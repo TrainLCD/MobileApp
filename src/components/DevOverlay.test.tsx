@@ -4,6 +4,7 @@ import { useAtomValue } from 'jotai';
 import { Dimensions, StyleSheet } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -256,6 +257,51 @@ describe('DevOverlay', () => {
         getByTestId('dev-overlay-accuracy-value').props.style
       );
       expect(valueStyle.color).not.toBe('#f87171');
+    });
+
+    it('生の精度がBAD_ACCURACY_THRESHOLD以上・MAX_PERMIT_ACCURACY以下の場合は黄字で表示する', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: BAD_ACCURACY_THRESHOLD },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).toBe('#facc15');
+    });
+
+    it('生の精度がMAX_PERMIT_ACCURACYを超える場合は黄字ではなく赤字で表示する', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY + 100 },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).toBe('#f87171');
+    });
+
+    it('生の精度がBAD_ACCURACY_THRESHOLD未満の場合は黄字にしない', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: BAD_ACCURACY_THRESHOLD - 1 },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).not.toBe('#facc15');
     });
 
     it('継続測位の生の値（rawLocation）が無い場合は精度を表示しない', () => {
