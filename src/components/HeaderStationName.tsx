@@ -127,11 +127,7 @@ const HeaderStationName: React.FC<Props> = ({
           style={[
             styles.scaledText,
             {
-              // 計測前は文字幅が未確定で widthScale が 1 のまま。ここでコンテナ幅
-              // （未確定なら '100%'）にクランプしておくと、計測完了までの間も
-              // 等倍テキストが枠からはみ出さず、かつ空白にもならない。計測が返れば
-              // renderTextWidth が入り、自然幅 + scaleX で正確に圧縮される。
-              width: renderTextWidth || containerWidth || '100%',
+              width: renderTextWidth || MEASURE_TEXT_WIDTH,
               transform: [{ scaleX: widthScale }],
             },
           ]}
