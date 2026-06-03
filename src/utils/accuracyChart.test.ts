@@ -156,7 +156,7 @@ describe('generateAccuracyChart', () => {
 
   describe('color coding', () => {
     it('should use red color for accuracy > MAX_PERMIT_ACCURACY', () => {
-      const result = generateAccuracyChart([1501, 2000, 3000]);
+      const result = generateAccuracyChart([2001, 2500, 3000]);
       expect(result).toHaveLength(3);
       for (const block of result) {
         expect(block.color).toBe('#ff0000');
@@ -181,14 +181,14 @@ describe('generateAccuracyChart', () => {
 
     it('should handle mixed accuracy values with different colors', () => {
       // Test with values in all three ranges
-      const result = generateAccuracyChart([50, 500, 2000]);
+      const result = generateAccuracyChart([50, 500, 2500]);
       expect(result).toHaveLength(3);
 
       // 50m should be white
       expect(result[0].color).toBe('#ffffff');
       // 500m should be yellow
       expect(result[1].color).toBe('#ffff00');
-      // 2000m (over MAX_PERMIT_ACCURACY) should be red
+      // 2500m (over MAX_PERMIT_ACCURACY) should be red
       expect(result[2].color).toBe('#ff0000');
     });
   });
