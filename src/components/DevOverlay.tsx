@@ -24,7 +24,6 @@ import {
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import {
   backgroundLocationTrackingAtom,
-  locationAtom,
   rawLocationAtom,
 } from '~/store/atoms/location';
 import { generateAccuracyChart } from '~/utils/accuracyChart';
@@ -332,12 +331,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
 const DevOverlay: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedHeight, setExpandedHeight] = useState(0);
-  const location = useAtomValue(locationAtom);
-  // 精度はMAX_PERMIT_ACCURACYフィルタを通らない生の測位値から取得する。
+  // DevOverlayは診断用途のため、速度・精度ともにEMAスムージングやMAX_PERMIT_ACCURACY
+  // フィルタを通らない生の測位値（rawLocationAtom）から取得する。
   // 継続測位（watch/background両経路）はhandleTrackingLocation経由でフィルタ前に
-  // rawLocationAtomへ生の値を記録するため、棄却された精度もここから観測できる。
+  // rawLocationAtomへ生の値を記録するため、棄却・補正された値もここから観測できる。
   const rawLocation = useAtomValue(rawLocationAtom);
-  const speed = location?.coords?.speed;
+  const speed = rawLocation?.coords?.speed;
   const accuracy = rawLocation?.coords?.accuracy;
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
