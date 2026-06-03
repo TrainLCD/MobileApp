@@ -155,24 +155,24 @@ describe('generateAccuracyChart', () => {
   });
 
   describe('color coding', () => {
-    it('should use red color for accuracy >= BAD_ACCURACY_THRESHOLD', () => {
-      const result = generateAccuracyChart([200, 250, 300]);
+    it('should use red color for accuracy > MAX_PERMIT_ACCURACY', () => {
+      const result = generateAccuracyChart([1501, 2000, 3000]);
       expect(result).toHaveLength(3);
       for (const block of result) {
         expect(block.color).toBe('#ff0000');
       }
     });
 
-    it('should use yellow color for accuracy >= BAD_ACCURACY_THRESHOLD / 2 and < BAD_ACCURACY_THRESHOLD', () => {
-      const result = generateAccuracyChart([100, 150, 199]);
+    it('should use yellow color for accuracy >= BAD_ACCURACY_THRESHOLD and <= MAX_PERMIT_ACCURACY', () => {
+      const result = generateAccuracyChart([200, 750, 1500]);
       expect(result).toHaveLength(3);
       for (const block of result) {
         expect(block.color).toBe('#ffff00');
       }
     });
 
-    it('should use white color for accuracy < BAD_ACCURACY_THRESHOLD / 2', () => {
-      const result = generateAccuracyChart([10, 50, 99]);
+    it('should use white color for accuracy < BAD_ACCURACY_THRESHOLD', () => {
+      const result = generateAccuracyChart([10, 100, 199]);
       expect(result).toHaveLength(3);
       for (const block of result) {
         expect(block.color).toBe('#ffffff');
@@ -181,14 +181,14 @@ describe('generateAccuracyChart', () => {
 
     it('should handle mixed accuracy values with different colors', () => {
       // Test with values in all three ranges
-      const result = generateAccuracyChart([50, 150, 250]);
+      const result = generateAccuracyChart([50, 500, 2000]);
       expect(result).toHaveLength(3);
 
       // 50m should be white
       expect(result[0].color).toBe('#ffffff');
-      // 150m should be yellow
+      // 500m should be yellow
       expect(result[1].color).toBe('#ffff00');
-      // 250m should be red
+      // 2000m (over MAX_PERMIT_ACCURACY) should be red
       expect(result[2].color).toBe('#ff0000');
     });
   });

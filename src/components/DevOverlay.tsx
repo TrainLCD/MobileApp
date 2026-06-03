@@ -15,6 +15,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import {
   useDistanceToNextStation,
   useLandscapeWindowDimensions,
@@ -42,6 +43,7 @@ const PANEL_BG = 'rgba(7, 11, 24, 0.78)';
 const LABEL_COLOR = 'rgba(199, 210, 254, 0.72)';
 const VALUE_COLOR = '#f8fafc';
 const DANGER_COLOR = '#f87171';
+const WARNING_COLOR = '#facc15';
 const AURORA_COLORS = [
   'rgba(56, 189, 248, 0.28)',
   'rgba(217, 70, 239, 0.2)',
@@ -196,6 +198,9 @@ const styles = StyleSheet.create({
   metricValueDanger: {
     color: DANGER_COLOR,
   },
+  metricValueWarning: {
+    color: WARNING_COLOR,
+  },
   metricSuffix: {
     color: 'rgba(191, 219, 254, 0.78)',
     fontSize: 11,
@@ -347,6 +352,12 @@ const DevOverlay: React.FC = () => {
   // MAX_PERMIT_ACCURACYのフィルタに関係なく生の精度を判定し、許容値を超えたら赤字で警告する
   const isAccuracyOverLimit =
     accuracy != null && accuracy > MAX_PERMIT_ACCURACY;
+  // チャートが黄色になる精度域（BAD_ACCURACY_THRESHOLD以上・許容値以下）では
+  // m表示も黄色文字にして、精度悪化を数値とチャートの双方で示す
+  const isAccuracyWarning =
+    accuracy != null &&
+    accuracy >= BAD_ACCURACY_THRESHOLD &&
+    accuracy <= MAX_PERMIT_ACCURACY;
 
   const speedKMH = useMemo(
     () =>
@@ -760,10 +771,15 @@ const DevOverlay: React.FC = () => {
                     labelStyle={metricLabelStyle}
                     valueStyle={[
                       metricValueStyle,
+                      isAccuracyWarning && styles.metricValueWarning,
                       isAccuracyOverLimit && styles.metricValueDanger,
                     ]}
                     suffixStyle={
-                      isAccuracyOverLimit ? styles.metricValueDanger : null
+                      isAccuracyOverLimit
+                        ? styles.metricValueDanger
+                        : isAccuracyWarning
+                          ? styles.metricValueWarning
+                          : null
                     }
                     metaStyle={metricMetaStyle}
                   />
@@ -820,10 +836,15 @@ const DevOverlay: React.FC = () => {
                     labelStyle={metricLabelStyle}
                     valueStyle={[
                       metricValueStyle,
+                      isAccuracyWarning && styles.metricValueWarning,
                       isAccuracyOverLimit && styles.metricValueDanger,
                     ]}
                     suffixStyle={
-                      isAccuracyOverLimit ? styles.metricValueDanger : null
+                      isAccuracyOverLimit
+                        ? styles.metricValueDanger
+                        : isAccuracyWarning
+                          ? styles.metricValueWarning
+                          : null
                     }
                     metaStyle={metricMetaStyle}
                   />

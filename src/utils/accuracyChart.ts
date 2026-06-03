@@ -1,3 +1,4 @@
+import { MAX_PERMIT_ACCURACY } from '../constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '../constants/threshold';
 
 export type AccuracyBlock = {
@@ -11,10 +12,12 @@ export type AccuracyBlock = {
  * @returns Color string for the block
  */
 const getAccuracyColor = (accuracy: number): string => {
-  if (accuracy >= BAD_ACCURACY_THRESHOLD) {
+  // 最大許容精度(MAX_PERMIT_ACCURACY)を超えた測位値はフィルタで棄却されるため、
+  // DevOverlayのメトリクスカード(isAccuracyOverLimit)と揃えて赤で警告する。
+  if (accuracy > MAX_PERMIT_ACCURACY) {
     return '#ff0000'; // red
   }
-  if (accuracy >= BAD_ACCURACY_THRESHOLD / 2) {
+  if (accuracy >= BAD_ACCURACY_THRESHOLD) {
     return '#ffff00'; // yellow
   }
   return '#ffffff'; // white
