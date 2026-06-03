@@ -98,11 +98,6 @@ const HeaderStationName: React.FC<Props> = ({
     return Math.min(1, containerWidth / renderTextWidth);
   }, [containerWidth, renderTextWidth]);
 
-  // 計測（コンテナ幅・現在の text の文字幅）が揃うまでは widthScale が 1 のままで、
-  // そのまま見せると縮小前の等倍テキストが 1 フレーム見えてしまう（scaleX が
-  // 一瞬効かない）。計測完了までは表示用テキストを隠し、スケール確定後に出す。
-  const isScaleReady = containerWidth > 0 && renderTextWidth > 0;
-
   return (
     <View
       onLayout={handleContainerLayout}
@@ -125,7 +120,6 @@ const HeaderStationName: React.FC<Props> = ({
           styles.viewport,
           {
             width: containerWidth || '100%',
-            opacity: isScaleReady ? 1 : 0,
           },
         ]}
       >
@@ -133,7 +127,11 @@ const HeaderStationName: React.FC<Props> = ({
           style={[
             styles.scaledText,
             {
-              width: renderTextWidth || MEASURE_TEXT_WIDTH,
+              // 計測前は文字幅が未確定で widthScale が 1 のまま。ここでコンテナ幅
+              // （未確定なら '100%'）にクランプしておくと、計測完了までの間も
+              // 等倍テキストが枠からはみ出さず、かつ空白にもならない。計測が返れば
+              // renderTextWidth が入り、自然幅 + scaleX で正確に圧縮される。
+              width: renderTextWidth || containerWidth || '100%',
               transform: [{ scaleX: widthScale }],
             },
           ]}
