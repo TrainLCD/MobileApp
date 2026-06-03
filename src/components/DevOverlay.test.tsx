@@ -77,17 +77,18 @@ describe('DevOverlay', () => {
   const mockDimensionsGet = jest.spyOn(Dimensions, 'get');
 
   const setupAtomValues = ({
-    // locationAtomはフィルタ・スムージング後の値で、速度や次駅距離の表示元
+    // locationAtomはフィルタ・スムージング後の値。DevOverlayの速度・精度表示はここから読まない
     location = {
       coords: {
         speed: 10,
         accuracy: 15,
       },
     },
-    // rawLocationAtomは継続測位の生の値で、精度表示はlocationAtomではなくここから読む。
-    // 既定は精度15mの測位が継続取得できている状態を表す（locationAtomとは独立した別物）。
+    // rawLocationAtomは継続測位の生の値で、速度・精度ともにlocationAtomではなくここから読む。
+    // 既定は速度10m/s・精度15mの測位が継続取得できている状態を表す（locationAtomとは独立した別物）。
     rawLocation = {
       coords: {
+        speed: 10,
         accuracy: 15,
       },
     },
@@ -422,7 +423,7 @@ describe('DevOverlay', () => {
 
     it('速度がnullの場合に0km/hを表示する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: null, accuracy: 15 },
         },
         backgroundLocationTracking: false,
@@ -434,7 +435,7 @@ describe('DevOverlay', () => {
 
     it('速度が負の値の場合に0km/hを表示する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: -5, accuracy: 15 },
         },
         backgroundLocationTracking: false,
@@ -483,7 +484,7 @@ describe('DevOverlay', () => {
   describe('速度計算のロジック', () => {
     it('速度が0の場合に0km/hを表示する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: 0, accuracy: 15 },
         },
         backgroundLocationTracking: false,
@@ -495,7 +496,7 @@ describe('DevOverlay', () => {
 
     it('速度が正の小数値の場合に正しく変換する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: 13.89, accuracy: 15 },
         },
         backgroundLocationTracking: false,
