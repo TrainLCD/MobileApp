@@ -4,6 +4,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
+import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { locationAtom } from '~/store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
@@ -77,6 +78,14 @@ export const useRefreshStation = (): void => {
       return true;
     }
 
+    // 実際のGPS精度が許容上限(MAX_PERMIT_ACCURACY=1.5km)を超える測位では到着判定の
+    // 信頼性が担保できないため、強制的に未到着とみなす。
+    // 継続測位はhandleTrackingLocationで弾かれるが、ワンショット取得や手動選択など
+    // フィルタを経由しない経路で粗い精度の測位が紛れ込みうるため、ここでも防御的に検査する。
+    if (accuracy != null && accuracy > MAX_PERMIT_ACCURACY) {
+      return false;
+    }
+
     // グレース期間は到着を引き起こした駅にのみ適用する
     // 別の駅に対してtrueを返すと誤って駅が進んでしまう
     const inGracePeriod =
@@ -106,7 +115,13 @@ export const useRefreshStation = (): void => {
       lastArrivedStationIdRef.current = nearestStation.id ?? null;
     }
     return arrived;
-  }, [effectiveArrivedThreshold, latitude, longitude, nearestStation]);
+  }, [
+    accuracy,
+    effectiveArrivedThreshold,
+    latitude,
+    longitude,
+    nearestStation,
+  ]);
 
   const isApproaching = useMemo((): boolean => {
     if (
