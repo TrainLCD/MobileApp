@@ -8,7 +8,6 @@ import {
   PanResponder,
   type StyleProp,
   StyleSheet,
-  Text,
   type TextStyle,
   useWindowDimensions,
   View,
@@ -26,7 +25,7 @@ import {
   backgroundLocationTrackingAtom,
   rawLocationAtom,
 } from '~/store/atoms/location';
-import { generateAccuracyChart } from '~/utils/accuracyChart';
+import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
 
 const EXPAND_DURATION = 280;
@@ -159,11 +158,6 @@ const styles = StyleSheet.create({
     color: LABEL_COLOR,
     fontSize: 9,
     letterSpacing: 1.6,
-  },
-  chartValue: {
-    color: '#fff',
-    fontSize: 14,
-    lineHeight: 18,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -391,11 +385,6 @@ const DevOverlay: React.FC = () => {
     return () => clearInterval(id);
   }, []);
 
-  const accuracyChartBlocks = useMemo(
-    () => generateAccuracyChart(chartHistory),
-    [chartHistory]
-  );
-
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
   const telemetryValue = isTelemetryEnabled ? 'ON' : 'OFF';
   const backgroundValue = isBackgroundLocationTracking ? 'ON' : 'OFF';
@@ -432,7 +421,6 @@ const DevOverlay: React.FC = () => {
         minHeight: 64,
       }
     : null;
-  const chartValueStyle = isLandscape ? { fontSize: 12, lineHeight: 15 } : null;
   const metricCardStyle = isLandscape
     ? {
         minHeight: 56,
@@ -463,6 +451,11 @@ const DevOverlay: React.FC = () => {
     : contentWidth;
   const metricWidth = (metricsColumnWidth - metricsGap) / 2;
   const nextCardWidth = metricsColumnWidth;
+  // 折れ線グラフの描画サイズ。chartShellの内側(paddingHorizontal分を差し引いた幅)に収める
+  const accuracyChartWidth = isLandscape
+    ? chartColumnWidth - 20
+    : contentWidth - 24;
+  const accuracyChartHeight = isLandscape ? 30 : 40;
   const leftMetricWidth = metricWidth;
   const nextTargetCardStyle: ViewStyle = {
     justifyContent: 'flex-start',
@@ -721,23 +714,11 @@ const DevOverlay: React.FC = () => {
                         <Typography style={styles.chartLabel}>
                           ACCURACY HISTORY
                         </Typography>
-                        <Typography
-                          style={[styles.chartValue, chartValueStyle]}
-                          testID="dev-overlay-accuracy-history"
-                          numberOfLines={1}
-                          ellipsizeMode="clip"
-                        >
-                          {accuracyChartBlocks.length === 0
-                            ? '---'
-                            : accuracyChartBlocks.map((block, index) => (
-                                <Text
-                                  key={`${index}-${block.char}-${block.color}`}
-                                  style={{ color: block.color }}
-                                >
-                                  {block.char}
-                                </Text>
-                              ))}
-                        </Typography>
+                        <AccuracyHistoryChart
+                          history={chartHistory}
+                          width={accuracyChartWidth}
+                          height={accuracyChartHeight}
+                        />
                       </View>
                     </View>
                   </View>
@@ -805,23 +786,11 @@ const DevOverlay: React.FC = () => {
                     <Typography style={styles.chartLabel}>
                       ACCURACY HISTORY
                     </Typography>
-                    <Typography
-                      style={[styles.chartValue, chartValueStyle]}
-                      testID="dev-overlay-accuracy-history"
-                      numberOfLines={1}
-                      ellipsizeMode="clip"
-                    >
-                      {accuracyChartBlocks.length === 0
-                        ? '---'
-                        : accuracyChartBlocks.map((block, index) => (
-                            <Text
-                              key={`${index}-${block.char}-${block.color}`}
-                              style={{ color: block.color }}
-                            >
-                              {block.char}
-                            </Text>
-                          ))}
-                    </Typography>
+                    <AccuracyHistoryChart
+                      history={chartHistory}
+                      width={accuracyChartWidth}
+                      height={accuracyChartHeight}
+                    />
                   </View>
                 </View>
 
