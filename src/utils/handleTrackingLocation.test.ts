@@ -1,11 +1,16 @@
 import type * as Location from 'expo-location';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
-import { setLocation, setRawLocation } from '~/store/atoms/location';
+import {
+  setLocation,
+  setLocationAccuracyOutlier,
+  setRawLocation,
+} from '~/store/atoms/location';
 import { handleTrackingLocation } from './handleTrackingLocation';
 
 jest.mock('~/store/atoms/location', () => ({
   setLocation: jest.fn(),
   setRawLocation: jest.fn(),
+  setLocationAccuracyOutlier: jest.fn(),
 }));
 
 let mockIsDevApp = false;
@@ -17,6 +22,7 @@ jest.mock('./isDevApp', () => ({
 
 const mockSetLocation = setLocation as jest.Mock;
 const mockSetRawLocation = setRawLocation as jest.Mock;
+const mockSetLocationAccuracyOutlier = setLocationAccuracyOutlier as jest.Mock;
 
 const makeLocation = (accuracy: number | null): Location.LocationObject => ({
   coords: {
@@ -37,18 +43,20 @@ describe('handleTrackingLocation', () => {
     mockIsDevApp = false;
   });
 
-  it('精度がMAX_PERMIT_ACCURACY以下ならsetLocationに渡す', () => {
+  it('精度がMAX_PERMIT_ACCURACY以下ならsetLocationに渡し外れ値フラグを下ろす', () => {
     const loc = makeLocation(MAX_PERMIT_ACCURACY);
     handleTrackingLocation(loc);
 
     expect(mockSetLocation).toHaveBeenCalledWith(loc);
+    expect(mockSetLocationAccuracyOutlier).toHaveBeenCalledWith(false);
   });
 
-  it('精度がMAX_PERMIT_ACCURACYを超える測位はsetLocationに渡さない', () => {
+  it('精度がMAX_PERMIT_ACCURACYを超える測位はsetLocationに渡さず外れ値フラグを立てる', () => {
     const loc = makeLocation(MAX_PERMIT_ACCURACY + 1);
     handleTrackingLocation(loc);
 
     expect(mockSetLocation).not.toHaveBeenCalled();
+    expect(mockSetLocationAccuracyOutlier).toHaveBeenCalledWith(true);
   });
 
   it('精度がnullの測位はフィルタせずsetLocationに渡す', () => {
