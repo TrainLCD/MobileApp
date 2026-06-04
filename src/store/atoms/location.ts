@@ -84,9 +84,9 @@ export const setRawLocation = (location: Location.LocationObject) => {
   store.set(rawLocationAtom, location);
 };
 
+// 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
+// 手動選択(StationSearchModal/useInitialNearbyStation/Privacy等)もここを通る。
 export const setLocation = (location: Location.LocationObject) => {
-  // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
-  // 手動選択(StationSearchModal/useInitialNearbyStation/Privacy等)もここを通る。
   // 新しい測位を受け取った時点で「直近の測位が精度外れ値だった」状態は解消されるため、
   // ここで外れ値フラグを解除する。解除をhandleTrackingLocationだけに置くと、継続測位で
   // 一度立ったフラグがdirect setLocation経由の良好な測位では解除されず、arrivedがfalseに
