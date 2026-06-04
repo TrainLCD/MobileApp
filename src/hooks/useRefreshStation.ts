@@ -4,7 +4,11 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
-import { locationAtom } from '~/store/atoms/location';
+import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import {
+  locationAccuracyOutlierAtom,
+  locationAtom,
+} from '~/store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
@@ -37,6 +41,7 @@ export const useRefreshStation = (): void => {
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
   const location = useAtomValue(locationAtom);
+  const isAccuracyOutlier = useAtomValue(locationAccuracyOutlierAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
   const accuracy = location?.coords.accuracy;
@@ -77,6 +82,20 @@ export const useRefreshStation = (): void => {
       return true;
     }
 
+    // 現在位置を信用できない状況では到着判定の信頼性が担保できないため、
+    // 強制的に未到着(=走行中)とみなす。次の2系統を区別して検査する:
+    //   1. 継続測位: handleTrackingLocationがMAX_PERMIT_ACCURACY超の測位を棄却して
+    //      座標を凍結するため、精度悪化はlocationAtom側には現れない。棄却の事実は
+    //      外れ値フラグ(isAccuracyOutlier)から判定する。
+    //   2. ワンショット取得・手動選択: フィルタを経由せず粗い精度の測位がlocationAtomに
+    //      入りうるため、保持している精度を直接検査する。
+    if (
+      isAccuracyOutlier ||
+      (accuracy != null && accuracy > MAX_PERMIT_ACCURACY)
+    ) {
+      return false;
+    }
+
     // グレース期間は到着を引き起こした駅にのみ適用する
     // 別の駅に対してtrueを返すと誤って駅が進んでしまう
     const inGracePeriod =
@@ -106,7 +125,14 @@ export const useRefreshStation = (): void => {
       lastArrivedStationIdRef.current = nearestStation.id ?? null;
     }
     return arrived;
-  }, [effectiveArrivedThreshold, latitude, longitude, nearestStation]);
+  }, [
+    accuracy,
+    isAccuracyOutlier,
+    effectiveArrivedThreshold,
+    latitude,
+    longitude,
+    nearestStation,
+  ]);
 
   const isApproaching = useMemo((): boolean => {
     if (
