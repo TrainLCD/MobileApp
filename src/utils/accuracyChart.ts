@@ -6,14 +6,27 @@ export type AccuracyChartPoint = {
   /** 測位精度(m)。小さいほど高精度。 */
   value: number;
   /**
-   * 系列内の相対位置を 0..1 に正規化した値。
-   * 1 が系列中で最も精度が悪い(値が大きい)サンプル、0 が最も精度が良い(値が小さい)サンプル。
-   * 全サンプルが同値の場合は中央の 0.5 を返す。
+   * 精度を 0..1 の固定スケール上の位置へ変換した値。
+   * 履歴ウィンドウの min/max には依存せず、同じ精度値は常に同じ位置に来る。
+   * 1 が最も精度が悪い(上端)、0 が最も精度が良い(下端)。
+   * @see normalizeAccuracy
    */
   normalized: number;
   /** 精度帯に応じた線・点の表示色。 */
   color: string;
 };
+
+/**
+ * 縦軸固定スケールの下限(m)。これ以下の高精度は下端(0)に張り付く。
+ * GPS の実用的な最良精度域(数 m)を踏まえた値。
+ */
+export const ACCURACY_CHART_FLOOR_M = 5;
+/**
+ * 縦軸固定スケールの上限(m)。これ以上は上端(1)にクランプする。
+ * 許容上限(MAX_PERMIT_ACCURACY)を超えた測位はフィルタで棄却される域なので、
+ * それ以降を区別する意味は薄く、上端に張り付かせて「振り切れ」を示す。
+ */
+export const ACCURACY_CHART_CEILING_M = MAX_PERMIT_ACCURACY;
 
 /**
  * 精度帯ごとの折れ線・点の表示色。DevOverlay のメトリクスカード配色と揃え、
@@ -42,12 +55,35 @@ export const getAccuracyColor = (accuracy: number): string => {
   return ACCURACY_CHART_COLORS.good;
 };
 
+const LOG_FLOOR = Math.log(ACCURACY_CHART_FLOOR_M);
+const LOG_SPAN = Math.log(ACCURACY_CHART_CEILING_M) - LOG_FLOOR;
+
+/**
+ * Maps an accuracy value (m) to a fixed 0..1 position on a logarithmic scale.
+ * The scale is anchored to constant floor/ceiling bounds (not the history
+ * window) so the same accuracy always lands at the same height and the
+ * magnitude of a change is directly readable. A log axis keeps both
+ * good-range jitter (e.g. 5m↔60m) and large degradations (hundreds of m)
+ * legible despite GPS accuracy spanning several orders of magnitude.
+ * 1 = worst (ceiling and above), 0 = best (floor and below).
+ * @param accuracy Accuracy value in meters
+ * @returns Normalized position clamped to [0, 1]
+ */
+export const normalizeAccuracy = (accuracy: number): number => {
+  const clamped = Math.min(
+    ACCURACY_CHART_CEILING_M,
+    Math.max(ACCURACY_CHART_FLOOR_M, accuracy)
+  );
+  return (Math.log(clamped) - LOG_FLOOR) / LOG_SPAN;
+};
+
 /**
  * Builds a normalized series for the accuracy history line chart.
  * Invalid samples (NaN, Infinity, negative numbers) are dropped so that a
  * stalled GPS makes the line visibly thin out instead of drawing bogus points.
- * The series is normalization-only and rendering-size agnostic; callers map the
- * 0..1 `normalized` value onto pixel coordinates.
+ * Each sample is positioned on a fixed logarithmic scale (see normalizeAccuracy)
+ * independently of the others, so the chart is both window- and
+ * rendering-size agnostic; callers map the 0..1 `normalized` value onto pixels.
  * @param accuracyHistory Array of accuracy values in meters
  * @returns Array of chart points with normalized position and color
  */
@@ -59,26 +95,9 @@ export const buildAccuracyChartSeries = (
     (val) => Number.isFinite(val) && val >= 0
   );
 
-  if (validHistory.length === 0) {
-    return [];
-  }
-
-  // Find min and max for normalization using reduce to avoid stack overflow
-  const minAccuracy = validHistory.reduce(
-    (min, val) => (val < min ? val : min),
-    validHistory[0]
-  );
-  const maxAccuracy = validHistory.reduce(
-    (max, val) => (val > max ? val : max),
-    validHistory[0]
-  );
-  const range = maxAccuracy - minAccuracy;
-
-  // normalized: 値が大きい(精度が悪い)ほど 1 に近づける。
-  // 全サンプルが同値で range が 0 のときは中央(0.5)に揃える。
   return validHistory.map((value) => ({
     value,
-    normalized: range > 0 ? (value - minAccuracy) / range : 0.5,
+    normalized: normalizeAccuracy(value),
     color: getAccuracyColor(value),
   }));
 };
