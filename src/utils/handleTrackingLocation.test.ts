@@ -43,12 +43,13 @@ describe('handleTrackingLocation', () => {
     mockIsDevApp = false;
   });
 
-  it('精度がMAX_PERMIT_ACCURACY以下ならsetLocationに渡し外れ値フラグを下ろす', () => {
+  it('精度がMAX_PERMIT_ACCURACY以下ならsetLocationに渡す（外れ値フラグの解除はsetLocationに委譲）', () => {
     const loc = makeLocation(MAX_PERMIT_ACCURACY);
     handleTrackingLocation(loc);
 
     expect(mockSetLocation).toHaveBeenCalledWith(loc);
-    expect(mockSetLocationAccuracyOutlier).toHaveBeenCalledWith(false);
+    // 解除はsetLocation側に集約したため、本関数からは外れ値フラグを操作しない
+    expect(mockSetLocationAccuracyOutlier).not.toHaveBeenCalled();
   });
 
   it('精度がMAX_PERMIT_ACCURACYを超える測位はsetLocationに渡さず外れ値フラグを立てる', () => {
