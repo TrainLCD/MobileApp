@@ -51,6 +51,12 @@ export const rawLocationAtom = atom<Location.LocationObject | null>(null);
 export const accuracyHistoryAtom = atom<number[]>([]);
 export const backgroundLocationTrackingAtom = atom(false);
 
+// 直近の継続測位がMAX_PERMIT_ACCURACYを超え、ワープ対策フィルタで棄却されたかを表す。
+// 棄却時は座標を捨てる（=locationAtomが前回値で凍結する）ため、精度の悪化は
+// locationAtom側の精度には現れない。この事実を別フラグとして残すことで、到着判定など
+// 下流の処理が「現在位置を信用できない＝走行中」と扱えるようにする。
+export const locationAccuracyOutlierAtom = atom(false);
+
 // 速度フィルタ・EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
@@ -61,6 +67,13 @@ export const resetLocationState = () => {
   store.set(rawLocationAtom, null);
   store.set(accuracyHistoryAtom, []);
   store.set(lastFilteredLocationAtom, null);
+  store.set(locationAccuracyOutlierAtom, false);
+};
+
+// ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
+// フィルタ判定の都度呼び出すこと。
+export const setLocationAccuracyOutlier = (isOutlier: boolean) => {
+  store.set(locationAccuracyOutlierAtom, isOutlier);
 };
 
 // MAX_PERMIT_ACCURACYフィルタで棄却される測位も含め、生の測位値を記録する。
@@ -71,7 +84,16 @@ export const setRawLocation = (location: Location.LocationObject) => {
   store.set(rawLocationAtom, location);
 };
 
+// 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
+// 手動選択(StationSearchModal/useInitialNearbyStation/Privacy等)もここを通る。
 export const setLocation = (location: Location.LocationObject) => {
+  // 新しい測位を受け取った時点で「直近の測位が精度外れ値だった」状態は解消されるため、
+  // ここで外れ値フラグを解除する。解除をhandleTrackingLocationだけに置くと、継続測位で
+  // 一度立ったフラグがdirect setLocation経由の良好な測位では解除されず、arrivedがfalseに
+  // 張り付く。座標棄却(speedフィルタ)で早期returnする経路でも精度自体は良好なため、
+  // フィルタ判定より前で解除する。
+  store.set(locationAccuracyOutlierAtom, false);
+
   const filteredPrev = store.get(lastFilteredLocationAtom);
   const currentHistory = store.get(accuracyHistoryAtom);
   const newAccuracy = location.coords.accuracy;

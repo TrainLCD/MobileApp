@@ -3,6 +3,7 @@ import { LineType, type Station } from '~/@types/graphql';
 import { store } from '..';
 import {
   accuracyHistoryAtom,
+  locationAccuracyOutlierAtom,
   locationAtom,
   rawLocationAtom,
   resetLocationState,
@@ -68,6 +69,35 @@ describe('setLocation', () => {
       // watchPositionAsync経路ではlocationAtomが生の精度を持つため、rawLocationは触らない
       expect(store.get(rawLocationAtom)).toBeNull();
       expect(store.get(locationAtom)?.coords.accuracy).toBe(30);
+    });
+  });
+
+  describe('外れ値フラグの解除', () => {
+    it('受理した測位を反映する際に外れ値フラグを解除する', () => {
+      // 継続測位で一度立ったフラグが、direct setLocation経由の良好な測位で解除されること
+      store.set(locationAccuracyOutlierAtom, true);
+
+      const loc = makeLocation(35.0, 139.0, 30, 1000);
+      setLocation(loc);
+
+      expect(store.get(locationAccuracyOutlierAtom)).toBe(false);
+      expect(store.get(locationAtom)?.coords.accuracy).toBe(30);
+    });
+
+    it('speedフィルタで座標が棄却される場合でも外れ値フラグは解除される', () => {
+      // フィルタ基準となる前回値を用意する
+      const first = makeLocation(35.0, 139.0, 30, 1000);
+      setLocation(first);
+
+      store.set(locationAccuracyOutlierAtom, true);
+
+      // 1秒で遠方へジャンプ → MAX_PLAUSIBLE_SPEED超過で座標は棄却される
+      const jump = makeLocation(36.0, 140.0, 30, 2000);
+      setLocation(jump);
+
+      // 座標は前回値のまま（棄却）だが、精度自体は良好なので外れ値フラグは解除される
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+      expect(store.get(locationAccuracyOutlierAtom)).toBe(false);
     });
   });
 
