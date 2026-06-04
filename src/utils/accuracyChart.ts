@@ -1,51 +1,64 @@
 import { MAX_PERMIT_ACCURACY } from '../constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '../constants/threshold';
 
-export type AccuracyBlock = {
-  char: string;
+/** 折れ線グラフ上の 1 サンプルを表す点。 */
+export type AccuracyChartPoint = {
+  /** 測位精度(m)。小さいほど高精度。 */
+  value: number;
+  /**
+   * 系列内の相対位置を 0..1 に正規化した値。
+   * 1 が系列中で最も精度が悪い(値が大きい)サンプル、0 が最も精度が良い(値が小さい)サンプル。
+   * 全サンプルが同値の場合は中央の 0.5 を返す。
+   */
+  normalized: number;
+  /** 精度帯に応じた線・点の表示色。 */
   color: string;
 };
 
 /**
- * Determines the color of an accuracy block based on accuracy value
- * @param accuracy Accuracy value in meters
- * @returns Color string for the block
+ * 精度帯ごとの折れ線・点の表示色。DevOverlay のメトリクスカード配色と揃え、
+ * 数値表示とグラフで同じ警告レベルが読み取れるようにする。
  */
-const getAccuracyColor = (accuracy: number): string => {
+export const ACCURACY_CHART_COLORS = {
+  good: '#38bdf8', // sky: BAD_ACCURACY_THRESHOLD 未満の良好域
+  warning: '#facc15', // yellow: BAD_ACCURACY_THRESHOLD 以上・MAX_PERMIT_ACCURACY 以下
+  danger: '#f87171', // red: MAX_PERMIT_ACCURACY 超過(フィルタで棄却される域)
+} as const;
+
+/**
+ * Determines the color of a chart point based on accuracy value
+ * @param accuracy Accuracy value in meters
+ * @returns Color string for the point
+ */
+export const getAccuracyColor = (accuracy: number): string => {
   // 最大許容精度(MAX_PERMIT_ACCURACY)を超えた測位値はフィルタで棄却されるため、
   // DevOverlayのメトリクスカード(isAccuracyOverLimit)と揃えて赤で警告する。
   if (accuracy > MAX_PERMIT_ACCURACY) {
-    return '#ff0000'; // red
+    return ACCURACY_CHART_COLORS.danger;
   }
   if (accuracy >= BAD_ACCURACY_THRESHOLD) {
-    return '#ffff00'; // yellow
+    return ACCURACY_CHART_COLORS.warning;
   }
-  return '#ffffff'; // white
+  return ACCURACY_CHART_COLORS.good;
 };
 
 /**
- * Generates an ASCII bar chart from accuracy values
- * Uses block characters to represent accuracy levels
- * Higher accuracy values (worse) produce taller bars
+ * Builds a normalized series for the accuracy history line chart.
+ * Invalid samples (NaN, Infinity, negative numbers) are dropped so that a
+ * stalled GPS makes the line visibly thin out instead of drawing bogus points.
+ * The series is normalization-only and rendering-size agnostic; callers map the
+ * 0..1 `normalized` value onto pixel coordinates.
  * @param accuracyHistory Array of accuracy values in meters
- * @returns Array of accuracy blocks with color information
+ * @returns Array of chart points with normalized position and color
  */
-export const generateAccuracyChart = (
+export const buildAccuracyChartSeries = (
   accuracyHistory: number[]
-): AccuracyBlock[] => {
-  if (accuracyHistory.length === 0) {
-    return [];
-  }
-
-  // Block characters from tallest to shortest
-  const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-
+): AccuracyChartPoint[] => {
   // Filter out invalid values (NaN, Infinity, negative numbers)
   const validHistory = accuracyHistory.filter(
     (val) => Number.isFinite(val) && val >= 0
   );
 
-  // Return empty array if no valid values
   if (validHistory.length === 0) {
     return [];
   }
@@ -59,32 +72,13 @@ export const generateAccuracyChart = (
     (max, val) => (val > max ? val : max),
     validHistory[0]
   );
+  const range = maxAccuracy - minAccuracy;
 
-  // If all values are the same, use middle block
-  if (minAccuracy === maxAccuracy) {
-    return validHistory.map((accuracy) => ({
-      char: blocks[3],
-      color: getAccuracyColor(accuracy),
-    }));
-  }
-
-  // Normalize and map to block characters
-  // Higher accuracy values (worse) map to taller blocks (index 0)
-  // Lower accuracy (better) maps to shorter blocks (index 6)
-  return validHistory.map((accuracy) => {
-    // Higher accuracy values should map to lower indices (taller blocks)
-    // So we invert the normalization
-    const denominator = maxAccuracy - minAccuracy;
-    const normalized =
-      denominator > 0
-        ? Math.max(0, Math.min(1, (maxAccuracy - accuracy) / denominator))
-        : 0.5;
-    const blockIndex = Math.floor(normalized * (blocks.length - 1));
-    // Ensure blockIndex is within bounds
-    const safeIndex = Math.max(0, Math.min(blocks.length - 1, blockIndex));
-    return {
-      char: blocks[safeIndex] || blocks[3],
-      color: getAccuracyColor(accuracy),
-    };
-  });
+  // normalized: 値が大きい(精度が悪い)ほど 1 に近づける。
+  // 全サンプルが同値で range が 0 のときは中央(0.5)に揃える。
+  return validHistory.map((value) => ({
+    value,
+    normalized: range > 0 ? (value - minAccuracy) / range : 0.5,
+    color: getAccuracyColor(value),
+  }));
 };

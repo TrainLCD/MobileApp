@@ -34,22 +34,6 @@ jest.mock('~/hooks', () => ({
   useNextStation: jest.fn(),
 }));
 
-// Mock utils
-jest.mock('~/utils/accuracyChart', () => ({
-  generateAccuracyChart: jest.fn((history: number[] | null | undefined) => {
-    // Mock implementation that mirrors generateAccuracyChart's invalid-value filter
-    if (!history || history.length === 0) {
-      return [];
-    }
-    return history
-      .filter((value) => Number.isFinite(value) && value >= 0)
-      .map(() => ({
-        char: '▇',
-        color: '#ffffff',
-      }));
-  }),
-}));
-
 jest.mock('~/utils/telemetryConfig', () => ({
   isTelemetryEnabledByBuild: true,
 }));
@@ -358,30 +342,24 @@ describe('DevOverlay', () => {
     });
 
     it('精度チャートをマウント直後に1サンプル分描画する', () => {
-      const { getByTestId } = render(<DevOverlay />);
-      // マウント時の即時サンプリングで1件積まれる
-      expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
-        /^▇$/
-      );
+      const { getAllByTestId } = render(<DevOverlay />);
+      // マウント時の即時サンプリングで折れ線グラフに1点描かれる
+      expect(getAllByTestId('dev-overlay-accuracy-point')).toHaveLength(1);
     });
 
     it('精度チャートが1秒ごとに無条件で更新される', () => {
       jest.useFakeTimers();
       try {
-        const { getByTestId } = render(<DevOverlay />);
+        const { getAllByTestId } = render(<DevOverlay />);
         // 初回サンプル
-        expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
-          /^▇$/
-        );
+        expect(getAllByTestId('dev-overlay-accuracy-point')).toHaveLength(1);
 
         act(() => {
           jest.advanceTimersByTime(3000);
         });
 
         // 位置情報イベントが届かなくても interval 由来で履歴が積み増される
-        expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
-          /^▇{4}$/
-        );
+        expect(getAllByTestId('dev-overlay-accuracy-point')).toHaveLength(4);
       } finally {
         jest.useRealTimers();
       }
@@ -395,14 +373,15 @@ describe('DevOverlay', () => {
       });
       jest.useFakeTimers();
       try {
-        const { getByTestId } = render(<DevOverlay />);
+        const { getByTestId, queryAllByTestId } = render(<DevOverlay />);
         act(() => {
           jest.advanceTimersByTime(5000);
         });
-        // NaN だけが積まれるため generateAccuracyChart 側で全件除外され '---' になる
+        // NaN だけが積まれるため buildAccuracyChartSeries 側で全件除外され '---' になる
         expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
           '---'
         );
+        expect(queryAllByTestId('dev-overlay-accuracy-point')).toHaveLength(0);
       } finally {
         jest.useRealTimers();
       }
