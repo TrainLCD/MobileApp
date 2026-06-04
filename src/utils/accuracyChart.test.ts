@@ -1,8 +1,45 @@
 import {
+  ACCURACY_CHART_CEILING_M,
   ACCURACY_CHART_COLORS,
+  ACCURACY_CHART_FLOOR_M,
   buildAccuracyChartSeries,
   getAccuracyColor,
+  normalizeAccuracy,
 } from './accuracyChart';
+
+describe('normalizeAccuracy (fixed log scale)', () => {
+  it('maps the floor and below to 0', () => {
+    expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M)).toBe(0);
+    expect(normalizeAccuracy(0)).toBe(0);
+    expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M - 1)).toBe(0);
+  });
+
+  it('maps the ceiling and above to 1', () => {
+    expect(normalizeAccuracy(ACCURACY_CHART_CEILING_M)).toBe(1);
+    expect(normalizeAccuracy(ACCURACY_CHART_CEILING_M + 500)).toBe(1);
+  });
+
+  it('is monotonically increasing with accuracy across the range', () => {
+    const samples = [5, 10, 50, 200, 700, 1500];
+    const normalized = samples.map(normalizeAccuracy);
+    for (let i = 0; i < normalized.length - 1; i++) {
+      expect(normalized[i]).toBeLessThan(normalized[i + 1]);
+    }
+  });
+
+  it('keeps every result within [0, 1]', () => {
+    for (const v of [0, 1, 5, 60, 199, 200, 1499, 1500, 5000]) {
+      const n = normalizeAccuracy(v);
+      expect(n).toBeGreaterThanOrEqual(0);
+      expect(n).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('spreads good-range jitter visibly (5m vs 60m differ clearly)', () => {
+    // 相対スケールを廃したログ固定軸では良好域の変化も読み取れる
+    expect(normalizeAccuracy(60) - normalizeAccuracy(5)).toBeGreaterThan(0.3);
+  });
+});
 
 describe('buildAccuracyChartSeries', () => {
   it('should return empty array for empty history', () => {
@@ -15,26 +52,34 @@ describe('buildAccuracyChartSeries', () => {
     expect(result.map((point) => point.value)).toEqual([10, 20, 30, 40]);
   });
 
-  it('should normalize worst (highest) accuracy to 1 and best to 0', () => {
-    const result = buildAccuracyChartSeries([10, 100, 55]);
-    // 10m が最良(0)、100m が最悪(1)
-    expect(result[0].normalized).toBe(0);
-    expect(result[1].normalized).toBe(1);
-    // 中間値は 0..1 の範囲に収まる
-    expect(result[2].normalized).toBeGreaterThan(0);
-    expect(result[2].normalized).toBeLessThan(1);
+  it('positions each sample on the fixed scale, independent of the window', () => {
+    // 同じ精度値は他のサンプルに依らず常に同じ高さに来る(可変スケールの撤廃)
+    const alone = buildAccuracyChartSeries([50]);
+    const withOthers = buildAccuracyChartSeries([10, 50, 1500]);
+    expect(alone[0].normalized).toBe(normalizeAccuracy(50));
+    expect(withOthers[1].normalized).toBe(normalizeAccuracy(50));
+    expect(alone[0].normalized).toBe(withOthers[1].normalized);
   });
 
-  it('should return middle (0.5) normalization for identical values', () => {
+  it('does not collapse identical values to the middle', () => {
+    // 旧実装は全同値で 0.5 を返していたが、固定スケールでは実際の位置を返す
     const result = buildAccuracyChartSeries([100, 100, 100, 100]);
     expect(result).toHaveLength(4);
-    expect(result.every((point) => point.normalized === 0.5)).toBe(true);
+    const expected = normalizeAccuracy(100);
+    expect(result.every((point) => point.normalized === expected)).toBe(true);
+    expect(result[0].normalized).not.toBe(0.5);
+  });
+
+  it('orders worse (higher) accuracy above better accuracy', () => {
+    const result = buildAccuracyChartSeries([10, 100, 1000]);
+    expect(result[0].normalized).toBeLessThan(result[1].normalized);
+    expect(result[1].normalized).toBeLessThan(result[2].normalized);
   });
 
   it('should handle single value', () => {
     const result = buildAccuracyChartSeries([50]);
     expect(result).toHaveLength(1);
-    expect(result[0].normalized).toBe(0.5);
+    expect(result[0].normalized).toBe(normalizeAccuracy(50));
     expect(result[0].value).toBe(50);
   });
 
@@ -75,9 +120,10 @@ describe('buildAccuracyChartSeries', () => {
     const values = [10, 12, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100];
     const result = buildAccuracyChartSeries(values);
     expect(result).toHaveLength(12);
-    // 最初(10m)が最良で 0、最後(100m)が最悪で 1
-    expect(result[0].normalized).toBe(0);
-    expect(result[11].normalized).toBe(1);
+    // 単調増加の入力は単調増加の正規化位置になる
+    for (let i = 0; i < result.length - 1; i++) {
+      expect(result[i].normalized).toBeLessThan(result[i + 1].normalized);
+    }
   });
 
   describe('color coding', () => {
