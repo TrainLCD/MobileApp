@@ -1,5 +1,5 @@
-import { MAX_PERMIT_ACCURACY } from '../constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '../constants/threshold';
+import { getMaxPermitAccuracy } from '../lib/remoteConfig';
 
 /** 折れ線グラフ上の 1 サンプルを表す点。 */
 export type AccuracyChartPoint = {
@@ -23,10 +23,11 @@ export type AccuracyChartPoint = {
 export const ACCURACY_CHART_FLOOR_M = 5;
 /**
  * 縦軸固定スケールの上限(m)。これ以上は上端(1)にクランプする。
- * 許容上限(MAX_PERMIT_ACCURACY)を超えた測位はフィルタで棄却される域なので、
+ * 許容上限(最大許容精度)を超えた測位はフィルタで棄却される域なので、
  * それ以降を区別する意味は薄く、上端に張り付かせて「振り切れ」を示す。
+ * 上限は Remote Config 由来の最大許容精度に追従させ、フィルタ本体と軸をそろえる。
  */
-export const ACCURACY_CHART_CEILING_M = MAX_PERMIT_ACCURACY;
+export const getAccuracyChartCeiling = (): number => getMaxPermitAccuracy();
 
 /**
  * 精度帯ごとの折れ線・点の表示色。DevOverlay のメトリクスカード配色と揃え、
@@ -34,8 +35,8 @@ export const ACCURACY_CHART_CEILING_M = MAX_PERMIT_ACCURACY;
  */
 export const ACCURACY_CHART_COLORS = {
   good: '#38bdf8', // sky: BAD_ACCURACY_THRESHOLD 未満の良好域
-  warning: '#facc15', // yellow: BAD_ACCURACY_THRESHOLD 以上・MAX_PERMIT_ACCURACY 以下
-  danger: '#f87171', // red: MAX_PERMIT_ACCURACY 超過(フィルタで棄却される域)
+  warning: '#facc15', // yellow: BAD_ACCURACY_THRESHOLD 以上・最大許容精度 以下
+  danger: '#f87171', // red: 最大許容精度 超過(フィルタで棄却される域)
 } as const;
 
 /**
@@ -44,9 +45,10 @@ export const ACCURACY_CHART_COLORS = {
  * @returns Color string for the point
  */
 export const getAccuracyColor = (accuracy: number): string => {
-  // 最大許容精度(MAX_PERMIT_ACCURACY)を超えた測位値はフィルタで棄却されるため、
-  // DevOverlayのメトリクスカード(isAccuracyOverLimit)と揃えて赤で警告する。
-  if (accuracy > MAX_PERMIT_ACCURACY) {
+  // 最大許容精度を超えた測位値はフィルタで棄却されるため、DevOverlayの
+  // メトリクスカード(isAccuracyOverLimit)と揃えて赤で警告する。許容値は
+  // Remote Config 由来のため、フィルタ本体と同じ実効値で判定をそろえる。
+  if (accuracy > getMaxPermitAccuracy()) {
     return ACCURACY_CHART_COLORS.danger;
   }
   if (accuracy >= BAD_ACCURACY_THRESHOLD) {
@@ -56,7 +58,6 @@ export const getAccuracyColor = (accuracy: number): string => {
 };
 
 const LOG_FLOOR = Math.log(ACCURACY_CHART_FLOOR_M);
-const LOG_SPAN = Math.log(ACCURACY_CHART_CEILING_M) - LOG_FLOOR;
 
 /**
  * Maps an accuracy value (m) to a fixed 0..1 position on a logarithmic scale.
@@ -70,11 +71,16 @@ const LOG_SPAN = Math.log(ACCURACY_CHART_CEILING_M) - LOG_FLOOR;
  * @returns Normalized position clamped to [0, 1]
  */
 export const normalizeAccuracy = (accuracy: number): number => {
-  const clamped = Math.min(
-    ACCURACY_CHART_CEILING_M,
-    Math.max(ACCURACY_CHART_FLOOR_M, accuracy)
-  );
-  return (Math.log(clamped) - LOG_FLOOR) / LOG_SPAN;
+  // 上限は Remote Config 由来の最大許容精度に追従するため、対数スパンも都度算出する。
+  const ceiling = getAccuracyChartCeiling();
+  // Remote Config で床値以下が設定されるとスケールが潰れて logSpan が 0 以下になり、
+  // 除算で NaN/不正値が生じる。退化したスケールでは床超えを上端(1)、床以下を下端(0)に倒す。
+  if (ceiling <= ACCURACY_CHART_FLOOR_M) {
+    return accuracy > ACCURACY_CHART_FLOOR_M ? 1 : 0;
+  }
+  const logSpan = Math.log(ceiling) - LOG_FLOOR;
+  const clamped = Math.min(ceiling, Math.max(ACCURACY_CHART_FLOOR_M, accuracy));
+  return (Math.log(clamped) - LOG_FLOOR) / logSpan;
 };
 
 /**

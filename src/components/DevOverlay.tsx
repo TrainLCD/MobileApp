@@ -13,7 +13,6 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
-import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import {
   useDistanceToNextStation,
@@ -21,6 +20,7 @@ import {
   useNextStation,
 } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
+import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
 import {
   backgroundLocationTrackingAtom,
   rawLocationAtom,
@@ -342,15 +342,16 @@ const DevOverlay: React.FC = () => {
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
   const accuracyMeters =
     accuracy != null ? Math.max(0, Math.floor(accuracy)) : null;
-  // MAX_PERMIT_ACCURACYのフィルタに関係なく生の精度を判定し、許容値を超えたら赤字で警告する
-  const isAccuracyOverLimit =
-    accuracy != null && accuracy > MAX_PERMIT_ACCURACY;
+  // 最大許容精度のフィルタに関係なく生の精度を判定し、許容値を超えたら赤字で警告する。
+  // 許容値は Remote Config 由来のため、フィルタ本体と同じ実効値で判定をそろえる。
+  const maxPermitAccuracy = getMaxPermitAccuracy();
+  const isAccuracyOverLimit = accuracy != null && accuracy > maxPermitAccuracy;
   // チャートが黄色になる精度域（BAD_ACCURACY_THRESHOLD以上・許容値以下）では
   // m表示も黄色文字にして、精度悪化を数値とチャートの双方で示す
   const isAccuracyWarning =
     accuracy != null &&
     accuracy >= BAD_ACCURACY_THRESHOLD &&
-    accuracy <= MAX_PERMIT_ACCURACY;
+    accuracy <= maxPermitAccuracy;
 
   const speedKMH = useMemo(
     () =>
