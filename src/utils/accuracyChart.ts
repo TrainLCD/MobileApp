@@ -73,6 +73,11 @@ const LOG_FLOOR = Math.log(ACCURACY_CHART_FLOOR_M);
 export const normalizeAccuracy = (accuracy: number): number => {
   // 上限は Remote Config 由来の最大許容精度に追従するため、対数スパンも都度算出する。
   const ceiling = getAccuracyChartCeiling();
+  // Remote Config で床値以下が設定されるとスケールが潰れて logSpan が 0 以下になり、
+  // 除算で NaN/不正値が生じる。退化したスケールでは床超えを上端(1)、床以下を下端(0)に倒す。
+  if (ceiling <= ACCURACY_CHART_FLOOR_M) {
+    return accuracy > ACCURACY_CHART_FLOOR_M ? 1 : 0;
+  }
   const logSpan = Math.log(ceiling) - LOG_FLOOR;
   const clamped = Math.min(ceiling, Math.max(ACCURACY_CHART_FLOOR_M, accuracy));
   return (Math.log(clamped) - LOG_FLOOR) / logSpan;
