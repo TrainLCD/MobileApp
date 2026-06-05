@@ -5,6 +5,9 @@ export const LOCATION_ACCURACY = Location.Accuracy.Highest;
 export const LOCATION_DISTANCE_INTERVAL = 10;
 export const LOCATION_TIME_INTERVAL = 5000;
 
+// 最大許容精度(m)のフォールバック既定値。実効値は Firebase Remote Config の
+// max_permit_accuracy を参照する（src/lib/remoteConfig.ts の getMaxPermitAccuracy）。
+// リモート値が未取得・不正な場合はこの値にフォールバックする。
 export const MAX_PERMIT_ACCURACY = 1500;
 
 export const LOCATION_START_MAX_RETRIES = 3;

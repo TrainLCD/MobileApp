@@ -1,11 +1,16 @@
+import * as remoteConfigModule from '../lib/remoteConfig';
 import {
-  ACCURACY_CHART_CEILING_M,
   ACCURACY_CHART_COLORS,
   ACCURACY_CHART_FLOOR_M,
   buildAccuracyChartSeries,
+  getAccuracyChartCeiling,
   getAccuracyColor,
   normalizeAccuracy,
 } from './accuracyChart';
+
+// Remote Config 未設定時はフォールバック(1500m)が返るため、固定スケールの
+// 上限はその値で評価される。
+const ACCURACY_CHART_CEILING_M = getAccuracyChartCeiling();
 
 describe('normalizeAccuracy (fixed log scale)', () => {
   it('maps the floor and below to 0', () => {
@@ -38,6 +43,22 @@ describe('normalizeAccuracy (fixed log scale)', () => {
   it('spreads good-range jitter visibly (5m vs 60m differ clearly)', () => {
     // 相対スケールを廃したログ固定軸では良好域の変化も読み取れる
     expect(normalizeAccuracy(60) - normalizeAccuracy(5)).toBeGreaterThan(0.3);
+  });
+
+  it('degrades gracefully when the ceiling is at or below the floor', () => {
+    // Remote Config で床値以下が設定された退化スケールでも NaN を出さず、
+    // 床超えは上端(1)、床以下は下端(0)へ倒す
+    const spy = jest
+      .spyOn(remoteConfigModule, 'getMaxPermitAccuracy')
+      .mockReturnValue(ACCURACY_CHART_FLOOR_M - 2);
+    try {
+      expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M + 100)).toBe(1);
+      expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M)).toBe(0);
+      expect(normalizeAccuracy(1)).toBe(0);
+      expect(Number.isNaN(normalizeAccuracy(50))).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 
