@@ -51,3 +51,28 @@ jest.mock("~/utils/isTablet", () => ({
 jest.mock("react-native-localize", () => ({
   findBestLanguageTag: jest.fn(() => "ja"),
 }));
+
+// Remote Config はネイティブモジュール依存のためモックする。
+// setDefaults で登録した既定値を getValue から読み出せるようにし、未設定キーは
+// asNumber が 0 を返すことで getMaxPermitAccuracy 側のフォールバックを発火させる。
+jest.mock("@react-native-firebase/remote-config", () => {
+  const store = {};
+  return {
+    getRemoteConfig: jest.fn(() => ({})),
+    setConfigSettings: jest.fn(() => Promise.resolve()),
+    setDefaults: jest.fn((_remoteConfig, defaults) => {
+      Object.assign(store, defaults);
+      return Promise.resolve();
+    }),
+    fetchAndActivate: jest.fn(() => Promise.resolve(true)),
+    getValue: jest.fn((_remoteConfig, key) => {
+      const value = store[key];
+      return {
+        asNumber: () => (typeof value === "number" ? value : Number(value) || 0),
+        asString: () => (value == null ? "" : String(value)),
+        asBoolean: () => Boolean(value),
+        getSource: () => (key in store ? "default" : "static"),
+      };
+    }),
+  };
+});

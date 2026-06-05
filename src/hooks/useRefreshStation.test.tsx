@@ -9,6 +9,7 @@ import * as useNextStationModule from '~/hooks/useNextStation';
 import { useRefreshStation } from '~/hooks/useRefreshStation';
 import * as useThresholdModule from '~/hooks/useThreshold';
 import * as useWrongDirectionDetectorModule from '~/hooks/useWrongDirectionDetector';
+import * as remoteConfigModule from '~/lib/remoteConfig';
 
 jest.mock('jotai', () => {
   const actual = jest.requireActual('jotai');
@@ -199,5 +200,54 @@ describe('useRefreshStation', () => {
     const updater = setStation.mock.calls[0][0] as (prev: any) => any;
     const nextState = updater({});
     expect(nextState.arrived).toBe(false);
+  });
+
+  it('強制未到着トグルが無効なら精度超過・外れ値でも通常の到着判定を行う', () => {
+    // Remote Configのフィーチャートグルで無効化された場合、精度に依らず
+    // 最寄り駅と同一座標なら到着とみなす
+    jest
+      .spyOn(remoteConfigModule, 'isForceNotArrivedOnLowAccuracyEnabled')
+      .mockReturnValue(false);
+
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.0,
+          longitude: 135.0,
+          accuracy: MAX_PERMIT_ACCURACY + 1,
+        },
+      }) // locationAtom
+      .mockReturnValueOnce(true) // locationAccuracyOutlierAtom
+      .mockReturnValue({ targetStationIds: [] }); // notifyState
+
+    const setStation = jest.fn();
+    mockUseSetAtom.mockReturnValueOnce(setStation).mockReturnValue(jest.fn());
+
+    jest
+      .spyOn(useNearestStationModule, 'useNearestStation')
+      .mockReturnValue(mockStation);
+    jest
+      .spyOn(useNextStationModule, 'useNextStation')
+      .mockReturnValue(mockStation);
+    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
+    jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
+      arrivedThreshold: 100,
+      approachingThreshold: 300,
+    });
+    jest
+      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
+      .mockReturnValue({
+        isWrongDirection: false,
+        isLoopLineWrongDirection: false,
+      });
+
+    renderHook(() => useRefreshStation(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    expect(setStation).toHaveBeenCalled();
+    const updater = setStation.mock.calls[0][0] as (prev: any) => any;
+    const nextState = updater({});
+    expect(nextState.arrived).toBe(true);
   });
 });

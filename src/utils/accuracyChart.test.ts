@@ -1,11 +1,15 @@
 import {
-  ACCURACY_CHART_CEILING_M,
   ACCURACY_CHART_COLORS,
   ACCURACY_CHART_FLOOR_M,
   buildAccuracyChartSeries,
+  getAccuracyChartCeiling,
   getAccuracyColor,
   normalizeAccuracy,
 } from './accuracyChart';
+
+// Remote Config 未設定時はフォールバック(1500m)が返るため、固定スケールの
+// 上限はその値で評価される。
+const ACCURACY_CHART_CEILING_M = getAccuracyChartCeiling();
 
 describe('normalizeAccuracy (fixed log scale)', () => {
   it('maps the floor and below to 0', () => {
