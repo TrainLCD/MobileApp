@@ -8,23 +8,24 @@ import {
   PanResponder,
   type StyleProp,
   StyleSheet,
-  Text,
   type TextStyle,
   useWindowDimensions,
   View,
   type ViewStyle,
 } from 'react-native';
+import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import {
   useDistanceToNextStation,
   useLandscapeWindowDimensions,
   useNextStation,
 } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
+import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
 import {
   backgroundLocationTrackingAtom,
-  locationAtom,
+  rawLocationAtom,
 } from '~/store/atoms/location';
-import { generateAccuracyChart } from '~/utils/accuracyChart';
+import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
 
 const EXPAND_DURATION = 280;
@@ -39,6 +40,8 @@ const PANEL_BORDER = 'rgba(255,255,255,0.18)';
 const PANEL_BG = 'rgba(7, 11, 24, 0.78)';
 const LABEL_COLOR = 'rgba(199, 210, 254, 0.72)';
 const VALUE_COLOR = '#f8fafc';
+const DANGER_COLOR = '#f87171';
+const WARNING_COLOR = '#facc15';
 const AURORA_COLORS = [
   'rgba(56, 189, 248, 0.28)',
   'rgba(217, 70, 239, 0.2)',
@@ -156,11 +159,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 1.6,
   },
-  chartValue: {
-    color: '#fff',
-    fontSize: 14,
-    lineHeight: 18,
-  },
   metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -189,6 +187,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     lineHeight: 22,
+  },
+  metricValueDanger: {
+    color: DANGER_COLOR,
+  },
+  metricValueWarning: {
+    color: WARNING_COLOR,
   },
   metricSuffix: {
     color: 'rgba(191, 219, 254, 0.78)',
@@ -256,6 +260,7 @@ type MetricCardProps = {
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
   valueStyle?: StyleProp<TextStyle>;
+  suffixStyle?: StyleProp<TextStyle>;
   metaStyle?: StyleProp<TextStyle>;
 };
 
@@ -294,6 +299,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   style,
   labelStyle,
   valueStyle,
+  suffixStyle,
   metaStyle,
 }) => (
   <View style={[styles.metricCard, style]}>
@@ -302,7 +308,9 @@ const MetricCard: React.FC<MetricCardProps> = ({
       <Typography style={[styles.metricValue, valueStyle]} testID={valueTestID}>
         {value}
         {suffix && value !== '--' ? (
-          <Typography style={styles.metricSuffix}>{suffix}</Typography>
+          <Typography style={[styles.metricSuffix, suffixStyle]}>
+            {suffix}
+          </Typography>
         ) : null}
       </Typography>
     </View>
@@ -317,9 +325,13 @@ const MetricCard: React.FC<MetricCardProps> = ({
 const DevOverlay: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedHeight, setExpandedHeight] = useState(0);
-  const location = useAtomValue(locationAtom);
-  const speed = location?.coords?.speed;
-  const accuracy = location?.coords?.accuracy;
+  // DevOverlayは診断用途のため、速度・精度ともにEMAスムージングやMAX_PERMIT_ACCURACY
+  // フィルタを通らない生の測位値（rawLocationAtom）から取得する。
+  // 継続測位（watch/background両経路）はhandleTrackingLocation経由でフィルタ前に
+  // rawLocationAtomへ生の値を記録するため、棄却・補正された値もここから観測できる。
+  const rawLocation = useAtomValue(rawLocationAtom);
+  const speed = rawLocation?.coords?.speed;
+  const accuracy = rawLocation?.coords?.accuracy;
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
@@ -330,6 +342,16 @@ const DevOverlay: React.FC = () => {
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
   const accuracyMeters =
     accuracy != null ? Math.max(0, Math.floor(accuracy)) : null;
+  // 最大許容精度のフィルタに関係なく生の精度を判定し、許容値を超えたら赤字で警告する。
+  // 許容値は Remote Config 由来のため、フィルタ本体と同じ実効値で判定をそろえる。
+  const maxPermitAccuracy = getMaxPermitAccuracy();
+  const isAccuracyOverLimit = accuracy != null && accuracy > maxPermitAccuracy;
+  // チャートが黄色になる精度域（BAD_ACCURACY_THRESHOLD以上・許容値以下）では
+  // m表示も黄色文字にして、精度悪化を数値とチャートの双方で示す
+  const isAccuracyWarning =
+    accuracy != null &&
+    accuracy >= BAD_ACCURACY_THRESHOLD &&
+    accuracy <= maxPermitAccuracy;
 
   const speedKMH = useMemo(
     () =>
@@ -363,11 +385,6 @@ const DevOverlay: React.FC = () => {
     const id = setInterval(pushSample, ACCURACY_CHART_SAMPLE_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
-
-  const accuracyChartBlocks = useMemo(
-    () => generateAccuracyChart(chartHistory),
-    [chartHistory]
-  );
 
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
   const telemetryValue = isTelemetryEnabled ? 'ON' : 'OFF';
@@ -405,7 +422,6 @@ const DevOverlay: React.FC = () => {
         minHeight: 64,
       }
     : null;
-  const chartValueStyle = isLandscape ? { fontSize: 12, lineHeight: 15 } : null;
   const metricCardStyle = isLandscape
     ? {
         minHeight: 56,
@@ -436,6 +452,11 @@ const DevOverlay: React.FC = () => {
     : contentWidth;
   const metricWidth = (metricsColumnWidth - metricsGap) / 2;
   const nextCardWidth = metricsColumnWidth;
+  // 折れ線グラフの描画サイズ。chartShellの内側(paddingHorizontal分を差し引いた幅)に収める
+  const accuracyChartWidth = isLandscape
+    ? chartColumnWidth - 20
+    : contentWidth - 24;
+  const accuracyChartHeight = isLandscape ? 30 : 40;
   const leftMetricWidth = metricWidth;
   const nextTargetCardStyle: ViewStyle = {
     justifyContent: 'flex-start',
@@ -694,23 +715,11 @@ const DevOverlay: React.FC = () => {
                         <Typography style={styles.chartLabel}>
                           ACCURACY HISTORY
                         </Typography>
-                        <Typography
-                          style={[styles.chartValue, chartValueStyle]}
-                          testID="dev-overlay-accuracy-history"
-                          numberOfLines={1}
-                          ellipsizeMode="clip"
-                        >
-                          {accuracyChartBlocks.length === 0
-                            ? '---'
-                            : accuracyChartBlocks.map((block, index) => (
-                                <Text
-                                  key={`${index}-${block.char}-${block.color}`}
-                                  style={{ color: block.color }}
-                                >
-                                  {block.char}
-                                </Text>
-                              ))}
-                        </Typography>
+                        <AccuracyHistoryChart
+                          history={chartHistory}
+                          width={accuracyChartWidth}
+                          height={accuracyChartHeight}
+                        />
                       </View>
                     </View>
                   </View>
@@ -741,7 +750,18 @@ const DevOverlay: React.FC = () => {
                     style={[{ width: leftMetricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-accuracy-value"
                     labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
+                    valueStyle={[
+                      metricValueStyle,
+                      isAccuracyWarning && styles.metricValueWarning,
+                      isAccuracyOverLimit && styles.metricValueDanger,
+                    ]}
+                    suffixStyle={
+                      isAccuracyOverLimit
+                        ? styles.metricValueDanger
+                        : isAccuracyWarning
+                          ? styles.metricValueWarning
+                          : null
+                    }
                     metaStyle={metricMetaStyle}
                   />
                   <MetricCard
@@ -767,23 +787,11 @@ const DevOverlay: React.FC = () => {
                     <Typography style={styles.chartLabel}>
                       ACCURACY HISTORY
                     </Typography>
-                    <Typography
-                      style={[styles.chartValue, chartValueStyle]}
-                      testID="dev-overlay-accuracy-history"
-                      numberOfLines={1}
-                      ellipsizeMode="clip"
-                    >
-                      {accuracyChartBlocks.length === 0
-                        ? '---'
-                        : accuracyChartBlocks.map((block, index) => (
-                            <Text
-                              key={`${index}-${block.char}-${block.color}`}
-                              style={{ color: block.color }}
-                            >
-                              {block.char}
-                            </Text>
-                          ))}
-                    </Typography>
+                    <AccuracyHistoryChart
+                      history={chartHistory}
+                      width={accuracyChartWidth}
+                      height={accuracyChartHeight}
+                    />
                   </View>
                 </View>
 
@@ -795,7 +803,18 @@ const DevOverlay: React.FC = () => {
                     style={[{ width: metricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-accuracy-value"
                     labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
+                    valueStyle={[
+                      metricValueStyle,
+                      isAccuracyWarning && styles.metricValueWarning,
+                      isAccuracyOverLimit && styles.metricValueDanger,
+                    ]}
+                    suffixStyle={
+                      isAccuracyOverLimit
+                        ? styles.metricValueDanger
+                        : isAccuracyWarning
+                          ? styles.metricValueWarning
+                          : null
+                    }
                     metaStyle={metricMetaStyle}
                   />
                   <MetricCard

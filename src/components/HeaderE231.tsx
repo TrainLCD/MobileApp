@@ -15,6 +15,15 @@ const BOTTOM_HEIGHT = isTablet ? 128 : 84;
 const DIVIDER_HEIGHT = isTablet ? 4 : 2;
 const ROOT_HEIGHT = BOUND_AREA_HEIGHT + BOTTOM_HEIGHT + DIVIDER_HEIGHT;
 
+// 白枠は固定 dp 高さなので、駅名も RFValue で画面スケールさせず枠高に連動した
+// 固定サイズにする。枠の内寸(高さ - 上下ボーダー)に行の高さが収まるよう 0.7 を掛け、
+// HeaderStationName の縦方向はスケールしない前提でも枠からはみ出さないようにしている。
+const STATION_AREA_HEIGHT = isTablet ? 128 : 80;
+const STATION_AREA_BORDER_WIDTH = isTablet ? 4 : 2;
+const STATION_NAME_FONT_SIZE = Math.floor(
+  (STATION_AREA_HEIGHT - STATION_AREA_BORDER_WIDTH * 2) * 0.7
+);
+
 const styles = StyleSheet.create({
   root: {
     zIndex: 9999,
@@ -63,17 +72,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
     textAlign: 'right',
-    lineHeight: Platform.select({ android: RFValue(21) }),
+    lineHeight: Platform.select({ android: RFValue(28) }),
   },
   stationArea: {
     width: '60%',
-    height: isTablet ? 128 : 80,
+    height: STATION_AREA_HEIGHT,
     flexShrink: 0,
     flexGrow: 0,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderWidth: isTablet ? 4 : 2,
+    borderWidth: STATION_AREA_BORDER_WIDTH,
     borderColor: '#666',
     borderRadius: isTablet ? 4 : 2,
     paddingHorizontal: isTablet ? 8 : 4,
@@ -87,7 +96,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#1B432B',
-    fontSize: RFValue(64),
+    fontSize: STATION_NAME_FONT_SIZE,
   },
   headerTexts: {
     flexDirection: 'row',

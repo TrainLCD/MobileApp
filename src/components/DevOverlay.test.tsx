@@ -1,11 +1,14 @@
 import { act, render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
-import { Dimensions } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import type { Station } from '~/@types/graphql';
+import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
+  rawLocationAtom,
 } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import DevOverlay, { getDevOverlayDragTranslation } from './DevOverlay';
@@ -29,22 +32,6 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useDistanceToNextStation: jest.fn(),
   useNextStation: jest.fn(),
-}));
-
-// Mock utils
-jest.mock('~/utils/accuracyChart', () => ({
-  generateAccuracyChart: jest.fn((history: number[] | null | undefined) => {
-    // Mock implementation that mirrors generateAccuracyChart's invalid-value filter
-    if (!history || history.length === 0) {
-      return [];
-    }
-    return history
-      .filter((value) => Number.isFinite(value) && value >= 0)
-      .map(() => ({
-        char: '▇',
-        color: '#ffffff',
-      }));
-  }),
 }));
 
 jest.mock('~/utils/telemetryConfig', () => ({
@@ -74,7 +61,16 @@ describe('DevOverlay', () => {
   const mockDimensionsGet = jest.spyOn(Dimensions, 'get');
 
   const setupAtomValues = ({
+    // locationAtomはフィルタ・スムージング後の値。DevOverlayの速度・精度表示はここから読まない
     location = {
+      coords: {
+        speed: 10,
+        accuracy: 15,
+      },
+    },
+    // rawLocationAtomは継続測位の生の値で、速度・精度ともにlocationAtomではなくここから読む。
+    // 既定は速度10m/s・精度15mの測位が継続取得できている状態を表す（locationAtomとは独立した別物）。
+    rawLocation = {
       coords: {
         speed: 10,
         accuracy: 15,
@@ -83,11 +79,15 @@ describe('DevOverlay', () => {
     backgroundLocationTracking = false,
   }: {
     location?: unknown;
+    rawLocation?: unknown;
     backgroundLocationTracking?: boolean;
   } = {}) => {
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === locationAtom) {
         return location as never;
+      }
+      if (atom === rawLocationAtom) {
+        return rawLocation as never;
       }
       if (atom === backgroundLocationTrackingAtom) {
         return backgroundLocationTracking as never;
@@ -202,8 +202,8 @@ describe('DevOverlay', () => {
 
     it('精度情報の小数点を切り捨てて表示する', () => {
       setupAtomValues({
-        location: {
-          coords: { speed: 10, accuracy: 15.9 },
+        rawLocation: {
+          coords: { accuracy: 15.9 },
         },
         backgroundLocationTracking: false,
       });
@@ -212,6 +212,116 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent(
         '15m'
       );
+    });
+
+    it('生の精度がMAX_PERMIT_ACCURACYを超える場合は赤字で表示する', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY + 100 },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).toBe('#f87171');
+    });
+
+    it('生の精度がMAX_PERMIT_ACCURACY以下の場合は赤字にしない', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).not.toBe('#f87171');
+    });
+
+    it('生の精度がBAD_ACCURACY_THRESHOLD以上・MAX_PERMIT_ACCURACY以下の場合は黄字で表示する', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: BAD_ACCURACY_THRESHOLD },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).toBe('#facc15');
+    });
+
+    it('生の精度がMAX_PERMIT_ACCURACYを超える場合は黄字ではなく赤字で表示する', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY + 100 },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).toBe('#f87171');
+    });
+
+    it('生の精度がBAD_ACCURACY_THRESHOLD未満の場合は黄字にしない', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { speed: 10, accuracy: BAD_ACCURACY_THRESHOLD - 1 },
+        },
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueStyle = StyleSheet.flatten(
+        getByTestId('dev-overlay-accuracy-value').props.style
+      );
+      expect(valueStyle.color).not.toBe('#facc15');
+    });
+
+    it('継続測位の生の値（rawLocation）が無い場合は精度を表示しない', () => {
+      // 継続測位（watch/background）はhandleTrackingLocation経由でrawLocationを記録する。
+      // ワンショット取得や手動選択のみでrawLocationが無い状態では精度を出さない。
+      setupAtomValues({
+        location: {
+          coords: { speed: 10, accuracy: 42 },
+        },
+        rawLocation: null,
+        backgroundLocationTracking: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent('--');
+    });
+
+    it('startLocationUpdatesAsync経路でlocationAtomがフィルタ後の値でも生の精度を表示する', () => {
+      // バックグラウンドタスクはMAX_PERMIT_ACCURACY超過を棄却するため、
+      // locationAtomには直近のフィルタ通過値が残り、rawLocationAtomに生の値が入る
+      setupAtomValues({
+        location: {
+          coords: { speed: 10, accuracy: 15 },
+        },
+        rawLocation: {
+          coords: { speed: 10, accuracy: MAX_PERMIT_ACCURACY + 500 },
+        },
+        backgroundLocationTracking: true,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      const valueNode = getByTestId('dev-overlay-accuracy-value');
+      // フィルタ後の15mではなく生の精度を表示し、赤字で警告する
+      expect(valueNode).toHaveTextContent(`${MAX_PERMIT_ACCURACY + 500}m`);
+      expect(StyleSheet.flatten(valueNode.props.style).color).toBe('#f87171');
     });
 
     it('速度情報をkm/hで表示する', () => {
@@ -232,30 +342,24 @@ describe('DevOverlay', () => {
     });
 
     it('精度チャートをマウント直後に1サンプル分描画する', () => {
-      const { getByTestId } = render(<DevOverlay />);
-      // マウント時の即時サンプリングで1件積まれる
-      expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
-        /^▇$/
-      );
+      const { getAllByTestId } = render(<DevOverlay />);
+      // マウント時の即時サンプリングで折れ線グラフに1点描かれる
+      expect(getAllByTestId('dev-overlay-accuracy-point')).toHaveLength(1);
     });
 
     it('精度チャートが1秒ごとに無条件で更新される', () => {
       jest.useFakeTimers();
       try {
-        const { getByTestId } = render(<DevOverlay />);
+        const { getAllByTestId } = render(<DevOverlay />);
         // 初回サンプル
-        expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
-          /^▇$/
-        );
+        expect(getAllByTestId('dev-overlay-accuracy-point')).toHaveLength(1);
 
         act(() => {
           jest.advanceTimersByTime(3000);
         });
 
         // 位置情報イベントが届かなくても interval 由来で履歴が積み増される
-        expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
-          /^▇{4}$/
-        );
+        expect(getAllByTestId('dev-overlay-accuracy-point')).toHaveLength(4);
       } finally {
         jest.useRealTimers();
       }
@@ -264,18 +368,20 @@ describe('DevOverlay', () => {
     it('位置情報が取得できない状態で精度チャートが空のまま維持される', () => {
       setupAtomValues({
         location: null,
+        rawLocation: null,
         backgroundLocationTracking: false,
       });
       jest.useFakeTimers();
       try {
-        const { getByTestId } = render(<DevOverlay />);
+        const { getByTestId, queryAllByTestId } = render(<DevOverlay />);
         act(() => {
           jest.advanceTimersByTime(5000);
         });
-        // NaN だけが積まれるため generateAccuracyChart 側で全件除外され '---' になる
+        // NaN だけが積まれるため buildAccuracyChartSeries 側で全件除外され '---' になる
         expect(getByTestId('dev-overlay-accuracy-history')).toHaveTextContent(
           '---'
         );
+        expect(queryAllByTestId('dev-overlay-accuracy-point')).toHaveLength(0);
       } finally {
         jest.useRealTimers();
       }
@@ -296,7 +402,7 @@ describe('DevOverlay', () => {
 
     it('速度がnullの場合に0km/hを表示する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: null, accuracy: 15 },
         },
         backgroundLocationTracking: false,
@@ -308,7 +414,7 @@ describe('DevOverlay', () => {
 
     it('速度が負の値の場合に0km/hを表示する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: -5, accuracy: 15 },
         },
         backgroundLocationTracking: false,
@@ -320,8 +426,8 @@ describe('DevOverlay', () => {
 
     it('精度がnullの場合に空文字を表示する', () => {
       setupAtomValues({
-        location: {
-          coords: { speed: 10, accuracy: null },
+        rawLocation: {
+          coords: { accuracy: null },
         },
         backgroundLocationTracking: false,
       });
@@ -357,7 +463,7 @@ describe('DevOverlay', () => {
   describe('速度計算のロジック', () => {
     it('速度が0の場合に0km/hを表示する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: 0, accuracy: 15 },
         },
         backgroundLocationTracking: false,
@@ -369,7 +475,7 @@ describe('DevOverlay', () => {
 
     it('速度が正の小数値の場合に正しく変換する', () => {
       setupAtomValues({
-        location: {
+        rawLocation: {
           coords: { speed: 13.89, accuracy: 15 },
         },
         backgroundLocationTracking: false,

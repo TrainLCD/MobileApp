@@ -63,6 +63,14 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Co-locate style modules or constants near their consumers; share cross-cutting utilities through `src/utils/`.
 - Keep comments purposeful: explain intent or non-obvious constraints, not obvious mechanics.
 
+### React Native side effects under StrictMode
+
+- React StrictMode intentionally re-runs effect setup/cleanup in development. Treat mount-time effects as repeatable, and never rely on an empty dependency array to mean "runs exactly once" for visible side effects.
+- Do not call `Alert.alert` directly from `useEffect` or from async functions launched by `useEffect`. StrictMode can evaluate the same persisted condition twice before the first alert is dismissed, which may stack duplicate native alerts.
+- For automatic alerts, use the shared alert presentation guard in `src/utils/alertPresentation.ts` or an equivalent keyed presentation layer. The guard should prevent duplicate alerts only while the same logical alert is already being presented, and should release the key when the user presses a button or dismisses the alert.
+- User-initiated alerts from event handlers such as `onPress` may call `Alert.alert` directly when they are not triggered by mount-time or subscription effects.
+- If an effect writes shared app state during cleanup, confirm that the cleanup represents a real lifecycle event such as a navigation `beforeRemove`, not only StrictMode's development-only unmount check.
+
 ### Markdown documentation (docs/, README, .claude/skills/\*\*/SKILL.md)
 
 `markdownlint-cli2` 準拠。CodeRabbit も同ルールで指摘するため、執筆時点で以下を守る:
