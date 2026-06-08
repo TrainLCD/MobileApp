@@ -1,5 +1,10 @@
 import { useCallback } from 'react';
-import { type Line, LineType } from '~/@types/graphql';
+import {
+  type Line,
+  LineType,
+  type Maybe,
+  type StationNumber,
+} from '~/@types/graphql';
 import { MARK_SHAPE } from '../constants';
 import { getLineSymbolImage } from '../lineSymbolImage';
 import type { LineMark } from '../models/LineMark';
@@ -11,9 +16,11 @@ export const useGetLineMark = () => {
   const func = useCallback(
     ({
       line,
+      stationNumbers = [],
       shouldGrayscale = false,
     }: {
       line: Line | undefined;
+      stationNumbers: Maybe<StationNumber[]>;
       shouldGrayscale?: boolean;
     }): LineMark | null => {
       if (!line) {
@@ -37,21 +44,30 @@ export const useGetLineMark = () => {
       }
 
       const lineMarkMap = {
-        sign: line.lineSymbols?.[0]?.symbol ?? undefined,
-        signShape: line.lineSymbols?.[0]?.shape ?? undefined,
+        sign: stationNumbers?.[0]?.lineSymbol ?? undefined,
+        signShape: stationNumbers?.[0]?.lineSymbolShape ?? undefined,
         signPath: getLineSymbolImage(line, shouldGrayscale)?.signPath,
-        subSign: line.lineSymbols?.[1]?.symbol ?? undefined,
-        subSignShape: line.lineSymbols?.[1]?.shape ?? undefined,
+        subSign: stationNumbers?.[1]?.lineSymbol ?? undefined,
+        subSignShape: stationNumbers?.[1]?.lineSymbolShape ?? undefined,
         subSignPath: getLineSymbolImage(line, shouldGrayscale)?.subSignPath,
-        extraSign: line.lineSymbols?.[2]?.symbol ?? undefined,
-        extraSignShape: line.lineSymbols?.[2]?.shape ?? undefined,
+        extraSign: stationNumbers?.[2]?.lineSymbol ?? undefined,
+        extraSignShape: stationNumbers?.[2]?.lineSymbolShape ?? undefined,
         extraSignPath: getLineSymbolImage(line, shouldGrayscale)?.extraSignPath,
       };
 
-      const numberingIndex = getNumberingIndex(line.station ?? null, line) ?? 0;
+      const numberingIndex =
+        getNumberingIndex(line.station ?? undefined, line) ?? 0;
 
       if (numberingIndex === -1) {
-        return lineMarkMap;
+        // 駅の stationNumbers に当該路線のシンボルが含まれていない場合
+        // （例: 泉岳寺は都営浅草線所属で京急本線の KK01 が返ってこない）、
+        // 路線自身の lineSymbols にフォールバックしてアイコンが消えないようにする
+        const fallbackSymbol = line.lineSymbols?.[0];
+        return {
+          ...lineMarkMap,
+          sign: fallbackSymbol?.symbol ?? lineMarkMap.sign,
+          signShape: fallbackSymbol?.shape ?? lineMarkMap.signShape,
+        };
       }
 
       const lineMark = [
@@ -61,13 +77,17 @@ export const useGetLineMark = () => {
           signPath: lineMarkMap.signPath,
         },
         {
-          sign: lineMarkMap.subSign,
-          signShape: lineMarkMap.subSignShape,
+          sign: lineMarkMap.subSign ?? lineMarkMap.sign,
+          signShape: lineMarkMap.subSignShape ?? lineMarkMap.signShape,
           signPath: lineMarkMap.subSignPath ?? lineMarkMap.signPath,
         },
         {
-          sign: lineMarkMap.extraSign,
-          signShape: lineMarkMap.extraSignShape,
+          sign:
+            lineMarkMap.extraSign ?? lineMarkMap.subSign ?? lineMarkMap.sign,
+          signShape:
+            lineMarkMap.extraSignShape ??
+            lineMarkMap.subSignShape ??
+            lineMarkMap.signShape,
           signPath:
             lineMarkMap.extraSignPath ??
             lineMarkMap.subSignPath ??

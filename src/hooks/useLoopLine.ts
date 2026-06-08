@@ -2,6 +2,8 @@ import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import {
+  DISNEY_RESORT_LINE_ID,
+  DISNEY_RESORT_LINE_MAJOR_STATIONS_ID,
   MEIJO_LINE_ID,
   MEIJO_LINE_MAJOR_STATIONS_ID,
   OSAKA_LOOP_LINE_ID,
@@ -63,28 +65,47 @@ export const useLoopLine = (
         : stations.every((s) => s.line?.id === TOEI_OEDO_LINE_ID),
     [line, stations]
   );
+  const isDisneyResortLine = useMemo(
+    (): boolean =>
+      line
+        ? line?.id === DISNEY_RESORT_LINE_ID
+        : stations.every((s) => s.line?.id === DISNEY_RESORT_LINE_ID),
+    [line, stations]
+  );
 
-  const majorStationIds = useMemo(() => {
+  const majorStationIdSet = useMemo(() => {
     if (isYamanoteLine) {
-      return YAMANOTE_LINE_MAJOR_STATIONS_ID.sort((a, b) => a - b);
+      return new Set(YAMANOTE_LINE_MAJOR_STATIONS_ID);
     }
     if (isOsakaLoopLine) {
-      return OSAKA_LOOP_LINE_MAJOR_STATIONS_ID.sort((a, b) => a - b);
+      return new Set(OSAKA_LOOP_LINE_MAJOR_STATIONS_ID);
     }
 
     if (isMeijoLine) {
-      return MEIJO_LINE_MAJOR_STATIONS_ID.sort((a, b) => a - b);
+      return new Set(MEIJO_LINE_MAJOR_STATIONS_ID);
     }
 
-    return [];
-  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine]);
+    if (isDisneyResortLine) {
+      return new Set(DISNEY_RESORT_LINE_MAJOR_STATIONS_ID);
+    }
+
+    return new Set<number>();
+  }, [isDisneyResortLine, isMeijoLine, isOsakaLoopLine, isYamanoteLine]);
 
   const isLoopLine = useMemo((): boolean => {
     if (trainType && !getIsLocal(trainType)) {
       return false;
     }
-    return isYamanoteLine || isOsakaLoopLine || isMeijoLine;
-  }, [isMeijoLine, isOsakaLoopLine, isYamanoteLine, trainType]);
+    return (
+      isYamanoteLine || isOsakaLoopLine || isMeijoLine || isDisneyResortLine
+    );
+  }, [
+    isDisneyResortLine,
+    isMeijoLine,
+    isOsakaLoopLine,
+    isYamanoteLine,
+    trainType,
+  ]);
 
   const isPartiallyLoopLine = useMemo(
     () =>
@@ -95,31 +116,57 @@ export const useLoopLine = (
     [line, stations]
   );
 
+  // OUTBOUND/INBOUND どちらでも参照されうる reverse 結果をメモ化。
+  // 以前は inboundStationsForLoopLine が呼ばれる度にフル配列を slice().reverse() していた。
+  const reversedStations = useMemo(
+    () => stations.slice().reverse(),
+    [stations]
+  );
+
   const inboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {
       return [];
     }
 
-    const reversedStations = stations.slice().reverse();
+    // ディズニーリゾートラインは反時計回り (=API 駅順方向=OUTBOUND) の一方向運行。
+    // 時計回り側 (INBOUND) を経路探索・行先表示の候補に含めないため常に空配列を返す。
+    if (isDisneyResortLine) {
+      return [];
+    }
 
     const currentStationIndex = reversedStations.findIndex(
       (s) => s.groupId === station.groupId
     );
+    // findIndex が -1 の場合、(-1 + step) % total は負値起点になり末尾要素を取りこぼす。
+    // overrideStations 等で current station が配列に居ないケースを安全に扱うため早期 return。
+    if (currentStationIndex === -1) {
+      return [];
+    }
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const majorStations = [
-      ...reversedStations.slice(currentStationIndex),
-      ...reversedStations.slice(0, currentStationIndex),
-    ]
-      .filter(
-        (s) =>
-          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
-      )
-      .filter((s) => s.groupId !== station.groupId)
-      .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
-
-    return majorStations.slice(0, 2);
-  }, [isLoopLine, majorStationIds, station, stations]);
+    const seenGroupIds = new Set<number>();
+    const majorStations: Station[] = [];
+    // 連結配列を物理生成せず 2 段スキャンで集める
+    const total = reversedStations.length;
+    for (let step = 0; step < total && majorStations.length < 2; step++) {
+      const idx = (currentStationIndex + step) % total;
+      const s = reversedStations[idx];
+      if (!s || s.id == null || !majorStationIdSet.has(s.id)) continue;
+      if (s.groupId === station.groupId) continue;
+      if (s.groupId != null) {
+        if (seenGroupIds.has(s.groupId)) continue;
+        seenGroupIds.add(s.groupId);
+      }
+      majorStations.push(s);
+    }
+    return majorStations;
+  }, [
+    isDisneyResortLine,
+    isLoopLine,
+    majorStationIdSet,
+    station,
+    reversedStations,
+  ]);
 
   const outboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {
@@ -129,27 +176,34 @@ export const useLoopLine = (
     const currentStationIndex = stations.findIndex(
       (s) => s.groupId === station.groupId
     );
+    if (currentStationIndex === -1) {
+      return [];
+    }
 
     // 配列の途中から走査しているので端っこだと表示されるべき駅が存在しないものとされるので、環状させる
-    const majorStations = [
-      ...stations.slice(currentStationIndex),
-      ...stations.slice(0, currentStationIndex),
-    ]
-      .filter(
-        (s) =>
-          s.id !== undefined && s.id !== null && majorStationIds.includes(s.id)
-      )
-      .filter((s) => s.groupId !== station.groupId)
-      .filter((s, i, a) => a.findIndex((e) => e.groupId === s.groupId) === i);
-
-    return majorStations.slice(0, 2);
-  }, [isLoopLine, majorStationIds, station, stations]);
+    const seenGroupIds = new Set<number>();
+    const majorStations: Station[] = [];
+    const total = stations.length;
+    for (let step = 0; step < total && majorStations.length < 2; step++) {
+      const idx = (currentStationIndex + step) % total;
+      const s = stations[idx];
+      if (!s || s.id == null || !majorStationIdSet.has(s.id)) continue;
+      if (s.groupId === station.groupId) continue;
+      if (s.groupId != null) {
+        if (seenGroupIds.has(s.groupId)) continue;
+        seenGroupIds.add(s.groupId);
+      }
+      majorStations.push(s);
+    }
+    return majorStations;
+  }, [isLoopLine, majorStationIdSet, station, stations]);
 
   return {
     isYamanoteLine,
     isOsakaLoopLine,
     isMeijoLine,
     isOedoLine,
+    isDisneyResortLine,
     isLoopLine,
     isPartiallyLoopLine,
     inboundStationsForLoopLine,

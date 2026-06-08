@@ -56,18 +56,10 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 2,
   },
-  stationNumberMedium: {
+  stationNumber: {
     color: 'white',
     fontSize: isTablet ? 24 * 1.5 : 24,
     lineHeight: isTablet ? 24 * 1.5 : 24,
-    textAlign: 'center',
-    fontFamily: FONTS.MyriadPro,
-    marginTop: isTablet ? 8 : 4,
-  },
-  stationNumber: {
-    color: 'white',
-    fontSize: isTablet ? 32 * 1.5 : 32,
-    lineHeight: isTablet ? 32 * 1.5 : 32,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
     marginTop: isTablet ? 8 : 4,
@@ -94,7 +86,7 @@ const NumberingIconReversedRoundHorizontal: React.FC<Props> = ({
   if (size === NUMBERING_ICON_SIZE.MEDIUM) {
     return (
       <View style={[styles.rootMedium, { backgroundColor: lineColor }]}>
-        <Typography style={styles.stationNumberMedium}>{lineSymbol}</Typography>
+        <Typography style={styles.stationNumber}>{lineSymbol}</Typography>
       </View>
     );
   }

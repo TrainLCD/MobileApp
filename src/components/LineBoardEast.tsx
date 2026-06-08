@@ -1,150 +1,101 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useInterval,
+  useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
+import { useAfterNextStation } from '~/hooks/useAfterNextStation';
+import { useNextStation } from '~/hooks/useNextStation';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
-import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
 import stationState from '../store/atoms/station';
-import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
-import { ChevronTY } from './ChevronTY';
-import PadLineMarks from './PadLineMarks';
-import PassChevronTY from './PassChevronTY';
-import Typography from './Typography';
+import { BarTerminalOdakyu } from './BarTerminalOdakyu';
+import { type ChevronColor, ChevronTY } from './ChevronTY';
+import { Heading } from './Heading';
+import {
+  EmptyStationNameCell,
+  LineDot,
+  StationName,
+} from './LineBoard/shared/components';
+import {
+  useBarStyles,
+  useChevronPosition,
+  useIncludesLongStationName,
+} from './LineBoard/shared/hooks/useBarStyles';
+import {
+  STATION_NAME_CONTAINER_BOTTOM,
+  commonLineBoardStyles as styles,
+} from './LineBoard/shared/styles/commonStyles';
+import NumberingIcon from './NumberingIcon';
 
-const useBarStyles = ({
-  index,
-}: {
-  index?: number;
-}): { left: number; width: number } => {
-  const { widthScale } = useScale();
+const localStyles = StyleSheet.create({
+  numberingIconContainer: {
+    position: 'absolute',
+    width: isTablet ? 96 : 64,
+    height: isTablet ? 96 : 64,
+    bottom: isTablet ? -22 : 52,
+    left: isTablet ? -24 : -16,
+    transform: [{ scale: 0.5 }],
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+  },
+  nextStopBanner: {
+    position: 'absolute',
+    bottom: 0,
+    left: '12.5%',
+    right: '12.5%',
+  },
+  nextStopBannerText: {
+    color: '#212121',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+});
 
-  const left = useMemo(() => {
-    if (index === 0) {
-      return widthScale(-32);
-    }
-    return widthScale(-20);
-  }, [index, widthScale]);
+const NumberingIconView: React.FC<{
+  station: Station;
+  shouldGrayscale: boolean;
+}> = ({ station, shouldGrayscale }) => {
+  const numberingObj = useMemo(
+    () => station.stationNumbers?.[0],
+    [station.stationNumbers]
+  );
 
-  const width = useMemo(() => {
-    if (isTablet) {
-      if (index === 0) {
-        return widthScale(200);
-      }
-      if (index === 1) {
-        return widthScale(61.75);
-      }
-    }
-    return widthScale(62);
-  }, [index, widthScale]);
-  return { left, width };
+  if (!numberingObj?.lineSymbolShape || !numberingObj?.stationNumber) {
+    return null;
+  }
+
+  return (
+    <View style={localStyles.numberingIconContainer}>
+      <NumberingIcon
+        shape={numberingObj.lineSymbolShape}
+        lineColor={numberingObj.lineSymbolColor || '#000'}
+        stationNumber={numberingObj.stationNumber}
+        threeLetterCode={station.threeLetterCode}
+        transformOrigin="center"
+        shouldGrayscale={shouldGrayscale}
+      />
+    </View>
+  );
 };
 
 type Props = {
   lineColors: (string | null | undefined)[];
   stations: Station[];
   hasTerminus: boolean;
+  chevronColorPair?: readonly [ChevronColor, ChevronColor];
+  isOdakyu?: boolean;
 };
-
-const styles = StyleSheet.create({
-  root: {
-    height: '100%',
-    flexDirection: 'row',
-    justifyContent: isTablet ? 'flex-start' : undefined,
-    marginLeft: 32,
-    flex: 1,
-  },
-  bar: {
-    position: 'absolute',
-    bottom: isTablet ? -52 : 32,
-    height: isTablet ? 48 : 32,
-  },
-  barTerminal: {
-    position: 'absolute',
-  },
-  stationNameContainer: {
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
-    bottom: isTablet ? 84 : undefined,
-  },
-  stationNameMapContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    marginBottom: 16,
-  },
-  stationName: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    marginLeft: 5,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
-  },
-  stationNameHorizontal: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    transform: [{ rotate: '-55deg' }],
-  },
-  grayColor: {
-    color: '#ccc',
-  },
-  stationArea: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-    position: 'absolute',
-    zIndex: 9999,
-    bottom: isTablet ? -46 : 32 + 4,
-    overflow: 'visible',
-  },
-  chevron: {
-    position: 'absolute',
-    zIndex: 9999,
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 48 : 32,
-    bottom: isTablet ? 198 : 32,
-  },
-  chevronArea: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
-  },
-  chevronAreaPass: {
-    width: isTablet ? 48 : 16,
-    height: isTablet ? 32 : 24,
-  },
-  chevronGradient: {
-    width: isTablet ? 48 : 32,
-    height: isTablet ? 36 : 24,
-  },
-  marksContainer: { top: 38, position: 'absolute' },
-  nameCommon: {
-    marginBottom: isTablet ? undefined : 64,
-  },
-  longOrEnName: {
-    flex: 1,
-    width: '100%',
-    marginLeft: isTablet ? -24 : -16,
-    justifyContent: 'flex-end',
-  },
-  jaName: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-});
-
-interface StationNameProps {
-  station: Station;
-  en?: boolean;
-  horizontal?: boolean;
-  passed?: boolean;
-}
 
 interface StationNameCellProps {
   station: Station;
@@ -153,129 +104,9 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLUE' | 'WHITE';
+  chevronColor: ChevronColor;
+  isOdakyu?: boolean;
 }
-
-const StationName: React.FC<StationNameProps> = ({
-  station,
-  en,
-  horizontal,
-  passed,
-}: StationNameProps) => {
-  const stationNameR = useMemo(() => getStationNameR(station), [station]);
-  const dim = useWindowDimensions();
-
-  const horizontalAditionalStyle = useMemo(
-    () => ({
-      width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
-      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
-    }),
-    [dim.height]
-  );
-
-  if (en) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAditionalStyle,
-        ]}
-      >
-        {stationNameR}
-      </Typography>
-    );
-  }
-
-  if (horizontal) {
-    return (
-      <Typography
-        style={[
-          styles.stationNameHorizontal,
-          passed ? styles.grayColor : null,
-          horizontalAditionalStyle,
-        ]}
-      >
-        {station.name}
-      </Typography>
-    );
-  }
-
-  return (
-    <View style={styles.stationNameMapContainer}>
-      {station.name?.split('').map((c, j) => (
-        <Typography
-          style={[styles.stationName, passed ? styles.grayColor : null]}
-          key={`${j + 1}${c}`}
-        >
-          {c}
-        </Typography>
-      ))}
-    </View>
-  );
-};
-
-type LineDotProps = {
-  station: Station;
-  shouldGrayscale: boolean;
-  transferLines: Line[];
-  arrived: boolean;
-  passed: boolean;
-};
-
-const LineDot: React.FC<LineDotProps> = ({
-  station,
-  shouldGrayscale,
-  transferLines,
-  arrived,
-  passed,
-}) => {
-  const { widthScale } = useScale();
-
-  if (getIsPass(station)) {
-    return (
-      <View style={styles.stationArea}>
-        <View
-          style={[
-            styles.chevronAreaPass,
-            {
-              marginLeft: isTablet ? 0 : widthScale(5),
-            },
-          ]}
-        >
-          <PassChevronTY />
-        </View>
-        <View style={styles.marksContainer}>
-          <PadLineMarks
-            shouldGrayscale={shouldGrayscale}
-            transferLines={transferLines}
-            station={station}
-          />
-        </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.stationArea}>
-      <View style={styles.chevronArea}>
-        <LinearGradient
-          style={styles.chevronGradient}
-          colors={
-            passed && !arrived ? ['#ccc', '#dadada'] : ['#fdfbfb', '#ebedee']
-          }
-        />
-      </View>
-      <View style={styles.marksContainer}>
-        <PadLineMarks
-          shouldGrayscale={shouldGrayscale}
-          transferLines={transferLines}
-          station={station}
-        />
-      </View>
-    </View>
-  );
-};
 
 // Helper for bar gradients
 const shouldShowSecondaryBar = (
@@ -292,9 +123,10 @@ const isSplitAtCurrentStation = (
   stations: Station[]
 ) =>
   arrived &&
-  currentStationIndex !== 0 &&
   currentStationIndex === index &&
   currentStationIndex !== stations.length - 1;
+
+const ODAKYU_HIGHLIGHT_OFFSET = 0.35;
 
 const getMainBarColors = (line?: Line): readonly [string, string] =>
   line ? ['#aaaaaaff', '#aaaaaabb'] : ['#000000ff', '#000000bb'];
@@ -304,8 +136,8 @@ const getLineBarColors = (
   lineColors: (string | null | undefined)[],
   index: number
 ): readonly [string, string] => {
-  const base = lineColors[index] || line.color;
-  return base ? [`${base}ff`, `${base}bb`] : ['#000000ff', '#000000bb'];
+  const raw = lineColors[index] || line.color;
+  return raw ? [`${raw}ff`, `${raw}bb`] : ['#000000ff', '#000000bb'];
 };
 
 const createBarGradient = (
@@ -339,6 +171,7 @@ const renderBarGradients = ({
   currentStationIndex,
   stations,
   passed,
+  isOdakyu,
 }: {
   barLeft: number;
   barWidth: number;
@@ -349,6 +182,7 @@ const renderBarGradients = ({
   currentStationIndex: number;
   stations: Station[];
   passed: boolean;
+  isOdakyu?: boolean;
 }) => {
   const secondaryVisible = shouldShowSecondaryBar(
     arrived,
@@ -363,6 +197,8 @@ const renderBarGradients = ({
     stations
   );
 
+  const barHighlightOffset = isOdakyu ? ODAKYU_HIGHLIGHT_OFFSET : 0.5;
+
   const gradients = [
     createBarGradient(
       'bar-bg',
@@ -370,7 +206,12 @@ const renderBarGradients = ({
       barLeft,
       barWidth,
       {
-        locations: [0.5, 0.5, 0.5, 0.9],
+        locations: [
+          barHighlightOffset,
+          barHighlightOffset,
+          barHighlightOffset,
+          0.9,
+        ],
       }
     ),
     createBarGradient('bar-main', getMainBarColors(line), barLeft, barWidth),
@@ -384,26 +225,38 @@ const renderBarGradients = ({
         barLeft,
         barWidth,
         {
-          locations: [0.5, 0.5, 0.5, 0.9],
+          locations: [
+            barHighlightOffset,
+            barHighlightOffset,
+            barHighlightOffset,
+            0.9,
+          ],
         }
       )
     );
   }
 
   if (splitHere) {
+    // index 0ではバー左端からドット中心までの距離を灰色幅に使う
+    const dotCenterOffset = isTablet ? 24 : 16;
+    const splitWidth =
+      index === 0 ? Math.abs(barLeft) + dotCenterOffset : barWidth / 2.5;
     gradients.push(
       createBarGradient(
         'bar-main-half',
         getMainBarColors(line),
         barLeft,
-        barWidth / 2.5
+        splitWidth
       )
     );
   }
 
   if (secondaryVisible) {
-    const left = splitHere ? barLeft + barWidth / 2.5 : barLeft;
-    const width = splitHere ? barWidth / 2.5 : barWidth;
+    const dotCenterOffset = isTablet ? 24 : 16;
+    const splitWidth =
+      index === 0 ? Math.abs(barLeft) + dotCenterOffset : barWidth / 2.5;
+    const left = splitHere ? barLeft + splitWidth : barLeft;
+    const width = splitHere ? barWidth - splitWidth : barWidth;
     gradients.push(
       createBarGradient(
         'bar-color',
@@ -414,31 +267,32 @@ const renderBarGradients = ({
     );
   }
 
-  return gradients;
-};
+  if (isOdakyu) {
+    gradients.push(
+      createBarGradient(
+        'bar-shadow',
+        ['#00000000', '#00000033', '#00000000'],
+        barLeft,
+        barWidth,
+        {
+          locations: [barHighlightOffset, 0.55, 0.85],
+        }
+      )
+    );
+    gradients.push(
+      createBarGradient(
+        'bar-gloss',
+        ['#ffffff44', '#ffffff11', '#00000000'],
+        barLeft,
+        barWidth,
+        {
+          locations: [0, barHighlightOffset, barHighlightOffset],
+        }
+      )
+    );
+  }
 
-const getAdditionalChevronStyle = (
-  index: number,
-  arrived: boolean,
-  passed: boolean,
-  widthScale: (v: number) => number
-) => {
-  if (!index) {
-    return arrived ? { left: widthScale(-14) } : null;
-  }
-  if (arrived) {
-    return {
-      left: widthScale(41.75 * index) - widthScale(14),
-    };
-  }
-  if (!passed) {
-    return {
-      left: widthScale(arrived ? 45 : 42 * index),
-    };
-  }
-  return {
-    left: widthScale(42 * index),
-  };
+  return gradients;
 };
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -449,6 +303,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
   chevronColor,
+  isOdakyu,
 }: StationNameCellProps) => {
   const { station: currentStation, arrived } = useAtomValue(stationState);
   const isEn = useAtomValue(isEnAtom);
@@ -476,21 +331,28 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const { left: barLeft, width: barWidth } = useBarStyles({ index });
   const { widthScale } = useScale();
+  const additionalChevronStyle = useChevronPosition(index, arrived, passed);
+  const includesLongStationName = useIncludesLongStationName(stations);
 
-  const additionalChevronStyle = useMemo(
-    () => getAdditionalChevronStyle(index, arrived, passed, widthScale),
-    [arrived, index, passed, widthScale]
-  );
+  const dim = useLandscapeWindowDimensions();
 
-  const includesLongStationName = useMemo(
+  const hasDrawableNumbering = useMemo(
     () =>
-      !!stations.filter(
-        (s) => s.name?.includes('ー') || (s.name?.length ?? 0) > 6
-      ).length,
-    [stations]
+      station.stationNumbers?.some(
+        (sn) => sn?.lineSymbolShape && sn?.stationNumber
+      ) ?? false,
+    [station.stationNumbers]
   );
 
-  const dim = useWindowDimensions();
+  const nameCommonStyle = useMemo(() => {
+    if (!isOdakyu || !hasDrawableNumbering) {
+      return styles.nameCommon;
+    }
+    return {
+      ...styles.nameCommon,
+      marginBottom: isTablet ? 45 : 95,
+    };
+  }, [isOdakyu, hasDrawableNumbering]);
 
   return (
     <>
@@ -504,7 +366,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         <View
           style={[
-            styles.nameCommon,
+            nameCommonStyle,
             isEn || includesLongStationName
               ? styles.longOrEnName
               : styles.jaName,
@@ -514,9 +376,15 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             station={station}
             en={isEn}
             horizontal={includesLongStationName}
-            passed={getIsPass(station) || shouldGrayscale}
+            passed={shouldGrayscale}
           />
         </View>
+        {isOdakyu ? (
+          <NumberingIconView
+            station={station}
+            shouldGrayscale={shouldGrayscale}
+          />
+        ) : null}
         {renderBarGradients({
           barLeft,
           barWidth,
@@ -527,6 +395,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           currentStationIndex,
           stations,
           passed,
+          isOdakyu,
         })}
         <LineDot
           station={station}
@@ -534,21 +403,39 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           transferLines={transferLines}
           arrived={arrived}
           passed={passed}
+          isOdakyu={isOdakyu}
         />
         {stations.length - 1 === index ? (
-          <BarTerminalEast
-            width={isTablet ? 41 : 27}
-            height={isTablet ? 48 : 32}
-            style={[
-              styles.barTerminal,
-              {
-                left: barLeft + barWidth,
-                bottom: isTablet ? -52 : 32,
-              },
-            ]}
-            lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
-            hasTerminus={hasTerminus}
-          />
+          isOdakyu ? (
+            <BarTerminalOdakyu
+              width={isTablet ? 24 : 16}
+              height={isTablet ? 48 : 32}
+              style={[
+                styles.barTerminal,
+                {
+                  left: barLeft + barWidth,
+                  bottom: isTablet ? -52 : 32,
+                },
+              ]}
+              lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
+              hasTerminus={hasTerminus}
+              barHighlightOffset={ODAKYU_HIGHLIGHT_OFFSET}
+            />
+          ) : (
+            <BarTerminalEast
+              width={isTablet ? 41 : 27}
+              height={isTablet ? 48 : 32}
+              style={[
+                styles.barTerminal,
+                {
+                  left: barLeft + barWidth,
+                  bottom: isTablet ? -52 : 32,
+                },
+              ]}
+              lineColor={line.color ? lineColors.at(-1) || line.color : '#000'}
+              hasTerminus={hasTerminus}
+            />
+          )
         ) : null}
       </View>
       <View
@@ -556,7 +443,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           styles.chevron,
           additionalChevronStyle,
           {
-            bottom: isTablet ? dim.height / 3.5 + 32 : 32,
+            bottom: isTablet
+              ? dim.height / 3.5 + (STATION_NAME_CONTAINER_BOTTOM ?? 0) - 52
+              : 32,
             marginLeft: widthScale(14),
           },
         ]}
@@ -570,103 +459,77 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 };
 
-type EmptyStationNameCellProps = {
-  lastLineColor: string;
-  isLast: boolean;
-  hasTerminus: boolean;
-};
-
-const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
-  lastLineColor: lastLineColorOriginal,
-  isLast,
-  hasTerminus,
-}: EmptyStationNameCellProps) => {
-  const lastLineColor = lastLineColorOriginal;
-  const { left: barLeft, width: barWidth } = useBarStyles({});
-
-  return (
-    <View style={styles.stationNameContainer}>
-      <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
-        style={[
-          styles.bar,
-          {
-            left: barLeft,
-            width: barWidth,
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
-          },
-        ]}
-      />
-      <LinearGradient
-        colors={
-          lastLineColor
-            ? [`${lastLineColor}ff`, `${lastLineColor}bb`]
-            : ['#000000ff', '#000000bb']
-        }
-        style={[
-          styles.bar,
-          {
-            left: barLeft,
-            width: barWidth,
-          },
-        ]}
-      />
-      {isLast ? (
-        <BarTerminalEast
-          width={isTablet ? 41 : 27}
-          height={isTablet ? 48 : 32}
-          style={[
-            styles.barTerminal,
-            {
-              left: barLeft + barWidth,
-              bottom: isTablet ? -52 : 32,
-            },
-          ]}
-          lineColor={lastLineColor}
-          hasTerminus={hasTerminus}
-        />
-      ) : null}
-    </View>
-  );
-};
+const DEFAULT_CHEVRON_PAIR: readonly [ChevronColor, ChevronColor] = [
+  'RED',
+  'BLUE',
+];
 
 const LineBoardEast: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  chevronColorPair = DEFAULT_CHEVRON_PAIR,
+  isOdakyu,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
+  const [chevronColor, setChevronColor] = useState<ChevronColor>(
+    chevronColorPair[1]
+  );
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
+  const nextStation = useNextStation();
+  const afterNextStation = useAfterNextStation();
 
-  const dim = useWindowDimensions();
+  const dim = useLandscapeWindowDimensions();
 
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
   );
 
+  const hasPassStation = useMemo(
+    () => stations.some((s) => getIsPass(s)),
+    [stations]
+  );
+
+  const showNextStopBanner = useMemo(
+    () =>
+      isOdakyu &&
+      isTablet &&
+      hasPassStation &&
+      !!nextStation?.name &&
+      !!afterNextStation?.name,
+    [isOdakyu, hasPassStation, nextStation?.name, afterNextStation?.name]
+  );
+
   const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
-    []
+    () =>
+      setChevronColor((prev) =>
+        prev === chevronColorPair[0] ? chevronColorPair[1] : chevronColorPair[0]
+      ),
+    [chevronColorPair]
   );
 
   useInterval(intervalStep, 1000);
 
+  const stationsWithEmpty = useMemo(() => {
+    const filled = stations.length >= 8 ? stations : [...stations];
+    while (filled.length < 8) {
+      // 残りスロットは undefined のまま埋め切る (型上は Station[] にキャスト)
+      filled.push(undefined as unknown as Station);
+    }
+    return filled;
+  }, [stations]);
+
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): React.ReactNode | null => {
-      const isLast =
-        [...stations, ...Array.from({ length: 8 - stations.length })].length -
-          1 ===
-        i;
+      // padded 後の長さは常に 8 なので最後尾は i === 7
+      const isLast = i === 7;
 
       if (!s) {
         return (
           <EmptyStationNameCell
             lastLineColor={lineColors.at(-1) || line?.color || '#fff'}
-            key={i}
+            key={`empty-${i}`}
             isLast={isLast}
             hasTerminus={hasTerminus}
           />
@@ -687,20 +550,12 @@ const LineBoardEast: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             chevronColor={chevronColor}
+            isOdakyu={isOdakyu}
           />
         </React.Fragment>
       );
     },
-    [chevronColor, hasTerminus, line, lineColors, stations]
-  );
-
-  const stationsWithEmpty = useMemo(
-    () =>
-      [
-        ...stations,
-        ...Array.from({ length: 8 - stations.length }),
-      ] as Station[],
-    [stations]
+    [chevronColor, hasTerminus, line, lineColors, stations, isOdakyu]
   );
 
   return (
@@ -713,6 +568,19 @@ const LineBoardEast: React.FC<Props> = ({
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
+      {showNextStopBanner ? (
+        <LinearGradient
+          colors={['white', '#ccc', '#ccc', 'white']}
+          start={[0, 1]}
+          end={[1, 0]}
+          locations={[0, 0.1, 0.9, 1]}
+          style={localStyles.nextStopBanner}
+        >
+          <Heading style={localStyles.nextStopBannerText}>
+            {`${nextStation?.name}のつぎは${afterNextStation?.name}にとまります`}
+          </Heading>
+        </LinearGradient>
+      ) : null}
     </View>
   );
 };

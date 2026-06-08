@@ -1,26 +1,26 @@
 import { memo, type ReactNode, useEffect } from 'react';
-import { Alert } from 'react-native';
-import Loading from '../components/Loading';
-import { useDeepLink } from '../hooks';
+import { useDeepLink } from '../hooks/useDeepLink';
 import { translate } from '../translation';
+import { showAlertWhilePresenting } from '../utils/alertPresentation';
 
 type Props = {
   children: ReactNode;
 };
 
 const DeepLinkProvider = ({ children }: Props) => {
-  const { isLoading: isRoutesLoadingByLink, error: fetchRoutesByLinkError } =
-    useDeepLink();
+  const { initialUrlProcessed, isLoading, error } = useDeepLink();
   useEffect(() => {
-    if (fetchRoutesByLinkError) {
-      console.error(fetchRoutesByLinkError);
-      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
+    if (error) {
+      console.error(error);
+      showAlertWhilePresenting(
+        'deepLinkFetchStationError',
+        translate('errorTitle'),
+        translate('failedToFetchStation')
+      );
     }
-  }, [fetchRoutesByLinkError]);
-  if (isRoutesLoadingByLink && !fetchRoutesByLinkError) {
-    return (
-      <Loading message={translate('loadingAPI')} linkType="serverStatus" />
-    );
+  }, [error]);
+  if (!initialUrlProcessed || (isLoading && !error)) {
+    return null;
   }
 
   return children;

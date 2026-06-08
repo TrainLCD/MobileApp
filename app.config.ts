@@ -1,0 +1,79 @@
+import type { ConfigContext } from 'expo/config';
+
+export default ({ config }: ConfigContext) => ({
+  name: 'TrainLCD',
+  slug: 'trainlcd',
+  version: '10.7.0',
+  plugins: [
+    'expo-image',
+    'expo-font',
+    'expo-localization',
+    'expo-web-browser',
+    'expo-sqlite',
+    'expo-asset',
+    'expo-quick-actions',
+    [
+      'expo-location',
+      {
+        isAndroidBackgroundLocationEnabled: true,
+        isAndroidForegroundServiceEnabled: true,
+      },
+    ],
+    [
+      '@sentry/react-native',
+      {
+        url: 'https://sentry.io/',
+        note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
+        project: 'trainlcd',
+        organization: 'tinykitten',
+      },
+    ],
+    'expo-audio',
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#fff',
+        image: './assets/splash-icon.png',
+      },
+    ],
+    [
+      'expo-build-properties',
+      {
+        ios: {
+          buildReactNativeFromSource: true,
+        },
+      },
+    ],
+  ],
+  extra: {
+    eas: {
+      projectId:
+        process.env.EAS_BUILD_PROJECT_ID ||
+        'dad36dde-0056-4760-8eda-37f05e7c9c6c',
+    },
+  },
+  ios: {
+    buildNumber: '2668',
+    bundleIdentifier:
+      process.env.EAS_BUILD_PROFILE === 'production'
+        ? 'me.tinykitten.trainlcd'
+        : 'me.tinykitten.trainlcd.dev',
+    scheme:
+      process.env.EAS_BUILD_PROFILE === 'production'
+        ? 'TrainLCD'
+        : 'CanaryTrainLCD',
+    supportsTablet: true,
+  },
+  android: {
+    package:
+      process.env.EAS_BUILD_PROFILE === 'production'
+        ? 'me.tinykitten.trainlcd'
+        : 'me.tinykitten.trainlcd.dev',
+    permissions: [],
+    versionCode: 100000455,
+  },
+  owner: 'trainlcd',
+  experiments: {
+    reactCompiler: true,
+  },
+});

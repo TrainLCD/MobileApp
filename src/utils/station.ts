@@ -2,19 +2,20 @@ import type { Line, Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
 
 export const getStationPrimaryCode = (
-  s: Station | null | undefined
-): string | null => s?.stationNumbers?.[0]?.stationNumber ?? null;
+  from: Station | null,
+  _to: Station | null
+): string => {
+  return from?.stationNumbers?.[0]?.stationNumber ?? '';
+};
+export const getStationName = (s: Station | undefined): string =>
+  (isJapanese ? s?.name : s?.nameRoman) ?? '';
 
-export const getStationName = (s: Station | null | undefined): string | null =>
-  (isJapanese ? s?.name : s?.nameRoman) ?? null;
-
-export const getStationLineId = (
-  s: Station | null | undefined
-): number | undefined => (s?.line as Line | undefined)?.id ?? undefined;
+export const getStationLineId = (s: Station | undefined): number | undefined =>
+  (s?.line as Line | undefined)?.id ?? undefined;
 
 export const isSameStationShallow = (
-  a: Station | null | undefined,
-  b: Station | null | undefined
+  a: Station | undefined,
+  b: Station | undefined
 ): boolean => {
   if (!!a !== !!b) return false;
   return (

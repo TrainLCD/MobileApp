@@ -1,13 +1,12 @@
 import type React from 'react';
-import { type StyleProp, StyleSheet, type TextStyle } from 'react-native';
+import { StyleSheet, type TextProps } from 'react-native';
 import { RFValue } from '../utils/rfValue';
 import Typography from './Typography';
 
-interface Props {
+type Props = {
   children: React.ReactNode;
-  style?: StyleProp<TextStyle>;
   singleLine?: boolean;
-}
+} & TextProps;
 
 const styles = StyleSheet.create({
   text: {
@@ -20,12 +19,15 @@ export const Heading: React.FC<Props> = ({
   children,
   style,
   singleLine,
+  numberOfLines,
+  ...props
 }: Props) => {
   return (
     <Typography
-      numberOfLines={singleLine ? 1 : undefined}
       adjustsFontSizeToFit
       style={[styles.text, style]}
+      {...props}
+      numberOfLines={singleLine ? 1 : numberOfLines}
     >
       {children}
     </Typography>

@@ -4,6 +4,7 @@ import {
   OperationStatus,
   type Station,
   StopCondition,
+  TransportType,
 } from '~/@types/graphql';
 
 /**
@@ -22,6 +23,9 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Amagasaki',
     nameChinese: '尼崎',
     nameKorean: '아마가사키',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -30,6 +34,9 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: 'JR神戸線',
       nameKatakana: 'コウベセン',
       nameFull: '東海道本線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'JR Kobe Line',
       nameChinese: 'JR神户线',
       nameKorean: 'JR 고베선',
@@ -40,6 +47,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 4,
@@ -68,6 +76,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: true,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // Hanshin - groupId 3500109
   {
@@ -79,6 +88,9 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Amagasaki',
     nameChinese: '尼崎',
     nameKorean: '아마가사키',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -87,6 +99,9 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '阪神本線',
       nameKatakana: 'ハンシンホンセン',
       nameFull: '阪神本線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Hanshin Main Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -97,6 +112,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 25,
@@ -125,6 +141,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: true,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // Unique station - groupId 3500111
   {
@@ -136,6 +153,9 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Amagasaki-Centerpool-Mae',
     nameChinese: '尼崎汽艇比赛场前',
     nameKorean: '아마가사키 센터풀마에',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -144,6 +164,9 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '阪神本線',
       nameKatakana: 'ハンシンホンセン',
       nameFull: '阪神本線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Hanshin Main Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -154,6 +177,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 25,
@@ -182,6 +206,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: true,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
 ];
 
@@ -196,6 +221,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Ochiai',
     nameChinese: '落合',
     nameKorean: '오치아이',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -204,6 +232,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '根室本線',
       nameKatakana: 'ネムロホンセン',
       nameFull: '根室本線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Nemuro Main Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -214,6 +245,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 1,
@@ -242,6 +274,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 陸前落合 (Miyagi) - unique name
   {
@@ -253,6 +286,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Rikuzen-Ochiai',
     nameChinese: '陸前落合',
     nameKorean: '리쿠젠오치아이',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -261,6 +297,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '仙石線',
       nameKatakana: 'センセキセン',
       nameFull: '仙石線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Senseki Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -271,6 +310,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 2,
@@ -299,6 +339,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 落合川 (Tokyo) - unique name
   {
@@ -310,6 +351,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Ochiaigawa',
     nameChinese: '落合川',
     nameKorean: '오치아이가와',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -318,6 +362,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '多摩都市モノレール線',
       nameKatakana: 'タマトシモノレールセン',
       nameFull: '多摩都市モノレール線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Tama Toshi Monorail Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -328,6 +375,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 156,
@@ -356,6 +404,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 美作落合 (Okayama) - unique name
   {
@@ -367,6 +416,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Mimasaka-Ochiai',
     nameChinese: '美作落合',
     nameKorean: '미마사카오치아이',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -375,6 +427,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '姫新線',
       nameKatakana: 'キシンセン',
       nameFull: '姫新線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Kishin Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -385,6 +440,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 4,
@@ -413,6 +469,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 備後落合 (Hiroshima) - unique name
   {
@@ -424,6 +481,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Bingo-Ochiai',
     nameChinese: '備後落合',
     nameKorean: '빙고오치아이',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -432,6 +492,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '芸備線',
       nameKatakana: 'ゲイビセン',
       nameFull: '芸備線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Geibi Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -442,6 +505,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 4,
@@ -470,6 +534,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 下落合 (Tokyo) - unique name
   {
@@ -481,6 +546,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Shimo-Ochiai',
     nameChinese: '下落合',
     nameKorean: '시모오치아이',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -489,6 +557,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '西武新宿線',
       nameKatakana: 'セイブシンジュクセン',
       nameFull: '西武新宿線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Seibu Shinjuku Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -499,6 +570,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 23,
@@ -527,6 +599,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 落合 (Tokyo) - prefectureId 13
   {
@@ -538,6 +611,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Ochiai',
     nameChinese: '落合',
     nameKorean: '오치아이',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -546,6 +622,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '東京メトロ東西線',
       nameKatakana: 'トウザイセン',
       nameFull: '東京メトロ東西線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Tokyo Metro Tozai Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -556,6 +635,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 18,
@@ -584,6 +664,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
   // 落合南長崎 (Tokyo) - unique name
   {
@@ -595,6 +676,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRoman: 'Ochiai-minami-nagasaki',
     nameChinese: '落合南長崎',
     nameKorean: '오치아이미나미나가사키',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     threeLetterCode: undefined,
     lines: [],
     line: {
@@ -603,6 +687,9 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       nameShort: '都営大江戸線',
       nameKatakana: 'オオエドセン',
       nameFull: '都営地下鉄大江戸線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
       nameRoman: 'Toei Oedo Line',
       nameChinese: undefined,
       nameKorean: undefined,
@@ -613,11 +700,12 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
       station: undefined,
       trainType: undefined,
       averageDistance: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 19,
         railroadId: 29,
-        nameShort: '都営地下鉄',
+        nameShort: '東京都交通局',
         nameKatakana: 'トエイチカテツ',
         nameFull: '東京都交通局',
         nameEnglishShort: 'Toei',
@@ -641,5 +729,6 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     distance: 0,
     hasTrainTypes: false,
     trainType: undefined,
+    transportType: TransportType.Rail,
   },
 ];

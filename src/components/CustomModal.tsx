@@ -1,86 +1,129 @@
 import { Portal } from '@gorhom/portal';
-import React, { useEffect, useState } from 'react';
-import type { StyleProp, ViewStyle } from 'react-native';
-import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  createAnimatedComponent,
-  interpolate,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-import Toast from 'react-native-toast-message';
+import { useAtomValue } from 'jotai';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  type GestureResponderEvent,
+  Keyboard,
+  KeyboardAvoidingView,
+  Pressable,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from 'react-native';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
+import isTablet from '~/utils/isTablet';
 
 type Props = {
   visible: boolean;
   children: React.ReactNode;
   onClose?: () => void;
+  /** 閉じるアニメーションが完了した後に呼ばれるコールバック */
+  onCloseAnimationEnd?: () => void;
+  /** 開くアニメーションが完了した後に呼ばれるコールバック */
+  onShow?: () => void;
   dismissOnBackdropPress?: boolean;
   backdropStyle?: StyleProp<ViewStyle>;
   containerStyle?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   animationDuration?: number;
   testID?: string;
+  avoidKeyboard?: boolean;
 };
 
 const ANIMATION_DURATION = 180;
-const AnimatedPressable = createAnimatedComponent(Pressable);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const stopModalTouchPropagation = (event: GestureResponderEvent) => {
+  event.stopPropagation();
+};
 
 export const CustomModal: React.FC<Props> = ({
   visible,
   children,
   onClose,
+  onCloseAnimationEnd,
+  onShow,
   dismissOnBackdropPress = true,
   backdropStyle,
   containerStyle,
   contentContainerStyle,
   animationDuration = ANIMATION_DURATION,
   testID,
+  avoidKeyboard = false,
 }) => {
   const [isMounted, setIsMounted] = useState(visible);
-  const opacity = useSharedValue(visible ? 1 : 0);
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  const animatedContentStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: interpolate(opacity.value, [0, 1], [0.96, 1]) }],
-  }));
+  const contentOpacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const backdropOpacity = useRef(new Animated.Value(visible ? 1 : 0)).current;
+  const onShowRef = useRef(onShow);
+  const onCloseAnimationEndRef = useRef(onCloseAnimationEnd);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const animatedBackdropStyle = {
+    opacity: backdropOpacity,
+  };
+  const animatedContentStyle = {
+    opacity: contentOpacity,
+    transform: [
+      {
+        scale: contentOpacity.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.96, 1],
+        }),
+      },
+    ],
+  };
 
   useEffect(() => {
-    let cancelled = false;
+    onShowRef.current = onShow;
+  }, [onShow]);
 
+  useEffect(() => {
+    onCloseAnimationEndRef.current = onCloseAnimationEnd;
+  }, [onCloseAnimationEnd]);
+
+  useEffect(() => {
     if (visible) {
       setIsMounted(true);
-      opacity.value = withTiming(1, { duration: animationDuration });
-
-      return () => {
-        cancelled = true;
-        cancelAnimation(opacity);
-      };
+      Animated.parallel([
+        Animated.timing(backdropOpacity, {
+          toValue: 1,
+          duration: animationDuration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: animationDuration,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) {
+          onShowRef.current?.();
+        }
+      });
+      return;
     }
 
-    opacity.value = withTiming(
-      0,
-      { duration: animationDuration },
-      (finished) => {
-        if (finished && !cancelled && !visible) {
-          runOnJS(setIsMounted)(false);
-        }
+    Animated.parallel([
+      Animated.timing(backdropOpacity, {
+        toValue: 0,
+        duration: animationDuration,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentOpacity, {
+        toValue: 0,
+        duration: animationDuration,
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished && !visible) {
+        setIsMounted(false);
+        onCloseAnimationEndRef.current?.();
       }
-    );
-
-    return () => {
-      cancelled = true;
-      cancelAnimation(opacity);
-    };
-  }, [animationDuration, opacity, visible]);
+    });
+  }, [animationDuration, backdropOpacity, contentOpacity, visible]);
 
   const handleBackdropPress = () => {
+    Keyboard.dismiss();
     if (dismissOnBackdropPress) {
       onClose?.();
     }
@@ -104,24 +147,51 @@ export const CustomModal: React.FC<Props> = ({
             backdropStyle,
             animatedBackdropStyle,
           ]}
-          onPress={dismissOnBackdropPress ? handleBackdropPress : undefined}
+          onPress={handleBackdropPress}
         />
-        <Toast />
 
-        <View
-          style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
-          pointerEvents="box-none"
-        >
-          <Animated.View
-            style={[
-              styles.content,
-              contentContainerStyle,
-              animatedContentStyle,
-            ]}
+        {avoidKeyboard ? (
+          <KeyboardAvoidingView
+            style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
+            behavior="padding"
+            pointerEvents="box-none"
           >
-            {children}
-          </Animated.View>
-        </View>
+            <Animated.View
+              style={[
+                styles.content,
+                {
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
+                contentContainerStyle,
+                animatedContentStyle,
+              ]}
+              pointerEvents="auto"
+              onTouchEnd={stopModalTouchPropagation}
+            >
+              {children}
+            </Animated.View>
+          </KeyboardAvoidingView>
+        ) : (
+          <View
+            style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
+            pointerEvents="box-none"
+          >
+            <Animated.View
+              style={[
+                styles.content,
+                {
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
+                contentContainerStyle,
+                animatedContentStyle,
+              ]}
+              pointerEvents="auto"
+              onTouchEnd={stopModalTouchPropagation}
+            >
+              {children}
+            </Animated.View>
+          </View>
+        )}
       </View>
     </Portal>
   );
@@ -138,8 +208,9 @@ const styles = StyleSheet.create({
   },
   content: {
     width: '100%',
-    maxWidth: 720,
-    borderRadius: 8,
+    maxWidth: isTablet ? 480 : 400,
+    maxHeight: '75%',
+    overflow: 'hidden',
     backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOpacity: 0.18,

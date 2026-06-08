@@ -1,133 +1,134 @@
-import { generateAccuracyChart } from './accuracyChart';
+import * as remoteConfigModule from '../lib/remoteConfig';
+import {
+  ACCURACY_CHART_COLORS,
+  ACCURACY_CHART_FLOOR_M,
+  buildAccuracyChartSeries,
+  getAccuracyChartCeiling,
+  getAccuracyColor,
+  normalizeAccuracy,
+} from './accuracyChart';
 
-describe('generateAccuracyChart', () => {
+// Remote Config 未設定時はフォールバック(1500m)が返るため、固定スケールの
+// 上限はその値で評価される。
+const ACCURACY_CHART_CEILING_M = getAccuracyChartCeiling();
+
+describe('normalizeAccuracy (fixed log scale)', () => {
+  it('maps the floor and below to 0', () => {
+    expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M)).toBe(0);
+    expect(normalizeAccuracy(0)).toBe(0);
+    expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M - 1)).toBe(0);
+  });
+
+  it('maps the ceiling and above to 1', () => {
+    expect(normalizeAccuracy(ACCURACY_CHART_CEILING_M)).toBe(1);
+    expect(normalizeAccuracy(ACCURACY_CHART_CEILING_M + 500)).toBe(1);
+  });
+
+  it('is monotonically increasing with accuracy across the range', () => {
+    const samples = [5, 10, 50, 200, 700, 1500];
+    const normalized = samples.map(normalizeAccuracy);
+    for (let i = 0; i < normalized.length - 1; i++) {
+      expect(normalized[i]).toBeLessThan(normalized[i + 1]);
+    }
+  });
+
+  it('keeps every result within [0, 1]', () => {
+    for (const v of [0, 1, 5, 60, 199, 200, 1499, 1500, 5000]) {
+      const n = normalizeAccuracy(v);
+      expect(n).toBeGreaterThanOrEqual(0);
+      expect(n).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('spreads good-range jitter visibly (5m vs 60m differ clearly)', () => {
+    // 相対スケールを廃したログ固定軸では良好域の変化も読み取れる
+    expect(normalizeAccuracy(60) - normalizeAccuracy(5)).toBeGreaterThan(0.3);
+  });
+
+  it('degrades gracefully when the ceiling is at or below the floor', () => {
+    // Remote Config で床値以下が設定された退化スケールでも NaN を出さず、
+    // 床超えは上端(1)、床以下は下端(0)へ倒す
+    const spy = jest
+      .spyOn(remoteConfigModule, 'getMaxPermitAccuracy')
+      .mockReturnValue(ACCURACY_CHART_FLOOR_M - 2);
+    try {
+      expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M + 100)).toBe(1);
+      expect(normalizeAccuracy(ACCURACY_CHART_FLOOR_M)).toBe(0);
+      expect(normalizeAccuracy(1)).toBe(0);
+      expect(Number.isNaN(normalizeAccuracy(50))).toBe(false);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe('buildAccuracyChartSeries', () => {
   it('should return empty array for empty history', () => {
-    expect(generateAccuracyChart([])).toEqual([]);
+    expect(buildAccuracyChartSeries([])).toEqual([]);
   });
 
-  it('should return same block for all identical values', () => {
-    const result = generateAccuracyChart([100, 100, 100, 100]);
+  it('should keep one point per valid sample', () => {
+    const result = buildAccuracyChartSeries([10, 20, 30, 40]);
     expect(result).toHaveLength(4);
-    expect(result.every((block) => block.char === '▄')).toBe(true);
+    expect(result.map((point) => point.value)).toEqual([10, 20, 30, 40]);
   });
 
-  it('should use taller blocks for higher (worse) accuracy values', () => {
-    // Higher accuracy values (worse precision) should get taller blocks
-    const result = generateAccuracyChart([100, 50, 10]);
+  it('positions each sample on the fixed scale, independent of the window', () => {
+    // 同じ精度値は他のサンプルに依らず常に同じ高さに来る(可変スケールの撤廃)
+    const alone = buildAccuracyChartSeries([50]);
+    const withOthers = buildAccuracyChartSeries([10, 50, 1500]);
+    expect(alone[0].normalized).toBe(normalizeAccuracy(50));
+    expect(withOthers[1].normalized).toBe(normalizeAccuracy(50));
+    expect(alone[0].normalized).toBe(withOthers[1].normalized);
+  });
 
-    // Should have 3 blocks
-    expect(result).toHaveLength(3);
+  it('does not collapse identical values to the middle', () => {
+    // 旧実装は全同値で 0.5 を返していたが、固定スケールでは実際の位置を返す
+    const result = buildAccuracyChartSeries([100, 100, 100, 100]);
+    expect(result).toHaveLength(4);
+    const expected = normalizeAccuracy(100);
+    expect(result.every((point) => point.normalized === expected)).toBe(true);
+    expect(result[0].normalized).not.toBe(0.5);
+  });
 
-    // First block (100m accuracy) should be tallest
-    // Last block (10m accuracy) should be shortest
-    const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-    const firstChar = result[0].char;
-    const lastChar = result[2].char;
-
-    expect(blocks.indexOf(firstChar)).toBeLessThan(blocks.indexOf(lastChar));
+  it('orders worse (higher) accuracy above better accuracy', () => {
+    const result = buildAccuracyChartSeries([10, 100, 1000]);
+    expect(result[0].normalized).toBeLessThan(result[1].normalized);
+    expect(result[1].normalized).toBeLessThan(result[2].normalized);
   });
 
   it('should handle single value', () => {
-    const result = generateAccuracyChart([50]);
+    const result = buildAccuracyChartSeries([50]);
     expect(result).toHaveLength(1);
-    expect(result[0].char).toBe('▄');
-  });
-
-  it('should handle two values', () => {
-    const result = generateAccuracyChart([100, 10]);
-    expect(result).toHaveLength(2);
-
-    // Higher value should have taller block
-    const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-    expect(blocks.indexOf(result[0].char)).toBeLessThan(
-      blocks.indexOf(result[1].char)
-    );
-  });
-
-  it('should handle typical accuracy progression', () => {
-    // Simulate getting worse accuracy over time
-    const result = generateAccuracyChart([10, 20, 40, 60, 80, 100]);
-
-    expect(result).toHaveLength(6);
-
-    // Should be an ascending pattern (visually going up since higher accuracy = taller block)
-    // Indices should decrease as blocks get taller
-    const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-    for (let i = 0; i < result.length - 1; i++) {
-      const currentIndex = blocks.indexOf(result[i].char);
-      const nextIndex = blocks.indexOf(result[i + 1].char);
-      // Each subsequent value should have a taller or same height block (lower or same index)
-      expect(currentIndex).toBeGreaterThanOrEqual(nextIndex);
-    }
-  });
-
-  it('should handle fluctuating accuracy', () => {
-    const result = generateAccuracyChart([50, 100, 25, 75]);
-
-    expect(result).toHaveLength(4);
-
-    // Should use blocks based on relative values
-    const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-
-    // 100m (worst) should have tallest block
-    const index100 = blocks.indexOf(result[1].char);
-    // 25m (best) should have shortest block
-    const index25 = blocks.indexOf(result[2].char);
-
-    expect(index100).toBeLessThan(index25);
-  });
-
-  it('should handle 12 values (max history)', () => {
-    const values = [10, 12, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-    const result = generateAccuracyChart(values);
-
-    expect(result).toHaveLength(12);
-
-    // First value (10) should be shortest
-    // Last value (100) should be tallest
-    const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-    expect(blocks.indexOf(result[0].char)).toBeGreaterThan(
-      blocks.indexOf(result[11].char)
-    );
-  });
-
-  it('should only use valid block characters', () => {
-    const validBlocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-    const result = generateAccuracyChart([
-      10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
-    ]);
-
-    for (const block of result) {
-      expect(validBlocks).toContain(block.char);
-    }
+    expect(result[0].normalized).toBe(normalizeAccuracy(50));
+    expect(result[0].value).toBe(50);
   });
 
   it('should filter out NaN values', () => {
-    const result = generateAccuracyChart([10, Number.NaN, 50, 100]);
-    // Should have 3 valid values
+    const result = buildAccuracyChartSeries([10, Number.NaN, 50, 100]);
     expect(result).toHaveLength(3);
+    expect(result.map((point) => point.value)).toEqual([10, 50, 100]);
   });
 
   it('should filter out Infinity values', () => {
-    const result = generateAccuracyChart([
+    const result = buildAccuracyChartSeries([
       10,
       Number.POSITIVE_INFINITY,
       50,
       Number.NEGATIVE_INFINITY,
       100,
     ]);
-    // Should have 3 valid values
     expect(result).toHaveLength(3);
   });
 
   it('should filter out negative values', () => {
-    const result = generateAccuracyChart([10, -5, 50, -100, 100]);
-    // Should have 3 valid values (10, 50, 100)
+    const result = buildAccuracyChartSeries([10, -5, 50, -100, 100]);
     expect(result).toHaveLength(3);
+    expect(result.map((point) => point.value)).toEqual([10, 50, 100]);
   });
 
   it('should return empty array when all values are invalid', () => {
-    const result = generateAccuracyChart([
+    const result = buildAccuracyChartSeries([
       Number.NaN,
       Number.POSITIVE_INFINITY,
       -10,
@@ -136,60 +137,61 @@ describe('generateAccuracyChart', () => {
     expect(result).toEqual([]);
   });
 
-  it('should handle mixed valid and invalid values', () => {
-    const result = generateAccuracyChart([
-      10,
-      Number.NaN,
-      50,
-      Number.POSITIVE_INFINITY,
-      100,
-      -5,
-    ]);
-    // Should have 3 valid values
-    expect(result).toHaveLength(3);
-
-    const blocks = ['▇', '▆', '▅', '▄', '▃', '▂', '▁'];
-    for (const block of result) {
-      expect(blocks).toContain(block.char);
+  it('should handle 12 values (max history)', () => {
+    const values = [10, 12, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+    const result = buildAccuracyChartSeries(values);
+    expect(result).toHaveLength(12);
+    // 単調増加の入力は単調増加の正規化位置になる
+    for (let i = 0; i < result.length - 1; i++) {
+      expect(result[i].normalized).toBeLessThan(result[i + 1].normalized);
     }
   });
 
   describe('color coding', () => {
-    it('should use red color for accuracy >= BAD_ACCURACY_THRESHOLD', () => {
-      const result = generateAccuracyChart([200, 250, 300]);
+    it('should use danger color for accuracy > MAX_PERMIT_ACCURACY', () => {
+      const result = buildAccuracyChartSeries([2001, 2500, 3000]);
       expect(result).toHaveLength(3);
-      for (const block of result) {
-        expect(block.color).toBe('#ff0000');
+      for (const point of result) {
+        expect(point.color).toBe(ACCURACY_CHART_COLORS.danger);
       }
     });
 
-    it('should use yellow color for accuracy >= BAD_ACCURACY_THRESHOLD / 2 and < BAD_ACCURACY_THRESHOLD', () => {
-      const result = generateAccuracyChart([100, 150, 199]);
+    it('should use warning color for accuracy >= BAD_ACCURACY_THRESHOLD and <= MAX_PERMIT_ACCURACY', () => {
+      const result = buildAccuracyChartSeries([200, 750, 1500]);
       expect(result).toHaveLength(3);
-      for (const block of result) {
-        expect(block.color).toBe('#ffff00');
+      for (const point of result) {
+        expect(point.color).toBe(ACCURACY_CHART_COLORS.warning);
       }
     });
 
-    it('should use white color for accuracy < BAD_ACCURACY_THRESHOLD / 2', () => {
-      const result = generateAccuracyChart([10, 50, 99]);
+    it('should use good color for accuracy < BAD_ACCURACY_THRESHOLD', () => {
+      const result = buildAccuracyChartSeries([10, 100, 199]);
       expect(result).toHaveLength(3);
-      for (const block of result) {
-        expect(block.color).toBe('#ffffff');
+      for (const point of result) {
+        expect(point.color).toBe(ACCURACY_CHART_COLORS.good);
       }
     });
 
     it('should handle mixed accuracy values with different colors', () => {
-      // Test with values in all three ranges
-      const result = generateAccuracyChart([50, 150, 250]);
+      const result = buildAccuracyChartSeries([50, 500, 2500]);
       expect(result).toHaveLength(3);
-
-      // 50m should be white
-      expect(result[0].color).toBe('#ffffff');
-      // 150m should be yellow
-      expect(result[1].color).toBe('#ffff00');
-      // 250m should be red
-      expect(result[2].color).toBe('#ff0000');
+      expect(result[0].color).toBe(ACCURACY_CHART_COLORS.good);
+      expect(result[1].color).toBe(ACCURACY_CHART_COLORS.warning);
+      expect(result[2].color).toBe(ACCURACY_CHART_COLORS.danger);
     });
+  });
+});
+
+describe('getAccuracyColor', () => {
+  it('returns danger over MAX_PERMIT_ACCURACY', () => {
+    expect(getAccuracyColor(2000)).toBe(ACCURACY_CHART_COLORS.danger);
+  });
+
+  it('returns warning at the bad threshold boundary', () => {
+    expect(getAccuracyColor(200)).toBe(ACCURACY_CHART_COLORS.warning);
+  });
+
+  it('returns good below the bad threshold', () => {
+    expect(getAccuracyColor(199)).toBe(ACCURACY_CHART_COLORS.good);
   });
 });

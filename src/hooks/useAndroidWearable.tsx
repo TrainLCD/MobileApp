@@ -34,14 +34,18 @@ export const useAndroidWearable = (): void => {
       if (!station || Platform.OS !== 'android') {
         return;
       }
-      await sendStationInfoToWatch({
-        stationName: station.name ?? '',
-        stationNameRoman: station.nameRoman ?? '',
-        currentStateKey: stoppingState ?? 'CURRENT',
-        stationNumber: currentNumbering?.stationNumber ?? '',
-        badAccuracy,
-        isNextLastStop,
-      });
+      try {
+        await sendStationInfoToWatch({
+          stationName: station.name ?? '',
+          stationNameRoman: station.nameRoman ?? '',
+          currentStateKey: stoppingState ?? 'CURRENT',
+          stationNumber: currentNumbering?.stationNumber ?? '',
+          badAccuracy,
+          isNextLastStop,
+        });
+      } catch (e) {
+        console.warn('Failed to send station info to watch:', e);
+      }
     })();
   }, [
     badAccuracy,

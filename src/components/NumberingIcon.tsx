@@ -51,6 +51,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
   size,
   allowScaling,
   withDarkTheme,
+  shouldGrayscale,
   transformOrigin,
   withOutline,
 }: Props) => {
@@ -205,7 +206,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           lineColor={lineColor}
           stationNumber={stationNumber}
           threeLetterCode={threeLetterCode}
-          allowScaling={allowScaling ?? true}
+          allowScaling={allowScaling ?? false}
           size={size}
           transformOrigin={transformOrigin}
           withOutline={withOutline}
@@ -234,6 +235,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
           stationNumber={stationNumber}
           hakone={shape === MARK_SHAPE.HAKONE}
           withOutline={withOutline}
+          shouldGrayscale={shouldGrayscale ?? false}
         />
       );
     case MARK_SHAPE.KEIO:
@@ -274,6 +276,7 @@ const NumberingIconOriginal: React.FC<Props> = ({
         <NumberingIconMonochromeRound
           stationNumber={stationNumber}
           withOutline={withOutline}
+          size={size}
         />
       );
     case MARK_SHAPE.NTL:

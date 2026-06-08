@@ -1,4 +1,6 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
+import { useMemo } from 'react';
 import {
   type GestureResponderEvent,
   type StyleProp,
@@ -8,8 +10,8 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { LED_THEME_BG_COLOR } from '~/constants';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -19,16 +21,18 @@ type Props = {
   onToggle: (event: GestureResponderEvent) => void;
   outline?: boolean;
   style?: StyleProp<ViewStyle>;
+  statePanelStyle?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   state?: boolean;
   onText?: string;
   offText?: string;
+  activeOpacity?: number;
 };
 
 const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     elevation: 1,
     shadowColor: '#333',
     shadowOpacity: 0.25,
@@ -40,93 +44,151 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 8,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
   },
   buttonLED: {
-    paddingVertical: 8,
-    paddingHorizontal: isTablet ? 18 : 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 1,
+    shadowColor: '#333',
+    shadowOpacity: 0.25,
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowRadius: 4,
     borderWidth: 1,
     borderColor: '#fff',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     flexDirection: 'row',
   },
   text: {
-    fontSize: RFValue(14),
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
     color: '#fff',
+  },
+  textFill: {
+    flex: 1,
+    marginRight: 12,
   },
   outlinedButton: {
     borderColor: '#008ffe',
     borderWidth: 1,
-    backgroundColor: '#fff',
   },
   outlinedButtonText: {
     fontWeight: 'bold',
     color: '#008ffe',
   },
   stateIndicator: {
-    width: 64,
-    height: 32,
-    borderRadius: 8,
+    minWidth: isTablet ? 96 : 64,
+    maxWidth: isTablet ? 108 : 72,
+    height: isTablet ? 40 : 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 16,
     borderWidth: 1,
   },
   stateIndicatorText: {
-    fontSize: RFValue(14),
+    fontSize: RFValue(12),
     fontWeight: 'bold',
   },
 });
+
+export const StatePanel = ({
+  state,
+  onText = 'ON',
+  offText = 'OFF',
+  disabled,
+  style,
+}: {
+  state: boolean;
+  onText?: string;
+  offText?: string;
+  disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
+}) => {
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+
+  const styleIndicatorStyle: StyleProp<ViewStyle> = useMemo(
+    () =>
+      isLEDTheme
+        ? {
+            backgroundColor: state ? '#008ffe' : LED_THEME_BG_COLOR,
+            borderColor: state ? '#008ffe' : '#fff',
+            opacity: disabled ? 0.5 : 1,
+            borderRadius: 0,
+          }
+        : {
+            backgroundColor: state ? '#008ffe' : '#fff',
+            borderColor: state ? '#008ffe' : '#aaa',
+            opacity: disabled ? 0.5 : 1,
+            borderRadius: 8,
+          },
+    [isLEDTheme, state, disabled]
+  );
+
+  return (
+    <View style={[styles.stateIndicator, styleIndicatorStyle, style]}>
+      <Typography
+        style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
+      >
+        {state ? onText : offText}
+      </Typography>
+    </View>
+  );
+};
 
 export const ToggleButton: React.FC<Props> = ({
   children,
   onToggle,
   outline,
   style,
+  statePanelStyle,
   textStyle,
   state,
   onText = 'ON',
   offText = 'OFF',
+  activeOpacity,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <TouchableOpacity
       onPress={onToggle}
+      activeOpacity={activeOpacity}
       style={[
         isLEDTheme ? styles.buttonLED : styles.button,
         {
-          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#008ffe',
         },
-        outline && styles.outlinedButton,
+        outline && [
+          styles.outlinedButton,
+          {
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          },
+        ],
         style,
       ]}
     >
       <Typography
         numberOfLines={1}
-        style={[styles.text, outline && styles.outlinedButtonText, textStyle]}
+        style={[
+          styles.text,
+          styles.textFill,
+          outline && styles.outlinedButtonText,
+          textStyle,
+        ]}
       >
         {children}
       </Typography>
-      <View
-        style={[
-          styles.stateIndicator,
-          {
-            backgroundColor: state ? '#008ffe' : '#fff',
-            borderColor: state ? '#008ffe' : '#aaa',
-          },
-        ]}
-      >
-        <Typography
-          style={[
-            styles.stateIndicatorText,
-            { color: state ? '#fff' : '#888' },
-          ]}
-        >
-          {state ? onText : offText}
-        </Typography>
-      </View>
+
+      <StatePanel
+        state={!!state}
+        onText={onText}
+        offText={offText}
+        style={statePanelStyle}
+      />
     </TouchableOpacity>
   );
 };

@@ -9,6 +9,7 @@ jest.mock('jotai', () => ({
     headerLangState: 'JA',
     headerState: 'CURRENT',
   })),
+  atom: jest.fn((val) => val),
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({
@@ -74,6 +75,9 @@ describe('TrainTypeBoxJL', () => {
     name: 'Test',
     nameKatakana: 'テスト',
     nameRoman: 'Test',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     nameChinese: '测试',
     nameKorean: '테스트',
     color: '#000000',

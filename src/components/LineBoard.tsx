@@ -1,11 +1,15 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useCurrentStation, useThemeStore } from '../hooks';
+import { parenthesisRegexp } from '~/constants';
+import { useCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
+import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
+import { isBusLine } from '../utils/line';
 import { RFValue } from '../utils/rfValue';
+import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
 import LineBoardJO from './LineBoardJO';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
@@ -30,14 +34,25 @@ const styles = StyleSheet.create({
 });
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
-  const theme = useThemeStore((state) => state);
+  const theme = useAtomValue(themeAtom);
   const { leftStations } = useAtomValue(navigationState);
   const station = useCurrentStation();
+  const isBus = isBusLine(station?.line);
 
-  const slicedLeftStations = useMemo(
-    () => leftStations.slice(0, 8),
-    [leftStations]
-  );
+  const slicedLeftStations = useMemo(() => {
+    // 8 件だけ取り出す。bus 路線の場合は親括弧を駅名から除去する加工が必要。
+    // 鉄道路線では加工が不要 = 元の配列をそのまま返してオブジェクト生成 / 子コンポーネント
+    // の再 memoize を抑える（とくに山手線iPad テーマでアニメーションが何度も走る原因になる）。
+    if (!isBus) {
+      // sliceは新しい配列を返すが要素は同一参照なので、子コンポーネントは memo 効きやすい。
+      return leftStations.length <= 8 ? leftStations : leftStations.slice(0, 8);
+    }
+    return leftStations.slice(0, 8).map((sta) => ({
+      ...sta,
+      name: sta.name?.replace(parenthesisRegexp, ''),
+      nameRoman: sta.nameRoman?.replace(parenthesisRegexp, ''),
+    }));
+  }, [leftStations, isBus]);
 
   const currentStationIndex = useMemo(
     () =>
@@ -68,6 +83,15 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             lineColors={lineColors}
           />
         );
+      case APP_THEME.ODAKYU:
+        return (
+          <LineBoardEast
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
+            lineColors={lineColors}
+            isOdakyu
+          />
+        );
       case APP_THEME.TOEI:
         return (
           <LineBoardToei
@@ -86,6 +110,14 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
       case APP_THEME.SAIKYO:
         return (
           <LineBoardSaikyo
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
+            lineColors={lineColors}
+          />
+        );
+      case APP_THEME.E231:
+        return (
+          <LineBoardE231
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}

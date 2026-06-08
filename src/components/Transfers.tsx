@@ -3,15 +3,10 @@ import React, { useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
-import {
-  useCurrentStation,
-  useGetLineMark,
-  useNextStation,
-  useThemeStore,
-  useTransferLines,
-} from '../hooks';
-import { APP_THEME, type AppTheme } from '../models/Theme';
-import stationState from '../store/atoms/station';
+import { useGetLineMark, useTransferLines } from '../hooks';
+import type { AppTheme } from '../models/Theme';
+import navigationState from '../store/atoms/navigation';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import NumberingIcon from './NumberingIcon';
@@ -49,6 +44,7 @@ const styles = StyleSheet.create({
     flexBasis: '50%',
   },
   lineNameContainer: {
+    flex: 1,
     marginLeft: isTablet ? 4 : 2,
   },
   lineName: {
@@ -70,75 +66,89 @@ const styles = StyleSheet.create({
 });
 
 const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
-  const { arrived } = useAtomValue(stationState);
-  const currentStation = useCurrentStation();
-
   const lines = useTransferLines();
-  const nextStation = useNextStation();
   const getLineMarkFunc = useGetLineMark();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const { enabledLanguages } = useAtomValue(navigationState);
 
-  const station = useMemo(
-    () => (arrived ? currentStation : nextStation),
-    [arrived, currentStation, nextStation]
-  );
+  const isJaEnabled = enabledLanguages.includes('JA');
+  const isEnEnabled = enabledLanguages.includes('EN');
+  const isZhEnabled = enabledLanguages.includes('ZH');
+  const isKoEnabled = enabledLanguages.includes('KO');
 
   const stationNumbers = useMemo(
     () =>
-      lines
-        ?.map((l) => l)
-        ?.map((l) => {
-          const stationNumberData = l.station?.stationNumbers?.find((sn) =>
-            l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
-          );
-          const lineSymbol = stationNumberData?.lineSymbol ?? '';
-          const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
-          const stationNumber = stationNumberData?.stationNumber ?? '';
-          const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
+      lines?.map((l) => {
+        const stationNumberData = l.station?.stationNumbers?.find((sn) =>
+          l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
+        );
+        const lineSymbol = stationNumberData?.lineSymbol ?? '';
+        const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
+        const stationNumber = stationNumberData?.stationNumber ?? '';
+        const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
 
-          if (!lineSymbol.length || !stationNumber.length) {
-            const stationNumberWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.stationNumber ?? '';
-            const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
-            const lineSymbolColorWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.lineSymbolColor ?? '#000000';
-            const lineSymbolShapeWhenEmptySymbol =
-              l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-                ?.lineSymbolShape ?? 'NOOP';
-
-            return {
-              __typename: 'StationNumber' as const,
-              lineSymbol: lineSymbolWhenEmptySymbol,
-              lineSymbolColor: lineSymbolColorWhenEmptySymbol,
-              stationNumber: stationNumberWhenEmptySymbol,
-              lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
-            };
-          }
+        if (!lineSymbol.length || !stationNumber.length) {
+          const stationNumberWhenEmptySymbol =
+            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
+              ?.stationNumber ?? '';
+          const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
+          const lineSymbolColorWhenEmptySymbol =
+            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
+              ?.lineSymbolColor ?? '#000000';
+          const lineSymbolShapeWhenEmptySymbol =
+            l.station?.stationNumbers?.find(
+              (sn) => !sn.lineSymbol?.length
+            )?.lineSymbolShape;
 
           return {
             __typename: 'StationNumber' as const,
-            lineSymbol,
-            lineSymbolColor,
-            stationNumber,
-            lineSymbolShape,
+            lineSymbol: lineSymbolWhenEmptySymbol,
+            lineSymbolColor: lineSymbolColorWhenEmptySymbol,
+            stationNumber: stationNumberWhenEmptySymbol,
+            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
           };
-        }),
+        }
+
+        return {
+          __typename: 'StationNumber' as const,
+          lineSymbol,
+          lineSymbolColor,
+          stationNumber,
+          lineSymbolShape,
+        };
+      }),
     [lines]
   );
 
   const renderTransferLine = useCallback(
     ({ item: line, index }: { item: Line; index: number }) => {
-      if (!station) {
-        return null;
-      }
       const lineMark = getLineMarkFunc({
         line,
+        stationNumbers: line?.station?.stationNumbers,
       });
       const includesNumberedStation = stationNumbers.some(
         (sn) => !!sn?.stationNumber
       );
+
+      const cjkLineName = [
+        isZhEnabled ? line.nameChinese : null,
+        isKoEnabled ? line.nameKorean : null,
+      ]
+        .filter((s): s is string => !!s?.length)
+        .map((s) => s.replace(parenthesisRegexp, ''))
+        .join(' / ');
+
+      const cjkStationName = [
+        isZhEnabled && line.station?.nameChinese
+          ? `${line.station.nameChinese.replace(parenthesisRegexp, '')}站`
+          : null,
+        isKoEnabled && line.station?.nameKorean
+          ? `${line.station.nameKorean.replace(parenthesisRegexp, '')}역`
+          : null,
+      ]
+        .filter((s): s is string => !!s?.length)
+        .join(' / ');
+
       return (
         <View style={styles.transferLine} key={line.id}>
           <View style={styles.transferLineInnerLeft}>
@@ -181,18 +191,21 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                   } as Station);
                 }}
               >
-                <Typography style={styles.lineName}>
-                  {line.nameShort?.replace(parenthesisRegexp, '')}
-                </Typography>
-                <Typography style={styles.lineNameEn}>
-                  {line.nameRoman?.replace(parenthesisRegexp, '')}
-                </Typography>
-                {!!line.nameChinese?.length && !!line.nameKorean?.length ? (
+                {isJaEnabled && line.nameShort ? (
+                  <Typography style={styles.lineName}>
+                    {line.nameShort.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
+                {isEnEnabled && line.nameRoman ? (
+                  <Typography
+                    style={isJaEnabled ? styles.lineNameEn : styles.lineName}
+                  >
+                    {line.nameRoman.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
+                {cjkLineName ? (
                   <Typography style={styles.lineNameEn}>
-                    {`${line.nameChinese.replace(
-                      parenthesisRegexp,
-                      ''
-                    )} / ${line.nameKorean.replace(parenthesisRegexp, '')}`}
+                    {cjkLineName}
                   </Typography>
                 ) : null}
               </TouchableOpacity>
@@ -243,24 +256,26 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
                     } as Station);
                   }}
                 >
-                  <Typography style={styles.lineName}>
-                    {`${line.station?.name?.replace(parenthesisRegexp, '')}駅`}
-                  </Typography>
-                  <Typography style={styles.lineNameEn}>
-                    {`${(line.station?.nameRoman ?? '').replace(
-                      parenthesisRegexp,
-                      ''
-                    )} Sta.`}
-                  </Typography>
-                  <Typography style={styles.lineNameEn}>
-                    {`${(line.station?.nameChinese ?? '').replace(
-                      parenthesisRegexp,
-                      ''
-                    )}站 / ${(line.station?.nameKorean ?? '').replace(
-                      parenthesisRegexp,
-                      ''
-                    )}역`}
-                  </Typography>
+                  {isJaEnabled && line.station?.name ? (
+                    <Typography style={styles.lineName}>
+                      {`${line.station.name.replace(parenthesisRegexp, '')}駅`}
+                    </Typography>
+                  ) : null}
+                  {isEnEnabled && line.station?.nameRoman ? (
+                    <Typography
+                      style={isJaEnabled ? styles.lineNameEn : styles.lineName}
+                    >
+                      {`${line.station.nameRoman.replace(
+                        parenthesisRegexp,
+                        ''
+                      )} Sta.`}
+                    </Typography>
+                  ) : null}
+                  {cjkStationName ? (
+                    <Typography style={styles.lineNameEn}>
+                      {cjkStationName}
+                    </Typography>
+                  ) : null}
                 </TouchableOpacity>
               )}
             </View>
@@ -268,7 +283,16 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
         </View>
       );
     },
-    [getLineMarkFunc, onPress, station, stationNumbers, lines]
+    [
+      getLineMarkFunc,
+      onPress,
+      stationNumbers,
+      lines,
+      isJaEnabled,
+      isEnEnabled,
+      isZhEnabled,
+      isKoEnabled,
+    ]
   );
 
   if (isLEDTheme) {

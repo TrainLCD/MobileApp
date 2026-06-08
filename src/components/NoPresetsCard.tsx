@@ -1,16 +1,16 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import isTablet from '~/utils/isTablet';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
     width: '100%',
     height: 180,
-    borderRadius: 8,
     paddingHorizontal: 24,
     paddingVertical: 32,
     justifyContent: 'center',
@@ -48,12 +48,20 @@ const NoPresetsIcon: React.FC = () => (
 type Props = { text?: string; icon?: React.ReactNode };
 
 const NoPresetsCardBase: React.FC<Props> = ({ text, icon }) => {
-  const isLEDTheme = useThemeStore((st) => st === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const containerStyle = useMemo(
     () => [
       styles.root,
-      { backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC' },
+      {
+        backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC',
+        borderRadius: isLEDTheme ? 0 : 8,
+        ...(isTablet
+          ? {}
+          : {
+              height: 156,
+            }),
+      },
     ],
     [isLEDTheme]
   );

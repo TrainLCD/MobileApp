@@ -1,4 +1,5 @@
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { getIdToken } from '@react-native-firebase/auth';
 import {
   getDownloadURL,
   getStorage,
@@ -58,8 +59,7 @@ export const useFeedback = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
-  const { autoModeEnabled, enableLegacyAutoMode } =
-    useAtomValue(navigationState);
+  const { autoModeEnabled } = useAtomValue(navigationState);
 
   const sendReport = useCallback(
     async ({
@@ -93,7 +93,7 @@ export const useFeedback = (
 
         const feedbackId = Crypto.randomUUID();
 
-        const idToken = await user?.getIdToken();
+        const idToken = await getIdToken(user);
 
         let imageUrl: string | null = null;
         if (screenShotBase64) {
@@ -117,7 +117,6 @@ export const useFeedback = (
           language: isJapanese ? 'ja-JP' : 'en-US',
           appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
           autoModeEnabled,
-          enableLegacyAutoMode,
           deviceInfo: Device.isDevice
             ? {
                 brand,
@@ -162,7 +161,7 @@ export const useFeedback = (
         throw new Error(`フィードバックの送信に失敗しました: ${err}`);
       }
     },
-    [user, autoModeEnabled, enableLegacyAutoMode]
+    [user, autoModeEnabled]
   );
 
   return {

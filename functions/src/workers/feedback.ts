@@ -1,10 +1,27 @@
-import { onMessagePublished } from 'firebase-functions/v2/pubsub';
-import { VertexAI } from '@google-cloud/vertexai';
-import type { FeedbackMessage } from '../models/feedback';
-import type { AIReport, FewShotItem } from '../models/ai';
-import dayjs from 'dayjs';
-import type { DiscordEmbed } from '../models/common';
 import { Storage } from '@google-cloud/storage';
+import { VertexAI } from '@google-cloud/vertexai';
+import dayjs from 'dayjs';
+import { onMessagePublished } from 'firebase-functions/v2/pubsub';
+import type {
+  AICategory,
+  AIReport,
+  AITriageLevel,
+  FewShotItem,
+} from '../models/ai';
+import type { DiscordEmbed } from '../models/common';
+import type { FeedbackMessage } from '../models/feedback';
+
+interface VertexPart {
+  text?: string;
+}
+
+interface VertexCandidate {
+  content?: { parts?: VertexPart[] };
+}
+
+interface VertexResponse {
+  response?: { candidates?: VertexCandidate[] };
+}
 
 const GITHUB_LABELS = {
   PLATFORM_IOS: '🍎 iOS',
@@ -18,9 +35,60 @@ const GITHUB_LABELS = {
   CRASH_TYPE: '💣 Crash',
   SPAM_TYPE: '💩 Spam',
   UNKNOWN_TYPE: '❓ Unknown Type',
-  AUTOMODE_V1: '🤖 Auto Mode 1.0',
-  AUTOMODE_V2: '🤖 Auto Mode 2.0',
+  AUTOMODE_ENABLED: '🤖 Auto Mode',
+  CATEGORY_BUG: '🐛 Bug',
+  CATEGORY_FEATURE_REQUEST: '✨ Feature Request',
+  CATEGORY_IMPROVEMENT: '🛠️ Improvement',
+  CATEGORY_QUESTION: '❓ Question',
+  TRIAGE_URGENT: '🔴 P0 / Urgent',
+  TRIAGE_HIGH: '🟠 P1 / High',
+  TRIAGE_MEDIUM: '🟡 P2 / Medium',
+  TRIAGE_LOW: '🟢 P3 / Low',
 } as const;
+
+const CATEGORY_LABELS: Record<AICategory, string> = {
+  bug: GITHUB_LABELS.CATEGORY_BUG,
+  feature_request: GITHUB_LABELS.CATEGORY_FEATURE_REQUEST,
+  improvement: GITHUB_LABELS.CATEGORY_IMPROVEMENT,
+  question: GITHUB_LABELS.CATEGORY_QUESTION,
+};
+
+const TRIAGE_LABELS: Record<AITriageLevel, string> = {
+  urgent: GITHUB_LABELS.TRIAGE_URGENT,
+  high: GITHUB_LABELS.TRIAGE_HIGH,
+  medium: GITHUB_LABELS.TRIAGE_MEDIUM,
+  low: GITHUB_LABELS.TRIAGE_LOW,
+};
+
+const CATEGORY_SYNONYMS: Record<string, AICategory> = {
+  bug: 'bug',
+  defect: 'bug',
+  crash: 'bug',
+  feature: 'feature_request',
+  feature_request: 'feature_request',
+  featurerequest: 'feature_request',
+  request: 'feature_request',
+  improvement: 'improvement',
+  enhancement: 'improvement',
+  improve: 'improvement',
+  question: 'question',
+  support: 'question',
+  help: 'question',
+};
+
+const TRIAGE_SYNONYMS: Record<string, AITriageLevel> = {
+  urgent: 'urgent',
+  critical: 'urgent',
+  p0: 'urgent',
+  high: 'high',
+  p1: 'high',
+  medium: 'medium',
+  normal: 'medium',
+  p2: 'medium',
+  low: 'low',
+  minor: 'low',
+  p3: 'low',
+};
 
 function looksLikeSpam(text: string) {
   if (!text) return false;
@@ -63,7 +131,7 @@ function looksLikeSpam(text: string) {
   // Long run without sentence-ending punctuation but with announcement tokens
   if (
     t.length >= 40 &&
-    !/[。．\.!?！？]/.test(t) &&
+    !/[。．.!?！？]/.test(t) &&
     /(次は|まもなく|行きです)/.test(t)
   ) {
     score += 0.5;
@@ -121,7 +189,7 @@ async function generateWithRetry(
   const compactFew = half
     .map((b) =>
       b.length > FEW_SHOT_PER_EX_MAX
-        ? b.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…'
+        ? `${b.slice(0, FEW_SHOT_PER_EX_MAX - 1)}…`
         : b
     )
     .join('\n\n');
@@ -134,21 +202,22 @@ async function generateWithRetry(
   return res;
 }
 
-function extractTextFromVertex(result: any): string {
+function extractTextFromVertex(result: VertexResponse): string {
   // Vertex返却の差分に強い安全抽出
   const parts =
     result?.response?.candidates?.flatMap(
-      (c: any) => c?.content?.parts ?? []
+      (c: VertexCandidate) => c?.content?.parts ?? []
     ) ?? [];
-  const txt = parts.find((p: any) => typeof p?.text === 'string')?.text;
+  const txt = parts.find((p: VertexPart) => typeof p?.text === 'string')?.text;
   return typeof txt === 'string' ? txt : '{}';
 }
 
-function coerceReport(raw: any, titleMax = 72): AIReport {
+export function coerceReport(raw: unknown, titleMax = 72): AIReport {
   const norm = (k: string) =>
     String(k).toLowerCase().replace(/\s+/g, '').trim();
-  const map = new Map<string, any>();
-  for (const [k, v] of Object.entries(raw || {})) map.set(norm(k), v);
+  const map = new Map<string, unknown>();
+  const entries = raw && typeof raw === 'object' ? Object.entries(raw) : [];
+  for (const [k, v] of entries) map.set(norm(k), v);
 
   const getStr = (k: string, d = '') => String(map.get(k) ?? d).trim();
   const getNum = (k: string, d = 0.5) => {
@@ -164,15 +233,35 @@ function coerceReport(raw: any, titleMax = 72): AIReport {
   let title = getStr('title');
   let summary = getStr('summary');
   const isSpam = getBool('isSpam');
-  const labels = Array.isArray(map.get('labels')) ? map.get('labels') : [];
+  const rawLabels = map.get('labels');
+  const labels: string[] = Array.isArray(rawLabels)
+    ? rawLabels.filter((l): l is string => typeof l === 'string')
+    : [];
   const confidence = getNum('confidence', 0.5);
   const reason = getStr('reason');
+  const categoryKey = getStr('category')
+    .toLowerCase()
+    .replaceAll(/[\s-]+/g, '');
+  const category: AICategory = CATEGORY_SYNONYMS[categoryKey] ?? 'question';
+  const triageKey = getStr('triagelevel')
+    .toLowerCase()
+    .replaceAll(/[\s-]+/g, '');
+  const triageLevel: AITriageLevel = TRIAGE_SYNONYMS[triageKey] ?? 'medium';
 
   if (!title) title = '要約未取得';
-  if (title.length > titleMax) title = title.slice(0, titleMax - 1) + '…';
+  if (title.length > titleMax) title = `${title.slice(0, titleMax - 1)}…`;
   if (!summary) summary = '';
 
-  return { title, summary, isSpam, labels, confidence, reason };
+  return {
+    title,
+    summary,
+    isSpam,
+    labels,
+    confidence,
+    reason,
+    category,
+    triageLevel,
+  };
 }
 
 // ---- Few-shot loader ----
@@ -188,10 +277,21 @@ const FEW_SHOT_PER_EX_MAX = Number(process.env.FEW_SHOT_PER_EX_MAX ?? 800); // c
 
 const SYSTEM_PROMPT = `
 You are a precise issue triager for TrainLCD.
-Task: 
+Task:
 1. Summarize the user's message into a ONE-LINE issue title in Japanese (≤72 chars).
 2. Also create a 1–3 sentence summary in Japanese that concisely describes the feedback content.
 3. Classify spam.
+4. If NOT spam, pick ONE primary "category" from ["bug","feature_request","improvement","question"]:
+   - bug: 不具合・誤動作・クラッシュ・表示崩れ
+   - feature_request: まだ存在しない機能の新規要望
+   - improvement: 既存機能の改善・調整
+   - question: 質問・使い方の確認・情報要求
+5. If NOT spam, pick ONE "triageLevel" from ["urgent","high","medium","low"]:
+   - urgent: クラッシュ・データ消失・広範な実用不能
+   - high: 特定機能が使えない／重要機能要望
+   - medium: 通常の改善・軽微なバグ
+   - low: 体裁の問題・質問・軽い要望
+   If spam, omit "category" and "triageLevel" entirely.
 
 Rules:
 - Newspaper-style headline: [症状/論点]+[対象]（助詞は最小限）
@@ -202,7 +302,7 @@ Rules:
   ["bug","improvement","feature","localization","location","ui","performance","network","settings"]
 
 Output JSON only:
-{"title": "...", "summary": "...", "isSpam": true|false, "labels": [], "confidence": 0..1, "reason": "..."}
+{"title": "...", "summary": "...", "isSpam": true|false, "labels": [], "category": "...", "triageLevel": "...", "confidence": 0..1, "reason": "..."}
 
 Return ONLY that JSON. No prose, no markdown.
 `.trim();
@@ -243,7 +343,7 @@ async function loadFewShotFromGCS(): Promise<string | null> {
   const blocks = shuffled.map((it) => {
     const block = `Input:\n${String(it.input)}\nOutput:\n${String(it.output)}`;
     return block.length > FEW_SHOT_PER_EX_MAX
-      ? block.slice(0, FEW_SHOT_PER_EX_MAX - 1) + '…'
+      ? `${block.slice(0, FEW_SHOT_PER_EX_MAX - 1)}…`
       : block;
   });
   return blocks.join('\n\n');
@@ -299,7 +399,7 @@ export const feedbackTriageWorker = onMessagePublished(
       report.description
     );
 
-    const text = extractTextFromVertex(vertexRes as any);
+    const text = extractTextFromVertex(vertexRes as VertexResponse);
     const raw = (() => {
       try {
         const m = text.match(/\{[\s\S]*\}/);
@@ -333,7 +433,6 @@ export const feedbackTriageWorker = onMessagePublished(
       appEdition,
       appClip,
       autoModeEnabled,
-      enableLegacyAutoMode,
       sentryEventId,
     } = report;
 
@@ -352,14 +451,19 @@ export const feedbackTriageWorker = onMessagePublished(
     })();
 
     const autoModeLabel = (() => {
-      if (autoModeEnabled && !enableLegacyAutoMode) {
-        return GITHUB_LABELS.AUTOMODE_V2;
-      }
-      if (autoModeEnabled && enableLegacyAutoMode) {
-        return GITHUB_LABELS.AUTOMODE_V1;
+      if (autoModeEnabled) {
+        return GITHUB_LABELS.AUTOMODE_ENABLED;
       }
       return undefined;
     })();
+
+    const shouldTagTriage = reportType === 'feedback' && !aiReport.isSpam;
+    const categoryLabel = shouldTagTriage
+      ? CATEGORY_LABELS[aiReport.category]
+      : undefined;
+    const triageLabel = shouldTagTriage
+      ? TRIAGE_LABELS[aiReport.triageLevel]
+      : undefined;
 
     try {
       const res = await fetch(
@@ -403,7 +507,7 @@ ${language}
 ${appVersion}
 
 ## オートモード
-${autoModeEnabled ? `有効(${enableLegacyAutoMode ? '1.0' : '2.0'})` : '無効'}
+${autoModeEnabled ? '有効' : '無効'}
 
 ## スタックトレース
 ${'```'}
@@ -429,6 +533,8 @@ ${reporterUid}
               aiReport.isSpam && GITHUB_LABELS.SPAM_TYPE,
               osNameLabel,
               autoModeLabel,
+              categoryLabel,
+              triageLabel,
             ].filter(Boolean),
           }),
         }
@@ -459,6 +565,12 @@ ${reporterUid}
                   name: 'Geminiによる要約',
                   value: aiReport.summary,
                 },
+                ...(shouldTagTriage && categoryLabel && triageLabel
+                  ? [
+                      { name: 'カテゴリ', value: categoryLabel },
+                      { name: 'トリアージ', value: triageLabel },
+                    ]
+                  : []),
                 {
                   name: '端末モデル名',
                   value: `${deviceInfo.brand} ${deviceInfo.modelName}(${deviceInfo.modelId})`,
@@ -515,6 +627,12 @@ ${reporterUid}
                   name: 'Geminiによる要約',
                   value: aiReport.summary,
                 },
+                ...(shouldTagTriage && categoryLabel && triageLabel
+                  ? [
+                      { name: 'カテゴリ', value: categoryLabel },
+                      { name: 'トリアージ', value: triageLabel },
+                    ]
+                  : []),
                 {
                   name: 'アプリの設定言語',
                   value: language,

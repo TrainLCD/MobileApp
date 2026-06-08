@@ -35,7 +35,6 @@ export type Report = {
   appEdition: 'canary' | 'production';
   appClip: boolean;
   autoModeEnabled: boolean;
-  enableLegacyAutoMode: boolean;
   sentryEventId?: string;
 };
 

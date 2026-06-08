@@ -16,92 +16,89 @@ export const useNextStation = (
   const currentStation = useCurrentStation();
   const { isLoopLine } = useLoopLine();
 
-  const station = useMemo(
-    () => originStation ?? currentStation,
-    [originStation, currentStation]
-  );
+  const station = originStation ?? currentStation;
 
   const stations = useMemo(
     () => dropEitherJunctionStation(stationsFromState, selectedDirection),
     [selectedDirection, stationsFromState]
   );
 
-  const stationIndex = useMemo(() => {
-    const index = stations.findIndex((s) => s.id === station?.id);
-    if (index !== -1) {
-      return index;
-    }
+  const isInbound = selectedDirection === 'INBOUND';
 
-    return stations.findIndex((s) => s.groupId === station?.groupId);
-  }, [station?.id, station?.groupId, stations]);
+  // OUTBOUND 用に reverse した配列をメモ化（必要なときだけ作る）。
+  // 以前は useMemo を 2 つに分けて毎回 stations.slice().reverse() を 2 回計算していた。
+  const reversedStations = useMemo(
+    () => (isInbound ? null : stations.slice().reverse()),
+    [isInbound, stations]
+  );
 
-  const outboundStationIndex = useMemo(() => {
-    const index = stations
-      .slice()
-      .reverse()
-      .findIndex((s) => s.id === station?.id);
+  const result = useMemo(() => {
+    const orderedStations = isInbound
+      ? stations
+      : (reversedStations ?? stations);
+    const idMatchIndex = orderedStations.findIndex((s) => s.id === station?.id);
+    const stationIndex =
+      idMatchIndex !== -1
+        ? idMatchIndex
+        : orderedStations.findIndex((s) => s.groupId === station?.groupId);
 
-    if (index !== -1) {
-      return index;
-    }
-
-    return stations
-      .slice()
-      .reverse()
-      .findIndex((s) => s.groupId === station?.groupId);
-  }, [station?.id, station?.groupId, stations]);
-
-  const actualNextStation = useMemo(() => {
     if (stationIndex === -1) {
-      return;
+      return undefined;
     }
 
-    if (isLoopLine) {
-      const loopLineStationIndex =
-        selectedDirection === 'INBOUND' ? stationIndex - 1 : stationIndex + 1;
-
-      if (!stations[loopLineStationIndex]) {
-        return stations[
-          selectedDirection === 'INBOUND' ? stations.length - 1 : 0
-        ];
+    // ループ線とそれ以外で進行方向の取り方が違う。
+    // INBOUND→reversedで stationIndex+1、OUTBOUND→reversedで stationIndex+1（共通）。
+    const actualNextStation = (() => {
+      if (isLoopLine) {
+        // 元配列基準で INBOUND は -1, OUTBOUND は +1 だったが、
+        // ここでは orderedStations が常に進行方向順なので +1 で揃えられる場合とそうでない場合がある。
+        // 既存仕様を保つため元の挙動を再現する。
+        const flatIndex = stations.findIndex((s) => s.id === station?.id);
+        const groupIndex =
+          flatIndex !== -1
+            ? flatIndex
+            : stations.findIndex((s) => s.groupId === station?.groupId);
+        if (groupIndex === -1) {
+          return undefined;
+        }
+        const loopLineStationIndex = isInbound
+          ? groupIndex - 1
+          : groupIndex + 1;
+        if (!stations[loopLineStationIndex]) {
+          return stations[isInbound ? stations.length - 1 : 0];
+        }
+        return stations[loopLineStationIndex];
       }
 
-      return stations[loopLineStationIndex];
+      // 非ループ線: orderedStations は進行方向順なので次は +1
+      return orderedStations[stationIndex + 1];
+    })();
+
+    if (!actualNextStation) {
+      return undefined;
     }
 
-    const notLoopLineStationIndex =
-      selectedDirection === 'INBOUND' ? stationIndex + 1 : stationIndex - 1;
-
-    return stations[notLoopLineStationIndex];
-  }, [isLoopLine, selectedDirection, stationIndex, stations]);
-
-  const nextInboundStopStation = useMemo(() => {
-    if (stationIndex === -1) {
-      return;
+    if (!ignorePass || !getIsPass(actualNextStation)) {
+      return actualNextStation;
     }
 
-    return actualNextStation && getIsPass(actualNextStation) && ignorePass
-      ? stations
-          .slice(stationIndex - stations.length + 1)
-          .find((s) => !getIsPass(s))
-      : actualNextStation;
-  }, [actualNextStation, ignorePass, stationIndex, stations]);
-
-  const nextOutboundStopStation = useMemo(() => {
-    if (outboundStationIndex === -1) {
-      return;
+    // 通過駅をスキップして次の停車駅を探す
+    for (let i = stationIndex + 1; i < orderedStations.length; i++) {
+      const s = orderedStations[i];
+      if (s && !getIsPass(s)) {
+        return s;
+      }
     }
+    return undefined;
+  }, [
+    ignorePass,
+    isInbound,
+    isLoopLine,
+    reversedStations,
+    station?.groupId,
+    station?.id,
+    stations,
+  ]);
 
-    return actualNextStation && getIsPass(actualNextStation) && ignorePass
-      ? stations
-          .slice()
-          .reverse()
-          .slice(outboundStationIndex - stations.length + 1)
-          .find((s) => !getIsPass(s))
-      : actualNextStation;
-  }, [actualNextStation, ignorePass, outboundStationIndex, stations]);
-
-  return selectedDirection === 'INBOUND'
-    ? nextInboundStopStation
-    : nextOutboundStopStation;
+  return result;
 };

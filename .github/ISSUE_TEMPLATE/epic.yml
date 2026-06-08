@@ -1,0 +1,29 @@
+name: "⚔ Epic"
+description: 親タスク
+labels: ["epic"]
+assignees:
+  - TinyKitten
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: 何をこのエピックで実現させたいか
+    validations:
+      required: true
+  - type: textarea
+    id: tickets
+    attributes:
+      label: チケット
+      description: 関連するIssueをリストアップしてください
+      value: |
+        - [ ] #
+    validations:
+      required: false
+  - type: textarea
+    id: concerns
+    attributes:
+      label: 懸念点
+      description: エピックの規模において実現の障壁になりそうな事柄
+    validations:
+      required: false

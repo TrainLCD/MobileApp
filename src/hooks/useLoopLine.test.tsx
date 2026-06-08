@@ -4,6 +4,7 @@ import type React from 'react';
 import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import {
+  DISNEY_RESORT_LINE_ID,
   MEIJO_LINE_ID,
   OSAKA_LOOP_LINE_ID,
   TOEI_OEDO_LINE_ID,
@@ -37,6 +38,7 @@ const TestComponent: React.FC<{
       <Text testID="isOsakaLoopLine">{String(r.isOsakaLoopLine)}</Text>
       <Text testID="isMeijoLine">{String(r.isMeijoLine)}</Text>
       <Text testID="isOedoLine">{String(r.isOedoLine)}</Text>
+      <Text testID="isDisneyResortLine">{String(r.isDisneyResortLine)}</Text>
       <Text testID="isLoopLine">{String(r.isLoopLine)}</Text>
       <Text testID="isPartiallyLoopLine">{String(r.isPartiallyLoopLine)}</Text>
       <Text testID="inbound">
@@ -51,9 +53,11 @@ const TestComponent: React.FC<{
 
 describe('useLoopLine', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     (getIsLocal as jest.Mock).mockReturnValue(true);
-    // useAtomValue はテストごとに必要量だけ上書きする
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('山手線で環状線として検出し、主要駅2件ずつを返す', () => {
@@ -185,5 +189,73 @@ describe('useLoopLine', () => {
 
     expect(getByTestId('isMeijoLine').props.children).toBe('true');
     expect(getByTestId('isLoopLine').props.children).toBe('true');
+  });
+
+  it('ディズニーリゾートラインは環状線として検出されつつ INBOUND は常に空配列', () => {
+    // StationAPI が返す順 (反時計回り):
+    //   東京ディズニーランド → ベイサイド → 東京ディズニーシー → リゾートゲートウェイ
+    const stations: Station[] = [
+      { id: 1134501, groupId: 1, line: { id: DISNEY_RESORT_LINE_ID } }, // 東京ディズニーランド
+      { id: 1134502, groupId: 2, line: { id: DISNEY_RESORT_LINE_ID } }, // ベイサイド
+      { id: 1134503, groupId: 3, line: { id: DISNEY_RESORT_LINE_ID } }, // 東京ディズニーシー
+      { id: 1134504, groupId: 4, line: { id: DISNEY_RESORT_LINE_ID } }, // リゾートゲートウェイ
+    ] as unknown as Station[];
+
+    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations });
+    (useCurrentLine as jest.Mock).mockReturnValue({
+      id: DISNEY_RESORT_LINE_ID,
+    });
+    // 東京ディズニーランドを現在駅
+    (useCurrentStation as jest.Mock).mockReturnValue({
+      id: 1134501,
+      groupId: 1,
+    });
+    (useCurrentTrainType as jest.Mock).mockReturnValue(null);
+
+    const { getByTestId } = render(<TestComponent />);
+
+    expect(getByTestId('isDisneyResortLine').props.children).toBe('true');
+    expect(getByTestId('isLoopLine').props.children).toBe('true');
+    expect(getByTestId('isYamanoteLine').props.children).toBe('false');
+    expect(getByTestId('isOsakaLoopLine').props.children).toBe('false');
+    expect(getByTestId('isMeijoLine').props.children).toBe('false');
+
+    // INBOUND (時計回り) は一方向運行のため常に空
+    expect(getByTestId('inbound').props.children).toBe('[]');
+
+    // OUTBOUND (反時計回り) は順方向に最大 2 駅の主要駅
+    const outbound = getByTestId('outbound').props.children as string;
+    expect(outbound).toContain('1134502'); // ベイサイド
+    expect(outbound).toContain('1134503'); // 東京ディズニーシー
+  });
+
+  it('ディズニーリゾートラインで終端駅 (リゾートゲートウェイ) を起点にしても環状的に主要駅を取得', () => {
+    const stations: Station[] = [
+      { id: 1134501, groupId: 1, line: { id: DISNEY_RESORT_LINE_ID } },
+      { id: 1134502, groupId: 2, line: { id: DISNEY_RESORT_LINE_ID } },
+      { id: 1134503, groupId: 3, line: { id: DISNEY_RESORT_LINE_ID } },
+      { id: 1134504, groupId: 4, line: { id: DISNEY_RESORT_LINE_ID } },
+    ] as unknown as Station[];
+
+    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations });
+    (useCurrentLine as jest.Mock).mockReturnValue({
+      id: DISNEY_RESORT_LINE_ID,
+    });
+    // 配列末尾のリゾートゲートウェイを現在駅 (配列を環状化しないと outbound が空になるケース)
+    (useCurrentStation as jest.Mock).mockReturnValue({
+      id: 1134504,
+      groupId: 4,
+    });
+    (useCurrentTrainType as jest.Mock).mockReturnValue(null);
+
+    const { getByTestId } = render(<TestComponent />);
+
+    // 環状化スキャンで先頭側に折り返してディズニーランド・ベイサイドが取得される
+    const outbound = getByTestId('outbound').props.children as string;
+    expect(outbound).toContain('1134501');
+    expect(outbound).toContain('1134502');
+
+    // INBOUND は一方向運行のため空のまま
+    expect(getByTestId('inbound').props.children).toBe('[]');
   });
 });

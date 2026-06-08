@@ -28,20 +28,20 @@ export const useNumbering = (
   const getStationNumberIndex = useStationNumberIndexFunc();
 
   const targetStation = useMemo(
-    () => (firstStop ? selectedBound : stoppedCurrentStation),
+    () => (firstStop ? (selectedBound ?? undefined) : stoppedCurrentStation),
     [firstStop, selectedBound, stoppedCurrentStation]
   );
 
   const currentStationNumberIndex = useMemo(
     () =>
       getStationNumberIndex(
-        targetStation ?? null,
+        targetStation,
         firstStop ? selectedBound?.line : undefined
       ),
     [firstStop, getStationNumberIndex, selectedBound?.line, targetStation]
   );
   const nextStationNumberIndex = useMemo(
-    () => getStationNumberIndex(nextStation ?? null),
+    () => getStationNumberIndex(nextStation),
     [getStationNumberIndex, nextStation]
   );
 
@@ -52,6 +52,7 @@ export const useNumbering = (
       currentLine.id !== null &&
       JOBAN_LINE_IDS.includes(currentLine.id) &&
       (trainType?.kind === TrainTypeKind.Rapid ||
+        trainType?.kind === TrainTypeKind.CommuterRapid ||
         trainType?.kind === TrainTypeKind.HighSpeedRapid),
     [currentLine, trainType?.kind]
   );

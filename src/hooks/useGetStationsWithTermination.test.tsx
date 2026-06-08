@@ -23,6 +23,9 @@ const mkStation = (groupId: number, id: number = groupId): StationType => ({
   nameKatakana: '',
   nameRoman: undefined,
   nameChinese: undefined,
+  nameIpa: null,
+  nameRomanIpa: null,
+  nameTtsSegments: null,
   nameKorean: undefined,
   threeLetterCode: undefined,
   lines: [],
@@ -40,6 +43,7 @@ const mkStation = (groupId: number, id: number = groupId): StationType => ({
   hasTrainTypes: undefined,
   line: undefined,
   trainType: undefined,
+  transportType: undefined,
 });
 
 const TestComponent: React.FC<Props> = ({ destination, stations }) => {
@@ -55,7 +59,7 @@ const TestComponent: React.FC<Props> = ({ destination, stations }) => {
 };
 
 describe('useGetStationsWithTermination', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

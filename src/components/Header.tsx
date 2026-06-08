@@ -1,42 +1,50 @@
+import { useAtomValue } from 'jotai';
 import React from 'react';
-import { useCurrentStation, useThemeStore } from '~/hooks';
+import { useHeaderCommonData } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
+import { themeAtom } from '~/store/atoms/theme';
+import HeaderE231 from './HeaderE231';
 import HeaderE235 from './HeaderE235';
 import HeaderJL from './HeaderJL';
 import HeaderJRKyushu from './HeaderJRKyushu';
 import HeaderJRWest from './HeaderJRWest';
 import HeaderLED from './HeaderLED';
+import HeaderOdakyu from './HeaderOdakyu';
 import HeaderSaikyo from './HeaderSaikyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
 
 const Header = () => {
-  const theme = useThemeStore((state) => state);
-  const station = useCurrentStation();
+  const theme = useAtomValue(themeAtom);
+  const commonData = useHeaderCommonData();
 
-  if (!station) {
+  if (!commonData) {
     return null;
   }
 
   switch (theme) {
     case APP_THEME.TOKYO_METRO:
     case APP_THEME.TOEI:
-      return <HeaderTokyoMetro />;
+      return <HeaderTokyoMetro {...commonData} />;
     case APP_THEME.JR_WEST:
-      return <HeaderJRWest />;
+      return <HeaderJRWest {...commonData} />;
     case APP_THEME.YAMANOTE:
     case APP_THEME.JO:
-      return <HeaderE235 isJO={theme === APP_THEME.JO} />;
+      return <HeaderE235 {...commonData} isJO={theme === APP_THEME.JO} />;
     case APP_THEME.TY:
-      return <HeaderTY />;
+      return <HeaderTY {...commonData} />;
     case APP_THEME.SAIKYO:
-      return <HeaderSaikyo />;
+      return <HeaderSaikyo {...commonData} />;
     case APP_THEME.LED:
-      return <HeaderLED />;
+      return <HeaderLED {...commonData} />;
     case APP_THEME.JL:
-      return <HeaderJL />;
+      return <HeaderJL {...commonData} />;
     case APP_THEME.JR_KYUSHU:
-      return <HeaderJRKyushu />;
+      return <HeaderJRKyushu {...commonData} />;
+    case APP_THEME.ODAKYU:
+      return <HeaderOdakyu {...commonData} />;
+    case APP_THEME.E231:
+      return <HeaderE231 {...commonData} />;
     default:
       return null;
   }

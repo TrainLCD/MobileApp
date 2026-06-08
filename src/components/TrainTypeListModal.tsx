@@ -1,13 +1,19 @@
+import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
 import navigationState from '~/store/atoms/navigation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -27,7 +33,6 @@ const styles = StyleSheet.create({
   contentView: {
     width: '100%',
     borderRadius: 8,
-    minHeight: 512,
     overflow: 'hidden',
   },
   closeButtonContainer: {
@@ -59,11 +64,95 @@ const styles = StyleSheet.create({
   title: {
     width: '100%',
   },
+  headerText: {
+    color: '#111',
+  },
   flatListContentContainer: {
     paddingHorizontal: 24,
     paddingVertical: 72,
   },
 });
+
+// 選択された路線と目的地の路線の間にある経由路線を取得する
+const getViaLines = (
+  lines: Line[],
+  selectedLine: Line,
+  destination?: Station | null
+): Line[] => {
+  const selectedLineIndex = lines.findIndex((l) => l.id === selectedLine.id);
+  const linesWithoutCurrent = lines.filter((l) => l.id !== selectedLine.id);
+
+  if (!destination) {
+    return linesWithoutCurrent;
+  }
+
+  const destinationLineIndex = lines.findIndex(
+    (l) => l.id === destination.line?.id
+  );
+  if (destinationLineIndex === -1) {
+    return linesWithoutCurrent;
+  }
+
+  // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
+  if (selectedLineIndex === destinationLineIndex) {
+    return lines.slice(selectedLineIndex + 1);
+  }
+
+  const start = Math.min(selectedLineIndex, destinationLineIndex);
+  const end = Math.max(selectedLineIndex, destinationLineIndex);
+  let segment = lines.slice(start + 1, end);
+  if (selectedLineIndex > destinationLineIndex) {
+    segment = [...segment].reverse();
+  }
+  return segment.filter((l) => l.id !== selectedLine.id);
+};
+
+// 同じ会社の連続する路線を「〇〇線」にまとめて表示する
+// 全路線が同一会社の場合はまとめずに個別表示する
+const formatLineNames = (lines: Line[], ja: boolean): string => {
+  const names = (l: Line) => (ja ? l.nameShort : l.nameRoman);
+  const sep = ja ? ' ' : ', ';
+
+  // 全路線が同一会社ならグルーピングせず個別表示
+  const allSameCompany =
+    lines.length > 1 &&
+    lines[0]?.company?.id != null &&
+    lines.every((l) => l.company?.id === lines[0]?.company?.id);
+
+  if (allSameCompany) {
+    return Array.from(new Set(lines.map(names)))
+      .filter(Boolean)
+      .join(sep);
+  }
+
+  // 連続する同一会社の路線をサブグループ化（companyがない場合はまとめない）
+  const companyGroups = lines.reduce<Line[][]>((groups, l) => {
+    const lastGroup = groups.at(-1);
+    if (
+      lastGroup &&
+      lastGroup[0]?.company?.id != null &&
+      lastGroup[0].company.id === l.company?.id
+    ) {
+      lastGroup.push(l);
+    } else {
+      groups.push([l]);
+    }
+    return groups;
+  }, []);
+
+  return companyGroups
+    .map((group) => {
+      if (group.length > 1) {
+        const companyName = ja
+          ? group[0]?.company?.nameShort
+          : group[0]?.company?.nameEnglishShort;
+        return ja ? `${companyName}線` : `${companyName} Line`;
+      }
+      return names(group[0]);
+    })
+    .filter(Boolean)
+    .join(sep);
+};
 
 type Props = {
   visible: boolean;
@@ -83,103 +172,131 @@ export const TrainTypeListModal = ({
   onSelect,
 }: Props) => {
   const { fetchedTrainTypes } = useAtomValue(navigationState);
-
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const { height: windowHeight } = useWindowDimensions();
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const title = useMemo(() => {
-    if (!destination) {
-      return (isJapanese ? line?.nameShort : line?.nameRoman) ?? '';
-    }
-
-    return isJapanese
-      ? `${destination.name ?? ''}方面`
-      : `${destination.nameRoman ?? ''}`;
-  }, [destination, line?.nameRoman, line?.nameShort]);
+    return (isJapanese ? line?.nameShort : line?.nameRoman) ?? '';
+  }, [line?.nameRoman, line?.nameShort]);
   const subtitle = useMemo(() => {
     if (!destination) {
       return '';
     }
 
-    return isJapanese ? `${line?.nameShort ?? ''}` : `${line?.nameRoman ?? ''}`;
-  }, [destination, line?.nameRoman, line?.nameShort]);
+    return isJapanese
+      ? `${destination.name ?? ''}方面`
+      : `${destination.nameRoman ?? ''}`;
+  }, [destination]);
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType }) => {
-      const itemLine = item.line;
+      if (!line) return null;
+
       const lines = uniqBy(item.lines ?? [], 'id');
-
-      if (!itemLine || !line) return null;
-
-      // 選択された路線がこの列車種別の路線リストに含まれているかチェック
-      const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
-      if (selectedLineIndex === -1) return null;
-
-      if (destination) {
-        const destinationLineIndex = lines.findIndex(
-          (l) => l.id === destination.line?.id
-        );
-
-        if (destinationLineIndex === -1) {
-          return null;
-        }
-
-        // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
-        let viaLines: Line[];
-        if (selectedLineIndex === destinationLineIndex) {
-          viaLines = lines.slice(selectedLineIndex + 1);
-        } else {
-          const [start, end] =
-            selectedLineIndex <= destinationLineIndex
-              ? [selectedLineIndex, destinationLineIndex]
-              : [destinationLineIndex, selectedLineIndex];
-          let segment = lines.slice(start, end + 1);
-          if (selectedLineIndex > destinationLineIndex) {
-            segment = segment.reverse();
-          }
-          viaLines = segment.slice(1);
-        }
-
-        const title = `${isJapanese ? item.name : item.nameRoman}`;
-        const subtitle = isJapanese
-          ? `${viaLines.map((l) => l.nameShort).join('・')}${
-              viaLines.length ? '直通' : ''
-            }`
-          : viaLines.length
-            ? `Via ${viaLines.map((l) => l.nameRoman).join(', ')}`
-            : '';
-
-        return (
-          <CommonCard
-            line={line}
-            title={title}
-            subtitle={subtitle}
-            onPress={() => onSelect(item)}
-          />
-        );
-      }
+      const viaLines = getViaLines(lines, line, destination);
 
       const title = `${isJapanese ? item.name : item.nameRoman}`;
-      const subtitle = isJapanese
-        ? lines.map((l) => l.nameShort).join('・')
-        : lines.map((l) => l.nameRoman).join(', ');
+
+      // 同じ種別の路線をグループ化（連続していなくても同じtypeIdなら同一グループ）
+      const groupedViaLines = viaLines.reduce<Line[][]>((groups, l) => {
+        const typeId = l.trainType?.typeId;
+        const existingGroup =
+          typeId !== null && typeId !== undefined
+            ? groups.find((g) => g[0]?.trainType?.typeId === typeId)
+            : undefined;
+        if (existingGroup) {
+          existingGroup.push(l);
+        } else {
+          groups.push([l]);
+        }
+        return groups;
+      }, []);
+
+      const isSingleGroup = groupedViaLines.length <= 1;
+      const ja = isJapanese;
+
+      const subtitle = isSingleGroup
+        ? ja
+          ? `${formatLineNames(viaLines, ja)}${viaLines.length ? ' 直通' : ''}`
+          : viaLines.length
+            ? `Via ${formatLineNames(viaLines, ja)}`
+            : ''
+        : groupedViaLines
+            .map((group) => {
+              const names = formatLineNames(group, ja);
+              const typeName = ja
+                ? (group[0]?.trainType?.name ?? '')
+                : (group[0]?.trainType?.nameRoman ?? '');
+              return typeName ? `${names} ${typeName}` : names;
+            })
+            .join('\n');
 
       return (
         <CommonCard
+          targetStation={line.station ?? undefined}
           line={line}
           title={title}
           subtitle={subtitle}
+          loading={loading}
           onPress={() => onSelect(item)}
         />
       );
     },
-    [destination, line, onSelect]
+    [destination, line, loading, onSelect]
   );
 
   const keyExtractor = useCallback(
-    (tt: TrainType, index: number) =>
-      tt.groupId?.toString() ?? tt.id?.toString() ?? index.toString(),
+    (tt: TrainType, index: number) => tt.id?.toString() ?? index.toString(),
     []
   );
+
+  const trainTypes = useMemo(() => {
+    if (!line) return [];
+
+    const trainTypesWithSelectedLine = fetchedTrainTypes
+      .map((tt) => {
+        const nestedTrainType = tt.lines?.find((l) => l.id === line.id)
+          ?.trainType as TrainType | undefined;
+        return { ...tt, ...nestedTrainType, id: tt.id };
+      })
+      .filter((tt): tt is TrainType => {
+        if (!tt || !tt.line) return false;
+
+        const lines = uniqBy(tt.lines ?? [], 'id');
+        const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
+        if (selectedLineIndex === -1) return false;
+
+        return true;
+      });
+
+    if (!destination?.line?.id) {
+      return trainTypesWithSelectedLine;
+    }
+
+    const trainTypesWithDestination = trainTypesWithSelectedLine.filter(
+      (tt) => {
+        const lines = uniqBy(tt.lines ?? [], 'id');
+        const destinationLineIndex = lines.findIndex(
+          (l) => l.id === destination.line?.id
+        );
+        return destinationLineIndex !== -1;
+      }
+    );
+
+    // destination路線がデータ都合で欠落している場合は0件表示を避けるためフォールバック
+    if (!trainTypesWithDestination.length) {
+      return trainTypesWithSelectedLine;
+    }
+
+    return trainTypesWithDestination;
+  }, [fetchedTrainTypes, line, destination]);
+
+  // ヘッダー(72) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
+  const dynamicMinHeight = useMemo(() => {
+    const content =
+      72 + trainTypes.length * 80 + Math.max(0, trainTypes.length - 1) * 8 + 72;
+    return Math.min(content, windowHeight * 0.75);
+  }, [trainTypes.length, windowHeight]);
 
   return (
     <CustomModal
@@ -190,11 +307,12 @@ export const TrainTypeListModal = ({
       contentContainerStyle={[
         styles.contentView,
         {
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}
@@ -202,27 +320,49 @@ export const TrainTypeListModal = ({
       <View
         style={[
           styles.headerContainer,
-          {
-            backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? '#212121' : undefined },
         ]}
       >
-        {destination ? (
-          <Heading style={styles.subtitle}>{subtitle}</Heading>
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
         ) : null}
-        <Heading singleLine style={styles.title}>
+        <Heading
+          singleLine
+          style={[
+            destination ? styles.subtitle : styles.title,
+            !isLEDTheme && styles.headerText,
+          ]}
+        >
           {title}
         </Heading>
+        {destination ? (
+          <Heading style={[styles.title, !isLEDTheme && styles.headerText]}>
+            {subtitle}
+          </Heading>
+        ) : null}
       </View>
 
       <FlatList<TrainType>
         style={StyleSheet.absoluteFill}
-        data={fetchedTrainTypes}
+        data={trainTypes}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
+        scrollIndicatorInsets={{ top: 72, bottom: 72 }}
+        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
             <SkeletonPlaceholder borderRadius={4} speed={1500}>
@@ -234,11 +374,23 @@ export const TrainTypeListModal = ({
       <View
         style={[
           styles.closeButtonContainer,
-          {
-            backgroundColor: isLEDTheme ? '#212121' : '#fff',
-          },
+          { backgroundColor: isLEDTheme ? '#212121' : undefined },
         ]}
       >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
         <Button
           style={styles.closeButton}
           textStyle={styles.closeButtonText}

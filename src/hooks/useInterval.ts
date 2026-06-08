@@ -7,19 +7,28 @@ export const useInterval = (
   isPausing: boolean;
   pause: () => void;
 } => {
-  const intervalId = useRef<number | null>(null);
+  const intervalId = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isPausing, setIsPausing] = useState(false);
+
+  // handlerをrefに保持することで、呼び出し元のuseCallback依存変化による
+  // setInterval / clearInterval の再生成を抑制する
+  const handlerRef = useRef(handler);
+  useEffect(() => {
+    handlerRef.current = handler;
+  }, [handler]);
 
   useEffect(() => {
     if (isPausing) {
       return () => undefined;
     }
 
-    const id = setInterval(handler, timeout);
+    const id = setInterval(() => {
+      handlerRef.current();
+    }, timeout);
     intervalId.current = id;
 
     return () => clearInterval(id);
-  }, [handler, isPausing, timeout]);
+  }, [isPausing, timeout]);
 
   const pause = useCallback(() => {
     setIsPausing(true);

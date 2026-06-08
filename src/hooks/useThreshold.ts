@@ -1,8 +1,16 @@
 import getDistance from 'geolib/es/getPreciseDistance';
 import { useMemo } from 'react';
-import { APPROACHING_MAX_THRESHOLD, ARRIVED_MAX_THRESHOLD } from '../constants';
+import {
+  APPROACHING_MAX_THRESHOLD,
+  APPROACHING_MIN_THRESHOLD,
+  ARRIVED_MAX_THRESHOLD,
+  ARRIVED_MIN_THRESHOLD,
+} from '../constants';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value));
 
 export const useThreshold = () => {
   const currentStation = useCurrentStation(true);
@@ -36,12 +44,11 @@ export const useThreshold = () => {
       return APPROACHING_MAX_THRESHOLD;
     }
 
-    const threshold = betweenDistance / 2;
-    if (threshold > APPROACHING_MAX_THRESHOLD) {
-      return APPROACHING_MAX_THRESHOLD;
-    }
-
-    return threshold;
+    return clamp(
+      betweenDistance / 2,
+      APPROACHING_MIN_THRESHOLD,
+      APPROACHING_MAX_THRESHOLD
+    );
   }, [betweenDistance]);
 
   const arrivedThreshold = useMemo(() => {
@@ -49,12 +56,11 @@ export const useThreshold = () => {
       return ARRIVED_MAX_THRESHOLD;
     }
 
-    const threshold = betweenDistance / 4;
-    if (threshold > ARRIVED_MAX_THRESHOLD) {
-      return ARRIVED_MAX_THRESHOLD;
-    }
-
-    return threshold;
+    return clamp(
+      betweenDistance / 4,
+      ARRIVED_MIN_THRESHOLD,
+      ARRIVED_MAX_THRESHOLD
+    );
   }, [betweenDistance]);
 
   return { approachingThreshold, arrivedThreshold };

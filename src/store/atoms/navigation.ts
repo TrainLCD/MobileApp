@@ -15,6 +15,7 @@ export type LoopItem = (SavedRoute & { stations: Station[] }) & {
 
 export interface NavigationState {
   leftStations: Station[];
+  pendingTrainType: TrainType | null;
   trainType: TrainType | null;
   headerState: HeaderTransitionState;
   bottomState: BottomTransitionState;
@@ -24,16 +25,16 @@ export interface NavigationState {
   enabledLanguages: AvailableLanguage[];
   fetchedTrainTypes: TrainType[];
   autoModeEnabled: boolean;
-  enableLegacyAutoMode: boolean;
   isAppLatest: boolean;
   firstStop: boolean;
   presetsFetched: boolean;
   presetRoutes: SavedRoute[];
-  pendingWantedDestination: Station | null;
+  pendingQuickActionRouteId: string | null;
 }
 
 export const initialNavigationState: NavigationState = {
   headerState: (isJapanese ? 'CURRENT' : 'CURRENT_EN') as HeaderTransitionState,
+  pendingTrainType: null,
   trainType: null,
   bottomState: 'LINE' as BottomTransitionState,
   leftStations: [],
@@ -41,12 +42,11 @@ export const initialNavigationState: NavigationState = {
   enabledLanguages: ALL_AVAILABLE_LANGUAGES,
   fetchedTrainTypes: [],
   autoModeEnabled: false,
-  enableLegacyAutoMode: false,
   isAppLatest: false,
   firstStop: true,
   presetsFetched: false,
   presetRoutes: [],
-  pendingWantedDestination: null,
+  pendingQuickActionRouteId: null,
 };
 
 const navigationState = atom<NavigationState>(initialNavigationState);

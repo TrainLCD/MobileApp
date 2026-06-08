@@ -32,8 +32,8 @@ class WearableModule(reactContext: ReactApplicationContext) :
       Tasks.await(GoogleApiAvailability.getInstance().checkApiAvailability(Wearable.getDataClient(context)))
     } catch (e: Exception) {
       isWearableApiAvailable = false
-      Log.e(TAG, "Exception: $e")
-      return promise.reject(e)
+      Log.w(TAG, "Wearable API is not available on this device: $e")
+      return promise.resolve(null)
     }
 
     try {

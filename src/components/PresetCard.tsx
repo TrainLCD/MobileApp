@@ -1,14 +1,16 @@
+import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
-import { NUMBERING_ICON_SIZE } from '~/constants';
-import { useThemeStore } from '~/hooks';
+import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '~/constants';
 import { useGetLineMark } from '~/hooks/useGetLineMark';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
+import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getStationName, getStationPrimaryCode } from '~/utils/station';
+import { getIsLocal } from '~/utils/trainTypeString';
 import { NoPresetsCard } from './NoPresetsCard';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
@@ -23,7 +25,6 @@ const styles = StyleSheet.create({
   root: {
     width: '100%',
     height: 180,
-    borderRadius: 8,
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 14,
@@ -37,14 +38,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   title: {
-    fontSize: RFValue(21),
+    fontSize: RFValue(16),
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   columnsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   colLeft: {
     flex: 1,
@@ -53,7 +53,6 @@ const styles = StyleSheet.create({
   },
   colCenter: {
     width: 48, // gap(8) + arrow(32) + gap(8)
-    justifyContent: 'center',
     alignItems: 'center',
   },
   arrowShift: {
@@ -67,8 +66,6 @@ const styles = StyleSheet.create({
   lineItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
-    minWidth: 0,
   },
   lineText: {
     fontSize: RFValue(11),
@@ -81,7 +78,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stationName: {
-    fontSize: RFValue(21),
+    fontSize: RFValue(17),
     fontWeight: 'bold',
     textAlignVertical: 'auto',
   },
@@ -90,6 +87,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlignVertical: 'auto',
   },
+  stationCodeParen: {
+    fontSize: RFValue(8),
+    fontWeight: 'bold',
+    textAlignVertical: 'auto',
+  },
+  trainTypeName: {
+    fontSize: RFValue(9),
+    fontWeight: 'bold',
+    paddingLeft: 24,
+  },
   lineDot: {
     width: 16,
     height: 16,
@@ -97,6 +104,28 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
 });
+
+const renderTextWithSmallerParens = (
+  text: string,
+  baseStyle: typeof styles.stationCode,
+  parenStyle: typeof styles.stationCodeParen,
+  color: string
+) => {
+  const parts = text.split(/([(\uFF08][^)\uFF09]*[)\uFF09])/);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) => {
+    const key = `${i}-${part}`;
+    return /^[(\uFF08]/.test(part) ? (
+      <Typography key={key} style={[parenStyle, { color }]}>
+        {part}
+      </Typography>
+    ) : (
+      <Typography key={key} style={[baseStyle, { color }]}>
+        {part}
+      </Typography>
+    );
+  });
+};
 
 const BrokenIcon = () => (
   <Svg width="34" height="34" viewBox="0 0 24 24">
@@ -109,13 +138,23 @@ const BrokenIcon = () => (
 );
 
 const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
-  const isLEDTheme = useThemeStore((st) => st === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const getLineMark = useGetLineMark();
 
   const containerStyle = useMemo(
     () => [
       styles.root,
-      { backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC' },
+      {
+        backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC',
+        borderRadius: isLEDTheme ? 0 : 8,
+        ...(isTablet
+          ? {}
+          : {
+              height: 156,
+              paddingTop: 16,
+              paddingBottom: 10,
+            }),
+      },
     ],
     [isLEDTheme]
   );
@@ -123,19 +162,25 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
   const lineFg = isLEDTheme ? '#CCCCCC' : '#666666';
   const metaFg = isLEDTheme ? '#CCCCCC' : '#666666';
 
-  const leftCode = getStationPrimaryCode(from);
-  const rightCode = getStationPrimaryCode(to);
-  const leftName = getStationName(from);
-  const rightName = getStationName(to);
+  const leftCode = getStationPrimaryCode(from ?? null, to ?? null);
+  const rightCode = getStationPrimaryCode(to ?? null, from ?? null);
+  const leftName = getStationName(from ?? undefined);
+  const rightName = getStationName(to ?? undefined);
   const leftLine: Line | null = (from?.line as Line) ?? from?.line ?? null;
   const rightLine: Line | null = (to?.line as Line) ?? to?.line ?? null;
   const leftMark = useMemo(
-    () => (leftLine ? getLineMark({ line: leftLine }) : null),
-    [getLineMark, leftLine]
+    () =>
+      leftLine
+        ? getLineMark({ line: leftLine, stationNumbers: from?.stationNumbers })
+        : null,
+    [getLineMark, leftLine, from?.stationNumbers]
   );
   const rightMark = useMemo(
-    () => (rightLine ? getLineMark({ line: rightLine }) : null),
-    [getLineMark, rightLine]
+    () =>
+      rightLine
+        ? getLineMark({ line: rightLine, stationNumbers: to?.stationNumbers })
+        : null,
+    [getLineMark, rightLine, to?.stationNumbers]
   );
 
   const leftLineName = (() => {
@@ -151,6 +196,38 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
       : (rightLine.nameRoman ?? rightLine.nameShort ?? null);
   })();
 
+  const leftTrainType = (() => {
+    const tt = from?.trainType;
+    if (!tt || getIsLocal(tt)) return null;
+    return isJapanese ? (tt.name ?? null) : (tt.nameRoman ?? null);
+  })();
+  const rightTrainType = (() => {
+    const tt = to?.trainType;
+    if (!tt || getIsLocal(tt)) return null;
+    return isJapanese ? (tt.name ?? null) : (tt.nameRoman ?? null);
+  })();
+
+  const leftCodeRendered = useMemo(
+    () =>
+      renderTextWithSmallerParens(
+        leftCode,
+        styles.stationCode,
+        styles.stationCodeParen,
+        metaFg
+      ),
+    [leftCode, metaFg]
+  );
+  const rightCodeRendered = useMemo(
+    () =>
+      renderTextWithSmallerParens(
+        rightCode,
+        styles.stationCode,
+        styles.stationCodeParen,
+        metaFg
+      ),
+    [rightCode, metaFg]
+  );
+
   if (!from || !to)
     return (
       <NoPresetsCard
@@ -165,7 +242,7 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
 
   return (
     <View style={containerStyle}>
-      <Typography style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+      <Typography style={styles.title} numberOfLines={1}>
         {title}
       </Typography>
       {(leftLineName || rightLineName) && (
@@ -179,6 +256,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                     mark={leftMark}
                     size={NUMBERING_ICON_SIZE.SMALL}
                     withDarkTheme={isLEDTheme}
+                    withOutline={
+                      leftMark.signShape === MARK_SHAPE.MONOCHROME_ROUND
+                    }
                   />
                 ) : (
                   <View
@@ -193,11 +273,18 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                 <Typography
                   style={[styles.lineText, { color: lineFg }]}
                   numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
                   {leftLineName}
                 </Typography>
               </View>
+            ) : null}
+            {leftTrainType ? (
+              <Typography
+                style={[styles.trainTypeName, { color: metaFg }]}
+                numberOfLines={1}
+              >
+                {leftTrainType}
+              </Typography>
             ) : null}
           </View>
           <View style={styles.colCenter} />
@@ -210,6 +297,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                     mark={rightMark}
                     size={NUMBERING_ICON_SIZE.SMALL}
                     withDarkTheme={isLEDTheme}
+                    withOutline={
+                      rightMark.signShape === MARK_SHAPE.MONOCHROME_ROUND
+                    }
                   />
                 ) : (
                   <View
@@ -224,11 +314,18 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
                 <Typography
                   style={[styles.lineText, { color: lineFg }]}
                   numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
                   {rightLineName}
                 </Typography>
               </View>
+            ) : null}
+            {rightTrainType ? (
+              <Typography
+                style={[styles.trainTypeName, { color: metaFg }]}
+                numberOfLines={1}
+              >
+                {rightTrainType}
+              </Typography>
             ) : null}
           </View>
         </View>
@@ -238,11 +335,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
           <Typography style={styles.stationName} numberOfLines={1}>
             {leftName}
           </Typography>
-          {leftCode ? (
-            <Typography style={[styles.stationCode, { color: metaFg }]}>
-              {leftCode}
-            </Typography>
-          ) : null}
+          <Typography style={[styles.stationCode, { color: metaFg }]}>
+            {leftCodeRendered}
+          </Typography>
         </View>
         <View style={styles.colCenter}>
           <Svg
@@ -265,11 +360,9 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
           <Typography style={styles.stationName} numberOfLines={1}>
             {rightName}
           </Typography>
-          {rightCode ? (
-            <Typography style={[styles.stationCode, { color: metaFg }]}>
-              {rightCode}
-            </Typography>
-          ) : null}
+          <Typography style={[styles.stationCode, { color: metaFg }]}>
+            {rightCodeRendered}
+          </Typography>
         </View>
       </View>
     </View>

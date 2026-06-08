@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Effect, pipe } from 'effect';
 import { useForegroundPermissions } from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,6 +12,7 @@ import { isJapanese, translate } from '../translation';
 import { useBadAccuracy } from './useBadAccuracy';
 import { useConnectivity } from './useConnectivity';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
+import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 const WARNING_PANEL_LEVEL = {
   URGENT: 'URGENT',
@@ -35,6 +35,8 @@ export const useWarningInfo = () => {
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const badAccuracy = useBadAccuracy();
+  const { isWrongDirection, isLoopLineWrongDirection } =
+    useWrongDirectionDetector();
   const [fgPermStatus] = useForegroundPermissions();
   const bgPermGranted = useLocationPermissionsGranted();
 
@@ -65,29 +67,24 @@ export const useWarningInfo = () => {
   }, [isInternetAvailable]);
 
   useEffect(() => {
-    pipe(
-      Effect.promise(() =>
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED)
-      ),
-      Effect.andThen((longPressNoticeDismissed) => {
-        setLongPressNoticeDismissed(longPressNoticeDismissed === 'true');
-      }),
-      Effect.runPromise
-    );
-
-    pipe(
-      Effect.promise(() =>
+    const loadSettings = async () => {
+      const [
+        longPressNoticeDismissedValue,
+        alwaysPermNotGrantedDismissedValue,
+      ] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED),
         AsyncStorage.getItem(
           ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
-        )
-      ),
-      Effect.andThen((isAlwaysPermissionNotGrantedDismissed) => {
-        setIsAlwaysPermissionNotGrantedDismissed(
-          isAlwaysPermissionNotGrantedDismissed === 'true'
-        );
-      }),
-      Effect.runPromise
-    );
+        ),
+      ]);
+
+      setLongPressNoticeDismissed(longPressNoticeDismissedValue === 'true');
+      setIsAlwaysPermissionNotGrantedDismissed(
+        alwaysPermNotGrantedDismissedValue === 'true'
+      );
+    };
+
+    loadSettings();
   }, []);
 
   const warningInfo = useMemo(() => {
@@ -131,6 +128,18 @@ export const useWarningInfo = () => {
       };
     }
 
+    if (isWrongDirection) {
+      return {
+        level: WARNING_PANEL_LEVEL.URGENT,
+        text: translate('wrongDirectionWarning'),
+      };
+    }
+    if (isLoopLineWrongDirection) {
+      return {
+        level: WARNING_PANEL_LEVEL.WARNING,
+        text: translate('wrongDirectionLoopLineWarning'),
+      };
+    }
     if (badAccuracy) {
       return {
         level: WARNING_PANEL_LEVEL.URGENT,
@@ -166,6 +175,8 @@ export const useWarningInfo = () => {
     autoModeEnabled,
     badAccuracy,
     bgPermGranted,
+    isLoopLineWrongDirection,
+    isWrongDirection,
     fgPermStatus?.granted,
     isAlwaysPermissionNotGrantedDismissed,
     isInternetAvailable,
@@ -182,14 +193,9 @@ export const useWarningInfo = () => {
     setScreenshotTaken(false);
 
     if (!longPressNoticeDismissed) {
-      pipe(
-        Effect.promise(() =>
-          AsyncStorage.setItem(
-            ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
-            'true'
-          )
-        ),
-        Effect.runPromise
+      AsyncStorage.setItem(
+        ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
+        'true'
       );
     }
   }, [longPressNoticeDismissed]);

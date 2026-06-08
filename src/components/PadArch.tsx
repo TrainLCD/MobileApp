@@ -1,16 +1,10 @@
 import { darken } from 'polished';
-import React, { useCallback, useEffect } from 'react';
-import { Dimensions, Platform, StyleSheet, View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
-import type { Line, Station } from '~/@types/graphql';
+import type { Line, LineNested, Station } from '~/@types/graphql';
+import { useLandscapeWindowDimensions } from '~/hooks';
+import { isBusLine } from '~/utils/line';
 import {
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
@@ -28,8 +22,6 @@ import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('screen');
-
 type NumberingInfo = {
   stationNumber: string;
   lineMarkShape: LineMark;
@@ -44,7 +36,155 @@ type Props = {
   station: Station | null;
   numberingInfo: (NumberingInfo | null)[];
   lineMarks: (LineMark | null)[];
+  trainTypeLines: LineNested[];
   isEn: boolean;
+};
+
+type ColorSegment = {
+  color: string;
+  yStart: number;
+  yEnd: number;
+};
+
+const STROKE_WIDTH = 128;
+const DOT_RADIUS = 34; // circle width(68) / 2
+const NAME_TOP_OFFSET = 42;
+
+/** SVG 楕円弧の中心パラメータを算出する (SVG Spec F.6.5) */
+const ARC_EPS = 1e-6;
+const computeArcEllipse = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  rawRx: number,
+  rawRy: number,
+  largeArc: boolean,
+  sweep: boolean
+): { cx: number; cy: number; rx: number; ry: number } => {
+  let rx = Math.max(rawRx, ARC_EPS);
+  let ry = Math.max(rawRy, ARC_EPS);
+  const dx = (x1 - x2) / 2;
+  const dy = (y1 - y2) / 2;
+  const d = (dx * dx) / (rx * rx) + (dy * dy) / (ry * ry);
+  if (d > 1) {
+    const s = Math.sqrt(d);
+    rx *= s;
+    ry *= s;
+  }
+  const num = Math.max(
+    0,
+    rx * rx * ry * ry - rx * rx * dy * dy - ry * ry * dx * dx
+  );
+  const denom = rx * rx * dy * dy + ry * ry * dx * dx;
+  const root = denom > 0 ? Math.sqrt(num / denom) : 0;
+  const sign = largeArc === sweep ? -1 : 1;
+  return {
+    cx: (sign * root * rx * dy) / ry + (x1 + x2) / 2,
+    cy: (sign * root * -(ry * dx)) / rx + (y1 + y2) / 2,
+    rx,
+    ry,
+  };
+};
+
+/** 楕円弧上で指定した y 座標に対応する x 座標を返す（外側の弧） */
+const getArcXAtY = (
+  y: number,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number
+): number => {
+  if (ry < ARC_EPS) return cx;
+  const t = Math.max(-1, Math.min(1, (y - cy) / ry));
+  return cx + rx * Math.sqrt(1 - t * t);
+};
+
+/** 楕円上の指定座標における外向き単位法線の水平成分を返す */
+const getOutwardNormalX = (
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number
+): number => {
+  const clampedRx = Math.max(rx, ARC_EPS);
+  const clampedRy = Math.max(ry, ARC_EPS);
+  const gx = (x - cx) / (clampedRx * clampedRx);
+  const gy = (y - cy) / (clampedRy * clampedRy);
+  const len = Math.sqrt(gx * gx + gy * gy);
+  return len > 0 ? gx / len : 1;
+};
+
+const computeColorSegments = (
+  stations: Station[],
+  trainTypeLines: LineNested[],
+  fallbackColor: string,
+  height: number
+): ColorSegment[] => {
+  if (stations.length === 0) {
+    return [{ color: fallbackColor, yStart: -height, yEnd: 2 * height }];
+  }
+
+  // station.lines と trainType.lines の路線IDを照合して色を決定
+  // マッチしない駅は null にして隣接する確定色で埋める
+  const resolvedColors: (string | null)[] = stations.map((s) => {
+    if (!s) return null;
+
+    for (const ttLine of trainTypeLines) {
+      if (s.lines?.some((sl) => sl.id === ttLine.id)) {
+        return ttLine.color ?? null;
+      }
+    }
+
+    // trainTypeLinesが空なら駅固有の色を使用
+    return trainTypeLines.length > 0 ? null : (s.line?.color ?? null);
+  });
+
+  // null を隣接する確定色で埋める（前方 → 後方の順）
+  for (let i = 1; i < resolvedColors.length; i++) {
+    if (resolvedColors[i] === null) resolvedColors[i] = resolvedColors[i - 1];
+  }
+  for (let i = resolvedColors.length - 2; i >= 0; i--) {
+    if (resolvedColors[i] === null) resolvedColors[i] = resolvedColors[i + 1];
+  }
+
+  const stationColors = resolvedColors.map((c) => c ?? fallbackColor);
+
+  // 駅のドットy座標（スクリーン座標）
+  const dotYs = stations.map((_, i) =>
+    i === 0 ? height / 30 : (i * height) / 7
+  );
+
+  const segments: ColorSegment[] = [];
+  let currentColor = stationColors[0];
+  let segStartIdx = 0;
+
+  for (let i = 1; i <= stationColors.length; i++) {
+    if (i === stationColors.length || stationColors[i] !== currentColor) {
+      // 境界位置: 前の駅ドットと次の駅ドットの間を 0.8 の比率で按分（やや次の駅寄り）
+      const BOUNDARY_RATIO = 0.8;
+      const yStart =
+        segStartIdx === 0
+          ? -height
+          : dotYs[segStartIdx - 1] * (1 - BOUNDARY_RATIO) +
+            dotYs[segStartIdx] * BOUNDARY_RATIO;
+      const yEnd =
+        i === stationColors.length
+          ? 2 * height
+          : dotYs[i - 1] * (1 - BOUNDARY_RATIO) + dotYs[i] * BOUNDARY_RATIO;
+
+      segments.push({ color: currentColor, yStart, yEnd });
+
+      if (i < stationColors.length) {
+        currentColor = stationColors[i];
+        segStartIdx = i;
+      }
+    }
+  }
+
+  return segments;
 };
 
 const styles = StyleSheet.create({
@@ -53,14 +193,12 @@ const styles = StyleSheet.create({
   },
   stationNameContainer: {
     position: 'absolute',
-    width: screenWidth / 4,
     flexDirection: 'row',
     alignItems: 'center',
   },
   stationName: {
     fontSize: 32,
     fontWeight: 'bold',
-    width: screenWidth / 4,
   },
   circle: {
     position: 'absolute',
@@ -73,25 +211,18 @@ const styles = StyleSheet.create({
   arrivedCircle: {
     width: 18,
     height: 18,
-    marginLeft: 32,
-    marginTop: 24,
-  },
-  animatedSurface: {
-    position: 'absolute',
-    bottom: -200,
+    marginLeft: 21,
+    marginTop: 25,
   },
   clipViewStyle: {
     overflow: 'hidden',
     position: 'absolute',
     bottom: 0,
-    width: screenWidth,
   },
   chevron: {
     position: 'absolute',
     width: 60,
     height: 45,
-    right: Platform.OS === 'ios' ? screenWidth / 3 : screenWidth / 3.25,
-    bottom: 72,
     // 非到着時のベース角度
     transform: [{ rotate: '-20deg' }],
     zIndex: 1,
@@ -99,21 +230,11 @@ const styles = StyleSheet.create({
   chevronArrived: {
     width: 72,
     height: 54,
-    top: (4 * screenHeight) / 7,
-    right: screenWidth / (Platform.OS === 'ios' ? 2.985 : 3.1),
-    bottom: undefined,
     transform: [{ rotate: '-110deg' }, { scale: 1.5 }],
     zIndex: 0,
   },
-  transfers: {
-    width: screenWidth / 2,
+  transfersBase: {
     position: 'absolute',
-    top: screenHeight / 4,
-    left: 24,
-  },
-  transfersMany: {
-    position: 'absolute',
-    top: screenHeight / 6,
     left: 24,
   },
   transfersCurrentStationName: {
@@ -136,7 +257,6 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   transferLines: {
-    width: screenWidth / 3,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
@@ -177,6 +297,8 @@ type TransfersProps = {
   lineMarks: (LineMark | null)[];
   station: Station | null;
   isEn: boolean;
+  windowWidth: number;
+  windowHeight: number;
 };
 
 const Transfers: React.FC<TransfersProps> = ({
@@ -184,7 +306,27 @@ const Transfers: React.FC<TransfersProps> = ({
   station,
   lineMarks,
   isEn,
+  windowWidth,
+  windowHeight,
 }: TransfersProps) => {
+  const isBus = isBusLine(station?.line);
+
+  const dynamicStyles = useMemo(
+    () => ({
+      transfers: {
+        width: windowWidth / 2,
+        top: windowHeight / 4,
+      },
+      transfersMany: {
+        top: windowHeight / 6,
+      },
+      transferLines: { width: windowWidth / 3 },
+    }),
+    [windowWidth, windowHeight]
+  );
+
+  const isMany = transferLines.length > MANY_LINES_THRESHOLD;
+
   const renderTransferLines = useCallback(
     (): React.ReactNode[] =>
       transferLines.map((l, i) => {
@@ -212,7 +354,7 @@ const Transfers: React.FC<TransfersProps> = ({
     [isEn, lineMarks, transferLines]
   );
 
-  if (!transferLines?.length) {
+  if (!transferLines.length) {
     return null;
   }
 
@@ -220,31 +362,33 @@ const Transfers: React.FC<TransfersProps> = ({
     <>
       {isEn ? (
         <View
-          style={
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? styles.transfersMany
-              : styles.transfers
-          }
+          style={[
+            styles.transfersBase,
+            isMany ? dynamicStyles.transfersMany : dynamicStyles.transfers,
+          ]}
         >
           <Typography style={styles.transferAtTextEn}>Transfer at</Typography>
           <Typography style={styles.transfersCurrentStationNameEn}>
-            {`${station?.nameRoman} Station`}
+            {`${station?.nameRoman}${isBus ? '' : ' Station'}`}
           </Typography>
-          <View style={styles.transferLines}>{renderTransferLines()}</View>
+          <View style={[styles.transferLines, dynamicStyles.transferLines]}>
+            {renderTransferLines()}
+          </View>
         </View>
       ) : (
         <View
-          style={
-            transferLines?.length > MANY_LINES_THRESHOLD
-              ? styles.transfersMany
-              : styles.transfers
-          }
+          style={[
+            styles.transfersBase,
+            isMany ? dynamicStyles.transfersMany : dynamicStyles.transfers,
+          ]}
         >
           <Typography style={styles.transfersCurrentStationName}>
-            {`${station?.name ?? ''}駅`}
+            {`${station?.name ?? ''}${isBus ? '' : '駅'}`}
           </Typography>
           <Typography style={styles.transferAtText}>乗換えのご案内</Typography>
-          <View style={styles.transferLines}>{renderTransferLines()}</View>
+          <View style={[styles.transferLines, dynamicStyles.transferLines]}>
+            {renderTransferLines()}
+          </View>
         </View>
       )}
     </>
@@ -259,143 +403,185 @@ const PadArch: React.FC<Props> = ({
   station,
   numberingInfo,
   lineMarks,
+  trainTypeLines,
   isEn,
 }: Props) => {
-  // 共有値（Reanimated）
-  const bgScale = useSharedValue(0.95);
-  // シェブロンのアニメーションは 0..1 の単一タイムラインで駆動
-  const chevronTimeline = useSharedValue(0);
-  const fillHeight = useSharedValue(0);
+  const { width: windowWidth, height: windowHeight } =
+    useLandscapeWindowDimensions();
+
+  // Animated.Value（RN Animated API — Reanimated 4.2 の mapper バグ回避）
+  const bgScale = useRef(new Animated.Value(0.95)).current;
+  const chevronTimeline = useRef(new Animated.Value(0)).current;
+  const fillHeight = useRef(new Animated.Value(0)).current;
 
   // エフェクト: シェブロンと背景のアニメーション制御
-  // biome-ignore lint/correctness/useExhaustiveDependencies: SharedValue は安定した参照のため依存配列に含めません
   useEffect(() => {
-    // 既存のアニメーションを停止してから新しいアニメーションを開始
-    cancelAnimation(bgScale);
-    cancelAnimation(chevronTimeline);
-
     if (arrived) {
-      // 背景スケールを鼓動させる
-      bgScale.value = withRepeat(
-        withSequence(
-          withTiming(0.8, { duration: YAMANOTE_CHEVRON_SCALE_DURATION }),
-          withTiming(0.95, { duration: YAMANOTE_CHEVRON_SCALE_DURATION })
-        ),
-        -1,
-        false
-      );
+      chevronTimeline.stopAnimation();
+      chevronTimeline.setValue(0);
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(bgScale, {
+            toValue: 0.8,
+            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(bgScale, {
+            toValue: 0.95,
+            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
     } else {
-      // タイムラインは2フェーズ（移動→フェード）でループ（合計 2x の所要時間）
-      chevronTimeline.value = 0;
-      chevronTimeline.value = withRepeat(
-        withSequence(
-          withTiming(1, { duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2 }),
-          withTiming(0, { duration: 0 })
-        ),
-        -1,
-        false
-      );
+      bgScale.stopAnimation();
+      bgScale.setValue(0.95);
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(chevronTimeline, {
+            toValue: 1,
+            duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2,
+            easing: Easing.linear,
+            useNativeDriver: false,
+          }),
+          Animated.timing(chevronTimeline, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
     }
-  }, [arrived]);
-
-  // エフェクト: マウント時と到着/出発切替ごとに塗りつぶしアニメーション
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 到着状態の変化時のみ再実行
-  useEffect(() => {
-    fillHeight.value = 0;
-    fillHeight.value = withTiming(Dimensions.get('window').height, {
-      duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
-    });
-  }, [arrived, fillHeight]);
-
-  // アニメーション用スタイル
-  const fillStyle = useAnimatedStyle(() => ({ height: fillHeight.value }));
-  const chevronContainerStyle = useAnimatedStyle(() => {
-    if (arrived) return {};
-    const p = chevronTimeline.value; // サイクル全体で 0..1 の進行度
-    // 前半(0..0.5): 位置 128 → 104、後半は 104 を維持
-    const movePhase = Math.min(p / 0.5, 1); // 前半中は 0..1
-    const bottom = 128 - (128 - 104) * movePhase;
-    // 後半(0.5..1): 不透明度 1 → 0、前半は 1 を維持
-    const fadePhase = Math.max((p - 0.5) / 0.5, 0); // 後半中は 0..1
-    const opacity = 0.2 + (1 - fadePhase) * 0.8; // 0.2..1 の範囲
-    // 128→104 を 56→32 に変換
-    const translateY = bottom - 72;
-    return {
-      // 既定の rotate(-20deg) を維持したまま並記（transform は配列全体が上書きされるためここで回転も指定）
-      transform: [{ rotate: '-20deg' }, { translateY }],
-      opacity,
+    return () => {
+      bgScale.stopAnimation();
+      chevronTimeline.stopAnimation();
     };
+  }, [arrived, bgScale, chevronTimeline]);
+
+  // エフェクト: 塗りつぶしアニメーション（arrived 切替時にもリセットしたいため依存に含める）
+  // biome-ignore lint/correctness/useExhaustiveDependencies: arrived は値変化時にアニメーションを再開するため必要
+  useEffect(() => {
+    fillHeight.setValue(0);
+    Animated.timing(fillHeight, {
+      toValue: windowHeight,
+      duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+    return () => {
+      fillHeight.stopAnimation();
+    };
+  }, [arrived, fillHeight, windowHeight]);
+
+  // シェブロン用の補間スタイル（非到着時のみ使用）
+  const chevronOpacity = chevronTimeline.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 1, 0.2],
+  });
+  const chevronTranslateY = chevronTimeline.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, -24, -24],
   });
 
-  // AnimatedChevron不要。SharedValueを直接渡す
-
-  const pathD1 = `M -4 -60 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-    screenWidth / 1.5 - 4
-  } ${screenHeight}`;
-  const pathD2 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-    screenWidth / 1.5
-  } ${screenHeight}`;
-  const pathD3 = `M 0 -64 A ${screenWidth / 1.5} ${screenHeight} 0 0 1 ${
-    screenWidth / 1.5
-  } ${screenHeight}`;
+  const paths = useMemo(
+    () => ({
+      shadow: `M -4 -60 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+        windowWidth / 1.5 - 4
+      } ${windowHeight}`,
+      main: `M 0 -64 A ${windowWidth / 1.5} ${windowHeight} 0 0 1 ${
+        windowWidth / 1.5
+      } ${windowHeight}`,
+    }),
+    [windowWidth, windowHeight]
+  );
   const hexLineColor = line.color ?? '#000';
-  const strokeWidth = Platform.select({
-    ios: 128,
-    android: 96,
-    default: 128,
-  });
+  const strokeWidth = STROKE_WIDTH;
 
-  const getDotLeft = useCallback((i: number): number => {
-    const leftPad = Platform.OS === 'ios' ? 0 : 21;
-    switch (i) {
-      case 0:
-        return screenWidth / 3 + leftPad;
-      case 1:
-        return screenWidth / 2.35 + leftPad;
-      case 2:
-        return screenWidth / 1.975 + leftPad;
-      case 3:
-        return screenWidth / 1.785 + leftPad;
-      case 4:
-        return screenWidth / 1.655 - (Platform.OS === 'ios' ? 3.5 : 0);
-      default:
-        return 0;
-    }
-  }, []);
+  // アークの楕円中心を算出（ドット・ラベル・シェブロンの位置計算に使用）
+  const arc = useMemo(() => {
+    const rx = windowWidth / 1.5;
+    return computeArcEllipse(
+      0,
+      -64,
+      rx,
+      windowHeight,
+      rx,
+      windowHeight,
+      false,
+      true
+    );
+  }, [windowWidth, windowHeight]);
 
-  const getStationNameLeft = useCallback((i: number): number => {
-    switch (i) {
-      case 0:
-        return screenWidth / 2.2;
-      case 1:
-        return screenWidth / 1.925;
-      case 2:
-        return screenWidth / 1.7;
-      case 3:
-        return screenWidth / 1.55;
-      case 4:
-        return screenWidth / 1.47;
-      default:
-        return 0;
-    }
-  }, []);
+  const colorSegments = useMemo(
+    () =>
+      computeColorSegments(
+        stations,
+        trainTypeLines,
+        hexLineColor,
+        windowHeight
+      ),
+    [stations, trainTypeLines, hexLineColor, windowHeight]
+  );
 
-  const getStationNameTop = useCallback((i: number): number => {
-    switch (i) {
-      case 0:
-        return -8;
-      case 1:
-        return screenHeight / 11.5;
-      case 2:
-        return screenHeight / 4.5;
-      case 3:
-        return screenHeight / 2.75;
-      case 4:
-        return screenHeight / 1.9;
-      default:
-        return 0;
-    }
-  }, []);
+  const dynamicStyles = useMemo(() => {
+    const chevronY = (4 * windowHeight) / 7 + 84;
+    const chevronArrivedY = (4 * windowHeight) / 7;
+    return {
+      arcContainer: { width: windowWidth, height: windowHeight },
+      stationNameContainer: { width: windowWidth / 4 },
+      stationName: { width: windowWidth / 4 },
+      clipViewStyle: { width: windowWidth },
+      chevron: {
+        right:
+          windowWidth -
+          getArcXAtY(chevronY, arc.cx, arc.cy, arc.rx, arc.ry) -
+          30,
+        top: chevronY,
+      },
+      chevronArrived: {
+        top: chevronArrivedY,
+        right:
+          windowWidth -
+          getArcXAtY(chevronArrivedY, arc.cx, arc.cy, arc.rx, arc.ry) -
+          36,
+      },
+    };
+  }, [windowWidth, windowHeight, arc]);
+
+  const getDotLeft = useCallback(
+    (i: number): number => {
+      const dotY = i === 0 ? windowHeight / 30 : (i * windowHeight) / 7;
+      const arcX = getArcXAtY(dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      const nx = getOutwardNormalX(arcX, dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      // ストロークの曲率によりバンドの視覚的中心がアーク中心線より外側にずれるため補正
+      const ny2 = 1 - nx * nx;
+      const bandCenterOffset = (STROKE_WIDTH / 2) * ny2;
+      return arcX + bandCenterOffset - DOT_RADIUS;
+    },
+    [windowHeight, arc]
+  );
+
+  const getStationNameLeft = useCallback(
+    (i: number): number => {
+      const dotY = i === 0 ? windowHeight / 30 : (i * windowHeight) / 7;
+      const arcX = getArcXAtY(dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      const nx = getOutwardNormalX(arcX, dotY, arc.cx, arc.cy, arc.rx, arc.ry);
+      // ストローク幅の水平断面（64/nx）でバンド外縁を超えた位置にラベルを配置
+      const safeNx = Math.max(nx, 0.3);
+      return arcX + STROKE_WIDTH / 2 / safeNx + 12;
+    },
+    [windowHeight, arc]
+  );
+
+  const getStationNameTop = useCallback(
+    (i: number): number => {
+      const dotY = i === 0 ? windowHeight / 30 : (i * windowHeight) / 7;
+      return dotY - NAME_TOP_OFFSET;
+    },
+    [windowHeight]
+  );
 
   const getCustomDotStyle = useCallback(
     (
@@ -410,11 +596,11 @@ const PadArch: React.FC<Props> = ({
           : 'white';
       return {
         left: getDotLeft(i),
-        top: !i ? screenHeight / 30 : (i * screenHeight) / 7,
+        top: !i ? windowHeight / 30 : (i * windowHeight) / 7,
         backgroundColor: dotColor,
       };
     },
-    [getDotLeft]
+    [getDotLeft, windowHeight]
   );
 
   const getCustomStationNameStyle = useCallback(
@@ -432,62 +618,130 @@ const PadArch: React.FC<Props> = ({
         station={station}
         lineMarks={lineMarks}
         isEn={isEn}
+        windowWidth={windowWidth}
+        windowHeight={windowHeight}
       />
 
-      <Svg width={screenWidth} height={screenHeight} fill="transparent">
-        <Path d={pathD1} stroke="#333" strokeWidth={strokeWidth} />
-        <Path d={pathD2} stroke="#505a6e" strokeWidth={strokeWidth} />
-      </Svg>
+      {/* 背景アークと色セグメントを同一コンテナに格納し座標系を統一 */}
+      <View style={dynamicStyles.arcContainer}>
+        <Svg width={windowWidth} height={windowHeight} fill="transparent">
+          <Path d={paths.shadow} stroke="#333" strokeWidth={strokeWidth} />
+          <Path d={paths.main} stroke="#505a6e" strokeWidth={strokeWidth} />
+        </Svg>
 
-      <Animated.View style={[styles.clipViewStyle, fillStyle]}>
-        <Svg
-          style={styles.animatedSurface}
-          width={screenWidth}
-          height={screenHeight}
-          fill="transparent"
+        {/* 暗色層: 区間ごとにViewクリッピングで色分け */}
+        <Animated.View
+          style={[
+            styles.clipViewStyle,
+            dynamicStyles.clipViewStyle,
+            { height: fillHeight },
+          ]}
         >
-          <Path
-            d={pathD1}
-            stroke={darken(0.3, hexLineColor)}
-            strokeWidth={strokeWidth}
-          />
-        </Svg>
-      </Animated.View>
-      <Animated.View style={[styles.clipViewStyle, fillStyle]}>
-        <Svg
-          style={styles.animatedSurface}
-          width={screenWidth}
-          height={screenHeight}
-          fill="transparent"
+          {colorSegments.map((seg) => (
+            <View
+              key={`dk-${seg.color}-${seg.yStart}`}
+              style={{
+                position: 'absolute',
+                bottom: windowHeight - seg.yEnd,
+                width: windowWidth,
+                height: seg.yEnd - seg.yStart,
+                overflow: 'hidden',
+              }}
+            >
+              <Svg
+                style={{
+                  position: 'absolute',
+                  bottom: seg.yEnd - windowHeight,
+                }}
+                width={windowWidth}
+                height={windowHeight}
+                fill="transparent"
+              >
+                <Path
+                  d={paths.shadow}
+                  stroke={darken(0.3, seg.color)}
+                  strokeWidth={strokeWidth}
+                />
+              </Svg>
+            </View>
+          ))}
+        </Animated.View>
+        {/* 主色層: 区間ごとにViewクリッピングで色分け */}
+        <Animated.View
+          style={[
+            styles.clipViewStyle,
+            dynamicStyles.clipViewStyle,
+            { height: fillHeight },
+          ]}
         >
-          <Path d={pathD3} stroke={hexLineColor} strokeWidth={strokeWidth} />
-        </Svg>
-      </Animated.View>
+          {colorSegments.map((seg) => (
+            <View
+              key={`mn-${seg.color}-${seg.yStart}`}
+              style={{
+                position: 'absolute',
+                bottom: windowHeight - seg.yEnd,
+                width: windowWidth,
+                height: seg.yEnd - seg.yStart,
+                overflow: 'hidden',
+              }}
+            >
+              <Svg
+                style={{
+                  position: 'absolute',
+                  bottom: seg.yEnd - windowHeight,
+                }}
+                width={windowWidth}
+                height={windowHeight}
+                fill="transparent"
+              >
+                <Path
+                  d={paths.main}
+                  stroke={seg.color}
+                  strokeWidth={strokeWidth}
+                />
+              </Svg>
+            </View>
+          ))}
+        </Animated.View>
+      </View>
       <Animated.View
         style={[
           styles.chevron,
-          arrived ? styles.chevronArrived : chevronContainerStyle,
+          dynamicStyles.chevron,
+          arrived
+            ? [styles.chevronArrived, dynamicStyles.chevronArrived]
+            : {
+                transform: [
+                  { rotate: '-20deg' },
+                  { translateY: chevronTranslateY },
+                ],
+                opacity: chevronOpacity,
+              },
         ]}
       >
-        <ChevronYamanote backgroundScaleSV={bgScale} arrived={arrived} />
+        <ChevronYamanote backgroundScaleAV={bgScale} arrived={arrived} />
       </Animated.View>
 
       <View style={styles.stationNames}>
-        {stations.map((s, i) =>
-          s ? (
+        {stations.map((s, i) => {
+          if (!s) return null;
+          // 同一駅 s に対して getIsPass を複数回呼ばないように1回だけ計算してreuseする。
+          const isPass = getIsPass(s);
+          return (
             <React.Fragment key={s.id}>
               <View
                 style={[
                   styles.circle,
-                  (arrived && i === stations.length - 2) || getIsPass(s)
+                  (arrived && i === stations.length - 2) || isPass
                     ? styles.arrivedCircle
                     : undefined,
-                  getCustomDotStyle(i, stations, arrived, getIsPass(s)),
+                  getCustomDotStyle(i, stations, arrived, isPass),
                 ]}
               />
               <View
                 style={[
                   styles.stationNameContainer,
+                  dynamicStyles.stationNameContainer,
                   getCustomStationNameStyle(i),
                 ]}
               >
@@ -498,7 +752,7 @@ const PadArch: React.FC<Props> = ({
                         .signShape === MARK_SHAPE.SQUARE
                         ? styles.numberingSquareIconContainer
                         : styles.numberingIconContainer,
-                      getIsPass(s) ? styles.halfOpacity : null,
+                      isPass ? styles.halfOpacity : null,
                     ]}
                   >
                     <NumberingIcon
@@ -508,6 +762,7 @@ const PadArch: React.FC<Props> = ({
                       }
                       lineColor={numberingInfo[i]?.lineColor ?? '#000'}
                       stationNumber={numberingInfo[i]?.stationNumber ?? ''}
+                      threeLetterCode={s.threeLetterCode}
                       allowScaling={false}
                     />
                   </View>
@@ -518,15 +773,16 @@ const PadArch: React.FC<Props> = ({
                 <Typography
                   style={[
                     styles.stationName,
-                    getIsPass(s) ? styles.halfOpacity : null,
+                    dynamicStyles.stationName,
+                    isPass ? styles.halfOpacity : null,
                   ]}
                 >
                   {isEn ? s.nameRoman : s.name}
                 </Typography>
               </View>
             </React.Fragment>
-          ) : null
-        )}
+          );
+        })}
       </View>
     </>
   );

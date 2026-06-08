@@ -4,8 +4,8 @@ import getIsPass from '../utils/isPass';
 
 export const useHasPassStationInRegion = (
   stations: Station[],
-  prevStation: Station | null,
-  nextStation: Station | null
+  prevStation: Station | undefined,
+  nextStation: Station | undefined
 ): boolean => {
   const prevStationIndex = useMemo(
     () => stations.findIndex((s) => s.groupId === prevStation?.groupId),

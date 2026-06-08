@@ -1,0 +1,33 @@
+appId: me.tinykitten.trainlcd.dev
+tags:
+  - e2e
+  - yamanote
+  - regression
+---
+# 山手線 外回り メイン画面リグレッションテスト
+#
+# ディープリンクで新宿駅・外回りの状態を注入し、
+# 必要なデータが揃った状態でMain画面が表示されることを確認する。
+#
+# パラメータ:
+#   lid=11302    山手線のlineId
+#   sgid=1130208 新宿駅のstationGroupId
+#   dir=1        OUTBOUND（外回り）
+#   theme=TOKYO_METRO テーマを固定
+
+# アプリの状態をクリアし、位置情報権限を付与
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+
+# アプリを停止し、ディープリンクでコールドスタート
+- stopApp
+- openLink: "trainlcd-canary://?lid=11302&sgid=1130208&dir=1&auto=1&theme=TOKYO_METRO"
+
+# Main画面に新宿駅が表示されることを確認（データ取得成功）
+- extendedWaitUntil:
+    visible:
+      text: ".*新宿.*"
+    timeout: 30000
+    label: "Main画面に新宿駅が表示される"

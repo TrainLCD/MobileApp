@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import {
   type GestureResponderEvent,
@@ -7,10 +8,9 @@ import {
   TouchableOpacity,
   type ViewStyle,
 } from 'react-native';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { LED_THEME_BG_COLOR } from '~/constants';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import type { ButtonTestId } from '~/test/e2e';
-import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
@@ -41,8 +41,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonLED: {
-    paddingVertical: 8,
-    paddingHorizontal: isTablet ? 18 : 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 1,
+    shadowColor: '#333',
+    shadowOpacity: 0.25,
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowRadius: 4,
     borderWidth: 1,
     borderColor: '#fff',
   },
@@ -50,11 +58,11 @@ const styles = StyleSheet.create({
     fontSize: RFValue(14),
     textAlign: 'center',
     color: '#fff',
+    fontWeight: 'bold',
   },
   outlinedButton: {
     borderColor: '#008ffe',
     borderWidth: 1,
-    backgroundColor: '#fff',
   },
   outlinedButtonText: {
     fontWeight: 'bold',
@@ -71,7 +79,7 @@ const Button: React.FC<Props> = ({
   disabled,
   testID,
 }: Props) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
     <TouchableOpacity
@@ -80,10 +88,13 @@ const Button: React.FC<Props> = ({
       style={[
         isLEDTheme ? styles.buttonLED : styles.button,
         {
-          backgroundColor: isLEDTheme ? '#212121' : '#008ffe',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#008ffe',
           opacity: disabled ? 0.5 : 1,
         },
-        outline && styles.outlinedButton,
+        outline && [
+          styles.outlinedButton,
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff' },
+        ],
         style,
       ]}
       testID={testID}

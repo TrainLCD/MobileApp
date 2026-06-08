@@ -1,15 +1,33 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import React, { useMemo } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useAtomValue } from 'jotai';
+import React, { useCallback, useRef } from 'react';
+import {
+  type LayoutChangeEvent,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 type FooterTab = 'home' | 'search' | 'settings';
 
 export const FOOTER_BASE_HEIGHT = 72; // Figma: h=72px
+
+export type ButtonLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const ICON_COLOR = {
+  active: '#0A84FF',
+  inactive: '#6B7280', // gray-500 相当
+} as const;
 
 const styles = StyleSheet.create({
   container: {
@@ -49,19 +67,42 @@ const styles = StyleSheet.create({
 type Props = {
   active?: FooterTab;
   visible?: boolean;
+  onSearchButtonLayout?: (layout: ButtonLayout) => void;
+  onSettingsButtonLayout?: (layout: ButtonLayout) => void;
 };
 
-const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
+const FooterTabBar: React.FC<Props> = ({
+  active = 'home',
+  visible = true,
+  onSearchButtonLayout,
+  onSettingsButtonLayout,
+}) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const searchButtonRef = useRef<View>(null);
+  const settingsButtonRef = useRef<View>(null);
 
-  const iconColor = useMemo(
-    () => ({
-      active: '#0A84FF',
-      inactive: '#6B7280', // gray-500 相当
-    }),
-    []
+  const handleSearchButtonLayout = useCallback(
+    (_event: LayoutChangeEvent) => {
+      if (onSearchButtonLayout && searchButtonRef.current) {
+        searchButtonRef.current.measureInWindow((x, y, width, height) => {
+          onSearchButtonLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onSearchButtonLayout]
+  );
+
+  const handleSettingsButtonLayout = useCallback(
+    (_event: LayoutChangeEvent) => {
+      if (onSettingsButtonLayout && settingsButtonRef.current) {
+        settingsButtonRef.current.measureInWindow((x, y, width, height) => {
+          onSettingsButtonLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onSettingsButtonLayout]
   );
 
   if (!visible) return null;
@@ -81,17 +122,19 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
       >
         <View style={styles.content}>
           <Pressable
+            ref={searchButtonRef}
             style={styles.button}
             accessibilityRole="button"
             onPress={() => {
               navigation.navigate('RouteSearch' as never);
             }}
+            onLayout={handleSearchButtonLayout}
           >
             <Ionicons
               name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
               size={26}
               color={
-                active === 'search' ? iconColor.active : iconColor.inactive
+                active === 'search' ? ICON_COLOR.active : ICON_COLOR.inactive
               }
             />
           </Pressable>
@@ -106,22 +149,26 @@ const FooterTabBar: React.FC<Props> = ({ active = 'home', visible = true }) => {
             <Ionicons
               name={active === 'home' ? 'navigate' : 'navigate-outline'}
               size={28}
-              color={active === 'home' ? iconColor.active : iconColor.inactive}
+              color={
+                active === 'home' ? ICON_COLOR.active : ICON_COLOR.inactive
+              }
             />
           </Pressable>
 
           <Pressable
+            ref={settingsButtonRef}
             style={styles.button}
             accessibilityRole="button"
             onPress={() => {
               navigation.navigate('AppSettings' as never);
             }}
+            onLayout={handleSettingsButtonLayout}
           >
             <Ionicons
               name={active === 'settings' ? 'settings' : 'settings-outline'}
               size={26}
               color={
-                active === 'settings' ? iconColor.active : iconColor.inactive
+                active === 'settings' ? ICON_COLOR.active : ICON_COLOR.inactive
               }
             />
           </Pressable>

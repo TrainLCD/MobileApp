@@ -1,5 +1,5 @@
 import type { Line } from '~/@types/graphql';
-import { LineType } from '~/@types/graphql';
+import { LineType, TransportType } from '~/@types/graphql';
 import { JR_LINE_MAX_ID, MARK_SHAPE, OMIT_JR_THRESHOLD } from '../constants';
 
 export const isJRLine = (line: Line): boolean =>
@@ -45,17 +45,21 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
       color: jrLinesWithoutBT[0].company
         ? jrCompanyColor(jrLinesWithoutBT[0].company?.id ?? 0)
         : '#000000',
-      nameShort: 'JR線',
-      nameRoman: 'JR Lines',
-      nameKatakana: 'JRセン',
       lineType: LineType.Normal,
       nameChinese: 'JR线',
-      nameKorean: 'JR선',
       nameFull: 'JR線',
+      nameIpa: null,
+      nameRomanIpa: null,
+      nameTtsSegments: null,
+      nameKatakana: 'JRセン',
+      nameKorean: 'JR선',
+      nameRoman: 'JR Lines',
+      nameShort: 'JR線',
       status: undefined,
       averageDistance: undefined,
       station: undefined,
       trainType: undefined,
+      transportType: TransportType.Rail,
       company: {
         __typename: 'Company',
         id: 0,
@@ -95,10 +99,14 @@ const omitJRLinesIfThresholdExceeded = (lines: Line[]): Line[] => {
         nameChinese: '新干线',
         nameKorean: '신칸센',
         nameFull: '新幹線',
+        nameIpa: null,
+        nameRomanIpa: null,
+        nameTtsSegments: null,
         status: undefined,
         averageDistance: undefined,
         station: undefined,
         trainType: undefined,
+        transportType: TransportType.Rail,
         company: {
           __typename: 'Company',
           id: 0,

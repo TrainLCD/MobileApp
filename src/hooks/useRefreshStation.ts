@@ -5,23 +5,30 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import {
-  ARRIVED_MAXIMUM_SPEED,
-  BAD_ACCURACY_THRESHOLD,
-} from '../constants/threshold';
+  getMaxPermitAccuracy,
+  isForceNotArrivedOnLowAccuracyEnabled,
+} from '~/lib/remoteConfig';
+import {
+  locationAccuracyOutlierAtom,
+  locationAtom,
+} from '~/store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
-import { isJapanese } from '../translation';
+import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useCanGoForward } from './useCanGoForward';
-import { useLocationStore } from './useLocationStore';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useThreshold } from './useThreshold';
+import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
+
+// GPS精度に応じた閾値補正の上限(m)
+const MAX_ACCURACY_BONUS = 150;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -36,38 +43,72 @@ Notifications.setNotificationHandler({
 export const useRefreshStation = (): void => {
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
-  const latitude = useLocationStore(
-    (state) => state?.location?.coords.latitude
-  );
-  const longitude = useLocationStore(
-    (state) => state?.location?.coords.longitude
-  );
-  const speed =
-    useLocationStore((state) => state?.location?.coords.speed) ?? -1;
-  const accuracy = useLocationStore(
-    (state) => state?.location?.coords.accuracy
-  );
+  const location = useAtomValue(locationAtom);
+  const isAccuracyOutlier = useAtomValue(locationAccuracyOutlierAtom);
+  const latitude = location?.coords.latitude;
+  const longitude = location?.coords.longitude;
+  const accuracy = location?.coords.accuracy;
 
   const nextStation = useNextStation();
+  const nextStationId = nextStation?.id ?? null;
   const approachingNotifiedIdRef = useRef<number | null>(null);
   const arrivedNotifiedIdRef = useRef<number | null>(null);
   const lastArrivedTimeRef = useRef<number>(0);
-  const { targetStationIds } = useAtomValue(notifyState);
+  const lastArrivedStationIdRef = useRef<number | null>(null);
+  const { targetStationIds, wrongDirectionNotifyEnabled } =
+    useAtomValue(notifyState);
 
   const nearestStation = useNearestStation();
   const canGoForward = useCanGoForward();
   const getStationNumberIndex = useStationNumberIndexFunc();
   const { arrivedThreshold, approachingThreshold } = useThreshold();
+  const { isWrongDirection, isLoopLineWrongDirection } =
+    useWrongDirectionDetector();
+  // 同一の次駅区間で逆方向通知が複数回鳴るのを防ぐため、通知済みの次駅IDを記憶する。
+  // isWrongDirection の単なる false 復帰ではリセットせず、次駅が変わるまで保持する。
+  const lastNotifiedWrongDirectionStationIdRef = useRef<number | null>(null);
+
+  // GPS精度に応じた実効閾値を算出する
+  // 精度が悪い場合は判定圏を広げることで検知漏れを減らす
+  const accuracyBonus = useMemo(() => {
+    if (accuracy == null || !Number.isFinite(accuracy) || accuracy <= 0) {
+      return 0;
+    }
+    return Math.min(accuracy * 0.5, MAX_ACCURACY_BONUS);
+  }, [accuracy]);
+
+  const effectiveArrivedThreshold = arrivedThreshold + accuracyBonus;
+  const effectiveApproachingThreshold = approachingThreshold + accuracyBonus;
 
   const isArrived = useMemo((): boolean => {
+    if (latitude == null || longitude == null || !nearestStation) {
+      return true;
+    }
+
+    // 現在位置を信用できない状況では到着判定の信頼性が担保できないため、
+    // 強制的に未到着(=走行中)とみなす。次の2系統を区別して検査する:
+    //   1. 継続測位: handleTrackingLocationが最大許容精度超の測位を棄却して
+    //      座標を凍結するため、精度悪化はlocationAtom側には現れない。棄却の事実は
+    //      外れ値フラグ(isAccuracyOutlier)から判定する。
+    //   2. ワンショット取得・手動選択: フィルタを経由せず粗い精度の測位がlocationAtomに
+    //      入りうるため、保持している精度を直接検査する。
+    // この強制未到着はRemote Configのフィーチャートグルで無効化でき、無効時は
+    // 精度に依らず通常の到着判定を行う。
+    if (
+      isForceNotArrivedOnLowAccuracyEnabled() &&
+      (isAccuracyOutlier ||
+        (accuracy != null && accuracy > getMaxPermitAccuracy()))
+    ) {
+      return false;
+    }
+
+    // グレース期間は到着を引き起こした駅にのみ適用する
+    // 別の駅に対してtrueを返すと誤って駅が進んでしまう
     const inGracePeriod =
       Date.now() - lastArrivedTimeRef.current < ARRIVED_GRACE_PERIOD_MS;
-
     if (
-      latitude == null ||
-      longitude == null ||
-      !nearestStation ||
-      inGracePeriod
+      inGracePeriod &&
+      nearestStation.id === lastArrivedStationIdRef.current
     ) {
       return true;
     }
@@ -76,48 +117,28 @@ export const useRefreshStation = (): void => {
       return true;
     }
 
-    if (getIsPass(nearestStation)) {
-      return isPointWithinRadius(
-        { latitude, longitude },
-        {
-          latitude: nearestStation.latitude as number,
-          longitude: nearestStation.longitude as number,
-        },
-        arrivedThreshold
-      );
-    }
-
-    // NOTE: 速度か位置情報の取得誤差が無効値 or 位置情報の取得誤差が一定以上ある場合は走行速度を停車判定に使用しない
-    const isSpeedInvalid = speed < 0;
-    const isAccuracyInvalid =
-      !accuracy || (accuracy ?? 0) >= BAD_ACCURACY_THRESHOLD;
-
-    const arrived =
-      isSpeedInvalid || isAccuracyInvalid
-        ? isPointWithinRadius(
-            { latitude, longitude },
-            {
-              latitude: nearestStation.latitude as number,
-              longitude: nearestStation.longitude as number,
-            },
-            arrivedThreshold
-          )
-        : isPointWithinRadius(
-            { latitude, longitude },
-            {
-              latitude: nearestStation.latitude as number,
-              longitude: nearestStation.longitude as number,
-            },
-            arrivedThreshold
-          ) &&
-          // NOTE: 走行速度が一定以上の場合は停車判定に使用しない
-          (speed * 3600) / 1000 < ARRIVED_MAXIMUM_SPEED;
+    const arrived = isPointWithinRadius(
+      { latitude, longitude },
+      {
+        latitude: nearestStation.latitude as number,
+        longitude: nearestStation.longitude as number,
+      },
+      effectiveArrivedThreshold
+    );
 
     if (arrived) {
       lastArrivedTimeRef.current = Date.now();
+      lastArrivedStationIdRef.current = nearestStation.id ?? null;
     }
     return arrived;
-  }, [accuracy, arrivedThreshold, latitude, longitude, nearestStation, speed]);
+  }, [
+    accuracy,
+    isAccuracyOutlier,
+    effectiveArrivedThreshold,
+    latitude,
+    longitude,
+    nearestStation,
+  ]);
 
   const isApproaching = useMemo((): boolean => {
     if (
@@ -136,9 +157,9 @@ export const useRefreshStation = (): void => {
         latitude: nextStation.latitude as number,
         longitude: nextStation.longitude as number,
       },
-      approachingThreshold
+      effectiveApproachingThreshold
     );
-  }, [approachingThreshold, latitude, longitude, nextStation]);
+  }, [effectiveApproachingThreshold, latitude, longitude, nextStation]);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
@@ -197,6 +218,39 @@ export const useRefreshStation = (): void => {
     nearestStation,
     sendApproachingNotification,
     targetStationIds,
+  ]);
+
+  useEffect(() => {
+    // 次駅が変わった場合は通知済みフラグをクリアし、新しい区間で再通知できるようにする
+    if (
+      lastNotifiedWrongDirectionStationIdRef.current !== null &&
+      lastNotifiedWrongDirectionStationIdRef.current !== nextStationId
+    ) {
+      lastNotifiedWrongDirectionStationIdRef.current = null;
+    }
+
+    if (
+      !wrongDirectionNotifyEnabled ||
+      (!isWrongDirection && !isLoopLineWrongDirection) ||
+      nextStationId == null ||
+      lastNotifiedWrongDirectionStationIdRef.current === nextStationId
+    ) {
+      return;
+    }
+
+    const bodyKey = isLoopLineWrongDirection
+      ? 'wrongDirectionLoopLineWarning'
+      : 'wrongDirectionWarning';
+    sendNotificationAsync({
+      title: translate('wrongDirectionNotificationTitle'),
+      body: translate(bodyKey),
+    }).catch(() => {});
+    lastNotifiedWrongDirectionStationIdRef.current = nextStationId;
+  }, [
+    isWrongDirection,
+    isLoopLineWrongDirection,
+    nextStationId,
+    wrongDirectionNotifyEnabled,
   ]);
 
   useEffect(() => {

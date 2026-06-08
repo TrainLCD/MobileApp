@@ -1,0 +1,77 @@
+name: "🐛 Bug report"
+description: バグ報告
+labels: ["bug"]
+assignees:
+  - TinyKitten
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグ報告ありがとうございます。以下のフォームにできる限り詳しくご記入ください。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: 発生したバグについてなるべく詳細にご記入ください
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現方法
+      description: バグが再現する手順を箇条書きでご記入ください
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 想定していた動作
+      description: 本来どのように動作するべきかをご記入ください
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際にどのような動作をしたかをご記入ください
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: 端末名
+      placeholder: "例: iPhone 15 Pro, Pixel 8"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "例: iOS 17.1.1, Android 14"
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: アプリのバージョン
+      placeholder: "例: v10.3.1"
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: スクリーンショット
+      description: 必要であればスクリーンショットを添付してください
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: その他
+      description: バグ修正に役立つ追加情報がございましたらご記入ください
+    validations:
+      required: false

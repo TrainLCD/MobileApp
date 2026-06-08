@@ -1,0 +1,90 @@
+import React, { useMemo } from 'react';
+import { type StyleProp, type TextStyle, View } from 'react-native';
+import type { Station } from '~/@types/graphql';
+import { useLandscapeWindowDimensions } from '~/hooks';
+import getStationNameR from '~/utils/getStationNameR';
+import isTablet from '~/utils/isTablet';
+import Typography from '../../../Typography';
+import { commonLineBoardStyles as styles } from '../styles/commonStyles';
+
+export interface StationNameProps {
+  station: Station;
+  en?: boolean;
+  horizontal?: boolean;
+  passed?: boolean;
+  marginBottom?: number;
+  /** 縦書き時の各文字に適用する追加スタイル */
+  charStyle?: StyleProp<TextStyle>;
+}
+
+export const StationName: React.FC<StationNameProps> = React.memo(
+  ({
+    station,
+    en,
+    horizontal,
+    passed,
+    marginBottom,
+    charStyle,
+  }: StationNameProps) => {
+    const stationNameR = useMemo(() => getStationNameR(station), [station]);
+    const characters = useMemo(
+      () => station.name?.split('') ?? [],
+      [station.name]
+    );
+    const dim = useLandscapeWindowDimensions();
+
+    const horizontalAdditionalStyle = useMemo(
+      () => ({
+        width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+        marginBottom:
+          marginBottom ?? (isTablet ? dim.height / 8 : dim.height / 6),
+      }),
+      [dim.height, marginBottom]
+    );
+
+    if (en) {
+      return (
+        <Typography
+          style={[
+            styles.stationNameHorizontal,
+            passed ? styles.grayColor : null,
+            horizontalAdditionalStyle,
+          ]}
+        >
+          {stationNameR}
+        </Typography>
+      );
+    }
+
+    if (horizontal) {
+      return (
+        <Typography
+          style={[
+            styles.stationNameHorizontal,
+            passed ? styles.grayColor : null,
+            horizontalAdditionalStyle,
+          ]}
+        >
+          {station.name}
+        </Typography>
+      );
+    }
+
+    return (
+      <View style={styles.stationNameMapContainer}>
+        {characters.map((c, j) => (
+          <Typography
+            style={[
+              styles.stationName,
+              passed ? styles.grayColor : null,
+              charStyle,
+            ]}
+            key={`${j + 1}${c}`}
+          >
+            {c}
+          </Typography>
+        ))}
+      </View>
+    );
+  }
+);

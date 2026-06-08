@@ -25,7 +25,8 @@ class LiveActivityModule: NSObject {
       isLoopLine: state["isLoopLine"] as? Bool ?? false,
       isNextLastStop: state["isNextLastStop"] as? Bool ?? false,
       lineColor: state["lineColor"] as? String ?? "#000000",
-      lineName: state["lineName"] as? String ?? ""
+      lineName: state["lineName"] as? String ?? "",
+      progress: state["progress"] as? Double ?? 0.3
     )
   }
   

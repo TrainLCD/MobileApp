@@ -24,7 +24,7 @@ These Cloud Functions provide server-side functionality including:
 
 ### Prerequisites
 
-- **Node.js** (version 20)
+- **Node.js** (version 22)
 - **npm** package manager
 - **Firebase CLI** installed globally
 - **Firebase project** set up and configured

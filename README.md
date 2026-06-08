@@ -8,8 +8,8 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-![ESLint](https://github.com/TinyKitten/TrainLCD/workflows/ESLint/badge.svg)
-![Test](https://github.com/TinyKitten/TrainLCD/workflows/Jest/badge.svg)
+![Code quality](https://github.com/TrainLCD/MobileApp/workflows/Code%20quality/badge.svg)
+![Test](https://github.com/TrainLCD/MobileApp/workflows/Jest/badge.svg)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 **TrainLCD is a mobile application that simulates Japanese railway company LCDs, providing real-time navigation and station information for train passengers.**
@@ -34,6 +34,7 @@ This app recreates the authentic experience of Japanese train travel by displayi
 - [Architecture](#architecture)
 - [Support](#support)
 - [Join our Community](#join-our-community)
+- [Data Sources](#data-sources)
 - [Contributors](#contributors-)
 - [Related Projects](#related-projects)
 - [License](#license)
@@ -59,8 +60,8 @@ This app recreates the authentic experience of Japanese train travel by displayi
 
 Before you begin, ensure you have met the following requirements:
 
-- **Node.js 20.x**
-- **pnpm 10.x** (use the globally installed pnpm binary)
+- **Node.js 22.x** (pinned via `.nvmrc`; run `nvm use` to switch automatically)
+- **npm 10.x** (bundled with Node.js 22; `engines` + `engine-strict=true` block `npm install` on other versions)
 - **React Native development environment** set up
 - **Expo CLI** installed globally
 - **Firebase CLI** (for Cloud Functions development)
@@ -77,10 +78,10 @@ Before you begin, ensure you have met the following requirements:
 
 2. Install dependencies:
    ```bash
-   pnpm install
+   npm install
    ```
 
-   Note: Configure `GQL_API_URL` before running `pnpm gql:codegen` to regenerate GraphQL types.
+   Note: Configure `GQL_API_URL` before running `npm run gql:codegen` to regenerate GraphQL types.
 
 ### Running the App
 
@@ -89,14 +90,14 @@ Before you begin, ensure you have met the following requirements:
 To start the development server:
 
 ```bash
-pnpm start
+npm run start
 ```
 
 #### Platform-specific Commands
 
-- **iOS**: `pnpm ios`
-- **Android**: `pnpm android`
-- **Web**: `pnpm web`
+- **iOS**: `npm run ios`
+- **Android**: `npm run android`
+- **Web**: `npm run web`
 
 ## Download
 
@@ -107,7 +108,7 @@ pnpm start
 
 If you like this project, join our Discord community!  
 **NOTE: English is welcome, but in the community, we usually use Japanese for discussions, announcements, etc.**
-[https://discord.gg/7sQhQhnvvw](https://discord.gg/7sQhQhnvvw)
+[https://discord.gg/tsemdME9Nz](https://discord.gg/tsemdME9Nz)
 
 ## Development
 
@@ -118,7 +119,7 @@ src/
 ├── components/        # Reusable UI components
 ├── screens/           # Screen components
 ├── hooks/             # Custom React hooks
-├── store/             # Zustand stores and selectors
+├── store/             # Jotai atoms and selectors
 ├── stacks/            # React Navigation stack definitions
 ├── providers/         # Context providers and integration wrappers
 ├── lib/               # API clients and shared integrations
@@ -134,8 +135,8 @@ src/
 ├── translation.ts     # i18n resources
 └── lineSymbolImage.ts # Line symbol metadata
 
-android/               # Native Android project (Fastlane-managed)
-ios/                   # Native iOS project (Fastlane-managed)
+android/               # Native Android project
+ios/                   # Native iOS project
 functions/             # Firebase Cloud Functions
 docs/                  # Architectural notes and runbooks
 assets/                # Static media bundled with the app
@@ -144,28 +145,28 @@ utils/                 # Tooling scripts and codegen helpers
 
 ### Available Scripts
 
-- `pnpm start` - Start the Expo development server
-- `pnpm android` / `pnpm ios` - Build and launch native binaries through Fastlane
-- `pnpm web` - Serve the Expo web build
-- `pnpm lint` - Run Biome linter
-- `pnpm format` - Format code with Biome
-- `pnpm test` - Run Jest tests
-- `pnpm typecheck` - Run TypeScript type checking
-- `pnpm watch:test` - Run tests in watch mode
-- `pnpm gql:codegen` - Regenerate GraphQL types after schema or documents change (requires `GQL_API_URL`)
+- `npm run start` - Start the Expo development server
+- `npm run android` / `npm run ios` - Build and launch native binaries
+- `npm run web` - Serve the Expo web build
+- `npm run lint` - Run Biome linter
+- `npm run format` - Format code with Biome
+- `npm test` - Run Jest tests
+- `npm run typecheck` - Run TypeScript type checking
+- `npm run watch:test` - Run tests in watch mode
+- `npm run gql:codegen` - Regenerate GraphQL types after schema or documents change (requires `GQL_API_URL`)
 
 ### Testing
 
 This project uses Jest for testing. Run the test suite with:
 
 ```bash
-pnpm test
+npm test
 ```
 
 For watch mode during development:
 
 ```bash
-pnpm watch:test
+npm run watch:test
 ```
 
 ### Firebase Cloud Functions
@@ -201,8 +202,8 @@ We welcome contributions from the community! Here's how you can help:
 1. **Fork the repository**
 2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
 3. **Make your changes** and ensure they follow our coding standards
-4. **Run tests**: `pnpm test`
-5. **Run linting**: `pnpm lint`
+4. **Run tests**: `npm test`
+5. **Run linting**: `npm run lint`
 6. **Commit your changes**: `git commit -m 'Add some amazing feature'`
 7. **Push to the branch**: `git push origin feature/amazing-feature`
 8. **Open a Pull Request**
@@ -255,7 +256,7 @@ TrainLCD is built with:
 
 ### Community Support
 
-- Join our [Discord community](https://discord.gg/7sQhQhnvvw) for discussions and support
+- Join our [Discord community](https://discord.gg/tsemdME9Nz) for discussions and support
 - Check out existing [Issues](https://github.com/TrainLCD/MobileApp/issues) and [Discussions](https://github.com/TrainLCD/MobileApp/discussions)
 
 ### Professional Support
@@ -267,6 +268,11 @@ For professional support or custom development, please contact the maintainers.
 - Thanks to all contributors who have helped improve this project
 - Special thanks to the Japanese railway companies for providing inspiration
 - The open-source community for the excellent tools and libraries
+
+## Data Sources
+
+- Bus-related data provided by [Tokyo Metropolitan Bureau of Transportation (Toei)](https://www.kotsu.metro.tokyo.jp/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- Station data provided by [駅データ.jp](https://www.ekidata.jp/)
 
 ## Contributors ✨
 
@@ -297,7 +303,7 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 
 ## Related Projects
 
-- [StationAPI](https://github.com/TinyKitten/StationAPI) - Backend API for station data
+- [StationAPI](https://github.com/TrainLCD/StationAPI) - Backend API for station data
 
 
 ## License

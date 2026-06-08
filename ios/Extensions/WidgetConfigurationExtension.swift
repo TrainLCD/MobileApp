@@ -9,12 +9,12 @@
 import WidgetKit
 import SwiftUI
 
-extension WidgetConfiguration
-{
-  func supplementalActivityFamiliesIfAvailable() -> some WidgetConfiguration
-  {
+extension WidgetConfiguration {
+  func supplementalActivityFamiliesIfAvailable() -> some WidgetConfiguration {
     if #available(iOSApplicationExtension 18.0, *) {
-      return self.supplementalActivityFamilies([ActivityFamily.small])
+      // .small: Apple Watch Smart Stack
+      // .medium: Mac メニューバー（ネイティブ描画でスピナー問題を回避）
+      return self.supplementalActivityFamilies([.small, .medium])
     } else {
       return self
     }

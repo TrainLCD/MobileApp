@@ -1,28 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAtomValue } from 'jotai';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import {
-  useBoundText,
-  useCurrentLine,
-  useCurrentStation,
-  useCurrentTrainType,
-  useIsNextLastStop,
-  useLoopLine,
-  useNextStation,
-  useNumbering,
-} from '~/hooks';
+import { useLoopLine } from '~/hooks';
 import { STATION_NAME_FONT_SIZE } from '../constants';
-import type { HeaderLangState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
-import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
-import katakanaToHiragana from '../utils/kanaToHiragana';
-import { getNumberingColor } from '../utils/numbering';
 import { RFValue } from '../utils/rfValue';
 import Clock from './Clock';
+import type { CommonHeaderProps } from './Header.types';
+import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
 import Typography from './Typography';
@@ -32,6 +18,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     height: isTablet ? 200 : 128,
     flexDirection: 'row',
+    zIndex: 9999,
   },
   boundContainer: {
     position: 'absolute',
@@ -57,8 +44,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 32,
-    flexWrap: 'wrap',
-    flex: 1,
     textAlign: 'center',
     fontSize: STATION_NAME_FONT_SIZE,
   },
@@ -112,170 +97,21 @@ const styles = StyleSheet.create({
   },
 });
 
-const HeaderJL = () => {
-  const station = useCurrentStation();
-  const currentLine = useCurrentLine();
-  const nextStation = useNextStation();
-
-  const [stateText, setStateText] = useState(translate('nowStoppingAt'));
-  const [stationText, setStationText] = useState(station?.name || '');
-  const { headerState } = useAtomValue(navigationState);
-  const { selectedBound, arrived } = useAtomValue(stationState);
-  const isLast = useIsNextLastStop();
-  const trainType = useCurrentTrainType();
-  const boundStationNameList = useBoundText(true);
+const HeaderJL: React.FC<CommonHeaderProps> = (props) => {
+  const {
+    currentLine,
+    selectedBound,
+    headerLangState,
+    stationText,
+    stateText,
+    boundText,
+    currentStationNumber,
+    threeLetterCode,
+    numberingColor,
+    trainType,
+  } = props;
 
   const { isLoopLine, isPartiallyLoopLine } = useLoopLine();
-
-  const headerLangState = useMemo(
-    () =>
-      headerState.split('_')[1]?.length
-        ? (headerState.split('_')[1] as HeaderLangState)
-        : ('JA' as HeaderLangState),
-    [headerState]
-  );
-  const boundText = boundStationNameList[headerLangState];
-
-  const [currentStationNumber, threeLetterCode] = useNumbering();
-
-  const numberingColor = useMemo(
-    () =>
-      getNumberingColor(
-        arrived,
-        currentStationNumber,
-        nextStation,
-        currentLine
-      ),
-    [arrived, currentStationNumber, currentLine, nextStation]
-  );
-
-  useEffect(() => {
-    if (!station) {
-      return;
-    }
-
-    switch (headerState) {
-      case 'ARRIVING':
-        if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonLast' : 'soon').replace(/\n/, ' ')
-          );
-          setStationText(nextStation.name || '');
-        }
-        break;
-      case 'ARRIVING_KANA':
-        if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonKanaLast' : 'soon').replace(/\n/, ' ')
-          );
-          setStationText(katakanaToHiragana(nextStation.nameKatakana));
-        }
-        break;
-      case 'ARRIVING_EN':
-        if (nextStation) {
-          setStateText(
-            translate(isLast ? 'soonEnLast' : 'soonEn').replace(/\n/, ' ')
-          );
-          setStationText(nextStation.nameRoman ?? '');
-        }
-        break;
-      case 'ARRIVING_ZH':
-        if (nextStation?.nameChinese) {
-          setStateText(
-            translate(isLast ? 'soonZhLast' : 'soonZh').replace(/\n/, ' ')
-          );
-          setStationText(nextStation.nameChinese);
-        }
-        break;
-      case 'ARRIVING_KO':
-        if (nextStation?.nameKorean) {
-          setStateText(
-            translate(isLast ? 'soonKoLast' : 'soonKo').replace(/\n/, ' ')
-          );
-          setStationText(nextStation.nameKorean);
-        }
-        break;
-      case 'CURRENT':
-        setStateText(translate('nowStoppingAt'));
-        setStationText(station.name || '');
-        break;
-      case 'CURRENT_KANA':
-        setStateText(translate('nowStoppingAt'));
-        setStationText(katakanaToHiragana(station.nameKatakana));
-        break;
-      case 'CURRENT_EN':
-        setStateText(translate('nowStoppingAtEn'));
-        setStationText(station.nameRoman ?? '');
-        break;
-      case 'CURRENT_ZH':
-        if (!station.nameChinese) {
-          break;
-        }
-        setStateText(translate('nowStoppingAtZh'));
-        setStationText(station.nameChinese);
-        break;
-      case 'CURRENT_KO':
-        if (!station.nameKorean) {
-          break;
-        }
-        setStateText(translate('nowStoppingAtKo'));
-        setStationText(station.nameKorean);
-        break;
-      case 'NEXT':
-        if (nextStation) {
-          setStateText(
-            translate(isLast ? 'nextLast' : 'next').replace(/\n/, ' ')
-          );
-          setStationText(nextStation.name || '');
-        }
-        break;
-      case 'NEXT_KANA':
-        if (nextStation) {
-          setStateText(
-            translate(isLast ? 'nextKanaLast' : 'nextKana').replace(/\n/, ' ')
-          );
-          setStationText(katakanaToHiragana(nextStation.nameKatakana));
-        }
-        break;
-      case 'NEXT_EN':
-        if (nextStation) {
-          if (isLast) {
-            // 2単語以降はlower caseにしたい
-            // Next Last Stop -> Next last stop
-            const smallCapitalizedLast = translate('nextEnLast')
-              ?.split('\n')
-              .map((letters, index) =>
-                !index ? letters : letters.toLowerCase()
-              )
-              .join(' ');
-            setStateText(smallCapitalizedLast);
-          } else {
-            setStateText(translate('nextEn').replace(/\n/, ' '));
-          }
-
-          setStationText(nextStation.nameRoman ?? '');
-        }
-        break;
-      case 'NEXT_ZH':
-        if (nextStation?.nameChinese) {
-          setStateText(
-            translate(isLast ? 'nextZhLast' : 'nextZh').replace(/\n/, ' ')
-          );
-          setStationText(nextStation.nameChinese);
-        }
-        break;
-      case 'NEXT_KO':
-        if (nextStation?.nameKorean) {
-          setStateText(
-            translate(isLast ? 'nextKoLast' : 'nextKo').replace(/\n/, ' ')
-          );
-          setStationText(nextStation.nameKorean);
-        }
-        break;
-      default:
-        break;
-    }
-  }, [headerState, isLast, nextStation, station]);
 
   const boundPrefix = useMemo(() => {
     switch (headerLangState) {
@@ -287,6 +123,7 @@ const HeaderJL = () => {
         return '';
     }
   }, [headerLangState]);
+
   const boundSuffix = useMemo(() => {
     switch (headerLangState) {
       case 'EN':
@@ -385,15 +222,15 @@ const HeaderJL = () => {
               stationNumber={currentStationNumber.stationNumber || ''}
               threeLetterCode={threeLetterCode}
               withDarkTheme
+              allowScaling
+              transformOrigin="bottom"
             />
           ) : null}
-          <Typography
-            style={styles.stationName}
-            adjustsFontSizeToFit
-            numberOfLines={1}
-          >
-            {stationText}
-          </Typography>
+          <HeaderStationName
+            TextComponent={Typography}
+            text={stationText}
+            textStyle={styles.stationName}
+          />
         </View>
       </View>
       <View style={styles.clockContainer}>

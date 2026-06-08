@@ -1,13 +1,27 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { Provider } from 'jotai';
-import { useLocationStore } from '~/hooks/useLocationStore';
+import * as Battery from 'expo-battery';
+import { Provider, useAtomValue } from 'jotai';
+import { useCurrentLine } from '~/hooks/useCurrentLine';
+import { useCurrentStation } from '~/hooks/useCurrentStation';
+import { useIsPassing } from '~/hooks/useIsPassing';
+import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { useTelemetrySender } from '~/hooks/useTelemetrySender';
+import stationState from '~/store/atoms/station';
 
-const TELEMETRY_MAX_QUEUE_SIZE = 1000;
 const TELEMETRY_THROTTLE_MS = 1; // NOTE: flakyになるので実運用より短め
 
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
+jest.mock('expo-battery', () => ({
+  BatteryState: {
+    UNKNOWN: 0,
+    UNPLUGGED: 1,
+    CHARGING: 2,
+    FULL: 3,
+  },
+  getBatteryLevelAsync: jest.fn(),
+  getBatteryStateAsync: jest.fn(),
+}));
 jest.mock('expo-network', () => ({
   useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
   NetworkStateType: { WIFI: 'WIFI' },
@@ -15,46 +29,94 @@ jest.mock('expo-network', () => ({
 jest.mock('~/utils/telemetryConfig', () => ({
   isTelemetryEnabledByBuild: true,
 }));
-jest.mock('~/hooks/useLocationStore', () => ({
-  useLocationStore: jest.fn(),
-}));
+jest.mock('jotai', () => {
+  const actual = jest.requireActual('jotai');
+  return {
+    ...actual,
+    useAtomValue: jest.fn(),
+  };
+});
 jest.mock('~/constants/telemetry', () => ({
-  TELEMETRY_MAX_QUEUE_SIZE,
+  TELEMETRY_MAX_QUEUE_SIZE: 1000,
   TELEMETRY_THROTTLE_MS,
+}));
+jest.mock('~/hooks/useCurrentLine', () => ({
+  useCurrentLine: jest.fn(),
+}));
+jest.mock('~/hooks/useCurrentStation', () => ({
+  useCurrentStation: jest.fn(),
+}));
+jest.mock('~/hooks/useIsPassing', () => ({
+  useIsPassing: jest.fn(),
+}));
+jest.mock('~/hooks/useTelemetryEnabled', () => ({
+  useTelemetryEnabled: jest.fn(),
+}));
+jest.mock('~/utils/native/android/gnssModule', () => ({
+  subscribeGnss: jest.fn((_callback) => {
+    // No-op for tests
+    return () => {};
+  }),
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider>{children}</Provider>
+  <Provider
+    // @ts-expect-error - initialValues is valid for jotai Provider but types are not up to date
+    initialValues={[
+      [
+        stationState,
+        {
+          arrived: false,
+          approaching: false,
+          station: null,
+          stations: [],
+          stationsCache: [],
+          pendingStation: null,
+          pendingStations: [],
+          selectedDirection: null,
+          selectedBound: null,
+          wantedDestination: null,
+        },
+      ],
+    ]}
+  >
+    {children}
+  </Provider>
 );
 
-let mockWebSocketSend: jest.Mock;
-let mockWebSocket: any;
+let mockFetch: jest.Mock;
+const mockGetBatteryLevelAsync = Battery.getBatteryLevelAsync as jest.Mock;
+const mockGetBatteryStateAsync = Battery.getBatteryStateAsync as jest.Mock;
 
 describe('useTelemetrySender', () => {
   beforeEach(() => {
-    mockWebSocketSend = jest.fn();
-    mockWebSocket = {
-      send: mockWebSocketSend,
-      close: jest.fn(),
-      readyState: 1, // WebSocket.OPEN
-    };
-    (global as any).WebSocket = jest.fn(() => mockWebSocket);
-    (global as any).WebSocket.OPEN = 1;
-    (global as any).WebSocket.CONNECTING = 0;
-    (useLocationStore as unknown as jest.Mock).mockImplementation(
-      (selector: (state: any) => any) =>
-        selector({
-          location: {
-            coords: {
-              latitude: 35.0,
-              longitude: 139.0,
-              accuracy: 5,
-              speed: 10,
-            },
-          },
-          accuracyHistory: [5],
-        })
-    );
+    mockFetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: () => Promise.resolve({ ok: true }),
+    });
+    global.fetch = mockFetch;
+
+    (useAtomValue as jest.Mock).mockReturnValue({
+      coords: {
+        latitude: 35.0,
+        longitude: 139.0,
+        accuracy: 5,
+        speed: 10,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+      },
+      timestamp: Date.now(),
+    });
+
+    (useCurrentLine as jest.Mock).mockReturnValue({ id: 11302 });
+    (useCurrentStation as jest.Mock).mockReturnValue({ id: 1130224 });
+    (useIsPassing as jest.Mock).mockReturnValue(false);
+    (useTelemetryEnabled as jest.Mock).mockReturnValue(true);
+    mockGetBatteryLevelAsync.mockResolvedValue(0.5);
+    mockGetBatteryStateAsync.mockResolvedValue(Battery.BatteryState.CHARGING);
 
     jest.useFakeTimers();
   });
@@ -65,147 +127,245 @@ describe('useTelemetrySender', () => {
     jest.useRealTimers();
   });
 
-  test.skip('should send log when WebSocket is open', async () => {
-    const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+  test('should send log via fetch API', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
 
     await act(async () => {
       result.current.sendLog('Test log from the app', 'info');
-      await Promise.resolve(); // イベントループ1回分回す
+      await Promise.resolve();
     });
 
     await waitFor(
       () => {
-        expect(mockWebSocketSend).toHaveBeenCalled();
-        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-        expect(message.type).toBe('app');
-        expect(message.log.message).toBe('Test log from the app');
+        expect(mockFetch).toHaveBeenCalled();
+        const calls = mockFetch.mock.calls;
+        const logCall = calls.find((call: any[]) => {
+          return call[0] === 'https://example.com/api/log';
+        });
+        expect(logCall).toBeDefined();
+        const body = JSON.parse(logCall[1].body);
+        expect(body.log.message).toBe('Test log from the app');
+        expect(body.log.level).toBe('info');
+        expect(body.log.type).toBe('app');
+        expect(body.device).toBe('MockDevice');
       },
       { timeout: 2000 }
     );
   });
 
-  test.skip('should throttle log sending within 1s', async () => {
-    const { result } = renderHook(() => useTelemetrySender(), { wrapper });
+  test('should send log with default level as debug', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await act(async () => {
+      result.current.sendLog('Debug message');
+      await Promise.resolve();
+    });
+
+    await waitFor(
+      () => {
+        expect(mockFetch).toHaveBeenCalled();
+        const calls = mockFetch.mock.calls;
+        const logCall = calls.find((call: any[]) => {
+          return call[0] === 'https://example.com/api/log';
+        });
+        expect(logCall).toBeDefined();
+        const body = JSON.parse(logCall[1].body);
+        expect(body.log.level).toBe('debug');
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  test('should redact sensitive token-like values in telemetry payload', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await act(async () => {
+      result.current.sendLog('token=abc123-secret-value', 'error');
+      await Promise.resolve();
+    });
+
+    await waitFor(
+      () => {
+        expect(mockFetch).toHaveBeenCalled();
+        const calls = mockFetch.mock.calls;
+        const logCall = calls.find((call: any[]) => {
+          return call[0] === 'https://example.com/api/log';
+        });
+        expect(logCall).toBeDefined();
+        const body = JSON.parse(logCall[1].body);
+        expect(body.log.message).toContain('token=[REDACTED]');
+        expect(body.log.message).not.toContain('abc123-secret-value');
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  test('should not send log if telemetry is disabled', async () => {
+    (useTelemetryEnabled as jest.Mock).mockReturnValue(false);
+
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await act(async () => {
+      result.current.sendLog('Test log');
+      await Promise.resolve();
+    });
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  test('should not send log if baseUrl is not provided', async () => {
+    const { result } = renderHook(() => useTelemetrySender(false, ''), {
+      wrapper,
+    });
+
+    await act(async () => {
+      result.current.sendLog('Test log');
+      await Promise.resolve();
+    });
+
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  test('should include Authorization header with token', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await act(async () => {
+      result.current.sendLog('Test log', 'info');
+      await Promise.resolve();
+    });
+
+    await waitFor(
+      () => {
+        expect(mockFetch).toHaveBeenCalled();
+        const calls = mockFetch.mock.calls;
+        const logCall = calls.find((call: any[]) => {
+          return call[0] === 'https://example.com/api/log';
+        });
+        expect(logCall).toBeDefined();
+        expect(logCall[1].headers.Authorization).toMatch(/^Bearer .+$/);
+        expect(logCall[1].headers['Content-Type']).toBe('application/json');
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  test('should handle fetch error gracefully', async () => {
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await act(async () => {
+      result.current.sendLog('Test log', 'info');
+      await Promise.resolve();
+    });
+
+    await waitFor(
+      () => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Failed to send log:',
+          expect.any(Error)
+        );
+      },
+      { timeout: 2000 }
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  test('should warn when API returns error', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: () => Promise.resolve({ ok: false, error: 'Server error' }),
+    });
+
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await act(async () => {
+      result.current.sendLog('Test log', 'info');
+      await Promise.resolve();
+    });
+
+    await waitFor(
+      () => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Log API error:',
+          'Server error'
+        );
+      },
+      { timeout: 2000 }
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  test('should send multiple logs independently', async () => {
+    const { result } = renderHook(
+      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
 
     await act(async () => {
       result.current.sendLog('First');
       result.current.sendLog('Second');
-      await Promise.resolve(); // イベントループ1回分回す
+      await Promise.resolve();
     });
 
     await waitFor(
       () => {
-        expect(mockWebSocketSend).toHaveBeenCalledTimes(1);
-      },
-      { timeout: 2000 }
-    );
-
-    // スロットリング時間を過ぎた後に2回目のメッセージが送信されることを確認
-    act(() => {
-      jest.advanceTimersByTime(TELEMETRY_THROTTLE_MS);
-      result.current.sendLog('Third');
-    });
-
-    await waitFor(
-      () => {
-        expect(mockWebSocketSend).toHaveBeenCalledTimes(2);
+        const logCalls = mockFetch.mock.calls.filter(
+          (call: any[]) => call[0] === 'https://example.com/api/log'
+        );
+        expect(logCalls.length).toBe(2);
       },
       { timeout: 2000 }
     );
   });
 
-  test('should not send telemetry if coordinates are null', () => {
-    (useLocationStore as unknown as jest.Mock).mockImplementation((selector) =>
-      selector({
-        location: {
-          coords: {
-            latitude: null,
-            longitude: null,
-            accuracy: null,
-            speed: null,
-          },
-        },
-        accuracyHistory: [],
-      })
+  test('should send location payload with null battery level when battery API returns -1', async () => {
+    mockGetBatteryLevelAsync.mockResolvedValueOnce(-1);
+
+    renderHook(
+      () => useTelemetrySender(true, 'https://example.com', 'test-token'),
+      { wrapper }
     );
-    renderHook(() => useTelemetrySender(), { wrapper });
-
-    expect(mockWebSocketSend).not.toHaveBeenCalled();
-  });
-
-  test.skip('should enqueue message if WebSocket is not open', async () => {
-    mockWebSocket.readyState = WebSocket.CONNECTING;
-
-    const { result } = renderHook(() => useTelemetrySender(), { wrapper });
-
-    act(() => {
-      result.current.sendLog('Queued message');
-    });
-
-    expect(mockWebSocketSend).not.toHaveBeenCalled();
-
-    await act(async () => {
-      mockWebSocket.readyState = WebSocket.OPEN;
-      mockWebSocket.onopen?.();
-      await Promise.resolve(); // イベントループ1回分回す
-    });
 
     await waitFor(
       () => {
-        expect(mockWebSocketSend).toHaveBeenCalled();
-        const message = JSON.parse(mockWebSocketSend.mock.calls[0][0]);
-        expect(message.log.message).toBe('Queued message');
+        const locationCall = mockFetch.mock.calls.find((call: any[]) => {
+          return call[0] === 'https://example.com/api/location';
+        });
+        expect(locationCall).toBeDefined();
+        const body = JSON.parse(locationCall[1].body);
+        expect(body.batteryLevel).toBeNull();
       },
       { timeout: 2000 }
     );
-  });
-
-  test.skip('should not connect with invalid WebSocket URL', () => {
-    const spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    renderHook(() => useTelemetrySender(false, 'invalid-url'), { wrapper });
-    expect(spy).toHaveBeenCalledWith('Invalid WebSocket URL');
-    spy.mockRestore();
-  });
-
-  it('should add a message to an empty queue', () => {
-    const queue: string[] = [];
-    const enqueue = (q: string[], msg: string) => {
-      q.push(msg);
-      if (q.length > TELEMETRY_MAX_QUEUE_SIZE) q.shift();
-    };
-
-    enqueue(queue, 'msg1');
-    expect(queue).toEqual(['msg1']);
-  });
-
-  it('should not remove anything if under TELEMETRY_MAX_QUEUE_SIZE', () => {
-    const queue = Array.from(
-      { length: TELEMETRY_MAX_QUEUE_SIZE - 1 },
-      (_, i) => `msg${i}`
-    );
-    const enqueue = (q: string[], msg: string) => {
-      q.push(msg);
-      if (q.length > TELEMETRY_MAX_QUEUE_SIZE) q.shift();
-    };
-
-    enqueue(queue, 'new');
-    expect(queue.length).toBe(TELEMETRY_MAX_QUEUE_SIZE);
-    expect(queue[queue.length - 1]).toBe('new');
-  });
-
-  it('should remove oldest item if TELEMETRY_MAX_QUEUE_SIZE is exceeded', () => {
-    const queue = Array.from(
-      { length: TELEMETRY_MAX_QUEUE_SIZE },
-      (_, i) => `msg${i}`
-    );
-    const enqueue = (q: string[], msg: string) => {
-      q.push(msg);
-      if (q.length > TELEMETRY_MAX_QUEUE_SIZE) q.shift();
-    };
-
-    enqueue(queue, 'latest');
-    expect(queue.length).toBe(TELEMETRY_MAX_QUEUE_SIZE);
-    expect(queue[0]).toBe('msg1'); // msg0 was removed
-    expect(queue[queue.length - 1]).toBe('latest');
   });
 });

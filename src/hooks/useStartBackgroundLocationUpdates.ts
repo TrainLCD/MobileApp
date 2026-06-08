@@ -1,13 +1,25 @@
-import { Effect, pipe } from 'effect';
 import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
-import { AppState } from 'react-native';
+import { store } from '~/store';
+import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
-import { LOCATION_TASK_NAME, LOCATION_TASK_OPTIONS } from '../constants';
+import { handleTrackingLocation } from '~/utils/handleTrackingLocation';
+import {
+  LOCATION_START_MAX_RETRIES,
+  LOCATION_START_RETRY_BASE_DELAY_MS,
+  LOCATION_TASK_NAME,
+  LOCATION_TASK_OPTIONS,
+  LOCATION_WATCH_OPTIONS,
+} from '../constants';
+import { NEEDS_JOBSCHEDULER_BYPASS } from '../constants/native';
 import { translate } from '../translation';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
-import { setLocation } from './useLocationStore';
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
@@ -18,47 +30,146 @@ export const useStartBackgroundLocationUpdates = () => {
       return;
     }
 
-    if (AppState.currentState === 'active') {
-      pipe(
-        Effect.promise(() =>
-          Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    let cancelled = false;
+    let watchPositionSub: Location.LocationSubscription | null = null;
+
+    (async () => {
+      // 前回セッションのフォアグラウンドサービスが残存している場合（killServiceOnDestroy: false）、
+      // 明示的に停止してからstartすることで、FusedLocationProviderClientのサブスクリプションが
+      // システムレベルで蓄積するのを防ぐ。
+      // Android 16ではJobSchedulerクォータが厳格化されており、蓄積したサブスクリプションが
+      // クォータ超過を引き起こしバックグラウンド更新が停止する原因となる。
+      try {
+        const hasStarted =
+          await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+        if (hasStarted) {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        }
+      } catch (cleanupError) {
+        console.warn(
+          '前回セッションの位置情報タスクの停止に失敗しました:',
+          cleanupError
+        );
+      }
+
+      for (let attempt = 0; attempt <= LOCATION_START_MAX_RETRIES; attempt++) {
+        if (cancelled) {
+          return;
+        }
+
+        try {
+          // Android/iOS共通でexpo-locationのフォアグラウンドサービスを使用
+          // Androidではフォアグラウンドサービスにより、バックグラウンドでの位置情報更新の
+          // スロットリングを回避し、アプリプロセスの生存を維持する（Android 8以降の制約）
+          await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
             ...LOCATION_TASK_OPTIONS,
             // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
             // OtherNavigationは必須
             activityType: Location.ActivityType.OtherNavigation,
+            showsBackgroundLocationIndicator: true,
             foregroundService: {
               notificationTitle: translate('bgAlertTitle'),
               notificationBody: translate('bgAlertContent'),
-              killServiceOnDestroy: true,
+              killServiceOnDestroy: false,
             },
-          })
-        ),
-        Effect.runPromise
-      );
-    }
+          });
+          // クリーンアップがstartの完了前に実行された場合、
+          // stopが先に走り開始済みの更新が残るため、ここで再度停止する
+          if (cancelled) {
+            try {
+              await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+            } catch (stopError) {
+              console.warn(
+                'バックグラウンド位置情報の更新停止に失敗しました:',
+                stopError
+              );
+            }
+          } else {
+            store.set(backgroundLocationTrackingAtom, true);
+
+            // Android 16(API 36)ではexpo-task-managerのJobScheduler経由のJS配信が
+            // クォータ制限でスロットルされるため、watchPositionAsyncによる
+            // 直接コールバックを併用してリアルタイム更新を確保する。
+            // フォアグラウンドサービスがプロセスを維持するため、
+            // バックグラウンドでもwatchPositionAsyncのコールバックは正常に動作する。
+            // iOS・Android 15以前ではTaskManager経由の配信で十分なため不要。
+            if (NEEDS_JOBSCHEDULER_BYPASS) {
+              try {
+                const sub = await Location.watchPositionAsync(
+                  LOCATION_WATCH_OPTIONS,
+                  handleTrackingLocation
+                );
+                if (cancelled) {
+                  sub.remove();
+                } else {
+                  watchPositionSub = sub;
+                }
+              } catch (watchError) {
+                console.warn(
+                  '直接位置情報コールバックの開始に失敗しました:',
+                  watchError
+                );
+              }
+            }
+          }
+          return;
+        } catch (error) {
+          if (attempt < LOCATION_START_MAX_RETRIES) {
+            const delay = LOCATION_START_RETRY_BASE_DELAY_MS * 2 ** attempt;
+            console.warn(
+              `バックグラウンド位置情報の更新開始に失敗しました（リトライ ${attempt + 1}/${LOCATION_START_MAX_RETRIES}）:`,
+              error
+            );
+            await wait(delay);
+          } else {
+            console.warn(
+              'バックグラウンド位置情報の更新開始に失敗しました（リトライ上限到達）:',
+              error
+            );
+          }
+        }
+      }
+    })();
 
     return () => {
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      cancelled = true;
+      watchPositionSub?.remove();
+      store.set(backgroundLocationTrackingAtom, false);
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
+        console.warn(
+          'バックグラウンド位置情報の更新停止に失敗しました:',
+          error
+        );
+      });
     };
   }, [autoModeEnabled, bgPermGranted]);
 
   useEffect(() => {
     let watchPositionSub: Location.LocationSubscription | null = null;
+    let cancelled = false;
 
     if (autoModeEnabled || bgPermGranted) {
       return;
     }
 
     (async () => {
-      watchPositionSub = await pipe(
-        Effect.promise(() =>
-          Location.watchPositionAsync(LOCATION_TASK_OPTIONS, setLocation)
-        ),
-        Effect.runPromise
-      );
+      try {
+        const sub = await Location.watchPositionAsync(
+          LOCATION_WATCH_OPTIONS,
+          handleTrackingLocation
+        );
+        if (cancelled) {
+          sub.remove();
+        } else {
+          watchPositionSub = sub;
+        }
+      } catch (error) {
+        console.warn('位置情報の監視開始に失敗しました:', error);
+      }
     })();
 
     return () => {
+      cancelled = true;
       watchPositionSub?.remove();
     };
   }, [autoModeEnabled, bgPermGranted]);

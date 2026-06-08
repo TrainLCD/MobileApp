@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import type { TrainType } from '~/@types/graphql';
+import { TrainTypeKind } from '~/@types/graphql';
 import TrainTypeBoxSaikyo from './TrainTypeBoxSaikyo';
 
 // Mock dependencies
@@ -21,6 +22,29 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('~/hooks/useLazyPrevious', () => ({
   useLazyPrevious: jest.fn((value) => value),
 }));
+
+// LinearGradientのcolors propをDOM上から取得できるようにする
+jest.mock('expo-linear-gradient', () => {
+  const { View } = require('react-native');
+  return {
+    LinearGradient: ({
+      colors,
+      children,
+      style,
+    }: {
+      colors: string[];
+      children?: React.ReactNode;
+      style?: unknown;
+    }) => (
+      <View
+        style={style as object}
+        testID={`linear-gradient:${(colors ?? []).join('|')}`}
+      >
+        {children}
+      </View>
+    ),
+  };
+});
 
 // Create a minimal test component to test the split function crash fix
 const TestSplitFunction = ({
@@ -52,6 +76,9 @@ describe('TrainTypeBoxSaikyo', () => {
     name: 'Test',
     nameKatakana: 'テスト',
     nameRoman: 'Test',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
     nameChinese: '测试',
     nameKorean: '테스트',
     color: '#000000',
@@ -127,6 +154,75 @@ describe('TrainTypeBoxSaikyo', () => {
       expect(() => {
         render(<TrainTypeBoxSaikyo lineColor="#000" trainType={null} />);
       }).not.toThrow();
+    });
+  });
+
+  describe('trainTypeColor (種別色) の決定', () => {
+    const buildTrainType = (kind: TrainTypeKind | null): TrainType => ({
+      ...mockTrainType,
+      color: '#abcdef',
+      kind,
+    });
+
+    // trainTypeColorはLinearGradientの2層目（最後のcolors）に
+    // `${trainTypeColor}bb` / `${trainTypeColor}ff` として渡されるため、
+    // testIDから該当色を持つLinearGradientが存在するか検証する
+    const hasGradientWithColor = (
+      queryAllByTestId: (id: RegExp) => unknown[],
+      color: string
+    ): boolean =>
+      queryAllByTestId(new RegExp(`^linear-gradient:${color}bb\\|${color}ff$`))
+        .length > 0;
+
+    it('CommuterRapidの場合、専用色 #dc143c が適用される', () => {
+      const { queryAllByTestId } = render(
+        <TrainTypeBoxSaikyo
+          lineColor="#000000"
+          trainType={buildTrainType(TrainTypeKind.CommuterRapid)}
+        />
+      );
+      expect(hasGradientWithColor(queryAllByTestId, '#dc143c')).toBe(true);
+    });
+
+    it('Rapidの場合、Rapid色 #1e8ad2 が適用される（CommuterRapidとは異なる）', () => {
+      const { queryAllByTestId } = render(
+        <TrainTypeBoxSaikyo
+          lineColor="#000000"
+          trainType={buildTrainType(TrainTypeKind.Rapid)}
+        />
+      );
+      expect(hasGradientWithColor(queryAllByTestId, '#1e8ad2')).toBe(true);
+      expect(hasGradientWithColor(queryAllByTestId, '#dc143c')).toBe(false);
+    });
+
+    it('HighSpeedRapidの場合、Rapid色 #1e8ad2 が適用される', () => {
+      const { queryAllByTestId } = render(
+        <TrainTypeBoxSaikyo
+          lineColor="#000000"
+          trainType={buildTrainType(TrainTypeKind.HighSpeedRapid)}
+        />
+      );
+      expect(hasGradientWithColor(queryAllByTestId, '#1e8ad2')).toBe(true);
+    });
+
+    it('Default (各駅停車) の場合、lineColorが適用される', () => {
+      const { queryAllByTestId } = render(
+        <TrainTypeBoxSaikyo
+          lineColor="#abcd12"
+          trainType={buildTrainType(TrainTypeKind.Default)}
+        />
+      );
+      expect(hasGradientWithColor(queryAllByTestId, '#abcd12')).toBe(true);
+    });
+
+    it('LimitedExpressなど他の種別はtrainType.colorが優先される', () => {
+      const { queryAllByTestId } = render(
+        <TrainTypeBoxSaikyo
+          lineColor="#000000"
+          trainType={buildTrainType(TrainTypeKind.LimitedExpress)}
+        />
+      );
+      expect(hasGradientWithColor(queryAllByTestId, '#abcdef')).toBe(true);
     });
   });
 });

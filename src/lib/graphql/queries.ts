@@ -4,16 +4,9 @@ import { gql } from '@apollo/client';
 export const COMPANY_FRAGMENT = gql`
   fragment CompanyFields on Company {
     id
-    name
-    nameEnglishFull
     nameEnglishShort
-    nameFull
     nameKatakana
     nameShort
-    railroadId
-    status
-    type
-    url
   }
 `;
 
@@ -34,77 +27,35 @@ export const STATION_NUMBER_FRAGMENT = gql`
   }
 `;
 
-export const LINE_FRAGMENT = gql`
-  ${COMPANY_FRAGMENT}
-  ${LINE_SYMBOL_FRAGMENT}
-  ${STATION_NUMBER_FRAGMENT}
-  fragment LineDetailFields on Line {
-    id
-    averageDistance
-    color
-    company {
-      ...CompanyFields
-    }
-    lineSymbols {
-      ...LineSymbolFields
-    }
-    station {
-      id
-      groupId
-      name
-      nameRoman
-      nameChinese
-      nameKorean
-      hasTrainTypes
-      stationNumbers {
-        ...StationNumberFields
-      }
-    }
-    lineType
-    nameFull
-    nameKatakana
-    nameRoman
-    nameShort
-    nameChinese
-    nameKorean
-    status
+export const TTS_SEGMENT_FRAGMENT = gql`
+  fragment TtsSegmentFields on TtsSegment {
+    alphabet
+    fallbackText
+    lang
+    pronunciation
+    separator
+    surface
   }
 `;
 
-export const LINES_FRAGMENT = gql`
-  ${COMPANY_FRAGMENT}
-  ${LINE_SYMBOL_FRAGMENT}
-  ${STATION_NUMBER_FRAGMENT}
-  fragment LineListItemFields on Line {
+export const TINY_TRAIN_TYPE_FRAGMENT = gql`
+  ${TTS_SEGMENT_FRAGMENT}
+  fragment TinyTrainTypeFields on TrainTypeNested {
     id
-    averageDistance
-    color
-    company {
-      ...CompanyFields
-    }
-    lineSymbols {
-      ...LineSymbolFields
-    }
-    station {
-      id
-      groupId
-      name
-      nameRoman
-      nameChinese
-      nameKorean
-      hasTrainTypes
-      stationNumbers {
-        ...StationNumberFields
-      }
-    }
-    lineType
-    nameFull
+    typeId
+    groupId
+    name
     nameKatakana
     nameRoman
-    nameShort
+    nameRomanIpa
     nameChinese
     nameKorean
-    status
+    nameTtsSegments {
+      ...TtsSegmentFields
+    }
+    color
+    direction
+    kind
   }
 `;
 
@@ -112,9 +63,58 @@ export const LINE_NESTED_FRAGMENT = gql`
   ${COMPANY_FRAGMENT}
   ${LINE_SYMBOL_FRAGMENT}
   ${STATION_NUMBER_FRAGMENT}
+  ${TINY_TRAIN_TYPE_FRAGMENT}
   fragment LineNestedFields on LineNested {
     id
-    averageDistance
+    color
+    company {
+      ...CompanyFields
+    }
+    lineSymbols {
+      ...LineSymbolFields
+    }
+    station {
+      id
+      groupId
+      name
+      nameRoman
+      nameRomanIpa
+      nameChinese
+      nameKorean
+      hasTrainTypes
+      nameTtsSegments {
+        ...TtsSegmentFields
+      }
+      stationNumbers {
+        ...StationNumberFields
+      }
+    }
+    trainType {
+      ...TinyTrainTypeFields
+    }
+    lineType
+    nameFull
+    nameKatakana
+    nameRoman
+    nameRomanIpa
+    nameShort
+    nameChinese
+    nameKorean
+    nameTtsSegments {
+      ...TtsSegmentFields
+    }
+    status
+    transportType
+  }
+`;
+
+export const LINE_IN_STATION_FRAGMENT = gql`
+  ${COMPANY_FRAGMENT}
+  ${LINE_SYMBOL_FRAGMENT}
+  ${STATION_NUMBER_FRAGMENT}
+  ${TTS_SEGMENT_FRAGMENT}
+  fragment LineInStationFields on LineNested {
+    id
     color
     company {
       ...CompanyFields
@@ -135,36 +135,15 @@ export const LINE_NESTED_FRAGMENT = gql`
       }
     }
     lineType
-    nameFull
     nameKatakana
     nameRoman
     nameShort
     nameChinese
     nameKorean
-    status
-  }
-`;
-
-export const TRAIN_TYPE_FRAGMENT = gql`
-  ${LINE_NESTED_FRAGMENT}
-  fragment TrainTypeFields on TrainType {
-    id
-    typeId
-    groupId
-    name
-    nameKatakana
-    nameRoman
-    nameChinese
-    nameKorean
-    color
-    direction
-    kind
-    line {
-      ...LineNestedFields
+    nameTtsSegments {
+      ...TtsSegmentFields
     }
-    lines {
-      ...LineNestedFields
-    }
+    transportType
   }
 `;
 
@@ -177,8 +156,12 @@ export const TRAIN_TYPE_NESTED_FRAGMENT = gql`
     name
     nameKatakana
     nameRoman
+    nameRomanIpa
     nameChinese
     nameKorean
+    nameTtsSegments {
+      ...TtsSegmentFields
+    }
     color
     direction
     kind
@@ -192,7 +175,7 @@ export const TRAIN_TYPE_NESTED_FRAGMENT = gql`
 `;
 
 export const STATION_FRAGMENT = gql`
-  ${LINE_NESTED_FRAGMENT}
+  ${LINE_IN_STATION_FRAGMENT}
   ${STATION_NUMBER_FRAGMENT}
   ${TRAIN_TYPE_NESTED_FRAGMENT}
   fragment StationFields on Station {
@@ -203,65 +186,23 @@ export const STATION_FRAGMENT = gql`
     nameRoman
     nameChinese
     nameKorean
+    nameTtsSegments {
+      ...TtsSegmentFields
+    }
     threeLetterCode
     latitude
     longitude
-    address
-    postalCode
     prefectureId
-    openedAt
-    closedAt
-    status
-    distance
     hasTrainTypes
     stopCondition
     stationNumbers {
       ...StationNumberFields
     }
     line {
-      ...LineNestedFields
+      ...LineInStationFields
     }
     lines {
-      ...LineNestedFields
-    }
-    trainType {
-      ...TrainTypeNestedFields
-    }
-  }
-`;
-
-export const STATION_NESTED_FRAGMENT = gql`
-  ${LINE_NESTED_FRAGMENT}
-  ${STATION_NUMBER_FRAGMENT}
-  ${TRAIN_TYPE_NESTED_FRAGMENT}
-  fragment StationNestedFields on StationNested {
-    id
-    groupId
-    name
-    nameKatakana
-    nameRoman
-    nameChinese
-    nameKorean
-    threeLetterCode
-    latitude
-    longitude
-    address
-    postalCode
-    prefectureId
-    openedAt
-    closedAt
-    status
-    distance
-    hasTrainTypes
-    stopCondition
-    stationNumbers {
-      ...StationNumberFields
-    }
-    line {
-      ...LineNestedFields
-    }
-    lines {
-      ...LineNestedFields
+      ...LineInStationFields
     }
     trainType {
       ...TrainTypeNestedFields
@@ -272,8 +213,118 @@ export const STATION_NESTED_FRAGMENT = gql`
 // Query for getting stations by coordinates (nearby stations)
 export const GET_STATIONS_NEARBY = gql`
   ${STATION_FRAGMENT}
-  query GetStationsNearby($latitude: Float!, $longitude: Float!, $limit: Int) {
-    stationsNearby(latitude: $latitude, longitude: $longitude, limit: $limit) {
+  query GetStationsNearby(
+    $latitude: Float!
+    $longitude: Float!
+    $limit: Int
+    $transportType: TransportType
+  ) {
+    stationsNearby(
+      latitude: $latitude
+      longitude: $longitude
+      limit: $limit
+      transportType: $transportType
+    ) {
+      ...StationFields
+    }
+  }
+`;
+
+// Lightweight fragment for preset cards (PresetCard + useBounds display only)
+export const STATION_PRESET_FRAGMENT = gql`
+  ${LINE_SYMBOL_FRAGMENT}
+  ${STATION_NUMBER_FRAGMENT}
+  fragment StationPresetFields on Station {
+    id
+    groupId
+    name
+    nameRoman
+    nameRomanIpa
+    stationNumbers {
+      ...StationNumberFields
+    }
+    trainType {
+      groupId
+      kind
+      name
+      nameRoman
+    }
+    line {
+      id
+      color
+      lineType
+      nameShort
+      nameFull
+      nameRoman
+    nameRomanIpa
+      lineSymbols {
+        ...LineSymbolFields
+      }
+      station {
+        id
+        stationNumbers {
+          lineSymbol
+          stationNumber
+        }
+      }
+      company {
+        id
+      }
+    }
+  }
+`;
+
+// Query for getting stations by multiple line IDs (lightweight, for preset cards)
+export const GET_LINE_LIST_STATIONS_PRESET = gql`
+  ${STATION_PRESET_FRAGMENT}
+  query GetLineListStationsPreset($lineIds: [Int!]!) {
+    lineListStations(lineIds: $lineIds) {
+      ...StationPresetFields
+    }
+  }
+`;
+
+// Query for getting stations by multiple line group IDs (lightweight, for preset cards)
+export const GET_LINE_GROUP_LIST_STATIONS_PRESET = gql`
+  ${STATION_PRESET_FRAGMENT}
+  query GetLineGroupListStationsPreset($lineGroupIds: [Int!]!) {
+    lineGroupListStations(lineGroupIds: $lineGroupIds) {
+      ...StationPresetFields
+    }
+  }
+`;
+
+// Lightweight fragment for station cache (bounds display only)
+export const STATION_LIGHT_FRAGMENT = gql`
+  fragment StationLightFields on Station {
+    id
+    groupId
+    name
+    nameRoman
+    nameRomanIpa
+    nameChinese
+    nameKorean
+    line {
+      id
+    }
+  }
+`;
+
+// Query for getting stations by multiple line IDs (lightweight, for line card bounds)
+export const GET_LINE_LIST_STATIONS_LIGHT = gql`
+  ${STATION_LIGHT_FRAGMENT}
+  query GetLineListStationsLight($lineIds: [Int!]!) {
+    lineListStations(lineIds: $lineIds) {
+      ...StationLightFields
+    }
+  }
+`;
+
+// Query for getting stations by multiple line IDs
+export const GET_LINE_LIST_STATIONS = gql`
+  ${STATION_FRAGMENT}
+  query GetLineListStations($lineIds: [Int!]!) {
+    lineListStations(lineIds: $lineIds) {
       ...StationFields
     }
   }
@@ -292,8 +343,16 @@ export const GET_LINE_STATIONS = gql`
 // Query for getting stations by name
 export const GET_STATIONS_BY_NAME = gql`
   ${STATION_FRAGMENT}
-  query GetStationsByName($name: String!, $limit: Int, $fromStationGroupId: Int) {
-    stationsByName(name: $name, limit: $limit, fromStationGroupId: $fromStationGroupId) {
+  query GetStationsByName(
+    $name: String!
+    $limit: Int
+    $fromStationGroupId: Int
+  ) {
+    stationsByName(
+      name: $name
+      limit: $limit
+      fromStationGroupId: $fromStationGroupId
+    ) {
       ...StationFields
     }
   }
@@ -309,130 +368,106 @@ export const GET_LINE_GROUP_STATIONS = gql`
   }
 `;
 
-// Query for getting train types by station ID
-export const GET_STATION_TRAIN_TYPES = gql`
-  ${TRAIN_TYPE_FRAGMENT}
-  query GetStationTrainTypes($stationId: Int!) {
-    stationTrainTypes(stationId: $stationId) {
-      ...TrainTypeFields
-    }
-  }
-`;
-
-// Query for getting stations by ID list
-export const GET_STATIONS = gql`
+// Query for getting multiple stations by their IDs (per-operator unique row IDs)
+export const GET_STATIONS_BY_IDS = gql`
   ${STATION_FRAGMENT}
-  query GetStations($ids: [Int!]!) {
+  query GetStationsByIds($ids: [Int!]!) {
     stations(ids: $ids) {
       ...StationFields
     }
   }
 `;
 
-// Query for getting routes between two stations
-export const GET_ROUTES = gql`
-  ${STATION_NESTED_FRAGMENT}
-  query GetRoutes($fromStationGroupId: Int!, $toStationGroupId: Int!, $pageSize: Int, $pageToken: String) {
-    routes(
-      fromStationGroupId: $fromStationGroupId
-      toStationGroupId: $toStationGroupId
-      pageSize: $pageSize
-      pageToken: $pageToken
-    ) {
-      nextPageToken
-      routes {
-        id
-        stops {
-          ...StationNestedFields
-        }
-      }
+// Lightweight fragment for route/train-type selection (TrainTypeListModal + computeCurrentStationInRoutes)
+export const LINE_ROUTE_FRAGMENT = gql`
+  ${LINE_SYMBOL_FRAGMENT}
+  ${STATION_NUMBER_FRAGMENT}
+  fragment LineRouteFields on LineNested {
+    id
+    color
+    lineType
+    nameShort
+    nameRoman
+    nameRomanIpa
+    lineSymbols {
+      ...LineSymbolFields
     }
-  }
-`;
-
-// Query for getting connected routes
-export const GET_CONNECTED_ROUTES = gql`
-  ${STATION_NESTED_FRAGMENT}
-  query GetConnectedRoutes($fromStationGroupId: Int!, $toStationGroupId: Int!) {
-    connectedRoutes(fromStationGroupId: $fromStationGroupId, toStationGroupId: $toStationGroupId) {
+    station {
       id
-      stops {
-        ...StationNestedFields
+      groupId
+      name
+      nameRoman
+    nameRomanIpa
+      nameChinese
+      nameKorean
+      hasTrainTypes
+      stationNumbers {
+        ...StationNumberFields
       }
+    }
+    trainType {
+      typeId
+      name
+      nameRoman
+    }
+    company {
+      id
+      nameShort
+      nameEnglishShort
     }
   }
 `;
 
-// Query for getting route types
-export const GET_ROUTE_TYPES = gql`
-  ${TRAIN_TYPE_FRAGMENT}
-  query GetRouteTypes($fromStationGroupId: Int!, $toStationGroupId: Int!, $pageSize: Int, $pageToken: String) {
+export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
+  ${LINE_ROUTE_FRAGMENT}
+  fragment TrainTypeRouteFields on TrainType {
+    id
+    typeId
+    groupId
+    name
+    nameRoman
+    color
+    kind
+    line {
+      ...LineRouteFields
+    }
+    lines {
+      ...LineRouteFields
+    }
+  }
+`;
+
+// Query for getting route types (lightweight)
+export const GET_ROUTE_TYPES_LIGHT = gql`
+  ${TRAIN_TYPE_ROUTE_FRAGMENT}
+  query GetRouteTypesLight(
+    $fromStationGroupId: Int!
+    $toStationGroupId: Int!
+    $pageSize: Int
+    $pageToken: String
+    $viaLineId: Int
+  ) {
     routeTypes(
       fromStationGroupId: $fromStationGroupId
       toStationGroupId: $toStationGroupId
       pageSize: $pageSize
       pageToken: $pageToken
+      viaLineId: $viaLineId
     ) {
       nextPageToken
       trainTypes {
-        ...TrainTypeFields
+        ...TrainTypeRouteFields
       }
     }
   }
 `;
 
-// Query for getting station by ID
-export const GET_STATION = gql`
-  ${STATION_FRAGMENT}
-  query GetStation($id: Int!) {
-    station(id: $id) {
-      ...StationFields
-    }
-  }
-`;
-
-// Query for getting line by ID
-export const GET_LINE = gql`
-  ${LINE_FRAGMENT}
-  ${STATION_NESTED_FRAGMENT}
-  ${TRAIN_TYPE_NESTED_FRAGMENT}
-  query GetLine($lineId: Int!) {
-    line(lineId: $lineId) {
-      ...LineDetailFields
-      station {
-        ...StationNestedFields
-      }
-      trainType {
-        ...TrainTypeNestedFields
-      }
-    }
-  }
-`;
-
-// Query for getting lines by name
-export const GET_LINES_BY_NAME = gql`
-  ${LINE_FRAGMENT}
-  ${STATION_NESTED_FRAGMENT}
-  ${TRAIN_TYPE_NESTED_FRAGMENT}
-  query GetLinesByName($name: String!, $limit: Int) {
-    linesByName(name: $name, limit: $limit) {
-      ...LineListItemFields
-      station {
-        ...StationNestedFields
-      }
-      trainType {
-        ...TrainTypeNestedFields
-      }
-    }
-  }
-`;
-
-// Query for getting station group stations
-export const GET_STATION_GROUP_STATIONS = gql`
-  ${STATION_FRAGMENT}
-  query GetStationGroupStations($groupId: Int!) {
-    stationGroupStations(groupId: $groupId) {
-      ...StationFields
+// Query for getting train types by station ID (lightweight)
+export const GET_STATION_TRAIN_TYPES_LIGHT = gql`
+  ${TRAIN_TYPE_ROUTE_FRAGMENT}
+  query GetStationTrainTypesLight($stationId: Int!) {
+    stationTrainTypes(stationId: $stationId) {
+      ...TrainTypeRouteFields
     }
   }
 `;

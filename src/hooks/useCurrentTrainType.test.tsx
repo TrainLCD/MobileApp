@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station, TrainType } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import { createLine, createStation } from '~/utils/test/factories';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -44,63 +44,6 @@ const TestComponent: React.FC = () => {
   );
 };
 
-type StationNestedType = Extract<Station, { __typename: 'StationNested' }>;
-type LineNestedType = Extract<Line, { __typename: 'LineNested' }>;
-type TrainTypeNestedType = Extract<
-  TrainType,
-  { __typename: 'TrainTypeNested' }
->;
-
-type LineOverrides = Partial<Omit<Line, 'station' | 'trainType'>> & {
-  station?: Station | null;
-  trainType?: TrainType | null;
-};
-
-const createLine = (
-  overrides: LineOverrides = {},
-  typename: Line['__typename'] = 'Line'
-): Line => {
-  const {
-    station: stationOverride,
-    trainType: trainTypeOverride,
-    ...rest
-  } = overrides;
-  const stationValue: StationNestedType | null =
-    stationOverride !== undefined && stationOverride !== null
-      ? ({
-          ...stationOverride,
-          __typename: 'StationNested',
-          line: null,
-        } as StationNestedType)
-      : null;
-  const trainTypeValue: TrainTypeNestedType | null =
-    trainTypeOverride !== undefined && trainTypeOverride !== null
-      ? ({
-          ...trainTypeOverride,
-          __typename: 'TrainTypeNested',
-        } as TrainTypeNestedType)
-      : null;
-  return {
-    __typename: typename,
-    averageDistance: null,
-    color: '#123456',
-    company: null,
-    id: 1,
-    lineSymbols: [],
-    lineType: LineType.Normal,
-    nameChinese: null,
-    nameFull: 'Main Line',
-    nameKatakana: 'メインライン',
-    nameKorean: 'メインライン',
-    nameRoman: 'Main Line',
-    nameShort: 'Main',
-    station: stationValue,
-    status: OperationStatus.InOperation,
-    trainType: trainTypeValue,
-    ...rest,
-  };
-};
-
 const TRAIN_TYPE_IDS = {
   LOCAL: 1,
   RAPID: 2,
@@ -123,68 +66,13 @@ const createTrainType = (
   nameChinese: null,
   nameKatakana: 'ローカル',
   nameKorean: null,
+  nameIpa: null,
+  nameRomanIpa: null,
   nameRoman: 'Local',
+  nameTtsSegments: null,
   typeId: TRAIN_TYPE_IDS.LOCAL,
   ...overrides,
 });
-
-type StationOverrides = Partial<Omit<Station, 'line' | 'trainType'>> & {
-  line?: Line | null;
-  trainType?: TrainType | null;
-};
-
-const createStation = (
-  overrides: StationOverrides = {},
-  typename: Station['__typename'] = 'Station'
-): Station => {
-  const {
-    line: lineOverride,
-    trainType: trainTypeOverride,
-    id: overrideId,
-    groupId: overrideGroupId,
-    ...rest
-  } = overrides;
-  const lineValue: LineNestedType | null =
-    lineOverride !== undefined && lineOverride !== null
-      ? ({ ...lineOverride, __typename: 'LineNested' } as LineNestedType)
-      : null;
-  const trainTypeValue: TrainTypeNestedType | null =
-    trainTypeOverride !== undefined && trainTypeOverride !== null
-      ? ({
-          ...trainTypeOverride,
-          __typename: 'TrainTypeNested',
-        } as TrainTypeNestedType)
-      : null;
-  const stationId = (overrideId as number | undefined) ?? 1;
-  const stationGroupId = (overrideGroupId as number | undefined) ?? stationId;
-  return {
-    __typename: typename,
-    address: null,
-    closedAt: null,
-    distance: null,
-    groupId: stationGroupId,
-    hasTrainTypes: true,
-    id: stationId,
-    latitude: null,
-    line: lineValue,
-    lines: [],
-    longitude: null,
-    name: 'Shibuya',
-    nameChinese: null,
-    nameKatakana: 'シブヤ',
-    nameKorean: null,
-    nameRoman: 'Shibuya',
-    openedAt: null,
-    postalCode: null,
-    prefectureId: null,
-    stationNumbers: [],
-    status: OperationStatus.InOperation,
-    stopCondition: StopCondition.All,
-    threeLetterCode: null,
-    trainType: trainTypeValue,
-    ...rest,
-  };
-};
 
 describe('useCurrentTrainType', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
@@ -200,15 +88,14 @@ describe('useCurrentTrainType', () => {
 
   let stationAtomValue: { stations: Station[] };
   let navigationAtomValue: { trainType: TrainType | null };
-  let currentStationValue: Station | null;
+  let currentStationValue: Station | undefined;
   let currentLineValue: Line | null;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     stationAtomValue = { stations: [] };
     navigationAtomValue = { trainType: null };
-    currentStationValue = null;
-    currentLineValue = createLine();
+    currentStationValue = undefined;
+    currentLineValue = createLine(1);
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === stationState) {
         return stationAtomValue;
@@ -223,16 +110,21 @@ describe('useCurrentTrainType', () => {
     mockGetIsPass.mockReturnValue(false);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('現在駅の種別をそのまま返す', () => {
     const stationTrainType = createTrainType({
       typeId: TRAIN_TYPE_IDS.RAPID,
       name: 'Rapid',
+      __typename: 'TrainTypeNested',
     });
-    currentStationValue = createStation({
-      line: createLine({ id: 1 }),
+    currentStationValue = createStation(1, {
+      line: { id: 1 },
       trainType: stationTrainType,
-    });
-    currentLineValue = createLine({ id: 1 });
+    } as Parameters<typeof createStation>[1]);
+    currentLineValue = createLine(1);
     navigationAtomValue.trainType = createTrainType({
       typeId: TRAIN_TYPE_IDS.LOCAL,
       name: 'Local',
@@ -247,20 +139,22 @@ describe('useCurrentTrainType', () => {
     const actualTrainType = createTrainType({
       typeId: TRAIN_TYPE_IDS.EXPRESS,
       name: 'Express',
+      __typename: 'TrainTypeNested',
     });
-    currentStationValue = createStation({
-      line: createLine({ id: 1 }),
-      trainType: createTrainType({ typeId: TRAIN_TYPE_IDS.RAPID }),
-    });
-    const throughStation = createStation({
-      id: 200,
-      line: createLine({ id: 2 }),
+    currentStationValue = createStation(1, {
+      line: { id: 1 },
+      trainType: createTrainType({
+        typeId: TRAIN_TYPE_IDS.RAPID,
+        __typename: 'TrainTypeNested',
+      }),
+    } as Parameters<typeof createStation>[1]);
+    const throughStation = createStation(200, {
+      line: { id: 2 },
       trainType: actualTrainType,
-    });
+    } as Parameters<typeof createStation>[1]);
     stationAtomValue = { stations: [throughStation] };
-    currentLineValue = createLine({
-      id: 2,
-      station: createStation({ id: 200, line: undefined }, 'StationNested'),
+    currentLineValue = createLine(2, {
+      station: { id: 200, __typename: 'StationNested' } as Line['station'],
     });
 
     const { getByTestId } = render(<TestComponent />);
@@ -273,10 +167,10 @@ describe('useCurrentTrainType', () => {
   });
 
   it('navigationState の trainType が null になるとキャッシュをクリアする', async () => {
-    const passStation = createStation({
-      line: createLine({ id: 1 }),
+    const passStation = createStation(1, {
+      line: { id: 1 },
       trainType: null,
-    });
+    } as Parameters<typeof createStation>[1]);
     currentStationValue = passStation;
     currentLineValue = passStation.line as Line;
     navigationAtomValue.trainType = createTrainType({
@@ -299,15 +193,20 @@ describe('useCurrentTrainType', () => {
   });
 
   it('通過駅では前回の種別を維持する', () => {
-    const baseStation = createStation({
-      line: createLine({ id: 3 }),
-      trainType: createTrainType({ typeId: TRAIN_TYPE_IDS.RAPID }),
-    });
-    const passStation = createStation({
-      id: 2,
-      line: createLine({ id: 3 }),
-      trainType: createTrainType({ typeId: TRAIN_TYPE_IDS.EXPRESS }),
-    });
+    const baseStation = createStation(1, {
+      line: { id: 3 },
+      trainType: createTrainType({
+        typeId: TRAIN_TYPE_IDS.RAPID,
+        __typename: 'TrainTypeNested',
+      }),
+    } as Parameters<typeof createStation>[1]);
+    const passStation = createStation(2, {
+      line: { id: 3 },
+      trainType: createTrainType({
+        typeId: TRAIN_TYPE_IDS.EXPRESS,
+        __typename: 'TrainTypeNested',
+      }),
+    } as Parameters<typeof createStation>[1]);
     currentStationValue = baseStation;
     currentLineValue = baseStation.line as Line;
     navigationAtomValue.trainType = createTrainType({

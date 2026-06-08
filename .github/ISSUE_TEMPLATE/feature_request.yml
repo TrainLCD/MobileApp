@@ -1,0 +1,45 @@
+name: "💡 Feature request"
+description: モバイルアプリプロジェクトの課題もしくはご要望を報告
+labels: ["feature"]
+assignees:
+  - TinyKitten
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ご要望ありがとうございます。以下のフォームにできる限り詳しくご記入ください。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: モバイルアプリプロジェクトに対して感じている課題やご要望をなるべく詳細にご記入ください
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: 想定されている解決策
+      description: 上記課題に対する解決策がございましたらご記入ください
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 検討した代替案
+      description: 他に検討した解決策があればご記入ください
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: スクリーンショット
+      description: このチケットに関連する画像を任意で添付してください
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: その他
+      description: その他追加の情報がございましたらご記入ください
+    validations:
+      required: false

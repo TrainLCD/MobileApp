@@ -1,8 +1,8 @@
+import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useKeepAwake } from 'expo-keep-awake';
+import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -12,23 +12,34 @@ import React, {
 } from 'react';
 import {
   Alert,
-  AppState,
   Linking,
   Platform,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import { LineType, type Station, StopCondition } from '~/@types/graphql';
+import {
+  LineType,
+  type Station,
+  StopCondition,
+  type TrainType,
+} from '~/@types/graphql';
+import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureView';
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
+import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import {
-  useAutoMode,
+  useAndroidPictureInPicture,
+  useConsoleTelemetry,
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
   useFirstStop,
+  useKeepAwake,
   useLoopLine,
   useNextStation,
   useRefreshLeftStations,
@@ -38,7 +49,6 @@ import {
   useSimulationMode,
   useStartBackgroundLocationUpdates,
   useTelemetrySender,
-  useThemeStore,
   useTransferLines,
   useTransitionHeaderState,
   useTTS,
@@ -46,7 +56,14 @@ import {
   useUpdateBottomState,
   useUpdateLiveActivities,
 } from '~/hooks';
+import {
+  GET_LINE_GROUP_STATIONS,
+  GET_LINE_STATIONS,
+  GET_STATION_TRAIN_TYPES_LIGHT,
+} from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
+import lineState from '~/store/atoms/line';
+import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
@@ -58,20 +75,49 @@ import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
 import navigationState from '../store/atoms/navigation';
+import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
 import stationState from '../store/atoms/station';
+import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
 
+type GetLineGroupStationsData = {
+  lineGroupStations: Station[];
+};
+
+type GetLineGroupStationsVariables = {
+  lineGroupId: number;
+};
+
+type GetLineStationsData = {
+  lineStations: Station[];
+};
+
+type GetLineStationsVariables = {
+  lineId: number;
+  stationId?: number;
+};
+
+type GetStationTrainTypesData = {
+  stationTrainTypes: TrainType[];
+};
+
+type GetStationTrainTypesVariables = {
+  stationId: number;
+};
+
 const MainScreen: React.FC = () => {
-  const [isRotated, setIsRotated] = useState(false);
+  const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
 
-  const theme = useThemeStore();
-  const isLEDTheme = theme === APP_THEME.LED;
+  const theme = useAtomValue(themeAtom);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
 
-  const [{ stations, selectedDirection, arrived }, _setStationState] =
+  const [{ stations, selectedDirection, arrived }, setStationState] =
     useAtom(stationState);
   const [{ leftStations, bottomState }, setNavigationState] =
     useAtom(navigationState);
+  const setLineState = useSetAtom(lineState);
   const { devOverlayEnabled } = useAtomValue(tuningState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
@@ -80,16 +126,86 @@ const MainScreen: React.FC = () => {
   const trainType = useCurrentTrainType();
   const nextStation = useNextStation();
 
-  useAutoMode();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+
+  // OS 側で orientation lock せず、物理的に portrait のときはコンテンツ側を 90deg
+  // 回転して横長レイアウトを維持する。端末の回転ロック ON でも横表示を保てる。
+  const landscapeKeepStyle = useMemo<ViewStyle>(() => {
+    if (windowHeight <= windowWidth) {
+      return StyleSheet.absoluteFillObject;
+    }
+    return {
+      position: 'absolute',
+      top: (windowHeight - windowWidth) / 2,
+      left: (windowWidth - windowHeight) / 2,
+      width: windowHeight,
+      height: windowWidth,
+      transform: [{ rotate: '90deg' }],
+    };
+  }, [windowWidth, windowHeight]);
+
   useSimulationMode();
   useFirstStop(true);
 
   useTelemetrySender(true);
+  useConsoleTelemetry();
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
+  const [
+    fetchStationsByLineGroupId,
+    {
+      loading: fetchStationsByLineGroupIdLoading,
+      error: fetchStationsByLineGroupIdError,
+    },
+  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
+    GET_LINE_GROUP_STATIONS
+  );
+
+  const [
+    fetchStationsByLineId,
+    {
+      loading: fetchStationsByLineIdLoading,
+      error: fetchStationsByLineIdError,
+    },
+  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+    GET_LINE_STATIONS
+  );
+
+  const [
+    fetchTrainTypes,
+    { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
+  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
+    GET_STATION_TRAIN_TYPES_LIGHT
+  );
+
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);
+  const navigation = useNavigation();
+
+  const handleCloseSelectBoundModal = useCallback(() => {
+    setIsSelectBoundModalOpen(false);
+  }, []);
+
+  const handleTrainTypeSelect = useCallback(
+    async (trainType: TrainType) => {
+      if (trainType.groupId == null) return;
+      const res = await fetchStationsByLineGroupId({
+        variables: {
+          lineGroupId: trainType.groupId,
+        },
+      });
+      setStationState((prev) => ({
+        ...prev,
+        pendingStations: res.data?.lineGroupStations ?? [],
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        pendingTrainType: trainType,
+      }));
+    },
+    [fetchStationsByLineGroupId, setStationState, setNavigationState]
+  );
 
   const hasTerminus = useMemo((): boolean => {
     if (
@@ -98,17 +214,24 @@ const MainScreen: React.FC = () => {
     ) {
       return false;
     }
-    if (selectedDirection === 'INBOUND') {
-      return leftStations
-        .slice(0, 8)
-        .some((ls) => ls.id === stations[stations.length - 1]?.id);
+    // INBOUND は最終駅、OUTBOUND は始発駅が終点。
+    // 以前は OUTBOUND 側で stations.slice().reverse()[length-1] と書いていたが、
+    // これは単に stations[0] と等価なので reverse 全配列コピーは丸ごと無駄だった。
+    const terminusId =
+      selectedDirection === 'INBOUND'
+        ? stations[stations.length - 1]?.id
+        : stations[0]?.id;
+    if (terminusId == null) {
+      return false;
     }
 
-    return leftStations
-      .slice(0, 8)
-      .some(
-        (ls) => ls.id === stations.slice().reverse()[stations.length - 1]?.id
-      );
+    const limit = Math.min(8, leftStations.length);
+    for (let i = 0; i < limit; i++) {
+      if (leftStations[i]?.id === terminusId) {
+        return true;
+      }
+    }
+    return false;
   }, [
     currentLine,
     isYamanoteLine,
@@ -128,6 +251,7 @@ const MainScreen: React.FC = () => {
   const resetMainState = useResetMainState();
   useTTS();
   useUpdateLiveActivities();
+  useAndroidPictureInPicture();
 
   const { pause: pauseBottomTimer } = useUpdateBottomState();
 
@@ -153,30 +277,6 @@ const MainScreen: React.FC = () => {
   }, [selectedDirection]);
 
   useEffect(() => {
-    const lockOrientationAsync = async () => {
-      try {
-        await ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE
-        );
-      } catch (_e) {
-        // ignore and proceed
-      } finally {
-        // fail-open to avoid blocking UI even if locking fails
-        setIsRotated(true);
-      }
-    };
-    lockOrientationAsync();
-    return () => {
-      ScreenOrientation.unlockAsync().catch(console.error);
-    };
-  }, []);
-
-  useEffect(() => {
-    // 横画面になるのを待たないと2回スクリーンロックがかかる
-    if (!isRotated) {
-      return;
-    }
-
     if (
       stationsFromCurrentStation.some(
         (s) => s.line?.lineType === LineType.Subway
@@ -188,7 +288,8 @@ const MainScreen: React.FC = () => {
         );
 
         if (subwayAlertDismissed !== 'true') {
-          Alert.alert(
+          showAlertWhilePresenting(
+            ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
             translate('subwayAlertTitle'),
             translate('subwayAlertText'),
             [
@@ -210,16 +311,11 @@ const MainScreen: React.FC = () => {
 
       alertAsync();
     }
-  }, [stationsFromCurrentStation, isRotated]);
+  }, [stationsFromCurrentStation]);
 
   const isHoliday = useMemo(() => getIsHoliday(new Date()), []);
 
   useEffect(() => {
-    // 横画面になるのを待たないと2回スクリーンロックがかかる
-    if (!isRotated) {
-      return;
-    }
-
     const alertAsync = async () => {
       // 土休日通過
       const holidayNoticeDismissed = await AsyncStorage.getItem(
@@ -232,19 +328,24 @@ const MainScreen: React.FC = () => {
         isHoliday &&
         holidayNoticeDismissed !== 'true'
       ) {
-        Alert.alert(translate('notice'), translate('holidayNotice'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
-                'true'
-              );
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
+          translate('notice'),
+          translate('holidayNotice'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
+                  'true'
+                );
+              },
             },
-          },
-          { text: 'OK' },
-        ]);
+            { text: 'OK' },
+          ]
+        );
       }
 
       // 平日通過
@@ -259,19 +360,24 @@ const MainScreen: React.FC = () => {
         !isHoliday &&
         weekdayNoticeDismissed !== 'true'
       ) {
-        Alert.alert(translate('notice'), translate('weekdayNotice'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
-                'true'
-              );
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
+          translate('notice'),
+          translate('weekdayNotice'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
+                  'true'
+                );
+              },
             },
-          },
-          { text: 'OK' },
-        ]);
+            { text: 'OK' },
+          ]
+        );
       }
 
       // 一部通過
@@ -284,23 +390,28 @@ const MainScreen: React.FC = () => {
         ) !== -1 &&
         partiallyPassNoticeDismissed !== 'true'
       ) {
-        Alert.alert(translate('notice'), translate('partiallyPassNotice'), [
-          {
-            text: translate('doNotShowAgain'),
-            style: 'cancel',
-            onPress: async (): Promise<void> => {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
-                'true'
-              );
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
+          translate('notice'),
+          translate('partiallyPassNotice'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: async (): Promise<void> => {
+                await AsyncStorage.setItem(
+                  ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
+                  'true'
+                );
+              },
             },
-          },
-          { text: 'OK' },
-        ]);
+            { text: 'OK' },
+          ]
+        );
       }
     };
     alertAsync();
-  }, [stationsFromCurrentStation, isHoliday, isRotated]);
+  }, [stationsFromCurrentStation, isHoliday]);
 
   const transferLines = useTransferLines();
 
@@ -314,6 +425,18 @@ const MainScreen: React.FC = () => {
         return {
           ...prev,
           bottomState: 'TRANSFER',
+        };
+      }
+
+      if (
+        prev.bottomState === 'LINE' &&
+        !transferLines.length &&
+        isTypeWillChange &&
+        !shouldHideTypeChange
+      ) {
+        return {
+          ...prev,
+          bottomState: 'TYPE_CHANGE',
         };
       }
 
@@ -339,19 +462,11 @@ const MainScreen: React.FC = () => {
     transferLines.length,
   ]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 確実にアンマウント時に動かしたい
   useEffect(() => {
-    return () => {
-      resetMainState();
-    };
-  }, []);
+    return navigation.addListener('beforeRemove', resetMainState);
+  }, [navigation, resetMainState]);
 
   useEffect(() => {
-    // 横画面になるのを待たないと2回スクリーンロックがかかる
-    if (!isRotated) {
-      return;
-    }
-
     const f = async (): Promise<void> => {
       const warningDismissed = await AsyncStorage.getItem(
         ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
@@ -364,7 +479,8 @@ const MainScreen: React.FC = () => {
 
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
-        Alert.alert(
+        showAlertWhilePresenting(
+          ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
           translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
           [
@@ -407,7 +523,8 @@ const MainScreen: React.FC = () => {
           ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
         );
         if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
-          Alert.alert(
+          showAlertWhilePresenting(
+            ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
             translate('announcementTitle'),
             translate('dozeAlertText'),
             [
@@ -441,30 +558,48 @@ const MainScreen: React.FC = () => {
       }
     };
     f();
-  }, [isRotated]);
+  }, []);
 
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        ScreenOrientation.lockAsync(
-          ScreenOrientation.OrientationLock.LANDSCAPE
-        ).catch(console.warn);
+  const changeOperatingLine = useCallback(
+    async (selectedStation: Station) => {
+      const selectedLine = selectedStation.line;
+      if (!selectedStation.id || !selectedLine?.id) {
+        return;
       }
-    });
 
-    return () => sub.remove();
-  }, []);
+      setIsSelectBoundModalOpen(true);
 
-  const changeOperatingLine = useCallback(async (selectedStation: Station) => {
-    const selectedLine = selectedStation.line;
-    if (!selectedLine) {
-      return;
-    }
-    // TODO: 実装し直す
-    if (isDevApp) {
-      Alert.alert('Unimplemented', 'This feature is not implemented yet.');
-    }
-  }, []);
+      const { data } = await fetchStationsByLineId({
+        variables: { lineId: selectedLine.id, stationId: selectedStation.id },
+      });
+
+      const fetchedTrainTypesData = await fetchTrainTypes({
+        variables: {
+          stationId: selectedStation.id as number,
+        },
+      });
+      const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
+
+      setNavigationState((prev) => ({
+        ...prev,
+        pendingTrainType: null,
+        fetchedTrainTypes: trainTypes,
+      }));
+      setLineState((prev) => ({ ...prev, pendingLine: selectedLine }));
+      setStationState((prev) => ({
+        ...prev,
+        pendingStation: selectedStation,
+        pendingStations: data?.lineStations ?? [],
+      }));
+    },
+    [
+      setStationState,
+      setLineState,
+      fetchStationsByLineId,
+      setNavigationState,
+      fetchTrainTypes,
+    ]
+  );
 
   const handleTransferPress = useCallback(
     (selectedStation?: Station) => {
@@ -540,27 +675,53 @@ const MainScreen: React.FC = () => {
     }
   }, [bottomState, handleTransferPress, hasTerminus, theme, transferStation]);
 
-  if (!isRotated) {
-    return null;
+  if (pictureInPictureActive) {
+    return <AndroidPictureInPictureView />;
   }
 
   if (isLEDTheme) {
     return (
-      <>
+      <View style={landscapeKeepStyle}>
         <Header />
         <LineBoard hasTerminus={hasTerminus} />
-      </>
+      </View>
     );
   }
 
   return (
     <>
-      <Pressable style={StyleSheet.absoluteFill} onPress={updateBottomState}>
-        <Header />
-        {inner}
-      </Pressable>
+      <View style={landscapeKeepStyle}>
+        <Pressable
+          style={[
+            StyleSheet.absoluteFill,
+            theme === APP_THEME.E231 && { backgroundColor: '#E6E6E6' },
+          ]}
+          onPress={updateBottomState}
+        >
+          <Header />
+          {inner}
+        </Pressable>
 
-      {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {isDevApp && devOverlayEnabled && <DevOverlay />}
+      </View>
+
+      <SelectBoundModal
+        visible={isSelectBoundModalOpen}
+        onClose={handleCloseSelectBoundModal}
+        onBoundSelect={handleCloseSelectBoundModal}
+        onTrainTypeSelect={handleTrainTypeSelect}
+        loading={
+          fetchStationsByLineGroupIdLoading ||
+          fetchStationsByLineIdLoading ||
+          fetchTrainTypesLoading
+        }
+        error={
+          fetchStationsByLineGroupIdError ||
+          fetchStationsByLineIdError ||
+          fetchTrainTypesError ||
+          null
+        }
+      />
     </>
   );
 };

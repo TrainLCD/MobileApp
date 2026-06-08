@@ -1,17 +1,18 @@
-import { Effect, pipe } from 'effect';
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
-import { Alert, Linking, Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import VersionCheck from 'react-native-version-check';
 import { APP_STORE_URL, GOOGLE_PLAY_URL } from '~/constants';
 import navigationState from '~/store/atoms/navigation';
 import { translate } from '../translation';
+import { showAlertWhilePresenting } from '../utils/alertPresentation';
 
 export const useCheckStoreVersion = (): void => {
   const setNavigationState = useSetAtom(navigationState);
 
   const showUpdateRequestDialog = useCallback((storeURL: string) => {
-    Alert.alert(
+    showAlertWhilePresenting(
+      'storeVersionUpdateRequest',
       translate('announcementTitle'),
       translate('newVersionAvailableText'),
       [
@@ -36,9 +37,9 @@ export const useCheckStoreVersion = (): void => {
       return;
     }
 
-    pipe(
-      Effect.promise(() => VersionCheck.needUpdate()),
-      Effect.andThen((res) => {
+    const checkVersion = async () => {
+      try {
+        const res = await VersionCheck.needUpdate();
         if (res?.isNeeded) {
           const url = Platform.select({
             ios: APP_STORE_URL,
@@ -54,16 +55,15 @@ export const useCheckStoreVersion = (): void => {
             isAppLatest: true,
           }));
         }
-      }),
-      Effect.runPromise,
-      (promise) =>
-        promise.catch(() => {
-          // バージョンチェック失敗時も最新版として扱う
-          setNavigationState((prev) => ({
-            ...prev,
-            isAppLatest: true,
-          }));
-        })
-    );
+      } catch {
+        // バージョンチェック失敗時も最新版として扱う
+        setNavigationState((prev) => ({
+          ...prev,
+          isAppLatest: true,
+        }));
+      }
+    };
+
+    checkVersion();
   }, [showUpdateRequestDialog, setNavigationState]);
 };

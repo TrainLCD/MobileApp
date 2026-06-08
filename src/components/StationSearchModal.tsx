@@ -1,7 +1,16 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
+import { BlurView } from 'expo-blur';
+import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
-import { useCallback, useEffect, useMemo } from 'react';
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  FlatList,
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
@@ -10,14 +19,16 @@ import type {
 } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
-import { useLocationStore, useThemeStore } from '~/hooks';
+import { useFetchCurrentLocationOnce } from '~/hooks/useFetchCurrentLocationOnce';
 import {
   GET_STATIONS_BY_NAME,
   GET_STATIONS_NEARBY,
 } from '~/lib/graphql/queries';
-import { APP_THEME } from '~/models/Theme';
+import { locationAtom, setLocation } from '~/store/atoms/location';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
+import { filterBusLinesForNonBusStation } from '~/utils/line';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
@@ -42,7 +53,7 @@ type GetStationsByNameVariables = {
 
 const getStationUniqueKey = (station: Station) => {
   if (station.groupId) {
-    return String(station.groupId);
+    return `${station.groupId}|${station.name}`;
   }
   if (station.id) {
     return String(station.id);
@@ -67,7 +78,6 @@ const styles = StyleSheet.create({
   contentView: {
     width: '100%',
     borderRadius: 8,
-    minHeight: 512,
     overflow: 'hidden',
   },
   closeButtonContainer: {
@@ -78,7 +88,6 @@ const styles = StyleSheet.create({
     height: 72,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     paddingHorizontal: 24,
   },
   closeButton: { width: '100%' },
@@ -92,12 +101,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     paddingVertical: 21,
-    backgroundColor: '#fff',
   },
   subtitle: { width: '100%', fontSize: 16 },
   title: {
     width: '100%',
     marginBottom: 24,
+  },
+  headerText: {
+    color: '#111',
   },
   flatListContentContainer: {
     paddingHorizontal: 24,
@@ -116,14 +127,18 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
-  const latitude = useLocationStore(
-    (state) => state?.location?.coords.latitude
-  );
-  const longitude = useLocationStore(
-    (state) => state?.location?.coords.longitude
-  );
+  const { height: windowHeight } = useWindowDimensions();
+  const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
+  const wasVisibleRef = useRef(false);
+  const location = useAtomValue(locationAtom);
+  const [modalCoords, setModalCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const latitude = modalCoords?.latitude ?? location?.coords.latitude;
+  const longitude = modalCoords?.longitude ?? location?.coords.longitude;
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
 
   const {
@@ -152,6 +167,36 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   );
 
   useEffect(() => {
+    if (!visible) {
+      setModalCoords(null);
+      wasVisibleRef.current = false;
+      return;
+    }
+    if (wasVisibleRef.current) return;
+    wasVisibleRef.current = true;
+
+    let active = true;
+    const refreshLocation = async () => {
+      try {
+        const currentLocation = await fetchCurrentLocation();
+        if (!active) return;
+        setModalCoords({
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+        });
+        setLocation(currentLocation);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    refreshLocation();
+    return () => {
+      active = false;
+    };
+  }, [visible, fetchCurrentLocation]);
+
+  useEffect(() => {
     if (fetchStationsByNameError || fetchStationsNearbyError) {
       Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
     }
@@ -159,19 +204,22 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
-      const { line, lines } = item;
+      const { line, lines: linesRaw } = item;
+      const lines = filterBusLinesForNonBusStation(line, linesRaw);
       if (!line) return null;
 
       const title = (isJapanese ? item.name : item.nameRoman) || undefined;
       const subtitle = isJapanese
-        ? `${(lines ?? []).map((l) => l.nameShort).join('・')}`
-        : (lines ?? []).map((l) => l.nameRoman).join(', ');
+        ? Array.from(new Set((lines ?? []).map((l) => l.nameShort))).join(' ')
+        : Array.from(new Set((lines ?? []).map((l) => l.nameRoman))).join(', ');
 
       return (
         <CommonCard
+          targetStation={item}
           line={line}
           title={title}
           subtitle={subtitle}
+          subtitleNumberOfLines={1}
           onPress={() => {
             onSelect(item);
           }}
@@ -197,21 +245,34 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     [fetchStationsByName]
   );
 
+  const isLoading = fetchStationsByNameLoading || fetchStationsNearbyLoading;
+
   const stations = useMemo(
     () =>
-      fetchStationsByNameCalled
-        ? getUniqueStations(stationsByNameData?.stationsByName)
-        : getUniqueStations(stationsNearbyData?.stationsNearby),
+      isLoading
+        ? []
+        : fetchStationsByNameCalled
+          ? getUniqueStations(stationsByNameData?.stationsByName)
+          : getUniqueStations(stationsNearbyData?.stationsNearby),
     [
       stationsNearbyData?.stationsNearby,
       stationsByNameData?.stationsByName,
       fetchStationsByNameCalled,
+      isLoading,
     ]
   );
 
   const handleClose = useCallback(() => {
     onClose();
   }, [onClose]);
+
+  // ヘッダー(150) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
+  const dynamicMinHeight = useMemo(() => {
+    // ローディング中・エラー時はSkeleton2つ分の高さを最低限確保
+    const count = Math.max(isLoading ? 2 : 0, stations?.length ?? 0);
+    const content = 150 + count * 80 + Math.max(0, count - 1) * 8 + 72;
+    return Math.min(Math.max(content, 390), windowHeight * 0.75);
+  }, [stations?.length, windowHeight, isLoading]);
 
   return (
     <CustomModal
@@ -222,19 +283,39 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       contentContainerStyle={[
         styles.contentView,
         {
+          height: dynamicMinHeight,
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
           marginBottom: insets.bottom || 0,
         },
         isTablet && {
           width: '80%',
-          maxHeight: '90%',
+          maxHeight: '75%',
           borderRadius: 16,
         },
       ]}
     >
-      <View style={styles.headerContainer}>
-        <Heading style={styles.title}>
-          {translate('searchFirstStationTitle')}
+      <View
+        style={[
+          styles.headerContainer,
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+        ]}
+      >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
+        <Heading style={[styles.title, !isLEDTheme && styles.headerText]}>
+          {translate('searchByStationName')}
         </Heading>
         <SearchBar onSearch={handleSearchStations} nameSearch />
       </View>
@@ -247,6 +328,8 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
+        scrollIndicatorInsets={{ top: 150, bottom: 72 }}
+        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           <EmptyResult
             loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}
@@ -254,7 +337,26 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           />
         }
       />
-      <View style={styles.closeButtonContainer}>
+      <View
+        style={[
+          styles.closeButtonContainer,
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+        ]}
+      >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: 'rgba(255,255,255,0.92)' },
+            ]}
+          />
+        ) : null}
         <Button
           style={styles.closeButton}
           textStyle={styles.closeButtonText}

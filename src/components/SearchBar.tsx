@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useAtomValue } from 'jotai';
 import { useMemo, useState } from 'react';
 import {
   Platform,
@@ -8,14 +9,12 @@ import {
   View,
 } from 'react-native';
 import { FONTS } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
 const styles = StyleSheet.create({
   root: {
     flexDirection: 'row',
-    borderRadius: 8,
     height: 48,
     // iOS shadow
     shadowColor: '#333',
@@ -34,6 +33,7 @@ const styles = StyleSheet.create({
   },
   bg: {
     backgroundColor: '#fcfcfc',
+    borderRadius: 8,
   },
   ledBg: {
     backgroundColor: '#333',
@@ -44,8 +44,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
   },
 });
 
@@ -56,7 +54,7 @@ type Props = {
 
 export const SearchBar = ({ onSearch, nameSearch }: Props) => {
   const [searchText, setSearchText] = useState('');
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {
@@ -79,7 +77,12 @@ export const SearchBar = ({ onSearch, nameSearch }: Props) => {
         )}
       />
       <TouchableOpacity
-        style={styles.button}
+        style={[
+          styles.button,
+          isLEDTheme
+            ? undefined
+            : { borderTopRightRadius: 8, borderBottomRightRadius: 8 },
+        ]}
         onPress={() => onSearch?.(searchText)}
       >
         <Ionicons name="search" size={20} color="white" />

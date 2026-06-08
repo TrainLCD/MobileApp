@@ -1,23 +1,63 @@
+import { useAtomValue } from 'jotai';
 import React, { forwardRef, type LegacyRef, useMemo } from 'react';
 import {
   type StyleProp,
-  StyleSheet,
   Text,
   type TextProps,
   type TextStyle,
 } from 'react-native';
 import { FONTS } from '../constants';
-import { useThemeStore } from '../hooks';
-import { APP_THEME } from '../models/Theme';
+import { isLEDThemeAtom } from '../store/atoms/theme';
+
+const isAnimatedStyleObject = (style: unknown): boolean => {
+  if (!style || typeof style !== 'object') {
+    return false;
+  }
+  return (
+    Object.hasOwn(style, 'viewDescriptors') ||
+    Object.hasOwn(style, 'initial') ||
+    Object.hasOwn(style, 'jestAnimatedValues')
+  );
+};
+
+const getFontWeight = (style: unknown): TextStyle['fontWeight'] => {
+  if (!style) {
+    return undefined;
+  }
+  if (Array.isArray(style)) {
+    for (let i = style.length - 1; i >= 0; i--) {
+      const weight = getFontWeight(style[i]);
+      if (weight) {
+        return weight;
+      }
+    }
+    return undefined;
+  }
+  if (typeof style === 'number') {
+    return undefined;
+  }
+  // Reanimated の animated style オブジェクトは参照のみ行い、通常styleとしては扱わない
+  if (isAnimatedStyleObject(style)) {
+    return undefined;
+  }
+  if (
+    typeof style === 'object' &&
+    style !== null &&
+    Object.hasOwn(style, 'fontWeight')
+  ) {
+    return (style as TextStyle).fontWeight;
+  }
+  return undefined;
+};
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {
       return FONTS.JFDotJiskan24h;
     }
-    const weight = StyleSheet.flatten(props.style)?.fontWeight;
+    const weight = getFontWeight(props.style);
     const isBold =
       weight === 'bold' ||
       weight === '700' ||

@@ -1,28 +1,27 @@
 import { BlurView } from 'expo-blur';
-import { useSetAtom } from 'jotai';
-import { useCallback, useMemo, useState } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
   Pressable,
+  Animated as RNAnimated,
   StyleSheet,
   View,
   type ViewStyle,
 } from 'react-native';
-import Animated, {
-  interpolate,
-  type SharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { useLocationPermissionsGranted } from '~/hooks/useLocationPermissionsGranted';
+import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
-import { isJapanese } from '~/translation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { isJapanese, translate } from '~/translation';
+import isTablet from '~/utils/isTablet';
+import { isBusLine } from '~/utils/line';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
 
@@ -66,73 +65,124 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   nowLabel: {
-    fontSize: 24,
+    fontSize: isTablet ? 32 : 24,
   },
   nowStation: {
-    fontSize: 32,
+    fontSize: isTablet ? 44 : 32,
     fontWeight: 'bold',
   },
+  nowStationScaleWrap: {
+    alignSelf: 'stretch',
+    transformOrigin: 'left bottom',
+  },
+  nowStationFlexible: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  busStationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  busBadge: {
+    alignSelf: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  busBadgeText: {
+    fontSize: isTablet ? 16 : 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
 });
+
+export type HeaderLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 type Props = {
   station: Station | null;
   onLayout?: (event: LayoutChangeEvent) => void;
-  scrollY: SharedValue<number>;
+  onHeaderLayout?: (layout: HeaderLayout) => void;
+  scrollY: RNAnimated.Value;
 };
 
-export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
+export const NowHeader = ({
+  station,
+  onLayout,
+  onHeaderLayout,
+  scrollY,
+}: Props) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  const headerCardRef = useRef<View>(null);
 
   const setStationAtom = useSetAtom(stationState);
   const setNavigationAtom = useSetAtom(navigationState);
+  const setLocationAtom = useSetAtom(locationAtom);
 
-  const isLEDTheme = useThemeStore((s) => s === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
-
-  const AnimatedTypography = useMemo(
-    () => Animated.createAnimatedComponent(Typography),
-    []
-  );
+  const locationPermissionsGranted = useLocationPermissionsGranted();
 
   const nowHeader = useMemo(() => {
-    const label = isJapanese ? 'ただいま' : 'Now at';
-    if (!station) return { label, name: '' };
+    const label = locationPermissionsGranted
+      ? translate('nowAtLabel')
+      : translate('welcomeLabel');
+    if (!station) return { label, name: '', isBus: false };
     const re = /\([^()]*\)/g;
     const name = isJapanese
       ? (station.name ?? '').replaceAll(re, '')
       : (station.nameRoman ?? station.name ?? '').replaceAll(re, '');
-    return { label, name };
-  }, [station]);
+    const isBus = isBusLine(station.line);
+    return { label, name, isBus };
+  }, [station, locationPermissionsGranted]);
+
+  const busBadgeStyle: ViewStyle = useMemo(
+    () => ({
+      backgroundColor: isLEDTheme ? '#2E7D32' : '#388E3C',
+      borderColor: isLEDTheme ? '#43A047' : '#2E7D32',
+    }),
+    [isLEDTheme]
+  );
 
   const COLLAPSE_RANGE = 64;
-  const stackedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5],
-      [1, 0],
-      'clamp'
-    ),
-  }));
-  const inlineStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
-      [0, 0, 1],
-      'clamp'
-    ),
-  }));
-  const animatedStationFont = useAnimatedStyle(() => ({
-    fontSize: interpolate(
-      scrollY.value,
-      [0, COLLAPSE_RANGE],
-      [32, 21],
-      'clamp'
-    ),
-  }));
+  const stackedOpacity = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE * 0.5],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
+  const inlineOpacity = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE * 0.5, COLLAPSE_RANGE],
+    outputRange: [0, 0, 1],
+    extrapolate: 'clamp',
+  });
+  const stationScale = scrollY.interpolate({
+    inputRange: [0, COLLAPSE_RANGE],
+    outputRange: isTablet ? [1, 32 / 44] : [1, 24 / 32],
+    extrapolate: 'clamp',
+  });
 
   const handlePress = useCallback(() => {
     setIsSearchModalVisible(true);
   }, []);
+
+  const handleHeaderLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      onLayout?.(event);
+      if (onHeaderLayout && headerCardRef.current) {
+        headerCardRef.current.measureInWindow((x, y, width, height) => {
+          onHeaderLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onLayout, onHeaderLayout]
+  );
 
   const handleSelectStation = useCallback(
     (station: Station) => {
@@ -147,9 +197,21 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
         trainType: null,
         fetchedTrainTypes: [],
       }));
+      setLocationAtom({
+        coords: {
+          latitude: station.latitude as number,
+          longitude: station.longitude as number,
+          altitude: null,
+          accuracy: 0,
+          heading: null,
+          speed: 0,
+          altitudeAccuracy: null,
+        },
+        timestamp: Date.now(),
+      });
       setIsSearchModalVisible(false);
     },
-    [setStationAtom, setNavigationAtom]
+    [setStationAtom, setNavigationAtom, setLocationAtom]
   );
 
   const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
@@ -166,6 +228,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
     <>
       <Pressable style={styles.nowHeaderContainer} onPress={handlePress}>
         <View
+          ref={headerCardRef}
           style={[
             styles.nowHeaderCard,
             {
@@ -173,7 +236,7 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
               borderBottomRightRadius: isLEDTheme ? 0 : 16,
             },
           ]}
-          onLayout={onLayout}
+          onLayout={handleHeaderLayout}
         >
           {Platform.OS === 'ios' ? (
             <BlurView
@@ -184,33 +247,68 @@ export const NowHeader = ({ station, onLayout, scrollY }: Props) => {
           ) : null}
           <View style={[styles.nowHeaderContent, nowHeaderAdditionalStyle]}>
             {/* Stacked layout (fades out) */}
-            <Animated.View style={stackedStyle}>
+            <RNAnimated.View style={{ opacity: stackedOpacity }}>
               <Typography style={styles.nowLabel}>
                 {nowHeader.label ?? ''}
               </Typography>
               {station ? (
-                <AnimatedTypography
-                  style={[styles.nowStation, animatedStationFont]}
+                <RNAnimated.View
+                  style={[
+                    styles.nowStationScaleWrap,
+                    { transform: [{ scale: stationScale }] },
+                  ]}
                 >
-                  {nowHeader.name ?? ''}
-                </AnimatedTypography>
-              ) : (
+                  <View style={styles.busStationRow}>
+                    <Typography
+                      style={[styles.nowStation, styles.nowStationFlexible]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {nowHeader.name ?? ''}
+                    </Typography>
+                    {nowHeader.isBus ? (
+                      <View style={[styles.busBadge, busBadgeStyle]}>
+                        <Typography style={styles.busBadgeText}>
+                          {translate('toeiBusBadge')}
+                        </Typography>
+                      </View>
+                    ) : null}
+                  </View>
+                </RNAnimated.View>
+              ) : locationPermissionsGranted ? (
                 <SkeletonPlaceholder borderRadius={4} speed={1500}>
                   <SkeletonPlaceholder.Item width={128} height={32} />
                 </SkeletonPlaceholder>
+              ) : (
+                <Typography style={styles.nowStation}>
+                  {translate('searchByStationName')}
+                </Typography>
               )}
-            </Animated.View>
+            </RNAnimated.View>
             {/* Inline layout (fades in) */}
-            <Animated.View style={[inlineStyle, styles.nowHeaderInline]}>
+            <RNAnimated.View
+              style={[styles.nowHeaderInline, { opacity: inlineOpacity }]}
+            >
               <Typography style={styles.nowLabel}>
                 {nowHeader.label ?? ''}
               </Typography>
-              <Typography style={styles.nowStation}>
-                {isJapanese
-                  ? `${nowHeader.name ?? ''}`
-                  : (nowHeader.name ?? '')}
+              <Typography
+                style={[styles.nowStation, styles.nowStationFlexible]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {station
+                  ? (nowHeader.name ?? '')
+                  : translate('searchByStationName')}
               </Typography>
-            </Animated.View>
+              {nowHeader.isBus ? (
+                <View style={[styles.busBadge, busBadgeStyle]}>
+                  <Typography style={styles.busBadgeText}>
+                    {translate('toeiBusBadge')}
+                  </Typography>
+                </View>
+              ) : null}
+            </RNAnimated.View>
           </View>
         </View>
       </Pressable>

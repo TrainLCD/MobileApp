@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
-import { PixelRatio, useWindowDimensions } from 'react-native';
+import { PixelRatio } from 'react-native';
+import { useLandscapeWindowDimensions } from './useLandscapeWindowDimensions';
 
 const standardWidth = 375.0;
 const standardHeight = 667.0;
 
 export const useScale = () => {
-  const { width: myWidth, height: myHeight } = useWindowDimensions();
+  const { width: myWidth, height: myHeight } = useLandscapeWindowDimensions();
 
   const widthScale = useCallback(
     (dimension: number): number =>

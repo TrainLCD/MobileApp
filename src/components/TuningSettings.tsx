@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { useAtom } from 'jotai';
-import React, { useCallback } from 'react';
+import { useAtom, useAtomValue } from 'jotai';
+import React, { useCallback, useEffect } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -14,8 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ASYNC_STORAGE_KEYS, FONTS } from '~/constants';
-import { useThemeStore } from '~/hooks';
-import { APP_THEME } from '~/models/Theme';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -65,10 +64,24 @@ const styles = StyleSheet.create({
 
 const TuningSettings: React.FC = () => {
   const [settings, setSettings] = useAtom(tuningState);
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const navigation = useNavigation();
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
+
+  useEffect(() => {
+    (async () => {
+      const [enVoice, jaVoice] = await Promise.all([
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
+      ]);
+      setSettings((prev) => ({
+        ...prev,
+        ttsEnVoiceName: enVoice || prev.ttsEnVoiceName,
+        ttsJaVoiceName: jaVoice || prev.ttsJaVoiceName,
+      }));
+    })();
+  }, [setSettings]);
 
   const hasInvalidNumber =
     settings.bottomTransitionInterval < 0 ||
@@ -101,70 +114,75 @@ const TuningSettings: React.FC = () => {
   const parseNumberFromText = (prev: number, text: string) =>
     Number.isNaN(Number(text)) ? prev : Number(text);
 
-  const handleHeaderIntervalChange = (text: string) =>
+  const handleHeaderIntervalChange = (text: string) => {
+    const value = parseNumberFromText(settings.headerTransitionInterval, text);
     setSettings((prev) => ({
       ...prev,
-      headerTransitionInterval: parseNumberFromText(
-        prev.headerTransitionInterval,
-        text
-      ),
+      headerTransitionInterval: value,
     }));
-  const handleHeaderDelayChange = (text: string) =>
+    AsyncStorage.setItem(
+      ASYNC_STORAGE_KEYS.HEADER_TRANSITION_INTERVAL,
+      String(value)
+    );
+  };
+  const handleHeaderDelayChange = (text: string) => {
+    const value = parseNumberFromText(settings.headerTransitionDelay, text);
     setSettings((prev) => ({
       ...prev,
-      headerTransitionDelay: parseNumberFromText(
-        prev.headerTransitionDelay,
-        text
-      ),
+      headerTransitionDelay: value,
     }));
+    AsyncStorage.setItem(
+      ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY,
+      String(value)
+    );
+  };
 
-  const handleBottomDelayChange = (text: string) =>
+  const handleBottomDelayChange = (text: string) => {
+    const value = parseNumberFromText(settings.bottomTransitionInterval, text);
     setSettings((prev) => ({
       ...prev,
-      bottomTransitionInterval: parseNumberFromText(
-        prev.bottomTransitionInterval,
-        text
-      ),
+      bottomTransitionInterval: value,
     }));
+    AsyncStorage.setItem(
+      ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL,
+      String(value)
+    );
+  };
 
-  const toggleDevOverlayEnabled = () =>
+  const toggleDevOverlayEnabled = () => {
+    const nextValue = !settings.devOverlayEnabled;
     setSettings((prev) => ({
       ...prev,
-      devOverlayEnabled: !prev.devOverlayEnabled,
+      devOverlayEnabled: nextValue,
     }));
+    AsyncStorage.setItem(
+      ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED,
+      String(nextValue)
+    );
+  };
 
-  const toggleUntouchableModeEnabled = () =>
+  const toggleUntouchableModeEnabled = () => {
+    const nextValue = !settings.untouchableModeEnabled;
     setSettings((prev) => ({
       ...prev,
-      untouchableModeEnabled: !prev.untouchableModeEnabled,
+      untouchableModeEnabled: nextValue,
     }));
+    AsyncStorage.setItem(
+      ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED,
+      String(nextValue)
+    );
+  };
 
   const toggleTelemetryEnabled = () => {
-    if (settings.telemetryEnabled) {
-      AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED, 'false');
-      setSettings((prev) => ({
-        ...prev,
-        telemetryEnabled: !prev.telemetryEnabled,
-      }));
-      return;
-    }
-
-    Alert.alert(translate('notice'), translate('telemetrySettingWillPersist'), [
-      {
-        text: 'OK',
-        onPress: () => {
-          AsyncStorage.setItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED, 'true');
-          setSettings((prev) => ({
-            ...prev,
-            telemetryEnabled: !prev.telemetryEnabled,
-          }));
-        },
-      },
-      {
-        text: translate('cancel'),
-        style: 'cancel',
-      },
-    ]);
+    const nextValue = !settings.telemetryEnabled;
+    setSettings((prev) => ({
+      ...prev,
+      telemetryEnabled: nextValue,
+    }));
+    AsyncStorage.setItem(
+      ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED,
+      String(nextValue)
+    );
   };
 
   return (

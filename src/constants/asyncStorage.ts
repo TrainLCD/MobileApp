@@ -1,8 +1,10 @@
 export const ASYNC_STORAGE_KEYS = {
   FIRST_LAUNCH_PASSED: '@TrainLCD:firstLaunchPassed',
   PREVIOUS_THEME: '@TrainLCD:previousTheme',
+  THEME_PREFERENCE: '@TrainLCD:themePreference',
   ENABLED_LANGUAGES: '@TrainLCD:enabledLanguages',
   SPEECH_ENABLED: '@TrainLCD:speechEnabled',
+  TTS_ENABLED_LANGUAGES: '@TrainLCD:ttsEnabledLanguages',
   DOZE_CONFIRMED: '@TrainLCD:dozeConfirmed',
   TTS_NOTICE: '@TrainLCD:ttsNotice',
   LONG_PRESS_NOTICE_DISMISSED: '@TrainLCD:longPressNoticeDismissed',
@@ -10,13 +12,25 @@ export const ASYNC_STORAGE_KEYS = {
     '@TrainLCD:alwaysPermissionNotGrantedWarningDismissed',
   BG_TTS_ENABLED: '@TrainLCD:qaBgTtsEnabled',
   BG_TTS_NOTICE: '@TrainLCD:bgTtsNotice',
-  LEGACY_AUTO_MODE_ENABLED: '@TrainLCD:enableLegacyAutoMode',
   AUTO_MODE_V2_CONFIRMED: '@TrainLCD:autoModeV2Confirmed',
   SUBWAY_ALERT_DISMISSED: '@TrainLCD:subwayAlertDismissed',
   HOLIDAY_ALERT_DISMISSED: '@TrainLCD:holidayAlertDismissed',
   WEEKDAY_ALERT_DISMISSED: '@TrainLCD:weekdayAlertDismissed',
   PARTIALLY_PASS_ALERT_DISMISSED: '@TrainLCD:partiallyPassAlertDismissed',
   TELEMETRY_ENABLED: '@TrainLCD:telemetryEnabled',
+  DEV_OVERLAY_ENABLED: '@TrainLCD:devOverlayEnabled',
+  TTS_JA_VOICE_NAME: '@TrainLCD:ttsJaVoiceName',
+  TTS_EN_VOICE_NAME: '@TrainLCD:ttsEnVoiceName',
+  HEADER_TRANSITION_INTERVAL: '@TrainLCD:headerTransitionInterval',
+  HEADER_TRANSITION_DELAY: '@TrainLCD:headerTransitionDelay',
+  BOTTOM_TRANSITION_INTERVAL: '@TrainLCD:bottomTransitionInterval',
+  UNTOUCHABLE_MODE_ENABLED: '@TrainLCD:untouchableModeEnabled',
+  WALKTHROUGH_COMPLETED: '@TrainLCD:walkthroughCompleted',
+  ROUTE_SEARCH_WALKTHROUGH_COMPLETED:
+    '@TrainLCD:routeSearchWalkthroughCompleted',
+  SETTINGS_WALKTHROUGH_COMPLETED: '@TrainLCD:settingsWalkthroughCompleted',
+  WRONG_DIRECTION_NOTIFY_ENABLED: '@TrainLCD:wrongDirectionNotifyEnabled',
+  PICTURE_IN_PICTURE_ENABLED: '@TrainLCD:pictureInPictureEnabled',
 } as const;
 
 export type AsyncStorageKeys =

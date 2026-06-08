@@ -11,17 +11,22 @@ import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { useEffect } from 'react';
-import { Alert, Platform, StatusBar, Text } from 'react-native';
+import React, { StrictMode, useEffect } from 'react';
+import { Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
+import { GlobalToast } from './components/GlobalToast';
 import TuningSettings from './components/TuningSettings';
 import { gqlClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
+import QuickActionsProvider from './providers/QuickActionsProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
+import { navigationRef } from './stacks/rootNavigation';
+import { store } from './store';
 import { setI18nConfig } from './translation';
+import { showAlertWhilePresenting } from './utils/alertPresentation';
 
 SplashScreen.preventAutoHideAsync();
 setI18nConfig();
@@ -39,7 +44,7 @@ const options: NativeStackNavigationOptions = {
   },
 };
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
   useEffect(() => {
     type TextProps = {
       defaultProps: {
@@ -61,7 +66,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (fontsLoaded || fontsLoadError) {
       if (fontsLoadError) {
-        Alert.alert('Font Load Error', 'Failed to load fonts.');
+        showAlertWhilePresenting(
+          'fontLoadError',
+          'Font Load Error',
+          'Failed to load fonts.'
+        );
       }
       SplashScreen.hideAsync();
     }
@@ -75,44 +84,55 @@ const App: React.FC = () => {
         <SystemBars hidden style="auto" />
       )}
 
-      <CustomErrorBoundary>
-        <GestureHandlerRootView>
-          <ApolloProvider client={gqlClient}>
-            <ActionSheetProvider>
-              <Provider>
-                <NavigationContainer>
-                  <DeepLinkProvider>
-                    <PortalProvider>
-                      <Stack.Navigator screenOptions={screenOptions}>
-                        {!permStatus?.granted ? (
-                          <Stack.Screen
-                            options={options}
-                            name="Privacy"
-                            component={PrivacyScreen}
-                          />
-                        ) : null}
+      <Stack.Navigator screenOptions={screenOptions}>
+        {!permStatus?.granted ? (
+          <Stack.Screen
+            options={options}
+            name="Privacy"
+            component={PrivacyScreen}
+          />
+        ) : null}
 
-                        <Stack.Screen
-                          options={options}
-                          name="MainStack"
-                          component={MainStack}
-                        />
+        <Stack.Screen
+          options={options}
+          name="MainStack"
+          component={MainStack}
+        />
 
-                        <Stack.Screen
-                          options={options}
-                          name="TuningSettings"
-                          component={TuningSettings}
-                        />
-                      </Stack.Navigator>
-                    </PortalProvider>
-                  </DeepLinkProvider>
-                </NavigationContainer>
-              </Provider>
-            </ActionSheetProvider>
-          </ApolloProvider>
-        </GestureHandlerRootView>
-      </CustomErrorBoundary>
+        <Stack.Screen
+          options={options}
+          name="TuningSettings"
+          component={TuningSettings}
+        />
+      </Stack.Navigator>
     </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <CustomErrorBoundary>
+      <GestureHandlerRootView>
+        <ApolloProvider client={gqlClient}>
+          <ActionSheetProvider>
+            <Provider store={store}>
+              <NavigationContainer ref={navigationRef}>
+                <DeepLinkProvider>
+                  <QuickActionsProvider>
+                    <PortalProvider>
+                      <StrictMode>
+                        <AppContent />
+                      </StrictMode>
+                    </PortalProvider>
+                  </QuickActionsProvider>
+                  <GlobalToast />
+                </DeepLinkProvider>
+              </NavigationContainer>
+            </Provider>
+          </ActionSheetProvider>
+        </ApolloProvider>
+      </GestureHandlerRootView>
+    </CustomErrorBoundary>
   );
 };
 

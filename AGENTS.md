@@ -10,6 +10,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - **Document reproducibility:** record every manual command you execute and note any local assumptions about environment variables or credentials.
 - **Validate assumptions proactively:** confirm tool versions, workflow expectations, and environment needs instead of relying on cached knowledge.
 - **Clarify uncertainty:** request guidance or leave TODO notes rather than guessing at intent.
+- **Prioritize quality and performance over speed:** prefer well-structured, performant implementations over quick solutions. Take extra time to consider edge cases, optimize hot paths, and ensure code correctness rather than rushing to deliver.
 
 ## Standard Workflow
 
@@ -17,7 +18,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 2. **Reconnaissance:** map relevant files with `rg`, `ls`, or `find`; review interfaces and existing patterns to plan compatible changes.
 3. **Plan:** outline discrete steps, keep the plan updated as you progress, and expose blockers early.
 4. **Implement:** use `apply_patch` for targeted edits, commit in small logical units, and avoid regenerating large files unless required.
-5. **Validate:** run only the necessary commands (`pnpm lint`, `pnpm test`, `pnpm typecheck`, etc.) and capture summarized output.
+5. **Validate:** run only the necessary commands (`npm run lint`, `npm test`, `npm run typecheck`, etc.) and capture summarized output.
 6. **Document & Handoff:** update READMEs or docs when behavior changes, summarize modifications, list executed commands, and attach artifacts (logs, screenshots) before opening PRs.
 
 ## Repository Map
@@ -31,36 +32,54 @@ This handbook defines how automation agents collaborate safely and effectively o
 - `assets/`: static media (images, fonts, icons).
 - `docs/`: human-facing documentation including changelog and incident notes.
 - `utils/`: developer tooling scripts such as GraphQL codegen config.
-- `android/`, `ios/`: native projects managed via Fastlane.
+- `android/`, `ios/`: native projects.
 - `functions/`: Firebase Cloud Functions.
 
 ## Tooling & Environment Expectations
 
-- Target **Node.js 20.x** and **pnpm 10.x**; use the globally installed pnpm (Corepack is unnecessary).
-- Run `pnpm install` when dependencies shift; avoid re-locking packages unless instructed.
+- Target **Node.js 22.x** and **npm 10.x**.
+- Run `npm install` when dependencies shift; avoid re-locking packages unless instructed.
 - Metro cache issues: run `expo start --clear` only when debugging build failures and document the action.
-- For native builds, rely on project scripts (`pnpm android`, `pnpm ios`) rather than invoking Fastlane directly.
-- GraphQL codegen requires `GQL_API_URL` in `.env.local`; run `pnpm gql:codegen` after document or schema updates.
+- For native builds, rely on project scripts (`npm run android`, `npm run ios`).
+- GraphQL codegen requires `GQL_API_URL` in `.env.local`; run `npm run gql:codegen` after document or schema updates.
 
 ## Build, Test & Development Commands
 
-- `pnpm start`: start the Expo Dev Client locally.
-- `pnpm android` / `pnpm ios`: build native binaries through Fastlane lanes.
-- `pnpm web`: run the web preview.
-- `pnpm lint`: execute Biome linting (`biome ci ./src` in CI).
-- `pnpm format`: apply Biome formatting fixes.
-- `pnpm test`: run Jest in UTC; add `--watch` or `--runInBand` for debugging.
-- `pnpm test --updateSnapshot`: refresh Jest snapshots when output diffs are intentional.
-- `pnpm typecheck`: enforce TypeScript constraints.
-- `pnpm gql:codegen`: regenerate generated GraphQL types.
+- `npm run start`: start the Expo Dev Client locally.
+- `npm run android` / `npm run ios`: build native binaries.
+- `npm run web`: run the web preview.
+- `npm run lint`: execute Biome linting (`biome ci ./src` in CI).
+- `npm run format`: apply Biome formatting fixes.
+- `npm test`: run Jest in UTC; add `--watch` or `--runInBand` for debugging.
+- `npm test -- --updateSnapshot`: refresh Jest snapshots when output diffs are intentional.
+- `npm run typecheck`: enforce TypeScript constraints.
+- `npm run gql:codegen`: regenerate generated GraphQL types.
 
 ## Coding Style & Naming Conventions
 
 - `.editorconfig` enforces UTF-8, two-space indentation, single quotes, and ES5 trailing commas.
 - Biome is authoritative; avoid `// biome-ignore` unless a rule is truly incompatible and document the rationale inline.
-- Components → PascalCase (`StationBanner.tsx`); hooks → `use*` (`useStationFeed.ts`); Zustand stores → `*Store.ts`; GraphQL operations → `FeatureVerbQuery`.
+- Components → PascalCase (`StationBanner.tsx`); hooks → `use*` (`useStationFeed.ts`); Jotai atoms → `store/atoms/*.ts`; GraphQL operations → `FeatureVerbQuery`.
 - Co-locate style modules or constants near their consumers; share cross-cutting utilities through `src/utils/`.
 - Keep comments purposeful: explain intent or non-obvious constraints, not obvious mechanics.
+
+### React Native side effects under StrictMode
+
+- React StrictMode intentionally re-runs effect setup/cleanup in development. Treat mount-time effects as repeatable, and never rely on an empty dependency array to mean "runs exactly once" for visible side effects.
+- Do not call `Alert.alert` directly from `useEffect` or from async functions launched by `useEffect`. StrictMode can evaluate the same persisted condition twice before the first alert is dismissed, which may stack duplicate native alerts.
+- For automatic alerts, use the shared alert presentation guard in `src/utils/alertPresentation.ts` or an equivalent keyed presentation layer. The guard should prevent duplicate alerts only while the same logical alert is already being presented, and should release the key when the user presses a button or dismisses the alert.
+- User-initiated alerts from event handlers such as `onPress` may call `Alert.alert` directly when they are not triggered by mount-time or subscription effects.
+- If an effect writes shared app state during cleanup, confirm that the cleanup represents a real lifecycle event such as a navigation `beforeRemove`, not only StrictMode's development-only unmount check.
+
+### Markdown documentation (docs/, README, .claude/skills/\*\*/SKILL.md)
+
+`markdownlint-cli2` 準拠。CodeRabbit も同ルールで指摘するため、執筆時点で以下を守る:
+
+- **MD040 (fenced code language)**: フェンスコードブロックには必ず言語指定を付ける。用途別の既定: 平文の図示・実行計画サマリは `text`、シェル例は `bash`、差分は `diff`、埋め込みテンプレ本文は `markdown`、構造化データは `json` / `yaml`。
+- **MD038 (no spaces in code spans)**: インラインコード（バッククォート）の内側先頭・末尾に空白を入れない。`` `**v<release_version>**` `` は OK、`` `**v<release_version>** ` `` は NG。
+- **MD031 / MD032 (blanks around fences / lists)**: フェンスコードブロック・リストブロックの前後に空行を 1 行入れる。
+- **MD029 (ordered list numbering)**: 順序リストの番号付けは単一ファイル内で統一する（全て `1.` で書くか、`1.` `2.` `3.` と逐次番号を振るか）。
+- **MD033 (inline HTML)**: Markdown で表現できる構造は HTML タグに落とさない。例外として `<details><summary>…</summary>` と表セル内の `<br>` は許可。
 
 ## Testing Strategy
 
@@ -75,20 +94,25 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 - Commit messages must be single-sentence statements in Japanese (e.g., `テレメトリー送信機をリファクタリングしてnull状態を回避`); prefix production hot fixes with `Hotfix:`.
 - Keep commits logically scoped (implementation, tests, docs) and mention generated artifacts in the description.
+- Pull requests must follow `.github/pull_request_template.md`; do not add or remove sections from the template without maintainer approval.
+- Pull requests must be assigned to `@TinyKitten`.
 - Pull requests must include:
   - Purpose and summary of key changes.
   - Regression risk assessment and mitigation.
-  - Commands executed locally (e.g., `pnpm lint && pnpm test && pnpm typecheck`).
+  - Commands executed locally (e.g., `npm run lint && npm test && npm run typecheck`).
   - Linked issues or tickets.
   - Screenshots or recordings for UI/UX deltas with device names (e.g., Pixel 8, iPhone 15 Pro).
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
+- **Keep PR metadata in sync with the branch state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
+  - **Title**: re-evaluate whether the current title still describes the full scope of the branch. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
+  - **Body**: update the `変更の種類` checkboxes, the `変更内容` summary, and the test-result section so they reflect the updated diff. Preserve human-authored prose sections (`概要`, narrative added under `変更内容`, `関連Issue`, `スクリーンショット`) unless the changes invalidate them.
 
 ## Security & Configuration Guardrails
 
-- Store secrets in `.env.local`; treat `.env` as the template, and keep `.env.example` synchronized for onboarding.
+- Store secrets in `.env.local`; treat `.env.example` as the template for onboarding (copy it to `.env.local` and fill in values).
 - Never commit credentials, access tokens, or production endpoints.
-- Protect Expo and Fastlane credentials with 2FA and rotate access when automations change.
-- After dependency upgrades (`pnpm up --interactive`) or Expo SDK migrations, run `expo-doctor`, `pnpm lint`, `pnpm test`, and `pnpm typecheck`, then capture results in `docs/changelog.md`.
+- Protect Expo credentials with 2FA and rotate access when automations change.
+- After dependency upgrades (`npm update`) or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, and `npm run typecheck`, then capture results in `docs/changelog.md`.
 
 ## Automation Checklists
 
@@ -96,7 +120,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 - [ ] Confirm requirements and flag conflicts.
 - [ ] Update or add tests relevant to code changes.
-- [ ] Run `pnpm lint`, `pnpm test`, and `pnpm typecheck`; record summaries.
+- [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
 - [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
 - [ ] Capture screenshots/video for UI changes with device labels.
 
@@ -108,7 +132,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 **For workflow, release, or CI updates**
 
-- [ ] Cross-check `.github/workflows/` and Fastlane lanes for consistency.
+- [ ] Cross-check `.github/workflows/` for consistency.
 - [ ] Provide dry-run instructions or environment prerequisites.
 - [ ] Document required secrets, environment variables, or service accounts.
 

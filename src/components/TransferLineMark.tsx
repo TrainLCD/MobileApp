@@ -11,6 +11,7 @@ import {
 } from '../constants';
 import type { LineMark } from '../models/LineMark';
 import isTablet from '../utils/isTablet';
+import { isBusLine } from '../utils/line';
 import NumberingIcon from './NumberingIcon';
 
 interface Props {
@@ -33,6 +34,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible',
   },
   signPathWrapper: {
     flexDirection: 'row',
@@ -60,6 +62,9 @@ const TransferLineMark: React.FC<Props> = ({
   stationNumber,
   threeLetterCode,
 }: Props) => {
+  const isBus = isBusLine(line);
+  const busSymbol = line?.nameShort?.replace(/[０-９]/g, '').at(0) ?? '';
+
   const notTinyImageSize = useMemo(() => (isTablet ? 35 * 1.5 : 35), []);
   const dim = useMemo(
     () => (size === NUMBERING_ICON_SIZE.SMALL ? 20 : notTinyImageSize),
@@ -147,6 +152,38 @@ const TransferLineMark: React.FC<Props> = ({
     [outlineRadiusValue]
   );
 
+  const stationNumberText = useMemo(() => {
+    if (isBus && busSymbol) {
+      return busSymbol;
+    }
+
+    if (!stationNumber && mark.signShape === MARK_SHAPE.JR_UNION) {
+      return 'JR';
+    }
+
+    return stationNumber ?? mark.sign ?? '';
+  }, [isBus, busSymbol, stationNumber, mark.sign, mark.signShape]);
+
+  const fallbackImageSrc = mark.btUnionSignPaths?.[0] ?? mark.signPath;
+  const imageSourceKey = useMemo(() => {
+    if (mark.btUnionSignPaths?.length) {
+      return mark.btUnionSignPaths.join(',');
+    }
+
+    return fallbackImageSrc != null ? String(fallbackImageSrc) : 'no-image';
+  }, [fallbackImageSrc, mark.btUnionSignPaths]);
+  const recyclingKey = String(
+    [
+      line?.id ?? 'unknown-line',
+      imageSourceKey,
+      stationNumber ?? '',
+      threeLetterCode ?? '',
+      mark.sign ?? '',
+      mark.signShape ?? '',
+      shouldGrayscale ? 'grayscale' : 'color',
+    ].join(':')
+  );
+
   if (mark.btUnionSignPaths && !stationNumber) {
     return (
       <View style={[containerStyle, withOutline ? outlineStyle : null]}>
@@ -155,10 +192,12 @@ const TransferLineMark: React.FC<Props> = ({
         ) : null}
 
         <Image
+          key={recyclingKey}
           style={imageStyle}
           source={mark.btUnionSignPaths[0]}
           cachePolicy="memory-disk"
           contentFit="cover"
+          recyclingKey={recyclingKey}
         />
       </View>
     );
@@ -172,10 +211,12 @@ const TransferLineMark: React.FC<Props> = ({
         ) : null}
 
         <Image
+          key={recyclingKey}
           style={imageStyle}
           source={mark.signPath}
           cachePolicy="memory-disk"
           contentFit="cover"
+          recyclingKey={recyclingKey}
         />
       </View>
     );
@@ -189,12 +230,7 @@ const TransferLineMark: React.FC<Props> = ({
           lineColor={
             shouldGrayscale ? fadedLineColor : color || (line?.color ?? '#000')
           }
-          stationNumber={
-            stationNumber ??
-            `${
-              mark.signShape === MARK_SHAPE.JR_UNION ? 'JR' : mark.sign || ''
-            }-00`
-          }
+          stationNumber={stationNumberText}
           threeLetterCode={threeLetterCode}
           size={size}
           withDarkTheme={withDarkTheme}

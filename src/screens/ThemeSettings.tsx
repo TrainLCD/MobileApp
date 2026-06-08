@@ -1,62 +1,276 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ThemeList } from '~/components/ThemeList';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { lighten } from 'polished';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  type GestureResponderEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Platform,
+  Pressable,
+  Animated as RNAnimated,
+  StyleSheet,
+  View,
+} from 'react-native';
+import Animated from 'react-native-reanimated';
+import Button from '~/components/Button';
+import FooterTabBar from '~/components/FooterTabBar';
+import { SettingsHeader } from '~/components/SettingsHeader';
+import { ThemeConfirmModal } from '~/components/ThemeConfirmModal';
+import { StatePanel } from '~/components/ToggleButton';
+import Typography from '~/components/Typography';
+import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
+import { isLEDThemeAtom, themePreferenceAtom } from '~/store/atoms/theme';
+import { translate } from '~/translation';
+import { isDevApp } from '~/utils/isDevApp';
+import isTablet from '~/utils/isTablet';
+import { RFValue } from '~/utils/rfValue';
 import { getSettingsThemes } from '~/utils/theme';
-import FAB from '../components/FAB';
-import { Heading } from '../components/Heading';
-import { ASYNC_STORAGE_KEYS } from '../constants';
-import { useThemeStore } from '../hooks';
-import type { AppTheme } from '../models/Theme';
-import { translate } from '../translation';
-import { isDevApp } from '../utils/isDevApp';
+import {
+  ASYNC_STORAGE_KEYS,
+  AUTO_THEME_GRADIENT_COLORS,
+  IN_USE_COLOR_MAP,
+} from '../constants';
+
+type SettingItem = {
+  id: ThemePreference;
+  title: string;
+  hidden: boolean;
+};
 
 const styles = StyleSheet.create({
-  rootPadding: {
-    marginTop: 12,
+  root: {
+    paddingHorizontal: 24,
+    flex: 1,
   },
-  listContainer: {
-    height: '100%',
-    paddingBottom: 96,
-    marginTop: 12,
+  screenBg: {
+    backgroundColor: '#FAFAFA',
+  },
+  title: {
+    flex: 1,
+    fontSize: isTablet ? RFValue(12) : RFValue(14),
+    fontWeight: 'bold',
   },
 });
 
-const ThemeSettingsScreen: React.FC = () => {
-  const theme = useThemeStore((state) => state);
+const SettingsItem = ({
+  item,
+  isFirst,
+  isLast,
+  state,
+  onToggle,
+}: {
+  item: SettingItem;
+  isFirst: boolean;
+  isLast: boolean;
+  state: boolean;
+  onToggle: (event: GestureResponderEvent) => void;
+}) => {
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const isAuto = item.id === THEME_PREFERENCE.AUTO;
+  const themeColor = isAuto
+    ? AUTO_THEME_GRADIENT_COLORS[0]
+    : IN_USE_COLOR_MAP[item.id as keyof typeof IN_USE_COLOR_MAP];
 
-  const onThemeValueChange = useCallback((t: AppTheme) => {
-    useThemeStore.setState(t);
-  }, []);
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={item.title}
+      accessibilityState={{ checked: state }}
+      onPress={onToggle}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : 'white',
+        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
+      }}
+    >
+      <View
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: isLEDTheme ? 0 : 8,
+          overflow: 'hidden',
+          marginRight: 16,
+        }}
+      >
+        <LinearGradient
+          colors={
+            isAuto
+              ? AUTO_THEME_GRADIENT_COLORS
+              : [themeColor, lighten(0.1, themeColor)]
+          }
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        />
+      </View>
+      <Typography style={styles.title}>{item.title}</Typography>
+
+      <StatePanel
+        state={state}
+        onText={translate('inUse')}
+        offText={translate('select')}
+      />
+    </Pressable>
+  );
+};
+
+const ThemeSettingsScreen: React.FC = () => {
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [pendingTheme, setPendingTheme] = useState<SettingItem | null>(null);
+  const [isThemeModalVisible, setIsThemeModalVisible] = useState(false);
+
+  const scrollY = useRef(new RNAnimated.Value(0)).current;
+
+  const currentPreference = useAtomValue(themePreferenceAtom);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const setThemePreference = useSetAtom(themePreferenceAtom);
 
   const navigation = useNavigation();
-  const unlockedSettingsThemes = useMemo(() => {
-    const settingsThemes = getSettingsThemes();
-    return isDevApp ? settingsThemes : settingsThemes.filter((t) => !t.devOnly);
+
+  const SETTING_ITEMS: SettingItem[] = useMemo(() => {
+    const themes = getSettingsThemes();
+    return themes.map((theme) => ({
+      id: theme.value,
+      title: theme.label,
+      hidden: !isDevApp && theme.devOnly,
+    }));
   }, []);
 
-  const onPressBack = useCallback(async () => {
-    await AsyncStorage.setItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME, theme);
+  const visibleItems = useMemo(
+    () => SETTING_ITEMS.filter((item) => !item.hidden),
+    [SETTING_ITEMS]
+  );
 
-    if (navigation.canGoBack()) {
-      navigation.goBack();
+  const handleApplyTheme = useCallback(
+    async (preference: ThemePreference) => {
+      try {
+        await AsyncStorage.setItem(
+          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
+          preference
+        );
+        setThemePreference(preference);
+      } catch (error) {
+        console.error('Failed to toggle theme setting', error);
+        Alert.alert(
+          translate('errorTitle'),
+          translate('failedToSavePreference')
+        );
+      }
+    },
+    [setThemePreference]
+  );
+
+  const handleConfirmThemeChange = useCallback(() => {
+    if (pendingTheme) {
+      handleApplyTheme(pendingTheme.id);
     }
-  }, [navigation, theme]);
+    setIsThemeModalVisible(false);
+  }, [pendingTheme, handleApplyTheme]);
+
+  const handleCloseModal = useCallback(() => {
+    setIsThemeModalVisible(false);
+  }, []);
+
+  const handleCloseAnimationEnd = useCallback(() => {
+    setPendingTheme(null);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item, index }: { item: SettingItem; index: number }) => {
+      const state = currentPreference === item.id;
+
+      const onToggle = () => {
+        if (state) {
+          return;
+        }
+        setPendingTheme(item);
+        setIsThemeModalVisible(true);
+      };
+
+      return (
+        <SettingsItem
+          item={item}
+          isFirst={index === 0}
+          isLast={index === visibleItems.length - 1}
+          onToggle={onToggle}
+          state={state}
+        />
+      );
+    },
+    [visibleItems.length, currentPreference]
+  );
+
+  const keyExtractor = useCallback((item: SettingItem) => item.id, []);
+
+  const getItemLayout = useCallback(
+    (_data: ArrayLike<SettingItem> | null | undefined, index: number) => ({
+      length: 76,
+      offset: 76 * index,
+      index,
+    }),
+    []
+  );
+
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.setValue(e.nativeEvent.contentOffset.y);
+    },
+    [scrollY]
+  );
 
   return (
     <>
-      <SafeAreaView style={styles.rootPadding}>
-        <Heading>{translate('selectThemeTitle')}</Heading>
-        <View style={styles.listContainer}>
-          <ThemeList
-            data={unlockedSettingsThemes}
-            onSelect={onThemeValueChange}
-          />
-        </View>
-      </SafeAreaView>
-      <FAB onPress={onPressBack} icon="checkmark" />
+      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+        <Animated.FlatList
+          data={visibleItems}
+          keyExtractor={keyExtractor}
+          getItemLayout={getItemLayout}
+          removeClippedSubviews={Platform.OS === 'android'}
+          contentContainerStyle={[
+            headerHeight
+              ? { marginTop: headerHeight, paddingBottom: headerHeight }
+              : null,
+          ]}
+          renderItem={renderItem}
+          onScroll={handleScroll}
+          ListFooterComponent={() => (
+            <Button
+              style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+              textStyle={{ fontWeight: 'bold' }}
+              onPress={() => navigation.goBack()}
+            >
+              OK
+            </Button>
+          )}
+        />
+      </View>
+      <SettingsHeader
+        title={translate('theme')}
+        onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height + 32)}
+        scrollY={scrollY}
+      />
+      <FooterTabBar active="settings" />
+      <ThemeConfirmModal
+        visible={isThemeModalVisible}
+        themeId={pendingTheme?.id ?? null}
+        themeTitle={pendingTheme?.title ?? ''}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmThemeChange}
+        onCloseAnimationEnd={handleCloseAnimationEnd}
+      />
     </>
   );
 };

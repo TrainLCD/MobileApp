@@ -4,17 +4,21 @@ import {
 } from '@react-navigation/native-stack';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
+import AndroidSettings from '~/screens/AndroidSettings';
+import Licenses from '~/screens/Licenses';
+import NotificationSettings from '~/screens/NotificationSettings';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
+import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
 import Permitted from '../components/Permitted';
-import { useConnectivity, useThemeStore, useUnderMaintenance } from '../hooks';
-import { APP_THEME } from '../models/Theme';
+import { useConnectivity, useUnderMaintenance } from '../hooks';
 import AppSettings from '../screens/AppSettings';
 import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
 import SelectLine from '../screens/SelectLineScreen';
 import ThemeSettings from '../screens/ThemeSettings';
 import stationState from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 
 const Stack = createNativeStackNavigator();
@@ -27,7 +31,7 @@ const screenOptions: NativeStackNavigationOptions = {
 const MainStack: React.FC = () => {
   const { station, selectedBound } = useAtomValue(stationState);
 
-  const isLEDTheme = useThemeStore((state) => state === APP_THEME.LED);
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const isUnderMaintenance = useUnderMaintenance();
   const isInternetAvailable = useConnectivity();
@@ -89,13 +93,33 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           options={optionsWithCustomStyle}
+          name="TTSSettings"
+          component={TTSSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
           name="EnabledLanguagesSettings"
           component={EnabledLanguagesSettings}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}
+          name="NotificationSettings"
+          component={NotificationSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="AndroidSettings"
+          component={AndroidSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
           name="RouteSearch"
           component={RouteSearchScreen}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="Licenses"
+          component={Licenses}
         />
       </Stack.Navigator>
     </Permitted>
