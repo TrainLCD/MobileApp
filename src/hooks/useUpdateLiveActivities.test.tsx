@@ -1,7 +1,11 @@
 import type { Station } from '~/@types/graphql';
 import { pickLiveActivityNextStation } from './useUpdateLiveActivities';
 
-const makeStation = (id: number, groupId: number, name: string): Station =>
+const makeStation = (
+  id: number,
+  groupId: number | null,
+  name: string
+): Station =>
   ({
     id,
     groupId,
@@ -38,5 +42,15 @@ describe('pickLiveActivityNextStation', () => {
     expect(pickLiveActivityNextStation(gpsNext, recordNext, undefined)).toBe(
       gpsNext
     );
+  });
+
+  it('groupIdが両方nullの場合は同一駅扱いでcollapse判定されフォールバックする', () => {
+    // groupId は GraphQL 上 Maybe<Int> のため null を取り得る。
+    // null === null で collapse と判定される現挙動を明示する。
+    const stoppedNullGroup = makeStation(1, null, '駅A');
+    const displayNullGroup = makeStation(2, null, '駅B');
+    expect(
+      pickLiveActivityNextStation(displayNullGroup, recordNext, stoppedNullGroup)
+    ).toBe(recordNext);
   });
 });
