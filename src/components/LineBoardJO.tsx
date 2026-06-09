@@ -4,7 +4,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import type { Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
-  useCurrentStation,
+  useDisplayCurrentStation,
   useIsPassing,
   useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
@@ -229,7 +229,8 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { arrived } = useAtomValue(stationState);
   const { selectedLine } = useAtomValue(lineState);
   const isPassing = useIsPassing();
-  const station = useCurrentStation();
+  // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
+  const station = useDisplayCurrentStation();
   const currentLine = useCurrentLine();
   const barWidth = useBarWidth();
 

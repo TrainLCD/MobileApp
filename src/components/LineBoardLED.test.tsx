@@ -17,6 +17,7 @@ jest.mock('~/hooks', () => ({
   useBounds: jest.fn(() => ({ directionalStops: [] })),
   useCurrentLine: jest.fn(),
   useCurrentTrainType: jest.fn(() => ({ name: '普通', nameRoman: 'Local' })),
+  useDisplayNextStation: jest.fn(),
   useLoopLine: jest.fn(() => ({
     isLoopLine: false,
     isPartiallyLoopLine: false,
@@ -41,7 +42,7 @@ describe('LineBoardLED', () => {
   const { useAtomValue } = require('jotai');
   const {
     useCurrentLine,
-    useNextStation,
+    useDisplayNextStation,
     useAfterNextStation,
     useTransferLines,
     useNumbering,
@@ -80,7 +81,7 @@ describe('LineBoardLED', () => {
       return { headerState: 'NEXT' };
     });
     useCurrentLine.mockReturnValue(mockLine);
-    useNextStation.mockReturnValue(mockNextStation);
+    useDisplayNextStation.mockReturnValue(mockNextStation);
     useAfterNextStation.mockReturnValue(mockAfterNextStation);
     useTransferLines.mockReturnValue([]);
     useNumbering.mockReturnValue([null]);
@@ -157,7 +158,7 @@ describe('LineBoardLED', () => {
   });
 
   it('一部列車が通過する駅の場合、注意喚起が表示される', () => {
-    useNextStation.mockReturnValue({
+    useDisplayNextStation.mockReturnValue({
       ...mockNextStation,
       stopCondition: StopCondition.Partial,
     });

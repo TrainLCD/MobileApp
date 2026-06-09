@@ -15,8 +15,8 @@ import getIsPass from '../utils/isPass';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useLoopLine } from './useLoopLine';
-import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
 import { useStoppingState } from './useStoppingState';
 
@@ -27,7 +27,8 @@ export const useAppleWatch = (): void => {
 
   const reachable = useReachability();
   const [currentNumbering] = useNumbering();
-  const nextStation = useNextStation();
+  // まもなく表示時は現在地基準で実際に接近している駅を次駅としてウォッチへ送る
+  const nextStation = useDisplayNextStation();
   const stoppingState = useStoppingState();
   const { isLoopLine: isFullLoopLine, isPartiallyLoopLine } = useLoopLine();
   const { directionalStops } = useBounds(stations);
