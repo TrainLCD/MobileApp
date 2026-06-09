@@ -142,7 +142,9 @@ describe('DevOverlay', () => {
       expect(getByText('TELEMETRY')).toBeTruthy();
       // BLE行のON/OFFは.env.localのBLE_ENABLEDがbabelでインライン展開され環境依存になるため、
       // 全体の'ON'件数ではなく対象pill単位のvalueで判定する
-      expect(getByTestId('dev-overlay-telemetry-value')).toHaveTextContent('ON');
+      expect(getByTestId('dev-overlay-telemetry-value')).toHaveTextContent(
+        'ON'
+      );
     });
 
     it('バックグラウンド位置情報のOFF状態を表示する', () => {
