@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { parenthesisRegexp } from '~/constants';
 import { useDisplayCurrentStation } from '../hooks';
@@ -72,8 +72,11 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     [slicedLeftStations]
   );
 
-  // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る
-  const Inner = useCallback(() => {
+  // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る。
+  // また、コンポーネント関数(useCallback)を<Inner />として描画すると依存が変わるたびに
+  // 「別のコンポーネント型」と判定されてサブツリー全体が再マウントされるため、
+  // useMemoで要素を生成して型を安定させる。
+  const inner = useMemo(() => {
     switch (theme) {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TY:
@@ -159,11 +162,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     theme,
   ]);
 
-  return (
-    <View style={styles.flexOne}>
-      <Inner />
-    </View>
-  );
+  return <View style={styles.flexOne}>{inner}</View>;
 };
 
 export default React.memo(LineBoard);
