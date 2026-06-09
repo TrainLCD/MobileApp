@@ -13,6 +13,7 @@ import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useFirstStop } from './useFirstStop';
 import { useHeaderLangState } from './useHeaderLangState';
 import { useHeaderStateText } from './useHeaderStateText';
@@ -36,6 +37,8 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
   const currentStation = useCurrentStation();
   const currentLine = useCurrentLine();
   const nextStation = useNextStation();
+  // まもなく表示時は現在地基準で実際に接近している駅を「次の駅」として見せる
+  const displayNextStation = useDisplayNextStation();
 
   // その他のhooks
   const trainType = useCurrentTrainType();
@@ -63,7 +66,7 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
 
   const stationText = useHeaderStationText({
     currentStation,
-    nextStation,
+    nextStation: displayNextStation,
     headerLangState,
     firstStop,
   });

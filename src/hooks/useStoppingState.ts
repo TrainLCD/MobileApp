@@ -4,12 +4,13 @@ import type { HeaderStoppingState } from '../models/HeaderTransitionState';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
-import { useNextStation } from './useNextStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
 
 export const useStoppingState = (): HeaderStoppingState => {
   const { arrived, approaching } = useAtomValue(stationState);
   const currentStation = useCurrentStation();
-  const nextStation = useNextStation();
+  // まもなく表示時は現在地基準で接近している駅を次駅として状態判定する
+  const nextStation = useDisplayNextStation();
 
   const currentStateKey = useMemo(() => {
     if ((arrived && !getIsPass(currentStation)) || !nextStation) {

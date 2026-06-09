@@ -13,6 +13,7 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useInterval: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
   useTransferLinesFromStation: jest.fn(() => []),
@@ -75,7 +76,7 @@ jest.mock('./Typography', () => {
 
 describe('LineBoardToei', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine } = require('~/hooks');
+  const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -141,6 +142,7 @@ describe('LineBoardToei', () => {
   beforeEach(() => {
     useAtomValue.mockImplementation(createUseAtomValueMock());
     useCurrentLine.mockReturnValue(mockLine);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {

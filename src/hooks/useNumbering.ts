@@ -7,7 +7,7 @@ import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
-import { useNextStation } from './useNextStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 export const useNumbering = (
@@ -23,7 +23,8 @@ export const useNumbering = (
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
-  const nextStation = useNextStation(true);
+  // まもなく表示時は現在地基準で接近している駅の番号を表示する
+  const nextStation = useDisplayNextStation();
 
   const getStationNumberIndex = useStationNumberIndexFunc();
 

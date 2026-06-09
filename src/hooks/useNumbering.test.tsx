@@ -12,7 +12,7 @@ import {
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
-import { useNextStation } from './useNextStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useNumbering } from './useNumbering';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
@@ -37,9 +37,9 @@ jest.mock('./useCurrentTrainType', () => ({
   useCurrentTrainType: jest.fn(),
 }));
 
-jest.mock('./useNextStation', () => ({
+jest.mock('./useDisplayNextStation', () => ({
   __esModule: true,
-  useNextStation: jest.fn(),
+  useDisplayNextStation: jest.fn(),
 }));
 
 jest.mock('./useStationNumberIndexFunc', () => ({
@@ -83,8 +83,8 @@ describe('useNumbering', () => {
   const mockUseCurrentTrainType = useCurrentTrainType as jest.MockedFunction<
     typeof useCurrentTrainType
   >;
-  const mockUseNextStation = useNextStation as jest.MockedFunction<
-    typeof useNextStation
+  const mockUseNextStation = useDisplayNextStation as jest.MockedFunction<
+    typeof useDisplayNextStation
   >;
   const mockUseStationNumberIndexFunc =
     useStationNumberIndexFunc as jest.MockedFunction<

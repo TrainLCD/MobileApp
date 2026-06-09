@@ -26,10 +26,10 @@ import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useIsTerminus } from './useIsTerminus';
 import { useLoopLine } from './useLoopLine';
 import { useLoopLineBound } from './useLoopLineBound';
-import { useNextStation } from './useNextStation';
 import { useSlicedStations } from './useSlicedStations';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useStoppingState } from './useStoppingState';
@@ -87,7 +87,8 @@ export const useTTSText = (
   const loopLineBoundJa = useLoopLineBound(false, 'JA');
   const loopLineBoundEn = useLoopLineBound(false, 'EN');
   const { directionalStops } = useBounds(stations);
-  const nextStationOrigin = useNextStation();
+  // まもなく表示時は現在地基準で実際に接近している駅を読み上げる
+  const nextStationOrigin = useDisplayNextStation();
   const isNextStopTerminus = useIsTerminus(nextStationOrigin);
   const { isLoopLine, isPartiallyLoopLine, isYamanoteLine } = useLoopLine();
   const slicedStationsOrigin = useSlicedStations();

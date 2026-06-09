@@ -14,6 +14,7 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useCurrentTrainType: jest.fn(() => null),
+  useDisplayCurrentStation: jest.fn(),
   useGetLineMark: jest.fn(() => jest.fn(() => null)),
   useNextStation: jest.fn(() => null),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
@@ -39,7 +40,8 @@ jest.mock('./PadArch', () => {
 
 describe('LineBoardYamanotePad', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine, useNextStation } = require('~/hooks');
+  const { useCurrentLine, useDisplayCurrentStation, useNextStation } =
+    require('~/hooks');
   const PadArch = require('./PadArch').default;
 
   const mockLine: Line = {
@@ -99,6 +101,7 @@ describe('LineBoardYamanotePad', () => {
     });
     useCurrentLine.mockReturnValue(mockLine);
     useNextStation.mockReturnValue(mockStations[1]);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {

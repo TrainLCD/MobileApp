@@ -8,8 +8,9 @@ import {
   useBounds,
   useCurrentLine,
   useCurrentTrainType,
+  useDisplayNextStation,
   useLoopLine,
-  useNextStation,
+  type useNextStation,
   useNumbering,
   useTransferLines,
 } from '../hooks';
@@ -287,7 +288,8 @@ const LineBoardLED = () => {
     [headerState]
   );
 
-  const nextStation = useNextStation();
+  // ヘッダーの「まもなく」と一致させるため現在地基準の次駅を使う
+  const nextStation = useDisplayNextStation();
   const trainType = useCurrentTrainType();
   const { directionalStops } = useBounds(stations);
   const transferLines = useTransferLines();
