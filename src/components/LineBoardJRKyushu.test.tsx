@@ -45,6 +45,7 @@ jest.mock('./ChevronTY', () => ({
 }));
 
 jest.mock('./LineBoard/shared/components', () => ({
+  BlinkingChevron: jest.fn(() => null),
   EmptyStationNameCell: jest.fn(() => null),
   LineDot: jest.fn(() => null),
   StationName: jest.fn(() => null),
@@ -166,8 +167,8 @@ describe('LineBoardJRKyushu', () => {
     expect(NumberingIcon).toHaveBeenCalledTimes(mockStations.length);
   });
 
-  it('ChevronTYコンポーネントが表示される', () => {
-    const { ChevronTY } = require('./ChevronTY');
+  it('点滅チェブロンが表示される', () => {
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardJRKyushu
         stations={mockStations}
@@ -175,7 +176,10 @@ describe('LineBoardJRKyushu', () => {
         hasTerminus={false}
       />
     );
-    expect(ChevronTY).toHaveBeenCalled();
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['BLACK', 'BLUE'] }),
+      undefined
+    );
     expect(useCurrentLine).toHaveBeenCalled();
   });
 
@@ -219,7 +223,7 @@ describe('LineBoardJRKyushu', () => {
     expect(useAtomValue).toHaveBeenCalled();
   });
 
-  it('useIntervalフックが1秒間隔で呼ばれる', () => {
+  it('点滅処理はボード本体ではなくBlinkingChevronに委譲される', () => {
     const { useInterval } = require('~/hooks');
     render(
       <LineBoardJRKyushu
@@ -228,7 +232,8 @@ describe('LineBoardJRKyushu', () => {
         hasTerminus={false}
       />
     );
-    expect(useInterval).toHaveBeenCalledWith(expect.any(Function), 1000);
+    // 毎秒の点滅で全セルが再レンダーされないよう、ボード本体はintervalを持たない
+    expect(useInterval).not.toHaveBeenCalled();
   });
 
   it('駅番号がない駅の場合、NumberingIconが表示されない', () => {
