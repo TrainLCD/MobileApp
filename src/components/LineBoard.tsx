@@ -2,7 +2,7 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { parenthesisRegexp } from '~/constants';
-import { useCurrentStation } from '../hooks';
+import { useDisplayCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
@@ -36,7 +36,8 @@ const styles = StyleSheet.create({
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const theme = useAtomValue(themeAtom);
   const { leftStations } = useAtomValue(navigationState);
-  const station = useCurrentStation();
+  // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
+  const station = useDisplayCurrentStation();
   const isBus = isBusLine(station?.line);
 
   const slicedLeftStations = useMemo(() => {

@@ -189,36 +189,42 @@ export const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
-    if (!nearestStation || !canGoForward) {
+    if (!canGoForward) {
       return;
     }
 
-    const isNearestStationNotifyTarget = !!targetStationIds.find(
-      (id) => id === nearestStation.id
-    );
+    // 接近通知はヘッダーの「まもなく」と同じく現在地基準の接近駅(次に到着する停車駅)を
+    // 基準にする。通知される駅名・発火対象がヘッダー表示と一致し、発車直後の駅や通過駅で
+    // 誤って鳴らない。到着判定の取りこぼし時も接近駅側へ自己修復する。
+    if (
+      isApproaching &&
+      approachingStation?.id != null &&
+      targetStationIds.includes(approachingStation.id) &&
+      approachingStation.id !== approachingNotifiedIdRef.current
+    ) {
+      void sendApproachingNotification(approachingStation, 'APPROACHING').catch(
+        () => {}
+      );
+      approachingNotifiedIdRef.current = approachingStation.id;
+    }
 
-    if (isNearestStationNotifyTarget) {
-      if (
-        isApproaching &&
-        nearestStation.id !== undefined &&
-        nearestStation.id !== approachingNotifiedIdRef.current
-      ) {
-        sendApproachingNotification(nearestStation, 'APPROACHING');
-        approachingNotifiedIdRef.current = nearestStation.id ?? null;
-      }
-      if (
-        isArrived &&
-        nearestStation.id !== undefined &&
-        nearestStation.id !== arrivedNotifiedIdRef.current
-      ) {
-        sendApproachingNotification(nearestStation, 'ARRIVED');
-        arrivedNotifiedIdRef.current = nearestStation.id ?? null;
-      }
+    // 到着通知は実際に到着した最寄り駅を基準にする
+    if (
+      isArrived &&
+      nearestStation?.id != null &&
+      targetStationIds.includes(nearestStation.id) &&
+      nearestStation.id !== arrivedNotifiedIdRef.current
+    ) {
+      void sendApproachingNotification(nearestStation, 'ARRIVED').catch(
+        () => {}
+      );
+      arrivedNotifiedIdRef.current = nearestStation.id;
     }
   }, [
     canGoForward,
     isApproaching,
     isArrived,
+    approachingStation,
     nearestStation,
     sendApproachingNotification,
     targetStationIds,

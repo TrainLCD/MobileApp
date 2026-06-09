@@ -18,6 +18,7 @@ export { useCurrentLine } from './useCurrentLine';
 export { useCurrentStation } from './useCurrentStation';
 export { useCurrentTrainType } from './useCurrentTrainType';
 export { useDeepLink } from './useDeepLink';
+export { useDisplayCurrentStation } from './useDisplayCurrentStation';
 export { useDisplayNextStation } from './useDisplayNextStation';
 export { useDistanceToNextStation } from './useDistanceToNextStation';
 export { useFeedback } from './useFeedback';
