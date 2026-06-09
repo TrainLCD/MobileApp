@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react-native';
 import { Provider, useAtomValue, useSetAtom } from 'jotai';
 import { OperationStatus, type Station, StopCondition } from '~/@types/graphql';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import * as useApproachingStationModule from '~/hooks/useApproachingStation';
 import * as useCanGoForwardModule from '~/hooks/useCanGoForward';
 import * as useNearestStationModule from '~/hooks/useNearestStation';
 import * as useNextStationModule from '~/hooks/useNextStation';
@@ -66,6 +67,11 @@ describe('useRefreshStation', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.spyOn(global.Date, 'now').mockImplementation(() => 100000);
+    // 接近駅は現在地基準で算出されるが、本テストでは最寄り駅と同一座標の
+    // mockStation を返すことで従来(次駅基準)と同じ接近判定挙動を再現する。
+    jest
+      .spyOn(useApproachingStationModule, 'useApproachingStation')
+      .mockReturnValue(mockStation);
   });
 
   afterEach(() => {
