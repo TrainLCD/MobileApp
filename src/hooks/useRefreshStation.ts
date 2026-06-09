@@ -18,6 +18,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
+import { useApproachingStation } from './useApproachingStation';
 import { useCanGoForward } from './useCanGoForward';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
@@ -51,6 +52,9 @@ export const useRefreshStation = (): void => {
 
   const nextStation = useNextStation();
   const nextStationId = nextStation?.id ?? null;
+  // 接近判定は最後に到着した駅起点の次駅ではなく、現在地起点で実際に接近して
+  // いる停車駅を基準にすることで、到着取りこぼし等による次駅ずれを自己修復する。
+  const approachingStation = useApproachingStation();
   const approachingNotifiedIdRef = useRef<number | null>(null);
   const arrivedNotifiedIdRef = useRef<number | null>(null);
   const lastArrivedTimeRef = useRef<number>(0);
@@ -144,9 +148,9 @@ export const useRefreshStation = (): void => {
     if (
       latitude == null ||
       longitude == null ||
-      nextStation == null ||
-      nextStation.latitude == null ||
-      nextStation.longitude == null
+      approachingStation == null ||
+      approachingStation.latitude == null ||
+      approachingStation.longitude == null
     ) {
       return false;
     }
@@ -154,12 +158,12 @@ export const useRefreshStation = (): void => {
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation.latitude as number,
-        longitude: nextStation.longitude as number,
+        latitude: approachingStation.latitude as number,
+        longitude: approachingStation.longitude as number,
       },
       effectiveApproachingThreshold
     );
-  }, [effectiveApproachingThreshold, latitude, longitude, nextStation]);
+  }, [effectiveApproachingThreshold, latitude, longitude, approachingStation]);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {

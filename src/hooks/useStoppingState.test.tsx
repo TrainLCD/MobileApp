@@ -6,7 +6,7 @@ import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
-import { useNextStation } from './useNextStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useStoppingState } from './useStoppingState';
 
 jest.mock('jotai', () => ({
@@ -19,8 +19,8 @@ jest.mock('./useCurrentStation', () => ({
   useCurrentStation: jest.fn(),
 }));
 
-jest.mock('./useNextStation', () => ({
-  useNextStation: jest.fn(),
+jest.mock('./useDisplayNextStation', () => ({
+  useDisplayNextStation: jest.fn(),
 }));
 
 jest.mock('../utils/isPass', () => ({
@@ -40,8 +40,8 @@ describe('useStoppingState', () => {
   const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
     typeof useCurrentStation
   >;
-  const mockUseNextStation = useNextStation as jest.MockedFunction<
-    typeof useNextStation
+  const mockUseNextStation = useDisplayNextStation as jest.MockedFunction<
+    typeof useDisplayNextStation
   >;
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 

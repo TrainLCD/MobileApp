@@ -20,10 +20,10 @@ import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useIsNextLastStop } from './useIsNextLastStop';
 import { useIsPassing } from './useIsPassing';
 import { useLoopLine } from './useLoopLine';
-import { useNextStation } from './useNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 export const useUpdateLiveActivities = (): void => {
@@ -39,7 +39,8 @@ export const useUpdateLiveActivities = (): void => {
   const currentLine = useCurrentLine();
   const previousStation = useCurrentStation(true);
   const currentStation = useCurrentStation(false, true);
-  const nextStation = useNextStation();
+  // まもなく表示時は現在地基準で実際に接近している駅を次駅として通知する
+  const nextStation = useDisplayNextStation();
   const { directionalStops } = useBounds(stations);
   const isNextLastStop = useIsNextLastStop();
   const getStationNumberIndex = useStationNumberIndexFunc();
