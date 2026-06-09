@@ -49,13 +49,14 @@ describe('useApproachingStation', () => {
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 
   const setLocation = (
-    coords: { latitude: number; longitude: number } | null
+    coords: { latitude: number; longitude: number } | null,
+    currentStation?: ReturnType<typeof createStation>
   ) => {
     mockUseAtomValue.mockImplementation((atom: unknown) => {
       if (atom === 'LOCATION_ATOM') {
         return coords ? { coords } : null;
       }
-      return { stations };
+      return { stations, station: currentStation };
     });
   };
 
@@ -142,6 +143,23 @@ describe('useApproachingStation', () => {
     const result = JSON.parse(getByTestId('station').props.children as string);
     // 通過駅Bは除外され、A→Cの区間でCへ接近しているためC
     expect(result.id).toBe(3);
+  });
+
+  it('直近で発車した(到着済みの)駅は接近判定の対象から除外する', () => {
+    const stationA = createStation(1, { latitude: 35.0, longitude: 135.0 });
+    const stationB = createStation(2, { latitude: 35.2, longitude: 135.0 });
+    const stationC = createStation(3, { latitude: 35.4, longitude: 135.0 });
+    stations = [stationA, stationB, stationC];
+
+    // 直近の到着駅(=発車駅)はA。Aの直近に留まっていても、Aを除外して
+    // 次の停車駅Bを接近駅として返す(「まもなくA」の誤表示を防ぐ)。
+    setLocation({ latitude: 35.0, longitude: 135.0 }, stationA);
+    // Aを除外した最寄り停車駅はB。Bを起点とした次駅はC。
+    mockUseNextStation.mockReturnValue(stationC);
+
+    const { getByTestId } = render(<TestComponent />);
+    const result = JSON.parse(getByTestId('station').props.children as string);
+    expect(result.id).toBe(2);
   });
 
   it('次の停車駅が存在しない(終点)場合は最寄り停車駅を返す', () => {
