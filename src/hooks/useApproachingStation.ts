@@ -1,7 +1,7 @@
 import findNearest from 'geolib/es/findNearest';
 import getDistance from 'geolib/es/getPreciseDistance';
 import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { locationAtom } from '~/store/atoms/location';
 import stationState from '../store/atoms/station';
@@ -71,6 +71,20 @@ export const useApproachingStation = (): Station | undefined => {
 
   // 最寄り停車駅を起点とした進行方向側の次の停車駅
   const nextOfNearestStop = useNextStation(true, nearestStop);
+  // 発車駅を起点とした次の停車駅。発車直後に発車駅自身が接近駅へ再選択された
+  // ときのフォールバック先(=本来向かっている次の停車駅)に使う。
+  const nextOfDepartedStation = useNextStation(
+    true,
+    departedStation ?? undefined
+  );
+
+  const isDepartedStation = useCallback(
+    (s: Station | undefined): boolean =>
+      !!s &&
+      !!departedStation &&
+      (s.id === departedStation.id || s.groupId === departedStation.groupId),
+    [departedStation]
+  );
 
   return useMemo<Station | undefined>(() => {
     if (!nearestStop) {
@@ -106,8 +120,23 @@ export const useApproachingStation = (): Station | undefined => {
 
     // 最寄り停車駅よりも次の停車駅へ近づいている場合は、
     // 既に最寄り停車駅を通過したとみなして次の停車駅を接近駅として扱う。
-    return distanceToNext < distanceBetweenStops
-      ? nextOfNearestStop
-      : nearestStop;
-  }, [latitude, longitude, nearestStop, nextOfNearestStop]);
+    const resolved =
+      distanceToNext < distanceBetweenStops ? nextOfNearestStop : nearestStop;
+
+    // 発車直後、手前の区間(W–X)が次の区間(X–Y)より短いと findNearest が手前の
+    // 停車駅 W を最寄りに選び、その次駅(=発車駅 X)が接近駅へ再選択されて
+    // 「まもなくX(発車済み駅)」と誤表示される。発車駅へ collapse したときは
+    // 本来向かっている次の停車駅(発車駅の次)へ進める。
+    if (isDepartedStation(resolved)) {
+      return nextOfDepartedStation ?? resolved;
+    }
+    return resolved;
+  }, [
+    latitude,
+    longitude,
+    nearestStop,
+    nextOfNearestStop,
+    nextOfDepartedStation,
+    isDepartedStation,
+  ]);
 };

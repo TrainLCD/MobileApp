@@ -261,6 +261,26 @@ export const useTransitionHeaderState = (): void => {
         targetStation
       );
 
+      // 接近が解除されたのに ARRIVING のまま貼り付くのを防ぐ。
+      // ARRIVING からの離脱は本来 arrived のリセット useEffect でしか起きないため、
+      // 到着を挟まず approaching が true→false に戻るケース(到着検知の取りこぼし・
+      // GPS補正・接近駅の切替など)では「まもなく」が解除されず、displayNextStation が
+      // 記録基準の次駅へフォールバックして「まもなく(遠い駅)」と誤表示され続ける。
+      // 未到着で接近も解除されたら NEXT/CURRENT へ明示的に戻す。
+      if (!approaching && !arrived && currentHeaderState === 'ARRIVING') {
+        const fallbackState = showNextExpression ? 'NEXT' : 'CURRENT';
+        setHeaderStateIfChanged(
+          isJapaneseEnabled
+            ? fallbackState
+            : getFallbackStateWithoutJapanese(
+                fallbackState,
+                currentHeaderStateLang,
+                enabledLanguages
+              )
+        );
+        return;
+      }
+
       switch (currentHeaderState) {
         case 'ARRIVING': {
           switch (currentHeaderStateLang) {
@@ -433,6 +453,7 @@ export const useTransitionHeaderState = (): void => {
       }
     }, [
       approaching,
+      arrived,
       enabledLanguages,
       headerStateRef,
       isJapaneseEnabled,
