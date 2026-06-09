@@ -249,6 +249,7 @@ type StatusPillProps = {
   label: string;
   value: 'ON' | 'OFF';
   style?: StyleProp<ViewStyle>;
+  valueTestID?: string;
 };
 
 type MetricCardProps = {
@@ -265,7 +266,12 @@ type MetricCardProps = {
   metaStyle?: StyleProp<TextStyle>;
 };
 
-const StatusPill: React.FC<StatusPillProps> = ({ label, value, style }) => {
+const StatusPill: React.FC<StatusPillProps> = ({
+  label,
+  value,
+  style,
+  valueTestID,
+}) => {
   const isOn = value === 'ON';
   const colors = isOn
     ? (['rgba(34,197,94,0.32)', 'rgba(14,165,233,0.2)'] as const)
@@ -285,7 +291,9 @@ const StatusPill: React.FC<StatusPillProps> = ({ label, value, style }) => {
       ]}
     >
       <Typography style={styles.statusLabel}>{label}</Typography>
-      <Typography style={styles.statusValue}>{value}</Typography>
+      <Typography style={styles.statusValue} testID={valueTestID}>
+        {value}
+      </Typography>
     </LinearGradient>
   );
 };
@@ -698,16 +706,19 @@ const DevOverlay: React.FC = () => {
                 label="TELEMETRY"
                 value={telemetryValue}
                 style={statusPillStyle}
+                valueTestID="dev-overlay-telemetry-value"
               />
               <StatusPill
                 label="BG LOC"
                 value={backgroundValue}
                 style={statusPillStyle}
+                valueTestID="dev-overlay-bg-loc-value"
               />
               <StatusPill
                 label="BLE"
                 value={bleValue}
                 style={statusPillStyle}
+                valueTestID="dev-overlay-ble-value"
               />
             </View>
           </View>

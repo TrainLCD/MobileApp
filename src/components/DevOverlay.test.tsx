@@ -138,15 +138,17 @@ describe('DevOverlay', () => {
     });
 
     it('テレメトリー状態を表示する', () => {
-      const { getByText } = render(<DevOverlay />);
+      const { getByText, getByTestId } = render(<DevOverlay />);
       expect(getByText('TELEMETRY')).toBeTruthy();
-      expect(getByText('ON')).toBeTruthy();
+      // BLE行のON/OFFは.env.localのBLE_ENABLEDがbabelでインライン展開され環境依存になるため、
+      // 全体の'ON'件数ではなく対象pill単位のvalueで判定する
+      expect(getByTestId('dev-overlay-telemetry-value')).toHaveTextContent('ON');
     });
 
     it('バックグラウンド位置情報のOFF状態を表示する', () => {
-      const { getByText } = render(<DevOverlay />);
+      const { getByText, getByTestId } = render(<DevOverlay />);
       expect(getByText('BG LOC')).toBeTruthy();
-      expect(getByText('OFF')).toBeTruthy();
+      expect(getByTestId('dev-overlay-bg-loc-value')).toHaveTextContent('OFF');
     });
 
     it('バックグラウンド位置情報のON状態を表示する', () => {
@@ -157,9 +159,9 @@ describe('DevOverlay', () => {
         backgroundLocationTracking: true,
       });
 
-      const { getByText, getAllByText } = render(<DevOverlay />);
+      const { getByText, getByTestId } = render(<DevOverlay />);
       expect(getByText('BG LOC')).toBeTruthy();
-      expect(getAllByText('ON')).toHaveLength(2);
+      expect(getByTestId('dev-overlay-bg-loc-value')).toHaveTextContent('ON');
     });
 
     it('横画面レイアウトを表示する', () => {
