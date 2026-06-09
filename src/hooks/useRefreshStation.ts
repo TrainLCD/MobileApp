@@ -202,7 +202,9 @@ export const useRefreshStation = (): void => {
       targetStationIds.includes(approachingStation.id) &&
       approachingStation.id !== approachingNotifiedIdRef.current
     ) {
-      sendApproachingNotification(approachingStation, 'APPROACHING');
+      void sendApproachingNotification(approachingStation, 'APPROACHING').catch(
+        () => {}
+      );
       approachingNotifiedIdRef.current = approachingStation.id;
     }
 
@@ -213,7 +215,9 @@ export const useRefreshStation = (): void => {
       targetStationIds.includes(nearestStation.id) &&
       nearestStation.id !== arrivedNotifiedIdRef.current
     ) {
-      sendApproachingNotification(nearestStation, 'ARRIVED');
+      void sendApproachingNotification(nearestStation, 'ARRIVED').catch(
+        () => {}
+      );
       arrivedNotifiedIdRef.current = nearestStation.id;
     }
   }, [
