@@ -34,8 +34,9 @@ export const memoizeLastCalls = <Args extends AnyArgs, R>(
     }
     const result = fn(...args);
     entries.push({ args, result });
+    // push直後にだけ一時的にmaxEntries+1件になるため、ここで最も古いエントリを
+    // 捨てて保持数を常に最大maxEntries件に保つ(>=にすると上限がmaxEntries-1件になる)
     if (entries.length > maxEntries) {
-      // 最も古いエントリから捨てる(参照の保持期間を限定するための上限)
       entries.shift();
     }
     return result;

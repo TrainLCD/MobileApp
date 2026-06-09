@@ -1,6 +1,10 @@
 import { memoizeLastCalls, memoizeWeak } from './memoizeLastCalls';
 
 describe('memoizeLastCalls', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('同一引数の呼び出しでは計算せず同一結果を返す', () => {
     const fn = jest.fn((arr: number[], flag: boolean) => ({
       sum: arr.reduce((a, b) => a + b, 0),
@@ -61,6 +65,10 @@ describe('memoizeLastCalls', () => {
 });
 
 describe('memoizeWeak', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('同一オブジェクトの呼び出しでは計算せず同一結果を返す', () => {
     const fn = jest.fn((arr: number[]) => arr.slice().reverse());
     const memoized = memoizeWeak(fn);
