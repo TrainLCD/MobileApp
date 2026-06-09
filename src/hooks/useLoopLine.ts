@@ -12,6 +12,7 @@ import {
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '~/constants';
+import reverseStations from '~/utils/reverseStations';
 import { getIsLocal } from '~/utils/trainTypeString';
 import stationState from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
@@ -116,12 +117,10 @@ export const useLoopLine = (
     [line, stations]
   );
 
-  // OUTBOUND/INBOUND どちらでも参照されうる reverse 結果をメモ化。
-  // 以前は inboundStationsForLoopLine が呼ばれる度にフル配列を slice().reverse() していた。
-  const reversedStations = useMemo(
-    () => stations.slice().reverse(),
-    [stations]
-  );
+  // OUTBOUND/INBOUND どちらでも参照されうる reverse 結果を共有キャッシュから取得。
+  // インスタンスごとの useMemo では複数の呼び出し元それぞれで slice().reverse() が
+  // 走っていたため、モジュールレベルのキャッシュ(reverseStations)で1回に集約する。
+  const reversedStations = reverseStations(stations);
 
   const inboundStationsForLoopLine = useMemo((): Station[] => {
     if (!station || !isLoopLine) {

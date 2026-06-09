@@ -4,6 +4,7 @@ import type { Station } from '~/@types/graphql';
 import stationState from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import reverseStations from '../utils/reverseStations';
 import { useApproachingStation } from './useApproachingStation';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
@@ -46,8 +47,9 @@ export const useDisplayCurrentStation = (): Station | undefined => {
       stationsFromState,
       selectedDirection
     );
+    // reverseStationsは共有キャッシュ付きのため、useNextStation等と逆順配列を共有できる
     const directional =
-      selectedDirection === 'INBOUND' ? ordered : ordered.slice().reverse();
+      selectedDirection === 'INBOUND' ? ordered : reverseStations(ordered);
 
     const findIndexByIdentity = (target: Station | undefined): number => {
       if (!target) {
