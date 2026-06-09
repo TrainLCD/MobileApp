@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
+  useDisplayCurrentStation,
   useInterval,
   useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
@@ -336,7 +337,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   hasTerminus,
   chevronColor,
 }: StationNameCellProps) => {
-  const { station: currentStation, arrived } = useAtomValue(stationState);
+  const { arrived } = useAtomValue(stationState);
+  // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
+  const currentStation = useDisplayCurrentStation();
   const isEn = useAtomValue(isEnAtom);
   const { enabledLanguages } = useAtomValue(navigationState);
   const isKoEnabled = enabledLanguages.includes('KO');

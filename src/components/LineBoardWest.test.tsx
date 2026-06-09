@@ -14,6 +14,7 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useHasPassStationInRegion: jest.fn(() => false),
   useIsPassing: jest.fn(() => false),
   useNextStation: jest.fn(() => null),

@@ -5,6 +5,7 @@ import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useCurrentStation,
+  useDisplayCurrentStation,
   useHasPassStationInRegion,
   useIsPassing,
   useLandscapeWindowDimensions,
@@ -165,14 +166,23 @@ const useStationProgress = (
 ) => {
   const { leftStations } = useAtomValue(navigationState);
   const station = useCurrentStation();
+  // 現在地基準の現在駅。到着取りこぼしで記録上の現在駅が古いとき、ヘッダーの
+  // 「まもなく」と一致する側へ前方補正された駅が返る。
+  const displayStation = useDisplayCurrentStation();
   const prevStation = usePreviousStation(false);
+  // 前方補正が効いている(displayStation が記録上の現在駅より進んでいる)ときだけ
+  // 走行中アンカーを補正後の駅へ切り替える。通常運行では従来どおり prevStation を使い、
+  // 既存の currentStationIndex === -1 フォールバック挙動を完全に維持する。
+  const isHealed = displayStation?.groupId !== station?.groupId;
 
   const currentStationIndex = useMemo(
     () =>
       leftStations.findIndex(
-        (s) => s.groupId === (arrived ? station : prevStation)?.groupId
+        (s) =>
+          s.groupId ===
+          (arrived ? station : isHealed ? displayStation : prevStation)?.groupId
       ),
-    [arrived, station, leftStations, prevStation]
+    [arrived, station, displayStation, isHealed, leftStations, prevStation]
   );
 
   const passed = useMemo(

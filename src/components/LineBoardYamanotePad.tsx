@@ -4,6 +4,7 @@ import type { Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useCurrentTrainType,
+  useDisplayCurrentStation,
   useGetLineMark,
   useNextStation,
   useTransferLines,
@@ -19,7 +20,9 @@ interface Props {
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
-  const { station, arrived } = useAtomValue(stationState);
+  const { arrived } = useAtomValue(stationState);
+  // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
+  const station = useDisplayCurrentStation();
   const { selectedLine } = useAtomValue(lineState);
   const isEn = useAtomValue(isEnAtom);
 

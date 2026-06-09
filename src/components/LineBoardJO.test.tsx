@@ -13,7 +13,7 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
-  useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useIsPassing: jest.fn(() => false),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
   useTransferLinesFromStation: jest.fn(() => []),
@@ -81,7 +81,7 @@ jest.mock('./LineBoard/shared/components', () => ({
 
 describe('LineBoardJO', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine, useCurrentStation } = require('~/hooks');
+  const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -111,7 +111,7 @@ describe('LineBoardJO', () => {
       selectedLine: mockLine,
     });
     useCurrentLine.mockReturnValue(mockLine);
-    useCurrentStation.mockReturnValue(mockStations[0]);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {
