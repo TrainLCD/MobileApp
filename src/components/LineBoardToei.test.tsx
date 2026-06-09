@@ -56,6 +56,7 @@ jest.mock('./ChevronTY', () => ({
 }));
 
 jest.mock('./LineBoard/shared/components', () => ({
+  BlinkingChevron: jest.fn(() => null),
   EmptyStationNameCell: jest.fn(() => null),
   LineDot: jest.fn(() => null),
 }));
@@ -184,8 +185,8 @@ describe('LineBoardToei', () => {
     expect(LineDot).toHaveBeenCalled();
   });
 
-  it('ChevronTYコンポーネントが表示される', () => {
-    const { ChevronTY } = require('./ChevronTY');
+  it('点滅チェブロンが表示される', () => {
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardToei
         stations={mockStations}
@@ -193,7 +194,10 @@ describe('LineBoardToei', () => {
         hasTerminus={false}
       />
     );
-    expect(ChevronTY).toHaveBeenCalled();
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['BLUE', 'RED'] }),
+      undefined
+    );
   });
 
   it('hasTerminus=trueの場合、BarTerminalEastが正しく表示される', () => {
@@ -235,7 +239,7 @@ describe('LineBoardToei', () => {
     expect(result.toJSON()).toBeTruthy();
   });
 
-  it('useIntervalフックが1秒間隔で呼ばれる', () => {
+  it('点滅処理はボード本体ではなくBlinkingChevronに委譲される', () => {
     const { useInterval } = require('~/hooks');
     render(
       <LineBoardToei
@@ -244,7 +248,8 @@ describe('LineBoardToei', () => {
         hasTerminus={false}
       />
     );
-    expect(useInterval).toHaveBeenCalledWith(expect.any(Function), 1000);
+    // 毎秒の点滅で全セルが再レンダーされないよう、ボード本体はintervalを持たない
+    expect(useInterval).not.toHaveBeenCalled();
   });
 
   it('lineがnullの場合、駅セルがレンダリングされない', () => {
