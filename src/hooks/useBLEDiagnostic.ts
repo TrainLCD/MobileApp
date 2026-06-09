@@ -11,8 +11,8 @@ import { parenthesisRegexp } from '../constants/regexp';
 import stationState from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useIsPassing } from './useIsPassing';
-import { useNextStation } from './useNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 const manager = new BleManager();
@@ -22,7 +22,8 @@ export const useBLEDiagnostic = (): void => {
   const [device, setDevice] = useState<Device | null>(null);
 
   const station = useCurrentStation();
-  const nextStation = useNextStation();
+  // まもなく表示時は現在地基準で実際に接近している駅をBLEへ送る(ヘッダー/TTS/ウォッチと同基準)
+  const nextStation = useDisplayNextStation();
   const isPassing = useIsPassing();
   const trainType = useCurrentTrainType();
   const getStationNumberIndex = useStationNumberIndexFunc();
