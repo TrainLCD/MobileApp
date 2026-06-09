@@ -82,7 +82,7 @@ describe('LineBoard', () => {
   const setupMocks = (theme: string, leftStations = defaultLeftStations) => {
     mockUseAtomValue
       .mockReturnValueOnce(theme) // themeAtom
-      .mockReturnValueOnce({ leftStations }); // navigationState
+      .mockReturnValueOnce(leftStations); // leftStationsAtom
     useDisplayCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,

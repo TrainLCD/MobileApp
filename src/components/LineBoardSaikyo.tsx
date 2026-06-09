@@ -11,9 +11,9 @@ import {
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
+import { arrivedAtom } from '~/store/selectors/station';
 import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalSaikyo } from './BarTerminalSaikyo';
@@ -83,7 +83,7 @@ const useStationCellState = (
   index: number,
   stations: Station[]
 ) => {
-  const { arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const currentStation = useDisplayCurrentStation();
   const transferLines = useTransferLinesFromStation(station, {

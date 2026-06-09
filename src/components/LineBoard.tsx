@@ -4,8 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { parenthesisRegexp } from '~/constants';
 import { useDisplayCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
+import { leftStationsAtom } from '../store/selectors/navigation';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import { RFValue } from '../utils/rfValue';
@@ -35,7 +35,9 @@ const styles = StyleSheet.create({
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const theme = useAtomValue(themeAtom);
-  const { leftStations } = useAtomValue(navigationState);
+  // navigationStateはheaderStateローテーション(数秒間隔)で頻繁に更新されるため、
+  // 必要なleftStationsだけを派生atomで購読する
+  const leftStations = useAtomValue(leftStationsAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const station = useDisplayCurrentStation();
   const isBus = isBusLine(station?.line);

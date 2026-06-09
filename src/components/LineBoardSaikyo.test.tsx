@@ -23,7 +23,11 @@ jest.mock('~/hooks/useScale', () => ({
 }));
 
 jest.mock('~/store/selectors/isEn', () => ({
-  isEnAtom: {},
+  isEnAtom: { __brand: 'isEnAtom' },
+}));
+
+jest.mock('~/store/selectors/station', () => ({
+  arrivedAtom: { __brand: 'arrivedAtom' },
 }));
 
 jest.mock('~/utils/isTablet', () => ({
@@ -84,9 +88,19 @@ describe('LineBoardSaikyo', () => {
   ];
 
   beforeEach(() => {
-    useAtomValue.mockReturnValue({
-      station: mockStations[0],
-      arrived: true,
+    // arrivedAtom/isEnAtom(派生atom)とその他のatomで返す値を分ける
+    useAtomValue.mockImplementation((atomVal: unknown) => {
+      const brand = (atomVal as { __brand?: string } | null)?.__brand;
+      if (brand === 'arrivedAtom') {
+        return true;
+      }
+      if (brand === 'isEnAtom') {
+        return false;
+      }
+      return {
+        station: mockStations[0],
+        arrived: true,
+      };
     });
     useCurrentLine.mockReturnValue(mockLine);
     useDisplayCurrentStation.mockReturnValue(mockStations[0]);

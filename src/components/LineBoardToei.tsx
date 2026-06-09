@@ -11,12 +11,12 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
-import navigationState from '~/store/atoms/navigation';
 import { isEnAtom } from '~/store/selectors/isEn';
+import { enabledLanguagesAtom } from '~/store/selectors/navigation';
+import { arrivedAtom } from '~/store/selectors/station';
 import getStationNameR from '~/utils/getStationNameR';
 import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
@@ -340,11 +340,11 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
 }: StationNameCellProps) => {
-  const { arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const currentStation = useDisplayCurrentStation();
   const isEn = useAtomValue(isEnAtom);
-  const { enabledLanguages } = useAtomValue(navigationState);
+  const enabledLanguages = useAtomValue(enabledLanguagesAtom);
   const isKoEnabled = enabledLanguages.includes('KO');
   const isZhEnabled = enabledLanguages.includes('ZH');
 

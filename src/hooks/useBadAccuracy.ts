@@ -1,10 +1,11 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import { locationAtom } from '~/store/atoms/location';
+import { locationAccuracyAtom } from '~/store/selectors/location';
 import { BAD_ACCURACY_THRESHOLD } from '../constants';
 
 export const useBadAccuracy = (): boolean => {
-  const accuracy = useAtomValue(locationAtom)?.coords.accuracy;
+  // 座標だけが変わる更新で再レンダーされないよう、accuracyのみを購読する
+  const accuracy = useAtomValue(locationAccuracyAtom);
 
   return useMemo(() => {
     if (!accuracy) {

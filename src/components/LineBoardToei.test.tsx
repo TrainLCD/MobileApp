@@ -27,9 +27,12 @@ jest.mock('~/store/selectors/isEn', () => ({
   isEnAtom: { __brand: 'isEnAtom' },
 }));
 
-jest.mock('~/store/atoms/navigation', () => ({
-  __esModule: true,
-  default: { __brand: 'navigationState' },
+jest.mock('~/store/selectors/navigation', () => ({
+  enabledLanguagesAtom: { __brand: 'enabledLanguagesAtom' },
+}));
+
+jest.mock('~/store/selectors/station', () => ({
+  arrivedAtom: { __brand: 'arrivedAtom' },
 }));
 
 jest.mock('~/utils/getStationNameR', () => ({
@@ -124,14 +127,15 @@ describe('LineBoardToei', () => {
       stationOverrides = {} as Record<string, unknown>,
     } = {}) =>
     (atomVal: unknown) => {
-      if (atomVal && (atomVal as { __brand?: string }).__brand === 'isEnAtom') {
+      const brand = (atomVal as { __brand?: string } | null)?.__brand;
+      if (brand === 'isEnAtom') {
         return isEn;
       }
-      if (
-        atomVal &&
-        (atomVal as { __brand?: string }).__brand === 'navigationState'
-      ) {
-        return { enabledLanguages };
+      if (brand === 'enabledLanguagesAtom') {
+        return enabledLanguages;
+      }
+      if (brand === 'arrivedAtom') {
+        return (stationOverrides.arrived as boolean | undefined) ?? true;
       }
       return {
         station: mockStations[0],
