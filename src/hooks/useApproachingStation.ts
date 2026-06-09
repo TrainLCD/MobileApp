@@ -18,17 +18,27 @@ import { useNextStation } from './useNextStation';
  */
 export const useApproachingStation = (): Station | undefined => {
   const location = useAtomValue(locationAtom);
-  const { stations } = useAtomValue(stationState);
+  const { stations, station: departedStation } = useAtomValue(stationState);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
 
-  // 通過駅を除いた停車駅のうち座標が有効なものだけを接近判定の対象にする
+  // 通過駅を除いた停車駅のうち座標が有効なものだけを接近判定の対象にする。
+  // さらに直近で発車した(=到着済みの現在)駅を除外する。これを残すと、発車直後で
+  // まだ当該駅の接近圏内に留まっている間に「まもなく(発車した駅)」と誤表示される
+  // (例: 五反田を発車直後に「まもなく五反田」)。除外することで次の停車駅(高輪台)を
+  // 正しく接近駅として扱える。stationState.station は到着時に確定する現在駅のため、
+  // 値が古い場合でも除外対象は進行方向の後方に限られ、前方の接近対象を消すことはない。
   const validStops = useMemo(
     () =>
       stations.filter(
-        (s) => !getIsPass(s) && s.latitude != null && s.longitude != null
+        (s) =>
+          !getIsPass(s) &&
+          s.latitude != null &&
+          s.longitude != null &&
+          s.id !== departedStation?.id &&
+          s.groupId !== departedStation?.groupId
       ),
-    [stations]
+    [stations, departedStation?.id, departedStation?.groupId]
   );
 
   const stopCoordinates = useMemo(
