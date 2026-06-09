@@ -7,9 +7,10 @@ import {
   BLE_TARGET_LOCAL_NAME,
   BLE_TARGET_SERVICE_UUID,
 } from 'react-native-dotenv';
+import { parenthesisRegexp } from '../constants/regexp';
 import stationState from '../store/atoms/station';
-import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
+import { useCurrentTrainType } from './useCurrentTrainType';
 import { useIsPassing } from './useIsPassing';
 import { useNextStation } from './useNextStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
@@ -22,26 +23,54 @@ export const useBLEDiagnostic = (): void => {
 
   const station = useCurrentStation();
   const nextStation = useNextStation();
-  const currentLine = useCurrentLine();
   const isPassing = useIsPassing();
+  const trainType = useCurrentTrainType();
   const getStationNumberIndex = useStationNumberIndexFunc();
 
-  const prevSentPayloads = useRef<string[]>([]);
+  const prevSentText = useRef<string>('');
 
-  const stateText = useMemo(() => {
-    if (isPassing) {
-      return 'Next';
+  const stationText = useMemo(() => {
+    if (!selectedBound) {
+      return '';
     }
 
-    if (approaching) {
-      return 'Soon';
-    }
-    if (arrived) {
-      return 'Now';
+    const arrivedAtCurrentStation = !isPassing && arrived;
+    const targetStation = arrivedAtCurrentStation ? station : nextStation;
+    if (!targetStation) {
+      return '';
     }
 
-    return 'Next';
-  }, [approaching, arrived, isPassing]);
+    const stationNumberIndex = getStationNumberIndex(targetStation);
+    const stationNumber =
+      targetStation.stationNumbers?.[stationNumberIndex]?.stationNumber;
+
+    const prefix = arrivedAtCurrentStation
+      ? 'ただいま'
+      : approaching
+        ? 'まもなく'
+        : '次は';
+
+    const boundStationNumberIndex = getStationNumberIndex(selectedBound);
+    const boundStationNumber =
+      selectedBound.stationNumbers?.[boundStationNumberIndex]?.stationNumber;
+    const trainTypeName = trainType?.name?.replace(parenthesisRegexp, '') ?? '';
+    const boundText = `この電車は${trainTypeName ? `${trainTypeName} ` : ''}${
+      selectedBound.name ?? ''
+    }${boundStationNumber ? `(${boundStationNumber})` : ''}ゆき`;
+
+    return `${prefix}${targetStation.name ?? ''}${
+      stationNumber ? `(${stationNumber})` : ''
+    } ${boundText}`;
+  }, [
+    selectedBound,
+    isPassing,
+    arrived,
+    approaching,
+    station,
+    nextStation,
+    trainType,
+    getStationNumberIndex,
+  ]);
 
   const scanAndConnect = useCallback(() => {
     manager.startDeviceScan([], null, async (err, dev) => {
@@ -64,59 +93,6 @@ export const useBLEDiagnostic = (): void => {
     };
   }, []);
 
-  const removeMacron = useCallback((str: string) => {
-    return str
-      .replace(/[ŌŪ]/g, (match) => {
-        return match.replace('Ō', 'O').replace('Ū', 'U');
-      })
-      .replace(/[ōū]/g, (match) => {
-        return match.replace('ō', 'o').replace('ū', 'u');
-      });
-  }, []);
-
-  const payloads = useMemo(() => {
-    const stationNumberIndex = getStationNumberIndex(station);
-    const nextStationNumberIndex =
-      (nextStation && getStationNumberIndex(nextStation)) ?? -1;
-    const stationNumber =
-      station?.stationNumbers?.[stationNumberIndex]?.stationNumber;
-    const nextStationNumber =
-      nextStation?.stationNumbers?.[nextStationNumberIndex]?.stationNumber;
-
-    return [
-      `stt:${stateText}`,
-      selectedBound
-        ? `num:${
-            (!isPassing && arrived ? stationNumber : nextStationNumber) ?? ''
-          }`
-        : 'num:',
-      `stn:${(!isPassing && arrived ? station?.nameRoman : nextStation?.nameRoman) ?? ''}`,
-      `tfr:${
-        (!isPassing && arrived
-          ? station?.lines
-              ?.filter((l) => l?.id !== currentLine?.id)
-              .map((l) => l.nameRoman)
-              .join(', ')
-          : nextStation?.lines
-              ?.filter((l) => l?.id !== currentLine?.id)
-              .map((l) => l.nameRoman)
-              .join(', ')) ?? ''
-      }`,
-      isPassing && arrived
-        ? `pss:${station?.nameRoman ?? ''}${stationNumber ? `(${stationNumber})` : ''}`
-        : 'pss:',
-    ];
-  }, [
-    stateText,
-    isPassing,
-    arrived,
-    station,
-    nextStation,
-    getStationNumberIndex,
-    currentLine,
-    selectedBound,
-  ]);
-
   useEffect(() => {
     const sub = device?.onDisconnected(() => {
       setDevice(null);
@@ -134,17 +110,15 @@ export const useBLEDiagnostic = (): void => {
       return;
     }
 
-    if (JSON.stringify(prevSentPayloads.current) !== JSON.stringify(payloads)) {
-      for (const val of payloads) {
-        device?.writeCharacteristicWithResponseForService(
-          BLE_TARGET_SERVICE_UUID,
-          BLE_TARGET_CHARACTERISTIC_UUID,
-          btoa(unescape(encodeURIComponent(removeMacron(val))))
-        );
-        prevSentPayloads.current = payloads;
-      }
+    if (prevSentText.current !== stationText) {
+      device?.writeCharacteristicWithResponseForService(
+        BLE_TARGET_SERVICE_UUID,
+        BLE_TARGET_CHARACTERISTIC_UUID,
+        btoa(unescape(encodeURIComponent(stationText)))
+      );
+      prevSentText.current = stationText;
     }
-  }, [device, payloads, removeMacron]);
+  }, [device, stationText]);
 
   useEffect(() => {
     if (BLE_ENABLED) {
