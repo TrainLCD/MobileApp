@@ -9,6 +9,7 @@ import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useFirstStop } from './useFirstStop';
 import { useHeaderCommonData } from './useHeaderCommonData';
 import { useHeaderLangState } from './useHeaderLangState';
@@ -99,6 +100,11 @@ jest.mock('./useNextStation', () => ({
   useNextStation: jest.fn(),
 }));
 
+jest.mock('./useDisplayNextStation', () => ({
+  __esModule: true,
+  useDisplayNextStation: jest.fn(),
+}));
+
 jest.mock('./useNumbering', () => ({
   __esModule: true,
   useNumbering: jest.fn(),
@@ -149,6 +155,7 @@ describe('useHeaderCommonData', () => {
     mockUseCurrentStation.mockReturnValue(mockStation);
     (useCurrentLine as jest.Mock).mockReturnValue(null);
     (useNextStation as jest.Mock).mockReturnValue(null);
+    (useDisplayNextStation as jest.Mock).mockReturnValue(null);
     (useCurrentTrainType as jest.Mock).mockReturnValue(null);
     (useIsNextLastStop as jest.Mock).mockReturnValue(false);
     (useFirstStop as jest.Mock).mockReturnValue(null);
