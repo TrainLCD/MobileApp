@@ -14,6 +14,7 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useHasPassStationInRegion: jest.fn(() => false),
   useIsPassing: jest.fn(() => false),
   useNextStation: jest.fn(() => null),
@@ -66,7 +67,8 @@ jest.mock('./LineBoard/shared/components', () => ({
 
 describe('LineBoardWest', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine } = require('~/hooks');
+  const { useCurrentLine, useCurrentStation, useDisplayCurrentStation } =
+    require('~/hooks');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -99,6 +101,10 @@ describe('LineBoardWest', () => {
       selectedLine: mockLine,
     });
     useCurrentLine.mockReturnValue(mockLine);
+    // 現在駅と表示用現在駅を同一駅に固定し、isHealed=false(前方補正なし)の
+    // 通常運行パスを決定論的に検証する。
+    useCurrentStation.mockReturnValue(mockStations[0]);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {

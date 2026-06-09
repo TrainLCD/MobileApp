@@ -11,6 +11,7 @@ import { useRefreshStation } from '~/hooks/useRefreshStation';
 import * as useThresholdModule from '~/hooks/useThreshold';
 import * as useWrongDirectionDetectorModule from '~/hooks/useWrongDirectionDetector';
 import * as remoteConfigModule from '~/lib/remoteConfig';
+import sendNotificationAsync from '~/utils/native/ios/sensitiveNotificationMoudle';
 
 jest.mock('jotai', () => {
   const actual = jest.requireActual('jotai');
@@ -25,6 +26,15 @@ jest.mock('~/store/atoms/notify', () => ({
   __esModule: true,
   default: {},
 }));
+
+jest.mock('~/utils/native/ios/sensitiveNotificationMoudle', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+const mockSendNotification = sendNotificationAsync as jest.MockedFunction<
+  typeof sendNotificationAsync
+>;
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
@@ -389,5 +399,67 @@ describe('useRefreshStation', () => {
     const nextState = updater({});
     expect(nextState.arrived).toBe(false);
     expect(nextState.approaching).toBe(false);
+  });
+
+  it('駅接近ローカル通知は最寄り駅ではなく現在地基準の接近駅を通知する', () => {
+    // 最寄り駅(発車直後の駅など)は遠方かつ別駅。接近駅は現在地と同一座標の通知対象駅。
+    // 通知される駅名がヘッダーの「まもなく」と同じ接近駅になることを担保する。
+    const approachingTarget = {
+      ...mockStation,
+      id: 2,
+      groupId: 2,
+      name: 'Approaching Station',
+      nameRoman: 'Approaching Station',
+      latitude: 35.0,
+      longitude: 135.0,
+    };
+    const farNearestStation = {
+      ...mockStation,
+      id: 1,
+      groupId: 1,
+      name: 'Nearest Station',
+      nameRoman: 'Nearest Station',
+      latitude: 35.5,
+      longitude: 135.0,
+    };
+
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: { latitude: 35.0, longitude: 135.0 },
+      }) // locationAtom
+      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValue({ targetStationIds: [2] }); // notifyState(接近駅id=2が通知対象)
+
+    mockUseSetAtom.mockReturnValue(jest.fn());
+
+    jest
+      .spyOn(useApproachingStationModule, 'useApproachingStation')
+      .mockReturnValue(approachingTarget);
+    jest
+      .spyOn(useNearestStationModule, 'useNearestStation')
+      .mockReturnValue(farNearestStation);
+    jest
+      .spyOn(useNextStationModule, 'useNextStation')
+      .mockReturnValue(approachingTarget);
+    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
+    jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
+      arrivedThreshold: 100,
+      approachingThreshold: 300,
+    });
+    jest
+      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
+      .mockReturnValue({
+        isWrongDirection: false,
+        isLoopLineWrongDirection: false,
+      });
+
+    renderHook(() => useRefreshStation(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    expect(mockSendNotification).toHaveBeenCalled();
+    const body = mockSendNotification.mock.calls[0][0].body;
+    expect(body).toContain('Approaching Station');
+    expect(body).not.toContain('Nearest Station');
   });
 });
