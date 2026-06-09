@@ -50,7 +50,11 @@ describe('pickLiveActivityNextStation', () => {
     const stoppedNullGroup = makeStation(1, null, '駅A');
     const displayNullGroup = makeStation(2, null, '駅B');
     expect(
-      pickLiveActivityNextStation(displayNullGroup, recordNext, stoppedNullGroup)
+      pickLiveActivityNextStation(
+        displayNullGroup,
+        recordNext,
+        stoppedNullGroup
+      )
     ).toBe(recordNext);
   });
 });
