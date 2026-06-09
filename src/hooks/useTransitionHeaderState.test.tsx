@@ -215,6 +215,35 @@ describe('useTransitionHeaderState', () => {
     expect(navigationAtomValue.headerState).toBe('CURRENT');
   });
 
+  it('未到着のまま approaching が解除されたら ARRIVING から NEXT へ戻る', () => {
+    // 到着を挟まず接近が解除されるケース(到着検知の取りこぼし・GPS補正・接近駅切替)。
+    // arrived のリセット useEffect が効かないため、interval 側で ARRIVING を抜ける。
+    navigationAtomValue.enabledLanguages = ['JA'];
+    navigationAtomValue.headerState = 'ARRIVING';
+    stationAtomValue.arrived = false;
+    stationAtomValue.approaching = false;
+
+    render(<TestComponent />);
+
+    tick();
+
+    expect(navigationAtomValue.headerState).toBe('NEXT');
+  });
+
+  it('到着中は ARRIVING から interval では NEXT に戻さない（arrived の useEffect に委ねる）', () => {
+    navigationAtomValue.enabledLanguages = ['JA'];
+    navigationAtomValue.headerState = 'ARRIVING';
+    stationAtomValue.arrived = true;
+    stationAtomValue.approaching = false;
+
+    render(<TestComponent />);
+
+    tick();
+
+    // interval は NEXT へ遷移させない（言語循環のみ）。CURRENT への復帰は別 useEffect の責務。
+    expect(navigationAtomValue.headerState).not.toBe('NEXT');
+  });
+
   it('日本語無効かつ次言語が見つからない場合は JA に戻らない', () => {
     navigationAtomValue.enabledLanguages = ['EN', 'KO'];
     navigationAtomValue.headerState = 'NEXT_KO';

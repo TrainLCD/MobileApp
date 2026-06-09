@@ -162,6 +162,36 @@ describe('useApproachingStation', () => {
     expect(result.id).toBe(2);
   });
 
+  it('発車駅を出た直後、手前の区間が短くても発車駅を接近駅に再選択しない', () => {
+    // W—X—Y で X を発車直後(現在地は X 付近)。
+    // W–X が X–Y より短いと findNearest が手前の W を最寄りに選び、
+    // useNextStation(true, W)=X となって「まもなくX(発車済み駅)」に化ける。
+    const stationW = createStation(1, { latitude: 35.0, longitude: 135.0 });
+    const stationX = createStation(2, { latitude: 35.1, longitude: 135.0 });
+    const stationY = createStation(3, { latitude: 35.4, longitude: 135.0 });
+    stations = [stationW, stationX, stationY];
+
+    // 発車駅(到着済みの現在駅)は X。現在地は X 直近。
+    setLocation({ latitude: 35.1, longitude: 135.0 }, stationX);
+    // 起点ごとの次の停車駅: W→X, X→Y
+    mockUseNextStation.mockImplementation(
+      (_ignorePass?: boolean, origin?: ReturnType<typeof createStation>) => {
+        if (origin?.id === stationW.id) {
+          return stationX;
+        }
+        if (origin?.id === stationX.id) {
+          return stationY;
+        }
+        return undefined;
+      }
+    );
+
+    const { getByTestId } = render(<TestComponent />);
+    const result = JSON.parse(getByTestId('station').props.children as string);
+    // 発車済みの X ではなく、次の停車駅 Y を接近駅として返す
+    expect(result.id).toBe(3);
+  });
+
   it('次の停車駅が存在しない(終点)場合は最寄り停車駅を返す', () => {
     const stationA = createStation(1, { latitude: 35.0, longitude: 135.0 });
     const stationB = createStation(2, { latitude: 35.2, longitude: 135.0 });
