@@ -50,11 +50,16 @@ type StatusCallback = (status: {
   error?: string;
 }) => void;
 
-const createMockPlayer = (opts?: { autoFinish?: boolean }) => {
+const createMockPlayer = (opts?: {
+  autoFinish?: boolean;
+  playing?: boolean;
+}) => {
   let playbackStatusListener: StatusCallback | null = null;
   const autoFinish = opts?.autoFinish ?? true;
 
   return {
+    playing: opts?.playing ?? false,
+    currentTime: 0,
     addListener: jest.fn((_event: string, callback: StatusCallback) => {
       playbackStatusListener = callback;
       return { remove: jest.fn() };
@@ -285,9 +290,10 @@ describe('useTTS', () => {
       ttsEnabledLanguages: ['EN'],
     });
 
-    // didJustFinish を発火しないプレイヤー
+    // didJustFinish を発火しないが再生中(playing=true)であり続けるプレイヤー
+    // （ストール検知に掛からず最終タイムアウトまで到達するケース）
     mockCreateAudioPlayer.mockImplementation(() =>
-      createMockPlayer({ autoFinish: false })
+      createMockPlayer({ autoFinish: false, playing: true })
     );
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -311,6 +317,46 @@ describe('useTTS', () => {
     expect(warnSpy).toHaveBeenCalledWith(
       '[useTTS] Playback safety timeout reached, force resetting'
     );
+
+    warnSpy.mockRestore();
+  });
+
+  it('didJustFinishが届かず再生位置も進まない場合はストール検知で復帰する', async () => {
+    const store = createStore();
+    store.set(speechState, {
+      ...defaultSpeechState,
+      ttsEnabledLanguages: ['EN'],
+    });
+
+    // Androidでネイティブエラーや音声フォーカス喪失により
+    // イベントが一切届かなくなった状態を再現する
+    const mockPlayer = createMockPlayer({ autoFinish: false, playing: false });
+    mockCreateAudioPlayer.mockReturnValue(mockPlayer);
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    jest.advanceTimersByTime(100);
+
+    await waitFor(() => {
+      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
+    });
+
+    // ストール検知タイムアウト（約10秒）経過で打ち切られる
+    jest.advanceTimersByTime(11_000);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[ttsAudioPlayer] playback stalled, aborting:',
+      '/tmp/tts-id_en.mp3'
+    );
+    // ストールしたプレイヤーは破棄され、再生パイプラインが解放される
+    expect(mockPlayer.pause).toHaveBeenCalled();
+    expect(mockPlayer.remove).toHaveBeenCalled();
 
     warnSpy.mockRestore();
   });

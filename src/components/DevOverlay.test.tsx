@@ -10,6 +10,7 @@ import {
   locationAtom,
   rawLocationAtom,
 } from '~/store/atoms/location';
+import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import DevOverlay, { getDevOverlayDragTranslation } from './DevOverlay';
 
@@ -61,14 +62,15 @@ describe('DevOverlay', () => {
   const mockDimensionsGet = jest.spyOn(Dimensions, 'get');
 
   const setupAtomValues = ({
-    // locationAtomはフィルタ・スムージング後の値。DevOverlayの速度・精度表示はここから読まない
+    // locationAtomはフィルタ・スムージング後の値。通常モードの速度・精度表示はここから読まないが、
+    // オートモード中はuseSimulationModeがここへ書き込むため、参照元がこちらへ切り替わる
     location = {
       coords: {
         speed: 10,
         accuracy: 15,
       },
     },
-    // rawLocationAtomは継続測位の生の値で、速度・精度ともにlocationAtomではなくここから読む。
+    // rawLocationAtomは継続測位の生の値で、通常モードでは速度・精度ともにここから読む。
     // 既定は速度10m/s・精度15mの測位が継続取得できている状態を表す（locationAtomとは独立した別物）。
     rawLocation = {
       coords: {
@@ -77,10 +79,12 @@ describe('DevOverlay', () => {
       },
     },
     backgroundLocationTracking = false,
+    autoModeEnabled = false,
   }: {
     location?: unknown;
     rawLocation?: unknown;
     backgroundLocationTracking?: boolean;
+    autoModeEnabled?: boolean;
   } = {}) => {
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === locationAtom) {
@@ -91,6 +95,9 @@ describe('DevOverlay', () => {
       }
       if (atom === backgroundLocationTrackingAtom) {
         return backgroundLocationTracking as never;
+      }
+      if (atom === autoModeEnabledAtom) {
+        return autoModeEnabled as never;
       }
       if (atom === isLEDThemeAtom) {
         return false as never;
@@ -457,6 +464,64 @@ describe('DevOverlay', () => {
 
       const { getByTestId } = render(<DevOverlay />);
       expect(getByTestId('dev-overlay-next-value')).toHaveTextContent('--');
+    });
+  });
+
+  describe('オートモード時の表示', () => {
+    it('オートモード中はlocationAtomのシミュレーション速度を表示する', () => {
+      // オートモード中はGPS測位が停止しrawLocationAtomが更新されないため、
+      // useSimulationModeが書き込むlocationAtom側の速度を表示する
+      setupAtomValues({
+        location: {
+          coords: { speed: 25, accuracy: 0 },
+        },
+        rawLocation: {
+          coords: { speed: 0, accuracy: 15 },
+        },
+        autoModeEnabled: true,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+        '90km/h'
+      );
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent('0m');
+    });
+
+    it('オートモード中はrawLocationが無くてもシミュレーション速度を表示する', () => {
+      setupAtomValues({
+        location: {
+          coords: { speed: 13.89, accuracy: 0 },
+        },
+        rawLocation: null,
+        autoModeEnabled: true,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+        '50km/h'
+      );
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent('0m');
+    });
+
+    it('オートモードが無効の場合はrawLocationAtomの速度を表示する', () => {
+      setupAtomValues({
+        location: {
+          coords: { speed: 25, accuracy: 0 },
+        },
+        rawLocation: {
+          coords: { speed: 10, accuracy: 15 },
+        },
+        autoModeEnabled: false,
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+        '36km/h'
+      );
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent(
+        '15m'
+      );
     });
   });
 
