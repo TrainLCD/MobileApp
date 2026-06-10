@@ -3,6 +3,7 @@ import { TtsAlphabet } from '~/@types/graphql';
 import {
   dedupeLinesByTtsName,
   formatFirstConnectedLineEnPhrase,
+  formatJrWestStopsListEn,
   replaceJapaneseText,
   stripParensForTTS,
   stripStationParensForTTS,
@@ -182,6 +183,61 @@ describe('formatFirstConnectedLineEnPhrase', () => {
       nameRoman: null,
     });
     expect(formatFirstConnectedLineEnPhrase([line])).toBe('');
+  });
+});
+
+describe('formatJrWestStopsListEn', () => {
+  const makeStop = (id: number, nameRoman: string): Station =>
+    ({
+      __typename: 'Station',
+      id,
+      groupId: id,
+      nameTtsSegments: null,
+      nameRoman,
+    }) as Station;
+
+  it('joins stops with an Oxford comma style "and" (official JR-West wording)', () => {
+    const stops = [
+      makeStop(1, 'Tofukuji'),
+      makeStop(2, 'Rokujizo'),
+      makeStop(3, 'Uji'),
+    ];
+    expect(formatJrWestStopsListEn(stops, () => false)).toBe(
+      'Tofukuji, Rokujizo, and Uji'
+    );
+  });
+
+  it('moves the bound stop to a "before arriving at" clause', () => {
+    const stops = [
+      makeStop(1, 'Joyo'),
+      makeStop(2, 'Tamamizu'),
+      makeStop(3, 'Kizu'),
+      makeStop(4, 'Nara'),
+    ];
+    expect(formatJrWestStopsListEn(stops, (s) => s.id === 4)).toBe(
+      'Joyo, Tamamizu, and Kizu before arriving at Nara'
+    );
+  });
+
+  it('handles a two-stop batch ending at the bound stop', () => {
+    const stops = [makeStop(1, 'Kizu'), makeStop(2, 'Nara')];
+    expect(formatJrWestStopsListEn(stops, (s) => s.id === 2)).toBe(
+      'Kizu before arriving at Nara'
+    );
+  });
+
+  it('slices the batch to the first five stops', () => {
+    const stops = [
+      makeStop(1, 'A'),
+      makeStop(2, 'B'),
+      makeStop(3, 'C'),
+      makeStop(4, 'D'),
+      makeStop(5, 'E'),
+      makeStop(6, 'F'),
+    ];
+    expect(formatJrWestStopsListEn(stops, () => false)).toBe(
+      'A, B, C, D, and E'
+    );
   });
 });
 

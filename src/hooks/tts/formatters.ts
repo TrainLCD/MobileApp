@@ -149,20 +149,26 @@ export const formatJrWestStopsListJa = (
     .join('、');
 
 /**
- * JR_WEST 用 (英語): `X, Y terminal, Z` 形式で先頭5駅を `, ` 連結する。
- * 終着駅には末尾に ` terminal` を付与する。
+ * JR_WEST 用 (英語): 先頭5駅を `A, B, and C` 形式で連結する。
+ * バッチ末尾が終着駅 (= selectedBound) の場合は終着駅を列挙から外し、
+ * 公式放送 (みやこ路快速) と同じ `A, B, and C before arriving at X` 形式にする。
  */
 export const formatJrWestStopsListEn = (
   stops: Station[],
   isBoundStop: (s: Station) => boolean
-): string =>
-  stops
-    .slice(0, 5)
-    .map((s) => {
-      const name = wrapPhoneme(s.nameTtsSegments, s.nameRoman);
-      return isBoundStop(s) ? `${name} terminal` : name;
-    })
-    .join(', ');
+): string => {
+  const joinWithAnd = (names: string[]): string => {
+    if (names.length <= 1) return names[0] ?? '';
+    return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+  };
+  const batch = stops.slice(0, 5);
+  const names = batch.map((s) => wrapPhoneme(s.nameTtsSegments, s.nameRoman));
+  const last = batch[batch.length - 1];
+  if (last && isBoundStop(last) && names.length > 1) {
+    return `${joinWithAnd(names.slice(0, -1))} before arriving at ${names[names.length - 1]}`;
+  }
+  return joinWithAnd(names);
+};
 
 /**
  * TY 用: 直通先1路線目のみを `on the X` 形式に整形する。該当がなければ空文字。
