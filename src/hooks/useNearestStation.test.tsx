@@ -71,7 +71,7 @@ describe('useNearestStation', () => {
       longitude: 139.701334,
     });
 
-    // locationAtom, then stationState
+    // locationAtom, then stationsAtom
     mockUseAtomValue
       .mockReturnValueOnce({
         coords: {
@@ -79,9 +79,7 @@ describe('useNearestStation', () => {
           longitude: 139.700258,
         },
       }) // locationAtom
-      .mockReturnValue({
-        stations: [station1, station2, station3],
-      }); // stationState
+      .mockReturnValue([station1, station2, station3]); // stationsAtom
 
     mockUseCurrentStation.mockReturnValue(station1);
     mockUseNextStation.mockReturnValue(station2);
@@ -100,9 +98,7 @@ describe('useNearestStation', () => {
   it('緯度経度がnullの場合、undefinedを返す', () => {
     mockUseAtomValue
       .mockReturnValueOnce(null) // locationAtom
-      .mockReturnValue({
-        stations: [],
-      }); // stationState
+      .mockReturnValue([]); // stationsAtom
 
     mockUseCurrentStation.mockReturnValue(undefined);
     mockUseNextStation.mockReturnValue(undefined);
@@ -119,9 +115,7 @@ describe('useNearestStation', () => {
           longitude: 139.767125,
         },
       }) // locationAtom
-      .mockReturnValue({
-        stations: [],
-      }); // stationState
+      .mockReturnValue([]); // stationsAtom
 
     mockUseCurrentStation.mockReturnValue(undefined);
     mockUseNextStation.mockReturnValue(undefined);
@@ -161,9 +155,7 @@ describe('useNearestStation', () => {
           longitude: 139.700258,
         },
       }) // locationAtom
-      .mockReturnValue({
-        stations: [station1, station2, station3],
-      }); // stationState
+      .mockReturnValue([station1, station2, station3]); // stationsAtom
 
     mockUseCurrentStation.mockReturnValue(undefined);
     mockUseNextStation.mockReturnValue(undefined);
@@ -205,9 +197,7 @@ describe('useNearestStation', () => {
           longitude: 139.700258,
         },
       }) // locationAtom
-      .mockReturnValue({
-        stations: [station1, station2, station3],
-      }); // stationState
+      .mockReturnValue([station1, station2, station3]); // stationsAtom
 
     mockUseCurrentStation.mockReturnValue(station1);
     mockUseNextStation.mockReturnValue(station3);
@@ -249,9 +239,7 @@ describe('useNearestStation', () => {
           longitude: 139.700258,
         },
       }) // locationAtom
-      .mockReturnValue({
-        stations: [station1, station2, station3],
-      }); // stationState
+      .mockReturnValue([station1, station2, station3]); // stationsAtom
 
     mockUseCurrentStation.mockReturnValue(station1);
     mockUseNextStation.mockReturnValue(undefined);

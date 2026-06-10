@@ -12,9 +12,9 @@ import {
 import { useAfterNextStation } from '~/hooks/useAfterNextStation';
 import { useNextStation } from '~/hooks/useNextStation';
 import { useScale } from '~/hooks/useScale';
+import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
-import { arrivedAtom } from '~/store/selectors/station';
-import lineState from '../store/atoms/line';
+import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
@@ -478,7 +478,7 @@ const LineBoardEast: React.FC<Props> = ({
   chevronColorPair = DEFAULT_CHEVRON_PAIR,
   isOdakyu,
 }: Props) => {
-  const { selectedLine } = useAtomValue(lineState);
+  const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const nextStation = useNextStation();
   const afterNextStation = useAfterNextStation();

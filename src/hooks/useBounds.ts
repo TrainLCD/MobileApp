@@ -8,8 +8,11 @@ import {
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER,
   TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID,
 } from '../constants/station';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { pendingTrainTypeAtom } from '../store/atoms/navigation';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+} from '../store/atoms/station';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
@@ -20,8 +23,9 @@ export const useBounds = (
   bounds: [Station[], Station[]];
   directionalStops: Station[];
 } => {
-  const { selectedDirection, selectedBound } = useAtomValue(stationState);
-  const { pendingTrainType } = useAtomValue(navigationState);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const pendingTrainType = useAtomValue(pendingTrainTypeAtom);
   const currentStation = useCurrentStation();
 
   const {

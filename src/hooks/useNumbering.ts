@@ -2,7 +2,7 @@ import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import { type StationNumber, TrainTypeKind } from '~/@types/graphql';
 import { JOBAN_LINE_IDS } from '../constants';
-import stationState from '../store/atoms/station';
+import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
@@ -14,7 +14,8 @@ export const useNumbering = (
   priorCurrent = false,
   firstStop = false
 ): [StationNumber | undefined, string | undefined] => {
-  const { arrived, selectedBound } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const stoppedCurrentStation = useCurrentStation(true);
   const trainType = useCurrentTrainType();
 

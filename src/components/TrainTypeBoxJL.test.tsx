@@ -1,20 +1,16 @@
 import { render } from '@testing-library/react-native';
+import { useAtomValue } from 'jotai';
 import React from 'react';
 import type { TrainType } from '~/@types/graphql';
+import { headerStateAtom } from '~/store/atoms/navigation';
+import { stationsAtom } from '~/store/atoms/station';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import TrainTypeBoxJL from './TrainTypeBoxJL';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
-  useAtomValue: jest.fn(() => ({
-    headerLangState: 'JA',
-    headerState: 'CURRENT',
-  })),
-  atom: jest.fn((val) => val),
-}));
-
-jest.mock('~/store/atoms/navigation', () => ({
-  __esModule: true,
-  default: {},
+  ...jest.requireActual('jotai'),
+  useAtomValue: jest.fn(),
 }));
 
 jest.mock('~/translation', () => ({
@@ -89,6 +85,13 @@ describe('TrainTypeBoxJL', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // 渡されたatomの同一性で読み出し値を出し分ける
+    (useAtomValue as jest.Mock).mockImplementation((a: unknown) => {
+      if (a === headerStateAtom) return 'CURRENT';
+      if (a === isLEDThemeAtom) return false;
+      if (a === stationsAtom) return [];
+      return undefined;
+    });
   });
 
   describe('Null safety fixes', () => {

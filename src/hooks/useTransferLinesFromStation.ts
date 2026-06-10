@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import type { Line, Station } from '~/@types/graphql';
 import { isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
-import stationState from '../store/atoms/station';
+import { stationsAtom } from '../store/atoms/station';
 import omitJRLinesIfThresholdExceeded from '../utils/jr';
 
 type Option = {
@@ -23,7 +23,7 @@ export const useTransferLinesFromStation = (
   const omitRepeatingLine = option?.omitRepeatingLine ?? false;
   const omitJR = option?.omitJR ?? false;
 
-  const { stations } = useAtomValue(stationState);
+  const stations = useAtomValue(stationsAtom);
 
   const transferLines = useMemo(() => {
     if (!station?.lines?.length) {

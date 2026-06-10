@@ -1,11 +1,11 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import stationState from '../store/atoms/station';
+import { arrivedAtom } from '../store/atoms/station';
 import { getIsPassFromStopCondition } from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 
 export const useIsPassing = (): boolean => {
-  const { arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
   const currentStation = useCurrentStation();
 
   const passing = useMemo(

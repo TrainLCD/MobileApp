@@ -1,15 +1,15 @@
 import { render } from '@testing-library/react-native';
+import { useAtomValue } from 'jotai';
 import React from 'react';
 import { createMockHeaderE235Props } from '~/__fixtures__/headerProps';
+import { headerStateAtom } from '~/store/atoms/navigation';
+import { stationsAtom } from '~/store/atoms/station';
 import HeaderE235 from './HeaderE235';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
-  useAtomValue: jest.fn(() => ({
-    headerLangState: 'JA',
-    headerState: 'CURRENT',
-  })),
-  atom: jest.fn((val) => val),
+  ...jest.requireActual('jotai'),
+  useAtomValue: jest.fn(),
 }));
 
 jest.mock('react-native-reanimated', () => {
@@ -25,21 +25,6 @@ jest.mock('react-native-reanimated', () => {
     },
   };
 });
-
-jest.mock('~/store/atoms/navigation', () => ({
-  __esModule: true,
-  default: {},
-}));
-
-jest.mock('~/store/atoms/station', () => ({
-  __esModule: true,
-  default: {},
-}));
-
-jest.mock('~/store/atoms/line', () => ({
-  __esModule: true,
-  default: {},
-}));
 
 jest.mock('~/translation', () => ({
   translate: jest.fn((key) => {
@@ -89,9 +74,19 @@ const TestTranslateSplitFunction = ({
   return null; // We just care that the component doesn't crash
 };
 
+const mockUseAtomValue = useAtomValue as jest.MockedFunction<
+  typeof useAtomValue
+>;
+
 describe('HeaderE235', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // 渡されたatomの同一性で読み出し値を出し分ける
+    mockUseAtomValue.mockImplementation((a: unknown) => {
+      if (a === stationsAtom) return [];
+      if (a === headerStateAtom) return 'CURRENT';
+      return undefined;
+    });
   });
 
   describe('Null safety fixes', () => {

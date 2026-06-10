@@ -1,8 +1,8 @@
 import { useAtomValue } from 'jotai';
 import type { Line, Station } from '~/@types/graphql';
 import type { LineDirection } from '../models/Bound';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
+import { selectedLineAtom } from '../store/atoms/line';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import { memoizeLastCalls } from '../utils/memoizeLastCalls';
 import { useCurrentStation } from './useCurrentStation';
 
@@ -40,8 +40,9 @@ const findActualCurrentStation = memoizeLastCalls(
 );
 
 export const useCurrentLine = (): Line | null => {
-  const { stations, selectedDirection } = useAtomValue(stationState);
-  const { selectedLine } = useAtomValue(lineState);
+  const stations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const selectedLine = useAtomValue(selectedLineAtom);
   const currentStation = useCurrentStation();
 
   const actualCurrentStation = findActualCurrentStation(

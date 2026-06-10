@@ -46,7 +46,7 @@ describe('useDisplayNextStation', () => {
   });
 
   it('接近中かつ接近駅が特定できる場合は接近駅を返す', () => {
-    mockUseAtomValue.mockReturnValue({ approaching: true });
+    mockUseAtomValue.mockReturnValue(true);
     mockUseNextStation.mockReturnValue(nextStation);
     mockUseApproachingStation.mockReturnValue(approachingStation);
 
@@ -56,7 +56,7 @@ describe('useDisplayNextStation', () => {
   });
 
   it('接近中でない場合は従来の次の駅を返す', () => {
-    mockUseAtomValue.mockReturnValue({ approaching: false });
+    mockUseAtomValue.mockReturnValue(false);
     mockUseNextStation.mockReturnValue(nextStation);
     mockUseApproachingStation.mockReturnValue(approachingStation);
 
@@ -66,7 +66,7 @@ describe('useDisplayNextStation', () => {
   });
 
   it('接近中でも接近駅が特定できない場合は従来の次の駅にフォールバックする', () => {
-    mockUseAtomValue.mockReturnValue({ approaching: true });
+    mockUseAtomValue.mockReturnValue(true);
     mockUseNextStation.mockReturnValue(nextStation);
     mockUseApproachingStation.mockReturnValue(undefined);
 

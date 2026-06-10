@@ -5,7 +5,7 @@ import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import { useGetLineMark, useTransferLines } from '../hooks';
 import type { AppTheme } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
+import { enabledLanguagesAtom } from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -69,7 +69,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const lines = useTransferLines();
   const getLineMarkFunc = useGetLineMark();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const { enabledLanguages } = useAtomValue(navigationState);
+  const enabledLanguages = useAtomValue(enabledLanguagesAtom);
 
   const isJaEnabled = enabledLanguages.includes('JA');
   const isEnEnabled = enabledLanguages.includes('EN');

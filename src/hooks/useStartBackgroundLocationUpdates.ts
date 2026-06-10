@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { store } from '~/store';
 import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
-import navigationState from '~/store/atoms/navigation';
+import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { handleTrackingLocation } from '~/utils/handleTrackingLocation';
 import {
   LOCATION_START_MAX_RETRIES,
@@ -23,7 +23,7 @@ const wait = (ms: number) =>
 
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
-  const { autoModeEnabled } = useAtomValue(navigationState);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
 
   useEffect(() => {
     if (autoModeEnabled || !bgPermGranted) {

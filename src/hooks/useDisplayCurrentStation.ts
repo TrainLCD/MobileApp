@@ -1,7 +1,11 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
-import stationState from '../store/atoms/station';
+import {
+  approachingAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import reverseStations from '../utils/reverseStations';
@@ -27,11 +31,9 @@ import { useLoopLine } from './useLoopLine';
  * 通常運行・通過駅・発車直後では従来の挙動と完全に一致する。
  */
 export const useDisplayCurrentStation = (): Station | undefined => {
-  const {
-    approaching,
-    stations: stationsFromState,
-    selectedDirection,
-  } = useAtomValue(stationState);
+  const approaching = useAtomValue(approachingAtom);
+  const stationsFromState = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
   const currentStation = useCurrentStation();
   const approachingStation = useApproachingStation();
   // ループ線は環状スライスのインデックス折返しが複雑なため、現状の挙動を維持する

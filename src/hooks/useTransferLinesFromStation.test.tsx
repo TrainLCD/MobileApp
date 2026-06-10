@@ -5,13 +5,12 @@ import { Text } from 'react-native';
 import type { Line, LineNested, Station } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
-import stationState from '../store/atoms/station';
+import { stationsAtom } from '../store/atoms/station';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
 jest.mock('jotai', () => ({
-  __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 type TestComponentProps = {
@@ -61,8 +60,8 @@ describe('useTransferLinesFromStation', () => {
   beforeEach(() => {
     stationAtomValue = { stations: [] };
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return stationAtomValue;
+      if (atom === stationsAtom) {
+        return stationAtomValue.stations;
       }
       throw new Error('unknown atom');
     });

@@ -1,5 +1,8 @@
 import { atom } from 'jotai';
-import navigationState from '~/store/atoms/navigation';
+import {
+  enabledLanguagesAtom,
+  headerStateAtom,
+} from '~/store/atoms/navigation';
 import type { AvailableLanguage } from '../../constants';
 
 export const shouldUseEnglishLineBoard = (
@@ -15,7 +18,6 @@ export const shouldUseEnglishLineBoard = (
   return false;
 };
 
-export const isEnAtom = atom((get) => {
-  const { headerState, enabledLanguages } = get(navigationState);
-  return shouldUseEnglishLineBoard(headerState, enabledLanguages);
-});
+export const isEnAtom = atom((get) =>
+  shouldUseEnglishLineBoard(get(headerStateAtom), get(enabledLanguagesAtom))
+);

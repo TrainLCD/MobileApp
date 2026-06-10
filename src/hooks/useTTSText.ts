@@ -3,7 +3,11 @@ import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
-import stationState from '../store/atoms/station';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import { wrapPhoneme as ph } from '../utils/phoneme';
@@ -59,11 +63,9 @@ export const useTTSText = (
 ): TTSTextResult => {
   const theme = useAtomValue(themeAtom);
 
-  const {
-    selectedBound: selectedBoundOrigin,
-    selectedDirection,
-    stations,
-  } = useAtomValue(stationState);
+  const selectedBoundOrigin = useAtomValue(selectedBoundAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const stations = useAtomValue(stationsAtom);
   const station = useCurrentStation();
   const currentLineOrigin = useCurrentLine();
 

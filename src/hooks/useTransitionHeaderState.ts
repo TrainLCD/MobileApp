@@ -1,10 +1,18 @@
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ALL_AVAILABLE_LANGUAGES, type AvailableLanguage } from '~/constants';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import navigationState, {
+  enabledLanguagesAtom,
+  headerStateAtom,
+  stationForHeaderAtom,
+} from '../store/atoms/navigation';
+import {
+  approachingAtom,
+  arrivedAtom,
+  selectedBoundAtom,
+} from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { isJapanese } from '../translation';
@@ -107,16 +115,14 @@ const getFallbackStateWithoutJapanese = (
 };
 
 export const useTransitionHeaderState = (): void => {
-  const { arrived, approaching, selectedBound } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  const approaching = useAtomValue(approachingAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const [
-    {
-      headerState,
-      enabledLanguages: enabledLanguagesFromState,
-      stationForHeader,
-    },
-    setNavigation,
-  ] = useAtom(navigationState);
+  const headerState = useAtomValue(headerStateAtom);
+  const enabledLanguagesFromState = useAtomValue(enabledLanguagesAtom);
+  const stationForHeader = useAtomValue(stationForHeaderAtom);
+  const setNavigation = useSetAtom(navigationState);
   const { headerTransitionInterval } = useAtomValue(tuningState);
   const station = useCurrentStation();
 

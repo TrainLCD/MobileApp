@@ -4,8 +4,8 @@ import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { createLine, createStation } from '~/utils/test/factories';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { trainTypeAtom } from '../store/atoms/navigation';
+import { stationsAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
@@ -18,11 +18,11 @@ jest.mock('jotai', () => ({
 }));
 jest.mock('../store/atoms/station', () => ({
   __esModule: true,
-  default: { __atom: 'station' },
+  stationsAtom: { __atom: 'stations' },
 }));
 jest.mock('../store/atoms/navigation', () => ({
   __esModule: true,
-  default: { __atom: 'navigation' },
+  trainTypeAtom: { __atom: 'trainType' },
 }));
 jest.mock('./useCurrentStation', () => ({
   useCurrentStation: jest.fn(),
@@ -97,11 +97,11 @@ describe('useCurrentTrainType', () => {
     currentStationValue = undefined;
     currentLineValue = createLine(1);
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return stationAtomValue;
+      if (atom === stationsAtom) {
+        return stationAtomValue.stations;
       }
-      if (atom === navigationState) {
-        return navigationAtomValue;
+      if (atom === trainTypeAtom) {
+        return navigationAtomValue.trainType;
       }
       throw new Error('unknown atom');
     });
@@ -179,7 +179,7 @@ describe('useCurrentTrainType', () => {
     mockGetIsPass.mockReturnValue(true);
 
     const screen = render(<TestComponent />);
-    expect(mockUseAtomValue).toHaveBeenCalledWith(navigationState);
+    expect(mockUseAtomValue).toHaveBeenCalledWith(trainTypeAtom);
     expect(screen.getByTestId('trainType').props.children).toBe(
       TRAIN_TYPE_IDS.RAPID
     );

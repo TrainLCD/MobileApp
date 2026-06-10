@@ -30,6 +30,7 @@ jest.mock('~/utils/handleTrackingLocation', () => ({
 jest.mock('~/store/atoms/navigation', () => ({
   __esModule: true,
   default: {},
+  autoModeEnabledAtom: { toString: () => 'autoModeEnabledAtom' },
 }));
 
 const mockUseLocationPermissionsGranted =
@@ -46,7 +47,9 @@ const mockWatchPositionAsync = Location.watchPositionAsync as jest.Mock;
 let mockAutoModeEnabled = false;
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
-  useAtomValue: jest.fn(() => ({ autoModeEnabled: mockAutoModeEnabled })),
+  useAtomValue: jest.fn((atom: unknown) =>
+    String(atom) === 'autoModeEnabledAtom' ? mockAutoModeEnabled : undefined
+  ),
 }));
 
 describe('useStartBackgroundLocationUpdates', () => {

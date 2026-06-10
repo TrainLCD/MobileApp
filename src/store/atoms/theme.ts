@@ -6,8 +6,8 @@ import {
   type ThemePreference,
 } from '../../models/Theme';
 import { resolveThemeForLine } from '../../utils/resolveThemeForLine';
-import lineState from './line';
-import stationState from './station';
+import { selectedLineAtom } from './line';
+import { selectedDirectionAtom, stationAtom, stationsAtom } from './station';
 
 export const themePreferenceAtom = atom<ThemePreference>(THEME_PREFERENCE.AUTO);
 
@@ -17,8 +17,10 @@ export const themeAtom = atom<AppTheme>((get) => {
     return preference as AppTheme;
   }
 
-  const { selectedLine } = get(lineState);
-  const { station, stations, selectedDirection } = get(stationState);
+  const selectedLine = get(selectedLineAtom);
+  const station = get(stationAtom);
+  const stations = get(stationsAtom);
+  const selectedDirection = get(selectedDirectionAtom);
 
   // useCurrentStation相当: stations内から現在駅を特定
   const currentStation =

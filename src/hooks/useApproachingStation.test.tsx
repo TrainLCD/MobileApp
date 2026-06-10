@@ -21,7 +21,8 @@ jest.mock('~/store/atoms/location', () => ({
 
 jest.mock('../store/atoms/station', () => ({
   __esModule: true,
-  default: 'STATION_ATOM',
+  stationAtom: 'STATION_ATOM',
+  stationsAtom: 'STATIONS_ATOM',
 }));
 
 jest.mock('./useNextStation', () => ({
@@ -56,7 +57,13 @@ describe('useApproachingStation', () => {
       if (atom === 'LOCATION_ATOM') {
         return coords ? { coords } : null;
       }
-      return { stations, station: currentStation };
+      if (atom === 'STATIONS_ATOM') {
+        return stations;
+      }
+      if (atom === 'STATION_ATOM') {
+        return currentStation ?? null;
+      }
+      return undefined;
     });
   };
 

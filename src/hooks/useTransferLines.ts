@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Line } from '~/@types/graphql';
-import stationState from '../store/atoms/station';
+import { arrivedAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
@@ -13,7 +13,7 @@ type Option = {
 };
 
 export const useTransferLines = (options?: Option): Line[] => {
-  const { arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
   const currentStation = useCurrentStation(false, true);
   const nextStation = useNextStation();
   const targetStation = useMemo(

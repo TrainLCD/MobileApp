@@ -18,7 +18,9 @@ jest.mock('jotai', () => ({
 
 jest.mock('../store/atoms/station', () => ({
   __esModule: true,
-  default: 'STATION_ATOM',
+  approachingAtom: 'APPROACHING_ATOM',
+  stationsAtom: 'STATIONS_ATOM',
+  selectedDirectionAtom: 'SELECTED_DIRECTION_ATOM',
 }));
 
 jest.mock('../utils/dropJunctionStation', () => ({
@@ -71,10 +73,19 @@ describe('useDisplayCurrentStation', () => {
     stations: ReturnType<typeof createStation>[];
     selectedDirection?: 'INBOUND' | 'OUTBOUND';
   }) => {
-    mockUseAtomValue.mockImplementation(() => ({
-      selectedDirection: 'INBOUND',
-      ...state,
-    }));
+    const { approaching, stations, selectedDirection = 'INBOUND' } = state;
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === 'APPROACHING_ATOM') {
+        return approaching;
+      }
+      if (atom === 'STATIONS_ATOM') {
+        return stations;
+      }
+      if (atom === 'SELECTED_DIRECTION_ATOM') {
+        return selectedDirection;
+      }
+      return undefined;
+    });
   };
 
   beforeEach(() => {

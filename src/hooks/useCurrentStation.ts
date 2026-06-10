@@ -1,7 +1,11 @@
 import { useAtomValue } from 'jotai';
 import type { Station } from '../@types/graphql';
 import type { LineDirection } from '../models/Bound';
-import stationState from '../store/atoms/station';
+import {
+  selectedDirectionAtom,
+  stationAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { memoizeLastCalls } from '../utils/memoizeLastCalls';
 
@@ -73,11 +77,9 @@ export const useCurrentStation = (
   skipPassStation = false,
   withTrainTypes = false
 ): Station | undefined => {
-  const {
-    stations,
-    station: stationFromState,
-    selectedDirection,
-  } = useAtomValue(stationState);
+  const stations = useAtomValue(stationsAtom);
+  const stationFromState = useAtomValue(stationAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
 
   const station = findBasicCurrentStation(
     stations,
