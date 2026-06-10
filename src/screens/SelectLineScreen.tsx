@@ -16,10 +16,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, LineNested } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
@@ -35,7 +32,7 @@ import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
-import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
+import FooterTabBar, { useFooterHeight } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
 import navigationState, {
   pendingQuickActionRouteIdAtom,
@@ -122,7 +119,6 @@ const SelectLineScreen = () => {
   const pendingQuickActionRouteId = useAtomValue(pendingQuickActionRouteIdAtom);
   const setNavigationState = useSetAtom(navigationState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const insets = useSafeAreaInsets();
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   // --- クイックアクションからのプリセット選択 ---
@@ -155,7 +151,7 @@ const SelectLineScreen = () => {
   }, [isLEDTheme]);
 
   // --- 派生値 ---
-  const footerHeight = FOOTER_BASE_HEIGHT + Math.max(insets.bottom, 8);
+  const footerHeight = useFooterHeight();
   const listPaddingBottom = useMemo(() => {
     const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
       paddingBottom?: number;

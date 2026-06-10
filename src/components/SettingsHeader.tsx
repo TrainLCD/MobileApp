@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import {
@@ -12,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import GlassHeaderBackground from './GlassHeaderBackground';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
@@ -114,13 +114,7 @@ export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
         ]}
         onLayout={onLayout}
       >
-        {Platform.OS === 'ios' ? (
-          <BlurView
-            intensity={40}
-            tint={isLEDTheme ? 'dark' : 'light'}
-            style={StyleSheet.absoluteFill}
-          />
-        ) : null}
+        <GlassHeaderBackground isLEDTheme={isLEDTheme} />
         <View style={[styles.nowHeaderContent, nowHeaderAdditionalStyle]}>
           {/* Stacked layout (fades out) */}
           <RNAnimated.View style={{ opacity: stackedOpacity }}>

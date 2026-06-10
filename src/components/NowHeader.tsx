@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -22,6 +21,7 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
+import GlassHeaderBackground from './GlassHeaderBackground';
 import { StationSearchModal } from './StationSearchModal';
 import Typography from './Typography';
 
@@ -238,13 +238,7 @@ export const NowHeader = ({
           ]}
           onLayout={handleHeaderLayout}
         >
-          {Platform.OS === 'ios' ? (
-            <BlurView
-              intensity={40}
-              tint={isLEDTheme ? 'dark' : 'light'}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : null}
+          <GlassHeaderBackground isLEDTheme={isLEDTheme} />
           <View style={[styles.nowHeaderContent, nowHeaderAdditionalStyle]}>
             {/* Stacked layout (fades out) */}
             <RNAnimated.View style={{ opacity: stackedOpacity }}>
