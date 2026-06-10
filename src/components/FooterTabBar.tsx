@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useRef } from 'react';
 import {
@@ -16,6 +17,10 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 type FooterTab = 'home' | 'search' | 'settings';
 
 export const FOOTER_BASE_HEIGHT = 72; // Figma: h=72px
+
+// iOS 26+ かつ Xcode 26 ビルドでのみ true。Android や旧 iOS では従来バーへフォールバックする
+const LIQUID_GLASS_AVAILABLE =
+  Platform.OS === 'ios' && isLiquidGlassAvailable();
 
 export type ButtonLayout = {
   x: number;
@@ -55,6 +60,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-evenly',
     paddingHorizontal: 24,
+  },
+  // iOS 26 のフローティングタブバーを模したカプセル形状。
+  // 占有高さが FOOTER_BASE_HEIGHT + insets.bottom に収まるよう高さを抑えている
+  glassBar: {
+    height: 64,
+    borderRadius: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    paddingHorizontal: 20,
   },
   button: {
     width: 48,
@@ -109,6 +125,72 @@ const FooterTabBar: React.FC<Props> = ({
 
   const safePad = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
 
+  const tabButtons = (
+    <>
+      <Pressable
+        ref={searchButtonRef}
+        style={styles.button}
+        accessibilityRole="button"
+        onPress={() => {
+          navigation.navigate('RouteSearch' as never);
+        }}
+        onLayout={handleSearchButtonLayout}
+      >
+        <Ionicons
+          name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
+          size={26}
+          color={active === 'search' ? ICON_COLOR.active : ICON_COLOR.inactive}
+        />
+      </Pressable>
+
+      <Pressable
+        style={styles.button}
+        accessibilityRole="button"
+        onPress={() => {
+          navigation.navigate('SelectLine' as never);
+        }}
+      >
+        <Ionicons
+          name={active === 'home' ? 'navigate' : 'navigate-outline'}
+          size={28}
+          color={active === 'home' ? ICON_COLOR.active : ICON_COLOR.inactive}
+        />
+      </Pressable>
+
+      <Pressable
+        ref={settingsButtonRef}
+        style={styles.button}
+        accessibilityRole="button"
+        onPress={() => {
+          navigation.navigate('AppSettings' as never);
+        }}
+        onLayout={handleSettingsButtonLayout}
+      >
+        <Ionicons
+          name={active === 'settings' ? 'settings' : 'settings-outline'}
+          size={26}
+          color={
+            active === 'settings' ? ICON_COLOR.active : ICON_COLOR.inactive
+          }
+        />
+      </Pressable>
+    </>
+  );
+
+  // LED テーマは独自の質感を持つためガラス化せず従来のソリッドなバーを維持する
+  if (LIQUID_GLASS_AVAILABLE && !isLEDTheme) {
+    return (
+      <View pointerEvents="box-none" style={styles.container}>
+        <GlassView
+          glassEffectStyle="regular"
+          style={[styles.glassBar, { marginBottom: Math.max(safePad, 12) }]}
+        >
+          {tabButtons}
+        </GlassView>
+      </View>
+    );
+  }
+
   return (
     <View pointerEvents="box-none" style={styles.container}>
       <View
@@ -120,59 +202,7 @@ const FooterTabBar: React.FC<Props> = ({
           },
         ]}
       >
-        <View style={styles.content}>
-          <Pressable
-            ref={searchButtonRef}
-            style={styles.button}
-            accessibilityRole="button"
-            onPress={() => {
-              navigation.navigate('RouteSearch' as never);
-            }}
-            onLayout={handleSearchButtonLayout}
-          >
-            <Ionicons
-              name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
-              size={26}
-              color={
-                active === 'search' ? ICON_COLOR.active : ICON_COLOR.inactive
-              }
-            />
-          </Pressable>
-
-          <Pressable
-            style={styles.button}
-            accessibilityRole="button"
-            onPress={() => {
-              navigation.navigate('SelectLine' as never);
-            }}
-          >
-            <Ionicons
-              name={active === 'home' ? 'navigate' : 'navigate-outline'}
-              size={28}
-              color={
-                active === 'home' ? ICON_COLOR.active : ICON_COLOR.inactive
-              }
-            />
-          </Pressable>
-
-          <Pressable
-            ref={settingsButtonRef}
-            style={styles.button}
-            accessibilityRole="button"
-            onPress={() => {
-              navigation.navigate('AppSettings' as never);
-            }}
-            onLayout={handleSettingsButtonLayout}
-          >
-            <Ionicons
-              name={active === 'settings' ? 'settings' : 'settings-outline'}
-              size={26}
-              color={
-                active === 'settings' ? ICON_COLOR.active : ICON_COLOR.inactive
-              }
-            />
-          </Pressable>
-        </View>
+        <View style={styles.content}>{tabButtons}</View>
       </View>
     </View>
   );
