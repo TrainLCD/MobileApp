@@ -35,8 +35,11 @@ jest.mock('~/utils/liquidGlass', () => ({
 
 describe('FooterTabBar', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockLiquidGlassAvailable = false;
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('visible=false の場合は何もレンダリングしない', () => {
