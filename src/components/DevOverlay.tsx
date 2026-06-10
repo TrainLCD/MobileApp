@@ -23,8 +23,10 @@ import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
 import {
   backgroundLocationTrackingAtom,
+  locationAtom,
   rawLocationAtom,
 } from '~/store/atoms/location';
+import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
 
@@ -330,8 +332,14 @@ const DevOverlay: React.FC = () => {
   // 継続測位（watch/background両経路）はhandleTrackingLocation経由でフィルタ前に
   // rawLocationAtomへ生の値を記録するため、棄却・補正された値もここから観測できる。
   const rawLocation = useAtomValue(rawLocationAtom);
-  const speed = rawLocation?.coords?.speed;
-  const accuracy = rawLocation?.coords?.accuracy;
+  const simulatedLocation = useAtomValue(locationAtom);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
+  // オートモード中はGPSの継続測位を停止し、useSimulationModeが速度プロファイル由来の
+  // 位置・速度をlocationAtomへ直接書き込むため、rawLocationAtomは更新されない。
+  // 速度・精度が0や古い値で凍結しないよう、参照元をlocationAtomへ切り替える。
+  const location = autoModeEnabled ? simulatedLocation : rawLocation;
+  const speed = location?.coords?.speed;
+  const accuracy = location?.coords?.accuracy;
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
