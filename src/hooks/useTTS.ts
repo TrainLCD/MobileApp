@@ -24,9 +24,10 @@ import { usePrevious } from './usePrevious';
 import { useStoppingState } from './useStoppingState';
 import { useTTSText } from './useTTSText';
 
-// 再生が完了しない場合のフォールバックタイムアウト（ミリ秒）
-// 長い路線放送でも途切れないよう十分な余裕を持たせつつ、
-// didJustFinishが発火しないエッジケースでのデッドロックを防止する
+// 再生が完了しない場合の最終フォールバックタイムアウト（ミリ秒）
+// 通常のストール（Androidでのネイティブエラーや音声フォーカス喪失など）は
+// ttsAudioPlayerのストール検知ウォッチドッグが先に打ち切って復帰させるため、
+// これはウォッチドッグでも捕捉できない異常系に対する最後の砦
 const PLAYBACK_TIMEOUT_MS = 300_000;
 
 // 日本語再生完了後に英語プレイヤーを生成するまでのディレイ（ミリ秒）
@@ -219,11 +220,18 @@ export const useTTS = (): void => {
                 finishPlaying();
               };
 
-              enHandleRef.current = playAudio({
-                uri: pathEn,
-                onFinish: enCleanup,
-                onError: () => enCleanup(),
-              });
+              // setTimeoutコールバック内の例外は誰もキャッチしないため、
+              // プレイヤー生成失敗時もここで確実にfinishPlayingへ到達させる
+              try {
+                enHandleRef.current = playAudio({
+                  uri: pathEn,
+                  onFinish: enCleanup,
+                  onError: () => enCleanup(),
+                });
+              } catch (e) {
+                console.warn('[useTTS] EN playback failed to start:', e);
+                enCleanup();
+              }
             }, EN_PLAYBACK_DELAY_MS);
           } else {
             removeSoundJa();
