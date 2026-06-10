@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { GlassView } from 'expo-glass-effect';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -10,6 +10,11 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -45,6 +50,21 @@ const ICON_COLOR = {
   active: '#0A84FF',
   inactive: '#6B7280', // gray-500 相当
 } as const;
+
+// アクティブタブのアイコン裏に敷くピル。iOS 26 純正タブバーの選択ハイライトを模した
+// アクセントカラーの半透明ティント
+const ACTIVE_PILL_COLOR = 'rgba(10, 132, 255, 0.16)';
+
+// 押下中に沈み込むスケール値
+const PRESSED_SCALE = 0.85;
+
+// 押下時は素早く沈み、離した時はバウンドしながら戻す
+const PRESS_IN_SPRING = { damping: 24, stiffness: 420 } as const;
+const PRESS_OUT_SPRING = { damping: 13, stiffness: 320 } as const;
+// アクティブピルの出現スプリング。画面遷移直後に弾みながら現れる
+const ACTIVE_PILL_SPRING = { damping: 15, stiffness: 280 } as const;
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const styles = StyleSheet.create({
   container: {
@@ -90,7 +110,79 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  activePill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 24, // button(48px) の半分で正円にする
+    backgroundColor: ACTIVE_PILL_COLOR,
+  },
 });
+
+type TabButtonProps = {
+  active: boolean;
+  /** アクティブタブの背面ピルを表示するか（Liquid Glass バーのみ true） */
+  showActivePill: boolean;
+  onPress: () => void;
+  onLayout?: (event: LayoutChangeEvent) => void;
+  buttonRef?: React.Ref<View>;
+  children: React.ReactNode;
+};
+
+const TabButton: React.FC<TabButtonProps> = ({
+  active,
+  showActivePill,
+  onPress,
+  onLayout,
+  buttonRef,
+  children,
+}) => {
+  const pressScale = useSharedValue(1);
+  // 0 → 1 でピルがスプリング出現する。タブバーは画面ごとにマウントされるため、
+  // 遷移直後のマウント時アニメーションが実質的な「選択が移った」表現になる
+  const pillProgress = useSharedValue(0);
+
+  useEffect(() => {
+    pillProgress.value = withSpring(active ? 1 : 0, ACTIVE_PILL_SPRING);
+  }, [active, pillProgress]);
+
+  const handlePressIn = useCallback(() => {
+    pressScale.value = withSpring(PRESSED_SCALE, PRESS_IN_SPRING);
+  }, [pressScale]);
+
+  const handlePressOut = useCallback(() => {
+    pressScale.value = withSpring(1, PRESS_OUT_SPRING);
+  }, [pressScale]);
+
+  const pressAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressScale.value }],
+  }));
+
+  const pillAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: pillProgress.value,
+    transform: [{ scale: 0.5 + pillProgress.value * 0.5 }],
+  }));
+
+  return (
+    <AnimatedPressable
+      ref={buttonRef}
+      style={[styles.button, pressAnimatedStyle]}
+      accessibilityRole="button"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onLayout={onLayout}
+    >
+      {showActivePill && active ? (
+        <Animated.View
+          testID="footer-active-pill"
+          pointerEvents="none"
+          style={[styles.activePill, pillAnimatedStyle]}
+        />
+      ) : null}
+      {children}
+    </AnimatedPressable>
+  );
+};
 
 type Props = {
   active?: FooterTab;
@@ -137,12 +229,15 @@ const FooterTabBar: React.FC<Props> = ({
 
   const safePad = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
 
+  // LED テーマは独自の質感を持つためガラス化せず従来のソリッドなバーを維持する
+  const isGlassBar = LIQUID_GLASS_AVAILABLE && !isLEDTheme;
+
   const tabButtons = (
     <>
-      <Pressable
-        ref={searchButtonRef}
-        style={styles.button}
-        accessibilityRole="button"
+      <TabButton
+        buttonRef={searchButtonRef}
+        active={active === 'search'}
+        showActivePill={isGlassBar}
         onPress={() => {
           navigation.navigate('RouteSearch' as never);
         }}
@@ -153,11 +248,11 @@ const FooterTabBar: React.FC<Props> = ({
           size={26}
           color={active === 'search' ? ICON_COLOR.active : ICON_COLOR.inactive}
         />
-      </Pressable>
+      </TabButton>
 
-      <Pressable
-        style={styles.button}
-        accessibilityRole="button"
+      <TabButton
+        active={active === 'home'}
+        showActivePill={isGlassBar}
         onPress={() => {
           navigation.navigate('SelectLine' as never);
         }}
@@ -167,12 +262,12 @@ const FooterTabBar: React.FC<Props> = ({
           size={28}
           color={active === 'home' ? ICON_COLOR.active : ICON_COLOR.inactive}
         />
-      </Pressable>
+      </TabButton>
 
-      <Pressable
-        ref={settingsButtonRef}
-        style={styles.button}
-        accessibilityRole="button"
+      <TabButton
+        buttonRef={settingsButtonRef}
+        active={active === 'settings'}
+        showActivePill={isGlassBar}
         onPress={() => {
           navigation.navigate('AppSettings' as never);
         }}
@@ -185,16 +280,17 @@ const FooterTabBar: React.FC<Props> = ({
             active === 'settings' ? ICON_COLOR.active : ICON_COLOR.inactive
           }
         />
-      </Pressable>
+      </TabButton>
     </>
   );
 
-  // LED テーマは独自の質感を持つためガラス化せず従来のソリッドなバーを維持する
-  if (LIQUID_GLASS_AVAILABLE && !isLEDTheme) {
+  if (isGlassBar) {
     return (
       <View pointerEvents="box-none" style={styles.container}>
         <GlassView
           glassEffectStyle="regular"
+          // タッチに反応してガラスが揺らぐ iOS 26 ネイティブのインタラクションを有効化
+          isInteractive
           style={[
             styles.glassBar,
             {
