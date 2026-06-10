@@ -159,6 +159,8 @@ export const formatJrWestStopsListEn = (
 ): string => {
   const joinWithAnd = (names: string[]): string => {
     if (names.length <= 1) return names[0] ?? '';
+    // 2件のときにシリアルカンマを入れると `A, and B` と不自然になるため分岐する
+    if (names.length === 2) return `${names[0]} and ${names[1]}`;
     return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
   };
   const batch = stops.slice(0, 5);

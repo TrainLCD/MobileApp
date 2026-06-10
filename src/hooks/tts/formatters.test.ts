@@ -9,6 +9,10 @@ import {
   stripStationParensForTTS,
 } from './formatters';
 
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 describe('replaceJapaneseText', () => {
   it('returns empty string when both name and nameKatakana are nullish', () => {
     expect(replaceJapaneseText(null, null)).toBe('');
@@ -216,6 +220,13 @@ describe('formatJrWestStopsListEn', () => {
     ];
     expect(formatJrWestStopsListEn(stops, (s) => s.id === 4)).toBe(
       'Joyo, Tamamizu, and Kizu before arriving at Nara'
+    );
+  });
+
+  it('joins two stops with a plain "and" (no serial comma)', () => {
+    const stops = [makeStop(1, 'Tofukuji'), makeStop(2, 'Rokujizo')];
+    expect(formatJrWestStopsListEn(stops, () => false)).toBe(
+      'Tofukuji and Rokujizo'
     );
   });
 
