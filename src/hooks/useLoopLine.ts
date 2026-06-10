@@ -14,7 +14,7 @@ import {
 } from '~/constants';
 import reverseStations from '~/utils/reverseStations';
 import { getIsLocal } from '~/utils/trainTypeString';
-import stationState from '../store/atoms/station';
+import { stationsAtom } from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
@@ -23,7 +23,7 @@ export const useLoopLine = (
   overrideStations?: Station[],
   checkCurrentLine = true
 ) => {
-  const { stations: stationsFromAtom } = useAtomValue(stationState);
+  const stationsFromAtom = useAtomValue(stationsAtom);
 
   const stations = useMemo(
     () => overrideStations ?? stationsFromAtom,

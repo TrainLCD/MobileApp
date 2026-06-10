@@ -1,10 +1,13 @@
 import { createStore } from 'jotai';
 import type { Station } from '~/@types/graphql';
-import stationState from '~/store/atoms/station';
-import { approachingAtom, arrivedAtom, stationsAtom } from './station';
+import stationState, {
+  approachingAtom,
+  arrivedAtom,
+  stationsAtom,
+} from './station';
 
-describe('station selectors', () => {
-  it('stationStateのフィールド値を導出する', () => {
+describe('stationState (互換ファサード)', () => {
+  it('ファサードへの書き込みがフィールドatomへ分配される', () => {
     const store = createStore();
     const stations = [{ id: 1, name: 'テスト駅' }] as Station[];
     store.set(stationState, {
@@ -16,6 +19,13 @@ describe('station selectors', () => {
     expect(store.get(arrivedAtom)).toBe(true);
     expect(store.get(approachingAtom)).toBe(false);
     expect(store.get(stationsAtom)).toBe(stations);
+  });
+
+  it('関数形式の更新でもフィールドatomへ分配される', () => {
+    const store = createStore();
+    store.set(stationState, (prev) => ({ ...prev, approaching: true }));
+    expect(store.get(approachingAtom)).toBe(true);
+    expect(store.get(stationState).approaching).toBe(true);
   });
 
   it('stationsAtomは無関係なフィールドの変更では購読者に通知しない', () => {

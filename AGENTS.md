@@ -60,6 +60,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - `.editorconfig` enforces UTF-8, two-space indentation, single quotes, and ES5 trailing commas.
 - Biome is authoritative; avoid `// biome-ignore` unless a rule is truly incompatible and document the rationale inline.
 - Components → PascalCase (`StationBanner.tsx`); hooks → `use*` (`useStationFeed.ts`); Jotai atoms → `store/atoms/*.ts`; GraphQL operations → `FeatureVerbQuery`.
+- Jotai state is held in field-level primitive atoms (named exports such as `arrivedAtom`, `headerStateAtom`). Always subscribe to those for reads; the default-exported `stationState` / `navigationState` / `lineState` are write-compatible facades and subscribing to them re-renders on every field change. See `docs/state-management.md`.
 - Co-locate style modules or constants near their consumers; share cross-cutting utilities through `src/utils/`.
 - Keep comments purposeful: explain intent or non-obvious constraints, not obvious mechanics.
 

@@ -11,7 +11,7 @@ import {
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import lineState from '~/store/atoms/line';
+import { pendingLineAtom } from '~/store/atoms/line';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
@@ -135,7 +135,7 @@ export const RouteInfoModal = ({
   const { height: windowHeight } = useWindowDimensions();
   const [headerHeight, setHeaderHeight] = useState(HEADER_HEIGHT);
 
-  const { pendingLine } = useAtomValue(lineState);
+  const pendingLine = useAtomValue(pendingLineAtom);
   const lineName = getLocalizedLineName(pendingLine, isJapanese);
   const trainTypeName = isJapanese
     ? (trainType?.name ?? '普通/各駅停車')

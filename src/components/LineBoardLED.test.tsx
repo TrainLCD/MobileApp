@@ -5,8 +5,8 @@ import LineBoardLED from './LineBoardLED';
 
 // モック設定
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn((initialValue) => initialValue),
   useAtom: jest.fn((val) => [val, jest.fn()]),
   useSetAtom: jest.fn(() => jest.fn()),
 }));
@@ -47,6 +47,29 @@ describe('LineBoardLED', () => {
     useTransferLines,
     useNumbering,
   } = require('~/hooks');
+  const { headerStateAtom } = require('~/store/atoms/navigation');
+  const {
+    selectedDirectionAtom,
+    stationsAtom,
+  } = require('~/store/atoms/station');
+  const { isLEDThemeAtom } = require('~/store/atoms/theme');
+
+  // 渡されたatomの同一性で読み出し値を出し分ける
+  const setAtomValues = ({
+    selectedDirection = null,
+    headerState = 'NEXT',
+  }: {
+    selectedDirection?: string | null;
+    headerState?: string;
+  } = {}) => {
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === selectedDirectionAtom) return selectedDirection;
+      if (a === stationsAtom) return [];
+      if (a === headerStateAtom) return headerState;
+      if (a === isLEDThemeAtom) return true;
+      return undefined;
+    });
+  };
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -73,13 +96,7 @@ describe('LineBoardLED', () => {
   } as unknown as Station;
 
   beforeEach(() => {
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 2;
-      if (index === 0) return { selectedDirection: null, stations: [] };
-      return { headerState: 'NEXT' };
-    });
+    setAtomValues();
     useCurrentLine.mockReturnValue(mockLine);
     useDisplayNextStation.mockReturnValue(mockNextStation);
     useAfterNextStation.mockReturnValue(mockAfterNextStation);
@@ -97,13 +114,7 @@ describe('LineBoardLED', () => {
   });
 
   it('ARRIVING状態でまもなく駅名が表示される', () => {
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 2;
-      if (index === 0) return { selectedDirection: null, stations: [] };
-      return { headerState: 'ARRIVING' };
-    });
+    setAtomValues({ headerState: 'ARRIVING' });
 
     const { getAllByText, getByText } = render(<LineBoardLED />);
     expect(getByText('まもなく')).toBeTruthy();
@@ -112,13 +123,7 @@ describe('LineBoardLED', () => {
   });
 
   it('CURRENT状態で電車情報が表示される', () => {
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 2;
-      if (index === 0) return { selectedDirection: null, stations: [] };
-      return { headerState: 'CURRENT' };
-    });
+    setAtomValues({ headerState: 'CURRENT' });
 
     const { getByText } = render(<LineBoardLED />);
     expect(getByText(/この電車は/)).toBeTruthy();
@@ -183,13 +188,7 @@ describe('LineBoardLED', () => {
       isYamanoteLine: true,
     });
 
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 2;
-      if (index === 0) return { selectedDirection: 'INBOUND', stations: [] };
-      return { headerState: 'CURRENT' };
-    });
+    setAtomValues({ selectedDirection: 'INBOUND', headerState: 'CURRENT' });
 
     const { getAllByText } = render(<LineBoardLED />);
     expect(getAllByText(/内回り/).length).toBeGreaterThan(0);

@@ -1,14 +1,14 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
-import stationState from '../store/atoms/station';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 
 export const usePreviousStation = (skipPass = true): Station | undefined => {
-  const { stations: stationsFromState, selectedDirection } =
-    useAtomValue(stationState);
+  const stationsFromState = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
   const station = useCurrentStation(true);
 
   const stations = useMemo(

@@ -4,8 +4,8 @@ import { APP_THEME } from '~/models/Theme';
 import { themeAtom } from '~/store/atoms/theme';
 import type { CommonHeaderProps } from '../components/Header.types';
 import { parenthesisRegexp } from '../constants';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { headerStateAtom } from '../store/atoms/navigation';
+import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { getNumberingColor } from '../utils/numbering';
 import { useBoundText } from './useBoundText';
@@ -28,8 +28,9 @@ import { useNumbering } from './useNumbering';
  */
 export const useHeaderCommonData = (): CommonHeaderProps | null => {
   // Atom values
-  const { selectedBound, arrived } = useAtomValue(stationState);
-  const { headerState } = useAtomValue(navigationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const arrived = useAtomValue(arrivedAtom);
+  const headerState = useAtomValue(headerStateAtom);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
 

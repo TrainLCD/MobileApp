@@ -1,6 +1,6 @@
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -31,9 +31,21 @@ import { RFValue } from '~/utils/rfValue';
 import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import { navigationRef } from '../stacks/rootNavigation';
-import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import lineState, {
+  pendingLineAtom,
+  selectedLineAtom,
+} from '../store/atoms/line';
+import navigationState, {
+  autoModeEnabledAtom,
+  fetchedTrainTypesAtom,
+  pendingTrainTypeAtom,
+} from '../store/atoms/navigation';
+import stationState, {
+  pendingStationAtom,
+  pendingStationsAtom,
+  stationAtom,
+  wantedDestinationAtom,
+} from '../store/atoms/station';
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { RouteInfoModal } from './RouteInfoModal';
@@ -151,19 +163,18 @@ export const SelectBoundModal: React.FC<Props> = ({
   const pendingTrainTypeModalRef = useRef(false);
 
   const navigation = useNavigation();
-  const [stationAtom, setStationState] = useAtom(stationState);
-  const {
-    station: confirmedStation,
-    pendingStation: station,
-    pendingStations: stations,
-    wantedDestination,
-  } = stationAtom;
-  const [
-    { autoModeEnabled, fetchedTrainTypes, pendingTrainType },
-    setNavigationState,
-  ] = useAtom(navigationState);
-  const [lineAtom, setLineState] = useAtom(lineState);
-  const { pendingLine: line, selectedLine } = lineAtom;
+  const confirmedStation = useAtomValue(stationAtom);
+  const station = useAtomValue(pendingStationAtom);
+  const stations = useAtomValue(pendingStationsAtom);
+  const wantedDestination = useAtomValue(wantedDestinationAtom);
+  const setStationState = useSetAtom(stationState);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
+  const fetchedTrainTypes = useAtomValue(fetchedTrainTypesAtom);
+  const pendingTrainType = useAtomValue(pendingTrainTypeAtom);
+  const setNavigationState = useSetAtom(navigationState);
+  const line = useAtomValue(pendingLineAtom);
+  const selectedLine = useAtomValue(selectedLineAtom);
+  const setLineState = useSetAtom(lineState);
   const [{ targetStationIds }, setNotifyState] = useAtom(notifyState);
 
   const { isLoopLine } = useLoopLine(stations, false);

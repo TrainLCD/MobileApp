@@ -3,6 +3,8 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
+import { locationAtom } from '~/store/atoms/location';
+import { stationAtom, stationsAtom } from '~/store/atoms/station';
 import { createStation } from '~/utils/test/factories';
 import { useInRadiusStation } from './useInRadiusStation';
 
@@ -24,8 +26,8 @@ let mockLocationValue: {
 
 jest.mock('jotai', () => ({
   __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 const TestComponent: React.FC<{ radius: number }> = ({ radius }) => {
@@ -47,16 +49,18 @@ describe('useInRadiusStation', () => {
     mockStationStateValue = { stations: [], station: null };
     mockLocationValue = null;
 
-    // Setup mock to return different values based on atom type
-    // First call is stationState, second call is locationAtom
-    let callIndex = 0;
-    mockUseAtomValue.mockImplementation(() => {
-      const isStationStateCall = callIndex % 2 === 0;
-      callIndex++;
-      if (isStationStateCall) {
-        return mockStationStateValue;
+    // Setup mock to return different values based on atom identity
+    mockUseAtomValue.mockImplementation((atom) => {
+      if (atom === stationsAtom) {
+        return mockStationStateValue.stations;
       }
-      return mockLocationValue;
+      if (atom === stationAtom) {
+        return mockStationStateValue.station;
+      }
+      if (atom === locationAtom) {
+        return mockLocationValue;
+      }
+      return undefined;
     });
   });
 

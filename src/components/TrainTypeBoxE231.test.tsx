@@ -2,6 +2,8 @@ import { render } from '@testing-library/react-native';
 import type React from 'react';
 import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
+import { headerStateAtom } from '~/store/atoms/navigation';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 // SvgのText要素を通常のText要素として扱うことで、getByTextでテキスト検証できるようにする
 jest.mock('react-native-svg', () => {
@@ -36,8 +38,8 @@ jest.mock('react-native-svg', () => {
 });
 
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn((val) => val),
 }));
 
 jest.mock('~/hooks', () => ({
@@ -47,15 +49,6 @@ jest.mock('~/hooks', () => ({
     nameShort: 'テスト',
     lineType: 'Normal',
   })),
-}));
-
-jest.mock('~/store/atoms/navigation', () => ({
-  __esModule: true,
-  default: { headerStateAtom: 'headerState' },
-}));
-
-jest.mock('~/store/atoms/theme', () => ({
-  isLEDThemeAtom: { isLEDThemeAtom: 'isLEDTheme' },
 }));
 
 jest.mock('~/translation', () => ({
@@ -115,11 +108,15 @@ const setHeaderLangState = (
   state: 'CURRENT' | 'CURRENT_EN' | 'CURRENT_ZH' | 'CURRENT_KO'
 ) => {
   const { useAtomValue } = require('jotai');
+  // 渡されたatomの同一性で読み出し値を出し分ける
   (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
-    if (atom === require('~/store/atoms/theme').isLEDThemeAtom) {
+    if (atom === isLEDThemeAtom) {
       return false;
     }
-    return { headerState: state };
+    if (atom === headerStateAtom) {
+      return state;
+    }
+    return undefined;
   });
 };
 

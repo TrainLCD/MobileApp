@@ -10,7 +10,11 @@ import type { Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
 import { getLocalizedLineName } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
-import stationState from '../store/atoms/station';
+import {
+  arrivedAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
@@ -21,7 +25,9 @@ import { useNumbering } from './useNumbering';
 import { useStoppingState } from './useStoppingState';
 
 export const useAppleWatch = (): void => {
-  const { arrived, stations, selectedDirection } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  const stations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
 

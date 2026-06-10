@@ -2,7 +2,7 @@
 
 **プロジェクト**: TrainLCD Mobile App
 **作成日**: 2025-12-25
-**最終更新**: 2026-01-06（テストカバレッジ改善・統計更新）
+**最終更新**: 2026-06-10（モノリシックatomのフィールド単位分解）
 
 ## 📊 概要
 
@@ -558,9 +558,15 @@ src/store/selectors/isEn.ts
 - ~~新規開発者がどちらを使うべきか混乱~~ → ✅ Jotaiのみ使用
 - ~~デバッグが困難（2つのDevToolsを使用）~~ → ✅ Jotai DevToolsのみ
 
+#### 追加の改善（2026-06-10）
+
+- ✅ **モノリシックatomのフィールド単位分解**: `stationState` / `navigationState` / `lineState` をフィールド単位のプリミティブatom（`arrivedAtom`, `headerStateAtom`, `selectedLineAtom` 等）に分解。1フィールドの変更で全購読コンポーネントが再レンダーされる問題を解消
+- ✅ **互換ファサードatomの維持**: 従来名のdefault exportは読み書き可能な派生atomとして残し、`set(prev => ({ ...prev, x }))` 形式の既存書き込みと `store.get`/`store.set`（React外アクセス）はそのまま動作。書き込み時は変更があったフィールドのatomにだけ分配
+- ✅ **読み取り側の全面移行**: モノリシックatomの分割代入による読み取り購読をフィールドatomの購読へ移行。旧 `src/store/selectors/station.ts` / `navigation.ts` は削除（同名atomは `src/store/atoms/` 側に統合）
+
 #### ~~推奨アクション~~ → 完了
 1. ~~状態管理を**Jotaiに統一**~~ ✅ **完了**
-2. 状態管理のガイドライン文書を作成（任意）
+2. ~~状態管理のガイドライン文書を作成（任意）~~ ✅ **完了**（`docs/state-management.md`）
 3. ~~Zustandで管理している3つの状態をJotaiに移行~~ ✅ **完了**
 
 ---

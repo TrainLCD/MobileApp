@@ -5,9 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isClip } from 'react-native-app-clip';
 import { StopCondition } from '~/@types/graphql';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
-import navigationState from '~/store/atoms/navigation';
+import {
+  autoModeEnabledAtom,
+  leftStationsAtom,
+} from '~/store/atoms/navigation';
 import tuningState from '~/store/atoms/tuning';
-import stationState from '../store/atoms/station';
+import { selectedBoundAtom } from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { useBadAccuracy } from './useBadAccuracy';
 import { useConnectivity } from './useConnectivity';
@@ -30,8 +33,9 @@ export const useWarningInfo = () => {
   ] = useState(true);
   const [screenshotTaken, setScreenshotTaken] = useState(false);
 
-  const { selectedBound } = useAtomValue(stationState);
-  const { autoModeEnabled, leftStations } = useAtomValue(navigationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
+  const leftStations = useAtomValue(leftStationsAtom);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
   const badAccuracy = useBadAccuracy();

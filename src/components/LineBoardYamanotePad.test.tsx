@@ -4,8 +4,8 @@ import LineBoardYamanotePad from './LineBoardYamanotePad';
 
 // モック設定
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn((initialValue) => initialValue),
   useAtom: jest.fn((val) => [val, jest.fn()]),
   useSetAtom: jest.fn(() => jest.fn()),
 }));
@@ -42,6 +42,9 @@ describe('LineBoardYamanotePad', () => {
   const { useAtomValue } = require('jotai');
   const { useCurrentLine, useDisplayCurrentStation, useNextStation } =
     require('~/hooks');
+  const { selectedLineAtom } = require('~/store/atoms/line');
+  const { arrivedAtom } = require('~/store/atoms/station');
+  const { isEnAtom } = require('~/store/selectors/isEn');
   const PadArch = require('./PadArch').default;
 
   const mockLine: Line = {
@@ -90,15 +93,26 @@ describe('LineBoardYamanotePad', () => {
     } as unknown as Station,
   ];
 
-  beforeEach(() => {
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 3;
-      if (index === 0) return true; // arrivedAtom
-      if (index === 1) return { selectedLine: mockLine };
-      return false; // isEn
+  // 渡されたatomの同一性で読み出し値を出し分ける
+  const setAtomValues = ({
+    arrived = true,
+    selectedLine = mockLine,
+    isEn = false,
+  }: {
+    arrived?: boolean;
+    selectedLine?: Line | null;
+    isEn?: boolean;
+  } = {}) => {
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === arrivedAtom) return arrived;
+      if (a === selectedLineAtom) return selectedLine;
+      if (a === isEnAtom) return isEn;
+      return undefined;
     });
+  };
+
+  beforeEach(() => {
+    setAtomValues();
     useCurrentLine.mockReturnValue(mockLine);
     useNextStation.mockReturnValue(mockStations[1]);
     useDisplayCurrentStation.mockReturnValue(mockStations[0]);
@@ -121,27 +135,13 @@ describe('LineBoardYamanotePad', () => {
 
   it('lineがnullの場合、nullを返す', () => {
     useCurrentLine.mockReturnValue(null);
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 3;
-      if (index === 0) return true; // arrivedAtom
-      if (index === 1) return { selectedLine: null };
-      return false;
-    });
+    setAtomValues({ selectedLine: null });
     const result = render(<LineBoardYamanotePad stations={mockStations} />);
     expect(result.toJSON()).toBeNull();
   });
 
   it('arrived=trueの場合、正しい駅数がPadArchに渡される', () => {
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 3;
-      if (index === 0) return true; // arrivedAtom
-      if (index === 1) return { selectedLine: mockLine };
-      return false;
-    });
+    setAtomValues({ arrived: true });
     render(<LineBoardYamanotePad stations={mockStations} />);
     const callArgs = PadArch.mock.calls[0][0];
     expect(callArgs.arrived).toBe(true);
@@ -154,14 +154,7 @@ describe('LineBoardYamanotePad', () => {
   });
 
   it('arrived=falseの場合、駅数が1つ減らされる', () => {
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 3;
-      if (index === 0) return false; // arrivedAtom
-      if (index === 1) return { selectedLine: mockLine };
-      return false;
-    });
+    setAtomValues({ arrived: false });
     render(<LineBoardYamanotePad stations={mockStations} />);
     const callArgs = PadArch.mock.calls[0][0];
     expect(callArgs.arrived).toBe(false);
@@ -193,14 +186,7 @@ describe('LineBoardYamanotePad', () => {
   });
 
   it('isEnプロップが正しく渡される', () => {
-    let callCount = 0;
-    useAtomValue.mockImplementation(() => {
-      callCount++;
-      const index = (callCount - 1) % 3;
-      if (index === 0) return true; // arrivedAtom
-      if (index === 1) return { selectedLine: mockLine };
-      return true; // isEn = true
-    });
+    setAtomValues({ isEn: true });
     render(<LineBoardYamanotePad stations={mockStations} />);
     expect(PadArch).toHaveBeenCalledWith(
       expect.objectContaining({

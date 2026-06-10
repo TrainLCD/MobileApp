@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import {
+  selectedDirectionAtom,
+  stationAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -15,11 +19,9 @@ import { useLoopLine } from './useLoopLine';
 
 export const useRefreshLeftStations = (): void => {
   const setNavigation = useSetAtom(navigationState);
-  const {
-    station: normalStation,
-    stations: normalStations,
-    selectedDirection,
-  } = useAtomValue(stationState);
+  const normalStation = useAtomValue(stationAtom);
+  const normalStations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
 
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();

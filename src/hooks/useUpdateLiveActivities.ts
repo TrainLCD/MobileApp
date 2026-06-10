@@ -4,7 +4,13 @@ import type { Station } from '~/@types/graphql';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import { directionToDirectionName } from '../models/Bound';
-import stationState from '../store/atoms/station';
+import {
+  approachingAtom,
+  arrivedAtom,
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
 import {
@@ -51,13 +57,11 @@ export const pickLiveActivityNextStation = (
 
 export const useUpdateLiveActivities = (): void => {
   const [started, setStarted] = useState(false);
-  const {
-    arrived: arrivedFromState,
-    approaching: approachingFromState,
-    selectedBound,
-    selectedDirection,
-    stations,
-  } = useAtomValue(stationState);
+  const arrivedFromState = useAtomValue(arrivedAtom);
+  const approachingFromState = useAtomValue(approachingAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const stations = useAtomValue(stationsAtom);
 
   const currentLine = useCurrentLine();
   const previousStation = useCurrentStation(true);

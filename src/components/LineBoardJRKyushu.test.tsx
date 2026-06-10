@@ -4,8 +4,8 @@ import LineBoardJRKyushu from './LineBoardJRKyushu';
 
 // モック設定
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn((initialValue) => initialValue),
   useAtom: jest.fn((val) => [val, jest.fn()]),
   useSetAtom: jest.fn(() => jest.fn()),
 }));
@@ -65,6 +65,9 @@ jest.mock('./NumberingIcon', () => ({
 describe('LineBoardJRKyushu', () => {
   const { useAtomValue } = require('jotai');
   const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
+  const { selectedLineAtom } = require('~/store/atoms/line');
+  const { arrivedAtom } = require('~/store/atoms/station');
+  const { isEnAtom } = require('~/store/selectors/isEn');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -105,9 +108,12 @@ describe('LineBoardJRKyushu', () => {
   ];
 
   beforeEach(() => {
-    useAtomValue.mockReturnValue({
-      station: mockStations[0],
-      arrived: true,
+    // 渡されたatomの同一性で読み出し値を出し分ける
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === arrivedAtom) return true;
+      if (a === selectedLineAtom) return null;
+      if (a === isEnAtom) return false;
+      return undefined;
     });
     useCurrentLine.mockReturnValue(mockLine);
     useDisplayCurrentStation.mockReturnValue(mockStations[0]);
@@ -258,10 +264,11 @@ describe('LineBoardJRKyushu', () => {
 
   it('lineがnullの場合、駅セルがレンダリングされない', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockReturnValue({
-      station: mockStations[0],
-      arrived: true,
-      selectedLine: null,
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === arrivedAtom) return true;
+      if (a === selectedLineAtom) return null;
+      if (a === isEnAtom) return false;
+      return undefined;
     });
     const { LineDot } = require('./LineBoard/shared/components');
     LineDot.mockClear();

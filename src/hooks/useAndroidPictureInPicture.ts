@@ -3,7 +3,13 @@ import { useEffect, useMemo } from 'react';
 import { parenthesisRegexp } from '../constants';
 import { directionToDirectionName } from '../models/Bound';
 import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
-import stationState from '../store/atoms/station';
+import {
+  approachingAtom,
+  arrivedAtom,
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
 import { getLocalizedLineName, isBusLine } from '../utils/line';
@@ -24,13 +30,11 @@ import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 export const useAndroidPictureInPicture = (): void => {
   const { enabled } = useAtomValue(pictureInPictureAtom);
   const setPictureInPictureState = useSetAtom(pictureInPictureAtom);
-  const {
-    arrived: arrivedFromState,
-    approaching: approachingFromState,
-    selectedBound,
-    selectedDirection,
-    stations,
-  } = useAtomValue(stationState);
+  const arrivedFromState = useAtomValue(arrivedAtom);
+  const approachingFromState = useAtomValue(approachingAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const stations = useAtomValue(stationsAtom);
 
   const currentLine = useCurrentLine();
   const previousStation = useCurrentStation(true);

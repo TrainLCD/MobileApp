@@ -15,14 +15,14 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
-import lineState from '~/store/atoms/line';
-import { isEnAtom } from '~/store/selectors/isEn';
-import { leftStationsAtom } from '~/store/selectors/navigation';
+import { selectedLineAtom } from '~/store/atoms/line';
+import { leftStationsAtom } from '~/store/atoms/navigation';
 import {
   approachingAtom,
   arrivedAtom,
   stationsAtom,
-} from '~/store/selectors/station';
+} from '~/store/atoms/station';
+import { isEnAtom } from '~/store/selectors/isEn';
 import getStationNameR from '~/utils/getStationNameR';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
@@ -423,7 +423,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
-  const { selectedLine } = useAtomValue(lineState);
+  const selectedLine = useAtomValue(selectedLineAtom);
   const arrived = useAtomValue(arrivedAtom);
   const approaching = useAtomValue(approachingAtom);
   const barWidth = useBarWidth();

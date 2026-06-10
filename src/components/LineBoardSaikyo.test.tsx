@@ -26,10 +26,6 @@ jest.mock('~/store/selectors/isEn', () => ({
   isEnAtom: { __brand: 'isEnAtom' },
 }));
 
-jest.mock('~/store/selectors/station', () => ({
-  arrivedAtom: { __brand: 'arrivedAtom' },
-}));
-
 jest.mock('~/utils/isTablet', () => ({
   __esModule: true,
   default: false,
@@ -88,11 +84,16 @@ describe('LineBoardSaikyo', () => {
   ];
 
   beforeEach(() => {
-    // arrivedAtom/isEnAtom(派生atom)とその他のatomで返す値を分ける
+    // arrivedAtom/selectedLineAtom/isEnAtomとその他のatomで返す値を分ける
     useAtomValue.mockImplementation((atomVal: unknown) => {
+      const { arrivedAtom } = require('~/store/atoms/station');
+      const { selectedLineAtom } = require('~/store/atoms/line');
       const brand = (atomVal as { __brand?: string } | null)?.__brand;
-      if (brand === 'arrivedAtom') {
+      if (atomVal === arrivedAtom) {
         return true;
+      }
+      if (atomVal === selectedLineAtom) {
+        return null;
       }
       if (brand === 'isEnAtom') {
         return false;

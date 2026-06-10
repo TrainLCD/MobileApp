@@ -10,9 +10,9 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
+import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
-import { arrivedAtom } from '~/store/selectors/station';
-import lineState from '../store/atoms/line';
+import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
@@ -400,7 +400,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   hasTerminus,
   lineColors,
 }: Props) => {
-  const { selectedLine } = useAtomValue(lineState);
+  const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
   const padCount = Math.max(0, 8 - stations.length);

@@ -2,12 +2,17 @@ import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 import type { Line } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
-import stationState from '../store/atoms/station';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 
 export const useConnectedLines = (excludePassed = true): Line[] => {
-  const { selectedBound, selectedDirection, stations } =
-    useAtomValue(stationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const stations = useAtomValue(stationsAtom);
   const currentLine = useCurrentLine();
 
   const belongLines = useMemo(

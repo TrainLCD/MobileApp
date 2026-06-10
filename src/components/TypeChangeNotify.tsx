@@ -14,8 +14,12 @@ import {
 } from '~/hooks';
 import { RFValue } from '~/utils/rfValue';
 import { getIsLocal } from '~/utils/trainTypeString';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { enabledLanguagesAtom } from '../store/atoms/navigation';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import truncateTrainType from '../utils/truncateTrainType';
@@ -1284,10 +1288,11 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
   getBarGradient,
   getBoxGradient,
 }) => {
-  const { selectedDirection, stations, selectedBound } =
-    useAtomValue(stationState);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const stations = useAtomValue(stationsAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const theme = useAtomValue(themeAtom);
-  const { enabledLanguages } = useAtomValue(navigationState);
+  const enabledLanguages = useAtomValue(enabledLanguagesAtom);
   const station = useCurrentStation();
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();

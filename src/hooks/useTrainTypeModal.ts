@@ -1,5 +1,5 @@
 import { useLazyQuery } from '@apollo/client/react';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
@@ -7,22 +7,30 @@ import {
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import { findNearestStation } from '~/utils/findNearestStation';
-import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
+import { selectedLineAtom } from '../store/atoms/line';
+import navigationState, {
+  fetchedTrainTypesAtom,
+  trainTypeAtom,
+} from '../store/atoms/navigation';
 import { resetFirstSpeechAtom } from '../store/atoms/speech';
-import stationState from '../store/atoms/station';
+import stationState, {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationAtom,
+} from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 
 export const useTrainTypeModal = () => {
-  const [
-    { selectedBound, station: currentStation, selectedDirection },
-    setStationState,
-  ] = useAtom(stationState);
-  const { selectedLine } = useAtomValue(lineState);
-  const [{ fetchedTrainTypes, trainType: activeTrainType }, setNavigation] =
-    useAtom(navigationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const currentStation = useAtomValue(stationAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const setStationState = useSetAtom(stationState);
+  const selectedLine = useAtomValue(selectedLineAtom);
+  const fetchedTrainTypes = useAtomValue(fetchedTrainTypesAtom);
+  const activeTrainType = useAtomValue(trainTypeAtom);
+  const setNavigation = useSetAtom(navigationState);
   const setResetFirstSpeech = useSetAtom(resetFirstSpeechAtom);
 
   const currentLine = useCurrentLine();

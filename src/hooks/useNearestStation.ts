@@ -3,7 +3,7 @@ import { useAtomValue } from 'jotai';
 import type { Station } from '~/@types/graphql';
 import { locationAtom } from '~/store/atoms/location';
 import { memoizeLastCalls, memoizeWeak } from '~/utils/memoizeLastCalls';
-import stationState from '../store/atoms/station';
+import { stationsAtom } from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 
@@ -78,7 +78,7 @@ export const useNearestStation = (): Station | undefined => {
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
-  const { stations } = useAtomValue(stationState);
+  const stations = useAtomValue(stationsAtom);
   const currentStation = useCurrentStation(false);
   const nextStation = useNextStation(false);
 

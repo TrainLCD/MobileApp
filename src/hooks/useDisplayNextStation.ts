@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import type { Station } from '~/@types/graphql';
-import stationState from '../store/atoms/station';
+import { approachingAtom } from '../store/atoms/station';
 import { useApproachingStation } from './useApproachingStation';
 import { useNextStation } from './useNextStation';
 
@@ -13,7 +13,7 @@ import { useNextStation } from './useNextStation';
  * 現在地が取得できず接近駅を特定できない場合は useNextStation にフォールバックする。
  */
 export const useDisplayNextStation = (): Station | undefined => {
-  const { approaching } = useAtomValue(stationState);
+  const approaching = useAtomValue(approachingAtom);
   const nextStation = useNextStation();
   const approachingStation = useApproachingStation();
 

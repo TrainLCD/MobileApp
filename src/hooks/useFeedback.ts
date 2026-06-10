@@ -17,7 +17,7 @@ import {
   DEV_FEEDBACK_API_URL,
   PRODUCTION_FEEDBACK_API_URL,
 } from 'react-native-dotenv';
-import navigationState from '~/store/atoms/navigation';
+import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from '../constants';
 import type { Report, ReportType } from '../models/Report';
 import { isJapanese } from '../translation';
@@ -59,7 +59,7 @@ export const useFeedback = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
-  const { autoModeEnabled } = useAtomValue(navigationState);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
 
   const sendReport = useCallback(
     async ({
