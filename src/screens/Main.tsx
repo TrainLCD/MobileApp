@@ -569,15 +569,17 @@ const MainScreen: React.FC = () => {
 
       setIsSelectBoundModalOpen(true);
 
-      const { data } = await fetchStationsByLineId({
-        variables: { lineId: selectedLine.id, stationId: selectedStation.id },
-      });
-
-      const fetchedTrainTypesData = await fetchTrainTypes({
-        variables: {
-          stationId: selectedStation.id as number,
-        },
-      });
+      // 駅一覧と種別一覧は互いに独立したクエリなので並列で取得する
+      const [{ data }, fetchedTrainTypesData] = await Promise.all([
+        fetchStationsByLineId({
+          variables: { lineId: selectedLine.id, stationId: selectedStation.id },
+        }),
+        fetchTrainTypes({
+          variables: {
+            stationId: selectedStation.id as number,
+          },
+        }),
+      ]);
       const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
 
       setNavigationState((prev) => ({

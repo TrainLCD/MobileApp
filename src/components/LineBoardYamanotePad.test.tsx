@@ -95,7 +95,7 @@ describe('LineBoardYamanotePad', () => {
     useAtomValue.mockImplementation(() => {
       callCount++;
       const index = (callCount - 1) % 3;
-      if (index === 0) return { station: mockStations[0], arrived: true };
+      if (index === 0) return true; // arrivedAtom
       if (index === 1) return { selectedLine: mockLine };
       return false; // isEn
     });
@@ -125,7 +125,7 @@ describe('LineBoardYamanotePad', () => {
     useAtomValue.mockImplementation(() => {
       callCount++;
       const index = (callCount - 1) % 3;
-      if (index === 0) return { station: mockStations[0], arrived: true };
+      if (index === 0) return true; // arrivedAtom
       if (index === 1) return { selectedLine: null };
       return false;
     });
@@ -138,7 +138,7 @@ describe('LineBoardYamanotePad', () => {
     useAtomValue.mockImplementation(() => {
       callCount++;
       const index = (callCount - 1) % 3;
-      if (index === 0) return { station: mockStations[0], arrived: true };
+      if (index === 0) return true; // arrivedAtom
       if (index === 1) return { selectedLine: mockLine };
       return false;
     });
@@ -158,7 +158,7 @@ describe('LineBoardYamanotePad', () => {
     useAtomValue.mockImplementation(() => {
       callCount++;
       const index = (callCount - 1) % 3;
-      if (index === 0) return { station: mockStations[0], arrived: false };
+      if (index === 0) return false; // arrivedAtom
       if (index === 1) return { selectedLine: mockLine };
       return false;
     });
@@ -197,7 +197,7 @@ describe('LineBoardYamanotePad', () => {
     useAtomValue.mockImplementation(() => {
       callCount++;
       const index = (callCount - 1) % 3;
-      if (index === 0) return { station: mockStations[0], arrived: true };
+      if (index === 0) return true; // arrivedAtom
       if (index === 1) return { selectedLine: mockLine };
       return true; // isEn = true
     });

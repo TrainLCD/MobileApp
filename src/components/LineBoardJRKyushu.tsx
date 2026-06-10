@@ -1,24 +1,23 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
-  useInterval,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
 import { isEnAtom } from '~/store/selectors/isEn';
+import { arrivedAtom } from '~/store/selectors/station';
 import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
-import { ChevronTY } from './ChevronTY';
 import {
+  BlinkingChevron,
   EmptyStationNameCell,
   LineDot,
   StationName,
@@ -66,7 +65,6 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'BLUE' | 'BLACK' | 'WHITE';
 }
 
 // Helper: Determine if the bar should be split at current station
@@ -112,7 +110,7 @@ const useStationRenderState = (
   index: number,
   stations: Station[]
 ) => {
-  const { arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const currentStation = useDisplayCurrentStation();
   const isEn = useAtomValue(isEnAtom);
@@ -247,14 +245,16 @@ const BarGradients: React.FC<{
   </>
 );
 
-const StationNameCell: React.FC<StationNameCellProps> = ({
+// 旧実装の点滅順(初期=BLACK、次=BLUE)を保つ
+const JR_KYUSHU_CHEVRON_COLORS = ['BLACK', 'BLUE'] as const;
+
+const StationNameCellBase: React.FC<StationNameCellProps> = ({
   station,
   index,
   stations,
   line,
   lineColors,
   hasTerminus,
-  chevronColor,
 }: StationNameCellProps) => {
   const dim = useLandscapeWindowDimensions();
   const {
@@ -383,18 +383,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           },
         ]}
       >
-        {showChevron ? <ChevronTY color={chevronColor} /> : null}
+        {showChevron ? (
+          <BlinkingChevron colors={JR_KYUSHU_CHEVRON_COLORS} />
+        ) : null}
       </View>
     </>
   );
 };
+
+// 点滅チェブロンを分離したことでセルのpropsは駅データ変化時にしか変わらないため、
+// memo化により毎秒・毎tickの不要な再レンダーを防ぐ
+const StationNameCell = React.memo(StationNameCellBase);
 
 const LineBoardJRKyushu: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'BLUE' | 'BLACK'>('BLACK');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
@@ -405,13 +410,6 @@ const LineBoardJRKyushu: React.FC<Props> = ({
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
   );
-
-  const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'BLUE' ? 'BLACK' : 'BLUE')),
-    []
-  );
-
-  useInterval(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
     (s: Station | undefined, i: number): React.ReactNode | null => {
@@ -441,12 +439,11 @@ const LineBoardJRKyushu: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
-            chevronColor={chevronColor}
           />
         </React.Fragment>
       );
     },
-    [chevronColor, hasTerminus, line, lineColors, stations, totalStations]
+    [hasTerminus, line, lineColors, stations, totalStations]
   );
 
   const stationsWithEmpty = useMemo(

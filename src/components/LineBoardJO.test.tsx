@@ -105,11 +105,16 @@ describe('LineBoardJO', () => {
     } as unknown as Station,
   ];
 
+  // arrivedAtom(派生atom)とその他のatomで返す値を分けるディスパッチ型モック
+  const mockAtoms = (arrived: boolean, selectedLine: Line | null) => {
+    const { arrivedAtom } = require('~/store/selectors/station');
+    useAtomValue.mockImplementation((a: unknown) =>
+      a === arrivedAtom ? arrived : { selectedLine }
+    );
+  };
+
   beforeEach(() => {
-    useAtomValue.mockReturnValue({
-      arrived: true,
-      selectedLine: mockLine,
-    });
+    mockAtoms(true, mockLine);
     useCurrentLine.mockReturnValue(mockLine);
     useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
@@ -130,10 +135,7 @@ describe('LineBoardJO', () => {
 
   it('lineがnullの場合、nullを返す', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockReturnValue({
-      arrived: true,
-      selectedLine: null,
-    });
+    mockAtoms(true, null);
     const result = render(
       <LineBoardJO
         stations={mockStations}
@@ -145,10 +147,7 @@ describe('LineBoardJO', () => {
 
   it('arrived=trueの場合、JOCurrentArrowEdgeが表示される', () => {
     const { JOCurrentArrowEdge } = require('./JOCurrentArrowEdge');
-    useAtomValue.mockReturnValue({
-      arrived: true,
-      selectedLine: mockLine,
-    });
+    mockAtoms(true, mockLine);
     render(
       <LineBoardJO
         stations={mockStations}
@@ -160,10 +159,7 @@ describe('LineBoardJO', () => {
 
   it('arrived=falseの場合、ChevronJOが表示される', () => {
     const { ChevronJO } = require('./ChevronJO');
-    useAtomValue.mockReturnValue({
-      arrived: false,
-      selectedLine: mockLine,
-    });
+    mockAtoms(false, mockLine);
     render(
       <LineBoardJO
         stations={mockStations}

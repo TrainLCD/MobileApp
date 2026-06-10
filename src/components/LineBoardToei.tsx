@@ -1,28 +1,30 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
-  useInterval,
   useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
-import navigationState from '~/store/atoms/navigation';
 import { isEnAtom } from '~/store/selectors/isEn';
+import { enabledLanguagesAtom } from '~/store/selectors/navigation';
+import { arrivedAtom } from '~/store/selectors/station';
 import getStationNameR from '~/utils/getStationNameR';
 import { RFValue } from '~/utils/rfValue';
 import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
-import { ChevronTY } from './ChevronTY';
-import { EmptyStationNameCell, LineDot } from './LineBoard/shared/components';
+import {
+  BlinkingChevron,
+  EmptyStationNameCell,
+  LineDot,
+} from './LineBoard/shared/components';
 import {
   useBarStyles,
   useChevronPosition,
@@ -203,7 +205,6 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLUE' | 'WHITE';
 }
 
 // Helper: Check if station is at middle position
@@ -328,20 +329,22 @@ const MiddleStationBar: React.FC<{
   );
 };
 
-const StationNameCell: React.FC<StationNameCellProps> = ({
+// 旧実装の点滅順(初期=BLUE、次=RED)を保つ
+const TOEI_CHEVRON_COLORS = ['BLUE', 'RED'] as const;
+
+const StationNameCellBase: React.FC<StationNameCellProps> = ({
   station,
   index,
   stations,
   line,
   lineColors,
   hasTerminus,
-  chevronColor,
 }: StationNameCellProps) => {
-  const { arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const currentStation = useDisplayCurrentStation();
   const isEn = useAtomValue(isEnAtom);
-  const { enabledLanguages } = useAtomValue(navigationState);
+  const enabledLanguages = useAtomValue(enabledLanguagesAtom);
   const isKoEnabled = enabledLanguages.includes('KO');
   const isZhEnabled = enabledLanguages.includes('ZH');
 
@@ -486,18 +489,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           },
         ]}
       >
-        {shouldShowChevron ? <ChevronTY color={chevronColor} /> : null}
+        {shouldShowChevron ? (
+          <BlinkingChevron colors={TOEI_CHEVRON_COLORS} />
+        ) : null}
       </View>
     </>
   );
 };
+
+// 点滅チェブロンを分離したことでセルのpropsは駅データ変化時にしか変わらないため、
+// memo化により毎秒・毎tickの不要な再レンダーを防ぐ
+const StationNameCell = React.memo(StationNameCellBase);
 
 const LineBoardToei: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'BLUE'>('BLUE');
   const { selectedLine } = useAtomValue(lineState);
   const currentLine = useCurrentLine();
 
@@ -507,13 +515,6 @@ const LineBoardToei: React.FC<Props> = ({
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
   );
-
-  const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'RED' ? 'BLUE' : 'RED')),
-    []
-  );
-
-  useInterval(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): React.ReactNode | null => {
@@ -546,12 +547,11 @@ const LineBoardToei: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
-            chevronColor={chevronColor}
           />
         </React.Fragment>
       );
     },
-    [chevronColor, hasTerminus, line, lineColors, stations]
+    [hasTerminus, line, lineColors, stations]
   );
 
   const stationsWithEmpty = useMemo(

@@ -1,46 +1,34 @@
 import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
+import { memoizeLastCalls } from '~/utils/memoizeLastCalls';
+import reverseStations from '~/utils/reverseStations';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 
-export const useNextStation = (
-  ignorePass = true,
-  originStation?: Station
-): Station | undefined => {
-  const { stations: stationsFromState, selectedDirection } =
-    useAtomValue(stationState);
-  const currentStation = useCurrentStation();
-  const { isLoopLine } = useLoopLine();
-
-  const station = originStation ?? currentStation;
-
-  const stations = useMemo(
-    () => dropEitherJunctionStation(stationsFromState, selectedDirection),
-    [selectedDirection, stationsFromState]
-  );
-
-  const isInbound = selectedDirection === 'INBOUND';
-
-  // OUTBOUND 用に reverse した配列をメモ化（必要なときだけ作る）。
-  // 以前は useMemo を 2 つに分けて毎回 stations.slice().reverse() を 2 回計算していた。
-  const reversedStations = useMemo(
-    () => (isInbound ? null : stations.slice().reverse()),
-    [isInbound, stations]
-  );
-
-  const result = useMemo(() => {
+// 本フックは20箇所以上から呼ばれ、originStation違いの呼び出しも同一レンダー内で
+// 混在するため、O(n)走査をインスタンスごとのuseMemoではなくモジュールレベルの
+// 共有キャッシュ(複数スロット)で集約する。
+const computeNextStation = memoizeLastCalls(
+  (
+    stations: Station[],
+    reversedStations: Station[] | null,
+    isInbound: boolean,
+    isLoopLine: boolean,
+    stationId: number | null | undefined,
+    stationGroupId: number | null | undefined,
+    ignorePass: boolean
+  ): Station | undefined => {
     const orderedStations = isInbound
       ? stations
       : (reversedStations ?? stations);
-    const idMatchIndex = orderedStations.findIndex((s) => s.id === station?.id);
+    const idMatchIndex = orderedStations.findIndex((s) => s.id === stationId);
     const stationIndex =
       idMatchIndex !== -1
         ? idMatchIndex
-        : orderedStations.findIndex((s) => s.groupId === station?.groupId);
+        : orderedStations.findIndex((s) => s.groupId === stationGroupId);
 
     if (stationIndex === -1) {
       return undefined;
@@ -53,11 +41,11 @@ export const useNextStation = (
         // 元配列基準で INBOUND は -1, OUTBOUND は +1 だったが、
         // ここでは orderedStations が常に進行方向順なので +1 で揃えられる場合とそうでない場合がある。
         // 既存仕様を保つため元の挙動を再現する。
-        const flatIndex = stations.findIndex((s) => s.id === station?.id);
+        const flatIndex = stations.findIndex((s) => s.id === stationId);
         const groupIndex =
           flatIndex !== -1
             ? flatIndex
-            : stations.findIndex((s) => s.groupId === station?.groupId);
+            : stations.findIndex((s) => s.groupId === stationGroupId);
         if (groupIndex === -1) {
           return undefined;
         }
@@ -90,15 +78,36 @@ export const useNextStation = (
       }
     }
     return undefined;
-  }, [
-    ignorePass,
+  }
+);
+
+export const useNextStation = (
+  ignorePass = true,
+  originStation?: Station
+): Station | undefined => {
+  const { stations: stationsFromState, selectedDirection } =
+    useAtomValue(stationState);
+  const currentStation = useCurrentStation();
+  const { isLoopLine } = useLoopLine();
+
+  const station = originStation ?? currentStation;
+
+  // dropEitherJunctionStation / reverseStations はモジュールレベルでメモ化済みのため、
+  // 全インスタンスが同一の配列参照を共有する
+  const stations = dropEitherJunctionStation(
+    stationsFromState,
+    selectedDirection
+  );
+  const isInbound = selectedDirection === 'INBOUND';
+  const reversedStations = isInbound ? null : reverseStations(stations);
+
+  return computeNextStation(
+    stations,
+    reversedStations,
     isInbound,
     isLoopLine,
-    reversedStations,
-    station?.groupId,
     station?.id,
-    stations,
-  ]);
-
-  return result;
+    station?.groupId,
+    ignorePass
+  );
 };
