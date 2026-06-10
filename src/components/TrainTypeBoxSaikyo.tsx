@@ -18,7 +18,7 @@ import type { TrainType } from '~/@types/graphql';
 import { FONTS, parenthesisRegexp } from '~/constants';
 import { useCurrentLine, useLazyPrevious, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
-import navigationState from '~/store/atoms/navigation';
+import { headerStateAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
@@ -88,7 +88,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
 }: Props) => {
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
-  const { headerState } = useAtomValue(navigationState);
+  const headerState = useAtomValue(headerStateAtom);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const currentLine = useCurrentLine();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);

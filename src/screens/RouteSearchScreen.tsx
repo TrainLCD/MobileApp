@@ -1,6 +1,6 @@
 import { useLazyQuery } from '@apollo/client/react';
 import { Orientation } from 'expo-screen-orientation';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -45,8 +45,11 @@ import {
   getStationWithMatchingLine,
 } from '~/utils/routeSearch';
 import { findLocalType } from '~/utils/trainTypeString';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
+import lineState, { pendingLineAtom } from '../store/atoms/line';
+import stationState, {
+  stationAtom,
+  wantedDestinationAtom,
+} from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 
@@ -140,11 +143,12 @@ const RouteSearchScreen = () => {
     [isPortraitOrientation]
   );
 
-  const [{ station, wantedDestination }, setStationState] =
-    useAtom(stationState);
+  const station = useAtomValue(stationAtom);
+  const wantedDestination = useAtomValue(wantedDestinationAtom);
+  const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
-  const [lineAtom, setLineState] = useAtom(lineState);
-  const { pendingLine } = lineAtom;
+  const pendingLine = useAtomValue(pendingLineAtom);
+  const setLineState = useSetAtom(lineState);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 

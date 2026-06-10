@@ -1,5 +1,5 @@
 import { Orientation } from 'expo-screen-orientation';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -37,8 +37,10 @@ import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
 import { Heading } from '../components/Heading';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import navigationState, {
+  pendingQuickActionRouteIdAtom,
+} from '../store/atoms/navigation';
+import { stationsCacheAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
@@ -116,9 +118,9 @@ const SelectLineScreen = () => {
   } = useSelectLineWalkthrough();
 
   // --- atom 読み取り ---
-  const { stationsCache } = useAtomValue(stationState);
-  const [{ pendingQuickActionRouteId }, setNavigationState] =
-    useAtom(navigationState);
+  const stationsCache = useAtomValue(stationsCacheAtom);
+  const pendingQuickActionRouteId = useAtomValue(pendingQuickActionRouteIdAtom);
+  const setNavigationState = useSetAtom(navigationState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
   const scrollY = useRef(new RNAnimated.Value(0)).current;

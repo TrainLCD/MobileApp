@@ -5,6 +5,8 @@ import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
+import type { LineDirection } from '../models/Bound';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
@@ -12,8 +14,8 @@ import { useNextStation } from './useNextStation';
 
 jest.mock('jotai', () => ({
   __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 jest.mock('./useCurrentStation', () => ({
@@ -54,6 +56,24 @@ describe('useNextStation', () => {
   >;
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 
+  const mockAtomValues = ({
+    stations,
+    selectedDirection,
+  }: {
+    stations: Station[];
+    selectedDirection: LineDirection;
+  }) => {
+    mockUseAtomValue.mockImplementation((atom) => {
+      if (atom === stationsAtom) {
+        return stations;
+      }
+      if (atom === selectedDirectionAtom) {
+        return selectedDirection;
+      }
+      return undefined;
+    });
+  };
+
   beforeEach(() => {
     mockGetIsPass.mockReturnValue(false);
     mockUseLoopLine.mockReturnValue({
@@ -80,7 +100,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station1);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -98,7 +118,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station2);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'OUTBOUND',
     });
@@ -130,7 +150,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station1);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -163,7 +183,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station1);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -194,7 +214,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station2);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -226,7 +246,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station2);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'OUTBOUND',
     });
@@ -246,7 +266,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station1);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -265,7 +285,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station3);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -281,7 +301,7 @@ describe('useNextStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station1);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'OUTBOUND',
     });

@@ -4,7 +4,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { navigationRef } from '~/stacks/rootNavigation';
-import navigationState from '~/store/atoms/navigation';
+import navigationState, { presetRoutesAtom } from '~/store/atoms/navigation';
 
 const MAX_QUICK_ACTIONS = 4;
 
@@ -33,7 +33,7 @@ const navigateToSelectLine = () => {
  * - クイックアクション選択時に pendingQuickActionRouteId を設定し、SelectLine に遷移
  */
 export const useQuickActions = () => {
-  const { presetRoutes } = useAtomValue(navigationState);
+  const presetRoutes = useAtomValue(presetRoutesAtom);
   const setNavigationState = useSetAtom(navigationState);
 
   // プリセットが変わるたびにOSのクイックアクションを同期

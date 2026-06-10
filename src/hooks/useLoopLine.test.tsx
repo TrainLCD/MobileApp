@@ -70,7 +70,7 @@ describe('useLoopLine', () => {
       { id: 1130229, groupId: 6, line: { id: YAMANOTE_LINE_ID } }, // 品川
     ] as unknown as Station[];
 
-    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations });
+    (useAtomValue as jest.Mock).mockReturnValueOnce(stations);
     (useCurrentLine as jest.Mock).mockReturnValue({ id: YAMANOTE_LINE_ID });
     (useCurrentStation as jest.Mock).mockReturnValue({
       id: 1130224,
@@ -102,7 +102,7 @@ describe('useLoopLine', () => {
       { id: 1130220, groupId: 2, line: { id: YAMANOTE_LINE_ID } },
     ] as unknown as Station[];
 
-    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations });
+    (useAtomValue as jest.Mock).mockReturnValueOnce(stations);
     (useCurrentLine as jest.Mock).mockReturnValue({ id: YAMANOTE_LINE_ID });
     (useCurrentStation as jest.Mock).mockReturnValue({
       id: 1130224,
@@ -129,7 +129,7 @@ describe('useLoopLine', () => {
     ] as unknown as Station[];
 
     // atom 側の値は未使用になるが、呼ばれるため空で返す
-    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations: [] });
+    (useAtomValue as jest.Mock).mockReturnValueOnce([]);
     (useCurrentLine as jest.Mock).mockReturnValue({ id: 99999 });
     (useCurrentStation as jest.Mock).mockReturnValue({
       id: 1162310,
@@ -151,7 +151,7 @@ describe('useLoopLine', () => {
       { id: 9930124, groupId: 2, line: { id: TOEI_OEDO_LINE_ID } },
     ] as unknown as Station[];
 
-    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations });
+    (useAtomValue as jest.Mock).mockReturnValueOnce(stations);
     (useCurrentLine as jest.Mock).mockReturnValue({ id: TOEI_OEDO_LINE_ID });
     (useCurrentStation as jest.Mock).mockReturnValue({
       id: 9930121,
@@ -175,7 +175,7 @@ describe('useLoopLine', () => {
       { id: 9951413, groupId: 3, line: { id: MEIJO_LINE_ID } },
     ] as unknown as Station[];
 
-    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations: [] });
+    (useAtomValue as jest.Mock).mockReturnValueOnce([]);
     (useCurrentLine as jest.Mock).mockReturnValue({ id: 0 });
     (useCurrentStation as jest.Mock).mockReturnValue({
       id: 9951409,
@@ -201,7 +201,7 @@ describe('useLoopLine', () => {
       { id: 1134504, groupId: 4, line: { id: DISNEY_RESORT_LINE_ID } }, // リゾートゲートウェイ
     ] as unknown as Station[];
 
-    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations });
+    (useAtomValue as jest.Mock).mockReturnValueOnce(stations);
     (useCurrentLine as jest.Mock).mockReturnValue({
       id: DISNEY_RESORT_LINE_ID,
     });
@@ -237,7 +237,7 @@ describe('useLoopLine', () => {
       { id: 1134504, groupId: 4, line: { id: DISNEY_RESORT_LINE_ID } },
     ] as unknown as Station[];
 
-    (useAtomValue as jest.Mock).mockReturnValueOnce({ stations });
+    (useAtomValue as jest.Mock).mockReturnValueOnce(stations);
     (useCurrentLine as jest.Mock).mockReturnValue({
       id: DISNEY_RESORT_LINE_ID,
     });

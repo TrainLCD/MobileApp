@@ -1,26 +1,37 @@
 import { render } from '@testing-library/react-native';
+import { useAtomValue } from 'jotai';
 import type React from 'react';
+import { enabledLanguagesAtom } from '../store/atoms/navigation';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
+import { themeAtom } from '../store/atoms/theme';
 import TypeChangeNotify from './TypeChangeNotify';
 
 jest.mock('jotai', () => ({
-  useAtomValue: jest.fn((atom) => {
-    if (atom === require('../store/atoms/station').default) {
-      return {
-        selectedDirection: 'INBOUND',
-        stations: [],
-        selectedBound: null,
-      };
-    }
-    if (atom === require('../store/atoms/theme').themeAtom) {
-      return 'TOKYO_METRO';
-    }
-    if (atom === require('../store/atoms/navigation').default) {
-      return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
-    }
-    return {};
-  }),
-  atom: jest.fn((initialValue) => initialValue),
+  ...jest.requireActual('jotai'),
+  useAtomValue: jest.fn(),
 }));
+
+// 渡されたatomの同一性で読み出し値を出し分ける
+const mockAtomValues = ({
+  selectedDirection = 'INBOUND',
+  stations = [] as unknown[],
+  selectedBound = null as unknown,
+  theme = 'TOKYO_METRO',
+  enabledLanguages = ['JA', 'EN', 'ZH', 'KO'] as string[],
+} = {}) => {
+  (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+    if (atom === selectedDirectionAtom) return selectedDirection;
+    if (atom === stationsAtom) return stations;
+    if (atom === selectedBoundAtom) return selectedBound;
+    if (atom === themeAtom) return theme;
+    if (atom === enabledLanguagesAtom) return enabledLanguages;
+    return {};
+  });
+};
 
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
@@ -67,20 +78,6 @@ jest.mock('~/utils/truncateTrainType', () => ({
   default: jest.fn((value) => value),
 }));
 
-jest.mock('../store/atoms/station', () => ({
-  __esModule: true,
-  default: {},
-}));
-
-jest.mock('../store/atoms/theme', () => ({
-  themeAtom: {},
-}));
-
-jest.mock('../store/atoms/navigation', () => ({
-  __esModule: true,
-  default: {},
-}));
-
 jest.mock('./BarTerminalEast', () => ({
   BarTerminalEast: jest.fn(() => null),
 }));
@@ -101,6 +98,10 @@ jest.mock('./Typography', () => {
 });
 
 describe('TypeChangeNotify', () => {
+  beforeEach(() => {
+    mockAtomValues();
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -122,23 +123,7 @@ describe('TypeChangeNotify', () => {
   });
 
   it('SAIKYOテーマでクラッシュしない', () => {
-    const { useAtomValue } = require('jotai');
-    useAtomValue.mockImplementation((atom: unknown) => {
-      if (atom === require('../store/atoms/station').default) {
-        return {
-          selectedDirection: 'INBOUND',
-          stations: [],
-          selectedBound: null,
-        };
-      }
-      if (atom === require('../store/atoms/theme').themeAtom) {
-        return 'SAIKYO';
-      }
-      if (atom === require('../store/atoms/navigation').default) {
-        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
-      }
-      return {};
-    });
+    mockAtomValues({ theme: 'SAIKYO' });
 
     expect(() => {
       render(<TypeChangeNotify />);
@@ -146,23 +131,7 @@ describe('TypeChangeNotify', () => {
   });
 
   it('JOテーマでクラッシュしない', () => {
-    const { useAtomValue } = require('jotai');
-    useAtomValue.mockImplementation((atom: unknown) => {
-      if (atom === require('../store/atoms/station').default) {
-        return {
-          selectedDirection: 'INBOUND',
-          stations: [],
-          selectedBound: null,
-        };
-      }
-      if (atom === require('../store/atoms/theme').themeAtom) {
-        return 'JO';
-      }
-      if (atom === require('../store/atoms/navigation').default) {
-        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
-      }
-      return {};
-    });
+    mockAtomValues({ theme: 'JO' });
 
     expect(() => {
       render(<TypeChangeNotify />);
@@ -170,23 +139,7 @@ describe('TypeChangeNotify', () => {
   });
 
   it('ODAKYUテーマでクラッシュしない', () => {
-    const { useAtomValue } = require('jotai');
-    useAtomValue.mockImplementation((atom: unknown) => {
-      if (atom === require('../store/atoms/station').default) {
-        return {
-          selectedDirection: 'INBOUND',
-          stations: [],
-          selectedBound: null,
-        };
-      }
-      if (atom === require('../store/atoms/theme').themeAtom) {
-        return 'ODAKYU';
-      }
-      if (atom === require('../store/atoms/navigation').default) {
-        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
-      }
-      return {};
-    });
+    mockAtomValues({ theme: 'ODAKYU' });
 
     expect(() => {
       render(<TypeChangeNotify />);
@@ -194,7 +147,6 @@ describe('TypeChangeNotify', () => {
   });
 
   it('直通運転時に中間路線名が正しく表示される（小田急多摩線→千代田線→常磐線）', () => {
-    const { useAtomValue } = require('jotai');
     const {
       useCurrentLine,
       useCurrentStation,
@@ -312,21 +264,9 @@ describe('TypeChangeNotify', () => {
       line: jobanLine,
     });
 
-    useAtomValue.mockImplementation((atom: unknown) => {
-      if (atom === require('../store/atoms/station').default) {
-        return {
-          selectedDirection: 'INBOUND',
-          stations,
-          selectedBound: { name: '取手', nameRoman: 'Toride' },
-        };
-      }
-      if (atom === require('../store/atoms/theme').themeAtom) {
-        return 'TOKYO_METRO';
-      }
-      if (atom === require('../store/atoms/navigation').default) {
-        return { enabledLanguages: ['JA', 'EN', 'ZH', 'KO'] };
-      }
-      return {};
+    mockAtomValues({
+      stations,
+      selectedBound: { name: '取手', nameRoman: 'Toride' },
     });
 
     const { queryAllByText } = render(<TypeChangeNotify />);
@@ -342,7 +282,6 @@ describe('TypeChangeNotify', () => {
 
   describe('enabledLanguages による表示切替', () => {
     const setupLanguageScenario = (enabledLanguages: string[]) => {
-      const { useAtomValue } = require('jotai');
       const {
         useCurrentLine,
         useCurrentStation,
@@ -402,21 +341,10 @@ describe('TypeChangeNotify', () => {
         line: jobanLine,
       });
 
-      useAtomValue.mockImplementation((atom: unknown) => {
-        if (atom === require('../store/atoms/station').default) {
-          return {
-            selectedDirection: 'INBOUND',
-            stations,
-            selectedBound: { name: '取手', nameRoman: 'Toride' },
-          };
-        }
-        if (atom === require('../store/atoms/theme').themeAtom) {
-          return 'TOKYO_METRO';
-        }
-        if (atom === require('../store/atoms/navigation').default) {
-          return { enabledLanguages };
-        }
-        return {};
+      mockAtomValues({
+        stations,
+        selectedBound: { name: '取手', nameRoman: 'Toride' },
+        enabledLanguages,
       });
     };
 

@@ -1,9 +1,12 @@
 import { randomUUID } from 'expo-crypto';
 import * as SQLite from 'expo-sqlite';
-import { useAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import type { SavedRoute, SavedRouteInput } from '~/models/SavedRoute';
-import navigationState from '~/store/atoms/navigation';
+import navigationState, {
+  presetRoutesAtom,
+  presetsFetchedAtom,
+} from '~/store/atoms/navigation';
 
 // SQLiteの行データ型を定義
 interface SavedRouteRow {
@@ -132,10 +135,9 @@ const ensureDbInitialized = (): Promise<void> => {
 };
 
 export const useSavedRoutes = () => {
-  const [
-    { presetRoutes: routes, presetsFetched: isInitialized },
-    setNavigationAtom,
-  ] = useAtom(navigationState);
+  const routes = useAtomValue(presetRoutesAtom);
+  const isInitialized = useAtomValue(presetsFetchedAtom);
+  const setNavigationAtom = useSetAtom(navigationState);
 
   useEffect(() => {
     ensureDbInitialized()

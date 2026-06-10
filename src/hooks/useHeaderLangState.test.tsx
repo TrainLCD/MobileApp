@@ -2,7 +2,7 @@ import { render, waitFor } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import navigationState from '../store/atoms/navigation';
+import { headerStateAtom } from '../store/atoms/navigation';
 import { useHeaderLangState } from './useHeaderLangState';
 
 jest.mock('jotai', () => ({
@@ -13,6 +13,7 @@ jest.mock('jotai', () => ({
 jest.mock('../store/atoms/navigation', () => ({
   __esModule: true,
   default: { __atom: 'navigation' },
+  headerStateAtom: { __atom: 'headerState' },
 }));
 
 const TestComponent: React.FC = () => {
@@ -30,8 +31,8 @@ describe('useHeaderLangState', () => {
   beforeEach(() => {
     navigationAtomValue = { headerState: 'CURRENT' };
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === navigationState) {
-        return navigationAtomValue;
+      if (atom === headerStateAtom) {
+        return navigationAtomValue.headerState;
       }
       throw new Error('unknown atom');
     });

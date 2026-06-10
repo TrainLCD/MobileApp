@@ -9,6 +9,11 @@ import {
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER,
   TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID,
 } from '../constants/station';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { useBounds } from './useBounds';
 import { useBoundText } from './useBoundText';
 import { useCurrentLine } from './useCurrentLine';
@@ -17,8 +22,8 @@ import { useLoopLine } from './useLoopLine';
 
 jest.mock('jotai', () => ({
   __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 jest.mock('./useBounds', () => ({
@@ -63,6 +68,24 @@ describe('useBoundText', () => {
     typeof useLoopLine
   >;
 
+  // useBoundText が useAtomValue で読むフィールドatomを、atomの同一性で出し分ける
+  const setAtomValues = ({
+    selectedBound,
+    selectedDirection,
+    stations,
+  }: {
+    selectedBound: ReturnType<typeof createStation> | null;
+    selectedDirection: 'INBOUND' | 'OUTBOUND';
+    stations: ReturnType<typeof createStation>[];
+  }) => {
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === selectedBoundAtom) return selectedBound;
+      if (atom === selectedDirectionAtom) return selectedDirection;
+      if (atom === stationsAtom) return stations;
+      return undefined;
+    });
+  };
+
   const shibuya = createStation(1, {
     groupId: 1,
     name: '渋谷',
@@ -101,7 +124,7 @@ describe('useBoundText', () => {
   });
 
   it('selectedBoundがnullの場合、TrainLCDを返す', () => {
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       selectedBound: null,
       selectedDirection: 'INBOUND',
       stations: [],
@@ -122,7 +145,7 @@ describe('useBoundText', () => {
   });
 
   it('通常路線で行先テキストを返す（接尾辞あり）', () => {
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       selectedBound: shibuya,
       selectedDirection: 'INBOUND',
       stations: [shinjuku, shibuya],
@@ -142,7 +165,7 @@ describe('useBoundText', () => {
   });
 
   it('excludePrefixAndSuffix=trueの場合、接尾辞なしで返す', () => {
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       selectedBound: shibuya,
       selectedDirection: 'INBOUND',
       stations: [shinjuku, shibuya],
@@ -175,7 +198,7 @@ describe('useBoundText', () => {
       inboundStationsForLoopLine: [],
       outboundStationsForLoopLine: [],
     });
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       selectedBound: shibuya,
       selectedDirection: 'INBOUND',
       stations: [shinjuku, shibuya],
@@ -192,7 +215,7 @@ describe('useBoundText', () => {
   });
 
   it('複数の行先駅がある場合、・で連結する', () => {
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       selectedBound: shibuya,
       selectedDirection: 'INBOUND',
       stations: [shinjuku, shibuya],
@@ -245,7 +268,7 @@ describe('useBoundText', () => {
     });
 
     it('大江戸線INBOUND、両国以降の駅で経由表示', () => {
-      mockUseAtomValue.mockReturnValue({
+      setAtomValues({
         selectedBound: hikarigaoka,
         selectedDirection: 'INBOUND',
         stations: [],
@@ -264,7 +287,7 @@ describe('useBoundText', () => {
     });
 
     it('大江戸線OUTBOUND、築地市場以前の駅で経由表示', () => {
-      mockUseAtomValue.mockReturnValue({
+      setAtomValues({
         selectedBound: hikarigaoka,
         selectedDirection: 'OUTBOUND',
         stations: [],
@@ -294,7 +317,7 @@ describe('useBoundText', () => {
     });
 
     it('大江戸線、都庁前以外の行先で経由表示', () => {
-      mockUseAtomValue.mockReturnValue({
+      setAtomValues({
         selectedBound: hikarigaoka,
         selectedDirection: 'INBOUND',
         stations: [],
@@ -325,7 +348,7 @@ describe('useBoundText', () => {
     });
 
     it('大江戸線、excludePrefixAndSuffix=trueの場合、経由表示なし', () => {
-      mockUseAtomValue.mockReturnValue({
+      setAtomValues({
         selectedBound: hikarigaoka,
         selectedDirection: 'INBOUND',
         stations: [],

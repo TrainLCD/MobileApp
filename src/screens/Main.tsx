@@ -2,7 +2,7 @@ import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -74,9 +74,16 @@ import LineBoard from '../components/LineBoard';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
-import navigationState from '../store/atoms/navigation';
+import navigationState, {
+  bottomStateAtom,
+  leftStationsAtom,
+} from '../store/atoms/navigation';
 import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
-import stationState from '../store/atoms/station';
+import stationState, {
+  arrivedAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
@@ -113,10 +120,13 @@ const MainScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
 
-  const [{ stations, selectedDirection, arrived }, setStationState] =
-    useAtom(stationState);
-  const [{ leftStations, bottomState }, setNavigationState] =
-    useAtom(navigationState);
+  const stations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const arrived = useAtomValue(arrivedAtom);
+  const setStationState = useSetAtom(stationState);
+  const leftStations = useAtomValue(leftStationsAtom);
+  const bottomState = useAtomValue(bottomStateAtom);
+  const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
   const { devOverlayEnabled } = useAtomValue(tuningState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);

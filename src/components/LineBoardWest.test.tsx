@@ -107,17 +107,19 @@ describe('LineBoardWest', () => {
     stations?: Station[];
     selectedLine?: Line | null;
   }) => {
-    const { leftStationsAtom } = require('~/store/selectors/navigation');
+    const { leftStationsAtom } = require('~/store/atoms/navigation');
     const {
       arrivedAtom,
       approachingAtom,
       stationsAtom,
-    } = require('~/store/selectors/station');
+    } = require('~/store/atoms/station');
+    const { selectedLineAtom } = require('~/store/atoms/line');
     useAtomValue.mockImplementation((a: unknown) => {
       if (a === leftStationsAtom) return leftStations;
       if (a === arrivedAtom) return arrived;
       if (a === approachingAtom) return approaching;
       if (a === stationsAtom) return stations;
+      if (a === selectedLineAtom) return selectedLine;
       return { selectedLine };
     });
   };

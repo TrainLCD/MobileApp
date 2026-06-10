@@ -12,7 +12,7 @@ import {
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import navigationState from '~/store/atoms/navigation';
+import { fetchedTrainTypesAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -171,7 +171,7 @@ export const TrainTypeListModal = ({
   onClose,
   onSelect,
 }: Props) => {
-  const { fetchedTrainTypes } = useAtomValue(navigationState);
+  const fetchedTrainTypes = useAtomValue(fetchedTrainTypesAtom);
   const { height: windowHeight } = useWindowDimensions();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 

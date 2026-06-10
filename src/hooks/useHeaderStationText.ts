@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { headerStateAtom } from '../store/atoms/navigation';
+import { selectedBoundAtom } from '../store/atoms/station';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { isBusLine } from '../utils/line';
 
@@ -21,8 +21,8 @@ export const useHeaderStationText = ({
   headerLangState,
   firstStop,
 }: UseHeaderStationTextOptions): string => {
-  const { headerState } = useAtomValue(navigationState);
-  const { selectedBound } = useAtomValue(stationState);
+  const headerState = useAtomValue(headerStateAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
 
   const isBus = isBusLine(currentStation?.line);
 

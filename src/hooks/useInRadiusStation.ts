@@ -3,10 +3,11 @@ import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
 import type { Station } from '~/@types/graphql';
 import { locationAtom } from '~/store/atoms/location';
-import stationState from '~/store/atoms/station';
+import { stationAtom, stationsAtom } from '~/store/atoms/station';
 
 export const useInRadiusStation = (radius: number) => {
-  const { stations, station } = useAtomValue(stationState);
+  const stations = useAtomValue(stationsAtom);
+  const station = useAtomValue(stationAtom);
 
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;

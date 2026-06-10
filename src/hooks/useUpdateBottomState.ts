@@ -1,6 +1,6 @@
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
-import navigationState from '../store/atoms/navigation';
+import navigationState, { bottomStateAtom } from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { useInterval } from './useInterval';
@@ -10,7 +10,8 @@ import { useTypeWillChange } from './useTypeWillChange';
 import { useValueRef } from './useValueRef';
 
 export const useUpdateBottomState = () => {
-  const [{ bottomState }, setNavigation] = useAtom(navigationState);
+  const bottomState = useAtomValue(bottomStateAtom);
+  const setNavigation = useSetAtom(navigationState);
   const { bottomTransitionInterval } = useAtomValue(tuningState);
   const bottomStateRef = useValueRef(bottomState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);

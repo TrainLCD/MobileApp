@@ -3,9 +3,9 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { locationAtom } from '~/store/atoms/location';
-import navigationState from '~/store/atoms/navigation';
+import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import notifyState from '~/store/atoms/notify';
-import stationState from '~/store/atoms/station';
+import { arrivedAtom, selectedBoundAtom } from '~/store/atoms/station';
 import wrongDirectionAtom, {
   type WrongDirectionState,
 } from '~/store/atoms/wrongDirection';
@@ -34,8 +34,9 @@ const INITIAL_STATE: WrongDirectionState = {
  */
 export const useWrongDirectionDetectorEffect = (): void => {
   const location = useAtomValue(locationAtom);
-  const { arrived, selectedBound } = useAtomValue(stationState);
-  const { autoModeEnabled } = useAtomValue(navigationState);
+  const arrived = useAtomValue(arrivedAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
   const { wrongDirectionNotifyEnabled } = useAtomValue(notifyState);
   const nextStation = useNextStation();
   const { isLoopLine } = useLoopLine();

@@ -25,7 +25,7 @@ import {
 } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { APP_THEME } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
+import { headerStateAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
@@ -98,7 +98,7 @@ const TrainTypeBox: React.FC<Props> = ({
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const { width: windowWidth } = useLandscapeWindowDimensions();
-  const { headerState } = useAtomValue(navigationState);
+  const headerState = useAtomValue(headerStateAtom);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();

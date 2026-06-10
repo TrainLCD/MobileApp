@@ -15,9 +15,13 @@ import {
 } from '~/constants';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
-import navigationState from '~/store/atoms/navigation';
+import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
-import stationState from '../store/atoms/station';
+import {
+  selectedDirectionAtom,
+  stationAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { isBusLine } from '../utils/line';
@@ -26,12 +30,10 @@ import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
 
 export const useSimulationMode = (): void => {
-  const {
-    station: currentStation,
-    stations: rawStations,
-    selectedDirection,
-  } = useAtomValue(stationState);
-  const { autoModeEnabled } = useAtomValue(navigationState);
+  const currentStation = useAtomValue(stationAtom);
+  const rawStations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
 
   const currentStationRef = useRef(currentStation);
   currentStationRef.current = currentStation;

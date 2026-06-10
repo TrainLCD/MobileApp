@@ -17,7 +17,7 @@ import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
 import SelectLine from '../screens/SelectLineScreen';
 import ThemeSettings from '../screens/ThemeSettings';
-import stationState from '../store/atoms/station';
+import { selectedBoundAtom, stationAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 
@@ -29,7 +29,8 @@ const screenOptions: NativeStackNavigationOptions = {
 };
 
 const MainStack: React.FC = () => {
-  const { station, selectedBound } = useAtomValue(stationState);
+  const station = useAtomValue(stationAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 

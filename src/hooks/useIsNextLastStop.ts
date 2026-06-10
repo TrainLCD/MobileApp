@@ -1,11 +1,11 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import stationState from '../store/atoms/station';
+import { selectedBoundAtom } from '../store/atoms/station';
 import { useLoopLine } from './useLoopLine';
 import { useNextStation } from './useNextStation';
 
 export const useIsNextLastStop = (): boolean => {
-  const { selectedBound } = useAtomValue(stationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const nextStation = useNextStation();
   const { isLoopLine } = useLoopLine();
 

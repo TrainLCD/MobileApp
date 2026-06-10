@@ -2,6 +2,7 @@ import { render, waitFor } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
+import type { Station } from '~/@types/graphql';
 import { StopCondition, TrainTypeKind } from '~/@types/graphql';
 import { JOBAN_LINE_IDS } from '~/constants';
 import {
@@ -9,6 +10,7 @@ import {
   createStation,
   createStationNumber,
 } from '~/utils/test/factories';
+import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
@@ -18,8 +20,8 @@ import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 jest.mock('jotai', () => ({
   __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 jest.mock('./useCurrentLine', () => ({
@@ -91,6 +93,24 @@ describe('useNumbering', () => {
       typeof useStationNumberIndexFunc
     >;
 
+  const mockAtomValues = ({
+    arrived,
+    selectedBound,
+  }: {
+    arrived: boolean;
+    selectedBound: Station | null;
+  }) => {
+    mockUseAtomValue.mockImplementation((atom) => {
+      if (atom === arrivedAtom) {
+        return arrived;
+      }
+      if (atom === selectedBoundAtom) {
+        return selectedBound;
+      }
+      return undefined;
+    });
+  };
+
   beforeEach(() => {
     mockUseStationNumberIndexFunc.mockReturnValue(() => 0);
     mockUseCurrentLine.mockReturnValue(createLine(1));
@@ -102,7 +122,7 @@ describe('useNumbering', () => {
   });
 
   it('selectedBoundがnullの場合、undefinedを返す', async () => {
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       selectedBound: null,
     });
@@ -125,7 +145,7 @@ describe('useNumbering', () => {
       threeLetterCode: 'TYO',
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: true,
       selectedBound: currentStation,
     });
@@ -155,7 +175,7 @@ describe('useNumbering', () => {
       threeLetterCode: 'SBY',
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       selectedBound: currentStation,
     });
@@ -186,7 +206,7 @@ describe('useNumbering', () => {
       threeLetterCode: 'NXT',
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: true,
       selectedBound: currentStation,
     });
@@ -209,7 +229,7 @@ describe('useNumbering', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: true,
       selectedBound: currentStation,
     });
@@ -231,7 +251,7 @@ describe('useNumbering', () => {
       threeLetterCode: 'END',
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       selectedBound: boundStation,
     });
@@ -261,7 +281,7 @@ describe('useNumbering', () => {
         threeLetterCode: 'UEN',
       });
 
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         arrived: true,
         selectedBound: currentStation,
       });
@@ -359,7 +379,7 @@ describe('useNumbering', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       selectedBound: currentStation,
     });

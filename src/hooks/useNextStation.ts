@@ -3,7 +3,7 @@ import type { Station } from '~/@types/graphql';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import { memoizeLastCalls } from '~/utils/memoizeLastCalls';
 import reverseStations from '~/utils/reverseStations';
-import stationState from '../store/atoms/station';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
@@ -85,8 +85,8 @@ export const useNextStation = (
   ignorePass = true,
   originStation?: Station
 ): Station | undefined => {
-  const { stations: stationsFromState, selectedDirection } =
-    useAtomValue(stationState);
+  const stationsFromState = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
   const currentStation = useCurrentStation();
   const { isLoopLine } = useLoopLine();
 

@@ -3,8 +3,8 @@ import { useCallback, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import type { PreferredLanguage } from '../models/PreferredLanguage';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { headerStateAtom } from '../store/atoms/navigation';
+import { selectedDirectionAtom } from '../store/atoms/station';
 import { isJapanese } from '../translation';
 import { useLoopLine } from './useLoopLine';
 
@@ -16,8 +16,8 @@ export const useLoopLineBound = (
   boundForKatakana: string;
   stations: Station[];
 } | null => {
-  const { headerState } = useAtomValue(navigationState);
-  const { selectedDirection } = useAtomValue(stationState);
+  const headerState = useAtomValue(headerStateAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
 
   const {
     isLoopLine,

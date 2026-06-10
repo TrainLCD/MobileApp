@@ -6,18 +6,41 @@ import type { Station } from '~/@types/graphql';
 // モジュールをモックしてフックの依存を制御
 jest.mock('jotai', () => ({
   __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 jest.mock('./useCurrentStation', () => ({ useCurrentStation: jest.fn() }));
 jest.mock('./useLoopLine', () => ({ useLoopLine: jest.fn() }));
 jest.mock('../utils/trainTypeString', () => ({ getIsLocal: jest.fn() }));
 
 import { useAtomValue } from 'jotai';
+import { pendingTrainTypeAtom } from '../store/atoms/navigation';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+} from '../store/atoms/station';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useBounds } from './useBounds';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
+
+// useBounds が useAtomValue で読むフィールドatomを、atomの同一性で出し分ける
+const setAtomValues = ({
+  selectedDirection = null,
+  selectedBound = null,
+  pendingTrainType = null,
+}: {
+  selectedDirection?: 'INBOUND' | 'OUTBOUND' | null;
+  selectedBound?: unknown;
+  pendingTrainType?: unknown;
+}) => {
+  (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+    if (atom === selectedDirectionAtom) return selectedDirection;
+    if (atom === selectedBoundAtom) return selectedBound;
+    if (atom === pendingTrainTypeAtom) return pendingTrainType;
+    return undefined;
+  });
+};
 
 const TestComponent: React.FC<{ stations: Station[] }> = ({ stations }) => {
   const { bounds, directionalStops } = useBounds(stations);
@@ -35,14 +58,7 @@ describe('useBounds フック', () => {
   });
 
   it('非環状線・非大江戸線のときは先頭/末尾が bounds になる', () => {
-    // stationState, navigationState の順で返される
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      trainType: 'EXPRESS',
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     // currentStation は未使用のケースなので null
     (useCurrentStation as jest.Mock).mockReturnValue(null);
@@ -72,13 +88,7 @@ describe('useBounds フック', () => {
   });
 
   it('環状線のときは useLoopLine の返す配列が bounds になる', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      trainType: undefined,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     (useCurrentStation as jest.Mock).mockReturnValue(null);
     (getIsLocal as jest.Mock).mockReturnValue(false);
@@ -104,13 +114,7 @@ describe('useBounds フック', () => {
   it('selectedBound があり該当方向の slicedBounds が空なら selectedBound を返す', () => {
     // selectedDirection と selectedBound を返す
     const selectedBound = { id: 99 };
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      trainType: 'EXPRESS',
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND', selectedBound });
 
     (useCurrentStation as jest.Mock).mockReturnValue(null);
     (useLoopLine as jest.Mock).mockReturnValue({
@@ -128,13 +132,7 @@ describe('useBounds フック', () => {
   });
 
   it('OUTBOUND の場合、bounds[1] から directionalStops を返す', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'OUTBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'OUTBOUND' });
 
     (useCurrentStation as jest.Mock).mockReturnValue(null);
     (useLoopLine as jest.Mock).mockReturnValue({
@@ -157,13 +155,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線の場合、主要駅がフィルタリングされた bounds を返す', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     const currentStation = { id: 9930107, groupId: 9930107 }; // 飯田橋
     (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
@@ -191,13 +183,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線で currentStation が見つからない場合、空の bounds を返す', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     const currentStation = { id: 99999, groupId: 99999 }; // 存在しない駅
     (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
@@ -219,13 +205,7 @@ describe('useBounds フック', () => {
   });
 
   it('pendingTrainType が null で環状線の場合、loop の bounds を返す', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     (useCurrentStation as jest.Mock).mockReturnValue(null);
 
@@ -247,13 +227,10 @@ describe('useBounds フック', () => {
   });
 
   it('pendingTrainType が local 以外で環状線の場合、先頭/末尾の bounds を返す', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
+    setAtomValues({
       selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
       pendingTrainType: { kind: 'RAPID' },
-    }));
+    });
 
     (useCurrentStation as jest.Mock).mockReturnValue(null);
 
@@ -281,13 +258,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線で築地市場以北の場合、都庁前内回りがフィルタリングされる', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'OUTBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'OUTBOUND' });
 
     // 築地市場以北の駅（id >= 9930119）
     const currentStation = { id: 9930120, groupId: 9930120 };
@@ -314,13 +285,7 @@ describe('useBounds フック', () => {
   });
 
   it('directionalStops が3つ以上の場合、先頭2つにスライスされる', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     (useCurrentStation as jest.Mock).mockReturnValue(null);
 
@@ -350,13 +315,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線で都庁前駅(内回り)が現在駅の場合、光が丘方面も表示される', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     // 都庁前駅（内回り: 9930101）が現在駅
     const currentStation = { id: 9930101, groupId: 9930101 };
@@ -387,13 +346,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線で都庁前駅(外回り)が現在駅の場合、光が丘方面も表示される', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'OUTBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'OUTBOUND' });
 
     // 都庁前駅（外回り: 9930100）が現在駅
     const currentStation = { id: 9930100, groupId: 9930100 };
@@ -421,13 +374,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線で都庁前駅が現在駅で光が丘が既にoutbound側にある場合、重複して追加されない', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'OUTBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'OUTBOUND' });
 
     // 都庁前駅（内回り: 9930101）が現在駅
     const currentStation = { id: 9930101, groupId: 9930101 };
@@ -461,13 +408,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線で都庁前駅が現在駅で光が丘が配列に存在しない場合、outboundは空のまま', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     // 都庁前駅（内回り: 9930101）が現在駅
     const currentStation = { id: 9930101, groupId: 9930101 };
@@ -498,13 +439,7 @@ describe('useBounds フック', () => {
   });
 
   it('大江戸線で都庁前以外の駅が現在駅の場合、光が丘追加の特別処理は適用されない', () => {
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      selectedDirection: 'INBOUND',
-      selectedBound: undefined,
-    }));
-    (useAtomValue as jest.Mock).mockImplementationOnce(() => ({
-      pendingTrainType: null,
-    }));
+    setAtomValues({ selectedDirection: 'INBOUND' });
 
     // 飯田橋（9930107）が現在駅
     const currentStation = { id: 9930107, groupId: 9930107 };

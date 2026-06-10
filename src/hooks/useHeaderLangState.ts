@@ -1,10 +1,10 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
+import { headerStateAtom } from '../store/atoms/navigation';
 
 export const useHeaderLangState = (): HeaderLangState => {
-  const { headerState } = useAtomValue(navigationState);
+  const headerState = useAtomValue(headerStateAtom);
 
   return useMemo(
     () =>

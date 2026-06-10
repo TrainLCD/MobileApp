@@ -42,11 +42,14 @@ import {
 } from '../hooks';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
+import navigationState, {
+  autoModeEnabledAtom,
+  isAppLatestAtom,
+} from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
 import speechState from '../store/atoms/speech';
-import stationState from '../store/atoms/station';
+import { selectedBoundAtom } from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import NewReportModal from './NewReportModal';
@@ -60,11 +63,12 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const { selectedBound } = useAtomValue(stationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const { untouchableModeEnabled, devOverlayEnabled } =
     useAtomValue(tuningState);
-  const [{ autoModeEnabled, isAppLatest }, setNavigation] =
-    useAtom(navigationState);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
+  const isAppLatest = useAtomValue(isAppLatestAtom);
+  const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);

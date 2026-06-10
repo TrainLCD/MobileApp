@@ -7,7 +7,7 @@ import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
 import { ASYNC_STORAGE_KEYS } from '../constants';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
-import stationState from '../store/atoms/station';
+import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
 import { isDevApp } from '../utils/isDevApp';
@@ -36,7 +36,8 @@ const EN_PLAYBACK_DELAY_MS = 100;
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
-  const { arrived, selectedBound } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const { ttsJaVoiceName, ttsEnVoiceName } = useAtomValue(tuningState);
   const setTuning = useSetAtom(tuningState);
   const currentLine = useCurrentLine();

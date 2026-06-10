@@ -11,12 +11,12 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
+import { enabledLanguagesAtom } from '~/store/atoms/navigation';
+import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
-import { enabledLanguagesAtom } from '~/store/selectors/navigation';
-import { arrivedAtom } from '~/store/selectors/station';
 import getStationNameR from '~/utils/getStationNameR';
 import { RFValue } from '~/utils/rfValue';
-import lineState from '../store/atoms/line';
+import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
@@ -506,7 +506,7 @@ const LineBoardToei: React.FC<Props> = ({
   hasTerminus,
   lineColors,
 }: Props) => {
-  const { selectedLine } = useAtomValue(lineState);
+  const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
 
   const dim = useLandscapeWindowDimensions();
