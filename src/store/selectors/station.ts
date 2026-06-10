@@ -8,3 +8,4 @@ import stationState from '~/store/atoms/station';
 export const arrivedAtom = atom((get) => get(stationState).arrived);
 export const approachingAtom = atom((get) => get(stationState).approaching);
 export const stationsAtom = atom((get) => get(stationState).stations);
+export const selectedBoundAtom = atom((get) => get(stationState).selectedBound);

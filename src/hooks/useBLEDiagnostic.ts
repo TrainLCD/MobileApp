@@ -8,7 +8,11 @@ import {
   BLE_TARGET_SERVICE_UUID,
 } from 'react-native-dotenv';
 import { parenthesisRegexp } from '../constants/regexp';
-import stationState from '../store/atoms/station';
+import {
+  approachingAtom,
+  arrivedAtom,
+  selectedBoundAtom,
+} from '../store/selectors/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayNextStation } from './useDisplayNextStation';
@@ -18,7 +22,11 @@ import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 const manager = new BleManager();
 
 export const useBLEDiagnostic = (): void => {
-  const { arrived, approaching, selectedBound } = useAtomValue(stationState);
+  // stationState全体を購読すると無関係なフィールド(station等)の更新でも
+  // 再レンダーされるため、必要なフィールドの派生atomに購読を絞る
+  const arrived = useAtomValue(arrivedAtom);
+  const approaching = useAtomValue(approachingAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const [device, setDevice] = useState<Device | null>(null);
 
   const station = useCurrentStation();
