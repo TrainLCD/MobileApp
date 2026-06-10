@@ -37,7 +37,7 @@ const TOKYO_METRO: ThemeTemplate = {
 
 // 文言の出典: 東急東横線 (w0s.jp 東急電車資料室)・東急多摩川線 (現行) 車内自動放送。
 // - 駅名は「次は◯◯、◯◯です」と2回読みが公式 (終点時は「次は◯◯、終点です」)。
-// - 乗換案内は「◯◯線ご利用のお客様はお乗り換えです」(「を」は入らない)。
+// - 乗換案内は「◯◯線をご利用のお客様はお乗り換えです」。
 // - 他社線直通の境界駅では「この電車は◯◯線直通、…ゆきです。」+ 自社線への御礼を放送する。
 const TY: ThemeTemplate = {
   NEXT: t(
@@ -47,7 +47,7 @@ const TY: ThemeTemplate = {
     '{#if hasTrainType}{trainTypeJa}{/if}{boundForJa}ゆきです。',
     '{/if}',
     '次は{nextStationJa}、{#if isNextStopTerminus}終点{:else}{nextStationJa}{/if}です。',
-    '{#if hasTransferLines}{transferLinesListJa}ご利用のお客様はお乗り換えです。{/if}',
+    '{#if hasTransferLines}{transferLinesListJa}をご利用のお客様はお乗り換えです。{/if}',
     '{#if isNextStopThroughBoundary}',
     '{vehicleJa}は{nextLineJa}直通、{#if hasTrainType}{trainTypeJa}{/if}{boundForJa}ゆきです。',
     '{currentLineJa}をご利用くださいまして、ありがとうございました。',
@@ -55,7 +55,7 @@ const TY: ThemeTemplate = {
   ),
   ARRIVING: t(
     'まもなく{nextStationJa}{#if isNextStopTerminus}、終点{/if}です。',
-    '{#if hasTransferLines}{transferLinesListJa}ご利用のお客様はお乗り換えです。{/if}',
+    '{#if hasTransferLines}{transferLinesListJa}をご利用のお客様はお乗り換えです。{/if}',
     '{#if isNextStopTerminus}本日も{currentLineJa}をご利用くださいまして、ありがとうございました。{/if}',
     '{#if isNextStopThroughBoundary}',
     '{vehicleJa}は{nextLineJa}直通、{#if hasTrainType}{trainTypeJa}{/if}{boundForJa}ゆきです。',
