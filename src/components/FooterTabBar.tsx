@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
+import { GlassView } from 'expo-glass-effect';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useRef } from 'react';
 import {
@@ -13,14 +13,26 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { LIQUID_GLASS_AVAILABLE } from '~/utils/liquidGlass';
 
 type FooterTab = 'home' | 'search' | 'settings';
 
 export const FOOTER_BASE_HEIGHT = 72; // Figma: h=72px
 
-// iOS 26+ かつ Xcode 26 ビルドでのみ true。Android や旧 iOS では従来バーへフォールバックする
-const LIQUID_GLASS_AVAILABLE =
-  Platform.OS === 'ios' && isLiquidGlassAvailable();
+const GLASS_BAR_HEIGHT = 64;
+const GLASS_BAR_MIN_BOTTOM_MARGIN = 12;
+
+// タブバーが画面下部で占有する実高さ。描画モード（Liquid Glass / 従来バー）で
+// 高さが異なるため、各画面の bottom padding 計算は必ずこのフックを使うこと
+export const useFooterHeight = (): number => {
+  const insets = useSafeAreaInsets();
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const safePad = Math.max(insets.bottom, Platform.OS === 'android' ? 8 : 0);
+  if (LIQUID_GLASS_AVAILABLE && !isLEDTheme) {
+    return GLASS_BAR_HEIGHT + Math.max(safePad, GLASS_BAR_MIN_BOTTOM_MARGIN);
+  }
+  return FOOTER_BASE_HEIGHT + safePad;
+};
 
 export type ButtonLayout = {
   x: number;
@@ -64,8 +76,8 @@ const styles = StyleSheet.create({
   // iOS 26 のフローティングタブバーを模したカプセル形状。
   // 占有高さが FOOTER_BASE_HEIGHT + insets.bottom に収まるよう高さを抑えている
   glassBar: {
-    height: 64,
-    borderRadius: 32,
+    height: GLASS_BAR_HEIGHT,
+    borderRadius: GLASS_BAR_HEIGHT / 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -183,7 +195,12 @@ const FooterTabBar: React.FC<Props> = ({
       <View pointerEvents="box-none" style={styles.container}>
         <GlassView
           glassEffectStyle="regular"
-          style={[styles.glassBar, { marginBottom: Math.max(safePad, 12) }]}
+          style={[
+            styles.glassBar,
+            {
+              marginBottom: Math.max(safePad, GLASS_BAR_MIN_BOTTOM_MARGIN),
+            },
+          ]}
         >
           {tabButtons}
         </GlassView>
