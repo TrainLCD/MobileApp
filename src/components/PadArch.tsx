@@ -611,6 +611,45 @@ const PadArch: React.FC<Props> = ({
     [getStationNameLeft, getStationNameTop]
   );
 
+  // 区間ごとのクリップ用スタイルとdarken()の結果を再レンダー間で再利用する
+  const segmentLayouts = useMemo(
+    () =>
+      colorSegments.map((seg) => ({
+        seg,
+        containerStyle: {
+          position: 'absolute' as const,
+          bottom: windowHeight - seg.yEnd,
+          width: windowWidth,
+          height: seg.yEnd - seg.yStart,
+          overflow: 'hidden' as const,
+        },
+        svgStyle: {
+          position: 'absolute' as const,
+          bottom: seg.yEnd - windowHeight,
+        },
+        darkColor: darken(0.3, seg.color),
+      })),
+    [colorSegments, windowWidth, windowHeight]
+  );
+
+  // 駅ごとのドット/駅名スタイルと通過判定を事前計算し、レンダー本体での
+  // 駅数×スタイルオブジェクト生成とgetIsPassの再評価を避ける
+  const stationRenderInfos = useMemo(
+    () =>
+      stations.map((s, i) => {
+        if (!s) {
+          return null;
+        }
+        const isPass = getIsPass(s);
+        return {
+          isPass,
+          dotStyle: getCustomDotStyle(i, stations, arrived, isPass),
+          nameStyle: getCustomStationNameStyle(i),
+        };
+      }),
+    [stations, arrived, getCustomDotStyle, getCustomStationNameStyle]
+  );
+
   return (
     <>
       <Transfers
@@ -637,34 +676,27 @@ const PadArch: React.FC<Props> = ({
             { height: fillHeight },
           ]}
         >
-          {colorSegments.map((seg) => (
-            <View
-              key={`dk-${seg.color}-${seg.yStart}`}
-              style={{
-                position: 'absolute',
-                bottom: windowHeight - seg.yEnd,
-                width: windowWidth,
-                height: seg.yEnd - seg.yStart,
-                overflow: 'hidden',
-              }}
-            >
-              <Svg
-                style={{
-                  position: 'absolute',
-                  bottom: seg.yEnd - windowHeight,
-                }}
-                width={windowWidth}
-                height={windowHeight}
-                fill="transparent"
+          {segmentLayouts.map(
+            ({ seg, containerStyle, svgStyle, darkColor }) => (
+              <View
+                key={`dk-${seg.color}-${seg.yStart}`}
+                style={containerStyle}
               >
-                <Path
-                  d={paths.shadow}
-                  stroke={darken(0.3, seg.color)}
-                  strokeWidth={strokeWidth}
-                />
-              </Svg>
-            </View>
-          ))}
+                <Svg
+                  style={svgStyle}
+                  width={windowWidth}
+                  height={windowHeight}
+                  fill="transparent"
+                >
+                  <Path
+                    d={paths.shadow}
+                    stroke={darkColor}
+                    strokeWidth={strokeWidth}
+                  />
+                </Svg>
+              </View>
+            )
+          )}
         </Animated.View>
         {/* 主色層: 区間ごとにViewクリッピングで色分け */}
         <Animated.View
@@ -674,22 +706,10 @@ const PadArch: React.FC<Props> = ({
             { height: fillHeight },
           ]}
         >
-          {colorSegments.map((seg) => (
-            <View
-              key={`mn-${seg.color}-${seg.yStart}`}
-              style={{
-                position: 'absolute',
-                bottom: windowHeight - seg.yEnd,
-                width: windowWidth,
-                height: seg.yEnd - seg.yStart,
-                overflow: 'hidden',
-              }}
-            >
+          {segmentLayouts.map(({ seg, containerStyle, svgStyle }) => (
+            <View key={`mn-${seg.color}-${seg.yStart}`} style={containerStyle}>
               <Svg
-                style={{
-                  position: 'absolute',
-                  bottom: seg.yEnd - windowHeight,
-                }}
+                style={svgStyle}
                 width={windowWidth}
                 height={windowHeight}
                 fill="transparent"
@@ -724,9 +744,9 @@ const PadArch: React.FC<Props> = ({
 
       <View style={styles.stationNames}>
         {stations.map((s, i) => {
-          if (!s) return null;
-          // 同一駅 s に対して getIsPass を複数回呼ばないように1回だけ計算してreuseする。
-          const isPass = getIsPass(s);
+          const renderInfo = stationRenderInfos[i];
+          if (!s || !renderInfo) return null;
+          const { isPass, dotStyle, nameStyle } = renderInfo;
           return (
             <React.Fragment key={s.id}>
               <View
@@ -735,14 +755,14 @@ const PadArch: React.FC<Props> = ({
                   (arrived && i === stations.length - 2) || isPass
                     ? styles.arrivedCircle
                     : undefined,
-                  getCustomDotStyle(i, stations, arrived, isPass),
+                  dotStyle,
                 ]}
               />
               <View
                 style={[
                   styles.stationNameContainer,
                   dynamicStyles.stationNameContainer,
-                  getCustomStationNameStyle(i),
+                  nameStyle,
                 ]}
               >
                 {numberingInfo[i] ? (

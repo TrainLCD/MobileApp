@@ -45,6 +45,7 @@ jest.mock('~/utils/isPass', () => ({
 }));
 
 jest.mock('./LineBoard/shared/components', () => ({
+  BlinkingChevron: jest.fn(() => null),
   EmptyStationNameCell: jest.fn(() => null),
   LineDot: jest.fn(() => null),
   StationName: jest.fn(() => null),
@@ -142,8 +143,8 @@ describe('LineBoardEast', () => {
     );
   });
 
-  it('ChevronTYコンポーネントが表示される', () => {
-    const { ChevronTY } = require('./ChevronTY');
+  it('点滅チェブロンが表示される', () => {
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardEast
         stations={mockStations}
@@ -151,7 +152,7 @@ describe('LineBoardEast', () => {
         hasTerminus={false}
       />
     );
-    expect(ChevronTY).toHaveBeenCalled();
+    expect(BlinkingChevron).toHaveBeenCalled();
   });
 
   it('StationNameコンポーネントが各駅に対してレンダリングされる', () => {
@@ -216,7 +217,7 @@ describe('LineBoardEast', () => {
   });
 
   it('カスタムchevronColorPairでレンダリングされる', () => {
-    const { ChevronTY } = require('./ChevronTY');
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardEast
         stations={mockStations}
@@ -225,15 +226,15 @@ describe('LineBoardEast', () => {
         chevronColorPair={['ORANGE', 'BLUE']}
       />
     );
-    // useIntervalがモックされているため初期値chevronColorPair[1]のまま
-    expect(ChevronTY).toHaveBeenCalledWith(
-      expect.objectContaining({ color: 'BLUE' }),
+    // 初期色=pair[1]、切替色=pair[0]の順でBlinkingChevronへ渡される
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['BLUE', 'ORANGE'] }),
       undefined
     );
   });
 
   it('chevronColorPair未指定時はデフォルトのBLUEが初期値になる', () => {
-    const { ChevronTY } = require('./ChevronTY');
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardEast
         stations={mockStations}
@@ -241,9 +242,9 @@ describe('LineBoardEast', () => {
         hasTerminus={false}
       />
     );
-    // デフォルトペア['RED','BLUE']の[1]が初期値
-    expect(ChevronTY).toHaveBeenCalledWith(
-      expect.objectContaining({ color: 'BLUE' }),
+    // デフォルトペア['RED','BLUE']から初期色BLUE・切替色REDの順になる
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['BLUE', 'RED'] }),
       undefined
     );
   });

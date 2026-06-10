@@ -206,13 +206,17 @@ export const useRefreshLeftStations = (): void => {
       loopLine && getIsLocal(trainType)
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
-    setNavigation((prev) => ({
-      ...prev,
-      leftStations:
-        leftStations[0]?.groupId !== prev.leftStations[0]?.groupId
-          ? leftStations
-          : prev.leftStations,
-    }));
+    setNavigation((prev) => {
+      // 先頭駅が同じでもリストの中身が変わることがある
+      // (例: テーマをJR西日本風/LEDへ切り替えると通過駅が除外される)ため、
+      // 全要素を比較して差分があるときだけ置き換える。
+      const isSameList =
+        leftStations.length === prev.leftStations.length &&
+        leftStations.every(
+          (s, i) => s.groupId === prev.leftStations[i]?.groupId
+        );
+      return isSameList ? prev : { ...prev, leftStations };
+    });
   }, [
     getStations,
     getStationsForLoopLine,

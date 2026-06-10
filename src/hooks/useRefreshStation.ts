@@ -268,24 +268,31 @@ export const useRefreshStation = (): void => {
       return;
     }
 
-    setStation((prev) => ({
-      ...prev,
-      approaching: !isArrived && !getIsPass(nearestStation) && isApproaching,
-      arrived: isArrived,
-      station:
+    // 値が変わらない場合はprevをそのまま返し、新オブジェクト生成による
+    // 全購読者への不要な再レンダー通知を避ける
+    setStation((prev) => {
+      const approaching =
+        !isArrived && !getIsPass(nearestStation) && isApproaching;
+      const station =
         isArrived && prev.station?.id !== nearestStation.id
           ? nearestStation
-          : prev.station,
-    }));
+          : prev.station;
+      if (
+        prev.approaching === approaching &&
+        prev.arrived === isArrived &&
+        prev.station === station
+      ) {
+        return prev;
+      }
+      return { ...prev, approaching, arrived: isArrived, station };
+    });
 
     if (isArrived && !getIsPass(nearestStation)) {
-      setNavigation((prev) => ({
-        ...prev,
-        stationForHeader:
-          prev.stationForHeader?.id !== nearestStation.id
-            ? nearestStation
-            : prev.stationForHeader,
-      }));
+      setNavigation((prev) =>
+        prev.stationForHeader?.id !== nearestStation.id
+          ? { ...prev, stationForHeader: nearestStation }
+          : prev
+      );
     }
   }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
 };

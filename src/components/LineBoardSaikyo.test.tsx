@@ -23,7 +23,11 @@ jest.mock('~/hooks/useScale', () => ({
 }));
 
 jest.mock('~/store/selectors/isEn', () => ({
-  isEnAtom: {},
+  isEnAtom: { __brand: 'isEnAtom' },
+}));
+
+jest.mock('~/store/selectors/station', () => ({
+  arrivedAtom: { __brand: 'arrivedAtom' },
 }));
 
 jest.mock('~/utils/isTablet', () => ({
@@ -45,6 +49,7 @@ jest.mock('./ChevronTY', () => ({
 }));
 
 jest.mock('./LineBoard/shared/components', () => ({
+  BlinkingChevron: jest.fn(() => null),
   EmptyStationNameCell: jest.fn(() => null),
   LineDot: jest.fn(() => null),
   StationName: jest.fn(() => null),
@@ -83,9 +88,19 @@ describe('LineBoardSaikyo', () => {
   ];
 
   beforeEach(() => {
-    useAtomValue.mockReturnValue({
-      station: mockStations[0],
-      arrived: true,
+    // arrivedAtom/isEnAtom(派生atom)とその他のatomで返す値を分ける
+    useAtomValue.mockImplementation((atomVal: unknown) => {
+      const brand = (atomVal as { __brand?: string } | null)?.__brand;
+      if (brand === 'arrivedAtom') {
+        return true;
+      }
+      if (brand === 'isEnAtom') {
+        return false;
+      }
+      return {
+        station: mockStations[0],
+        arrived: true,
+      };
     });
     useCurrentLine.mockReturnValue(mockLine);
     useDisplayCurrentStation.mockReturnValue(mockStations[0]);
@@ -150,8 +165,8 @@ describe('LineBoardSaikyo', () => {
     );
   });
 
-  it('ChevronTYコンポーネントが表示される', () => {
-    const { ChevronTY } = require('./ChevronTY');
+  it('点滅チェブロンが表示される', () => {
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardSaikyo
         stations={mockStations}
@@ -159,11 +174,8 @@ describe('LineBoardSaikyo', () => {
         hasTerminus={false}
       />
     );
-    expect(ChevronTY).toHaveBeenCalled();
-    expect(ChevronTY).toHaveBeenCalledWith(
-      expect.objectContaining({
-        color: expect.any(String),
-      }),
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['RED', 'WHITE'] }),
       undefined
     );
     expect(useCurrentLine).toHaveBeenCalled();
@@ -217,7 +229,7 @@ describe('LineBoardSaikyo', () => {
     );
   });
 
-  it('useIntervalフックが1秒間隔で呼ばれる', () => {
+  it('点滅処理はボード本体ではなくBlinkingChevronに委譲される', () => {
     const { useInterval } = require('~/hooks');
     render(
       <LineBoardSaikyo
@@ -226,7 +238,8 @@ describe('LineBoardSaikyo', () => {
         hasTerminus={false}
       />
     );
-    expect(useInterval).toHaveBeenCalledWith(expect.any(Function), 1000);
+    // 毎秒の点滅で全セルが再レンダーされないよう、ボード本体はintervalを持たない
+    expect(useInterval).not.toHaveBeenCalled();
   });
 
   it('空の駅がある場合でもエラーなくレンダリングされる', () => {

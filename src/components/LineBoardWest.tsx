@@ -16,9 +16,13 @@ import {
 } from '~/hooks';
 import { APP_THEME } from '~/models/Theme';
 import lineState from '~/store/atoms/line';
-import navigationState from '~/store/atoms/navigation';
-import stationState from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
+import { leftStationsAtom } from '~/store/selectors/navigation';
+import {
+  approachingAtom,
+  arrivedAtom,
+  stationsAtom,
+} from '~/store/selectors/station';
 import getStationNameR from '~/utils/getStationNameR';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
@@ -164,7 +168,7 @@ const useStationProgress = (
   index: number,
   stationInLoop: Station
 ) => {
-  const { leftStations } = useAtomValue(navigationState);
+  const leftStations = useAtomValue(leftStationsAtom);
   const station = useCurrentStation();
   // 現在地基準の現在駅。到着取りこぼしで記録上の現在駅が古いとき、ヘッダーの
   // 「まもなく」と一致する側へ前方補正された駅が返る。
@@ -318,7 +322,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
 }: StationNameCellProps) => {
-  const { stations: allStations } = useAtomValue(stationState);
+  const allStations = useAtomValue(stationsAtom);
   const isEn = useAtomValue(isEnAtom);
   const { width: windowWidth } = useLandscapeWindowDimensions();
 
@@ -420,7 +424,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
 const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const { selectedLine } = useAtomValue(lineState);
-  const { arrived, approaching } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  const approaching = useAtomValue(approachingAtom);
   const barWidth = useBarWidth();
   const dim = useLandscapeWindowDimensions();
 
