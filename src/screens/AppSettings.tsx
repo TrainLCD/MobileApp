@@ -21,10 +21,7 @@ import {
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import Animated from 'react-native-reanimated';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardChevron } from '~/components/CardChevron';
 import { Heading } from '~/components/Heading';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -33,7 +30,7 @@ import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { isBetaBuild } from '~/utils/isBetaBuild';
 import { isDevApp } from '~/utils/isDevApp';
-import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
+import FooterTabBar, { useFooterHeight } from '../components/FooterTabBar';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
@@ -185,7 +182,7 @@ const AppSettingsScreen: React.FC = () => {
     useState<ItemLayout | null>(null);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
-  const { bottom: safeAreaBottom } = useSafeAreaInsets();
+  const footerHeight = useFooterHeight();
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const navigation = useNavigation();
@@ -374,7 +371,7 @@ const AppSettingsScreen: React.FC = () => {
           contentContainerStyle={[
             styles.listContainerStyle,
             headerHeight ? { paddingTop: headerHeight } : null,
-            { paddingBottom: FOOTER_BASE_HEIGHT + safeAreaBottom },
+            { paddingBottom: footerHeight },
           ]}
         >
           {/* パーソナライズセクション */}

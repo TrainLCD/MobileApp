@@ -147,6 +147,7 @@ jest.mock('../components/FooterTabBar', () => {
     __esModule: true,
     default: FooterTabBar,
     FOOTER_BASE_HEIGHT: 72,
+    useFooterHeight: () => 80,
   };
 });
 
