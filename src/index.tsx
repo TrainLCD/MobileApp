@@ -11,7 +11,7 @@ import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { useEffect } from 'react';
+import React, { StrictMode, useEffect } from 'react';
 import { Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -120,7 +120,9 @@ const App: React.FC = () => {
                 <DeepLinkProvider>
                   <QuickActionsProvider>
                     <PortalProvider>
-                      <AppContent />
+                      <StrictMode>
+                        <AppContent />
+                      </StrictMode>
                     </PortalProvider>
                   </QuickActionsProvider>
                   <GlobalToast />
