@@ -195,6 +195,10 @@ describe('playAudio', () => {
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
     expect(onFinish).not.toHaveBeenCalled();
     expect(mock.listenerRemove).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[ttsAudioPlayer] playback stalled, aborting:',
+      'stalled.mp3'
+    );
 
     warnSpy.mockRestore();
   });
