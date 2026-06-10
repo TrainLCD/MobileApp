@@ -485,6 +485,7 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
         '90km/h'
       );
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent('0m');
     });
 
     it('オートモード中はrawLocationが無くてもシミュレーション速度を表示する', () => {
@@ -500,6 +501,7 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
         '50km/h'
       );
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent('0m');
     });
 
     it('オートモードが無効の場合はrawLocationAtomの速度を表示する', () => {
@@ -516,6 +518,9 @@ describe('DevOverlay', () => {
       const { getByTestId } = render(<DevOverlay />);
       expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
         '36km/h'
+      );
+      expect(getByTestId('dev-overlay-accuracy-value')).toHaveTextContent(
+        '15m'
       );
     });
   });
