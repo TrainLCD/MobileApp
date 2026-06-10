@@ -1,5 +1,7 @@
 import {
   playAudio,
+  STALL_CHECK_INTERVAL_MS,
+  STALL_TIMEOUT_MS,
   safeRemoveListener,
   safeRemovePlayer,
 } from './ttsAudioPlayer';
@@ -15,19 +17,22 @@ type StatusCallback = (status: {
   error?: string;
 }) => void;
 
-const createMockPlayer = () => {
+const createMockPlayer = (opts?: { playing?: boolean }) => {
   let statusCallback: StatusCallback | null = null;
   const listenerRemove = jest.fn();
+  const player = {
+    playing: opts?.playing ?? false,
+    currentTime: 0,
+    addListener: jest.fn((_event: string, callback: StatusCallback) => {
+      statusCallback = callback;
+      return { remove: listenerRemove };
+    }),
+    play: jest.fn(),
+    pause: jest.fn(),
+    remove: jest.fn(),
+  };
   return {
-    player: {
-      addListener: jest.fn((_event: string, callback: StatusCallback) => {
-        statusCallback = callback;
-        return { remove: listenerRemove };
-      }),
-      play: jest.fn(),
-      pause: jest.fn(),
-      remove: jest.fn(),
-    },
+    player,
     listenerRemove,
     emitStatus: (status: { didJustFinish?: boolean; error?: string }) => {
       statusCallback?.(status);
@@ -86,12 +91,15 @@ describe('safeRemovePlayer', () => {
 
 describe('playAudio', () => {
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.clearAllMocks();
   });
 
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
   });
+
   it('再生完了時に onFinish を呼ぶ', () => {
     const mock = createMockPlayer();
     mockCreateAudioPlayer.mockReturnValue(mock.player);
@@ -168,5 +176,112 @@ describe('playAudio', () => {
     expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
       uri: '/path/to/audio.mp3',
     });
+  });
+
+  it('再生位置が進まないままの場合はストールとして onError を呼ぶ', () => {
+    // Androidではネイティブエラーや音声フォーカス喪失でプレイヤーが
+    // 停止してもイベントが届かないため、ウォッチドッグで検知する
+    const mock = createMockPlayer({ playing: false });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'stalled.mp3', onFinish, onError });
+
+    jest.advanceTimersByTime(STALL_TIMEOUT_MS + STALL_CHECK_INTERVAL_MS);
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(expect.any(Error));
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(mock.listenerRemove).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[ttsAudioPlayer] playback stalled, aborting:',
+      'stalled.mp3'
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it('playing=true の間はストール扱いしない', () => {
+    const mock = createMockPlayer({ playing: true });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'long.mp3', onFinish, onError });
+
+    jest.advanceTimersByTime(STALL_TIMEOUT_MS * 3);
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(onFinish).not.toHaveBeenCalled();
+  });
+
+  it('currentTime が進んでいる間はストール扱いしない', () => {
+    const mock = createMockPlayer({ playing: false });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'progressing.mp3', onFinish, onError });
+
+    // ポーリングごとに再生位置を進める
+    for (let i = 0; i < (STALL_TIMEOUT_MS / STALL_CHECK_INTERVAL_MS) * 3; i++) {
+      mock.player.currentTime += 1;
+      jest.advanceTimersByTime(STALL_CHECK_INTERVAL_MS);
+    }
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(onFinish).not.toHaveBeenCalled();
+  });
+
+  it('再生完了後はウォッチドッグが停止する', () => {
+    const mock = createMockPlayer({ playing: false });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'finished.mp3', onFinish, onError });
+
+    mock.emitStatus({ didJustFinish: true });
+    jest.advanceTimersByTime(STALL_TIMEOUT_MS * 3);
+
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('listener.remove() 後はウォッチドッグが停止する', () => {
+    const mock = createMockPlayer({ playing: false });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    const handle = playAudio({ uri: 'removed.mp3', onFinish, onError });
+
+    handle.listener.remove();
+    jest.advanceTimersByTime(STALL_TIMEOUT_MS * 3);
+
+    expect(onError).not.toHaveBeenCalled();
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(mock.listenerRemove).toHaveBeenCalledTimes(1);
+  });
+
+  it('プレイヤーのプロパティ参照が例外を投げた場合は onError で復帰する', () => {
+    const mock = createMockPlayer();
+    Object.defineProperty(mock.player, 'playing', {
+      get: () => {
+        throw new Error('player released');
+      },
+    });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'released.mp3', onFinish, onError });
+
+    jest.advanceTimersByTime(STALL_CHECK_INTERVAL_MS);
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onFinish).not.toHaveBeenCalled();
   });
 });
