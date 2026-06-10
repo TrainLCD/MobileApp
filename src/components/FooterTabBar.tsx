@@ -16,6 +16,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnUI } from 'react-native-worklets';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { LIQUID_GLASS_AVAILABLE } from '~/utils/liquidGlass';
@@ -141,7 +142,10 @@ const TabButton: React.FC<TabButtonProps> = ({
   const pillProgress = useSharedValue(0);
 
   useEffect(() => {
-    pillProgress.value = withSpring(active ? 1 : 0, ACTIVE_PILL_SPRING);
+    scheduleOnUI(() => {
+      'worklet';
+      pillProgress.value = withSpring(active ? 1 : 0, ACTIVE_PILL_SPRING);
+    });
   }, [active, pillProgress]);
 
   const handlePressIn = useCallback(() => {
