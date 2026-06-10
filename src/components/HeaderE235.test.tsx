@@ -80,13 +80,16 @@ const mockUseAtomValue = useAtomValue as jest.MockedFunction<
 
 describe('HeaderE235', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     // 渡されたatomの同一性で読み出し値を出し分ける
     mockUseAtomValue.mockImplementation((a: unknown) => {
       if (a === stationsAtom) return [];
       if (a === headerStateAtom) return 'CURRENT';
       return undefined;
     });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('Null safety fixes', () => {

@@ -68,7 +68,6 @@ describe('useInitialNearbyStation', () => {
   const mockUseSetAtom = useSetAtom as unknown as jest.Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
     jest.spyOn(Alert, 'alert').mockImplementation();
 
     mockUseSetAtom.mockImplementation((atom) => {
@@ -83,6 +82,10 @@ describe('useInitialNearbyStation', () => {
 
     // stationAtom / locationAtom
     mockUseAtomValue.mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('station が null のときは nearbyStationLoading を返す', () => {

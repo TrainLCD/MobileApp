@@ -84,7 +84,6 @@ describe('TrainTypeBoxJL', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
     // 渡されたatomの同一性で読み出し値を出し分ける
     (useAtomValue as jest.Mock).mockImplementation((a: unknown) => {
       if (a === headerStateAtom) return 'CURRENT';
@@ -92,6 +91,10 @@ describe('TrainTypeBoxJL', () => {
       if (a === stationsAtom) return [];
       return undefined;
     });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('Null safety fixes', () => {
