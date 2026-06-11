@@ -43,10 +43,6 @@ jest.mock("react-native-reanimated", () => {
   };
 });
 
-jest.mock("react-native-worklets", () => ({
-  scheduleOnUI: jest.fn((worklet) => worklet()),
-}));
-
 jest.mock("~/utils/isTablet", () => ({
   __esModule: true,
   default: false,
