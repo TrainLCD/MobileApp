@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { GlassView } from 'expo-glass-effect';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -55,14 +55,29 @@ const ICON_COLOR = {
 // アクセントカラーの半透明ティント
 const ACTIVE_PILL_COLOR = 'rgba(10, 132, 255, 0.16)';
 
+const TAB_BUTTON_SIZE = 48;
+
 // 押下中に沈み込むスケール値
 const PRESSED_SCALE = 0.85;
 
 // 押下時は素早く沈み、離した時はバウンドしながら戻す
 const PRESS_IN_SPRING = { damping: 24, stiffness: 420 } as const;
 const PRESS_OUT_SPRING = { damping: 13, stiffness: 320 } as const;
-// アクティブピルの出現スプリング。画面遷移直後に弾みながら現れる
+// アプリ初回マウント時のみ使うピルのスケールイン出現スプリング
 const ACTIVE_PILL_SPRING = { damping: 15, stiffness: 280 } as const;
+// タブ切り替え時にピルが前のタブ位置からスライドするスプリング。
+// 進行方向へわずかにオーバーシュートさせ、Apple Music の選択ハイライトの動きに寄せる
+const PILL_SLIDE_SPRING = { damping: 24, stiffness: 350 } as const;
+
+// 直前の画面でアクティブだったタブ。タブバーは画面ごとに再マウントされるため、
+// マウントをまたいだピルのスライド元をモジュールスコープで保持する
+let lastActiveTab: FooterTab | null = null;
+
+// テスト専用。モジュールスコープの lastActiveTab がテスト間でリークして
+// 順序依存にならないよう、beforeEach でリセットするためのヘルパー
+export const resetLastActiveTabForTesting = (): void => {
+  lastActiveTab = null;
+};
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -105,22 +120,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   button: {
-    width: 48,
-    height: 48,
+    width: TAB_BUTTON_SIZE,
+    height: TAB_BUTTON_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // タブバー全体で 1 つだけ描画する共有ピル。translateX でアクティブタブ間をスライドする
   activePill: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 24, // button(48px) の半分で正円にする
+    position: 'absolute',
+    top: (GLASS_BAR_HEIGHT - TAB_BUTTON_SIZE) / 2,
+    left: 0,
+    width: TAB_BUTTON_SIZE,
+    height: TAB_BUTTON_SIZE,
+    borderRadius: TAB_BUTTON_SIZE / 2,
     backgroundColor: ACTIVE_PILL_COLOR,
   },
 });
 
 type TabButtonProps = {
   active: boolean;
-  /** アクティブタブの背面ピルを表示するか（Liquid Glass バーのみ true） */
-  showActivePill: boolean;
   onPress: () => void;
   onLayout?: (event: LayoutChangeEvent) => void;
   buttonRef?: React.Ref<View>;
@@ -129,20 +147,12 @@ type TabButtonProps = {
 
 const TabButton: React.FC<TabButtonProps> = ({
   active,
-  showActivePill,
   onPress,
   onLayout,
   buttonRef,
   children,
 }) => {
   const pressScale = useSharedValue(1);
-  // 0 → 1 でピルがスプリング出現する。タブバーは画面ごとにマウントされるため、
-  // 遷移直後のマウント時アニメーションが実質的な「選択が移った」表現になる
-  const pillProgress = useSharedValue(0);
-
-  useEffect(() => {
-    pillProgress.value = withSpring(active ? 1 : 0, ACTIVE_PILL_SPRING);
-  }, [active, pillProgress]);
 
   const handlePressIn = useCallback(() => {
     pressScale.value = withSpring(PRESSED_SCALE, PRESS_IN_SPRING);
@@ -156,11 +166,6 @@ const TabButton: React.FC<TabButtonProps> = ({
     transform: [{ scale: pressScale.value }],
   }));
 
-  const pillAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: pillProgress.value,
-    transform: [{ scale: 0.5 + pillProgress.value * 0.5 }],
-  }));
-
   return (
     <AnimatedPressable
       ref={buttonRef}
@@ -172,13 +177,6 @@ const TabButton: React.FC<TabButtonProps> = ({
       onPressOut={handlePressOut}
       onLayout={onLayout}
     >
-      {showActivePill && active ? (
-        <Animated.View
-          testID="footer-active-pill"
-          pointerEvents="none"
-          style={[styles.activePill, pillAnimatedStyle]}
-        />
-      ) : null}
       {children}
     </AnimatedPressable>
   );
@@ -203,27 +201,103 @@ const FooterTabBar: React.FC<Props> = ({
   const searchButtonRef = useRef<View>(null);
   const settingsButtonRef = useRef<View>(null);
 
+  const pillTranslateX = useSharedValue(0);
+  // 0 → 1 でピルがスケールインする。初回マウント時の出現にのみ使い、
+  // タブ切り替え時は 1 のままスライドだけを行う
+  const pillProgress = useSharedValue(0);
+  const pillBaseXRef = useRef<number | null>(null);
+  const slotXsRef = useRef<Partial<Record<FooterTab, number>>>({});
+  const pillPlacedRef = useRef(false);
+
+  // ピル自身と各タブの onLayout が揃った時点で一度だけ配置を確定する。
+  // 直前の画面でアクティブだったタブが異なる場合は、その位置からスライドさせて
+  // Apple Music のように選択ハイライトが移動して見えるようにする
+  const placePillIfReady = useCallback(() => {
+    if (pillPlacedRef.current) return;
+    const baseX = pillBaseXRef.current;
+    const activeX = slotXsRef.current[active];
+    if (baseX == null || activeX == null) return;
+    const fromTab = lastActiveTab;
+    const fromX = fromTab == null ? null : slotXsRef.current[fromTab];
+    // スライド元スロットの位置が未測定なら、その onLayout を待つ
+    if (fromTab != null && fromTab !== active && fromX == null) return;
+    pillPlacedRef.current = true;
+    lastActiveTab = active;
+    if (fromTab != null && fromTab !== active && fromX != null) {
+      pillProgress.value = 1;
+      pillTranslateX.value = fromX - baseX;
+      pillTranslateX.value = withSpring(activeX - baseX, PILL_SLIDE_SPRING);
+      return;
+    }
+    pillTranslateX.value = activeX - baseX;
+    // 同一タブ内の画面遷移（設定サブ画面間など）ではアニメーションを再生しない
+    pillProgress.value =
+      fromTab === active ? 1 : withSpring(1, ACTIVE_PILL_SPRING);
+  }, [active, pillProgress, pillTranslateX]);
+
+  const handlePillLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      pillBaseXRef.current = event.nativeEvent.layout.x;
+      placePillIfReady();
+    },
+    [placePillIfReady]
+  );
+
+  const registerSlotLayout = useCallback(
+    (tab: FooterTab, event: LayoutChangeEvent) => {
+      const x = event.nativeEvent.layout.x;
+      const prevX = slotXsRef.current[tab];
+      slotXsRef.current[tab] = x;
+      if (pillPlacedRef.current) {
+        // 配置確定後のレイアウト変化（回転など）にはアニメーションなしで追従する
+        if (tab === active && prevX !== x && pillBaseXRef.current != null) {
+          pillTranslateX.value = x - pillBaseXRef.current;
+        }
+        return;
+      }
+      placePillIfReady();
+    },
+    [active, pillTranslateX, placePillIfReady]
+  );
+
   const handleSearchButtonLayout = useCallback(
-    (_event: LayoutChangeEvent) => {
+    (event: LayoutChangeEvent) => {
+      registerSlotLayout('search', event);
       if (onSearchButtonLayout && searchButtonRef.current) {
         searchButtonRef.current.measureInWindow((x, y, width, height) => {
           onSearchButtonLayout({ x, y, width, height });
         });
       }
     },
-    [onSearchButtonLayout]
+    [onSearchButtonLayout, registerSlotLayout]
+  );
+
+  const handleHomeButtonLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      registerSlotLayout('home', event);
+    },
+    [registerSlotLayout]
   );
 
   const handleSettingsButtonLayout = useCallback(
-    (_event: LayoutChangeEvent) => {
+    (event: LayoutChangeEvent) => {
+      registerSlotLayout('settings', event);
       if (onSettingsButtonLayout && settingsButtonRef.current) {
         settingsButtonRef.current.measureInWindow((x, y, width, height) => {
           onSettingsButtonLayout({ x, y, width, height });
         });
       }
     },
-    [onSettingsButtonLayout]
+    [onSettingsButtonLayout, registerSlotLayout]
   );
+
+  const pillAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: pillProgress.value,
+    transform: [
+      { translateX: pillTranslateX.value },
+      { scale: 0.5 + pillProgress.value * 0.5 },
+    ],
+  }));
 
   if (!visible) return null;
 
@@ -237,7 +311,6 @@ const FooterTabBar: React.FC<Props> = ({
       <TabButton
         buttonRef={searchButtonRef}
         active={active === 'search'}
-        showActivePill={isGlassBar}
         onPress={() => {
           navigation.navigate('RouteSearch' as never);
         }}
@@ -252,10 +325,10 @@ const FooterTabBar: React.FC<Props> = ({
 
       <TabButton
         active={active === 'home'}
-        showActivePill={isGlassBar}
         onPress={() => {
           navigation.navigate('SelectLine' as never);
         }}
+        onLayout={handleHomeButtonLayout}
       >
         <Ionicons
           name={active === 'home' ? 'navigate' : 'navigate-outline'}
@@ -267,7 +340,6 @@ const FooterTabBar: React.FC<Props> = ({
       <TabButton
         buttonRef={settingsButtonRef}
         active={active === 'settings'}
-        showActivePill={isGlassBar}
         onPress={() => {
           navigation.navigate('AppSettings' as never);
         }}
@@ -298,6 +370,12 @@ const FooterTabBar: React.FC<Props> = ({
             },
           ]}
         >
+          <Animated.View
+            testID="footer-active-pill"
+            pointerEvents="none"
+            onLayout={handlePillLayout}
+            style={[styles.activePill, pillAnimatedStyle]}
+          />
           {tabButtons}
         </GlassView>
       </View>
