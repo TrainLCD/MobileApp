@@ -66,8 +66,13 @@ const PRESS_OUT_SPRING = { damping: 13, stiffness: 320 } as const;
 // アプリ初回マウント時のみ使うピルのスケールイン出現スプリング
 const ACTIVE_PILL_SPRING = { damping: 15, stiffness: 280 } as const;
 // タブ切り替え時にピルが前のタブ位置からスライドするスプリング。
-// 進行方向へわずかにオーバーシュートさせ、Apple Music の選択ハイライトの動きに寄せる
-const PILL_SLIDE_SPRING = { damping: 24, stiffness: 350 } as const;
+// 目標位置を通り過ぎて戻る動きが出ないよう臨界減衰以上 + overshootClamping で
+// バウンスせずに減速して止める
+const PILL_SLIDE_SPRING = {
+  damping: 38,
+  stiffness: 350,
+  overshootClamping: true,
+} as const;
 
 // 直前の画面でアクティブだったタブ。タブバーは画面ごとに再マウントされるため、
 // マウントをまたいだピルのスライド元をモジュールスコープで保持する
