@@ -22,8 +22,8 @@ jest.mock('~/hooks/useAfterNextStation', () => ({
   useAfterNextStation: jest.fn(() => undefined),
 }));
 
-jest.mock('~/hooks/useNextStation', () => ({
-  useNextStation: jest.fn(() => undefined),
+jest.mock('~/hooks/useDisplayNextStation', () => ({
+  useDisplayNextStation: jest.fn(() => undefined),
 }));
 
 jest.mock('~/hooks/useScale', () => ({

@@ -10,7 +10,7 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useAfterNextStation } from '~/hooks/useAfterNextStation';
-import { useNextStation } from '~/hooks/useNextStation';
+import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
 import { useScale } from '~/hooks/useScale';
 import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
@@ -480,7 +480,9 @@ const LineBoardEast: React.FC<Props> = ({
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
-  const nextStation = useNextStation();
+  // useAfterNextStation が案内面共通の次駅 (useDisplayNextStation) 起点に
+  // なったため、バナーの「◯◯のつぎは」側も同じ次駅を参照して整合を保つ
+  const nextStation = useDisplayNextStation();
   const afterNextStation = useAfterNextStation();
 
   const dim = useLandscapeWindowDimensions();
