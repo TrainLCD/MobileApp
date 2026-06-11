@@ -1,14 +1,9 @@
+import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -353,7 +348,7 @@ export const TrainTypeListModal = ({
         ) : null}
       </View>
 
-      <FlatList<TrainType>
+      <FlashList<TrainType>
         style={StyleSheet.absoluteFill}
         data={trainTypes}
         renderItem={renderItem}
@@ -362,7 +357,6 @@ export const TrainTypeListModal = ({
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
         scrollIndicatorInsets={{ top: 72, bottom: 72 }}
-        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
             <SkeletonPlaceholder borderRadius={4} speed={1500}>

@@ -1,11 +1,11 @@
 import { useLazyQuery, useQuery } from '@apollo/client/react';
+import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
-  FlatList,
   Platform,
   StyleSheet,
   useWindowDimensions,
@@ -320,7 +320,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         <SearchBar onSearch={handleSearchStations} nameSearch />
       </View>
 
-      <FlatList<Station>
+      <FlashList<Station>
         style={StyleSheet.absoluteFill}
         data={stations ?? []}
         renderItem={renderItem}
@@ -329,7 +329,6 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
         scrollIndicatorInsets={{ top: 150, bottom: 72 }}
-        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           <EmptyResult
             loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}
