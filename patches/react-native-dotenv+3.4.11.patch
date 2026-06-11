@@ -1,0 +1,23 @@
+diff --git a/node_modules/react-native-dotenv/index.js b/node_modules/react-native-dotenv/index.js
+index e2a360d..230ca44 100644
+--- a/node_modules/react-native-dotenv/index.js
++++ b/node_modules/react-native-dotenv/index.js
+@@ -147,7 +147,17 @@ module.exports = (api, options) => {
+           path.remove()
+         }
+       },
+-      MemberExpression(path) {
++      MemberExpression(path, state) {
++        // PATCH(TrainLCD): node_modules 内のコードには process.env インライン化を
++        // 適用しない。Metro の変換ワーカーは jest-worker 製で JEST_WORKER_ID が
++        // 設定されており、react-native-reanimated の
++        // `IS_JEST = !!process.env.JEST_WORKER_ID` に true が焼き込まれて
++        // 実機で Jest/Web 用実装が選ばれ、shared value のシリアライズが壊れて
++        // 起動時クラッシュ(Object is not a function / addListener)になるため。
++        // 参照: https://github.com/software-mansion/react-native-reanimated/discussions/9023
++        if (state.filename && /[\\/]node_modules[\\/]/.test(state.filename)) {
++          return
++        }
+         if (path.get('object').matchesPattern('process.env')) {
+           const key = path.toComputedKey()
+           if (t.isStringLiteral(key)) {
