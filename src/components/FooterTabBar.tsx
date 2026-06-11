@@ -1,5 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import {
+  StackActions,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { GlassView } from 'expo-glass-effect';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useRef } from 'react';
@@ -66,12 +70,11 @@ const PRESS_OUT_SPRING = { damping: 13, stiffness: 320 } as const;
 // アプリ初回マウント時のみ使うピルのスケールイン出現スプリング
 const ACTIVE_PILL_SPRING = { damping: 15, stiffness: 280 } as const;
 // タブ切り替え時にピルが前のタブ位置からスライドするスプリング。
-// 目標位置を通り過ぎて戻る動きが出ないよう臨界減衰以上 + overshootClamping で
-// バウンスせずに減速して止める
+// Apple Music の選択ハイライトのように、目標位置をわずかに通り過ぎて戻る
+// 控えめな弾力を持たせる(減衰比 ≈ 0.7。臨界減衰は 2√stiffness ≈ 37)
 const PILL_SLIDE_SPRING = {
-  damping: 38,
+  damping: 26,
   stiffness: 350,
-  overshootClamping: true,
 } as const;
 
 // 直前の画面でアクティブだったタブ。タブバーは画面ごとに再マウントされるため、
@@ -202,7 +205,18 @@ const FooterTabBar: React.FC<Props> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const route = useRoute();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+
+  // タブ間の移動で履歴を積まないよう navigate ではなく replace で遷移する。
+  // 同一画面への replace は画面の再マウントになるだけなので無視する
+  const replaceTo = useCallback(
+    (screen: string) => {
+      if (route.name === screen) return;
+      navigation.dispatch(StackActions.replace(screen));
+    },
+    [navigation, route.name]
+  );
   const searchButtonRef = useRef<View>(null);
   const settingsButtonRef = useRef<View>(null);
 
@@ -317,7 +331,7 @@ const FooterTabBar: React.FC<Props> = ({
         buttonRef={searchButtonRef}
         active={active === 'search'}
         onPress={() => {
-          navigation.navigate('RouteSearch' as never);
+          replaceTo('RouteSearch');
         }}
         onLayout={handleSearchButtonLayout}
       >
@@ -331,7 +345,7 @@ const FooterTabBar: React.FC<Props> = ({
       <TabButton
         active={active === 'home'}
         onPress={() => {
-          navigation.navigate('SelectLine' as never);
+          replaceTo('SelectLine');
         }}
         onLayout={handleHomeButtonLayout}
       >
@@ -346,7 +360,7 @@ const FooterTabBar: React.FC<Props> = ({
         buttonRef={settingsButtonRef}
         active={active === 'settings'}
         onPress={() => {
-          navigation.navigate('AppSettings' as never);
+          replaceTo('AppSettings');
         }}
         onLayout={handleSettingsButtonLayout}
       >

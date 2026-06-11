@@ -1,10 +1,15 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import FooterTabBar, { resetLastActiveTabForTesting } from './FooterTabBar';
 
-const mockNavigate = jest.fn();
+const mockDispatch = jest.fn();
+let mockRouteName = 'SelectLine';
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
+  useNavigation: () => ({ dispatch: mockDispatch }),
+  useRoute: () => ({ name: mockRouteName }),
+  StackActions: {
+    replace: (name: string) => ({ type: 'REPLACE', payload: { name } }),
+  },
 }));
 
 jest.mock('jotai', () => ({
@@ -36,6 +41,7 @@ jest.mock('~/utils/liquidGlass', () => ({
 describe('FooterTabBar', () => {
   beforeEach(() => {
     mockLiquidGlassAvailable = false;
+    mockRouteName = 'SelectLine';
     // モジュールスコープの lastActiveTab がテスト間でリークして
     // 実行順序依存にならないよう毎回リセットする
     resetLastActiveTabForTesting();
@@ -63,18 +69,37 @@ describe('FooterTabBar', () => {
     expect(settings.props.accessibilityState.selected).toBe(true);
   });
 
-  it('各タブを押すと対応する画面へ遷移する', () => {
+  it('各タブを押すと対応する画面へ replace で遷移する', () => {
+    mockRouteName = 'Main';
     const { getAllByRole } = render(<FooterTabBar active="home" />);
     const [search, home, settings] = getAllByRole('button');
 
     fireEvent.press(search);
-    expect(mockNavigate).toHaveBeenLastCalledWith('RouteSearch');
+    expect(mockDispatch).toHaveBeenLastCalledWith({
+      type: 'REPLACE',
+      payload: { name: 'RouteSearch' },
+    });
 
     fireEvent.press(home);
-    expect(mockNavigate).toHaveBeenLastCalledWith('SelectLine');
+    expect(mockDispatch).toHaveBeenLastCalledWith({
+      type: 'REPLACE',
+      payload: { name: 'SelectLine' },
+    });
 
     fireEvent.press(settings);
-    expect(mockNavigate).toHaveBeenLastCalledWith('AppSettings');
+    expect(mockDispatch).toHaveBeenLastCalledWith({
+      type: 'REPLACE',
+      payload: { name: 'AppSettings' },
+    });
+  });
+
+  it('現在の画面と同じタブを押しても replace を発行しない', () => {
+    mockRouteName = 'SelectLine';
+    const { getAllByRole } = render(<FooterTabBar active="home" />);
+    const [, home] = getAllByRole('button');
+
+    fireEvent.press(home);
+    expect(mockDispatch).not.toHaveBeenCalled();
   });
 
   describe('Liquid Glass モード', () => {
