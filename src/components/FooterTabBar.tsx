@@ -1,5 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import {
+  StackActions,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { GlassView } from 'expo-glass-effect';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useRef } from 'react';
@@ -202,7 +206,18 @@ const FooterTabBar: React.FC<Props> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const route = useRoute();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+
+  // タブ間の移動で履歴を積まないよう navigate ではなく replace で遷移する。
+  // 同一画面への replace は画面の再マウントになるだけなので無視する
+  const replaceTo = useCallback(
+    (screen: string) => {
+      if (route.name === screen) return;
+      navigation.dispatch(StackActions.replace(screen));
+    },
+    [navigation, route.name]
+  );
   const searchButtonRef = useRef<View>(null);
   const settingsButtonRef = useRef<View>(null);
 
@@ -317,7 +332,7 @@ const FooterTabBar: React.FC<Props> = ({
         buttonRef={searchButtonRef}
         active={active === 'search'}
         onPress={() => {
-          navigation.navigate('RouteSearch' as never);
+          replaceTo('RouteSearch');
         }}
         onLayout={handleSearchButtonLayout}
       >
@@ -331,7 +346,7 @@ const FooterTabBar: React.FC<Props> = ({
       <TabButton
         active={active === 'home'}
         onPress={() => {
-          navigation.navigate('SelectLine' as never);
+          replaceTo('SelectLine');
         }}
         onLayout={handleHomeButtonLayout}
       >
@@ -346,7 +361,7 @@ const FooterTabBar: React.FC<Props> = ({
         buttonRef={settingsButtonRef}
         active={active === 'settings'}
         onPress={() => {
-          navigation.navigate('AppSettings' as never);
+          replaceTo('AppSettings');
         }}
         onLayout={handleSettingsButtonLayout}
       >
