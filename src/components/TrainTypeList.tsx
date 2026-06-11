@@ -1,12 +1,7 @@
+import { FlashList } from '@shopify/flash-list';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Line, TrainType } from '~/@types/graphql';
 import { useCurrentLine } from '~/hooks';
@@ -155,17 +150,19 @@ export const TrainTypeList = ({
   );
   const { bottom: safeAreaBottom } = useSafeAreaInsets();
 
+  // FlashList v2のstyleは配列を受け付けないため単一オブジェクトに統合する
+  const listStyle = useMemo(
+    () => ({
+      ...styles.root,
+      borderColor: isLEDTheme ? '#fff' : '#aaa',
+      marginBottom: safeAreaBottom,
+    }),
+    [isLEDTheme, safeAreaBottom]
+  );
+
   return (
-    <FlatList
-      initialNumToRender={15}
-      removeClippedSubviews={Platform.OS === 'android'}
-      style={[
-        styles.root,
-        {
-          borderColor: isLEDTheme ? '#fff' : '#aaa',
-          marginBottom: safeAreaBottom,
-        },
-      ]}
+    <FlashList
+      style={listStyle}
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}

@@ -1,13 +1,8 @@
+import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo, useState } from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
@@ -324,7 +319,7 @@ export const RouteInfoModal = ({
         </Heading>
       </View>
 
-      <FlatList<Station>
+      <FlashList<Station>
         data={deduppedStations}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
@@ -336,7 +331,6 @@ export const RouteInfoModal = ({
           { paddingTop: headerHeight },
         ]}
         scrollIndicatorInsets={{ top: headerHeight, bottom: 72 }}
-        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
             <SkeletonPlaceholder borderRadius={4} speed={1500}>
