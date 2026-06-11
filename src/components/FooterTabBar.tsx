@@ -73,6 +73,12 @@ const PILL_SLIDE_SPRING = { damping: 24, stiffness: 350 } as const;
 // マウントをまたいだピルのスライド元をモジュールスコープで保持する
 let lastActiveTab: FooterTab | null = null;
 
+// テスト専用。モジュールスコープの lastActiveTab がテスト間でリークして
+// 順序依存にならないよう、beforeEach でリセットするためのヘルパー
+export const resetLastActiveTabForTesting = (): void => {
+  lastActiveTab = null;
+};
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const styles = StyleSheet.create({

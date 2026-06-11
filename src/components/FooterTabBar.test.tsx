@@ -1,5 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
-import FooterTabBar from './FooterTabBar';
+import FooterTabBar, { resetLastActiveTabForTesting } from './FooterTabBar';
 
 const mockNavigate = jest.fn();
 
@@ -36,6 +36,9 @@ jest.mock('~/utils/liquidGlass', () => ({
 describe('FooterTabBar', () => {
   beforeEach(() => {
     mockLiquidGlassAvailable = false;
+    // モジュールスコープの lastActiveTab がテスト間でリークして
+    // 実行順序依存にならないよう毎回リセットする
+    resetLastActiveTabForTesting();
   });
 
   afterEach(() => {
