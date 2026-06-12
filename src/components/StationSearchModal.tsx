@@ -1,4 +1,3 @@
-import { useLazyQuery, useQuery } from '@apollo/client/react';
 import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
@@ -20,6 +19,8 @@ import type {
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
 import { useFetchCurrentLocationOnce } from '~/hooks/useFetchCurrentLocationOnce';
+import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
+import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import {
   GET_STATIONS_BY_NAME,
   GET_STATIONS_NEARBY,
@@ -145,7 +146,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     data: stationsNearbyData,
     loading: fetchStationsNearbyLoading,
     error: fetchStationsNearbyError,
-  } = useQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
+  } = useGraphQLQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
     skip: !visible || latitude == null || longitude == null,
     variables: {
       latitude: latitude as number,
@@ -162,7 +163,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       error: fetchStationsByNameError,
       called: fetchStationsByNameCalled,
     },
-  ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+  ] = useLazyGraphQLQuery<GetStationsByNameData, GetStationsByNameVariables>(
     GET_STATIONS_BY_NAME
   );
 

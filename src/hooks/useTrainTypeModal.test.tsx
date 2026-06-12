@@ -1,4 +1,3 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { act, render } from '@testing-library/react-native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
@@ -7,14 +6,15 @@ import { StopCondition } from '~/@types/graphql';
 import { createLine, createStation } from '~/utils/test/factories';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 import { useTrainTypeModal } from './useTrainTypeModal';
 
 jest.mock('react-native-device-info', () => ({
   getBundleId: jest.fn(() => 'com.test'),
 }));
 
-jest.mock('@apollo/client/react', () => ({
-  useLazyQuery: jest.fn(),
+jest.mock('./useLazyGraphQLQuery', () => ({
+  useLazyGraphQLQuery: jest.fn(),
 }));
 
 jest.mock('jotai', () => ({
@@ -72,7 +72,7 @@ jest.mock('~/utils/findNearestStation', () => ({
   findNearestStation: jest.fn(),
 }));
 
-const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;
+const mockUseLazyQuery = useLazyGraphQLQuery as unknown as jest.Mock;
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
 >;

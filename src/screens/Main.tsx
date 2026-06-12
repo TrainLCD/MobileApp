@@ -1,4 +1,3 @@
-import { useLazyQuery } from '@apollo/client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
@@ -40,6 +39,7 @@ import {
   useCurrentTrainType,
   useFirstStop,
   useKeepAwake,
+  useLazyGraphQLQuery,
   useLoopLine,
   useNextStation,
   useRefreshLeftStations,
@@ -171,9 +171,10 @@ const MainScreen: React.FC = () => {
       loading: fetchStationsByLineGroupIdLoading,
       error: fetchStationsByLineGroupIdError,
     },
-  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
-    GET_LINE_GROUP_STATIONS
-  );
+  ] = useLazyGraphQLQuery<
+    GetLineGroupStationsData,
+    GetLineGroupStationsVariables
+  >(GET_LINE_GROUP_STATIONS);
 
   const [
     fetchStationsByLineId,
@@ -181,16 +182,17 @@ const MainScreen: React.FC = () => {
       loading: fetchStationsByLineIdLoading,
       error: fetchStationsByLineIdError,
     },
-  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+  ] = useLazyGraphQLQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
   );
 
   const [
     fetchTrainTypes,
     { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
-  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
-    GET_STATION_TRAIN_TYPES_LIGHT
-  );
+  ] = useLazyGraphQLQuery<
+    GetStationTrainTypesData,
+    GetStationTrainTypesVariables
+  >(GET_STATION_TRAIN_TYPES_LIGHT);
 
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);

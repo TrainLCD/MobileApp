@@ -14,7 +14,6 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
-    "@apollo/client": "^4.0.7",
     "@expo-google-fonts/roboto": "^0.2.3",
     "@expo/react-native-action-sheet": "^4.1.1",
     "@expo/vector-icons": "^15.0.3",
@@ -32,6 +31,7 @@
     "@react-navigation/native-stack": "^7.3.1",
     "@sentry/react-native": "~8.11.1",
     "@shopify/flash-list": "2.0.2",
+    "@tanstack/react-query": "^5.101.0",
     "dayjs": "^1.11.19",
     "expo": "~55.0.15",
     "expo-application": "~55.0.14",
@@ -65,6 +65,8 @@
     "expo-web-browser": "~55.0.14",
     "geolib": "^3.3.4",
     "graphql": "^16.11.0",
+    "graphql-request": "^6.1.0",
+    "graphql-tag": "^2.12.6",
     "i18n-js": "^3.5.1",
     "jotai": "^2.12.4",
     "lodash": "^4.18.1",

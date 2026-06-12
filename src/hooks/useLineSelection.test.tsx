@@ -1,4 +1,3 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { act, render } from '@testing-library/react-native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
@@ -8,13 +7,14 @@ import { createLine, createStation } from '~/utils/test/factories';
 import type { LineState } from '../store/atoms/line';
 import type { NavigationState } from '../store/atoms/navigation';
 import type { StationState } from '../store/atoms/station';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 import {
   type UseLineSelectionResult,
   useLineSelection,
 } from './useLineSelection';
 
-jest.mock('@apollo/client/react', () => ({
-  useLazyQuery: jest.fn(),
+jest.mock('./useLazyGraphQLQuery', () => ({
+  useLazyGraphQLQuery: jest.fn(),
 }));
 jest.mock('jotai', () => ({
   useSetAtom: jest.fn(),
@@ -74,7 +74,7 @@ const createLineState = (overrides: Partial<LineState> = {}): LineState => ({
 });
 
 describe('useLineSelection', () => {
-  const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;
+  const mockUseLazyQuery = useLazyGraphQLQuery as unknown as jest.Mock;
   const mockUseSetAtom = useSetAtom as unknown as jest.Mock;
   const mockUseAtomValue = useAtomValue as unknown as jest.Mock;
 
@@ -122,7 +122,7 @@ describe('useLineSelection', () => {
     const mockFetchByGroupId = jest.fn();
     const mockFetchTrainTypes = jest.fn();
 
-    // useLazyQuery は GET_LINE_STATIONS, GET_LINE_GROUP_STATIONS, GET_STATION_TRAIN_TYPES_LIGHT の順
+    // useLazyGraphQLQuery は GET_LINE_STATIONS, GET_LINE_GROUP_STATIONS, GET_STATION_TRAIN_TYPES_LIGHT の順
     const queryResults = [
       [mockFetchByLineId, { loading: lineLoading, error: lineError }],
       [mockFetchByGroupId, { loading: groupLoading, error: groupError }],
