@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import { Alert } from 'react-native';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import ExperimentalSettingsScreen from './ExperimentalSettings';
@@ -62,13 +63,14 @@ describe('ExperimentalSettingsScreen', () => {
     );
   });
 
-  it('AsyncStorageへの保存に失敗した場合はatom状態をロールバックする', async () => {
+  it('AsyncStorageへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', async () => {
     (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(
       new Error('storage failure')
     );
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
     const { getByLabelText, store } = renderWithStore(false);
 
@@ -82,6 +84,17 @@ describe('ExperimentalSettingsScreen', () => {
       expect(store.get(portraitModeEnabledAtom)).toBe(false);
     });
 
+    // エラーログとユーザーへのアラート表示を検証
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to save portrait mode setting',
+      expect.any(Error)
+    );
+    expect(alertSpy).toHaveBeenCalledWith(
+      'errorTitle',
+      'failedToSavePreference'
+    );
+
     consoleErrorSpy.mockRestore();
+    alertSpy.mockRestore();
   });
 });
