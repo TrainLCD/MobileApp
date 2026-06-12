@@ -42,6 +42,7 @@ import {
 } from '../hooks';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
+import { portraitModeEnabledAtom } from '../store/atoms/experimental';
 import navigationState, {
   autoModeEnabledAtom,
   isAppLatestAtom,
@@ -72,6 +73,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setSpeech = useSetAtom(speechState);
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
+  const setPortraitModeEnabled = useSetAtom(portraitModeEnabledAtom);
   const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
   const setTuning = useSetAtom(tuningState);
   const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
@@ -413,6 +415,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         untouchableModeEnabledStr,
         wrongDirectionNotifyEnabledStr,
         pictureInPictureEnabledStr,
+        portraitModeEnabledStr,
       ] = await Promise.all([
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.THEME_PREFERENCE),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
@@ -428,6 +431,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED),
         AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED),
+        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED),
       ]);
 
       if (themePreferenceKey) {
@@ -538,6 +542,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           enabled: pictureInPictureEnabledStr === 'true',
         }));
       }
+      if (portraitModeEnabledStr) {
+        setPortraitModeEnabled(portraitModeEnabledStr === 'true');
+      }
     };
 
     loadSettings();
@@ -548,6 +555,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setThemePreference,
     setNotify,
     setPictureInPicture,
+    setPortraitModeEnabled,
   ]);
 
   useEffect(() => {
