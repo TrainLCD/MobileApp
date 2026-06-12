@@ -31,6 +31,7 @@ export const ASYNC_STORAGE_KEYS = {
   SETTINGS_WALKTHROUGH_COMPLETED: '@TrainLCD:settingsWalkthroughCompleted',
   WRONG_DIRECTION_NOTIFY_ENABLED: '@TrainLCD:wrongDirectionNotifyEnabled',
   PICTURE_IN_PICTURE_ENABLED: '@TrainLCD:pictureInPictureEnabled',
+  PORTRAIT_MODE_ENABLED: '@TrainLCD:portraitModeEnabled',
 } as const;
 
 export type AsyncStorageKeys =

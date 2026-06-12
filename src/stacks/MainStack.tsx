@@ -5,6 +5,7 @@ import {
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import AndroidSettings from '~/screens/AndroidSettings';
+import ExperimentalSettings from '~/screens/ExperimentalSettings';
 import Licenses from '~/screens/Licenses';
 import NotificationSettings from '~/screens/NotificationSettings';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
@@ -111,6 +112,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="AndroidSettings"
           component={AndroidSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="ExperimentalSettings"
+          component={ExperimentalSettings}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}

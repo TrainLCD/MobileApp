@@ -1,0 +1,64 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fireEvent, render } from '@testing-library/react-native';
+import { createStore, Provider } from 'jotai';
+import { ASYNC_STORAGE_KEYS } from '~/constants';
+import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
+import ExperimentalSettingsScreen from './ExperimentalSettings';
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    goBack: jest.fn(),
+  }),
+}));
+
+jest.mock('~/components/FooterTabBar', () => () => null);
+jest.mock('~/components/SettingsHeader', () => ({
+  SettingsHeader: () => null,
+}));
+jest.mock('~/components/Button', () => () => null);
+jest.mock('~/translation', () => ({
+  translate: (key: string) => key,
+}));
+
+const renderWithStore = (portraitModeEnabled: boolean) => {
+  const store = createStore();
+  store.set(portraitModeEnabledAtom, portraitModeEnabled);
+
+  const screen = render(
+    <Provider store={store}>
+      <ExperimentalSettingsScreen />
+    </Provider>
+  );
+
+  return { ...screen, store };
+};
+
+describe('ExperimentalSettingsScreen', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('ポートレートモードをONにするとatomとAsyncStorageへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore(false);
+
+    fireEvent.press(getByLabelText('portraitModeTitle'));
+
+    expect(store.get(portraitModeEnabledAtom)).toBe(true);
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED,
+      'true'
+    );
+  });
+
+  it('ポートレートモードをOFFにするとatomとAsyncStorageへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore(true);
+
+    fireEvent.press(getByLabelText('portraitModeTitle'));
+
+    expect(store.get(portraitModeEnabledAtom)).toBe(false);
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED,
+      'false'
+    );
+  });
+});
