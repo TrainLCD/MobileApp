@@ -19,13 +19,14 @@ import { RFValue } from '~/utils/rfValue';
 import NumberingIcon from './NumberingIcon';
 import Typography from './Typography';
 
-// テーマ非依存の独自カラーパレット。選択中のテーマに関わらず同じ見た目にする。
+// テーマ非依存の独自カラーパレット。選択中のテーマに関わらず、設定画面などの
+// 操作系画面と印象を揃えたライト基調(白ベース)で統一する。
 const COLORS = {
-  background: '#13131A',
-  card: '#1E1E28',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#A0A0B0',
-  divider: '#2C2C38',
+  background: '#FAFAFA',
+  card: '#FFFFFF',
+  textPrimary: '#212121',
+  textSecondary: '#8B8B8B',
+  divider: '#EEEEEE',
   fallbackAccent: '#888888',
 } as const;
 
@@ -357,7 +358,6 @@ const PortraitMain: React.FC = () => {
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber || ''}
                 threeLetterCode={commonData.threeLetterCode}
-                withDarkTheme
               />
             </View>
           ) : null}
