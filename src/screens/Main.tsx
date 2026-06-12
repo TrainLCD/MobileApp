@@ -62,6 +62,7 @@ import {
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import { APP_THEME } from '~/models/Theme';
+import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import lineState from '~/store/atoms/line';
 import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
@@ -71,6 +72,7 @@ import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import { getIsLocal } from '~/utils/trainTypeString';
 import LineBoard from '../components/LineBoard';
+import PortraitMain from '../components/PortraitMain';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
@@ -130,6 +132,7 @@ const MainScreen: React.FC = () => {
   const setLineState = useSetAtom(lineState);
   const { devOverlayEnabled } = useAtomValue(tuningState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
+  const portraitModeEnabled = useAtomValue(portraitModeEnabledAtom);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
@@ -689,6 +692,17 @@ const MainScreen: React.FC = () => {
 
   if (pictureInPictureActive) {
     return <AndroidPictureInPictureView />;
+  }
+
+  // ポートレートモード有効時、端末が縦向きの間はテーマ非依存の
+  // 縦画面最適化レイアウトへ切り替える(横向きに戻すと通常表示)。
+  if (portraitModeEnabled && windowHeight > windowWidth) {
+    return (
+      <>
+        <PortraitMain />
+        {isDevApp && devOverlayEnabled && <DevOverlay />}
+      </>
+    );
   }
 
   if (isLEDTheme) {

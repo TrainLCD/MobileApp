@@ -311,5 +311,10 @@
   "androidSettings": "Android向け",
   "pictureInPictureTitle": "Picture in Picture",
   "pictureInPictureDescription": "走行中にホーム画面や他のアプリへ移動したとき、次駅などを小窓で表示します。",
-  "passingStation": "%{stationName}を通過中"
+  "passingStation": "%{stationName}を通過中",
+  "experimentalSettings": "試験的機能",
+  "experimentalSettingsNotice": "試験的機能は開発中のため、予告なく変更または削除されることがあります。",
+  "portraitModeTitle": "ポートレートモード",
+  "portraitModeDescription": "有効にすると、走行画面で端末を縦向きにした際に、縦画面に最適化されたデザインで表示します。",
+  "passStationLabel": "通過"
 }
