@@ -48,7 +48,9 @@ const readableAccentColor = (color: string): string => {
 // 駅名セクションの背景に敷く路線色の淡いティント。
 const lineTintColor = (color: string): string => {
   try {
-    return rgba(color, 0.08);
+    // 明るい路線色はそのまま透過するとほぼ白に潰れて
+    // 視認できないため、文字色と同じ補正を通してから透過する
+    return rgba(readableAccentColor(color), 0.08);
   } catch {
     return COLORS.background;
   }
