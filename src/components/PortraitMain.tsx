@@ -77,8 +77,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: COLORS.divider,
   },
+  // 停車駅リストの縦棒(trackLine)と同じ太さに揃える
   lineColorBar: {
-    width: 8,
+    width: 12,
   },
   lineSectionBody: {
     flex: 1,
