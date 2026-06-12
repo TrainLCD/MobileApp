@@ -1,4 +1,3 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { act, render, waitFor } from '@testing-library/react-native';
 import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
@@ -12,9 +11,10 @@ import type { LineState } from '../store/atoms/line';
 import type { NavigationState } from '../store/atoms/navigation';
 import type { StationState } from '../store/atoms/station';
 import { useDeepLink } from './useDeepLink';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
-jest.mock('@apollo/client/react', () => ({
-  useLazyQuery: jest.fn(),
+jest.mock('./useLazyGraphQLQuery', () => ({
+  useLazyGraphQLQuery: jest.fn(),
 }));
 jest.mock('jotai', () => ({
   useSetAtom: jest.fn(),
@@ -99,7 +99,7 @@ const createLineState = (overrides: Partial<LineState> = {}): LineState => ({
 });
 
 describe('useDeepLink', () => {
-  const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;
+  const mockUseLazyQuery = useLazyGraphQLQuery as unknown as jest.Mock;
   const mockUseSetAtom = useSetAtom as jest.MockedFunction<typeof useSetAtom>;
   const mockGetInitialURL = Linking.getInitialURL as jest.Mock;
   const mockParse = Linking.parse as jest.Mock;

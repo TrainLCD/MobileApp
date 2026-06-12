@@ -1,7 +1,7 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { useCallback, useMemo } from 'react';
 import type { Station, TransportType } from '~/@types/graphql';
 import { GET_STATIONS_NEARBY } from '~/lib/graphql/queries';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
 type GetStationsNearbyData = {
   stationsNearby: Station[];
@@ -16,7 +16,7 @@ type GetStationsNearbyVariables = {
 
 export const useFetchNearbyStation = () => {
   const [fetchStationsNearby, { data, error: byCoordsError, loading }] =
-    useLazyQuery<GetStationsNearbyData, GetStationsNearbyVariables>(
+    useLazyGraphQLQuery<GetStationsNearbyData, GetStationsNearbyVariables>(
       GET_STATIONS_NEARBY
     );
 

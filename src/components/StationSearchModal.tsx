@@ -1,16 +1,9 @@
-import { useLazyQuery, useQuery } from '@apollo/client/react';
 import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Alert,
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { NEARBY_STATIONS_LIMIT } from 'react-native-dotenv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
@@ -20,6 +13,8 @@ import type {
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
 import { useFetchCurrentLocationOnce } from '~/hooks/useFetchCurrentLocationOnce';
+import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
+import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import {
   GET_STATIONS_BY_NAME,
   GET_STATIONS_NEARBY,
@@ -27,6 +22,7 @@ import {
 import { locationAtom, setLocation } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
+import { showAlertWhilePresenting } from '~/utils/alertPresentation';
 import isTablet from '~/utils/isTablet';
 import { filterBusLinesForNonBusStation } from '~/utils/line';
 import Button from './Button';
@@ -145,7 +141,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     data: stationsNearbyData,
     loading: fetchStationsNearbyLoading,
     error: fetchStationsNearbyError,
-  } = useQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
+  } = useGraphQLQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
     skip: !visible || latitude == null || longitude == null,
     variables: {
       latitude: latitude as number,
@@ -162,7 +158,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       error: fetchStationsByNameError,
       called: fetchStationsByNameCalled,
     },
-  ] = useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+  ] = useLazyGraphQLQuery<GetStationsByNameData, GetStationsByNameVariables>(
     GET_STATIONS_BY_NAME
   );
 
@@ -198,7 +194,12 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
   useEffect(() => {
     if (fetchStationsByNameError || fetchStationsNearbyError) {
-      Alert.alert(translate('errorTitle'), translate('failedToFetchStation'));
+      // StrictMode の二重実行でアラートが重複しないよう共有ガードを使う
+      showAlertWhilePresenting(
+        'stationSearchModalFetchError',
+        translate('errorTitle'),
+        translate('failedToFetchStation')
+      );
     }
   }, [fetchStationsByNameError, fetchStationsNearbyError]);
 

@@ -1,4 +1,3 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
@@ -21,6 +20,7 @@ import stationState, {
 import { isJapanese } from '../translation';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
 export const useTrainTypeModal = () => {
   const selectedBound = useAtomValue(selectedBoundAtom);
@@ -41,13 +41,15 @@ export const useTrainTypeModal = () => {
   const pendingTrainTypeModalRef = useRef(false);
 
   const [fetchStationsByLineGroupId, { loading: trainTypeSelectLoading }] =
-    useLazyQuery<{ lineGroupStations: Station[] }, { lineGroupId: number }>(
-      GET_LINE_GROUP_STATIONS
-    );
-  const [fetchTrainTypes, { loading: fetchTrainTypesLoading }] = useLazyQuery<
-    { stationTrainTypes: TrainType[] },
-    { stationId: number }
-  >(GET_STATION_TRAIN_TYPES_LIGHT);
+    useLazyGraphQLQuery<
+      { lineGroupStations: Station[] },
+      { lineGroupId: number }
+    >(GET_LINE_GROUP_STATIONS);
+  const [fetchTrainTypes, { loading: fetchTrainTypesLoading }] =
+    useLazyGraphQLQuery<
+      { stationTrainTypes: TrainType[] },
+      { stationId: number }
+    >(GET_STATION_TRAIN_TYPES_LIGHT);
 
   const trainTypeName = useMemo(
     () =>

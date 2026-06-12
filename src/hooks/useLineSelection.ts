@@ -1,5 +1,3 @@
-import type { ErrorLike } from '@apollo/client/core';
-import { useLazyQuery } from '@apollo/client/react';
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -16,6 +14,7 @@ import lineStateAtom from '../store/atoms/line';
 import { locationAtom } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
 type GetLineStationsData = {
   lineStations: Station[];
@@ -51,9 +50,9 @@ export type UseLineSelectionResult = {
   fetchTrainTypesLoading: boolean;
   fetchStationsByLineIdLoading: boolean;
   fetchStationsByLineGroupIdLoading: boolean;
-  fetchTrainTypesError: ErrorLike | undefined;
-  fetchStationsByLineIdError: ErrorLike | undefined;
-  fetchStationsByLineGroupIdError: ErrorLike | undefined;
+  fetchTrainTypesError: Error | undefined;
+  fetchStationsByLineIdError: Error | undefined;
+  fetchStationsByLineGroupIdError: Error | undefined;
 };
 
 export const useLineSelection = (): UseLineSelectionResult => {
@@ -71,7 +70,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
       loading: fetchStationsByLineIdLoading,
       error: fetchStationsByLineIdError,
     },
-  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+  ] = useLazyGraphQLQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
   );
   const [
@@ -80,15 +79,17 @@ export const useLineSelection = (): UseLineSelectionResult => {
       loading: fetchStationsByLineGroupIdLoading,
       error: fetchStationsByLineGroupIdError,
     },
-  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
-    GET_LINE_GROUP_STATIONS
-  );
+  ] = useLazyGraphQLQuery<
+    GetLineGroupStationsData,
+    GetLineGroupStationsVariables
+  >(GET_LINE_GROUP_STATIONS);
   const [
     fetchTrainTypes,
     { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
-  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
-    GET_STATION_TRAIN_TYPES_LIGHT
-  );
+  ] = useLazyGraphQLQuery<
+    GetStationTrainTypesData,
+    GetStationTrainTypesVariables
+  >(GET_STATION_TRAIN_TYPES_LIGHT);
 
   const handleLineSelected = useCallback(
     async (line: Line) => {
