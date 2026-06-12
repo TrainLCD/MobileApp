@@ -1,6 +1,7 @@
-import { render } from '@testing-library/react-native';
+import { render, within } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import type React from 'react';
+import { StyleSheet } from 'react-native';
 import { type Station, StopCondition } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -9,6 +10,8 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { leftStationsAtom } from '~/store/atoms/navigation';
+import { arrivedAtom } from '~/store/atoms/station';
+import { RFValue } from '~/utils/rfValue';
 import PortraitMain from './PortraitMain';
 
 jest.mock('~/translation', () => ({
@@ -61,7 +64,8 @@ const buildStation = (
   id: number,
   name: string,
   stopCondition: StopCondition,
-  stationNumber?: string
+  stationNumber?: string,
+  line: typeof yamanoteLine = yamanoteLine
 ): Station =>
   ({
     id,
@@ -69,13 +73,17 @@ const buildStation = (
     nameRoman: `${name}-roman`,
     stopCondition,
     stationNumbers: stationNumber ? [{ stationNumber }] : [],
-    line: yamanoteLine,
+    line,
     lines: [],
   }) as unknown as Station;
 
-const renderWithStations = (stations: Station[]) => {
+const renderWithStations = (
+  stations: Station[],
+  { arrived = true }: { arrived?: boolean } = {}
+) => {
   const store = createStore();
   store.set(leftStationsAtom, stations);
+  store.set(arrivedAtom, arrived);
 
   return render(
     <Provider store={store}>
@@ -125,6 +133,79 @@ describe('PortraitMain', () => {
     expect(getByText('JY-27')).toBeTruthy();
     // 通過駅は1駅だけなので通過ラベルも1つ
     expect(getAllByText('passStationLabel')).toHaveLength(1);
+  });
+
+  it('発車後は先頭駅の行が半透明になり強調が次の停車駅へ移る', () => {
+    const { getByTestId, getByText } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+        buildStation(3, '浜松町', StopCondition.All, 'JY-28'),
+      ],
+      { arrived: false }
+    );
+
+    expect(
+      StyleSheet.flatten(getByTestId('stop-row-1').props.style).opacity
+    ).toBe(0.4);
+    expect(
+      StyleSheet.flatten(getByTestId('stop-row-2').props.style).opacity
+    ).toBeUndefined();
+    // 強調(フォント拡大)は発車済みの品川ではなく次の停車駅の田町に付く
+    expect(StyleSheet.flatten(getByText('田町').props.style).fontSize).toBe(
+      RFValue(18)
+    );
+    expect(StyleSheet.flatten(getByText('品川').props.style).fontSize).toBe(
+      RFValue(16)
+    );
+    // 列車位置の三角は現在駅と次駅の間(次駅行の上側セグメント)に出る
+    expect(
+      within(getByTestId('stop-row-2')).getByTestId('train-chevron')
+    ).toBeTruthy();
+    expect(
+      within(getByTestId('stop-row-1')).queryByTestId('train-chevron')
+    ).toBeNull();
+  });
+
+  it('停車中は先頭駅が強調され半透明にならない', () => {
+    const { getByTestId, getByText } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+      ],
+      { arrived: true }
+    );
+
+    expect(
+      StyleSheet.flatten(getByTestId('stop-row-1').props.style).opacity
+    ).toBeUndefined();
+    expect(StyleSheet.flatten(getByText('品川').props.style).fontSize).toBe(
+      RFValue(18)
+    );
+    // 列車位置の三角は現在駅の行に出る
+    expect(
+      within(getByTestId('stop-row-1')).getByTestId('train-chevron')
+    ).toBeTruthy();
+  });
+
+  it('直通先の駅は直通先のラインカラーで描画される', () => {
+    const keihinTohokuLine = {
+      id: 11332,
+      color: '#00B2E5',
+      nameShort: '京浜東北線',
+      nameRoman: 'Keihin-Tohoku Line',
+    };
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      buildStation(2, '大井町', StopCondition.All, 'JK-19', keihinTohokuLine),
+    ]);
+
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-1').props.style).borderColor
+    ).toBe(yamanoteLine.color);
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-2').props.style).borderColor
+    ).toBe(keihinTohokuLine.color);
   });
 
   it('ヘッダーデータが揃っていない間は何も表示しない', () => {
