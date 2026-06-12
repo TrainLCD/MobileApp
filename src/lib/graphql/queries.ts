@@ -1,4 +1,6 @@
-import { gql } from '@apollo/client';
+// graphql-tag は Apollo の gql と同実装で、入れ子フラグメントの
+// 重複定義を自動でまとめてくれる(単純な文字列結合だと重複定義エラーになる)
+import gql from 'graphql-tag';
 
 // Fragment definitions for reusability
 export const COMPANY_FRAGMENT = gql`

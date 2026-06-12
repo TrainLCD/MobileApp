@@ -1,6 +1,6 @@
-import { useLazyQuery } from '@apollo/client/react';
 import type { Station } from '~/@types/graphql';
 import { GET_LINE_GROUP_STATIONS } from '~/lib/graphql/queries';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
 type GetLineGroupStationsData = {
   lineGroupStations: Station[];
@@ -11,10 +11,11 @@ type GetLineGroupStationsVariables = {
 };
 
 export const useTrainTypeStations = () => {
-  const [fetchLineGroupStations, { data, loading, error }] = useLazyQuery<
-    GetLineGroupStationsData,
-    GetLineGroupStationsVariables
-  >(GET_LINE_GROUP_STATIONS);
+  const [fetchLineGroupStations, { data, loading, error }] =
+    useLazyGraphQLQuery<
+      GetLineGroupStationsData,
+      GetLineGroupStationsVariables
+    >(GET_LINE_GROUP_STATIONS);
 
   return {
     stations: data?.lineGroupStations ?? [],

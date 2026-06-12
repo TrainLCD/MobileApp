@@ -1,4 +1,3 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { CommonActions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import { useSetAtom } from 'jotai';
@@ -27,6 +26,7 @@ import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
 const MAX_NAV_RETRIES = 5;
 const INITIAL_RETRY_DELAY_MS = 100;
@@ -91,22 +91,23 @@ export const useDeepLink = () => {
       loading: fetchStationsByLineGroupIdLoading,
       error: fetchStationsByLineGroupIdError,
     },
-  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
-    GET_LINE_GROUP_STATIONS
-  );
+  ] = useLazyGraphQLQuery<
+    GetLineGroupStationsData,
+    GetLineGroupStationsVariables
+  >(GET_LINE_GROUP_STATIONS);
   const [
     fetchStationsByLineId,
     {
       loading: fetchStationsByLineIdLoading,
       error: fetchStationsByLineIdError,
     },
-  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+  ] = useLazyGraphQLQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
   );
   const [
     fetchStationsByIds,
     { loading: fetchStationsByIdsLoading, error: fetchStationsByIdsError },
-  ] = useLazyQuery<GetStationsByIdsData, GetStationsByIdsVariables>(
+  ] = useLazyGraphQLQuery<GetStationsByIdsData, GetStationsByIdsVariables>(
     GET_STATIONS_BY_IDS
   );
 
@@ -372,7 +373,7 @@ export const useDeepLink = () => {
       if (!parsed.queryParams) {
         return;
       }
-      // Apollo-derived errors auto-reset on the next query, but resolverError
+      // useLazyGraphQLQuery-derived errors auto-reset on the next query, but resolverError
       // is held in local state — without an explicit reset, a previous failure
       // leaks into the next handleUrl call (including subsequent legacy-path
       // successes). Clear it once we know the URL has parseable params.

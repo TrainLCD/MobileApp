@@ -1,4 +1,3 @@
-import { ApolloProvider } from '@apollo/client/react';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { PortalProvider } from '@gorhom/portal';
@@ -7,6 +6,7 @@ import {
   createNativeStackNavigator,
   type NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
@@ -18,7 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import { GlobalToast } from './components/GlobalToast';
 import TuningSettings from './components/TuningSettings';
-import { gqlClient } from './lib/gql';
+import { queryClient } from './lib/gql';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import QuickActionsProvider from './providers/QuickActionsProvider';
 import PrivacyScreen from './screens/Privacy';
@@ -113,7 +113,7 @@ const App: React.FC = () => {
   return (
     <CustomErrorBoundary>
       <GestureHandlerRootView>
-        <ApolloProvider client={gqlClient}>
+        <QueryClientProvider client={queryClient}>
           <ActionSheetProvider>
             <Provider store={store}>
               <NavigationContainer ref={navigationRef}>
@@ -128,7 +128,7 @@ const App: React.FC = () => {
               </NavigationContainer>
             </Provider>
           </ActionSheetProvider>
-        </ApolloProvider>
+        </QueryClientProvider>
       </GestureHandlerRootView>
     </CustomErrorBoundary>
   );
