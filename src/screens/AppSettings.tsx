@@ -312,12 +312,18 @@ const AppSettingsScreen: React.FC = () => {
           color: '#FF3B30',
           onPress: () => navigation.navigate('NotificationSettings' as never),
         },
-        {
-          id: SETTING_ITEM_ID_MAP.personalize_experimental,
-          title: translate('experimentalSettings'),
-          color: '#AF52DE',
-          onPress: () => navigation.navigate('ExperimentalSettings' as never),
-        },
+        // 試験的機能はカナリアリリース(devアプリ)限定で表示する
+        ...(isDevApp
+          ? [
+              {
+                id: SETTING_ITEM_ID_MAP.personalize_experimental,
+                title: translate('experimentalSettings'),
+                color: '#AF52DE',
+                onPress: () =>
+                  navigation.navigate('ExperimentalSettings' as never),
+              },
+            ]
+          : []),
         ...(Platform.OS === 'android'
           ? [
               {
