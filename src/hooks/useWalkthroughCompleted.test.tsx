@@ -1,12 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { ASYNC_STORAGE_KEYS } from '~/constants/asyncStorage';
+import { act, renderHook } from '@testing-library/react-native';
+import { STORAGE_KEYS } from '~/constants/storage';
 import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
-
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-}));
+import { storage } from '~/lib/storage';
 
 describe('useWalkthroughCompleted', () => {
   beforeEach(() => {
@@ -14,65 +9,30 @@ describe('useWalkthroughCompleted', () => {
   });
 
   describe('初期状態', () => {
-    it('ウォークスルーが完了していない場合、isWalkthroughActiveがtrueになる', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('ウォークスルーが完了していない場合、isWalkthroughActiveがtrueになる', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
 
-      await waitFor(() => {
-        expect(result.current.isWalkthroughCompleted).toBe(false);
-      });
-
+      expect(result.current.isWalkthroughCompleted).toBe(false);
       expect(result.current.isWalkthroughActive).toBe(true);
       expect(result.current.currentStepIndex).toBe(0);
       expect(result.current.currentStepId).toBe('welcome');
     });
 
-    it('ウォークスルーが完了している場合、isWalkthroughActiveがfalseになる', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue('true');
+    it('ウォークスルーが完了している場合、isWalkthroughActiveがfalseになる', () => {
+      storage.set(STORAGE_KEYS.WALKTHROUGH_COMPLETED, 'true');
 
       const { result } = renderHook(() => useWalkthroughCompleted());
 
-      await waitFor(() => {
-        expect(result.current.isWalkthroughCompleted).toBe(true);
-      });
-
+      expect(result.current.isWalkthroughCompleted).toBe(true);
       expect(result.current.isWalkthroughActive).toBe(false);
       expect(result.current.currentStep).toBeNull();
       expect(result.current.currentStepId).toBeNull();
     });
-
-    it('AsyncStorageでエラーが発生した場合、ウォークスルーを表示する', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockRejectedValue(
-        new Error('Storage error')
-      );
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughCompleted).toBe(false);
-      });
-
-      expect(result.current.isWalkthroughActive).toBe(true);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to check walkthrough completion status:',
-        expect.any(Error)
-      );
-
-      consoleSpy.mockRestore();
-    });
   });
 
   describe('ステップナビゲーション', () => {
-    it('nextStepで次のステップに進む', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('nextStepで次のステップに進む', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       expect(result.current.currentStepId).toBe('welcome');
 
@@ -112,15 +72,8 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.currentStepId).toBe('customize');
     });
 
-    it('最後のステップでnextStepを呼ぶとウォークスルーが完了する', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-      (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
-
+    it('最後のステップでnextStepを呼ぶとウォークスルーが完了する', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       // 最後のステップまで進む
       act(() => {
@@ -129,25 +82,18 @@ describe('useWalkthroughCompleted', () => {
 
       expect(result.current.currentStepId).toBe('customize');
 
-      await act(async () => {
+      act(() => {
         result.current.nextStep();
       });
 
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-        ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED,
+      expect(storage.getString(STORAGE_KEYS.WALKTHROUGH_COMPLETED)).toBe(
         'true'
       );
       expect(result.current.isWalkthroughCompleted).toBe(true);
     });
 
-    it('goToStepで任意のステップに移動できる', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('goToStepで任意のステップに移動できる', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       act(() => {
         result.current.goToStep(2);
@@ -164,14 +110,8 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.currentStepId).toBe('welcome');
     });
 
-    it('無効なインデックスでgoToStepを呼んでも何も起きない', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('無効なインデックスでgoToStepを呼んでも何も起きない', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       act(() => {
         result.current.goToStep(-1);
@@ -189,21 +129,15 @@ describe('useWalkthroughCompleted', () => {
 
   describe('skipWalkthrough', () => {
     it('skipWalkthroughでウォークスルーを完了としてマークする', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-      (AsyncStorage.setItem as jest.Mock).mockResolvedValue(undefined);
-
       const { result } = renderHook(() => useWalkthroughCompleted());
 
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
+      expect(result.current.isWalkthroughActive).toBe(true);
 
       await act(async () => {
         await result.current.skipWalkthrough();
       });
 
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-        ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED,
+      expect(storage.getString(STORAGE_KEYS.WALKTHROUGH_COMPLETED)).toBe(
         'true'
       );
       expect(result.current.isWalkthroughCompleted).toBe(true);
@@ -212,14 +146,8 @@ describe('useWalkthroughCompleted', () => {
   });
 
   describe('setSpotlightArea', () => {
-    it('spotlightAreaを設定できる', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('spotlightAreaを設定できる', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       const spotlightArea = {
         x: 100,
@@ -236,14 +164,8 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.currentStep?.spotlightArea).toEqual(spotlightArea);
     });
 
-    it('ステップ移動時にspotlightAreaがリセットされる', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('ステップ移動時にspotlightAreaがリセットされる', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       act(() => {
         result.current.setSpotlightArea({
@@ -265,14 +187,8 @@ describe('useWalkthroughCompleted', () => {
   });
 
   describe('currentStep', () => {
-    it('各ステップに正しいtitleKeyとdescriptionKeyが設定されている', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('各ステップに正しいtitleKeyとdescriptionKeyが設定されている', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       // Step 0: welcome
       expect(result.current.currentStep?.id).toBe('welcome');
@@ -317,39 +233,28 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.currentStep?.titleKey).toBe('walkthroughTitle4');
     });
 
-    it('totalStepsが正しい値を返す', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-
+    it('totalStepsが正しい値を返す', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       expect(result.current.totalSteps).toBe(6);
     });
   });
 
   describe('エラーハンドリング', () => {
-    it('completeWalkthroughでAsyncStorageエラーが発生しても例外をスローしない', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
-      (AsyncStorage.setItem as jest.Mock).mockRejectedValue(
-        new Error('Storage error')
-      );
+    it('completeWalkthroughでストレージエラーが発生しても例外をスローしない', () => {
+      const setSpy = jest.spyOn(storage, 'set').mockImplementation(() => {
+        throw new Error('Storage error');
+      });
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
       const { result } = renderHook(() => useWalkthroughCompleted());
-
-      await waitFor(() => {
-        expect(result.current.isWalkthroughActive).toBe(true);
-      });
 
       // 最後のステップに移動してnextStepを呼ぶ
       act(() => {
         result.current.goToStep(5);
       });
 
-      await act(async () => {
+      act(() => {
         result.current.nextStep();
       });
 
@@ -361,6 +266,7 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.isWalkthroughCompleted).toBe(true);
       expect(result.current.isWalkthroughActive).toBe(false);
 
+      setSpy.mockRestore();
       consoleSpy.mockRestore();
     });
   });
