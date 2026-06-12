@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { ASYNC_STORAGE_KEYS } from '~/constants';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
@@ -60,5 +60,28 @@ describe('ExperimentalSettingsScreen', () => {
       ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED,
       'false'
     );
+  });
+
+  it('AsyncStorageへの保存に失敗した場合はatom状態をロールバックする', async () => {
+    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(
+      new Error('storage failure')
+    );
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    const { getByLabelText, store } = renderWithStore(false);
+
+    fireEvent.press(getByLabelText('portraitModeTitle'));
+
+    // 楽観的更新で一度ONになる
+    expect(store.get(portraitModeEnabledAtom)).toBe(true);
+
+    // 保存失敗後にロールバックされる
+    await waitFor(() => {
+      expect(store.get(portraitModeEnabledAtom)).toBe(false);
+    });
+
+    consoleErrorSpy.mockRestore();
   });
 });

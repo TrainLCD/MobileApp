@@ -103,6 +103,9 @@ const ExperimentalSettingsScreen: React.FC = () => {
         flag ? 'true' : 'false'
       );
     } catch (error) {
+      // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
+      // UIと永続値の不整合を防ぐべくatom状態をロールバックする
+      setPortraitModeEnabled(!flag);
       console.error('Failed to save portrait mode setting', error);
       Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
