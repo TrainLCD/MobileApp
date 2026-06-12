@@ -1,11 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getIdToken } from '@react-native-firebase/auth';
 import { setAudioModeAsync } from 'expo-audio';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
-import { ASYNC_STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS } from '../constants';
+import { storage } from '../lib/storage';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
@@ -93,17 +93,13 @@ export const useTTS = (): void => {
   }, []);
 
   useEffect(() => {
-    (async () => {
-      const [jaVoice, enVoice] = await Promise.all([
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_JA_VOICE_NAME),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_EN_VOICE_NAME),
-      ]);
-      setTuning((prev) => ({
-        ...prev,
-        ttsJaVoiceName: jaVoice || prev.ttsJaVoiceName,
-        ttsEnVoiceName: enVoice || prev.ttsEnVoiceName,
-      }));
-    })();
+    const jaVoice = storage.getString(STORAGE_KEYS.TTS_JA_VOICE_NAME);
+    const enVoice = storage.getString(STORAGE_KEYS.TTS_EN_VOICE_NAME);
+    setTuning((prev) => ({
+      ...prev,
+      ttsJaVoiceName: jaVoice || prev.ttsJaVoiceName,
+      ttsEnVoiceName: enVoice || prev.ttsEnVoiceName,
+    }));
   }, [setTuning]);
 
   useEffect(() => {

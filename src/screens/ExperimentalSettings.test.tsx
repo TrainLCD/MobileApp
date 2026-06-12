@@ -1,8 +1,8 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { Alert } from 'react-native';
-import { ASYNC_STORAGE_KEYS } from '~/constants';
+import { STORAGE_KEYS } from '~/constants';
+import { storage } from '~/lib/storage';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import ExperimentalSettingsScreen from './ExperimentalSettings';
 
@@ -39,34 +39,28 @@ describe('ExperimentalSettingsScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('ポートレートモードをONにするとatomとAsyncStorageへ保存される', () => {
+  it('ポートレートモードをONにするとatomとストレージへ保存される', () => {
     const { getByLabelText, store } = renderWithStore(false);
 
     fireEvent.press(getByLabelText('portraitModeTitle'));
 
     expect(store.get(portraitModeEnabledAtom)).toBe(true);
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED,
-      'true'
-    );
+    expect(storage.getString(STORAGE_KEYS.PORTRAIT_MODE_ENABLED)).toBe('true');
   });
 
-  it('ポートレートモードをOFFにするとatomとAsyncStorageへ保存される', () => {
+  it('ポートレートモードをOFFにするとatomとストレージへ保存される', () => {
     const { getByLabelText, store } = renderWithStore(true);
 
     fireEvent.press(getByLabelText('portraitModeTitle'));
 
     expect(store.get(portraitModeEnabledAtom)).toBe(false);
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED,
-      'false'
-    );
+    expect(storage.getString(STORAGE_KEYS.PORTRAIT_MODE_ENABLED)).toBe('false');
   });
 
-  it('AsyncStorageへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', async () => {
-    (AsyncStorage.setItem as jest.Mock).mockRejectedValueOnce(
-      new Error('storage failure')
-    );
+  it('ストレージへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
+    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw new Error('storage failure');
+    });
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
@@ -76,13 +70,8 @@ describe('ExperimentalSettingsScreen', () => {
 
     fireEvent.press(getByLabelText('portraitModeTitle'));
 
-    // 楽観的更新で一度ONになる
-    expect(store.get(portraitModeEnabledAtom)).toBe(true);
-
-    // 保存失敗後にロールバックされる
-    await waitFor(() => {
-      expect(store.get(portraitModeEnabledAtom)).toBe(false);
-    });
+    // 保存失敗後にロールバックされる（MMKVは同期APIのため即時）
+    expect(store.get(portraitModeEnabledAtom)).toBe(false);
 
     // エラーログとユーザーへのアラート表示を検証
     expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -94,6 +83,7 @@ describe('ExperimentalSettingsScreen', () => {
       'failedToSavePreference'
     );
 
+    setSpy.mockRestore();
     consoleErrorSpy.mockRestore();
     alertSpy.mockRestore();
   });

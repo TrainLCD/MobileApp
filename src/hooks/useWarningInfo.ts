@@ -1,10 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useForegroundPermissions } from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isClip } from 'react-native-app-clip';
 import { StopCondition } from '~/@types/graphql';
-import { ASYNC_STORAGE_KEYS } from '~/constants';
+import { STORAGE_KEYS } from '~/constants';
+import { storage } from '~/lib/storage';
 import {
   autoModeEnabledAtom,
   leftStationsAtom,
@@ -25,12 +25,15 @@ const WARNING_PANEL_LEVEL = {
 
 export const useWarningInfo = () => {
   const [warningDismissed, setWarningDismissed] = useState(false);
-  const [longPressNoticeDismissed, setLongPressNoticeDismissed] =
-    useState(true);
-  const [
-    isAlwaysPermissionNotGrantedDismissed,
-    setIsAlwaysPermissionNotGrantedDismissed,
-  ] = useState(true);
+  const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(
+    () => storage.getString(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED) === 'true'
+  );
+  const [isAlwaysPermissionNotGrantedDismissed] = useState(
+    () =>
+      storage.getString(
+        STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
+      ) === 'true'
+  );
   const [screenshotTaken, setScreenshotTaken] = useState(false);
 
   const selectedBound = useAtomValue(selectedBoundAtom);
@@ -69,27 +72,6 @@ export const useWarningInfo = () => {
       setWarningDismissed(false);
     }
   }, [isInternetAvailable]);
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      const [
-        longPressNoticeDismissedValue,
-        alwaysPermNotGrantedDismissedValue,
-      ] = await Promise.all([
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED),
-        AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
-        ),
-      ]);
-
-      setLongPressNoticeDismissed(longPressNoticeDismissedValue === 'true');
-      setIsAlwaysPermissionNotGrantedDismissed(
-        alwaysPermNotGrantedDismissedValue === 'true'
-      );
-    };
-
-    loadSettings();
-  }, []);
 
   const warningInfo = useMemo(() => {
     if (warningDismissed) {
@@ -197,10 +179,8 @@ export const useWarningInfo = () => {
     setScreenshotTaken(false);
 
     if (!longPressNoticeDismissed) {
-      AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
-        'true'
-      );
+      setLongPressNoticeDismissed(true);
+      storage.set(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED, 'true');
     }
   }, [longPressNoticeDismissed]);
 
