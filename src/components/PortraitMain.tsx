@@ -606,7 +606,7 @@ const StopRow = ({
           lineTestID={`track-top-${station.id}`}
         />
         {isPass ? (
-          <View style={[styles.passDot, { borderColor: trackColor }]} />
+          <View style={styles.passDot} />
         ) : (
           <View
             style={[styles.stopDot, { borderColor: trackColor }]}
