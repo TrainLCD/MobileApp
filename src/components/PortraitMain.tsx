@@ -61,8 +61,10 @@ const lineTintColor = (color: string): string => {
 const CONTENT_INSET = 24;
 
 // NumberingIcon の LARGE サイズ実寸(NumberingIconRound 基準)に合わせた固定幅。
-// 駅名の長さやナンバリングの有無で記号の表示位置が動かないよう、
-// 駅名行の左端に固定幅の枠を確保する。
+// ナンバリングがある駅では駅名の長さで記号の表示位置が動かないよう
+// 駅名行の左端に固定幅の枠を確保する。ナンバリングがない駅では枠ごと
+// 描画せず、その分を駅名表示に充てる。行の minHeight にも流用し、
+// ナンバリングの有無で駅名セクションの高さが変わらないようにする。
 const NUMBERING_COLUMN_WIDTH = isTablet ? 72 * 1.5 : 72;
 
 const styles = StyleSheet.create({
@@ -147,6 +149,9 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontSize: RFValue(32),
     fontWeight: 'bold',
+  },
+  // ナンバリング記号と駅名の間隔。記号がないときは付けず左端を揃える
+  stationNameWithNumbering: {
     paddingLeft: 8,
   },
   stopList: {
@@ -507,20 +512,23 @@ const PortraitMain: React.FC = () => {
           {stateText}
         </Typography>
         <View style={styles.stationNameRow}>
-          <View style={styles.numberingColumn}>
-            {currentStationNumber ? (
+          {currentStationNumber ? (
+            <View style={styles.numberingColumn} testID="numbering-column">
               <NumberingIcon
                 shape={currentStationNumber.lineSymbolShape || ''}
                 lineColor={numberingColor}
                 stationNumber={currentStationNumber.stationNumber || ''}
                 threeLetterCode={commonData.threeLetterCode}
               />
-            ) : null}
-          </View>
+            </View>
+          ) : null}
           <Typography
             numberOfLines={1}
             adjustsFontSizeToFit
-            style={styles.stationName}
+            style={[
+              styles.stationName,
+              currentStationNumber && styles.stationNameWithNumbering,
+            ]}
           >
             {stationText}
           </Typography>

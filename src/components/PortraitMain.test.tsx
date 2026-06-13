@@ -208,6 +208,31 @@ describe('PortraitMain', () => {
     ).toBe(keihinTohokuLine.color);
   });
 
+  it('現在駅にナンバリングがあるときは駅名の左に固定幅の枠を確保する', () => {
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    expect(getByTestId('numbering-column')).toBeTruthy();
+  });
+
+  it('現在駅にナンバリングがないときは枠を確保せず駅名表示に充てる', () => {
+    mockedUseHeaderCommonData.mockReturnValue({
+      ...commonData,
+      currentStationNumber: null,
+    });
+
+    const { queryByTestId, getByText } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All),
+    ]);
+
+    expect(queryByTestId('numbering-column')).toBeNull();
+    // 記号との間隔用パディングも付かず、駅名が左端から始まる
+    expect(
+      StyleSheet.flatten(getByText('高輪ゲートウェイ').props.style).paddingLeft
+    ).toBeUndefined();
+  });
+
   it('ヘッダーデータが揃っていない間は何も表示しない', () => {
     mockedUseHeaderCommonData.mockReturnValue(null);
 
