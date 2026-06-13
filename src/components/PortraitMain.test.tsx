@@ -5,12 +5,16 @@ import { StyleSheet } from 'react-native';
 import { type Station, StopCondition } from '~/@types/graphql';
 import {
   useCurrentLine,
+  useCurrentStation,
   useCurrentTrainType,
   useHeaderCommonData,
   useTransferLinesFromStation,
 } from '~/hooks';
-import { leftStationsAtom } from '~/store/atoms/navigation';
-import { arrivedAtom } from '~/store/atoms/station';
+import {
+  arrivedAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '~/store/atoms/station';
 import { RFValue } from '~/utils/rfValue';
 import PortraitMain from './PortraitMain';
 
@@ -26,7 +30,9 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('./NumberingIcon', () => () => null);
 
 jest.mock('~/hooks', () => ({
+  useBoundText: jest.fn(() => ({ JA: '品川・大崎方面' })),
   useCurrentLine: jest.fn(),
+  useCurrentStation: jest.fn(),
   useCurrentTrainType: jest.fn(),
   useHeaderCommonData: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => () => 0),
@@ -35,6 +41,7 @@ jest.mock('~/hooks', () => ({
 
 const mockedUseHeaderCommonData = useHeaderCommonData as jest.Mock;
 const mockedUseCurrentLine = useCurrentLine as jest.Mock;
+const mockedUseCurrentStation = useCurrentStation as jest.Mock;
 const mockedUseCurrentTrainType = useCurrentTrainType as jest.Mock;
 const mockedUseTransferLinesFromStation =
   useTransferLinesFromStation as jest.Mock;
@@ -69,6 +76,7 @@ const buildStation = (
 ): Station =>
   ({
     id,
+    groupId: id,
     name,
     nameRoman: `${name}-roman`,
     stopCondition,
@@ -79,11 +87,17 @@ const buildStation = (
 
 const renderWithStations = (
   stations: Station[],
-  { arrived = true }: { arrived?: boolean } = {}
+  {
+    arrived = true,
+    currentStation = stations[0],
+  }: { arrived?: boolean; currentStation?: Station } = {}
 ) => {
   const store = createStore();
-  store.set(leftStationsAtom, stations);
+  // 全駅表示。INBOUND は反転しないので渡した順がそのまま表示順になる。
+  store.set(stationsAtom, stations);
+  store.set(selectedDirectionAtom, 'INBOUND');
   store.set(arrivedAtom, arrived);
+  mockedUseCurrentStation.mockReturnValue(currentStation);
 
   return render(
     <Provider store={store}>
@@ -109,7 +123,7 @@ describe('PortraitMain', () => {
   });
 
   it('路線名・種別・行き先・状態テキスト・駅名を表示する', () => {
-    const { getByText } = renderWithStations([
+    const { getByText, getByTestId } = renderWithStations([
       buildStation(1, '品川', StopCondition.All, 'JY-25'),
     ]);
 
@@ -117,22 +131,26 @@ describe('PortraitMain', () => {
     expect(getByText('各駅停車')).toBeTruthy();
     expect(getByText('品川・大崎方面')).toBeTruthy();
     expect(getByText('nextKana')).toBeTruthy();
-    expect(getByText('高輪ゲートウェイ')).toBeTruthy();
+    // 駅名は表示用と測定用の2つがあるため testID で表示用を取得
+    expect(getByTestId('portrait-station-name').props.children).toBe(
+      '高輪ゲートウェイ'
+    );
   });
 
-  it('停車駅リストに駅名とナンバリングを表示し通過駅には通過ラベルを付ける', () => {
-    const { getByText, getAllByText } = renderWithStations([
+  it('停車駅リストに通過駅も含めて駅名とナンバリングを表示する', () => {
+    const { getByText, queryByText } = renderWithStations([
       buildStation(1, '品川', StopCondition.All, 'JY-25'),
-      buildStation(2, '高輪ゲートウェイ', StopCondition.Not, 'JY-26'),
+      buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
       buildStation(3, '田町', StopCondition.All, 'JY-27'),
     ]);
 
     expect(getByText('品川')).toBeTruthy();
+    expect(getByText('新橋')).toBeTruthy();
     expect(getByText('田町')).toBeTruthy();
     expect(getByText('JY-25')).toBeTruthy();
     expect(getByText('JY-27')).toBeTruthy();
-    // 通過駅は1駅だけなので通過ラベルも1つ
-    expect(getAllByText('passStationLabel')).toHaveLength(1);
+    // 「通過」ラベルは表示しない
+    expect(queryByText('passStationLabel')).toBeNull();
   });
 
   it('発車後は先頭駅の行が半透明になり強調が次の停車駅へ移る', () => {
@@ -145,12 +163,13 @@ describe('PortraitMain', () => {
       { arrived: false }
     );
 
+    // 発車済みの先頭駅は縦棒・ドットが淡い色になり、次駅以降は通常色のまま
     expect(
-      StyleSheet.flatten(getByTestId('stop-row-1').props.style).opacity
-    ).toBe(0.4);
+      StyleSheet.flatten(getByTestId('stop-dot-1').props.style).borderColor
+    ).not.toBe(yamanoteLine.color);
     expect(
-      StyleSheet.flatten(getByTestId('stop-row-2').props.style).opacity
-    ).toBeUndefined();
+      StyleSheet.flatten(getByTestId('stop-dot-2').props.style).borderColor
+    ).toBe(yamanoteLine.color);
     // 強調(フォント拡大)は発車済みの品川ではなく次の停車駅の田町に付く
     expect(StyleSheet.flatten(getByText('田町').props.style).fontSize).toBe(
       RFValue(18)
@@ -188,6 +207,28 @@ describe('PortraitMain', () => {
     ).toBeTruthy();
   });
 
+  it('停車中も現在駅より前の駅(過ぎた線路)は半透明になる', () => {
+    const { getByTestId } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+        buildStation(3, '浜松町', StopCondition.All, 'JY-28'),
+      ],
+      {
+        arrived: true,
+        currentStation: buildStation(2, '田町', StopCondition.All),
+      }
+    );
+
+    // 現在駅(田町)より前の品川は淡色、現在駅と以降は通常色
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-1').props.style).borderColor
+    ).not.toBe(yamanoteLine.color);
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-2').props.style).borderColor
+    ).toBe(yamanoteLine.color);
+  });
+
   it('直通先の駅は直通先のラインカラーで描画される', () => {
     const keihinTohokuLine = {
       id: 11332,
@@ -206,6 +247,79 @@ describe('PortraitMain', () => {
     expect(
       StyleSheet.flatten(getByTestId('stop-dot-2').props.style).borderColor
     ).toBe(keihinTohokuLine.color);
+  });
+
+  it('現在駅にナンバリングがあるときは駅名の左に固定幅の枠を確保する', () => {
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    expect(getByTestId('numbering-column')).toBeTruthy();
+    // ナンバリングありのときは駅名スロットに記号との間隔パディングが付く
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-name-slot').props.style)
+        .paddingLeft
+    ).toBe(8);
+  });
+
+  it('現在駅にナンバリングがないときは枠を確保せず駅名表示に充てる', () => {
+    mockedUseHeaderCommonData.mockReturnValue({
+      ...commonData,
+      currentStationNumber: null,
+    });
+
+    const { queryByTestId, getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All),
+    ]);
+
+    expect(queryByTestId('numbering-column')).toBeNull();
+    // 記号との間隔用パディングも付かず、駅名スロットが左端から始まる
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-name-slot').props.style)
+        .paddingLeft
+    ).toBeUndefined();
+  });
+
+  it('ピンより前の駅は淡色になり、ピンの行とそれ以降は通常色のまま', () => {
+    const { getByTestId } = renderWithStations(
+      [
+        buildStation(1, '光が丘', StopCondition.All, 'E-38'),
+        buildStation(2, '練馬春日町', StopCondition.All, 'E-37'),
+        buildStation(3, '豊島園', StopCondition.All, 'E-36'),
+      ],
+      // 光が丘を発車し練馬春日町へ走行中(ピンは練馬春日町の行)
+      {
+        arrived: false,
+        currentStation: buildStation(1, '光が丘', StopCondition.All),
+      }
+    );
+
+    // ピンより前(光が丘)は上下とも淡色。ピンの行(練馬春日町)は通常色のまま。
+    expect(
+      StyleSheet.flatten(getByTestId('track-top-1').props.style).backgroundColor
+    ).not.toBe(yamanoteLine.color);
+    expect(
+      StyleSheet.flatten(getByTestId('track-bottom-1').props.style)
+        .backgroundColor
+    ).not.toBe(yamanoteLine.color);
+    expect(
+      StyleSheet.flatten(getByTestId('track-top-2').props.style).backgroundColor
+    ).toBe(yamanoteLine.color);
+  });
+
+  it('停車中(CURRENT)の英中韓 state は各言語の「ただいま停車中」を補完表示する', () => {
+    mockedUseHeaderCommonData.mockReturnValue({
+      ...commonData,
+      stateText: '',
+      headerState: 'CURRENT_EN',
+    });
+
+    const { getByText } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    // translate はモックでキーをそのまま返す
+    expect(getByText('nowStoppingAtEn')).toBeTruthy();
   });
 
   it('ヘッダーデータが揃っていない間は何も表示しない', () => {
