@@ -819,18 +819,17 @@ const PortraitMain: React.FC = () => {
   const [rowYs, setRowYs] = useState<Record<number, number>>({});
   const chevronRowY = rowYs[chevronRowIndex] ?? 0;
 
-  // 駅が変わるたびにスクロールする。現在駅の1つ前の駅が見える程度の余白
-  // (1行分)を上に残し、現在駅をその下に置く。
+  // 到着(ピン=現在駅)・出発(ピン=次駅)のたびに、ピンの行を表示領域の上
+  // (1つ前の駅が見える程度に1行分の余白を残した位置)へスクロールする。
   const scrollRef = useRef<ScrollView>(null);
   useEffect(() => {
-    const y = rowYs[currentIndex];
-    if (y != null) {
+    if (chevronRowY > 0) {
       scrollRef.current?.scrollTo({
-        y: Math.max(0, STOP_LIST_PADDING_V + y - STOP_ROW_HEIGHT),
+        y: Math.max(0, STOP_LIST_PADDING_V + chevronRowY - STOP_ROW_HEIGHT),
         animated: true,
       });
     }
-  }, [rowYs, currentIndex]);
+  }, [chevronRowY]);
 
   if (!commonData) {
     return <View style={styles.root} />;
