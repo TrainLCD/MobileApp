@@ -4,7 +4,7 @@ import { useWalkthroughCompleted } from '~/hooks/useWalkthroughCompleted';
 import { storage } from '~/lib/storage';
 
 describe('useWalkthroughCompleted', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 

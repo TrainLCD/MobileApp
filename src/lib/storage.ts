@@ -27,14 +27,18 @@ export const migrateFromAsyncStorage = async (): Promise<void> => {
     return;
   }
 
-  const keys = Object.values(STORAGE_KEYS);
-  const entries = await AsyncStorage.multiGet(keys);
-  for (const [key, value] of entries) {
-    if (value !== null && !storage.contains(key)) {
-      storage.set(key, value);
+  try {
+    const keys = Object.values(STORAGE_KEYS);
+    const entries = await AsyncStorage.multiGet(keys);
+    for (const [key, value] of entries) {
+      if (value !== null && !storage.contains(key)) {
+        storage.set(key, value);
+      }
     }
-  }
 
-  storage.set(MIGRATION_COMPLETED_KEY, true);
-  await AsyncStorage.multiRemove(keys);
+    storage.set(MIGRATION_COMPLETED_KEY, true);
+    await AsyncStorage.multiRemove(keys);
+  } catch (error) {
+    console.error('Failed to migrate from AsyncStorage:', error);
+  }
 };
