@@ -22,6 +22,15 @@ jest.mock('~/translation', () => ({
   translate: (key: string) => key,
 }));
 
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: jest.fn(() => ({
+    top: 59,
+    right: 0,
+    bottom: 34,
+    left: 0,
+  })),
+}));
+
 jest.mock('./NumberingIcon', () => () => null);
 
 jest.mock('~/hooks', () => ({
@@ -171,7 +180,9 @@ describe('PortraitMain', () => {
     // 描画幅 = 392 + 8(バッファ) = 400、利用可能幅 = 108 - 8 = 100
     expect(style.width).toBe(400);
     expect(style.transform).toEqual([{ scaleX: 100 / 400 }]);
-    expect(style.transformOrigin).toBe('left center');
+    // 左端基準で圧縮する。数値配列形式 [x, y, z] で指定し、New Architecture でも
+    // 確実に左端アンカーになるようにする(2 値キーワード文字列は中央へフォールバックする)。
+    expect(style.transformOrigin).toEqual([0, '50%', 0]);
   });
 
   it('停車駅リストに通過駅も含めて駅名とナンバリングを表示する', () => {
@@ -357,6 +368,24 @@ describe('PortraitMain', () => {
 
     // translate はモックでキーをそのまま返す
     expect(getByText('nowStoppingAtEn')).toBeTruthy();
+  });
+
+  it('上端は Dynamic Island、下端はホームインジケータと被らないようセーフエリア分の余白を取る', () => {
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    // 上端: 路線セクションが Dynamic Island に潜らないよう root に paddingTop
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-root').props.style).paddingTop
+    ).toBe(59);
+    // 下端: スクロール末尾でも最終駅がホームインジケータに被らないよう
+    // リスト内容に通常の下パディング + セーフエリア下端を足す
+    expect(
+      StyleSheet.flatten(
+        getByTestId('portrait-stop-list').props.contentContainerStyle
+      ).paddingBottom
+    ).toBe(12 + 34);
   });
 
   it('ヘッダーデータが揃っていない間は何も表示しない', () => {
