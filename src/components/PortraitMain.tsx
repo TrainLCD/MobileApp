@@ -19,6 +19,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Circle, Path, Svg } from 'react-native-svg';
 import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
@@ -776,6 +777,10 @@ const StationName = ({
 };
 
 const PortraitMain: React.FC = () => {
+  // ステータスバー非表示で全画面描画するため SafeAreaView は使わないが、
+  // Dynamic Island / ノッチやホームインジケータと表示が被らないよう、
+  // 上下のセーフエリア分を padding として確保する。
+  const insets = useSafeAreaInsets();
   const commonData = useHeaderCommonData();
   const allStations = useAtomValue(stationsAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
@@ -895,9 +900,13 @@ const PortraitMain: React.FC = () => {
   const displayStateText = resolveStateText(stateText, headerState);
 
   return (
-    // ポートレート時は上下のセーフエリアを無視して全画面に描画する。
     // ステータスバーは非表示のため SafeAreaView は使わず素の View を使う。
-    <View style={styles.root}>
+    // 上端は Dynamic Island / ノッチと路線セクションが被らないよう、
+    // セーフエリア上端ぶんの padding を確保する。
+    <View
+      testID="portrait-root"
+      style={[styles.root, { paddingTop: insets.top }]}
+    >
       {/* 路線・行き先情報 */}
       <View style={styles.lineSection}>
         <View style={[styles.lineColorBar, { backgroundColor: lineColor }]} />
@@ -959,7 +968,13 @@ const PortraitMain: React.FC = () => {
       <View style={styles.stopList}>
         <ScrollView
           ref={scrollRef}
-          contentContainerStyle={styles.stopListContent}
+          testID="portrait-stop-list"
+          contentContainerStyle={[
+            styles.stopListContent,
+            // スクロール末尾でも最終駅がホームインジケータに被って
+            // 見切れないよう、下端のセーフエリア分を余白として足す。
+            { paddingBottom: STOP_LIST_PADDING_V + insets.bottom },
+          ]}
         >
           {/* 行と光を同じ座標系・スタッキング文脈に置くラッパー。光は縦棒の
               上(zIndex 1)、列車マーカーの行はさらに上(zIndex 2)に重なる。 */}
