@@ -1,6 +1,5 @@
-import { render, within } from '@testing-library/react-native';
+import { fireEvent, render, within } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import type React from 'react';
 import { StyleSheet } from 'react-native';
 import { type Station, StopCondition } from '~/@types/graphql';
 import {
@@ -21,10 +20,6 @@ import PortraitMain from './PortraitMain';
 jest.mock('~/translation', () => ({
   isJapanese: true,
   translate: (key: string) => key,
-}));
-
-jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 jest.mock('./NumberingIcon', () => () => null);
@@ -135,6 +130,48 @@ describe('PortraitMain', () => {
     expect(getByTestId('portrait-station-name').props.children).toBe(
       '高輪ゲートウェイ'
     );
+  });
+
+  it('駅名がスロットに収まるときは末尾欠け防止のバッファ分だけ余白を取り横圧縮しない', () => {
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    // スロット幅 300 に対し自然幅 200 ならバッファ込み 208 でも収まる
+    fireEvent(getByTestId('portrait-station-name-slot'), 'layout', {
+      nativeEvent: { layout: { width: 300 } },
+    });
+    fireEvent(getByTestId('portrait-station-name-measure'), 'textLayout', {
+      nativeEvent: { lines: [{ width: 200 }] },
+    });
+
+    const style = StyleSheet.flatten(
+      getByTestId('portrait-station-name').props.style
+    );
+    expect(style.width).toBe(208);
+    expect(style.transform).toEqual([{ scaleX: 1 }]);
+  });
+
+  it('駅名がスロットをはみ出すときはバッファ込みの描画幅を基準に左基準で横圧縮する', () => {
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '高輪ゲートウェイ', StopCondition.All, 'JY-26'),
+    ]);
+
+    // ナンバリングありのスロットは onLayout 値から 8px を差し引く
+    fireEvent(getByTestId('portrait-station-name-slot'), 'layout', {
+      nativeEvent: { layout: { width: 108 } },
+    });
+    fireEvent(getByTestId('portrait-station-name-measure'), 'textLayout', {
+      nativeEvent: { lines: [{ width: 392 }] },
+    });
+
+    const style = StyleSheet.flatten(
+      getByTestId('portrait-station-name').props.style
+    );
+    // 描画幅 = 392 + 8(バッファ) = 400、利用可能幅 = 108 - 8 = 100
+    expect(style.width).toBe(400);
+    expect(style.transform).toEqual([{ scaleX: 100 / 400 }]);
+    expect(style.transformOrigin).toBe('left center');
   });
 
   it('停車駅リストに通過駅も含めて駅名とナンバリングを表示する', () => {
