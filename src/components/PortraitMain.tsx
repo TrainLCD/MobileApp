@@ -12,7 +12,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Circle, Path, Svg } from 'react-native-svg';
 import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
@@ -847,7 +846,9 @@ const PortraitMain: React.FC = () => {
   const displayStateText = resolveStateText(stateText, headerState);
 
   return (
-    <SafeAreaView style={styles.root}>
+    // ポートレート時は上下のセーフエリアを無視して全画面に描画する。
+    // ステータスバーは非表示のため SafeAreaView は使わず素の View を使う。
+    <View style={styles.root}>
       {/* 路線・行き先情報 */}
       <View style={styles.lineSection}>
         <View style={[styles.lineColorBar, { backgroundColor: lineColor }]} />
@@ -946,7 +947,7 @@ const PortraitMain: React.FC = () => {
           </View>
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
