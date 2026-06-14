@@ -3,7 +3,14 @@ import { useAtomValue } from 'jotai';
 import { darken, getLuminance, mix, rgba } from 'polished';
 import type React from 'react';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  type LayoutChangeEvent,
+  type NativeSyntheticEvent,
+  ScrollView,
+  StyleSheet,
+  type TextLayoutEventData,
+  View,
+} from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
@@ -12,7 +19,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Circle, Path, Svg } from 'react-native-svg';
 import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
@@ -116,6 +122,15 @@ const CONTENT_INSET = 24;
 // 描画せず、その分を駅名表示に充てる。行の minHeight にも流用し、
 // ナンバリングの有無で駅名セクションの高さが変わらないようにする。
 const NUMBERING_COLUMN_WIDTH = isTablet ? 72 * 1.5 : 72;
+
+// 日本語グリフでネイティブのテキスト計測幅がわずかに過小評価されると、
+// 表示用 Typography に計測幅ぴったりの width を与えたとき末尾の文字が
+// 欠ける。HeaderStationName と同じく計測幅にこの分を加えて余白を確保する。
+const STATION_NAME_MEASURE_BUFFER = 8;
+
+// 駅名の自然幅を測る非表示コンテナの幅。どんなに長い駅名でも打ち切られない
+// よう十分大きく取る。フォールバック計測でこの値以上なら未確定とみなす。
+const STATION_NAME_MEASURE_WIDTH = 10000;
 
 // トラック列と縦棒の幅。一筋の光(trackLight)を縦棒の x 位置・幅に合わせる
 // ためにも使う。
@@ -232,7 +247,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 0,
-    width: 1000,
+    width: STATION_NAME_MEASURE_WIDTH,
     alignItems: 'flex-start',
     opacity: 0,
   },
@@ -679,11 +694,42 @@ const StationName = ({
   withNumbering: boolean;
 }) => {
   const [availableWidth, setAvailableWidth] = useState(0);
-  const [naturalWidth, setNaturalWidth] = useState(0);
+  // 計測値は対象テキストとセットで保持し、駅名が変わった直後に前の駅名の
+  // 幅で圧縮してしまわないようにする。
+  const [measured, setMeasured] = useState({ text: '', width: 0 });
+  const measuredWidth = measured.text === text ? measured.width : 0;
+  // 末尾欠けを防ぐためのバッファを足した描画幅。スロット幅を超えるぶんだけ
+  // 左基準で横圧縮(長体)して 1 行に収める。
+  const renderWidth =
+    measuredWidth > 0 ? measuredWidth + STATION_NAME_MEASURE_BUFFER : 0;
   const scaleX =
-    availableWidth > 0 && naturalWidth > availableWidth
-      ? availableWidth / naturalWidth
+    availableWidth > 0 && renderWidth > availableWidth
+      ? availableWidth / renderWidth
       : 1;
+
+  const handleTextLayout = (
+    e: NativeSyntheticEvent<TextLayoutEventData>
+  ): void => {
+    const width = e.nativeEvent.lines.reduce(
+      (max, line) => Math.max(max, line.width),
+      0
+    );
+    setMeasured((prev) =>
+      prev.text === text && prev.width === width ? prev : { text, width }
+    );
+  };
+
+  // onTextLayout が発火しない環境向けのフォールバック。計測専用コンテナは
+  // 十分広いので、その幅未満ならテキスト本来の幅とみなす。
+  const handleMeasureLayout = (e: LayoutChangeEvent): void => {
+    const width = e.nativeEvent.layout.width;
+    if (width <= 0 || width >= STATION_NAME_MEASURE_WIDTH) {
+      return;
+    }
+    setMeasured((prev) =>
+      prev.text === text && prev.width >= width ? prev : { text, width }
+    );
+  };
 
   return (
     <View
@@ -701,21 +747,23 @@ const StationName = ({
       <View style={styles.stationNameMeasure} pointerEvents="none">
         <Typography
           numberOfLines={1}
+          testID="portrait-station-name-measure"
           style={styles.stationNameText}
-          onLayout={(e) => setNaturalWidth(e.nativeEvent.layout.width)}
+          onLayout={handleMeasureLayout}
+          onTextLayout={handleTextLayout}
         >
           {text}
         </Typography>
       </View>
-      {/* 表示用。自然幅(width)を与えて省略させず、左基準で横圧縮して
+      {/* 表示用。描画幅(width)を与えて省略させず、左基準で横圧縮して
           スロット内に収める(はみ出しはスロットの overflow:hidden でクリップ)。 */}
       <Typography
         numberOfLines={1}
         testID="portrait-station-name"
         style={[
           styles.stationNameText,
-          naturalWidth > 0 && {
-            width: naturalWidth,
+          renderWidth > 0 && {
+            width: renderWidth,
             transform: [{ scaleX }],
             transformOrigin: 'left center',
           },
@@ -847,7 +895,9 @@ const PortraitMain: React.FC = () => {
   const displayStateText = resolveStateText(stateText, headerState);
 
   return (
-    <SafeAreaView style={styles.root}>
+    // ポートレート時は上下のセーフエリアを無視して全画面に描画する。
+    // ステータスバーは非表示のため SafeAreaView は使わず素の View を使う。
+    <View style={styles.root}>
       {/* 路線・行き先情報 */}
       <View style={styles.lineSection}>
         <View style={[styles.lineColorBar, { backgroundColor: lineColor }]} />
@@ -946,7 +996,7 @@ const PortraitMain: React.FC = () => {
           </View>
         </ScrollView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
