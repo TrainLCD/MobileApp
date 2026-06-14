@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -30,7 +29,7 @@ import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureVie
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import { ASYNC_STORAGE_KEYS } from '~/constants';
+import { STORAGE_KEYS } from '~/constants';
 import {
   useAndroidPictureInPicture,
   useConsoleTelemetry,
@@ -61,6 +60,7 @@ import {
   GET_LINE_STATIONS,
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
+import { storage } from '~/lib/storage';
 import { APP_THEME } from '~/models/Theme';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import lineState from '~/store/atoms/line';
@@ -297,135 +297,116 @@ const MainScreen: React.FC = () => {
         (s) => s.line?.lineType === LineType.Subway
       )
     ) {
-      const alertAsync = async () => {
-        const subwayAlertDismissed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED
-        );
+      const subwayAlertDismissed = storage.getString(
+        STORAGE_KEYS.SUBWAY_ALERT_DISMISSED
+      );
 
-        if (subwayAlertDismissed !== 'true') {
-          showAlertWhilePresenting(
-            ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
-            translate('subwayAlertTitle'),
-            translate('subwayAlertText'),
-            [
-              {
-                text: translate('doNotShowAgain'),
-                style: 'cancel',
-                onPress: async (): Promise<void> => {
-                  await AsyncStorage.setItem(
-                    ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
-                    'true'
-                  );
-                },
+      if (subwayAlertDismissed !== 'true') {
+        showAlertWhilePresenting(
+          STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
+          translate('subwayAlertTitle'),
+          translate('subwayAlertText'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: (): void => {
+                storage.set(STORAGE_KEYS.SUBWAY_ALERT_DISMISSED, 'true');
               },
-              { text: 'OK' },
-            ]
-          );
-        }
-      };
-
-      alertAsync();
+            },
+            { text: 'OK' },
+          ]
+        );
+      }
     }
   }, [stationsFromCurrentStation]);
 
   const isHoliday = useMemo(() => getIsHoliday(new Date()), []);
 
   useEffect(() => {
-    const alertAsync = async () => {
-      // 土休日通過
-      const holidayNoticeDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED
-      );
-      if (
-        stationsFromCurrentStation.some(
-          (s) => s.stopCondition === StopCondition.Weekday
-        ) &&
-        isHoliday &&
-        holidayNoticeDismissed !== 'true'
-      ) {
-        showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
-          translate('notice'),
-          translate('holidayNotice'),
-          [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
-                  'true'
-                );
-              },
+    // 土休日通過
+    const holidayNoticeDismissed = storage.getString(
+      STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED
+    );
+    if (
+      stationsFromCurrentStation.some(
+        (s) => s.stopCondition === StopCondition.Weekday
+      ) &&
+      isHoliday &&
+      holidayNoticeDismissed !== 'true'
+    ) {
+      showAlertWhilePresenting(
+        STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
+        translate('notice'),
+        translate('holidayNotice'),
+        [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: (): void => {
+              storage.set(STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED, 'true');
             },
-            { text: 'OK' },
-          ]
-        );
-      }
-
-      // 平日通過
-      const weekdayNoticeDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED
+          },
+          { text: 'OK' },
+        ]
       );
+    }
 
-      if (
-        stationsFromCurrentStation.some(
-          (s) => s.stopCondition === StopCondition.Holiday
-        ) &&
-        !isHoliday &&
-        weekdayNoticeDismissed !== 'true'
-      ) {
-        showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
-          translate('notice'),
-          translate('weekdayNotice'),
-          [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
-                  'true'
-                );
-              },
+    // 平日通過
+    const weekdayNoticeDismissed = storage.getString(
+      STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED
+    );
+
+    if (
+      stationsFromCurrentStation.some(
+        (s) => s.stopCondition === StopCondition.Holiday
+      ) &&
+      !isHoliday &&
+      weekdayNoticeDismissed !== 'true'
+    ) {
+      showAlertWhilePresenting(
+        STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
+        translate('notice'),
+        translate('weekdayNotice'),
+        [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: (): void => {
+              storage.set(STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED, 'true');
             },
-            { text: 'OK' },
-          ]
-        );
-      }
-
-      // 一部通過
-      const partiallyPassNoticeDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED
+          },
+          { text: 'OK' },
+        ]
       );
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.Partial
-        ) !== -1 &&
-        partiallyPassNoticeDismissed !== 'true'
-      ) {
-        showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
-          translate('notice'),
-          translate('partiallyPassNotice'),
-          [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
-                  'true'
-                );
-              },
+    }
+
+    // 一部通過
+    const partiallyPassNoticeDismissed = storage.getString(
+      STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED
+    );
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === StopCondition.Partial
+      ) !== -1 &&
+      partiallyPassNoticeDismissed !== 'true'
+    ) {
+      showAlertWhilePresenting(
+        STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
+        translate('notice'),
+        translate('partiallyPassNotice'),
+        [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: (): void => {
+              storage.set(STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED, 'true');
             },
-            { text: 'OK' },
-          ]
-        );
-      }
-    };
-    alertAsync();
+          },
+          { text: 'OK' },
+        ]
+      );
+    }
   }, [stationsFromCurrentStation, isHoliday]);
 
   const transferLines = useTransferLines();
@@ -483,8 +464,8 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const warningDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
+      const warningDismissed = storage.getString(
+        STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
       );
       // NOTE: フォアグラウンドも許可しない設定の場合はそもそもオートモード前提で使われていると思うので警告は不要
       const fgPermStatus = await Location.getForegroundPermissionsAsync();
@@ -495,16 +476,16 @@ const MainScreen: React.FC = () => {
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
         showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+          STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
           translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
               text: translate('doNotShowAgain'),
               style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+              onPress: (): void => {
+                storage.set(
+                  STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
                   'true'
                 );
               },
@@ -534,23 +515,20 @@ const MainScreen: React.FC = () => {
       if (Platform.OS === 'android' && bgPermStatus.granted) {
         const { status: bgStatus } =
           await Location.getBackgroundPermissionsAsync();
-        const dozeAlertDismissed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
+        const dozeAlertDismissed = storage.getString(
+          STORAGE_KEYS.DOZE_CONFIRMED
         );
         if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
           showAlertWhilePresenting(
-            ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
+            STORAGE_KEYS.DOZE_CONFIRMED,
             translate('announcementTitle'),
             translate('dozeAlertText'),
             [
               {
                 text: translate('doNotShowAgain'),
                 style: 'cancel',
-                onPress: async (): Promise<void> => {
-                  await AsyncStorage.setItem(
-                    ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
-                    'true'
-                  );
+                onPress: (): void => {
+                  storage.set(STORAGE_KEYS.DOZE_CONFIRMED, 'true');
                 },
               },
               {

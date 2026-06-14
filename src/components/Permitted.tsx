@@ -1,5 +1,4 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
@@ -23,12 +22,12 @@ import { getSettingsThemes } from '~/utils/theme';
 import {
   ALL_AVAILABLE_LANGUAGES,
   APP_STORE_URL,
-  ASYNC_STORAGE_KEYS,
   AUTO_THEME_GRADIENT_COLORS,
   GOOGLE_PLAY_URL,
   IN_USE_COLOR_MAP,
   LONG_PRESS_DURATION,
   parenthesisRegexp,
+  STORAGE_KEYS,
 } from '../constants';
 import {
   useAndroidWearable,
@@ -41,6 +40,7 @@ import {
   useWrongDirectionDetectorEffect,
 } from '../hooks';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
+import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
 import { portraitModeEnabledAtom } from '../store/atoms/experimental';
 import navigationState, {
@@ -158,10 +158,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
       try {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
-          preference
-        );
+        storage.set(STORAGE_KEYS.THEME_PREFERENCE, preference);
         setThemePreference(preference);
       } catch (err) {
         console.error(err);
@@ -347,10 +344,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               devOverlayEnabled: nextValue,
             }));
             try {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED,
-                String(nextValue)
-              );
+              storage.set(STORAGE_KEYS.DEV_OVERLAY_ENABLED, String(nextValue));
             } catch (error) {
               console.error(error);
               setTuning((prev) => ({
@@ -399,50 +393,53 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 
   useEffect(() => {
-    const loadSettings = async () => {
-      const [
-        themePreferenceKey,
-        prevThemeKey,
-        enabledLanguagesStr,
-        speechEnabledStr,
-        bgTTSEnabledStr,
-        ttsEnabledLanguagesStr,
-        telemetryEnabledStr,
-        devOverlayEnabledStr,
-        headerTransitionIntervalStr,
-        headerTransitionDelayStr,
-        bottomTransitionIntervalStr,
-        untouchableModeEnabledStr,
-        wrongDirectionNotifyEnabledStr,
-        pictureInPictureEnabledStr,
-        portraitModeEnabledStr,
-      ] = await Promise.all([
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.THEME_PREFERENCE),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_INTERVAL),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED),
-      ]);
+    const loadSettings = () => {
+      const themePreferenceKey = storage.getString(
+        STORAGE_KEYS.THEME_PREFERENCE
+      );
+      const prevThemeKey = storage.getString(STORAGE_KEYS.PREVIOUS_THEME);
+      const enabledLanguagesStr = storage.getString(
+        STORAGE_KEYS.ENABLED_LANGUAGES
+      );
+      const speechEnabledStr = storage.getString(STORAGE_KEYS.SPEECH_ENABLED);
+      const bgTTSEnabledStr = storage.getString(STORAGE_KEYS.BG_TTS_ENABLED);
+      const ttsEnabledLanguagesStr = storage.getString(
+        STORAGE_KEYS.TTS_ENABLED_LANGUAGES
+      );
+      const telemetryEnabledStr = storage.getString(
+        STORAGE_KEYS.TELEMETRY_ENABLED
+      );
+      const devOverlayEnabledStr = storage.getString(
+        STORAGE_KEYS.DEV_OVERLAY_ENABLED
+      );
+      const headerTransitionIntervalStr = storage.getString(
+        STORAGE_KEYS.HEADER_TRANSITION_INTERVAL
+      );
+      const headerTransitionDelayStr = storage.getString(
+        STORAGE_KEYS.HEADER_TRANSITION_DELAY
+      );
+      const bottomTransitionIntervalStr = storage.getString(
+        STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL
+      );
+      const untouchableModeEnabledStr = storage.getString(
+        STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED
+      );
+      const wrongDirectionNotifyEnabledStr = storage.getString(
+        STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED
+      );
+      const pictureInPictureEnabledStr = storage.getString(
+        STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED
+      );
+      const portraitModeEnabledStr = storage.getString(
+        STORAGE_KEYS.PORTRAIT_MODE_ENABLED
+      );
 
       if (themePreferenceKey) {
         setThemePreference(themePreferenceKey as ThemePreference);
       } else if (prevThemeKey) {
         // 既存ユーザーの移行: 明示的に選択していたテーマを維持
         setThemePreference(prevThemeKey as ThemePreference);
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
-          prevThemeKey
-        );
+        storage.set(STORAGE_KEYS.THEME_PREFERENCE, prevThemeKey);
       }
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({

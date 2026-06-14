@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import { ASYNC_STORAGE_KEYS } from '~/constants';
+import { STORAGE_KEYS } from '~/constants';
+import { storage } from '~/lib/storage';
 import speechState, { type StationState } from '~/store/atoms/speech';
 import TTSSettingsScreen from './TTSSettings';
 
@@ -87,9 +87,6 @@ describe('TTSSettingsScreen', () => {
       disabled: true,
     });
     expect(store.get(speechState).ttsEnabledLanguages).toEqual(['JA', 'EN']);
-    expect(AsyncStorage.setItem).not.toHaveBeenCalledWith(
-      ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES,
-      expect.any(String)
-    );
+    expect(storage.contains(STORAGE_KEYS.TTS_ENABLED_LANGUAGES)).toBe(false);
   });
 });

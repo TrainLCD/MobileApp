@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -30,10 +29,11 @@ import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getSettingsThemes } from '~/utils/theme';
 import {
-  ASYNC_STORAGE_KEYS,
   AUTO_THEME_GRADIENT_COLORS,
   IN_USE_COLOR_MAP,
+  STORAGE_KEYS,
 } from '../constants';
+import { storage } from '../lib/storage';
 
 type SettingItem = {
   id: ThemePreference;
@@ -155,12 +155,9 @@ const ThemeSettingsScreen: React.FC = () => {
   );
 
   const handleApplyTheme = useCallback(
-    async (preference: ThemePreference) => {
+    (preference: ThemePreference) => {
       try {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
-          preference
-        );
+        storage.set(STORAGE_KEYS.THEME_PREFERENCE, preference);
         setThemePreference(preference);
       } catch (error) {
         console.error('Failed to toggle theme setting', error);
