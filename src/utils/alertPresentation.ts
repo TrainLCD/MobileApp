@@ -6,7 +6,7 @@ const presentingAlertKeys = new Set<string>();
  * 同じ論理キーの native alert が表示中でない場合だけ表示する。
  *
  * React StrictMode の開発時検査では、mount 時の effect が 2 回実行される。
- * effect 内で AsyncStorage の永続フラグを確認してから Alert.alert を呼ぶと、
+ * effect 内でストレージの永続フラグを確認してから Alert.alert を呼ぶと、
  * 最初の alert が閉じられる前に 2 回目の effect も同じ条件を通過し、
  * native alert が二重に積まれることがある。
  *

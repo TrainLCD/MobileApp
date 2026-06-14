@@ -1,4 +1,3 @@
-export * from './asyncStorage';
 export * from './color';
 export * from './duration';
 export * from './feedback';

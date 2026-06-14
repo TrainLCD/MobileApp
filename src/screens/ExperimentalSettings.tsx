@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
@@ -20,7 +19,8 @@ import Typography from '~/components/Typography';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { ASYNC_STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS } from '../constants';
+import { storage } from '../lib/storage';
 
 const styles = StyleSheet.create({
   root: {
@@ -94,14 +94,11 @@ const ExperimentalSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const handleTogglePortraitMode = useCallback(async () => {
+  const handleTogglePortraitMode = useCallback(() => {
     const flag = !portraitModeEnabled;
     setPortraitModeEnabled(flag);
     try {
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.PORTRAIT_MODE_ENABLED,
-        flag ? 'true' : 'false'
-      );
+      storage.set(STORAGE_KEYS.PORTRAIT_MODE_ENABLED, flag ? 'true' : 'false');
     } catch (error) {
       // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
       // UIと永続値の不整合を防ぐべくatom状態をロールバックする

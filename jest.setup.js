@@ -1,3 +1,16 @@
+// react-native-mmkv 本体は import 時に react-native-nitro-modules（ネイティブ
+// バイナリ必須）を引き込んで落ちるため、ライブラリ同梱のインメモリ実装
+// createMockMMKV だけを取り出して createMMKV を差し替える。
+jest.mock("react-native-mmkv", () => {
+  const {
+    createMockMMKV,
+  } = require("react-native-mmkv/lib/createMMKV/createMockMMKV");
+  return {
+    createMMKV: (config) => createMockMMKV(config),
+  };
+});
+
+// AsyncStorage は MMKV への移行処理（src/lib/storage.ts）でのみ参照される
 jest.mock("@react-native-async-storage/async-storage", () => ({
   __esModule: true,
   default: {
@@ -6,7 +19,7 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
     removeItem: jest.fn(() => Promise.resolve()),
     clear: jest.fn(() => Promise.resolve()),
     getAllKeys: jest.fn(() => Promise.resolve([])),
-    multiGet: jest.fn(() => Promise.resolve([])),
+    multiGet: jest.fn((keys) => Promise.resolve(keys.map((key) => [key, null]))),
     multiSet: jest.fn(() => Promise.resolve()),
     multiRemove: jest.fn(() => Promise.resolve()),
   },
@@ -83,4 +96,9 @@ beforeEach(() => {
   for (const key of Object.keys(mockRemoteConfigStore)) {
     delete mockRemoteConfigStore[key];
   }
+
+  // 共有 MMKV インスタンス（Jest では react-native-mmkv 組み込みの
+  // インメモリ実装）をテストごとに空へ戻す
+  const { storage } = require("./src/lib/storage");
+  storage.clearAll();
 });

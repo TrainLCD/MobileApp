@@ -1,9 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { render } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { Alert } from 'react-native';
+import { STORAGE_KEYS } from '~/constants';
+import { storage } from '~/lib/storage';
 import { createStation } from '~/utils/test/factories';
 import navigationState from '../store/atoms/navigation';
 import stationState, { stationAtom } from '../store/atoms/station';
@@ -23,11 +24,6 @@ jest.mock('expo-location', () => ({
   hasStartedLocationUpdatesAsync: jest.fn().mockResolvedValue(false),
   stopLocationUpdatesAsync: jest.fn(),
   Accuracy: { Highest: 6, Balanced: 3 },
-}));
-
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn().mockResolvedValue('true'),
-  setItem: jest.fn(),
 }));
 
 jest.mock('./useFetchNearbyStation', () => ({
@@ -69,6 +65,9 @@ describe('useInitialNearbyStation', () => {
 
   beforeEach(() => {
     jest.spyOn(Alert, 'alert').mockImplementation();
+
+    // 初回起動アラートが他のテストへ漏れないよう、既定では初回起動済みにする
+    storage.set(STORAGE_KEYS.FIRST_LAUNCH_PASSED, 'true');
 
     mockUseSetAtom.mockImplementation((atom) => {
       if (atom === stationState) {
@@ -132,7 +131,7 @@ describe('useInitialNearbyStation', () => {
   });
 
   it('初回起動時にアラートを表示する', async () => {
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
+    storage.remove(STORAGE_KEYS.FIRST_LAUNCH_PASSED);
 
     render(<HookBridge onReady={() => {}} />);
 

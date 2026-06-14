@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
@@ -17,7 +16,8 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import { ASYNC_STORAGE_KEYS } from '~/constants';
+import { STORAGE_KEYS } from '~/constants';
+import { storage } from '~/lib/storage';
 import { pictureInPictureAtom } from '~/store/atoms/pictureInPicture';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -41,11 +41,11 @@ const AndroidSettingsScreen: React.FC = () => {
     useAtom(pictureInPictureAtom);
   const navigation = useNavigation();
 
-  const handleTogglePictureInPicture = useCallback(async () => {
+  const handleTogglePictureInPicture = useCallback(() => {
     const nextValue = !pictureInPictureEnabled;
     try {
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED,
+      storage.set(
+        STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED,
         nextValue ? 'true' : 'false'
       );
       setPictureInPicture((prev) => ({

@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -22,7 +21,8 @@ import Typography from '~/components/Typography';
 import speechState from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { ASYNC_STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS } from '../constants';
+import { storage } from '../lib/storage';
 
 type SettingItem = {
   id: string;
@@ -140,23 +140,16 @@ const TTSSettingsScreen: React.FC = () => {
   );
 
   const handleToggleTTS = useCallback(
-    async (flag: boolean) => {
+    (flag: boolean) => {
       try {
-        const noticeConfirmed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.TTS_NOTICE
-        );
-
-        if (flag && noticeConfirmed === null) {
+        if (flag && !storage.contains(STORAGE_KEYS.TTS_NOTICE)) {
           Alert.alert(translate('notice'), translate('ttsAlertText'), [
             {
               text: translate('doNotShowAgain'),
               style: 'cancel',
-              onPress: async (): Promise<void> => {
+              onPress: (): void => {
                 try {
-                  await AsyncStorage.setItem(
-                    ASYNC_STORAGE_KEYS.TTS_NOTICE,
-                    'true'
-                  );
+                  storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
                 } catch (error) {
                   console.error('Failed to persist TTS notice flag', error);
                   Alert.alert(
@@ -172,10 +165,7 @@ const TTSSettingsScreen: React.FC = () => {
           ]);
         }
 
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.SPEECH_ENABLED,
-          flag ? 'true' : 'false'
-        );
+        storage.set(STORAGE_KEYS.SPEECH_ENABLED, flag ? 'true' : 'false');
         setSpeechState((prev) => ({
           ...prev,
           enabled: flag,
@@ -192,28 +182,21 @@ const TTSSettingsScreen: React.FC = () => {
   );
 
   const handleToggleBgTTS = useCallback(
-    async (flag: boolean) => {
+    (flag: boolean) => {
       if (isClip()) {
         Alert.alert(translate('notice'), translate('bgTtsAppClipAlertText'));
         return;
       }
 
       try {
-        const noticeConfirmed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.BG_TTS_NOTICE
-        );
-
-        if (flag && noticeConfirmed === null) {
+        if (flag && !storage.contains(STORAGE_KEYS.BG_TTS_NOTICE)) {
           Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
             {
               text: translate('doNotShowAgain'),
               style: 'cancel',
-              onPress: async (): Promise<void> => {
+              onPress: (): void => {
                 try {
-                  await AsyncStorage.setItem(
-                    ASYNC_STORAGE_KEYS.BG_TTS_NOTICE,
-                    'true'
-                  );
+                  storage.set(STORAGE_KEYS.BG_TTS_NOTICE, 'true');
                 } catch (error) {
                   console.error('Failed to persist BG TTS notice flag', error);
                   Alert.alert(
@@ -229,10 +212,7 @@ const TTSSettingsScreen: React.FC = () => {
           ]);
         }
 
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.BG_TTS_ENABLED,
-          flag ? 'true' : 'false'
-        );
+        storage.set(STORAGE_KEYS.BG_TTS_ENABLED, flag ? 'true' : 'false');
         setSpeechState((prev) => ({
           ...prev,
           backgroundEnabled: flag,
@@ -249,7 +229,7 @@ const TTSSettingsScreen: React.FC = () => {
   );
 
   const handleToggleTTSLanguage = useCallback(
-    async (language: TTSLanguage) => {
+    (language: TTSLanguage) => {
       const isJapaneseOff = !ttsEnabledLanguages.includes('JA');
       const isEnglishOff = !ttsEnabledLanguages.includes('EN');
       const isCurrentEnabled = ttsEnabledLanguages.includes(language);
@@ -276,8 +256,8 @@ const TTSSettingsScreen: React.FC = () => {
       }));
 
       try {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES,
+        storage.set(
+          STORAGE_KEYS.TTS_ENABLED_LANGUAGES,
           JSON.stringify(normalizedLanguages)
         );
       } catch (error) {
