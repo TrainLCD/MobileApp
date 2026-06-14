@@ -180,7 +180,9 @@ describe('PortraitMain', () => {
     // 描画幅 = 392 + 8(バッファ) = 400、利用可能幅 = 108 - 8 = 100
     expect(style.width).toBe(400);
     expect(style.transform).toEqual([{ scaleX: 100 / 400 }]);
-    expect(style.transformOrigin).toBe('left center');
+    // 左端基準で圧縮する。数値配列形式 [x, y, z] で指定し、New Architecture でも
+    // 確実に左端アンカーになるようにする(2 値キーワード文字列は中央へフォールバックする)。
+    expect(style.transformOrigin).toEqual([0, '50%', 0]);
   });
 
   it('停車駅リストに通過駅も含めて駅名とナンバリングを表示する', () => {

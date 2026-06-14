@@ -766,7 +766,11 @@ const StationName = ({
           renderWidth > 0 && {
             width: renderWidth,
             transform: [{ scaleX }],
-            transformOrigin: 'left center',
+            // 左端を基準に横圧縮する。2 値のキーワード文字列('left center')は
+            // New Architecture でパースされず中央基準にフォールバックし、圧縮した
+            // 駅名(主に文字数の多いひらがな表記)が右へ寄ってしまう。数値配列形式
+            // [x, y, z] で指定するとパースを介さず確実に左端基準になる。
+            transformOrigin: [0, '50%', 0],
           },
         ]}
       >
