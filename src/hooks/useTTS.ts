@@ -30,10 +30,6 @@ import { useTTSText } from './useTTSText';
 // これはウォッチドッグでも捕捉できない異常系に対する最後の砦
 const PLAYBACK_TIMEOUT_MS = 300_000;
 
-// 日本語再生完了後に英語プレイヤーを生成するまでのディレイ（ミリ秒）
-// ネイティブ音声セッションが安定するまで待機し、英語再生の開始失敗を防ぐ
-const EN_PLAYBACK_DELAY_MS = 100;
-
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
@@ -232,39 +228,31 @@ export const useTTS = (): void => {
         uri: pathJa,
         player: jaPlayerRef.current,
         onFinish: () => {
-          if (isLoadableRef.current && playEnglish) {
-            // 音声セッションが安定するまで短いディレイを入れてから英語を再生
-            setTimeout(() => {
-              if (!isLoadableRef.current) {
-                stopJa();
-                finishPlaying();
-                return;
-              }
-
-              const enCleanup = () => {
-                stopEn();
-                stopJa();
-                finishPlaying();
-              };
-
-              // setTimeoutコールバック内の例外は誰もキャッチしないため、
-              // プレイヤー生成失敗時もここで確実にfinishPlayingへ到達させる
-              try {
-                enHandleRef.current = playAudio({
-                  uri: pathEn,
-                  player: enPlayerRef.current,
-                  onFinish: enCleanup,
-                  onError: () => enCleanup(),
-                });
-                enPlayerRef.current = enHandleRef.current.player;
-              } catch (e) {
-                console.warn('[useTTS] EN playback failed to start:', e);
-                enCleanup();
-              }
-            }, EN_PLAYBACK_DELAY_MS);
-          } else {
+          if (!isLoadableRef.current || !playEnglish) {
             stopJa();
             finishPlaying();
+            return;
+          }
+
+          // プレイヤーを使い回すため、JA完了後すぐに英語へ差し替えて再生する
+          const enCleanup = () => {
+            stopEn();
+            stopJa();
+            finishPlaying();
+          };
+
+          // playAudioが生成・再生開始に失敗してもfinishPlayingへ確実に到達させる
+          try {
+            enHandleRef.current = playAudio({
+              uri: pathEn,
+              player: enPlayerRef.current,
+              onFinish: enCleanup,
+              onError: () => enCleanup(),
+            });
+            enPlayerRef.current = enHandleRef.current.player;
+          } catch (e) {
+            console.warn('[useTTS] EN playback failed to start:', e);
+            enCleanup();
           }
         },
         onError: () => {

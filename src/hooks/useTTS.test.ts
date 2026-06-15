@@ -179,7 +179,7 @@ describe('useTTS', () => {
 
     expect(calls[0]).toBe('/tmp/tts-id_ja.mp3');
 
-    // EN_PLAYBACK_DELAY_MS 後に EN プレイヤーが生成される
+    // JA 完了後に続けて EN プレイヤーが生成される
     jest.runAllTimers();
 
     await waitFor(() => {
