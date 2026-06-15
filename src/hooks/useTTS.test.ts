@@ -73,6 +73,7 @@ const createMockPlayer = (opts?: {
     }),
     pause: jest.fn(),
     remove: jest.fn(),
+    replace: jest.fn(),
     emitStatus: (status: { didJustFinish?: boolean; error?: string }) => {
       playbackStatusListener?.(status);
     },
@@ -381,11 +382,72 @@ describe('useTTS', () => {
       '[ttsAudioPlayer] playback stalled, aborting:',
       '/tmp/tts-id_en.mp3'
     );
-    // ストールしたプレイヤーは破棄され、再生パイプラインが解放される
+    // ストール時は一時停止して再生パイプラインを解放するが、
+    // プレイヤー自体は次の発話で使い回すため破棄しない
     expect(mockPlayer.pause).toHaveBeenCalled();
-    expect(mockPlayer.remove).toHaveBeenCalled();
+    expect(mockPlayer.remove).not.toHaveBeenCalled();
 
     warnSpy.mockRestore();
+  });
+
+  it('2回目以降の発話ではプレイヤーを使い回しreplaceで音源を差し替える', async () => {
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+
+    const store = createStore();
+    store.set(speechState, {
+      ...defaultSpeechState,
+      ttsEnabledLanguages: ['EN'],
+    });
+
+    const mockPlayer = createMockPlayer({ autoFinish: true });
+    mockCreateAudioPlayer.mockReturnValue(mockPlayer);
+
+    const { rerender } = renderHook(() => useTTS(), {
+      wrapper: createWrapper(store),
+    });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+    jest.runAllTimers();
+
+    await waitFor(() => {
+      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
+    });
+
+    // 次の駅のテキストへ変化させて2回目の発話を発火する
+    useTTSText.mockReturnValue({
+      text: ['ja text 2', 'en text 2'],
+      nextText: [],
+    });
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          id: 'tts-id-2',
+          jaAudioContent: 'QQ==',
+          enAudioContent: 'QQ==',
+          jaAudioMimeType: 'audio/mpeg',
+          enAudioMimeType: 'audio/mpeg',
+        },
+      }),
+    });
+    rerender({});
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+    jest.runAllTimers();
+
+    // 2回目はcreateAudioPlayerを呼ばず、既存プレイヤーのreplaceで差し替える
+    await waitFor(() => {
+      expect(mockPlayer.replace).toHaveBeenCalledWith({
+        uri: '/tmp/tts-id-2_en.mp3',
+      });
+    });
+    expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
   });
 
   it('resetFirstSpeechAtom変更時にuseTTSTextへfirstSpeech=trueが同期的に渡される', async () => {

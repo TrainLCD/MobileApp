@@ -1,5 +1,5 @@
 import { getIdToken } from '@react-native-firebase/auth';
-import { setAudioModeAsync } from 'expo-audio';
+import { type AudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
@@ -81,15 +81,37 @@ export const useTTS = (): void => {
 
   const jaHandleRef = useRef<PlayAudioHandle | null>(null);
   const enHandleRef = useRef<PlayAudioHandle | null>(null);
+  // プレイヤーは使い回す。createAudioPlayerを発話のたびに呼ぶとAndroidの
+  // AudioTrackが枯渇してTTSが停止するため、永続インスタンスをreplace()で再利用する
+  const jaPlayerRef = useRef<AudioPlayer | null>(null);
+  const enPlayerRef = useRef<AudioPlayer | null>(null);
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 現在の再生を止める（リスナー/ウォッチドッグを解放し一時停止）が、
+  // 永続プレイヤー自体は破棄せず次の発話で再利用する
   const cleanupAllPlayers = useCallback(() => {
     safeRemoveListener(jaHandleRef.current?.listener ?? null);
     safeRemoveListener(enHandleRef.current?.listener ?? null);
-    safeRemovePlayer(jaHandleRef.current?.player ?? null);
-    safeRemovePlayer(enHandleRef.current?.player ?? null);
+    try {
+      jaPlayerRef.current?.pause();
+    } catch {}
+    try {
+      enPlayerRef.current?.pause();
+    } catch {}
     jaHandleRef.current = null;
     enHandleRef.current = null;
+  }, []);
+
+  // アンマウント時のみ永続プレイヤーをネイティブごと解放する
+  const releaseAllPlayers = useCallback(() => {
+    safeRemoveListener(jaHandleRef.current?.listener ?? null);
+    safeRemoveListener(enHandleRef.current?.listener ?? null);
+    safeRemovePlayer(jaPlayerRef.current);
+    safeRemovePlayer(enPlayerRef.current);
+    jaHandleRef.current = null;
+    enHandleRef.current = null;
+    jaPlayerRef.current = null;
+    enPlayerRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -173,49 +195,55 @@ export const useTTS = (): void => {
       playingRef.current = true;
       armPlaybackWatchdog();
 
+      // 再生終了/失敗時は永続プレイヤーを破棄せず、リスナーだけ解放して一時停止する
+      const stopEn = () => {
+        safeRemoveListener(enHandleRef.current?.listener ?? null);
+        try {
+          enPlayerRef.current?.pause();
+        } catch {}
+        enHandleRef.current = null;
+      };
+      const stopJa = () => {
+        safeRemoveListener(jaHandleRef.current?.listener ?? null);
+        try {
+          jaPlayerRef.current?.pause();
+        } catch {}
+        jaHandleRef.current = null;
+      };
+
       if (!playJapanese && playEnglish) {
         const enCleanup = () => {
-          safeRemovePlayer(enHandleRef.current?.player ?? null);
-          enHandleRef.current = null;
+          stopEn();
           finishPlaying();
         };
 
         enHandleRef.current = playAudio({
           uri: pathEn,
+          player: enPlayerRef.current,
           onFinish: enCleanup,
           onError: () => enCleanup(),
         });
+        enPlayerRef.current = enHandleRef.current.player;
         return;
       }
 
       // JA（+ 任意で EN）再生
-      const removeSoundJa = () => {
-        const handle = jaHandleRef.current;
-        if (handle) {
-          safeRemovePlayer(handle.player);
-          jaHandleRef.current = null;
-        }
-      };
-
       jaHandleRef.current = playAudio({
         uri: pathJa,
+        player: jaPlayerRef.current,
         onFinish: () => {
-          // 日本語プレイヤーはまだremoveしない
-          // コールバック内でremoveするとオーディオセッションが不安定になり
-          // 直後に生成する英語プレイヤーの再生が開始されないことがある
           if (isLoadableRef.current && playEnglish) {
             // 音声セッションが安定するまで短いディレイを入れてから英語を再生
             setTimeout(() => {
               if (!isLoadableRef.current) {
-                removeSoundJa();
+                stopJa();
                 finishPlaying();
                 return;
               }
 
               const enCleanup = () => {
-                safeRemovePlayer(enHandleRef.current?.player ?? null);
-                enHandleRef.current = null;
-                removeSoundJa();
+                stopEn();
+                stopJa();
                 finishPlaying();
               };
 
@@ -224,24 +252,27 @@ export const useTTS = (): void => {
               try {
                 enHandleRef.current = playAudio({
                   uri: pathEn,
+                  player: enPlayerRef.current,
                   onFinish: enCleanup,
                   onError: () => enCleanup(),
                 });
+                enPlayerRef.current = enHandleRef.current.player;
               } catch (e) {
                 console.warn('[useTTS] EN playback failed to start:', e);
                 enCleanup();
               }
             }, EN_PLAYBACK_DELAY_MS);
           } else {
-            removeSoundJa();
+            stopJa();
             finishPlaying();
           }
         },
         onError: () => {
-          removeSoundJa();
+          stopJa();
           finishPlaying();
         },
       });
+      jaPlayerRef.current = jaHandleRef.current.player;
     },
     [
       armPlaybackWatchdog,
@@ -419,8 +450,8 @@ export const useTTS = (): void => {
         clearTimeout(playingTimeoutRef.current);
         playingTimeoutRef.current = null;
       }
-      cleanupAllPlayers();
+      releaseAllPlayers();
       playingRef.current = false;
     };
-  }, [cleanupAllPlayers]);
+  }, [releaseAllPlayers]);
 };
