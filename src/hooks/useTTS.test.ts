@@ -321,6 +321,33 @@ describe('useTTS', () => {
     warnSpy.mockRestore();
   });
 
+  it('フェッチがハングしても安全タイムアウトで再生パイプラインが解放される', async () => {
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    // 応答もエラーも返さないリクエストを再現（Androidでネットワーク切替や
+    // ドーズ状態に入ると発生し、これまではplayingRefが解放されず
+    // 以降のTTSが一切再生されなくなっていた）
+    mockFetch.mockReturnValue(new Promise(() => {}));
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled();
+    });
+
+    // フェッチ段階でも安全タイムアウトが張られており、ハングしても復帰する
+    jest.advanceTimersByTime(300_000);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[useTTS] Playback safety timeout reached, force resetting'
+    );
+
+    warnSpy.mockRestore();
+  });
+
   it('didJustFinishが届かず再生位置も進まない場合はストール検知で復帰する', async () => {
     const store = createStore();
     store.set(speechState, {

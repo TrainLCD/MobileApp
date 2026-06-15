@@ -104,6 +104,33 @@ describe('fetchSpeechAudio', () => {
     expect(result).toBeNull();
   });
 
+  it('リクエストがハングした場合はタイムアウトで中断して null を返す', async () => {
+    jest.useFakeTimers();
+    try {
+      let capturedSignal: AbortSignal | undefined;
+      // 応答もエラーも返さないリクエストを再現し、abort されたら reject する
+      mockFetch.mockImplementation(
+        (_url: string, opts: { signal: AbortSignal }) => {
+          capturedSignal = opts.signal;
+          return new Promise((_resolve, reject) => {
+            opts.signal.addEventListener('abort', () => {
+              reject(new Error('Aborted'));
+            });
+          });
+        }
+      );
+
+      const promise = fetchSpeechAudio({ ...defaultOptions, timeoutMs: 1000 });
+      await jest.advanceTimersByTimeAsync(1000);
+      const result = await promise;
+
+      expect(result).toBeNull();
+      expect(capturedSignal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('SSML でテキストをラップしてリクエストする', async () => {
     mockFetch.mockResolvedValue({
       ok: true,

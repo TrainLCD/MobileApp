@@ -133,6 +133,23 @@ export const useTTS = (): void => {
     }
   }, []);
 
+  // playingRefがtrueになった時点で必ず安全タイムアウトを張る。
+  // フェッチやトークン取得がハングしてもplayingRefが解放されずTTS全体が
+  // 停止するのを防ぐため、再生開始前のフェッチ段階も含めて監視する。
+  const armPlaybackWatchdog = useCallback(() => {
+    if (playingTimeoutRef.current) {
+      clearTimeout(playingTimeoutRef.current);
+    }
+    playingTimeoutRef.current = setTimeout(() => {
+      if (!playingRef.current) {
+        return;
+      }
+      console.warn('[useTTS] Playback safety timeout reached, force resetting');
+      cleanupAllPlayers();
+      finishPlaying();
+    }, PLAYBACK_TIMEOUT_MS);
+  }, [cleanupAllPlayers, finishPlaying]);
+
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
       if (!isLoadableRef.current) {
@@ -153,22 +170,8 @@ export const useTTS = (): void => {
 
       cleanupAllPlayers();
 
-      if (playingTimeoutRef.current) {
-        clearTimeout(playingTimeoutRef.current);
-      }
-
       playingRef.current = true;
-
-      playingTimeoutRef.current = setTimeout(() => {
-        if (!playingRef.current) {
-          return;
-        }
-        console.warn(
-          '[useTTS] Playback safety timeout reached, force resetting'
-        );
-        cleanupAllPlayers();
-        finishPlaying();
-      }, PLAYBACK_TIMEOUT_MS);
+      armPlaybackWatchdog();
 
       if (!playJapanese && playEnglish) {
         const enCleanup = () => {
@@ -240,7 +243,13 @@ export const useTTS = (): void => {
         },
       });
     },
-    [cleanupAllPlayers, finishPlaying, shouldSpeakEnglish, shouldSpeakJapanese]
+    [
+      armPlaybackWatchdog,
+      cleanupAllPlayers,
+      finishPlaying,
+      shouldSpeakEnglish,
+      shouldSpeakJapanese,
+    ]
   );
 
   const ttsApiUrl = useMemo(() => {
@@ -254,6 +263,9 @@ export const useTTS = (): void => {
       }
 
       playingRef.current = true;
+      // フェッチやトークン取得がハングした場合でもplayingRefが確実に解放される
+      // よう、再生開始前のこの時点から安全タイムアウトを張る
+      armPlaybackWatchdog();
       try {
         const idToken = user && (await getIdToken(user));
         if (!idToken) {
@@ -284,6 +296,7 @@ export const useTTS = (): void => {
       }
     },
     [
+      armPlaybackWatchdog,
       finishPlaying,
       speakFromPath,
       ttsApiUrl,
