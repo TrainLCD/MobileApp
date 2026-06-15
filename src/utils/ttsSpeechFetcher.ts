@@ -125,6 +125,12 @@ export const fetchSpeechAudio = async (
     enVoiceName,
     timeoutMs = TTS_FETCH_TIMEOUT_MS,
   } = options;
+  // 0・負値・NaN・Infinity が明示的に渡された場合もタイムアウト保護が
+  // 効くよう、正の有限値に正規化する
+  const effectiveTimeoutMs =
+    Number.isFinite(timeoutMs) && timeoutMs > 0
+      ? timeoutMs
+      : TTS_FETCH_TIMEOUT_MS;
 
   if (!textJa.length || !textEn.length) {
     return null;
@@ -149,7 +155,7 @@ export const fetchSpeechAudio = async (
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutId = setTimeout(() => controller.abort(), effectiveTimeoutMs);
 
   try {
     const response = await fetch(apiUrl, {

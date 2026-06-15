@@ -56,6 +56,9 @@ export const useTTS = (): void => {
   // 初回放送後にfirstSpeechRef変更で生じるテキスト変化を無視するフラグ
   const suppressPostFirstSpeechRef = useRef(false);
   const playingRef = useRef(false);
+  // 発話ごとに採番する世代ID。タイムアウト・新規発話で古いfetch継続を破棄し、
+  // 解決の遅れた古い音声が後から割り込んで再生されるのを防ぐ
+  const speechRunIdRef = useRef(0);
   const isLoadableRef = useRef(true);
   const pendingRef = useRef<{ textJa: string; textEn: string } | null>(null);
   const speechWithTextRef = useRef<
@@ -154,19 +157,26 @@ export const useTTS = (): void => {
   // playingRefがtrueになった時点で必ず安全タイムアウトを張る。
   // フェッチやトークン取得がハングしてもplayingRefが解放されずTTS全体が
   // 停止するのを防ぐため、再生開始前のフェッチ段階も含めて監視する。
-  const armPlaybackWatchdog = useCallback(() => {
-    if (playingTimeoutRef.current) {
-      clearTimeout(playingTimeoutRef.current);
-    }
-    playingTimeoutRef.current = setTimeout(() => {
-      if (!playingRef.current) {
-        return;
+  const armPlaybackWatchdog = useCallback(
+    (runId: number = speechRunIdRef.current) => {
+      if (playingTimeoutRef.current) {
+        clearTimeout(playingTimeoutRef.current);
       }
-      console.warn('[useTTS] Playback safety timeout reached, force resetting');
-      cleanupAllPlayers();
-      finishPlaying();
-    }, PLAYBACK_TIMEOUT_MS);
-  }, [cleanupAllPlayers, finishPlaying]);
+      playingTimeoutRef.current = setTimeout(() => {
+        if (!playingRef.current || speechRunIdRef.current !== runId) {
+          return;
+        }
+        console.warn(
+          '[useTTS] Playback safety timeout reached, force resetting'
+        );
+        // 世代を進めて、強制リセット後に古いfetch継続が再生へ進むのを無効化する
+        speechRunIdRef.current += 1;
+        cleanupAllPlayers();
+        finishPlaying();
+      }, PLAYBACK_TIMEOUT_MS);
+    },
+    [cleanupAllPlayers, finishPlaying]
+  );
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
@@ -281,12 +291,25 @@ export const useTTS = (): void => {
         return;
       }
 
+      // この発話の世代IDを採番。await の合間にタイムアウトや新規発話で世代が
+      // 進んでいたら、古い継続は再生へ進めず破棄する
+      const runId = speechRunIdRef.current + 1;
+      speechRunIdRef.current = runId;
       playingRef.current = true;
       // フェッチやトークン取得がハングした場合でもplayingRefが確実に解放される
       // よう、再生開始前のこの時点から安全タイムアウトを張る
-      armPlaybackWatchdog();
+      armPlaybackWatchdog(runId);
+      // 世代が進んでいる（=この継続はもう無効）場合は何もしない。
+      // playingRefは新しい発話が所有しているため、ここでリセットしてはならない
+      const isStaleRun = () =>
+        speechRunIdRef.current !== runId ||
+        !playingRef.current ||
+        !isLoadableRef.current;
       try {
         const idToken = user && (await getIdToken(user));
+        if (isStaleRun()) {
+          return;
+        }
         if (!idToken) {
           console.warn('[useTTS] idToken is missing, skipping fetch');
           finishPlaying();
@@ -302,6 +325,9 @@ export const useTTS = (): void => {
           enVoiceName: ttsEnVoiceName,
         });
 
+        if (isStaleRun()) {
+          return;
+        }
         if (!fetched) {
           console.warn('[useTTS] Failed to fetch speech audio');
           finishPlaying();
@@ -310,6 +336,9 @@ export const useTTS = (): void => {
 
         await speakFromPath(fetched.pathJa, fetched.pathEn);
       } catch (error) {
+        if (isStaleRun()) {
+          return;
+        }
         console.error('[useTTS] speech error:', error);
         finishPlaying();
       }

@@ -401,6 +401,12 @@ describe('useTTS', () => {
       ttsEnabledLanguages: ['EN'],
     });
 
+    // 初回 render で prefetch を走らせないことで、2回目発話の fetch を確実に分離する
+    useTTSText.mockReturnValue({
+      text: ['ja text', 'en text'],
+      nextText: [],
+    });
+
     const mockPlayer = createMockPlayer({ autoFinish: true });
     mockCreateAudioPlayer.mockReturnValue(mockPlayer);
 
@@ -416,6 +422,7 @@ describe('useTTS', () => {
     await waitFor(() => {
       expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
     });
+    const fetchCountAfterFirstSpeak = mockFetch.mock.calls.length;
 
     // 次の駅のテキストへ変化させて2回目の発話を発火する
     useTTSText.mockReturnValue({
@@ -437,7 +444,7 @@ describe('useTTS', () => {
     rerender({});
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(fetchCountAfterFirstSpeak + 1);
     });
     jest.runAllTimers();
 

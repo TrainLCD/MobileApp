@@ -1,5 +1,9 @@
 import { mockFetch } from '~/utils/test/ttsMocks';
-import { clearFetchCache, fetchSpeechAudio } from './ttsSpeechFetcher';
+import {
+  clearFetchCache,
+  fetchSpeechAudio,
+  TTS_FETCH_TIMEOUT_MS,
+} from './ttsSpeechFetcher';
 
 const defaultOptions = {
   textJa: 'こんにちは',
@@ -122,6 +126,36 @@ describe('fetchSpeechAudio', () => {
 
       const promise = fetchSpeechAudio({ ...defaultOptions, timeoutMs: 1000 });
       await jest.advanceTimersByTimeAsync(1000);
+      const result = await promise;
+
+      expect(result).toBeNull();
+      expect(capturedSignal?.aborted).toBe(true);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('timeoutMs に不正値が渡されてもデフォルトのタイムアウトに正規化する', async () => {
+    jest.useFakeTimers();
+    try {
+      let capturedSignal: AbortSignal | undefined;
+      mockFetch.mockImplementation(
+        (_url: string, opts: { signal: AbortSignal }) => {
+          capturedSignal = opts.signal;
+          return new Promise((_resolve, reject) => {
+            opts.signal.addEventListener('abort', () => {
+              reject(new Error('Aborted'));
+            });
+          });
+        }
+      );
+
+      // timeoutMs: 0 は無効値。即座に abort せず既定値まで待つことを検証する
+      const promise = fetchSpeechAudio({ ...defaultOptions, timeoutMs: 0 });
+      await jest.advanceTimersByTimeAsync(0);
+      expect(capturedSignal?.aborted).toBe(false);
+
+      await jest.advanceTimersByTimeAsync(TTS_FETCH_TIMEOUT_MS);
       const result = await promise;
 
       expect(result).toBeNull();
