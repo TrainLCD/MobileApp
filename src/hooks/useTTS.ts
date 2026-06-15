@@ -1,5 +1,5 @@
 import { getIdToken } from '@react-native-firebase/auth';
-import { setAudioModeAsync } from 'expo-audio';
+import { type AudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
@@ -30,10 +30,6 @@ import { useTTSText } from './useTTSText';
 // これはウォッチドッグでも捕捉できない異常系に対する最後の砦
 const PLAYBACK_TIMEOUT_MS = 300_000;
 
-// 日本語再生完了後に英語プレイヤーを生成するまでのディレイ（ミリ秒）
-// ネイティブ音声セッションが安定するまで待機し、英語再生の開始失敗を防ぐ
-const EN_PLAYBACK_DELAY_MS = 100;
-
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
@@ -60,6 +56,9 @@ export const useTTS = (): void => {
   // 初回放送後にfirstSpeechRef変更で生じるテキスト変化を無視するフラグ
   const suppressPostFirstSpeechRef = useRef(false);
   const playingRef = useRef(false);
+  // 発話ごとに採番する世代ID。タイムアウト・新規発話で古いfetch継続を破棄し、
+  // 解決の遅れた古い音声が後から割り込んで再生されるのを防ぐ
+  const speechRunIdRef = useRef(0);
   const isLoadableRef = useRef(true);
   const pendingRef = useRef<{ textJa: string; textEn: string } | null>(null);
   const speechWithTextRef = useRef<
@@ -81,15 +80,37 @@ export const useTTS = (): void => {
 
   const jaHandleRef = useRef<PlayAudioHandle | null>(null);
   const enHandleRef = useRef<PlayAudioHandle | null>(null);
+  // プレイヤーは使い回す。createAudioPlayerを発話のたびに呼ぶとAndroidの
+  // AudioTrackが枯渇してTTSが停止するため、永続インスタンスをreplace()で再利用する
+  const jaPlayerRef = useRef<AudioPlayer | null>(null);
+  const enPlayerRef = useRef<AudioPlayer | null>(null);
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 現在の再生を止める（リスナー/ウォッチドッグを解放し一時停止）が、
+  // 永続プレイヤー自体は破棄せず次の発話で再利用する
   const cleanupAllPlayers = useCallback(() => {
     safeRemoveListener(jaHandleRef.current?.listener ?? null);
     safeRemoveListener(enHandleRef.current?.listener ?? null);
-    safeRemovePlayer(jaHandleRef.current?.player ?? null);
-    safeRemovePlayer(enHandleRef.current?.player ?? null);
+    try {
+      jaPlayerRef.current?.pause();
+    } catch {}
+    try {
+      enPlayerRef.current?.pause();
+    } catch {}
     jaHandleRef.current = null;
     enHandleRef.current = null;
+  }, []);
+
+  // アンマウント時のみ永続プレイヤーをネイティブごと解放する
+  const releaseAllPlayers = useCallback(() => {
+    safeRemoveListener(jaHandleRef.current?.listener ?? null);
+    safeRemoveListener(enHandleRef.current?.listener ?? null);
+    safeRemovePlayer(jaPlayerRef.current);
+    safeRemovePlayer(enPlayerRef.current);
+    jaHandleRef.current = null;
+    enHandleRef.current = null;
+    jaPlayerRef.current = null;
+    enPlayerRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -133,6 +154,30 @@ export const useTTS = (): void => {
     }
   }, []);
 
+  // playingRefがtrueになった時点で必ず安全タイムアウトを張る。
+  // フェッチやトークン取得がハングしてもplayingRefが解放されずTTS全体が
+  // 停止するのを防ぐため、再生開始前のフェッチ段階も含めて監視する。
+  const armPlaybackWatchdog = useCallback(
+    (runId: number = speechRunIdRef.current) => {
+      if (playingTimeoutRef.current) {
+        clearTimeout(playingTimeoutRef.current);
+      }
+      playingTimeoutRef.current = setTimeout(() => {
+        if (!playingRef.current || speechRunIdRef.current !== runId) {
+          return;
+        }
+        console.warn(
+          '[useTTS] Playback safety timeout reached, force resetting'
+        );
+        // 世代を進めて、強制リセット後に古いfetch継続が再生へ進むのを無効化する
+        speechRunIdRef.current += 1;
+        cleanupAllPlayers();
+        finishPlaying();
+      }, PLAYBACK_TIMEOUT_MS);
+    },
+    [cleanupAllPlayers, finishPlaying]
+  );
+
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
       if (!isLoadableRef.current) {
@@ -153,94 +198,87 @@ export const useTTS = (): void => {
 
       cleanupAllPlayers();
 
-      if (playingTimeoutRef.current) {
-        clearTimeout(playingTimeoutRef.current);
-      }
-
       playingRef.current = true;
+      armPlaybackWatchdog();
 
-      playingTimeoutRef.current = setTimeout(() => {
-        if (!playingRef.current) {
-          return;
-        }
-        console.warn(
-          '[useTTS] Playback safety timeout reached, force resetting'
-        );
-        cleanupAllPlayers();
-        finishPlaying();
-      }, PLAYBACK_TIMEOUT_MS);
+      // 再生終了/失敗時は永続プレイヤーを破棄せず、リスナーだけ解放して一時停止する
+      const stopEn = () => {
+        safeRemoveListener(enHandleRef.current?.listener ?? null);
+        try {
+          enPlayerRef.current?.pause();
+        } catch {}
+        enHandleRef.current = null;
+      };
+      const stopJa = () => {
+        safeRemoveListener(jaHandleRef.current?.listener ?? null);
+        try {
+          jaPlayerRef.current?.pause();
+        } catch {}
+        jaHandleRef.current = null;
+      };
 
       if (!playJapanese && playEnglish) {
         const enCleanup = () => {
-          safeRemovePlayer(enHandleRef.current?.player ?? null);
-          enHandleRef.current = null;
+          stopEn();
           finishPlaying();
         };
 
         enHandleRef.current = playAudio({
           uri: pathEn,
+          player: enPlayerRef.current,
           onFinish: enCleanup,
           onError: () => enCleanup(),
         });
+        enPlayerRef.current = enHandleRef.current.player;
         return;
       }
 
       // JA（+ 任意で EN）再生
-      const removeSoundJa = () => {
-        const handle = jaHandleRef.current;
-        if (handle) {
-          safeRemovePlayer(handle.player);
-          jaHandleRef.current = null;
-        }
-      };
-
       jaHandleRef.current = playAudio({
         uri: pathJa,
+        player: jaPlayerRef.current,
         onFinish: () => {
-          // 日本語プレイヤーはまだremoveしない
-          // コールバック内でremoveするとオーディオセッションが不安定になり
-          // 直後に生成する英語プレイヤーの再生が開始されないことがある
-          if (isLoadableRef.current && playEnglish) {
-            // 音声セッションが安定するまで短いディレイを入れてから英語を再生
-            setTimeout(() => {
-              if (!isLoadableRef.current) {
-                removeSoundJa();
-                finishPlaying();
-                return;
-              }
-
-              const enCleanup = () => {
-                safeRemovePlayer(enHandleRef.current?.player ?? null);
-                enHandleRef.current = null;
-                removeSoundJa();
-                finishPlaying();
-              };
-
-              // setTimeoutコールバック内の例外は誰もキャッチしないため、
-              // プレイヤー生成失敗時もここで確実にfinishPlayingへ到達させる
-              try {
-                enHandleRef.current = playAudio({
-                  uri: pathEn,
-                  onFinish: enCleanup,
-                  onError: () => enCleanup(),
-                });
-              } catch (e) {
-                console.warn('[useTTS] EN playback failed to start:', e);
-                enCleanup();
-              }
-            }, EN_PLAYBACK_DELAY_MS);
-          } else {
-            removeSoundJa();
+          if (!isLoadableRef.current || !playEnglish) {
+            stopJa();
             finishPlaying();
+            return;
+          }
+
+          // プレイヤーを使い回すため、JA完了後すぐに英語へ差し替えて再生する
+          const enCleanup = () => {
+            stopEn();
+            stopJa();
+            finishPlaying();
+          };
+
+          // playAudioが生成・再生開始に失敗してもfinishPlayingへ確実に到達させる
+          try {
+            enHandleRef.current = playAudio({
+              uri: pathEn,
+              player: enPlayerRef.current,
+              onFinish: enCleanup,
+              onError: () => enCleanup(),
+            });
+            enPlayerRef.current = enHandleRef.current.player;
+          } catch (e) {
+            console.warn('[useTTS] EN playback failed to start:', e);
+            enCleanup();
           }
         },
         onError: () => {
-          removeSoundJa();
+          stopJa();
           finishPlaying();
         },
       });
+      jaPlayerRef.current = jaHandleRef.current.player;
     },
-    [cleanupAllPlayers, finishPlaying, shouldSpeakEnglish, shouldSpeakJapanese]
+    [
+      armPlaybackWatchdog,
+      cleanupAllPlayers,
+      finishPlaying,
+      shouldSpeakEnglish,
+      shouldSpeakJapanese,
+    ]
   );
 
   const ttsApiUrl = useMemo(() => {
@@ -253,9 +291,25 @@ export const useTTS = (): void => {
         return;
       }
 
+      // この発話の世代IDを採番。await の合間にタイムアウトや新規発話で世代が
+      // 進んでいたら、古い継続は再生へ進めず破棄する
+      const runId = speechRunIdRef.current + 1;
+      speechRunIdRef.current = runId;
       playingRef.current = true;
+      // フェッチやトークン取得がハングした場合でもplayingRefが確実に解放される
+      // よう、再生開始前のこの時点から安全タイムアウトを張る
+      armPlaybackWatchdog(runId);
+      // 世代が進んでいる（=この継続はもう無効）場合は何もしない。
+      // playingRefは新しい発話が所有しているため、ここでリセットしてはならない
+      const isStaleRun = () =>
+        speechRunIdRef.current !== runId ||
+        !playingRef.current ||
+        !isLoadableRef.current;
       try {
         const idToken = user && (await getIdToken(user));
+        if (isStaleRun()) {
+          return;
+        }
         if (!idToken) {
           console.warn('[useTTS] idToken is missing, skipping fetch');
           finishPlaying();
@@ -271,6 +325,9 @@ export const useTTS = (): void => {
           enVoiceName: ttsEnVoiceName,
         });
 
+        if (isStaleRun()) {
+          return;
+        }
         if (!fetched) {
           console.warn('[useTTS] Failed to fetch speech audio');
           finishPlaying();
@@ -279,11 +336,15 @@ export const useTTS = (): void => {
 
         await speakFromPath(fetched.pathJa, fetched.pathEn);
       } catch (error) {
+        if (isStaleRun()) {
+          return;
+        }
         console.error('[useTTS] speech error:', error);
         finishPlaying();
       }
     },
     [
+      armPlaybackWatchdog,
       finishPlaying,
       speakFromPath,
       ttsApiUrl,
@@ -406,8 +467,8 @@ export const useTTS = (): void => {
         clearTimeout(playingTimeoutRef.current);
         playingTimeoutRef.current = null;
       }
-      cleanupAllPlayers();
+      releaseAllPlayers();
       playingRef.current = false;
     };
-  }, [cleanupAllPlayers]);
+  }, [releaseAllPlayers]);
 };

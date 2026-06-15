@@ -30,6 +30,7 @@ const createMockPlayer = (opts?: { playing?: boolean }) => {
     play: jest.fn(),
     pause: jest.fn(),
     remove: jest.fn(),
+    replace: jest.fn(),
   };
   return {
     player,
@@ -176,6 +177,29 @@ describe('playAudio', () => {
     expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
       uri: '/path/to/audio.mp3',
     });
+  });
+
+  it('既存プレイヤーを渡すと再生成せず replace で音源を差し替える', () => {
+    const mock = createMockPlayer();
+
+    const handle = playAudio({
+      uri: '/path/to/next.mp3',
+      player: mock.player as unknown as Parameters<
+        typeof playAudio
+      >[0]['player'],
+      onFinish: jest.fn(),
+      onError: jest.fn(),
+    });
+
+    // createAudioPlayer は呼ばれず、既存インスタンスが使い回される
+    expect(mockCreateAudioPlayer).not.toHaveBeenCalled();
+    expect(handle.player).toBe(mock.player);
+    // 前回再生をリセットしてから replace し、再生を開始する
+    expect(mock.player.pause).toHaveBeenCalled();
+    expect(mock.player.replace).toHaveBeenCalledWith({
+      uri: '/path/to/next.mp3',
+    });
+    expect(mock.player.play).toHaveBeenCalledTimes(1);
   });
 
   it('再生位置が進まないままの場合はストールとして onError を呼ぶ', () => {

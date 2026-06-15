@@ -31,11 +31,17 @@ export interface PlayAudioHandle {
 
 export const playAudio = (options: {
   uri: string;
+  // 既存プレイヤーを渡すと再生成せず replace() で音源だけ差し替える。
+  // 再生のたびに createAudioPlayer すると Android の ExoPlayer/AudioTrack が
+  // 解放しきれず蓄積し、AudioFlinger がトラックを作れなくなって
+  // (status -12 / NO_MEMORY) TTS が完全停止するため、プレイヤーは使い回す。
+  player?: AudioPlayer | null;
   onFinish: () => void;
   onError: (error: unknown) => void;
 }): PlayAudioHandle => {
   const { uri, onFinish, onError } = options;
-  const player = createAudioPlayer({ uri });
+  const reusing = Boolean(options.player);
+  const player = options.player ?? createAudioPlayer({ uri });
 
   let settled = false;
   let stalledTicks = 0;
@@ -90,6 +96,11 @@ export const playAudio = (options: {
   }, STALL_CHECK_INTERVAL_MS);
 
   try {
+    if (reusing) {
+      // 前回再生の途中状態を確実にリセットしてから音源を差し替える
+      player.pause();
+      player.replace({ uri });
+    }
     player.play();
   } catch (e) {
     settle(() => onError(e));
