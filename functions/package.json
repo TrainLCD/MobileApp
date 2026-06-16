@@ -10,7 +10,9 @@
     "test": "jest",
     "lint": "biome check ./src",
     "format": "biome format ./src --write",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "find-tts-cache": "tsx src/cli/find-tts-cache.ts",
+    "find-orphaned-tts": "tsx src/cli/find-orphaned-tts.ts"
   },
   "engines": {
     "node": "22"
@@ -23,6 +25,7 @@
     "@cloudflare/workers-types": "^4.20240000.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.0.0",
+    "aws4fetch": "^1.0.20",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "tsx": "^4.22.4",

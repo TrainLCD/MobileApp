@@ -102,7 +102,41 @@ npm run tail           # ログ追尾
 パース）を Jest で検証する。HTTP/キュー/Cron のランタイム結合は `wrangler dev` /
 `wrangler dev --test-scheduled` で確認する。
 
-## メンテナンス CLI（TODO）
+## few-shot データ
 
-旧 `find-tts-cache` / `find-orphaned-tts` は Firestore + GCS 前提のため未移植。
-R2(list) + KV(list) ベースへの書き換えを別途行う。
+フィードバックトリアージは R2 上の `fewshot.jsonl`（`FEW_SHOT_R2_KEY`、`TTS_BUCKET` 内）を
+読み込む。フォーマットは 1 行 1 例の JSONL（`fewshot.example.jsonl` 参照）:
+
+```json
+{"input": "ユーザーの本文", "output": "{\"title\":...,\"isSpam\":false,...}"}
+```
+
+アップロード:
+
+```bash
+wrangler r2 object put trainlcd-tts-dev/fewshot.jsonl --file fewshot.jsonl
+```
+
+未配置だとトリアージは `FEW_SHOT_NOT_AVAILABLE` で失敗する（誤学習防止のフェイルハード）。
+
+## メンテナンス CLI
+
+KV(TTS_KV) と R2(音声バケット) を直接操作する保守ツール。Cloudflare REST API(KV) と
+S3 互換 API(R2) を使う。接続情報は環境変数で渡す:
+
+```bash
+export CF_ACCOUNT_ID=...          # Cloudflare アカウント ID
+export CF_API_TOKEN=...           # KV 読み書き権限の API トークン
+export CF_KV_NAMESPACE_ID=...     # 対象環境の TTS_KV ネームスペース ID
+export R2_ACCESS_KEY_ID=...       # R2 の S3 アクセスキー
+export R2_SECRET_ACCESS_KEY=...
+export R2_BUCKET=trainlcd-tts-dev # 対象環境の音声バケット名
+
+# SSML 本文で TTS キャッシュを検索（必要なら削除）
+npm run find-tts-cache -- "東京" --field ssmlJa
+npm run find-tts-cache -- "東京" --delete
+
+# R2 にあるが KV メタの無い孤立音声を検出（必要なら削除）
+npm run find-orphaned-tts
+npm run find-orphaned-tts -- --delete
+```
