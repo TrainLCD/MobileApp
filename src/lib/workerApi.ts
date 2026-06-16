@@ -4,10 +4,10 @@ import {
 } from 'react-native-dotenv';
 import { isDevApp } from '../utils/isDevApp';
 
-// Cloudflare Worker のベース URL（auth/config/upload など新規エンドポイント用）。
-// TTS / フィードバック送信は従来どおり個別の *_TTS_API_URL / *_FEEDBACK_API_URL を使う。
+// Cloudflare Worker のベース URL。全エンドポイント（/auth/token・/tts・/postFeedback・
+// /config/*・/feedback/upload-image）をこのベースから組み立てる。
 export const workerBaseUrl = (): string =>
-  (isDevApp ? DEV_WORKER_API_URL : PRODUCTION_WORKER_API_URL).replace(
+  ((isDevApp ? DEV_WORKER_API_URL : PRODUCTION_WORKER_API_URL) ?? '').replace(
     /\/$/,
     ''
   );

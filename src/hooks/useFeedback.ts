@@ -5,10 +5,6 @@ import * as Localization from 'expo-localization';
 import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
 import { isClip } from 'react-native-app-clip';
-import {
-  DEV_FEEDBACK_API_URL,
-  PRODUCTION_FEEDBACK_API_URL,
-} from 'react-native-dotenv';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from '../constants';
 import { getSessionToken } from '../lib/session';
@@ -78,9 +74,7 @@ export const useFeedback = (
       }
 
       try {
-        const API_URL = isDevApp
-          ? DEV_FEEDBACK_API_URL
-          : PRODUCTION_FEEDBACK_API_URL;
+        const API_URL = workerUrl('/postFeedback');
 
         const [locale] = Localization.getLocales();
 

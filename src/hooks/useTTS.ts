@@ -1,16 +1,15 @@
 import { type AudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
 import { STORAGE_KEYS } from '../constants';
 import { getSessionToken } from '../lib/session';
 import { storage } from '../lib/storage';
+import { workerUrl } from '../lib/workerApi';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
-import { isDevApp } from '../utils/isDevApp';
 import {
   type PlayAudioHandle,
   playAudio,
@@ -278,9 +277,7 @@ export const useTTS = (): void => {
     ]
   );
 
-  const ttsApiUrl = useMemo(() => {
-    return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
-  }, []);
+  const ttsApiUrl = useMemo(() => workerUrl('/tts'), []);
 
   const speechWithText = useCallback(
     async (ja: string, en: string) => {
