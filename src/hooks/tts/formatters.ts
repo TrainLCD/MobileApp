@@ -77,9 +77,10 @@ export const replaceJapaneseText = (
     return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(nameIpa)}">${escapeXml(name)}</phoneme>`;
   }
   if (!nameKatakana) {
-    return name;
+    return escapeXml(name);
   }
-  return `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`;
+  const alias = escapeXmlAttr(katakanaToHiragana(nameKatakana));
+  return `<sub alias="${alias}">${escapeXml(name)}</sub>`;
 };
 
 const replaceLineNameJa = (
