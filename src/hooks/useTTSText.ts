@@ -366,9 +366,7 @@ export const useTTSText = (
 
     const currentLineJa = replaceJapaneseText(
       currentLine.nameShort,
-      currentLine.nameKatakana,
-      '',
-      currentLine.nameIpa
+      currentLine.nameKatakana
     );
     const currentLineEn = ph(
       currentLine.nameTtsSegments,
@@ -377,9 +375,7 @@ export const useTTSText = (
     const currentTrainTypeJa = currentTrainType
       ? replaceJapaneseText(
           currentTrainType.name,
-          currentTrainType.nameKatakana,
-          '',
-          currentTrainType.nameIpa
+          currentTrainType.nameKatakana
         )
       : '';
     const currentTrainTypeEn = currentTrainType
@@ -422,9 +418,7 @@ export const useTTSText = (
       // 日本語
       nextStationJa: replaceJapaneseText(
         nextStation?.name,
-        nextStation?.nameKatakana,
-        '',
-        nextStation?.nameIpa
+        nextStation?.nameKatakana
       ),
       currentLineJa,
       currentLineShortJa: currentLine.nameShort ?? '',
@@ -456,36 +450,22 @@ export const useTTSText = (
       afterNextStationJa: afterNextStation
         ? replaceJapaneseText(
             afterNextStation.name,
-            afterNextStation.nameKatakana,
-            '',
-            afterNextStation.nameIpa
+            afterNextStation.nameKatakana
           )
         : '',
       viaStationJa: viaStation
-        ? replaceJapaneseText(
-            viaStation.name,
-            viaStation.nameKatakana,
-            '',
-            viaStation.nameIpa
-          )
+        ? replaceJapaneseText(viaStation.name, viaStation.nameKatakana)
         : '',
       jrWestStopsListJa: formatJrWestStopsListJa(allStops, isBoundStop),
       lastAnnouncedStopJa: lastAnnouncedStop
         ? replaceJapaneseText(
             lastAnnouncedStop.name,
-            lastAnnouncedStop.nameKatakana,
-            '',
-            lastAnnouncedStop.nameIpa
+            lastAnnouncedStop.nameKatakana
           )
         : '',
       // 直通境界駅で案内する直通先路線
       nextLineJa: isNextStopThroughBoundary
-        ? replaceJapaneseText(
-            throughLine?.nameShort,
-            throughLine?.nameKatakana,
-            '',
-            throughLine?.nameIpa
-          )
+        ? replaceJapaneseText(throughLine?.nameShort, throughLine?.nameKatakana)
         : '',
 
       // 英語
