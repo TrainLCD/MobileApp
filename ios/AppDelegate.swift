@@ -1,7 +1,6 @@
 internal import Expo
 import React
 import ReactAppDependencyProvider
-import Firebase
 
 @UIApplicationMain
 internal class AppDelegate: ExpoAppDelegate {
@@ -28,8 +27,6 @@ internal class AppDelegate: ExpoAppDelegate {
       in: window,
       launchOptions: launchOptions)
 #endif
-
-    FirebaseApp.configure()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

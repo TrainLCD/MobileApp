@@ -32,13 +32,6 @@ jobs:
             exit 1
           fi
           printf '%s' "$SENTRY_PROPERTIES_BASE64" | base64 --decode > android/sentry.properties
-      - name: Decode google-services.json
-        run: |
-          if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
-            echo "Environment variable GOOGLE_SERVICES_JSON_BASE64 is not set."
-            exit 1
-          fi
-          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
       - name: Restore android/app/release.jks
         run: |
           if [ -z "${ANDROID_RELEASE_JKS_BASE64:-}" ]; then
@@ -93,13 +86,6 @@ jobs:
             exit 1
           fi
           printf '%s' "$SENTRY_PROPERTIES_BASE64" | base64 --decode > ios/sentry.properties
-      - name: Decode GoogleService-Info.plist
-        run: |
-          if [ -z "${GOOGLE_SERVICE_INFO_PLIST_BASE64:-}" ]; then
-            echo "Environment variable GOOGLE_SERVICE_INFO_PLIST_BASE64 is not set."
-            exit 1
-          fi
-          printf '%s' "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > ios/Schemes/Prod/GoogleService-Info.plist
       - uses: eas/build
 
   submit_ios:
