@@ -143,7 +143,10 @@ export const useTTSText = (
 
   const yamanoteTrainTypeJa = useMemo(() => {
     if (isBus || !isYamanoteLine || !selectedDirection) return null;
-    return selectedDirection === 'INBOUND' ? '山手線内回り' : '山手線外回り';
+    // 「山手線内回り」を続けて渡すと TTS が「線内」を「せんない」と解釈し
+    // 「やまてせんないまわり」と誤読するため、路線名と方向の間にスペースを挟んで
+    // 語境界を明示する (「山手線 内回り」)。
+    return selectedDirection === 'INBOUND' ? '山手線 内回り' : '山手線 外回り';
   }, [isBus, isYamanoteLine, selectedDirection]);
 
   const yamanoteTrainTypeEn = !isBus && isYamanoteLine ? 'Yamanote Line' : null;

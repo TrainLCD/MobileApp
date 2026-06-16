@@ -84,14 +84,6 @@ ios/CanaryTrainLCD.app.dSYM.zip
 .expo/*
 web-build/
 
-# Firebase
-google-services.json
-GoogleService-Info.plist
-*.rules.json
-firestore.indexes.json
-.firebaserc
-*debug.log
-
 # Sentry
 sentry.properties
 
