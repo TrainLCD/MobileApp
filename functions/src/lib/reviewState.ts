@@ -9,8 +9,15 @@ export const loadReviewState = async (
   key: string
 ): Promise<ReviewState> => {
   try {
-    const json = await kv.get<ReviewState>(key, 'json');
-    return json ?? {};
+    const json = (await kv.get(key, 'json')) as Partial<ReviewState> | null;
+    if (!json || typeof json !== 'object') return {};
+    return {
+      lastUpdated:
+        typeof json.lastUpdated === 'string' ? json.lastUpdated : null,
+      lastIds: Array.isArray(json.lastIds)
+        ? json.lastIds.filter((x): x is string => typeof x === 'string')
+        : [],
+    };
   } catch {
     return {};
   }

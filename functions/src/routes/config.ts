@@ -26,10 +26,11 @@ const REMOTE_DEFAULTS: RemoteConfig = {
 };
 
 export const handleMaintenanceConfig = async (env: Env): Promise<Response> => {
+  // KV 値が壊れた JSON だと get が例外を投げるため、フォールバックで握る
   const stored = await env.CONFIG_KV.get<MaintenanceConfig>(
     'config:maintenance',
     'json'
-  );
+  ).catch(() => null);
   const body: MaintenanceConfig = {
     underMaintenance: stored?.underMaintenance === true,
   };
@@ -43,7 +44,7 @@ export const handleRemoteConfig = async (env: Env): Promise<Response> => {
   const stored = await env.CONFIG_KV.get<Partial<RemoteConfig>>(
     'config:remote',
     'json'
-  );
+  ).catch(() => null);
   const maxAccuracy = Number(stored?.max_permit_accuracy);
   const body: RemoteConfig = {
     max_permit_accuracy:

@@ -141,7 +141,7 @@ export function coerceReport(raw: unknown, titleMax = 72): AIReport {
 
   let title = getStr('title');
   let summary = getStr('summary');
-  const isSpam = getBool('isSpam');
+  const isSpam = getBool('isspam');
   const rawLabels = map.get('labels');
   const labels: string[] = Array.isArray(rawLabels)
     ? rawLabels.filter((l): l is string => typeof l === 'string')
@@ -538,6 +538,8 @@ ${reporterUid}
         break;
     }
   } catch (err) {
+    // 握りつぶすと queue ハンドラが ack してメッセージを失うため、再送出して再試行させる
     console.error(err);
+    throw err;
   }
 };

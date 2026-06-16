@@ -87,25 +87,30 @@ export const useFeedback = (
 
         let imageUrl: string | null = null;
         if (screenShotBase64) {
-          const uploadRes = await fetch(workerUrl('/feedback/upload-image'), {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json; charset=UTF-8',
-              Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify({
-              data: { feedbackId, imageBase64: screenShotBase64 },
-            }),
-          });
-          if (uploadRes.ok) {
-            const uploadJson = (await uploadRes.json()) as {
-              result?: { imageUrl?: string };
-            };
-            imageUrl = uploadJson?.result?.imageUrl ?? null;
-          } else {
-            console.warn(
-              `[useFeedback] image upload failed: ${uploadRes.status}`
-            );
+          // 画像アップロードは補助機能。失敗してもフィードバック本体送信は継続する
+          try {
+            const uploadRes = await fetch(workerUrl('/feedback/upload-image'), {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json; charset=UTF-8',
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({
+                data: { feedbackId, imageBase64: screenShotBase64 },
+              }),
+            });
+            if (uploadRes.ok) {
+              const uploadJson = (await uploadRes.json()) as {
+                result?: { imageUrl?: string };
+              };
+              imageUrl = uploadJson?.result?.imageUrl ?? null;
+            } else {
+              console.warn(
+                `[useFeedback] image upload failed: ${uploadRes.status}`
+              );
+            }
+          } catch (e) {
+            console.warn('[useFeedback] image upload error', e);
           }
         }
 

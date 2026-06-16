@@ -92,8 +92,13 @@ export function parseAppStoreJson(jsonText: string): AppStoreReview[] {
   }
 }
 
-async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
-  if (!reviews.length) return;
+// 全件 2xx で送れたら true。1 件でも失敗したら false（呼び出し側は state を進めない）
+async function postToDiscord(
+  webhookUrl: string,
+  reviews: AppStoreReview[]
+): Promise<boolean> {
+  if (!reviews.length) return true;
+  let allOk = true;
   const chunk = <T>(arr: T[], size: number): T[][] => {
     const result: T[][] = [];
     for (let i = 0; i < arr.length; i += size)
@@ -127,12 +132,15 @@ async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content, embeds }),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) {
       const msg = await res.text().catch(() => '');
       console.error('Discord Review webhook failed', res.status, msg);
+      allOk = false;
     }
   }
+  return allOk;
 }
 
 export async function runAppStoreReviewJob(env: Env): Promise<void> {
@@ -164,7 +172,12 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
   if (debug) console.log('[AppStoreJob] parsed', { count: items.length });
 
   const newcomers = items
-    .filter((x) => !lastUpdated || dayjs(x.updated).isAfter(lastUpdated))
+    .filter(
+      (x) =>
+        !lastUpdated ||
+        dayjs(x.updated).isAfter(lastUpdated) ||
+        dayjs(x.updated).isSame(lastUpdated)
+    )
     .filter((x) => !lastIds.has(x.id))
     .sort((a, b) => dayjs(a.updated).valueOf() - dayjs(b.updated).valueOf());
 
@@ -176,6 +189,7 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
       .slice(-Math.max(1, forceCount));
   }
 
+  let posted = true;
   if (dryRun) {
     console.log(
       '[AppStoreJob] DRY_RUN on. Will post (skipped):',
@@ -184,10 +198,11 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
         .slice(0, 5)
     );
   } else {
-    await postToDiscord(discordWebhook, postTargets);
+    posted = await postToDiscord(discordWebhook, postTargets);
   }
 
-  if (items.length) {
+  // DRY_RUN や送信失敗時は state を進めない（通知の恒久取りこぼしを防ぐ）
+  if (items.length && !dryRun && posted) {
     const newest = items.reduce(
       (p, c) => (dayjs(c.updated).isAfter(dayjs(p.updated)) ? c : p),
       items[0]

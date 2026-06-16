@@ -113,6 +113,10 @@ async function main(): Promise<void> {
     } catch {
       continue;
     }
+    // id 欠落レコードは voice:undefined / undefined.mp3 の誤削除を招くためスキップ
+    if (typeof rec.id !== 'string' || rec.id.length === 0) {
+      continue;
+    }
     const hit = field
       ? matchValue(rec[field])
       : matchValue(rec.ssmlJa) || matchValue(rec.ssmlEn);

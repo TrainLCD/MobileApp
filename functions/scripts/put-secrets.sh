@@ -19,10 +19,23 @@ set -euo pipefail
 # このスクリプトの位置に関わらず functions/ をカレントにする
 cd "$(dirname "$0")/.."
 
-# --env <name> の解釈
+# --env <name> の解釈。不明引数や値欠落は意図しない環境への投入を招くため即失敗にする
 WENV=""
-if [[ "${1:-}" == "--env" && -n "${2:-}" ]]; then
-  WENV="$2"
+if [[ $# -gt 0 ]]; then
+  if [[ "$1" == "--env" ]]; then
+    if [[ -z "${2:-}" ]]; then
+      echo "--env には環境名が必要です" >&2
+      exit 2
+    fi
+    WENV="$2"
+    if [[ $# -gt 2 ]]; then
+      echo "余分な引数: ${*:3}" >&2
+      exit 2
+    fi
+  else
+    echo "不明な引数: $1（使用法: put-secrets.sh [--env <name>]）" >&2
+    exit 2
+  fi
 fi
 wargs=()
 [[ -n "$WENV" ]] && wargs=(--env "$WENV")

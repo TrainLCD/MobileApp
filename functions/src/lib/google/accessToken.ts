@@ -79,12 +79,19 @@ export const getGoogleAccessToken = async (
   }
 
   const json = (await res.json()) as {
-    access_token: string;
-    expires_in: number;
+    access_token?: unknown;
+    expires_in?: unknown;
   };
+  if (typeof json.access_token !== 'string' || json.access_token.length === 0) {
+    throw new Error('Google token response missing access_token');
+  }
+  const expiresIn =
+    typeof json.expires_in === 'number' && json.expires_in > 0
+      ? json.expires_in
+      : 3600;
   tokenCache.set(scope, {
     token: json.access_token,
-    expiresAt: now + (json.expires_in ?? 3600),
+    expiresAt: now + expiresIn,
   });
   return json.access_token;
 };

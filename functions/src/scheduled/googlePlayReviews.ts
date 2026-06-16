@@ -91,11 +91,13 @@ export function toPlayReviews(rs?: PlayReviewsResponse | null): PlayReview[] {
   return out;
 }
 
+// 全件 2xx で送れたら true。1 件でも失敗したら false（呼び出し側は state を進めない）
 async function postToDiscord(
   webhookUrl: string,
   items: PlayReview[],
   packageName: string
-) {
+): Promise<boolean> {
+  let allOk = true;
   for (const r of items) {
     const r5 = Math.max(0, Math.min(5, Math.floor(r.rating)));
     const stars = '★'.repeat(r5) + '☆'.repeat(5 - r5);
@@ -127,12 +129,15 @@ async function postToDiscord(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content, embeds }),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) {
       const msg = await res.text().catch(() => '');
       console.error('Discord Review webhook failed (Play)', res.status, msg);
+      allOk = false;
     }
   }
+  return allOk;
 }
 
 async function fetchReviewsPage(
@@ -209,6 +214,7 @@ export async function runGooglePlayReviewJob(env: Env): Promise<void> {
       .slice(-Math.max(1, forceCount));
   }
 
+  let posted = true;
   if (dryRun) {
     console.log(
       '[PlayJob] DRY_RUN on. Will post (skipped):',
@@ -217,10 +223,11 @@ export async function runGooglePlayReviewJob(env: Env): Promise<void> {
         .slice(0, 5)
     );
   } else {
-    await postToDiscord(discordWebhook, postTargets, packageName);
+    posted = await postToDiscord(discordWebhook, postTargets, packageName);
   }
 
-  if (all.length) {
+  // DRY_RUN や送信失敗時は state を進めない（通知の恒久取りこぼしを防ぐ）
+  if (all.length && !dryRun && posted) {
     const newest = all.reduce(
       (p, c) => (dayjs(c.updated).isAfter(dayjs(p.updated)) ? c : p),
       all[0]

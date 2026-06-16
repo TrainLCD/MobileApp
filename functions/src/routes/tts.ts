@@ -33,6 +33,7 @@ interface VoiceCacheMeta {
 }
 
 const TEXT_BYTE_LIMIT = 4000;
+const RAW_SSML_BYTE_LIMIT = 10000;
 const HASH_VERSION = 11;
 const TTS_CONFIG_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -135,6 +136,17 @@ export const handleTts = async (
     throw new CallableError(
       'invalid-argument',
       `ssmlEn text exceeds ${TEXT_BYTE_LIMIT} byte limit (${enTextBytes} bytes)`
+    );
+  }
+
+  // 可視テキストだけでなく生 SSML のバイト長にも上限を設け、タグ膨張入力を弾く
+  if (
+    utf8ByteLength(ssmlJa) > RAW_SSML_BYTE_LIMIT ||
+    utf8ByteLength(ssmlEn) > RAW_SSML_BYTE_LIMIT
+  ) {
+    throw new CallableError(
+      'invalid-argument',
+      `raw SSML exceeds ${RAW_SSML_BYTE_LIMIT} byte limit`
     );
   }
 
