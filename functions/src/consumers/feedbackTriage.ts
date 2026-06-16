@@ -159,7 +159,9 @@ export function coerceReport(raw: unknown, titleMax = 72): AIReport {
 
   if (!title) title = '要約未取得';
   if (title.length > titleMax) title = `${title.slice(0, titleMax - 1)}…`;
-  if (!summary) summary = '';
+  // 要約が空だと Issue 本文の節が空になり、Discord embed も value 空でリジェクトされるため
+  // タイトルにフォールバックして常に何らかのテキストを入れる
+  if (!summary) summary = title;
 
   return {
     title,
@@ -282,15 +284,46 @@ export const processFeedbackMessage = async (
   const fewshot = await getFewShotText(env);
   const text = await runTriage(env, fewshot, report.description);
 
+  let parseFailed = false;
   const raw = (() => {
     try {
       const m = text.match(/\{[\s\S]*\}/);
       return JSON.parse(m ? m[0] : text);
     } catch {
+      parseFailed = true;
       return {};
     }
   })();
   let aiReport = coerceReport(raw, 72);
+
+  // 要約が空になる原因を実データで切り分けるための観測ログ。
+  // coerceReport が summary を title にフォールバックするため、ここでモデルの生出力を確認する。
+  const rawSummary = (() => {
+    if (!raw || typeof raw !== 'object') return undefined;
+    for (const [k, v] of Object.entries(raw)) {
+      if (k.toLowerCase().replace(/\s+/g, '').trim() === 'summary') return v;
+    }
+    return undefined;
+  })();
+  if (parseFailed) {
+    console.warn(
+      'feedbackTriage: モデル応答の JSON パースに失敗（全フィールドがデフォルト化）',
+      {
+        reportId: report.id,
+        responseLength: text.length,
+        responsePreview: text.slice(0, 200),
+      }
+    );
+  } else if (!aiReport.isSpam && String(rawSummary ?? '').trim() === '') {
+    // スパムは要約空が正常なので除外。非スパムで空なのはモデルの欠落。
+    console.warn(
+      'feedbackTriage: モデルが summary を空/欠落で返却（title にフォールバック）',
+      {
+        reportId: report.id,
+        responsePreview: text.slice(0, 200),
+      }
+    );
+  }
   if (!aiReport.isSpam && looksLikeSpam(report.description)) {
     aiReport = {
       ...aiReport,
@@ -359,7 +392,7 @@ ${'```'}
 ${description}
 ${'```'}
 
-## Geminiによる要約
+## AIによる要約
 ${aiReport.summary}
 
 ## 発行日時
@@ -432,7 +465,7 @@ ${reporterUid}
                 name: '発行日時',
                 value: dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss'),
               },
-              { name: 'Geminiによる要約', value: aiReport.summary },
+              { name: 'AIによる要約', value: aiReport.summary },
               ...(shouldTagTriage && categoryLabel && triageLabel
                 ? [
                     { name: 'カテゴリ', value: categoryLabel },
@@ -470,7 +503,7 @@ ${reporterUid}
                 name: '発行日時',
                 value: dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss'),
               },
-              { name: 'Geminiによる要約', value: aiReport.summary },
+              { name: 'AIによる要約', value: aiReport.summary },
               ...(shouldTagTriage && categoryLabel && triageLabel
                 ? [
                     { name: 'カテゴリ', value: categoryLabel },

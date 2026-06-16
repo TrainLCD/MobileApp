@@ -89,6 +89,17 @@ describe('coerceReport', () => {
     expect(r.reason).toBe('because');
   });
 
+  it('falls back to the title when summary is empty', () => {
+    const r = coerceReport({ title: 'タイトルだけ', summary: '' });
+    expect(r.summary).toBe('タイトルだけ');
+  });
+
+  it('falls back to the default title when both title and summary are empty', () => {
+    const r = coerceReport({});
+    expect(r.title).toBe('要約未取得');
+    expect(r.summary).toBe('要約未取得');
+  });
+
   it('supports question and improvement synonyms', () => {
     expect(coerceReport({ category: 'help' }).category).toBe('question');
     expect(coerceReport({ category: 'enhancement' }).category).toBe(
