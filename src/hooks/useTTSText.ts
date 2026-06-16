@@ -366,7 +366,8 @@ export const useTTSText = (
 
     const currentLineJa = replaceJapaneseText(
       currentLine.nameShort,
-      currentLine.nameKatakana
+      currentLine.nameKatakana,
+      currentLine.nameIpa
     );
     const currentLineEn = ph(
       currentLine.nameTtsSegments,
@@ -375,7 +376,8 @@ export const useTTSText = (
     const currentTrainTypeJa = currentTrainType
       ? replaceJapaneseText(
           currentTrainType.name,
-          currentTrainType.nameKatakana
+          currentTrainType.nameKatakana,
+          currentTrainType.nameIpa
         )
       : '';
     const currentTrainTypeEn = currentTrainType
@@ -418,7 +420,8 @@ export const useTTSText = (
       // 日本語
       nextStationJa: replaceJapaneseText(
         nextStation?.name,
-        nextStation?.nameKatakana
+        nextStation?.nameKatakana,
+        nextStation?.nameIpa
       ),
       currentLineJa,
       currentLineShortJa: currentLine.nameShort ?? '',
@@ -450,22 +453,32 @@ export const useTTSText = (
       afterNextStationJa: afterNextStation
         ? replaceJapaneseText(
             afterNextStation.name,
-            afterNextStation.nameKatakana
+            afterNextStation.nameKatakana,
+            afterNextStation.nameIpa
           )
         : '',
       viaStationJa: viaStation
-        ? replaceJapaneseText(viaStation.name, viaStation.nameKatakana)
+        ? replaceJapaneseText(
+            viaStation.name,
+            viaStation.nameKatakana,
+            viaStation.nameIpa
+          )
         : '',
       jrWestStopsListJa: formatJrWestStopsListJa(allStops, isBoundStop),
       lastAnnouncedStopJa: lastAnnouncedStop
         ? replaceJapaneseText(
             lastAnnouncedStop.name,
-            lastAnnouncedStop.nameKatakana
+            lastAnnouncedStop.nameKatakana,
+            lastAnnouncedStop.nameIpa
           )
         : '',
       // 直通境界駅で案内する直通先路線
       nextLineJa: isNextStopThroughBoundary
-        ? replaceJapaneseText(throughLine?.nameShort, throughLine?.nameKatakana)
+        ? replaceJapaneseText(
+            throughLine?.nameShort,
+            throughLine?.nameKatakana,
+            throughLine?.nameIpa
+          )
         : '',
 
       // 英語

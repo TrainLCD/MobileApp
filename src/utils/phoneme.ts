@@ -1,9 +1,9 @@
 import { TtsAlphabet, type TtsSegment } from '~/@types/graphql';
 
-const escapeXml = (s: string): string =>
+export const escapeXml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-const escapeXmlAttr = (s: string): string =>
+export const escapeXmlAttr = (s: string): string =>
   escapeXml(s).replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
 type IpaGroup = {
