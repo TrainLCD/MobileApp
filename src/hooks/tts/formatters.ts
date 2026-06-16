@@ -1,6 +1,6 @@
 import type { Line, Station, TtsSegment } from '../../@types/graphql';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
-import { wrapPhoneme } from '../../utils/phoneme';
+import { escapeXml, escapeXmlAttr, wrapPhoneme } from '../../utils/phoneme';
 
 // 駅名に併記されたカッコ書き (例: 命名権スポンサー名 `電鉄富山(トヨタモビリティ富山)`)
 // を TTS で読み上げないために、半角・全角のカッコと中身を取り除く。
@@ -59,10 +59,16 @@ export const stripStationParensForTTS = (station: Station): Station => ({
 export const replaceJapaneseText = (
   name: string | null | undefined,
   nameKatakana: string | null | undefined,
-  fallback = ''
+  fallback = '',
+  nameIpa?: string | null
 ): string => {
   if (!name) {
     return fallback;
+  }
+  // IPA があればピッチアクセントごと読みを当てられる phoneme を優先。
+  // 無ければ従来どおりカタカナ読みの sub alias にフォールバックする。
+  if (nameIpa) {
+    return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(nameIpa)}">${escapeXml(name)}</phoneme>`;
   }
   if (!nameKatakana) {
     return name;
@@ -70,12 +76,14 @@ export const replaceJapaneseText = (
   return `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`;
 };
 
-const replaceLineNameJa = (line: Pick<Line, 'nameShort' | 'nameKatakana'>) =>
-  replaceJapaneseText(line.nameShort, line.nameKatakana);
+const replaceLineNameJa = (
+  line: Pick<Line, 'nameShort' | 'nameKatakana' | 'nameIpa'>
+) => replaceJapaneseText(line.nameShort, line.nameKatakana, '', line.nameIpa);
 
 const replaceStationNameJa = (
-  station: Pick<Station, 'name' | 'nameKatakana'>
-) => replaceJapaneseText(station.name, station.nameKatakana);
+  station: Pick<Station, 'name' | 'nameKatakana' | 'nameIpa'>
+) =>
+  replaceJapaneseText(station.name, station.nameKatakana, '', station.nameIpa);
 
 /** 路線名を sub alias 付きで `、` 連結する。 */
 export const formatLinesListJa = (lines: Line[]): string =>

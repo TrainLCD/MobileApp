@@ -43,6 +43,24 @@ describe('replaceJapaneseText', () => {
     );
   });
 
+  it('prefers an IPA phoneme tag over the katakana sub alias when nameIpa exists', () => {
+    expect(
+      replaceJapaneseText('山手線', 'ヤマノテセン', '', 'jaˈmaꜜnote seɴ')
+    ).toBe('<phoneme alphabet="ipa" ph="jaˈmaꜜnote seɴ">山手線</phoneme>');
+  });
+
+  it('falls back to sub alias when nameIpa is empty', () => {
+    expect(replaceJapaneseText('新宿', 'シンジュク', '', null)).toBe(
+      '<sub alias="しんじゅく">新宿</sub>'
+    );
+  });
+
+  it('escapes XML special characters in the surface name', () => {
+    expect(replaceJapaneseText('A&B', null, '', 'eɪ ænd biː')).toBe(
+      '<phoneme alphabet="ipa" ph="eɪ ænd biː">A&amp;B</phoneme>'
+    );
+  });
+
   it('does not fall back to 各駅停車 implicitly (#5917)', () => {
     // 駅名・路線名のヘルパとして使われるため、誤って `各駅停車` を返してはならない。
     expect(replaceJapaneseText(null, null)).not.toContain('各駅停車');
