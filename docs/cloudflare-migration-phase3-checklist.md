@@ -44,11 +44,11 @@ wrangler secret put OCTOKIT_PAT
 wrangler secret put DISCORD_CS_WEBHOOK_URL
 wrangler secret put DISCORD_CRASH_WEBHOOK_URL
 wrangler secret put DISCORD_REVIEW_WEBHOOK_URL
-# 数値しきい値の初期投入（KV）
-wrangler kv key put --binding CONFIG_KV 'config:remote' '{"max_permit_accuracy":1500,"force_not_arrived_on_low_accuracy":true}'
-wrangler kv key put --binding CONFIG_KV 'config:maintenance' '{"underMaintenance":false}'
+# 数値しきい値の初期投入（KV）。wrangler v4 は既定でローカルエミュレータを操作するため、実 KV には --remote が必須
+wrangler kv key put --binding CONFIG_KV 'config:remote' '{"max_permit_accuracy":1500,"force_not_arrived_on_low_accuracy":true}' --remote
+wrangler kv key put --binding CONFIG_KV 'config:maintenance' '{"underMaintenance":false}' --remote
 # few-shot を CONFIG_KV に配置
-wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl --remote
 # デプロイ
 npm run deploy:dev      # / npm run deploy:prod
 ```
