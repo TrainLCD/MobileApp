@@ -1,0 +1,96 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "trainlcd-worker-dev",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-11-06",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // --- 既定（dev）。`wrangler deploy` / `wrangler dev` はこの設定を使う ---
+  "observability": { "enabled": true },
+
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+
+  "ai": { "binding": "AI" },
+
+  // KV / R2 / Queue の id・bucket 名は `wrangler kv namespace create` 等で発行後に差し替える
+  "kv_namespaces": [
+    { "binding": "TTS_KV", "id": "aebb675c3c27417eac6cd5a5b5a51c60" },
+    { "binding": "CONFIG_KV", "id": "538a8bc7db6b463089bf9327bc2e1483" },
+    { "binding": "STATE_KV", "id": "d99ba5c23127456f8e1e928be1731876" }
+  ],
+
+  "r2_buckets": [
+    { "binding": "TTS_BUCKET", "bucket_name": "trainlcd-tts-dev" },
+    { "binding": "UPLOAD_BUCKET", "bucket_name": "trainlcd-uploads-dev" }
+  ],
+
+  "queues": {
+    "producers": [
+      { "binding": "FEEDBACK_QUEUE", "queue": "feedback-triage-dev" }
+    ],
+    "consumers": [
+      { "queue": "feedback-triage-dev", "max_batch_size": 5, "max_retries": 3 }
+    ]
+  },
+
+  "vars": {
+    "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
+    "AZURE_SPEECH_REGION": "japaneast",
+    "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
+    "AZURE_TTS_RATE": "-3%",
+    "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct",
+    "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
+    "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
+    "SESSION_TOKEN_TTL_SECONDS": "3600",
+    "UPLOAD_PUBLIC_BASE_URL": "https://uploads-dev.trainlcd.app",
+    "FEW_SHOT_KV_KEY": "config:fewshot",
+    "FEW_SHOT_LIMIT": "12",
+    "FEW_SHOT_PER_EX_MAX": "800"
+  },
+
+  // secrets（`wrangler secret put <NAME>` で投入。コミットしない）:
+  //   SESSION_JWT_SECRET / AZURE_SPEECH_KEY / GOOGLE_SA_KEY /
+  //   OCTOKIT_PAT / DISCORD_CS_WEBHOOK_URL / DISCORD_CRASH_WEBHOOK_URL / DISCORD_REVIEW_WEBHOOK_URL
+
+  "env": {
+    "production": {
+      "name": "trainlcd-worker",
+      "observability": { "enabled": true },
+      "triggers": { "crons": ["0 * * * *"] },
+      "ai": { "binding": "AI" },
+      "kv_namespaces": [
+        { "binding": "TTS_KV", "id": "b42928fa3ed64bdcacb8c8749b528f24" },
+        { "binding": "CONFIG_KV", "id": "dc9c94a546d549e5b3ac02dfa94717a0" },
+        { "binding": "STATE_KV", "id": "a030d194835843f98cbaf368f0615a83" }
+      ],
+      "r2_buckets": [
+        { "binding": "TTS_BUCKET", "bucket_name": "trainlcd-tts" },
+        { "binding": "UPLOAD_BUCKET", "bucket_name": "trainlcd-uploads" }
+      ],
+      "queues": {
+        "producers": [
+          { "binding": "FEEDBACK_QUEUE", "queue": "feedback-triage" }
+        ],
+        "consumers": [
+          { "queue": "feedback-triage", "max_batch_size": 5, "max_retries": 3 }
+        ]
+      },
+      "vars": {
+        "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
+        "AZURE_SPEECH_REGION": "japaneast",
+        "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
+        "AZURE_TTS_RATE": "-3%",
+        "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct",
+        "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
+        "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
+        "SESSION_TOKEN_TTL_SECONDS": "3600",
+        "UPLOAD_PUBLIC_BASE_URL": "https://uploads.trainlcd.app",
+        "FEW_SHOT_KV_KEY": "config:fewshot",
+        "FEW_SHOT_LIMIT": "12",
+        "FEW_SHOT_PER_EX_MAX": "800"
+      }
+    }
+  }
+}

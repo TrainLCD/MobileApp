@@ -1,287 +1,145 @@
-# TrainLCD Cloud Functions
+# TrainLCD Worker (Cloudflare)
 
-This directory contains Firebase Cloud Functions that power the backend services for the TrainLCD mobile application.
+TrainLCD のバックエンドを担う Cloudflare Worker。旧 Firebase Cloud Functions を置き換えたもので、
+1 つの Worker に HTTP / キュー / Cron の 3 ハンドラを集約している。
 
-## Overview
+## 提供機能
 
-These Cloud Functions provide server-side functionality including:
-- Text-to-Speech (TTS) audio generation and caching
-- User feedback and report management
-- Background data processing and validation
-- Integration with Google Cloud services
-- Automated content moderation and spam filtering
+- **TTS 合成** (`POST /tts`): Azure Speech で SSML を音声合成し、KV/R2 でキャッシュ
+- **セッション発行** (`POST /auth/token`): インストール ID から短期セッション JWT を発行（Firebase 匿名認証の代替）
+- **フィードバック受付** (`POST /postFeedback`): トリアージキューへ投函
+- **画像アップロード** (`POST /feedback/upload-image`): フィードバック画像を R2 に保存し公開 URL を返す
+- **アプリ設定配信** (`GET /config/maintenance`, `GET /config/remote`): メンテナンス状態と GPS しきい値（Remote Config 代替）
+- **フィードバックトリアージ** (queue `feedback-triage`): Workers AI で要約・分類し、GitHub Issue 作成と Discord 通知
+- **TTS キャッシュ書き込み**: 合成音声を `/tts` ハンドラから R2 + KV へ直接保存（Queues の 128KB 上限に音声が収まらないためキューは使わない）
+- **レビュー通知** (Cron 毎時): App Store / Google Play の新着レビューを Discord へ通知
 
-## Technology Stack
+## 技術スタック
 
-- **Firebase Functions** - Serverless compute platform
-- **TypeScript** - Type-safe JavaScript development
-- **Firebase Admin SDK** - Server-side Firebase integration
-- **Google Cloud Pub/Sub** - Message queuing and processing
-- **Biome** - Code formatting and linting
-- **Jest** - Testing framework
+- **Cloudflare Workers** — `fetch` / `queue` / `scheduled` ハンドラ
+- **Workers KV** — TTS キャッシュメタ・設定・レビュー既読状態
+- **R2** — 音声バイナリ・フィードバック画像・few-shot データ
+- **Cloudflare Queues** — `feedback-triage`
+- **Workers AI** — フィードバックトリアージ
+- **Azure Speech** — TTS 合成（SSML）
+- **Google Android Publisher API** — Google Play レビュー取得（サービスアカウント JWT）
+- **TypeScript / Biome / Jest / Wrangler**
 
-## Getting Started
+## 前提
 
-### Prerequisites
+- Node.js 22.x / npm
+- Wrangler（`npm install` で devDependency として導入）
+- Cloudflare アカウント（KV/R2/Queues/Workers AI を有効化）
 
-- **Node.js** (version 22)
-- **npm** package manager
-- **Firebase CLI** installed globally
-- **Firebase project** set up and configured
-
-### Installation
-
-1. Navigate to the functions directory:
-   ```bash
-   cd functions
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Set up environment variables:
-   ```bash
-   # Create your local environment configuration file (see .env.example)
-   cp .env.example <your-env-file>
-   # Edit your environment file with your Firebase project configuration
-   ```
-
-   Note: You'll need to configure your Firebase project credentials and other environment-specific settings. Do not commit environment files containing sensitive credentials.
-
-### Development
-
-#### Building the Functions
-
-Build TypeScript to JavaScript:
+## セットアップ
 
 ```bash
-npm run build
+cd functions
+npm install
 ```
 
-For continuous building during development:
+### バインディングの作成
+
+`wrangler.jsonc` の `id` / `bucket_name` プレースホルダを、以下で発行した実値に置き換える（dev/prod それぞれ）。
 
 ```bash
-npm run build:watch
+# KV
+wrangler kv namespace create TTS_KV
+wrangler kv namespace create CONFIG_KV
+wrangler kv namespace create STATE_KV
+# R2
+wrangler r2 bucket create trainlcd-tts-dev
+wrangler r2 bucket create trainlcd-uploads-dev
+# Queues
+wrangler queues create feedback-triage-dev
 ```
 
-#### Testing
-
-Run the test suite:
+### シークレット投入
 
 ```bash
-npm test
+wrangler secret put SESSION_JWT_SECRET          # セッション JWT 署名鍵（任意の長い乱数）
+wrangler secret put AZURE_SPEECH_KEY            # Azure Speech のサブスクリプションキー
+wrangler secret put GOOGLE_SA_KEY              # Android Publisher 用 SA 鍵 JSON（1 行文字列）
+wrangler secret put OCTOKIT_PAT
+wrangler secret put DISCORD_CS_WEBHOOK_URL
+wrangler secret put DISCORD_CRASH_WEBHOOK_URL
+wrangler secret put DISCORD_REVIEW_WEBHOOK_URL
 ```
 
-#### Local Development
+ローカル開発では同じキーを `.dev.vars`（gitignore 済み）に記述する。
 
-Start the Firebase emulator for local testing:
+### 非機密の設定（vars）
+
+`wrangler.jsonc` の `vars` を参照。Azure リージョン・ボイス名・AI モデル名・パッケージ名・
+公開アップロード URL（R2 の公開ドメイン）などを環境ごとに設定する。
+
+## 開発・デプロイ
 
 ```bash
-npm run serve
+npm run dev            # wrangler dev（ローカル）
+npm run typecheck      # tsc --noEmit
+npm run lint           # biome check
+npm test               # jest（純粋関数）
+npm run deploy:dev     # wrangler deploy（dev）
+npm run deploy:prod    # wrangler deploy --env production
+npm run tail           # ログ追尾
 ```
 
-This will start the functions emulator and allow you to test functions locally.
+## クライアント通信規約
 
-#### Firebase Functions Shell
+`POST /tts` と `POST /postFeedback` は Firebase callable 互換のワイヤ形式を維持している。
 
-For interactive testing:
+- リクエスト: `{ "data": { ... } }`、`Authorization: Bearer <session JWT>`
+- 成功: `{ "result": { ... } }`
+- 失敗: HTTP ステータス + `{ "error": { "message", "status" } }`
+
+セッション JWT は `POST /auth/token`（body `{ "installId": "<uuid>" }`）で取得する。
+
+## テスト方針
+
+ユニットテストは純粋関数（SSML 整形・ボイス名解決・トリアージ JSON の正規化・レビュー
+パース）を Jest で検証する。HTTP/キュー/Cron のランタイム結合は `wrangler dev` /
+`wrangler dev --test-scheduled` で確認する。
+
+## few-shot データ
+
+フィードバックトリアージは `CONFIG_KV` の `config:fewshot`（`FEW_SHOT_KV_KEY`）を読み込む。
+few-shot は TTS とは無関係なので、設定用 KV に置く（`config:maintenance`/`config:remote` と同じ namespace）。
+フォーマットは 1 行 1 例の JSONL（`fewshot.example.jsonl` 参照）:
+
+```json
+{"input": "ユーザーの本文", "output": "{\"title\":...,\"isSpam\":false,...}"}
+```
+
+アップロード（ファイルをそのまま 1 つの KV 値として投入）:
 
 ```bash
-npm run shell
+# dev（--local を付けなければ本番 KV に書き込む）
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl
+# prod
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl --env production
 ```
 
-## Available Scripts
+未配置だとトリアージは `FEW_SHOT_NOT_AVAILABLE` で失敗する（誤学習防止のフェイルハード）。
 
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm run build:watch` - Watch mode compilation
-- `npm run serve` - Start Firebase emulators
-- `npm run shell` - Start Firebase functions shell
-- `npm run deploy` - Deploy functions to Firebase
-- `npm run logs` - View function logs
-- `npm run lint` - Run Biome linter
-- `npm run format` - Format code with Biome
-- `npm test` - Run Jest tests
+## メンテナンス CLI
 
-## Project Structure
-
-```text
-src/
-├── domain/         # Business logic and domain models
-├── funcs/          # Main function handlers
-├── models/         # Type definitions and interfaces
-├── utils/          # Utility functions
-├── workers/        # Background workers
-└── index.ts        # Main function exports
-
-lib/                # Compiled JavaScript output
-```
-
-## Functions
-The Cloud Functions in this project handle various backend operations:
-
-### HTTP Functions
-- **TTS Generation** - Text-to-Speech audio synthesis for station announcements
-- **Feedback Processing** - User report and feedback submission handling
-- **Content Validation** - Input validation and spam filtering
-
-### Pub/Sub Functions
-- **TTS Cache Management** - Background audio file caching and optimization
-- **Content Moderation** - Automated content review and filtering
-- **Data Processing** - Asynchronous data transformation tasks
-
-### Scheduled Jobs
-- **App Store Review Notifier (`appStoreReviewNotifier`)** - App Storeの最新レビューをJSONフィードから取得し、Discordへ通知します（既定: 毎時）。
-  - 環境変数:
-    - `DISCORD_REVIEW_WEBHOOK_URL`: DiscordのWebhook URL（必須）
-    - `APPSTORE_REVIEW_FEED_URL`: App StoreレビューのJSONフィードURL（任意）。未設定時は既定のJSONエンドポイント（日本向け `/jp/`）。国・言語を変更したい場合はこのURLの地域コードを差し替えてください。必ず末尾が `/json` のURLを指定してください（`/xml` は非対応）。
-      - 既定値: `https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json`
-    - `APPSTORE_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/appstore-reviews.json`）[本番必須]。必要最小の権限は該当オブジェクトへの読取/作成（例: `roles/storage.objectViewer` + `roles/storage.objectCreator`）。運用上の都合であれば `roles/storage.objectAdmin` でも可。
-    - `REVIEWS_CRON_SCHEDULE`: スケジュール（例: `every 60 minutes`）。未設定時は毎時実行
-    - `REVIEWS_TIMEZONE`: タイムゾーン（例: `Asia/Tokyo`）。未設定時はUTC（注: `every N minutes` のような相対指定ではタイムゾーンの影響は事実上ありません。特定時刻運用時は cron 式を推奨）
-  - デバッグ用（任意）:
-    - `REVIEWS_DEBUG=1`: 取得内容などの詳細ログを出力
-    - `REVIEWS_FORCE_LATEST_COUNT`: 整数N。既読に関わらず最新N件を強制送信（検証用途）
-    - `REVIEWS_DRY_RUN=1`: Discord送信をスキップし、送信予定の項目をログ表示
-    - 注意: 大量送信時は Discord Webhook のレート制限（HTTP 429）が発生し得ます。必要に応じてバッチ処理や送信間隔の調整を行ってください。
-
-- **Google Play Review Notifier (`googlePlayReviewNotifier`)** - Google Playの最新レビューをAndroid Publisher APIから取得し、Discordへ通知します（既定: 毎時）。
-  - 環境変数:
-    - `DISCORD_REVIEW_WEBHOOK_URL`: DiscordのWebhook URL（必須）
-    - `GOOGLE_PLAY_PACKAGE_NAME`: パッケージ名（既定: `me.tinykitten.trainlcd`）
-    - `GOOGLEPLAY_REVIEW_STATE_GCS_URI`: 既読状態を保存するGCSパス（例: `gs://<bucket>/states/googleplay-reviews.json`）。必要最小の権限は該当オブジェクトへの読取/作成（例: `roles/storage.objectViewer` + `roles/storage.objectCreator`）。運用都合であれば `roles/storage.objectAdmin` でも可。
-    - `PLAY_REVIEWS_CRON_SCHEDULE`: スケジュール（例: `every 60 minutes`）。未設定時は毎時実行
-    - `PLAY_REVIEWS_TIMEZONE`: タイムゾーン（例: `Asia/Tokyo`）。未設定時はUTC（注: `every N minutes` のような相対指定ではタイムゾーンの影響は事実上ありません。特定時刻運用時は cron 式を推奨）
-  - 認証: Cloud Functionsのサービスアカウントに「Android Publisher API」へのアクセス権を付与し、ADC（Application Default Credentials）で認証します。
-  - デバッグ用（任意）:
-    - `REVIEWS_DEBUG=1`: 取得/ページング/保存の詳細ログを出力
-    - `REVIEWS_FORCE_LATEST_COUNT`: 整数N。既読に関わらず最新N件を強制送信（検証用途）
-    - `REVIEWS_DRY_RUN=1`: Discord送信をスキップし、送信予定の項目をログ表示
-    - 注意: 大量送信時は Discord Webhook のレート制限（HTTP 429）が発生し得ます。必要に応じてバッチ処理や送信間隔の調整を行ってください。
-
-
-### Firestore Triggers
-- Database change reactions
-- Data validation
-- Automated workflows
-## Environment Configuration
-
-The functions use environment variables for configuration. You'll need to set up your own environment files based on your Firebase project settings:
-
-- Create an environment file for local development (see `.env.example`)
-- Configure production environment variables in your Firebase project settings
-
-Make sure to never commit environment files containing sensitive credentials to version control.
-
-## Deployment
-
-### Deploy to Development
+KV(TTS_KV) と R2(音声バケット) を直接操作する保守ツール。Cloudflare REST API(KV) と
+S3 互換 API(R2) を使う。接続情報は環境変数で渡す:
 
 ```bash
-# Make sure you're using the correct Firebase project
-firebase use <your-dev-project>
-npm run deploy
+export CF_ACCOUNT_ID=...          # Cloudflare アカウント ID
+export CF_API_TOKEN=...           # KV 読み書き権限の API トークン
+export CF_KV_NAMESPACE_ID=...     # 対象環境の TTS_KV ネームスペース ID
+export R2_ACCESS_KEY_ID=...       # R2 の S3 アクセスキー
+export R2_SECRET_ACCESS_KEY=...
+export R2_BUCKET=trainlcd-tts-dev # 対象環境の音声バケット名
+
+# SSML 本文で TTS キャッシュを検索（必要なら削除）
+npm run find-tts-cache -- "東京" --field ssmlJa
+npm run find-tts-cache -- "東京" --delete
+
+# R2 にあるが KV メタの無い孤立音声を検出（必要なら削除）
+npm run find-orphaned-tts
+npm run find-orphaned-tts -- --delete
 ```
-
-### Deploy to Production
-
-```bash
-# Switch to production project
-firebase use <your-prod-project>
-npm run deploy
-```
-
-## Testing
-
-### Unit Tests
-
-Run unit tests with Jest:
-
-```bash
-npm test
-```
-
-### Integration Testing
-
-Use the Firebase emulator for integration testing:
-
-```bash
-npm run serve
-# Run your integration tests against the local emulator
-```
-
-## Code Quality
-
-This project uses Biome for code formatting and linting:
-
-```bash
-# Check code quality
-npm run lint
-
-# Auto-format code
-npm run format
-```
-
-## Monitoring and Debugging
-
-### View Logs
-
-```bash
-# View function logs
-npm run logs
-
-# View logs for specific function
-firebase functions:log --only functionName
-```
-
-### Error Tracking
-
-Functions are integrated with error tracking and monitoring systems to help identify and resolve issues quickly.
-
-## Contributing
-
-
-When contributing to the Cloud Functions:
-
-1. Follow the existing TypeScript coding standards
-2. Add tests for new functions and workers
-3. Update this README if adding new functionality or changing structure
-4. Ensure all tests pass before submitting
-5. Use meaningful commit messages
-
-### Development Guidelines
-
-- Use TypeScript for all function code
-- Follow the established project structure (see above)
-- Add proper error handling and logging
-- Write unit tests for business logic and workers
-- Document complex functions and algorithms
-
-## Security
-
-- Environment variables contain sensitive configuration
-- Never commit environment files with real credentials
-- Follow Firebase security best practices
-- Validate all inputs in HTTP functions
-- Use proper authentication and authorization
-
-## Related Documentation
-
-- [Firebase Functions Documentation](https://firebase.google.com/docs/functions)
-- [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup)
-- [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/docs)
-- [Main TrainLCD README](../README.md)
-
-## Support
-
-For issues related to Cloud Functions:
-
-1. Check the Firebase console for error logs
-2. Review the [Firebase Functions documentation](https://firebase.google.com/docs/functions)
-3. Create an issue in the main repository with function-specific details
-4. Join our [Discord community](https://discord.gg/7sQhQhnvvw) for support
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.

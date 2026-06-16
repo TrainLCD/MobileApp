@@ -1,168 +1,93 @@
-import * as readline from 'node:readline';
-import type { Bucket } from '@google-cloud/storage';
-import admin from 'firebase-admin';
+/**
+ * R2 に存在するが KV(TTS_KV) に voice: メタが無い「孤立」音声ファイルを検出し、
+ * 必要なら削除する。旧 Firestore+GCS 版の Cloudflare 移植。
+ *
+ * 例:
+ *   CF_ACCOUNT_ID=... CF_API_TOKEN=... CF_KV_NAMESPACE_ID=... \
+ *   R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... R2_BUCKET=trainlcd-tts-dev \
+ *   npm run find-orphaned-tts -- --delete
+ */
+import {
+  confirm,
+  kvListKeys,
+  loadConfig,
+  r2Delete,
+  r2ListKeys,
+  requireKvConfig,
+  requireR2Config,
+} from './lib/cloudflare';
+
+const ID_FROM_R2_KEY = /caches\/tts\/(?:ja|en)\/(.+)\.[^.]+$/;
 
 function printUsage(): void {
-  console.error(
-    'Usage: npm run find-orphaned-tts -- --bucket <name> --project <project-id> [--delete]'
-  );
+  console.error('Usage: npm run find-orphaned-tts -- [--delete]');
   console.error('');
   console.error(
-    'Storageに存在するがFirestoreにドキュメントがない孤立したTTSキャッシュファイルを検出します。'
-  );
-  console.error('');
-  console.error('Options:');
-  console.error('  --bucket <name>          Cloud Storageバケット名（必須）');
-  console.error(
-    '  --project <project-id>   Firebaseプロジェクトを指定（必須）'
+    'R2 に存在するが KV にメタが無い孤立した TTS 音声ファイルを検出します。'
   );
   console.error('  --delete                 孤立ファイルを確認後に削除');
-}
-
-interface CliArgs {
-  bucket: string;
-  projectId: string;
-  delete: boolean;
-}
-
-function parseArgs(argv: string[]): CliArgs | null {
-  const args = argv.slice(2);
-
-  let bucket: string | undefined;
-  let projectId: string | undefined;
-  let deleteMode = false;
-
-  for (let i = 0; i < args.length; i++) {
-    switch (args[i]) {
-      case '--bucket':
-        bucket = args[++i];
-        break;
-      case '--project':
-        projectId = args[++i];
-        break;
-      case '--delete':
-        deleteMode = true;
-        break;
-    }
-  }
-
-  const resolved = projectId ?? process.env.GCLOUD_PROJECT;
-  if (!bucket || !resolved) {
-    return null;
-  }
-
-  return { bucket, projectId: resolved, delete: deleteMode };
-}
-
-const PAGE_SIZE = 1000;
-
-async function collectStorageFiles(
-  bucket: Bucket,
-  prefix: string
-): Promise<Map<string, string[]>> {
-  const filesById = new Map<string, string[]>();
-  let pageToken: string | undefined;
-
-  do {
-    const [files, , apiResponse] = await bucket.getFiles({
-      prefix,
-      maxResults: PAGE_SIZE,
-      autoPaginate: false,
-      pageToken,
-    });
-
-    for (const file of files) {
-      const match = file.name.match(/caches\/tts\/(?:ja|en)\/(.+)\.[^.]+$/);
-      if (match?.[1]) {
-        const id = match[1];
-        const existing = filesById.get(id) ?? [];
-        existing.push(file.name);
-        filesById.set(id, existing);
-      }
-    }
-
-    pageToken = (apiResponse as { nextPageToken?: string } | undefined)
-      ?.nextPageToken;
-    if (pageToken) {
-      process.stdout.write(`\r  ${prefix} ... ${filesById.size}件取得済み`);
-    }
-  } while (pageToken);
-
-  process.stdout.write(`\r  ${prefix} ... ${filesById.size}件 完了\n`);
-  return filesById;
+  console.error('');
+  console.error(
+    '接続情報は環境変数で指定: CF_ACCOUNT_ID / CF_API_TOKEN / CF_KV_NAMESPACE_ID /'
+  );
+  console.error('  R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET');
 }
 
 async function main(): Promise<void> {
-  const cliArgs = parseArgs(process.argv);
-
-  if (!cliArgs) {
+  const args = process.argv.slice(2);
+  const deleteMode = args.includes('--delete');
+  if (args.some((a) => a !== '--delete')) {
     printUsage();
     process.exit(1);
   }
 
-  const { bucket: bucketName, projectId, delete: deleteMode } = cliArgs;
+  const cfg = loadConfig();
+  requireKvConfig(cfg);
+  requireR2Config(cfg);
 
-  const app = admin.initializeApp({
-    projectId,
-    storageBucket: bucketName,
-  });
-  const firestore = app.firestore();
-  const bucket = app.storage().bucket();
+  console.log('KV の voice: 一覧を取得中...');
+  const kvKeys = await kvListKeys(cfg, 'voice:');
+  const kvIds = new Set(kvKeys.map((k) => k.replace(/^voice:/, '')));
+  console.log(`  KV メタ数: ${kvIds.size}`);
 
-  // Firestore のドキュメントID一覧を取得
-  console.log('Firestoreのドキュメント一覧を取得中...');
-  const voicesRef = firestore
-    .collection('caches')
-    .doc('tts')
-    .collection('voices');
-  const firestoreSnapshot = await voicesRef.select().get();
-  const firestoreIds = new Set(firestoreSnapshot.docs.map((doc) => doc.id));
-  console.log(`  Firestoreドキュメント数: ${firestoreIds.size}`);
-
-  // Storage のファイルIDをページネーションで取得（メモリ節約）
-  console.log('Storageのファイル一覧を取得中...');
-  const [jaFilesById, enFilesById] = await Promise.all([
-    collectStorageFiles(bucket, 'caches/tts/ja/'),
-    collectStorageFiles(bucket, 'caches/tts/en/'),
+  console.log('R2 の音声一覧を取得中...');
+  const [jaKeys, enKeys] = await Promise.all([
+    r2ListKeys(cfg, 'caches/tts/ja/'),
+    r2ListKeys(cfg, 'caches/tts/en/'),
   ]);
-  const jaIds = new Set(jaFilesById.keys());
-  const enIds = new Set(enFilesById.keys());
-  const storageIds = new Set([...jaIds, ...enIds]);
+
+  // id → そのidに紐づく R2 オブジェクトキー
+  const filesById = new Map<string, string[]>();
+  for (const key of [...jaKeys, ...enKeys]) {
+    const m = key.match(ID_FROM_R2_KEY);
+    if (!m?.[1]) continue;
+    const id = m[1];
+    const arr = filesById.get(id) ?? [];
+    arr.push(key);
+    filesById.set(id, arr);
+  }
   console.log(
-    `  Storageファイル数: JA=${jaIds.size}, EN=${enIds.size} (ユニークID: ${storageIds.size})`
+    `  R2 ファイル数: JA=${jaKeys.length}, EN=${enKeys.length} (ユニークID: ${filesById.size})`
   );
 
-  // 孤立ID = Storage にあるが Firestore にない
-  const orphanedIds = [...storageIds].filter((id) => !firestoreIds.has(id));
-
+  const orphanedIds = [...filesById.keys()].filter((id) => !kvIds.has(id));
   if (orphanedIds.length === 0) {
     console.log('\n孤立ファイルはありませんでした。');
     return;
   }
 
   console.log(`\n${orphanedIds.length}件の孤立IDが見つかりました:\n`);
-
-  const orphanedFiles: { id: string; ja: boolean; en: boolean }[] = [];
   for (const id of orphanedIds) {
-    const hasJa = jaIds.has(id);
-    const hasEn = enIds.has(id);
-    orphanedFiles.push({ id, ja: hasJa, en: hasEn });
-
-    const flags = [hasJa ? 'JA' : null, hasEn ? 'EN' : null]
-      .filter(Boolean)
-      .join(', ');
-    console.log(`  ${id} [${flags}]`);
+    console.log(`  ${id} [${(filesById.get(id) ?? []).join(', ')}]`);
   }
 
   if (!deleteMode) {
-    console.log(
-      '\n削除するには --delete オプションを付けて再実行してください。'
-    );
+    console.log('\n削除するには --delete を付けて再実行してください。');
     return;
   }
 
   const confirmed = await confirm(
-    `\n上記 ${orphanedIds.length}件の孤立ファイルをStorageから削除しますか？ (y/N): `
+    `\n上記 ${orphanedIds.length}件の孤立ファイルを R2 から削除しますか？ (y/N): `
   );
   if (!confirmed) {
     console.log('削除をキャンセルしました。');
@@ -170,22 +95,12 @@ async function main(): Promise<void> {
   }
 
   let deletedCount = 0;
-  for (const { id, ja, en } of orphanedFiles) {
+  for (const id of orphanedIds) {
     console.log(`削除中: ${id}...`);
-
-    const promises: Promise<unknown>[] = [];
-    if (ja) {
-      for (const path of jaFilesById.get(id) ?? []) {
-        promises.push(bucket.file(path).delete());
-      }
-    }
-    if (en) {
-      for (const path of enFilesById.get(id) ?? []) {
-        promises.push(bucket.file(path).delete());
-      }
-    }
-
-    const results = await Promise.allSettled(promises);
+    const paths = filesById.get(id) ?? [];
+    const results = await Promise.allSettled(
+      paths.map((p) => r2Delete(cfg, p))
+    );
     const failed = results.filter((r) => r.status === 'rejected');
     if (failed.length > 0) {
       for (const f of failed) {
@@ -197,26 +112,11 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `\n${deletedCount}/${orphanedFiles.length}件の削除が完了しました。`
+    `\n${deletedCount}/${orphanedIds.length}件の削除が完了しました。`
   );
 }
 
-function confirm(prompt: string): Promise<boolean> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise((resolve) => {
-    rl.question(prompt, (answer) => {
-      rl.close();
-      resolve(answer.toLowerCase() === 'y');
-    });
-  });
-}
-
-main()
-  .catch((err: Error) => {
-    console.error('Error:', err.message);
-    process.exit(1);
-  })
-  .finally(() => process.exit(0));
+main().catch((err: Error) => {
+  console.error('Error:', err.message);
+  process.exitCode = 1;
+});

@@ -1,46 +1,36 @@
 {
   "name": "functions",
   "scripts": {
+    "dev": "wrangler dev",
+    "deploy:dev": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "tail:prod": "wrangler tail --env production",
+    "typecheck": "tsc --noEmit",
     "test": "jest",
     "lint": "biome check ./src",
     "format": "biome format ./src --write",
-    "build": "tsc -p tsconfig.build.json",
-    "build:watch": "tsc -p tsconfig.build.json --watch",
-    "serve": "npm run build && firebase emulators:start --only functions",
-    "shell": "npm run build && firebase functions:shell",
-    "shell:dev": "npm run build && firebase functions:shell --project trainlcd-dev",
-    "shell:prod": "npm run build && firebase functions:shell --project trainlcd-ea91e",
-    "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log",
+    "cf-typegen": "wrangler types",
     "find-tts-cache": "tsx src/cli/find-tts-cache.ts",
-    "find-tts-cache:dev": "tsx src/cli/find-tts-cache.ts --project trainlcd-dev --bucket trainlcd-dev.appspot.com",
-    "find-tts-cache:prod": "tsx src/cli/find-tts-cache.ts --project trainlcd-ea91e --bucket trainlcd-ea91e.firebasestorage.app",
-    "find-orphaned-tts": "tsx src/cli/find-orphaned-tts.ts",
-    "find-orphaned-tts:dev": "tsx src/cli/find-orphaned-tts.ts --project trainlcd-dev --bucket trainlcd-dev.appspot.com",
-    "find-orphaned-tts:prod": "tsx src/cli/find-orphaned-tts.ts --project trainlcd-ea91e --bucket trainlcd-ea91e.firebasestorage.app"
+    "find-orphaned-tts": "tsx src/cli/find-orphaned-tts.ts"
   },
   "engines": {
     "node": "22"
   },
-  "main": "lib/index.js",
   "dependencies": {
-    "@google-cloud/pubsub": "^4.3.3",
-    "@google-cloud/vertexai": "^1.10.0",
-    "@googleapis/androidpublisher": "^15.0.0",
-    "dayjs": "^1.11.9",
-    "firebase-admin": "^12.0.0",
-    "firebase-functions": "^7.2.5",
-    "google-auth-library": "^9.14.2"
+    "dayjs": "^1.11.9"
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.0",
+    "@cloudflare/workers-types": "^4.20240000.0",
     "@types/jest": "^29.5.14",
-    "firebase-functions-test": "^3.2.0",
+    "@types/node": "^22.0.0",
+    "aws4fetch": "^1.0.20",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "tsx": "^4.22.4",
-    "typescript": "^4.9.0"
+    "typescript": "^5.6.0",
+    "wrangler": "^3.80.0"
   },
   "private": true
 }

@@ -12,6 +12,7 @@ export default ({ config }: ConfigContext) => ({
     'expo-sqlite',
     'expo-asset',
     'expo-quick-actions',
+    'expo-secure-store',
     [
       'expo-location',
       {

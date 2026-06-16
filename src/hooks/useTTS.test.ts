@@ -33,8 +33,8 @@ jest.mock('./usePrevious', () => ({
   usePrevious: jest.fn(() => ['', '']),
 }));
 
-jest.mock('@react-native-firebase/auth', () => ({
-  getIdToken: jest.fn(async () => 'token'),
+jest.mock('../lib/session', () => ({
+  getSessionToken: jest.fn(async () => 'token'),
 }));
 
 jest.mock('./useCachedAnonymousUser', () => ({

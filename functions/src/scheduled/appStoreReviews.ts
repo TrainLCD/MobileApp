@@ -1,56 +1,23 @@
-import { Storage } from '@google-cloud/storage';
+/** App Store の最新レビューを取得し Discord へ通知する（Cron）。状態は KV。 */
 import dayjs from 'dayjs';
-import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { loadReviewState, saveReviewState } from '../lib/reviewState';
 import type { DiscordEmbed } from '../models/common';
+import type { Env } from '../types';
+
+const STATE_KEY = 'state:appstore-reviews';
+const DEFAULT_FEED_URL =
+  'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
 
 type AppStoreReview = {
   id: string;
-  updated: string; // ISO8601
+  updated: string;
   title: string;
   content: string;
-  rating: number; // 1..5
+  rating: number;
   version?: string;
   author?: string;
   url?: string;
 };
-
-type ReviewState = {
-  lastUpdated?: string | null;
-  lastIds?: string[]; // optional ring buffer of recent ids
-};
-
-const storage = new Storage();
-
-function parseGsUri(
-  uri: string | undefined | null
-): { bucket: string; file: string } | null {
-  if (!uri) return null;
-  const m = uri.match(/^gs:\/\/([^/]+)\/(.+)$/);
-  if (!m) return null;
-  const [, bucket, file] = m;
-  return { bucket, file };
-}
-
-async function loadState(uri: string | undefined | null): Promise<ReviewState> {
-  const loc = parseGsUri(uri);
-  if (!loc) return {};
-  try {
-    const buf = await storage.bucket(loc.bucket).file(loc.file).download();
-    const json = JSON.parse(buf[0].toString('utf8')) as ReviewState;
-    return json ?? {};
-  } catch {
-    return {};
-  }
-}
-
-async function saveState(uri: string | undefined | null, state: ReviewState) {
-  const loc = parseGsUri(uri);
-  if (!loc) return;
-  await storage
-    .bucket(loc.bucket)
-    .file(loc.file)
-    .save(JSON.stringify(state), { contentType: 'application/json' });
-}
 
 type JsonObj = Record<string, unknown>;
 
@@ -83,7 +50,7 @@ function hrefOf(link: unknown): string | undefined {
   return typeof single === 'string' ? single : undefined;
 }
 
-function parseAppStoreJson(jsonText: string): AppStoreReview[] {
+export function parseAppStoreJson(jsonText: string): AppStoreReview[] {
   try {
     const data = JSON.parse(jsonText) as unknown;
     const entryNode = deepGet(data, 'feed.entry');
@@ -125,21 +92,20 @@ function parseAppStoreJson(jsonText: string): AppStoreReview[] {
   }
 }
 
-// for unit testing
-export const __test_parseAppStoreJson = parseAppStoreJson;
-
-async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
-  if (!reviews.length) return;
-  // 10件ずつバッチ送信
+// 全件 2xx で送れたら true。1 件でも失敗したら false（呼び出し側は state を進めない）
+async function postToDiscord(
+  webhookUrl: string,
+  reviews: AppStoreReview[]
+): Promise<boolean> {
+  if (!reviews.length) return true;
+  let allOk = true;
   const chunk = <T>(arr: T[], size: number): T[][] => {
     const result: T[][] = [];
-    for (let i = 0; i < arr.length; i += size) {
+    for (let i = 0; i < arr.length; i += size)
       result.push(arr.slice(i, i + size));
-    }
     return result;
   };
-  const batches = chunk(reviews, 10);
-  for (const group of batches) {
+  for (const group of chunk(reviews, 10)) {
     const embeds: DiscordEmbed[] = group.map((r) => {
       const r5 = Math.max(0, Math.min(5, Math.floor(r.rating)));
       const stars = '★'.repeat(r5) + '☆'.repeat(5 - r5);
@@ -166,152 +132,90 @@ async function postToDiscord(webhookUrl: string, reviews: AppStoreReview[]) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content, embeds }),
+      signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) {
       const msg = await res.text().catch(() => '');
       console.error('Discord Review webhook failed', res.status, msg);
+      allOk = false;
     }
   }
+  return allOk;
 }
 
-export async function runAppStoreReviewJob() {
-  const debug = process.env.REVIEWS_DEBUG === '1';
-  const dryRun = process.env.REVIEWS_DRY_RUN === '1';
-  const forceCount = Number(process.env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
-  const defaultUrl =
-    'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
-  const appStoreUrl = process.env.APPSTORE_REVIEW_FEED_URL || defaultUrl;
-  const stateUri = process.env.APPSTORE_REVIEW_STATE_GCS_URI; // e.g. gs://<bucket>/states/appstore-reviews.json
-  const discordWebhook = process.env.DISCORD_REVIEW_WEBHOOK_URL;
-
+export async function runAppStoreReviewJob(env: Env): Promise<void> {
+  const debug = env.REVIEWS_DEBUG === '1';
+  const dryRun = env.REVIEWS_DRY_RUN === '1';
+  const forceCount = Number(env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
+  const appStoreUrl = env.APPSTORE_REVIEW_FEED_URL || DEFAULT_FEED_URL;
+  const discordWebhook = env.DISCORD_REVIEW_WEBHOOK_URL;
   if (!discordWebhook) {
-    throw new Error('process.env.DISCORD_REVIEW_WEBHOOK_URL is not set');
-  }
-  if (!stateUri) {
-    throw new Error('process.env.APPSTORE_REVIEW_STATE_GCS_URI is not set');
-  }
-
-  if (debug) {
-    console.log('[AppStoreJob] start', {
-      hasStateUri: Boolean(stateUri),
-      hasWebhook: Boolean(discordWebhook),
-      appStoreUrl,
-    });
+    // 未設定はエラーではなく「通知オフ」として静かにスキップする
+    console.log('[AppStoreJob] DISCORD_REVIEW_WEBHOOK_URL not set, skipping');
+    return;
   }
 
-  // 1) Load last state
-  const state = await loadState(stateUri);
+  const state = await loadReviewState(env.STATE_KV, STATE_KEY);
   const lastUpdated = state.lastUpdated ? dayjs(state.lastUpdated) : null;
   const lastIds = new Set(state.lastIds ?? []);
-  if (debug) {
-    console.log('[AppStoreJob] loaded state', {
-      lastUpdated: state.lastUpdated ?? null,
-      lastIdsSize: lastIds.size,
-    });
-  }
 
-  // 2) JSONフィードを取得（UA付与 + タイムアウト）
-  const ac = new AbortController();
-  const tmo = setTimeout(() => ac.abort(), 15_000);
   const r = await fetch(appStoreUrl, {
     headers: {
       'User-Agent':
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
       Accept: 'application/json',
     },
-    signal: ac.signal,
+    signal: AbortSignal.timeout(15000),
   });
-  clearTimeout(tmo);
   if (!r.ok) throw new Error(`App Store Reviews fetch failed: ${r.status}`);
-  const t = await r.text();
-  if (debug) {
-    type MaybeHeaders = { get(name: string): string | null };
-    const ct =
-      (r.headers as MaybeHeaders | undefined)?.get('content-type') ?? '';
-    console.log('[AppStoreJob] json fetched', {
-      url: appStoreUrl,
-      contentType: ct,
-      preview: t.slice(0, 200).replace(/\s+/g, ' '),
-    });
-  }
-  const items = parseAppStoreJson(t);
-  if (debug) console.log('[AppStoreJob] json parsed', { count: items.length });
-  if (debug) {
-    console.log('[AppStoreJob] parsed items', { count: items.length });
-  }
+  const items = parseAppStoreJson(await r.text());
+  if (debug) console.log('[AppStoreJob] parsed', { count: items.length });
 
-  // 3) Filter new items by updated timestamp and id dedupe
   const newcomers = items
-    .filter((r) => !lastUpdated || dayjs(r.updated).isAfter(lastUpdated))
-    .filter((r) => !lastIds.has(r.id))
-    // Oldest first to post in order
+    .filter(
+      (x) =>
+        !lastUpdated ||
+        dayjs(x.updated).isAfter(lastUpdated) ||
+        dayjs(x.updated).isSame(lastUpdated)
+    )
+    .filter((x) => !lastIds.has(x.id))
     .sort((a, b) => dayjs(a.updated).valueOf() - dayjs(b.updated).valueOf());
 
   let postTargets = newcomers;
   if (forceCount > 0 && items.length > 0) {
     postTargets = items
-      .slice() // copy
+      .slice()
       .sort((a, b) => dayjs(a.updated).valueOf() - dayjs(b.updated).valueOf())
       .slice(-Math.max(1, forceCount));
-    if (debug) {
-      console.log('[AppStoreJob] force mode enabled', {
-        forceCount,
-        actual: postTargets.length,
-      });
-    }
   }
 
-  if (debug) {
-    console.log('[AppStoreJob] newcomers', { count: newcomers.length });
-  }
-
-  // 4) Post to Discord
+  let posted = true;
   if (dryRun) {
     console.log(
       '[AppStoreJob] DRY_RUN on. Will post (skipped):',
       postTargets
-        .map((r) => ({ id: r.id, rating: r.rating, updated: r.updated }))
+        .map((x) => ({ id: x.id, rating: x.rating, updated: x.updated }))
         .slice(0, 5)
     );
   } else {
-    await postToDiscord(discordWebhook, postTargets);
+    posted = await postToDiscord(discordWebhook, postTargets);
   }
 
-  // 5) Update state
-  if (items.length) {
+  // DRY_RUN や送信失敗時は state を進めない（通知の恒久取りこぼしを防ぐ）
+  if (items.length && !dryRun && posted) {
     const newest = items.reduce(
       (p, c) => (dayjs(c.updated).isAfter(dayjs(p.updated)) ? c : p),
       items[0]
     );
     const updatedIds = [
-      ...Array.from(
-        new Set([
-          ...(state.lastIds ?? []).slice(-20),
-          ...items.slice(0, 5).map((r) => r.id),
-        ])
-      ),
+      ...new Set([
+        ...(state.lastIds ?? []).slice(-20),
+        ...items.slice(0, 5).map((x) => x.id),
+      ]),
     ].slice(-40);
-    await saveState(stateUri, {
+    await saveReviewState(env.STATE_KV, STATE_KEY, {
       lastUpdated: newest.updated,
       lastIds: updatedIds,
     });
-    if (debug) {
-      console.log('[AppStoreJob] state saved', {
-        lastUpdated: newest.updated,
-        lastIds: updatedIds.length,
-      });
-    }
   }
 }
-
-export const appStoreReviewNotifier = onSchedule(
-  {
-    schedule: process.env.REVIEWS_CRON_SCHEDULE || 'every 60 minutes',
-    timeZone: process.env.REVIEWS_TIMEZONE || 'UTC',
-    region: 'asia-northeast1',
-    maxInstances: 1,
-  },
-  async () => {
-    await runAppStoreReviewJob();
-  }
-);

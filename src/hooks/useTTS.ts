@@ -1,16 +1,15 @@
-import { getIdToken } from '@react-native-firebase/auth';
 import { type AudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { DEV_TTS_API_URL, PRODUCTION_TTS_API_URL } from 'react-native-dotenv';
 import { TransportType } from '~/@types/graphql';
 import { STORAGE_KEYS } from '../constants';
+import { getSessionToken } from '../lib/session';
 import { storage } from '../lib/storage';
+import { workerUrl } from '../lib/workerApi';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
-import { isDevApp } from '../utils/isDevApp';
 import {
   type PlayAudioHandle,
   playAudio,
@@ -18,7 +17,6 @@ import {
   safeRemovePlayer,
 } from '../utils/ttsAudioPlayer';
 import { fetchSpeechAudio } from '../utils/ttsSpeechFetcher';
-import { useCachedInitAnonymousUser } from './useCachedAnonymousUser';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
 import { useStoppingState } from './useStoppingState';
@@ -75,8 +73,6 @@ export const useTTS = (): void => {
     : [undefined, undefined];
   const shouldSpeakJapanese = ttsEnabledLanguages.includes('JA');
   const shouldSpeakEnglish = ttsEnabledLanguages.includes('EN');
-
-  const user = useCachedInitAnonymousUser();
 
   const jaHandleRef = useRef<PlayAudioHandle | null>(null);
   const enHandleRef = useRef<PlayAudioHandle | null>(null);
@@ -281,9 +277,7 @@ export const useTTS = (): void => {
     ]
   );
 
-  const ttsApiUrl = useMemo(() => {
-    return isDevApp ? DEV_TTS_API_URL : PRODUCTION_TTS_API_URL;
-  }, []);
+  const ttsApiUrl = useMemo(() => workerUrl('/tts'), []);
 
   const speechWithText = useCallback(
     async (ja: string, en: string) => {
@@ -306,7 +300,7 @@ export const useTTS = (): void => {
         !playingRef.current ||
         !isLoadableRef.current;
       try {
-        const idToken = user && (await getIdToken(user));
+        const idToken = await getSessionToken();
         if (isStaleRun()) {
           return;
         }
@@ -350,7 +344,6 @@ export const useTTS = (): void => {
       ttsApiUrl,
       ttsEnVoiceName,
       ttsJaVoiceName,
-      user,
     ]
   );
 
@@ -369,7 +362,7 @@ export const useTTS = (): void => {
     prefetchingRef.current = true;
     (async () => {
       try {
-        const idToken = user && (await getIdToken(user));
+        const idToken = await getSessionToken();
         if (!idToken) return;
         await fetchSpeechAudio({
           textJa: prefetchJa,
@@ -394,7 +387,6 @@ export const useTTS = (): void => {
     ttsApiUrl,
     ttsEnVoiceName,
     ttsJaVoiceName,
-    user,
   ]);
 
   useEffect(() => {
