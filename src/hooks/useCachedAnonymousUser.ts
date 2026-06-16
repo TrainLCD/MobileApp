@@ -1,14 +1,9 @@
-import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInAnonymously,
-} from '@react-native-firebase/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import authState from '../store/atoms/auth';
+import { getInstallId } from '../lib/installId';
+import authState, { type AppUser } from '../store/atoms/auth';
 
-export const useCachedInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
+export const useCachedInitAnonymousUser = (): AppUser | null => {
   const [{ user }, setUser] = useAtom(authState);
 
   useEffect(() => {
@@ -17,17 +12,17 @@ export const useCachedInitAnonymousUser = (): FirebaseAuthTypes.User | null => {
       return () => undefined;
     }
 
-    const auth = getAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      if (authUser) {
-        setUser((prev) => ({ ...prev, user: authUser }));
-      } else {
-        const credential = await signInAnonymously(auth);
-        setUser((prev) => ({ ...prev, user: credential.user }));
-      }
-    });
-    return unsubscribe;
+    let active = true;
+    getInstallId()
+      .then((uid) => {
+        if (active) {
+          setUser((prev) => ({ ...prev, user: { uid } }));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
   }, [setUser, user]);
 
   return user;

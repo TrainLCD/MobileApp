@@ -1,7 +1,7 @@
-import { doc, getDoc, getFirestore } from '@react-native-firebase/firestore';
 import { useEffect, useState } from 'react';
+import { workerUrl } from '../lib/workerApi';
 
-type MaintenanceDoc = {
+type MaintenanceResponse = {
   underMaintenance: boolean;
 };
 
@@ -9,11 +9,15 @@ export const useUnderMaintenance = () => {
   const [underMaintenance, setUnderMaintenance] = useState<boolean>();
   useEffect(() => {
     const fetchMaintenance = async () => {
-      const db = getFirestore();
-      const docSnap = await getDoc(doc(db, 'appConfig', 'maintenance'));
-      const data = docSnap.data() as MaintenanceDoc | undefined;
-      if (data) {
-        setUnderMaintenance(data.underMaintenance);
+      try {
+        const res = await fetch(workerUrl('/config/maintenance'));
+        if (!res.ok) {
+          return;
+        }
+        const data = (await res.json()) as MaintenanceResponse;
+        setUnderMaintenance(data.underMaintenance === true);
+      } catch {
+        // 取得失敗時はメンテナンス扱いにしない（既定の通常表示を維持）
       }
     };
     fetchMaintenance();
