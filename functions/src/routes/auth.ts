@@ -29,9 +29,26 @@ export const handleAuthToken = async (
     });
   }
 
-  const { token, expiresIn } = await issueSessionToken(env, installId);
-  return new Response(JSON.stringify({ token, expiresIn }), {
-    status: 200,
-    headers: JSON_HEADERS,
-  });
+  // 署名鍵が未設定だと issueSessionToken が例外で 500 になるため、原因を明示する
+  if (!env.SESSION_JWT_SECRET) {
+    console.error('SESSION_JWT_SECRET is not set');
+    return new Response(
+      JSON.stringify({ error: 'server misconfigured: SESSION_JWT_SECRET' }),
+      { status: 500, headers: JSON_HEADERS }
+    );
+  }
+
+  try {
+    const { token, expiresIn } = await issueSessionToken(env, installId);
+    return new Response(JSON.stringify({ token, expiresIn }), {
+      status: 200,
+      headers: JSON_HEADERS,
+    });
+  } catch (e) {
+    console.error('issueSessionToken failed:', e);
+    return new Response(JSON.stringify({ error: 'failed to issue token' }), {
+      status: 500,
+      headers: JSON_HEADERS,
+    });
+  }
 };

@@ -30,28 +30,36 @@ export default {
     const { pathname } = url;
     const method = req.method.toUpperCase();
 
-    if (method === 'GET' && pathname === '/health') {
-      return new Response('ok');
+    try {
+      if (method === 'GET' && pathname === '/health') {
+        return new Response('ok');
+      }
+      if (method === 'POST' && pathname === '/auth/token') {
+        return await handleAuthToken(req, env);
+      }
+      if (method === 'POST' && pathname === '/tts') {
+        return await withCallable(() => handleTts(req, env, ctx));
+      }
+      if (method === 'POST' && pathname === '/postFeedback') {
+        return await withCallable(() => handleFeedback(req, env));
+      }
+      if (method === 'POST' && pathname === '/feedback/upload-image') {
+        return await withCallable(() => handleUploadImage(req, env));
+      }
+      if (method === 'GET' && pathname === '/config/maintenance') {
+        return await handleMaintenanceConfig(env);
+      }
+      if (method === 'GET' && pathname === '/config/remote') {
+        return await handleRemoteConfig(env);
+      }
+      return notFound();
+    } catch (e) {
+      console.error(`Unhandled error on ${method} ${pathname}:`, e);
+      return new Response(JSON.stringify({ error: 'internal error' }), {
+        status: 500,
+        headers: { 'content-type': 'application/json; charset=UTF-8' },
+      });
     }
-    if (method === 'POST' && pathname === '/auth/token') {
-      return handleAuthToken(req, env);
-    }
-    if (method === 'POST' && pathname === '/tts') {
-      return withCallable(() => handleTts(req, env, ctx));
-    }
-    if (method === 'POST' && pathname === '/postFeedback') {
-      return withCallable(() => handleFeedback(req, env));
-    }
-    if (method === 'POST' && pathname === '/feedback/upload-image') {
-      return withCallable(() => handleUploadImage(req, env));
-    }
-    if (method === 'GET' && pathname === '/config/maintenance') {
-      return handleMaintenanceConfig(env);
-    }
-    if (method === 'GET' && pathname === '/config/remote') {
-      return handleRemoteConfig(env);
-    }
-    return notFound();
   },
 
   async queue(
