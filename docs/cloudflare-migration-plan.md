@@ -46,7 +46,7 @@ Google Play レビュー取得は Google Play Developer API（Firebase ではな
 | メソッド/パス | 由来 | 認証 | 概要 |
 | --- | --- | --- | --- |
 | `POST /auth/token` | 新規 | なし（ID 受領） | インストール ID を受け、短期セッション JWT（HS256・Worker シークレット署名）を発行。`sub=installId` |
-| `POST /tts` | `tts` onCall | セッション JWT | callable 互換。KV/R2 キャッシュ照会 → ミス時 Azure 合成 → Queue 投函 |
+| `POST /tts` | `tts` onCall | セッション JWT | callable 互換。KV/R2 キャッシュ照会 → ミス時 Azure 合成 → R2+KV へ直接書込 |
 | `POST /postFeedback` | `enqueueFeedback` | セッション JWT | callable 互換。Queue へ投函 |
 | `POST /feedback/upload-image` | Firebase Storage 代替 | セッション JWT | PNG を受け R2 `report-images/{id}.png` に保存し公開 URL を返す |
 | `GET /config/maintenance` | Firestore 代替 | なし | KV `config:maintenance` → `{ underMaintenance: boolean }` |
@@ -66,12 +66,13 @@ callable 互換: リクエスト `{data:{…}}` を読み、成功は `{result:{
 - クライアント SSML `<speak>…</speak>` の外殻を剥がし `<speak version="1.0" xml:lang="<ja-JP|en-US>"><voice name="<voiceName>">…</voice></speak>` で包み直す。
 - **流用**: `funcs/tts.ts` の `stripSsml`（byte 数検証）、id ハッシュ生成（version=11・キーソート維持。`node:crypto` → `crypto.subtle.digest('SHA-256')` に置換し**入力不変**）、`normalizeRomanText`（`utils/normalize.ts`）。`synthesizeSpeech` は Azure 呼び出しへ全面差替え、出力は常に `audio/mpeg`（`sniffAudioMimeType` 不要）。
 - ボイス名は **Azure ニューラルボイス**（既定例 ja=`ja-JP-NanamiNeural` / en=`en-US-JennyNeural`、vars で可変）。`utils/ttsVoice.ts` は優先順位ロジック（クライアント指定→config→既定）は流用しつつ Google の `-Standard-` ガードを撤去/Azure 妥当性チェックに置換。config は KV `config:tts`（5 分 isolate キャッシュ）。
-- 処理: JWT 検証 → 入力検証（空・SSML 除去後空・4000byte 上限）→ ボイス解決 → id 算出 → KV メタ照会（ヒット時 R2 から ja/en 取得し base64 返却、既存フォールバック踏襲）→ ミス時 Azure 合成 → `ctx.waitUntil(env.TTS_CACHE_QUEUE.send(...))` → `{result:{…}}`。
+- 処理: JWT 検証 → 入力検証（空・SSML 除去後空・4000byte 上限）→ ボイス解決 → id 算出 → KV メタ照会（ヒット時 R2 から ja/en 取得し base64 返却、既存フォールバック踏襲）→ ミス時 Azure 合成 → `ctx.waitUntil(...)` で R2+KV へ直接キャッシュ書込 → `{result:{…}}`。
+
+> **実装上の変更**: 当初は TTS キャッシュ書込も Queue 経由を想定したが、音声が Queues の 128KB 上限に収まらないため、`/tts` ハンドラから R2+KV へ直接書き込む方式に変更した（tts-cache キューは新設しない）。
 
 ### キュー consumer（queue ハンドラ、`batch.queue` で分岐）
 
-- **tts-cache**（`funcs/ttsCachePubSub.ts` 由来）: base64 音声を R2 `caches/tts/{ja,en}/{id}.{ext}` に保存、KV `voice:{id}` にメタ書込。`getCacheFileExtension` 流用。
-- **feedback-triage**（`workers/feedback.ts` 由来）: few-shot を R2（`fewshot.jsonl`）から読み、`SYSTEM_PROMPT`+few-shot を `env.AI.run(<model>, { messages, response_format: json })` に渡す。出力 JSON を既存正規表現で抽出 → `coerceReport` → `looksLikeSpam` 補正 → GitHub Issue 作成（`OCTOKIT_PAT`）→ Discord 通知。**`coerceReport`/`looksLikeSpam`/Issue・Discord 生成ロジックは流用**、AI 呼び出しのみ差替え。Queues は orderingKey 非対応（reporterUid 単位順序は喪失するがトリアージでは許容）。
+- **feedback-triage**（`workers/feedback.ts` 由来）: few-shot を CONFIG_KV（`config:fewshot`）から読み、`SYSTEM_PROMPT`+few-shot を `env.AI.run(<model>, { messages, response_format: json })` に渡す。出力 JSON を既存正規表現で抽出 → `coerceReport` → `looksLikeSpam` 補正 → GitHub Issue 作成（`OCTOKIT_PAT`）→ Discord 通知。**`coerceReport`/`looksLikeSpam`/Issue・Discord 生成ロジックは流用**、AI 呼び出しのみ差替え。Queues は orderingKey 非対応（reporterUid 単位順序は喪失するがトリアージでは許容）。
 
 ### Cron（scheduled ハンドラ、`0 * * * *`）
 
@@ -99,7 +100,7 @@ functions/
     lib/azure/tts.ts        # Azure Speech 合成
     lib/google/accessToken.ts # SA JWT → OAuth(androidpublisher)
     routes/{tts,feedback,uploadImage,config}.ts
-    consumers/{ttsCache,feedbackTriage}.ts
+    consumers/feedbackTriage.ts            # tts-cache は廃止。TTS は /tts から直接書込
     scheduled/{appStoreReviews,googlePlayReviews}.ts
     models/{ai,common,feedback}.ts   # ほぼ無変更で流用
     utils/{normalize,removeMacron,ttsVoice}.ts  # 流用(ttsVoice は Azure 向け微調整)
@@ -108,8 +109,8 @@ functions/
 ### wrangler.jsonc（bindings）
 
 - **KV**: `TTS_KV`（`voice:*` / `config:tts`）、`CONFIG_KV`（`config:maintenance` / `config:remote`）、`STATE_KV`（`state:*`）
-- **R2**: `TTS_BUCKET`（音声 + `fewshot.jsonl`）、`UPLOAD_BUCKET`（`report-images/*`、公開ドメイン必要 → `imageUrl` 用）
-- **Queues**: producers/consumers = `tts-cache`, `feedback-triage`
+- **R2**: `TTS_BUCKET`（音声バイナリ）、`UPLOAD_BUCKET`（`report-images/*`、公開ドメイン必要 → `imageUrl` 用）。few-shot は CONFIG_KV `config:fewshot` に配置
+- **Queues**: producers/consumers = `feedback-triage`（tts-cache は廃止。TTS キャッシュは `/tts` から R2+KV へ直接書込）
 - **AI**: `AI`（Workers AI）
 - **Cron**: `["0 * * * *"]`
 - **vars（非機密）**: `GOOGLE_PLAY_PACKAGE_NAME`, `AZURE_SPEECH_REGION`, AI model 名, 既定 Azure voice 名(ja/en), few-shot 制御値, `UPLOAD_PUBLIC_BASE_URL`

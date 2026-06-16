@@ -1,46 +1,48 @@
 # TrainLCD Worker (Cloudflare)
 
-TrainLCD のバックエンドを担う Cloudflare Worker。旧 Firebase Cloud Functions を置き換えたもので、
-1 つの Worker に HTTP / キュー / Cron の 3 ハンドラを集約している。
+The Cloudflare Worker that powers the TrainLCD backend. It replaces the former
+Firebase Cloud Functions, consolidating the HTTP, queue, and Cron handlers into a
+single Worker.
 
-## 提供機能
+## Features
 
-- **TTS 合成** (`POST /tts`): Azure Speech で SSML を音声合成し、KV/R2 でキャッシュ
-- **セッション発行** (`POST /auth/token`): インストール ID から短期セッション JWT を発行（Firebase 匿名認証の代替）
-- **フィードバック受付** (`POST /postFeedback`): トリアージキューへ投函
-- **画像アップロード** (`POST /feedback/upload-image`): フィードバック画像を R2 に保存し公開 URL を返す
-- **アプリ設定配信** (`GET /config/maintenance`, `GET /config/remote`): メンテナンス状態と GPS しきい値（Remote Config 代替）
-- **フィードバックトリアージ** (queue `feedback-triage`): Workers AI で要約・分類し、GitHub Issue 作成と Discord 通知
-- **TTS キャッシュ書き込み**: 合成音声を `/tts` ハンドラから R2 + KV へ直接保存（Queues の 128KB 上限に音声が収まらないためキューは使わない）
-- **レビュー通知** (Cron 毎時): App Store / Google Play の新着レビューを Discord へ通知
+- **TTS synthesis** (`POST /tts`): synthesizes SSML into audio via Azure Speech and caches it in KV/R2.
+- **Session issuance** (`POST /auth/token`): issues a short-lived session JWT from an install ID (the replacement for Firebase anonymous auth).
+- **Feedback intake** (`POST /postFeedback`): enqueues feedback onto the triage queue.
+- **Image upload** (`POST /feedback/upload-image`): stores feedback images in R2 and returns a public URL.
+- **App config delivery** (`GET /config/maintenance`, `GET /config/remote`): maintenance status and GPS thresholds (the replacement for Remote Config).
+- **Feedback triage** (queue `feedback-triage`): summarizes and classifies feedback with Workers AI, then creates a GitHub Issue and notifies Discord.
+- **TTS cache writes**: synthesized audio is written directly from the `/tts` handler to R2 + KV (no queue is used, because audio does not fit within the 128 KB Queues limit).
+- **Review notifications** (Cron, hourly): notifies Discord of new App Store / Google Play reviews.
 
-## 技術スタック
+## Tech stack
 
-- **Cloudflare Workers** — `fetch` / `queue` / `scheduled` ハンドラ
-- **Workers KV** — TTS キャッシュメタ・設定・レビュー既読状態
-- **R2** — 音声バイナリ・フィードバック画像・few-shot データ
+- **Cloudflare Workers** — `fetch` / `queue` / `scheduled` handlers
+- **Workers KV** — TTS cache metadata, config, and review read-state
+- **R2** — audio binaries and feedback images
 - **Cloudflare Queues** — `feedback-triage`
-- **Workers AI** — フィードバックトリアージ
-- **Azure Speech** — TTS 合成（SSML）
-- **Google Android Publisher API** — Google Play レビュー取得（サービスアカウント JWT）
+- **Workers AI** — feedback triage
+- **Azure Speech** — TTS synthesis (SSML)
+- **Google Android Publisher API** — Google Play review retrieval (service-account JWT)
 - **TypeScript / Biome / Jest / Wrangler**
 
-## 前提
+## Prerequisites
 
 - Node.js 22.x / npm
-- Wrangler（`npm install` で devDependency として導入）
-- Cloudflare アカウント（KV/R2/Queues/Workers AI を有効化）
+- Wrangler (installed as a devDependency via `npm install`)
+- A Cloudflare account (with KV/R2/Queues/Workers AI enabled)
 
-## セットアップ
+## Setup
 
 ```bash
 cd functions
 npm install
 ```
 
-### バインディングの作成
+### Creating bindings
 
-`wrangler.jsonc` の `id` / `bucket_name` プレースホルダを、以下で発行した実値に置き換える（dev/prod それぞれ）。
+Replace the `id` / `bucket_name` placeholders in `wrangler.jsonc` with the real
+values issued by the commands below (for both dev and prod).
 
 ```bash
 # KV
@@ -54,92 +56,101 @@ wrangler r2 bucket create trainlcd-uploads-dev
 wrangler queues create feedback-triage-dev
 ```
 
-### シークレット投入
+### Setting secrets
 
 ```bash
-wrangler secret put SESSION_JWT_SECRET          # セッション JWT 署名鍵（任意の長い乱数）
-wrangler secret put AZURE_SPEECH_KEY            # Azure Speech のサブスクリプションキー
-wrangler secret put GOOGLE_SA_KEY              # Android Publisher 用 SA 鍵 JSON（1 行文字列）
+wrangler secret put SESSION_JWT_SECRET          # signing key for session JWTs (any long random string)
+wrangler secret put AZURE_SPEECH_KEY            # Azure Speech subscription key
+wrangler secret put GOOGLE_SA_KEY              # Android Publisher SA key JSON (single-line string)
 wrangler secret put OCTOKIT_PAT
 wrangler secret put DISCORD_CS_WEBHOOK_URL
 wrangler secret put DISCORD_CRASH_WEBHOOK_URL
 wrangler secret put DISCORD_REVIEW_WEBHOOK_URL
 ```
 
-ローカル開発では同じキーを `.dev.vars`（gitignore 済み）に記述する。
+For local development, put the same keys in `.dev.vars` (gitignored).
 
-### 非機密の設定（vars）
+You can also bulk-load secrets with the helper scripts: copy
+`.secrets.env.example` to `.secrets.env`, fill in the values, then run
+`./scripts/put-secrets.sh` (or `./scripts/put-secrets.ps1` on Windows).
 
-`wrangler.jsonc` の `vars` を参照。Azure リージョン・ボイス名・AI モデル名・パッケージ名・
-公開アップロード URL（R2 の公開ドメイン）などを環境ごとに設定する。
+### Non-secret configuration (vars)
 
-## 開発・デプロイ
+See `vars` in `wrangler.jsonc`. Configure the Azure region, voice names, AI model
+name, package name, public upload URL (the R2 public domain), and so on per
+environment.
+
+## Develop & deploy
 
 ```bash
-npm run dev            # wrangler dev（ローカル）
+npm run dev            # wrangler dev (local)
 npm run typecheck      # tsc --noEmit
 npm run lint           # biome check
-npm test               # jest（純粋関数）
-npm run deploy:dev     # wrangler deploy（dev）
+npm test               # jest (pure functions)
+npm run deploy:dev     # wrangler deploy (dev)
 npm run deploy:prod    # wrangler deploy --env production
-npm run tail           # ログ追尾
+npm run tail           # follow logs
 ```
 
-## クライアント通信規約
+## Client wire protocol
 
-`POST /tts` と `POST /postFeedback` は Firebase callable 互換のワイヤ形式を維持している。
+`POST /tts` and `POST /postFeedback` keep the Firebase callable-compatible wire
+format.
 
-- リクエスト: `{ "data": { ... } }`、`Authorization: Bearer <session JWT>`
-- 成功: `{ "result": { ... } }`
-- 失敗: HTTP ステータス + `{ "error": { "message", "status" } }`
+- Request: `{ "data": { ... } }` with `Authorization: Bearer <session JWT>`
+- Success: `{ "result": { ... } }`
+- Failure: an HTTP status plus `{ "error": { "message", "status" } }`
 
-セッション JWT は `POST /auth/token`（body `{ "installId": "<uuid>" }`）で取得する。
+A session JWT is obtained from `POST /auth/token` (body `{ "installId": "<uuid>" }`).
 
-## テスト方針
+## Testing strategy
 
-ユニットテストは純粋関数（SSML 整形・ボイス名解決・トリアージ JSON の正規化・レビュー
-パース）を Jest で検証する。HTTP/キュー/Cron のランタイム結合は `wrangler dev` /
-`wrangler dev --test-scheduled` で確認する。
+Unit tests cover pure functions (SSML formatting, voice-name resolution, triage
+JSON normalization, review parsing) with Jest. Runtime integration for HTTP /
+queue / Cron is verified with `wrangler dev` / `wrangler dev --test-scheduled`.
 
-## few-shot データ
+## few-shot data
 
-フィードバックトリアージは `CONFIG_KV` の `config:fewshot`（`FEW_SHOT_KV_KEY`）を読み込む。
-few-shot は TTS とは無関係なので、設定用 KV に置く（`config:maintenance`/`config:remote` と同じ namespace）。
-フォーマットは 1 行 1 例の JSONL（`fewshot.example.jsonl` 参照）:
+Feedback triage reads `config:fewshot` (`FEW_SHOT_KV_KEY`) from `CONFIG_KV`.
+The few-shot data is unrelated to TTS, so it lives in the config KV (the same
+namespace as `config:maintenance` / `config:remote`). The format is JSONL, one
+example per line (see `fewshot.example.jsonl`):
 
 ```json
-{"input": "ユーザーの本文", "output": "{\"title\":...,\"isSpam\":false,...}"}
+{"input": "user body text", "output": "{\"title\":...,\"isSpam\":false,...}"}
 ```
 
-アップロード（ファイルをそのまま 1 つの KV 値として投入）:
+Upload (the file is stored verbatim as a single KV value):
 
 ```bash
-# dev（--local を付けなければ本番 KV に書き込む）
+# dev (without --local it writes to the production KV)
 wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl
 # prod
 wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl --env production
 ```
 
-未配置だとトリアージは `FEW_SHOT_NOT_AVAILABLE` で失敗する（誤学習防止のフェイルハード）。
+If it is not present, triage fails hard with `FEW_SHOT_NOT_AVAILABLE` (a
+fail-hard guard that prevents mis-training).
 
-## メンテナンス CLI
+## Maintenance CLI
 
-KV(TTS_KV) と R2(音声バケット) を直接操作する保守ツール。Cloudflare REST API(KV) と
-S3 互換 API(R2) を使う。接続情報は環境変数で渡す:
+Maintenance tools that operate directly on KV (TTS_KV) and R2 (the audio bucket).
+They use the Cloudflare REST API (KV) and the S3-compatible API (R2). Connection
+details are passed via environment variables:
 
 ```bash
-export CF_ACCOUNT_ID=...          # Cloudflare アカウント ID
-export CF_API_TOKEN=...           # KV 読み書き権限の API トークン
-export CF_KV_NAMESPACE_ID=...     # 対象環境の TTS_KV ネームスペース ID
-export R2_ACCESS_KEY_ID=...       # R2 の S3 アクセスキー
+export CF_ACCOUNT_ID=...          # Cloudflare account ID
+export CF_API_TOKEN=...           # API token with KV read/write permission
+export CF_KV_NAMESPACE_ID=...     # TTS_KV namespace ID for the target environment
+export R2_ACCESS_KEY_ID=...       # R2 S3 access key
 export R2_SECRET_ACCESS_KEY=...
-export R2_BUCKET=trainlcd-tts-dev # 対象環境の音声バケット名
+export R2_BUCKET=trainlcd-tts-dev # audio bucket name for the target environment
 
-# SSML 本文で TTS キャッシュを検索（必要なら削除）
+# Search the TTS cache by SSML body (delete if needed)
 npm run find-tts-cache -- "東京" --field ssmlJa
 npm run find-tts-cache -- "東京" --delete
 
-# R2 にあるが KV メタの無い孤立音声を検出（必要なら削除）
+# Detect orphaned audio that exists in R2 but has no KV metadata (delete if needed)
 npm run find-orphaned-tts
 npm run find-orphaned-tts -- --delete
 ```
