@@ -16,9 +16,9 @@
 
   // KV / R2 / Queue の id・bucket 名は `wrangler kv namespace create` 等で発行後に差し替える
   "kv_namespaces": [
-    { "binding": "TTS_KV", "id": "REPLACE_DEV_TTS_KV_ID" },
-    { "binding": "CONFIG_KV", "id": "REPLACE_DEV_CONFIG_KV_ID" },
-    { "binding": "STATE_KV", "id": "REPLACE_DEV_STATE_KV_ID" }
+    { "binding": "TTS_KV", "id": "aebb675c3c27417eac6cd5a5b5a51c60" },
+    { "binding": "CONFIG_KV", "id": "538a8bc7db6b463089bf9327bc2e1483" },
+    { "binding": "STATE_KV", "id": "d99ba5c23127456f8e1e928be1731876" }
   ],
 
   "r2_buckets": [
@@ -28,11 +28,9 @@
 
   "queues": {
     "producers": [
-      { "binding": "TTS_CACHE_QUEUE", "queue": "tts-cache-dev" },
       { "binding": "FEEDBACK_QUEUE", "queue": "feedback-triage-dev" }
     ],
     "consumers": [
-      { "queue": "tts-cache-dev", "max_batch_size": 10, "max_retries": 3 },
       { "queue": "feedback-triage-dev", "max_batch_size": 5, "max_retries": 3 }
     ]
   },
@@ -61,9 +59,9 @@
       "triggers": { "crons": ["0 * * * *"] },
       "ai": { "binding": "AI" },
       "kv_namespaces": [
-        { "binding": "TTS_KV", "id": "REPLACE_PROD_TTS_KV_ID" },
-        { "binding": "CONFIG_KV", "id": "REPLACE_PROD_CONFIG_KV_ID" },
-        { "binding": "STATE_KV", "id": "REPLACE_PROD_STATE_KV_ID" }
+        { "binding": "TTS_KV", "id": "b42928fa3ed64bdcacb8c8749b528f24" },
+        { "binding": "CONFIG_KV", "id": "dc9c94a546d549e5b3ac02dfa94717a0" },
+        { "binding": "STATE_KV", "id": "a030d194835843f98cbaf368f0615a83" }
       ],
       "r2_buckets": [
         { "binding": "TTS_BUCKET", "bucket_name": "trainlcd-tts" },
@@ -71,11 +69,9 @@
       ],
       "queues": {
         "producers": [
-          { "binding": "TTS_CACHE_QUEUE", "queue": "tts-cache" },
           { "binding": "FEEDBACK_QUEUE", "queue": "feedback-triage" }
         ],
         "consumers": [
-          { "queue": "tts-cache", "max_batch_size": 10, "max_retries": 3 },
           { "queue": "feedback-triage", "max_batch_size": 5, "max_retries": 3 }
         ]
       },

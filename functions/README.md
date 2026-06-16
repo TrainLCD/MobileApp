@@ -11,7 +11,7 @@ TrainLCD のバックエンドを担う Cloudflare Worker。旧 Firebase Cloud F
 - **画像アップロード** (`POST /feedback/upload-image`): フィードバック画像を R2 に保存し公開 URL を返す
 - **アプリ設定配信** (`GET /config/maintenance`, `GET /config/remote`): メンテナンス状態と GPS しきい値（Remote Config 代替）
 - **フィードバックトリアージ** (queue `feedback-triage`): Workers AI で要約・分類し、GitHub Issue 作成と Discord 通知
-- **TTS キャッシュ書き込み** (queue `tts-cache`): 合成音声を R2 + KV へ保存
+- **TTS キャッシュ書き込み**: 合成音声を `/tts` ハンドラから R2 + KV へ直接保存（Queues の 128KB 上限に音声が収まらないためキューは使わない）
 - **レビュー通知** (Cron 毎時): App Store / Google Play の新着レビューを Discord へ通知
 
 ## 技術スタック
@@ -19,7 +19,7 @@ TrainLCD のバックエンドを担う Cloudflare Worker。旧 Firebase Cloud F
 - **Cloudflare Workers** — `fetch` / `queue` / `scheduled` ハンドラ
 - **Workers KV** — TTS キャッシュメタ・設定・レビュー既読状態
 - **R2** — 音声バイナリ・フィードバック画像・few-shot データ
-- **Cloudflare Queues** — `tts-cache` / `feedback-triage`
+- **Cloudflare Queues** — `feedback-triage`
 - **Workers AI** — フィードバックトリアージ
 - **Azure Speech** — TTS 合成（SSML）
 - **Google Android Publisher API** — Google Play レビュー取得（サービスアカウント JWT）
@@ -51,7 +51,6 @@ wrangler kv namespace create STATE_KV
 wrangler r2 bucket create trainlcd-tts-dev
 wrangler r2 bucket create trainlcd-uploads-dev
 # Queues
-wrangler queues create tts-cache-dev
 wrangler queues create feedback-triage-dev
 ```
 

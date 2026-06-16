@@ -3,7 +3,6 @@
  * 1 つの Worker に HTTP(fetch) / キュー(queue) / Cron(scheduled) の 3 ハンドラを集約する。
  */
 import { processFeedbackMessage } from './consumers/feedbackTriage';
-import { processTtsCacheMessage } from './consumers/ttsCache';
 import { withCallable } from './lib/callable';
 import { handleAuthToken } from './routes/auth';
 import { handleMaintenanceConfig, handleRemoteConfig } from './routes/config';
@@ -12,7 +11,7 @@ import { handleTts } from './routes/tts';
 import { handleUploadImage } from './routes/uploadImage';
 import { runAppStoreReviewJob } from './scheduled/appStoreReviews';
 import { runGooglePlayReviewJob } from './scheduled/googlePlayReviews';
-import type { Env, FeedbackQueueMessage, TtsCacheMessage } from './types';
+import type { Env, FeedbackQueueMessage } from './types';
 
 const notFound = () =>
   new Response(JSON.stringify({ error: 'not found' }), {
@@ -63,20 +62,12 @@ export default {
   },
 
   async queue(
-    batch: MessageBatch<TtsCacheMessage | FeedbackQueueMessage>,
+    batch: MessageBatch<FeedbackQueueMessage>,
     env: Env
   ): Promise<void> {
-    const isTtsCache = batch.queue.startsWith('tts-cache');
     for (const message of batch.messages) {
       try {
-        if (isTtsCache) {
-          await processTtsCacheMessage(message.body as TtsCacheMessage, env);
-        } else {
-          await processFeedbackMessage(
-            message.body as FeedbackQueueMessage,
-            env
-          );
-        }
+        await processFeedbackMessage(message.body, env);
         message.ack();
       } catch (e) {
         console.error(`Queue message failed (${batch.queue}):`, e);

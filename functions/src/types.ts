@@ -10,7 +10,6 @@ export interface Env {
   STATE_KV: KVNamespace;
   TTS_BUCKET: R2Bucket;
   UPLOAD_BUCKET: R2Bucket;
-  TTS_CACHE_QUEUE: Queue<TtsCacheMessage>;
   FEEDBACK_QUEUE: Queue<FeedbackQueueMessage>;
 
   // --- Vars（非機密。wrangler.jsonc の vars） ---
@@ -42,8 +41,8 @@ export interface Env {
   APPSTORE_REVIEW_FEED_URL?: string;
 }
 
-/** tts-cache キューのメッセージ */
-export interface TtsCacheMessage {
+/** TTS キャッシュ書き込みのペイロード（R2+KV へ直接保存。キューは介さない） */
+export interface TtsCachePayload {
   id: string;
   jaAudioContent: string;
   enAudioContent: string;

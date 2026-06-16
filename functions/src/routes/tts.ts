@@ -7,6 +7,7 @@ import {
   parseCallableData,
 } from '../lib/callable';
 import { bytesToBase64, sha256Hex } from '../lib/crypto';
+import { writeTtsCache } from '../lib/ttsCache';
 import type { Env } from '../types';
 import { normalizeRomanText } from '../utils/normalize';
 import { stripSsml, utf8ByteLength } from '../utils/ssml';
@@ -186,19 +187,23 @@ export const handleTts = async (
     ),
   ]);
 
-  // キャッシュ書き込みは非同期（失敗してもユーザー応答に影響させない）
+  // キャッシュ書き込みは非同期（失敗してもユーザー応答に影響させない）。
+  // 音声は Queues の上限(128KB)に収まらないため、キューを介さず R2+KV へ直接書く。
   ctx.waitUntil(
-    env.TTS_CACHE_QUEUE.send({
-      id,
-      jaAudioContent: jaAudio.audioContent,
-      enAudioContent: enAudio.audioContent,
-      jaAudioMimeType: jaAudio.mimeType,
-      enAudioMimeType: enAudio.mimeType,
-      ssmlJa,
-      ssmlEn,
-      voiceJa: jaVoiceName,
-      voiceEn: enVoiceName,
-    }).catch((err) => console.error('Failed to enqueue tts-cache:', err))
+    writeTtsCache(
+      {
+        id,
+        jaAudioContent: jaAudio.audioContent,
+        enAudioContent: enAudio.audioContent,
+        jaAudioMimeType: jaAudio.mimeType,
+        enAudioMimeType: enAudio.mimeType,
+        ssmlJa,
+        ssmlEn,
+        voiceJa: jaVoiceName,
+        voiceEn: enVoiceName,
+      },
+      env
+    ).catch((err) => console.error('Failed to cache tts audio:', err))
   );
 
   return callableSuccess({

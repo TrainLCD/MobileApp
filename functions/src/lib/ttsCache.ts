@@ -1,6 +1,10 @@
-/** tts-cache キュー consumer — 合成音声を R2 に保存し KV にメタを書き込む。 */
-import { base64ToBytes } from '../lib/crypto';
-import type { Env, TtsCacheMessage } from '../types';
+/**
+ * 合成済み TTS 音声を R2 に保存し、メタを KV に書き込む。
+ * Queues のメッセージ上限(128KB)に音声が収まらないため、キューを介さず
+ * /tts ハンドラから ctx.waitUntil で直接呼ぶ。
+ */
+import type { Env, TtsCachePayload } from '../types';
+import { base64ToBytes } from './crypto';
 
 const getCacheFileExtension = (mimeType: string): 'mp3' | 'wav' | 'pcm' => {
   const normalized = mimeType.toLowerCase();
@@ -9,8 +13,8 @@ const getCacheFileExtension = (mimeType: string): 'mp3' | 'wav' | 'pcm' => {
   return 'pcm';
 };
 
-export const processTtsCacheMessage = async (
-  msg: TtsCacheMessage,
+export const writeTtsCache = async (
+  payload: TtsCachePayload,
   env: Env
 ): Promise<void> => {
   const {
@@ -23,10 +27,10 @@ export const processTtsCacheMessage = async (
     ssmlEn,
     voiceJa,
     voiceEn,
-  } = msg;
+  } = payload;
 
   if (!id || !jaAudioContent || !enAudioContent) {
-    console.error('Invalid payload for tts-cache', {
+    console.error('Invalid payload for tts cache', {
       hasId: !!id,
       hasJa: !!jaAudioContent,
       hasEn: !!enAudioContent,
