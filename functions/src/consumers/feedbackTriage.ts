@@ -291,6 +291,27 @@ Output JSON only:
 Return ONLY that JSON. No prose, no markdown.
 `.trim();
 
+// Workers AI の JSON Mode（response_format）に渡すスキーマ。
+// summary を required にして「フィールド欠落で要約が空」になるのを構造的に防ぐ。
+// category / triageLevel はスパム時に省ける運用なので optional のまま。
+const TRIAGE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    summary: { type: 'string' },
+    isSpam: { type: 'boolean' },
+    labels: { type: 'array', items: { type: 'string' } },
+    category: {
+      type: 'string',
+      enum: ['bug', 'feature_request', 'improvement', 'question'],
+    },
+    triageLevel: { type: 'string', enum: ['urgent', 'high', 'medium', 'low'] },
+    confidence: { type: 'number' },
+    reason: { type: 'string' },
+  },
+  required: ['title', 'summary', 'isSpam', 'labels', 'confidence', 'reason'],
+} as const;
+
 // ---- Few-shot loader（CONFIG_KV） ----
 const FEW_SHOT_TTL_MS = 10 * 60 * 1000;
 let fewShotCache: { text: string; loadedAt: number } | null = null;
@@ -341,12 +362,14 @@ async function getFewShotText(env: Env): Promise<string> {
   return text;
 }
 
+// JSON Mode 利用時、Workers AI は response をパース済みオブジェクトで返すことがある
+// （非対応・複雑すぎでエラーのときは文字列になることもある）。両方を受けられるよう unknown で返す。
 async function runTriage(
   env: Env,
   fewshot: string,
   userText: string,
   strict = false
-): Promise<string> {
+): Promise<unknown> {
   // strict: 1 回パースに失敗した後の再試行。few-shot の模倣で複数オブジェクトを
   // 吐く／途中で切れるのを抑えるため、出力を 1 個の JSON に厳しく制約し直す。
   const strictNudge = strict
@@ -360,8 +383,23 @@ async function runTriage(
     ],
     max_tokens: 768,
     temperature: strict ? 0 : 0.2,
-  })) as { response?: string };
-  return typeof result?.response === 'string' ? result.response : '{}';
+    // JSON Schema を強制し、summary などのフィールド欠落を防ぐ。
+    response_format: { type: 'json_schema', json_schema: TRIAGE_JSON_SCHEMA },
+  })) as { response?: unknown };
+  return result?.response ?? null;
+}
+
+/** runTriage の戻り（オブジェクト or 文字列）からトリアージ JSON を取り出す。 */
+function normalizeTriageResponse(resp: unknown): unknown | null {
+  if (resp && typeof resp === 'object') return resp;
+  if (typeof resp === 'string') return extractReportJson(resp);
+  return null;
+}
+
+/** ログ用に応答を短いプレビュー文字列へ。 */
+function previewResponse(resp: unknown): string {
+  const s = typeof resp === 'string' ? resp : JSON.stringify(resp ?? null);
+  return s.slice(0, 200);
 }
 
 export const processFeedbackMessage = async (
@@ -377,17 +415,17 @@ export const processFeedbackMessage = async (
   // ここで諦めても原文（report.description）は Issue 本文に必ず残すため、フィードバックは捨てない。
   const MAX_TRIAGE_ATTEMPTS = 3;
   let raw: unknown = null;
-  let lastText = '';
+  let lastPreview = '';
   for (let attempt = 1; attempt <= MAX_TRIAGE_ATTEMPTS; attempt++) {
-    lastText = await runTriage(env, fewshot, report.description, attempt > 1);
-    raw = extractReportJson(lastText);
+    const resp = await runTriage(env, fewshot, report.description, attempt > 1);
+    lastPreview = previewResponse(resp);
+    raw = normalizeTriageResponse(resp);
     if (raw !== null) break;
     console.warn('feedbackTriage: モデル応答の JSON パースに失敗（再試行）', {
       reportId: report.id,
       attempt,
       maxAttempts: MAX_TRIAGE_ATTEMPTS,
-      responseLength: lastText.length,
-      responsePreview: lastText.slice(0, 200),
+      responsePreview: lastPreview,
     });
   }
 
@@ -412,7 +450,7 @@ export const processFeedbackMessage = async (
     if (!aiReport.isSpam && String(rawSummary ?? '').trim() === '') {
       console.warn(
         'feedbackTriage: モデルが summary を空/欠落で返却（title にフォールバック）',
-        { reportId: report.id, responsePreview: lastText.slice(0, 200) }
+        { reportId: report.id, responsePreview: lastPreview }
       );
     }
   }
