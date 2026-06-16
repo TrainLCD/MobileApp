@@ -55,6 +55,17 @@ describe('replaceJapaneseText', () => {
     );
   });
 
+  it('strips parenthesised sponsor text from nameIpa before use', () => {
+    expect(
+      replaceJapaneseText(
+        '電鉄富山',
+        'デンテツトヤマ',
+        '',
+        'dentetsɯ toꜜjama（toyota）'
+      )
+    ).toBe('<phoneme alphabet="ipa" ph="dentetsɯ toꜜjama">電鉄富山</phoneme>');
+  });
+
   it('escapes XML special characters in the surface name', () => {
     expect(replaceJapaneseText('A&B', null, '', 'eɪ ænd biː')).toBe(
       '<phoneme alphabet="ipa" ph="eɪ ænd biː">A&amp;B</phoneme>'

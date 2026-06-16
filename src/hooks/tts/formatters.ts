@@ -67,8 +67,10 @@ export const replaceJapaneseText = (
   }
   // IPA があればピッチアクセントごと読みを当てられる phoneme を優先。
   // 無ければ従来どおりカタカナ読みの sub alias にフォールバックする。
-  if (nameIpa) {
-    return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(nameIpa)}">${escapeXml(name)}</phoneme>`;
+  // nameIpa も name/nameKatakana と同様にカッコ書き（スポンサー名など）を除去してから使う。
+  const ipa = stripParensForTTS(nameIpa);
+  if (ipa) {
+    return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(ipa)}">${escapeXml(name)}</phoneme>`;
   }
   if (!nameKatakana) {
     return name;
