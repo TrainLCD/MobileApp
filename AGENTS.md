@@ -33,7 +33,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - `docs/`: human-facing documentation including changelog and incident notes.
 - `utils/`: developer tooling scripts such as GraphQL codegen config.
 - `android/`, `ios/`: native projects.
-- `functions/`: Firebase Cloud Functions.
+- `functions/`: Cloudflare Workers backend (TTS via Azure Speech, feedback triage via Workers AI, review notifiers). Migrated off Firebase Cloud Functions.
 
 ## Tooling & Environment Expectations
 

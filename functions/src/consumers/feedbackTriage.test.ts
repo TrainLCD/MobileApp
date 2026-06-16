@@ -1,32 +1,4 @@
-jest.mock('@google-cloud/storage', () => ({
-  Storage: class Storage {
-    bucket() {
-      return {
-        file() {
-          return {
-            async download() {
-              return [Buffer.from('')];
-            },
-          };
-        },
-      };
-    }
-  },
-}));
-
-jest.mock('@google-cloud/vertexai', () => ({
-  VertexAI: class VertexAI {},
-}));
-
-jest.mock('firebase-functions/v2/pubsub', () => ({
-  onMessagePublished: () => () => undefined,
-}));
-
-import { coerceReport } from '../feedback';
-
-afterEach(() => {
-  jest.clearAllMocks();
-});
+import { coerceReport, looksLikeSpam } from './feedbackTriage';
 
 describe('coerceReport', () => {
   it('returns defaults when category and triageLevel are missing', () => {
@@ -91,7 +63,7 @@ describe('coerceReport', () => {
     expect(r.triageLevel).toBe('medium');
   });
 
-  it('accepts case-insensitive key names from Gemini output', () => {
+  it('accepts case-insensitive key names from model output', () => {
     const r = coerceReport({
       Title: 't',
       Summary: 's',
@@ -122,5 +94,19 @@ describe('coerceReport', () => {
     expect(coerceReport({ category: 'enhancement' }).category).toBe(
       'improvement'
     );
+  });
+});
+
+describe('looksLikeSpam', () => {
+  it('treats actionable feedback as not spam', () => {
+    expect(looksLikeSpam('表示がおかしいので修正してほしい')).toBe(false);
+  });
+
+  it('flags announcement-style transcripts as spam', () => {
+    expect(
+      looksLikeSpam(
+        '次は東京、東京です。お乗り換えのご案内をいたします。停車駅は品川方面'
+      )
+    ).toBe(true);
   });
 });
