@@ -38,6 +38,7 @@
   "vars": {
     "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
     "AZURE_SPEECH_REGION": "japaneast",
+    "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
     "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct",
     "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
     "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
@@ -78,6 +79,7 @@
       "vars": {
         "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
         "AZURE_SPEECH_REGION": "japaneast",
+        "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
         "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct",
         "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
         "TTS_EN_VOICE_NAME": "en-US-JennyNeural",

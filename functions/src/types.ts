@@ -34,6 +34,13 @@ export interface Env {
   DISCORD_CRASH_WEBHOOK_URL: string;
   DISCORD_REVIEW_WEBHOOK_URL: string;
 
+  // --- Azure TTS チューニング（任意。未設定なら高音質既定のみ適用） ---
+  AZURE_TTS_OUTPUT_FORMAT?: string;
+  AZURE_TTS_STYLE?: string;
+  AZURE_TTS_STYLE_DEGREE?: string;
+  AZURE_TTS_RATE?: string;
+  AZURE_TTS_PITCH?: string;
+
   // --- 任意のデバッグ変数（未設定可） ---
   REVIEWS_DEBUG?: string;
   REVIEWS_DRY_RUN?: string;

@@ -6,7 +6,8 @@
  * ような価格差はなく、ニューラルが標準ティアのため「コストガード」は不要だが、
  * クライアントから任意文字列が渡るため最低限の妥当性チェックは行う。
  */
-const AZURE_VOICE_PATTERN = /^[a-z]{2,3}-[A-Za-z]+-[A-Za-z0-9]*Neural$/;
+// 標準ニューラル（ja-JP-NanamiNeural）と HD ボイス（ja-JP-Nanami:DragonHDLatestNeural）の両方を許可
+const AZURE_VOICE_PATTERN = /^[a-z]{2,3}-[A-Za-z]+-[A-Za-z0-9:]*Neural$/;
 
 export const isAzureVoiceName = (voiceName: string): boolean =>
   AZURE_VOICE_PATTERN.test(voiceName);

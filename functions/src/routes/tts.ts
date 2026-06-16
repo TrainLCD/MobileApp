@@ -1,6 +1,6 @@
 /** POST /tts — Azure Speech で音声合成し、KV/R2 キャッシュを介して返す（callable 互換）。 */
 import { verifySessionToken } from '../lib/auth/session';
-import { synthesizeSpeech } from '../lib/azure/tts';
+import { synthesizeSpeech, type TtsOptions } from '../lib/azure/tts';
 import {
   CallableError,
   callableSuccess,
@@ -170,20 +170,30 @@ export const handleTts = async (
   }
 
   // --- 合成（Azure） ---
+  // 音質・スタイル・プロソディは env で調整可能（未設定なら高音質既定のみ）
+  const ttsOptions: TtsOptions = {
+    outputFormat: env.AZURE_TTS_OUTPUT_FORMAT || undefined,
+    style: env.AZURE_TTS_STYLE || undefined,
+    styleDegree: env.AZURE_TTS_STYLE_DEGREE || undefined,
+    rate: env.AZURE_TTS_RATE || undefined,
+    pitch: env.AZURE_TTS_PITCH || undefined,
+  };
   const [jaAudio, enAudio] = await Promise.all([
     synthesizeSpeech(
       env.AZURE_SPEECH_REGION,
       env.AZURE_SPEECH_KEY,
       ssmlJa,
       'ja-JP',
-      jaVoiceName
+      jaVoiceName,
+      ttsOptions
     ),
     synthesizeSpeech(
       env.AZURE_SPEECH_REGION,
       env.AZURE_SPEECH_KEY,
       ssmlEn,
       'en-US',
-      enVoiceName
+      enVoiceName,
+      ttsOptions
     ),
   ]);
 
