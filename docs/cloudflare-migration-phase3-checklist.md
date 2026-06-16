@@ -35,7 +35,7 @@ cd functions
 # KV / R2 / Queue を作成し wrangler.jsonc の id・bucket 名を差し替え（dev/prod 両方）
 wrangler kv namespace create TTS_KV       # 他 CONFIG_KV / STATE_KV も
 wrangler r2 bucket create trainlcd-tts-dev # 他 uploads も
-wrangler queues create tts-cache-dev       # 他 feedback-triage も
+wrangler queues create feedback-triage-dev # TTS キャッシュはキューを使わず /tts から R2+KV へ直接書き込み
 # シークレット投入
 wrangler secret put SESSION_JWT_SECRET
 wrangler secret put AZURE_SPEECH_KEY
@@ -47,7 +47,7 @@ wrangler secret put DISCORD_REVIEW_WEBHOOK_URL
 # 数値しきい値の初期投入（KV）
 wrangler kv key put --binding CONFIG_KV 'config:remote' '{"max_permit_accuracy":1500,"force_not_arrived_on_low_accuracy":true}'
 wrangler kv key put --binding CONFIG_KV 'config:maintenance' '{"underMaintenance":false}'
-# few-shot を R2 に配置
+# few-shot を CONFIG_KV に配置
 wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl
 # デプロイ
 npm run deploy:dev      # / npm run deploy:prod
