@@ -142,7 +142,9 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
   const appStoreUrl = env.APPSTORE_REVIEW_FEED_URL || DEFAULT_FEED_URL;
   const discordWebhook = env.DISCORD_REVIEW_WEBHOOK_URL;
   if (!discordWebhook) {
-    throw new Error('DISCORD_REVIEW_WEBHOOK_URL is not set');
+    // 未設定はエラーではなく「通知オフ」として静かにスキップする
+    console.log('[AppStoreJob] DISCORD_REVIEW_WEBHOOK_URL not set, skipping');
+    return;
   }
 
   const state = await loadReviewState(env.STATE_KV, STATE_KEY);

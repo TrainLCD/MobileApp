@@ -167,7 +167,14 @@ export async function runGooglePlayReviewJob(env: Env): Promise<void> {
   const packageName = env.GOOGLE_PLAY_PACKAGE_NAME || 'me.tinykitten.trainlcd';
   const discordWebhook = env.DISCORD_REVIEW_WEBHOOK_URL;
   if (!discordWebhook) {
-    throw new Error('DISCORD_REVIEW_WEBHOOK_URL is not set');
+    // 未設定はエラーではなく「通知オフ」として静かにスキップする
+    console.log('[PlayJob] DISCORD_REVIEW_WEBHOOK_URL not set, skipping');
+    return;
+  }
+  if (!env.GOOGLE_SA_KEY) {
+    // SA 鍵が無いと Android Publisher 認証ができないためスキップ
+    console.log('[PlayJob] GOOGLE_SA_KEY not set, skipping');
+    return;
   }
 
   const accessToken = await getGoogleAccessToken(
