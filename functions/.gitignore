@@ -8,3 +8,6 @@ node_modules/
 
 # Secrets
 .env.*
+.secrets.env
+.secrets.*.env
+!.secrets.env.example
