@@ -10,4 +10,6 @@ node_modules/
 .env.*
 .secrets.env
 .secrets.*.env
+.secrets.bulk.*.json
+secrets*.json
 !.secrets.env.example
