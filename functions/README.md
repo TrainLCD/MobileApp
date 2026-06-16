@@ -123,10 +123,10 @@ example per line (see `fewshot.example.jsonl`):
 Upload (the file is stored verbatim as a single KV value):
 
 ```bash
-# dev (without --local it writes to the production KV)
-wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl
+# dev (wrangler v4 defaults to the local emulator; --remote targets the real KV)
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl --remote
 # prod
-wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl --env production
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl --env production --remote
 ```
 
 If it is not present, triage fails hard with `FEW_SHOT_NOT_AVAILABLE` (a
