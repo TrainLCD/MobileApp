@@ -48,6 +48,7 @@ export const TINY_TRAIN_TYPE_FRAGMENT = gql`
     groupId
     name
     nameKatakana
+    nameIpa
     nameRoman
     nameRomanIpa
     nameChinese
@@ -97,6 +98,7 @@ export const LINE_NESTED_FRAGMENT = gql`
     lineType
     nameFull
     nameKatakana
+    nameIpa
     nameRoman
     nameRomanIpa
     nameShort
@@ -138,6 +140,7 @@ export const LINE_IN_STATION_FRAGMENT = gql`
     }
     lineType
     nameKatakana
+    nameIpa
     nameRoman
     nameShort
     nameChinese
@@ -157,6 +160,7 @@ export const TRAIN_TYPE_NESTED_FRAGMENT = gql`
     groupId
     name
     nameKatakana
+    nameIpa
     nameRoman
     nameRomanIpa
     nameChinese
@@ -185,6 +189,7 @@ export const STATION_FRAGMENT = gql`
     groupId
     name
     nameKatakana
+    nameIpa
     nameRoman
     nameChinese
     nameKorean
