@@ -43,7 +43,7 @@
     "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
     "SESSION_TOKEN_TTL_SECONDS": "3600",
     "UPLOAD_PUBLIC_BASE_URL": "https://uploads-dev.trainlcd.app",
-    "FEW_SHOT_R2_KEY": "fewshot.jsonl",
+    "FEW_SHOT_KV_KEY": "config:fewshot",
     "FEW_SHOT_LIMIT": "12",
     "FEW_SHOT_PER_EX_MAX": "800"
   },
@@ -83,7 +83,7 @@
         "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
         "SESSION_TOKEN_TTL_SECONDS": "3600",
         "UPLOAD_PUBLIC_BASE_URL": "https://uploads.trainlcd.app",
-        "FEW_SHOT_R2_KEY": "fewshot.jsonl",
+        "FEW_SHOT_KV_KEY": "config:fewshot",
         "FEW_SHOT_LIMIT": "12",
         "FEW_SHOT_PER_EX_MAX": "800"
       }

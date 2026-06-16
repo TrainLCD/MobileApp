@@ -103,17 +103,21 @@ npm run tail           # ログ追尾
 
 ## few-shot データ
 
-フィードバックトリアージは R2 上の `fewshot.jsonl`（`FEW_SHOT_R2_KEY`、`TTS_BUCKET` 内）を
-読み込む。フォーマットは 1 行 1 例の JSONL（`fewshot.example.jsonl` 参照）:
+フィードバックトリアージは `CONFIG_KV` の `config:fewshot`（`FEW_SHOT_KV_KEY`）を読み込む。
+few-shot は TTS とは無関係なので、設定用 KV に置く（`config:maintenance`/`config:remote` と同じ namespace）。
+フォーマットは 1 行 1 例の JSONL（`fewshot.example.jsonl` 参照）:
 
 ```json
 {"input": "ユーザーの本文", "output": "{\"title\":...,\"isSpam\":false,...}"}
 ```
 
-アップロード:
+アップロード（ファイルをそのまま 1 つの KV 値として投入）:
 
 ```bash
-wrangler r2 object put trainlcd-tts-dev/fewshot.jsonl --file fewshot.jsonl
+# dev（--local を付けなければ本番 KV に書き込む）
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl
+# prod
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl --env production
 ```
 
 未配置だとトリアージは `FEW_SHOT_NOT_AVAILABLE` で失敗する（誤学習防止のフェイルハード）。

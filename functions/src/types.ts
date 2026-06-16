@@ -20,7 +20,7 @@ export interface Env {
   TTS_EN_VOICE_NAME: string;
   SESSION_TOKEN_TTL_SECONDS: string;
   UPLOAD_PUBLIC_BASE_URL: string;
-  FEW_SHOT_R2_KEY: string;
+  FEW_SHOT_KV_KEY: string;
   FEW_SHOT_LIMIT: string;
   FEW_SHOT_PER_EX_MAX: string;
 

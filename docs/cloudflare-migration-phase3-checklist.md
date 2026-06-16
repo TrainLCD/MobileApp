@@ -48,7 +48,7 @@ wrangler secret put DISCORD_REVIEW_WEBHOOK_URL
 wrangler kv key put --binding CONFIG_KV 'config:remote' '{"max_permit_accuracy":1500,"force_not_arrived_on_low_accuracy":true}'
 wrangler kv key put --binding CONFIG_KV 'config:maintenance' '{"underMaintenance":false}'
 # few-shot を R2 に配置
-wrangler r2 object put trainlcd-tts-dev/fewshot.jsonl --file fewshot.jsonl
+wrangler kv key put --binding CONFIG_KV "config:fewshot" --path fewshot.jsonl
 # デプロイ
 npm run deploy:dev      # / npm run deploy:prod
 ```

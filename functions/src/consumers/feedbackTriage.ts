@@ -205,14 +205,13 @@ Output JSON only:
 Return ONLY that JSON. No prose, no markdown.
 `.trim();
 
-// ---- Few-shot loader（R2） ----
+// ---- Few-shot loader（CONFIG_KV） ----
 const FEW_SHOT_TTL_MS = 10 * 60 * 1000;
 let fewShotCache: { text: string; loadedAt: number } | null = null;
 
-async function loadFewShotFromR2(env: Env): Promise<string | null> {
-  const obj = await env.TTS_BUCKET.get(env.FEW_SHOT_R2_KEY);
-  if (!obj) return null;
-  const raw = await obj.text();
+async function loadFewShot(env: Env): Promise<string | null> {
+  const raw = await env.CONFIG_KV.get(env.FEW_SHOT_KV_KEY, 'text');
+  if (!raw) return null;
   const limit = Number(env.FEW_SHOT_LIMIT) || 12;
   const perExMax = Number(env.FEW_SHOT_PER_EX_MAX) || 800;
 
@@ -247,7 +246,7 @@ async function getFewShotText(env: Env): Promise<string> {
   if (fewShotCache && now - fewShotCache.loadedAt < FEW_SHOT_TTL_MS) {
     return fewShotCache.text;
   }
-  const text = await loadFewShotFromR2(env);
+  const text = await loadFewShot(env);
   if (!text) {
     // フェイルハード：few-shot 未設定での誤学習や漏洩を防ぐ
     throw new Error('FEW_SHOT_NOT_AVAILABLE');
