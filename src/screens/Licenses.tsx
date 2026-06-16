@@ -24,7 +24,6 @@ import { isDevApp } from '~/utils/isDevApp';
 const LICENSE_MAP = {
   ekidata_jp: 'ekidata_jp',
   toei: 'toei',
-  firebase: 'firebase',
   rxjs: 'rxjs',
   roboto: 'roboto',
   other_oss: 'other_oss',
@@ -149,14 +148,6 @@ const Licenses: React.FC = () => {
             icon: '🚌',
             href: 'https://www.kotsu.metro.tokyo.jp/',
             license: translate('ccby'),
-            devOnly: false,
-          },
-          {
-            id: 'firebase',
-            title: 'Firebase',
-            icon: '🔥',
-            href: 'https://firebase.google.com/',
-            license: 'Apache License 2.0',
             devOnly: false,
           },
           {

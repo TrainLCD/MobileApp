@@ -12,6 +12,7 @@ export default ({ config }: ConfigContext) => ({
     'expo-sqlite',
     'expo-asset',
     'expo-quick-actions',
+    'expo-secure-store',
     [
       'expo-location',
       {
@@ -53,7 +54,7 @@ export default ({ config }: ConfigContext) => ({
     },
   },
   ios: {
-    buildNumber: '2698',
+    buildNumber: '2699',
     bundleIdentifier:
       process.env.EAS_BUILD_PROFILE === 'production'
         ? 'me.tinykitten.trainlcd'
@@ -70,7 +71,7 @@ export default ({ config }: ConfigContext) => ({
         ? 'me.tinykitten.trainlcd'
         : 'me.tinykitten.trainlcd.dev',
     permissions: [],
-    versionCode: 100000485,
+    versionCode: 100000486,
   },
   owner: 'trainlcd',
   experiments: {

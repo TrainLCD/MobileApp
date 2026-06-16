@@ -143,9 +143,7 @@ export const useTTSText = (
 
   const yamanoteTrainTypeJa = useMemo(() => {
     if (isBus || !isYamanoteLine || !selectedDirection) return null;
-    return selectedDirection === 'INBOUND'
-      ? 'やまのて線内回り'
-      : 'やまのて線外回り';
+    return selectedDirection === 'INBOUND' ? '山手線内回り' : '山手線外回り';
   }, [isBus, isYamanoteLine, selectedDirection]);
 
   const yamanoteTrainTypeEn = !isBus && isYamanoteLine ? 'Yamanote Line' : null;
