@@ -12,6 +12,11 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
+import {
+  formatLineNames,
+  getOriginLine,
+  getViaLines,
+} from '~/utils/trainTypeList';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
@@ -68,87 +73,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// 選択された路線と目的地の路線の間にある経由路線を取得する
-const getViaLines = (
-  lines: Line[],
-  selectedLine: Line,
-  destination?: Station | null
-): Line[] => {
-  const selectedLineIndex = lines.findIndex((l) => l.id === selectedLine.id);
-  const linesWithoutCurrent = lines.filter((l) => l.id !== selectedLine.id);
-
-  if (!destination) {
-    return linesWithoutCurrent;
-  }
-
-  const destinationLineIndex = lines.findIndex(
-    (l) => l.id === destination.line?.id
-  );
-  if (destinationLineIndex === -1) {
-    return linesWithoutCurrent;
-  }
-
-  // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
-  if (selectedLineIndex === destinationLineIndex) {
-    return lines.slice(selectedLineIndex + 1);
-  }
-
-  const start = Math.min(selectedLineIndex, destinationLineIndex);
-  const end = Math.max(selectedLineIndex, destinationLineIndex);
-  let segment = lines.slice(start + 1, end);
-  if (selectedLineIndex > destinationLineIndex) {
-    segment = [...segment].reverse();
-  }
-  return segment.filter((l) => l.id !== selectedLine.id);
-};
-
-// 同じ会社の連続する路線を「〇〇線」にまとめて表示する
-// 全路線が同一会社の場合はまとめずに個別表示する
-const formatLineNames = (lines: Line[], ja: boolean): string => {
-  const names = (l: Line) => (ja ? l.nameShort : l.nameRoman);
-  const sep = ja ? ' ' : ', ';
-
-  // 全路線が同一会社ならグルーピングせず個別表示
-  const allSameCompany =
-    lines.length > 1 &&
-    lines[0]?.company?.id != null &&
-    lines.every((l) => l.company?.id === lines[0]?.company?.id);
-
-  if (allSameCompany) {
-    return Array.from(new Set(lines.map(names)))
-      .filter(Boolean)
-      .join(sep);
-  }
-
-  // 連続する同一会社の路線をサブグループ化（companyがない場合はまとめない）
-  const companyGroups = lines.reduce<Line[][]>((groups, l) => {
-    const lastGroup = groups.at(-1);
-    if (
-      lastGroup &&
-      lastGroup[0]?.company?.id != null &&
-      lastGroup[0].company.id === l.company?.id
-    ) {
-      lastGroup.push(l);
-    } else {
-      groups.push([l]);
-    }
-    return groups;
-  }, []);
-
-  return companyGroups
-    .map((group) => {
-      if (group.length > 1) {
-        const companyName = ja
-          ? group[0]?.company?.nameShort
-          : group[0]?.company?.nameEnglishShort;
-        return ja ? `${companyName}線` : `${companyName} Line`;
-      }
-      return names(group[0]);
-    })
-    .filter(Boolean)
-    .join(sep);
-};
-
 type Props = {
   visible: boolean;
   line: Line | null;
@@ -171,8 +95,10 @@ export const TrainTypeListModal = ({
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const title = useMemo(() => {
-    return (isJapanese ? line?.nameShort : line?.nameRoman) ?? '';
-  }, [line?.nameRoman, line?.nameShort]);
+    // 行先がある経路検索では行先の路線名を、無い場合は選択路線名を表示する
+    const headerLine = destination?.line ?? line;
+    return (isJapanese ? headerLine?.nameShort : headerLine?.nameRoman) ?? '';
+  }, [destination?.line, line]);
   const subtitle = useMemo(() => {
     if (!destination) {
       return '';
@@ -188,7 +114,12 @@ export const TrainTypeListModal = ({
       if (!line) return null;
 
       const lines = uniqBy(item.lines ?? [], 'id');
-      const viaLines = getViaLines(lines, line, destination);
+
+      // カードの配色・路線シンボルは種別ごとの起点路線で描画する（選択中の line で
+      // 固定すると東武東上線経由の種別に西武池袋線のデザインが当たってしまう）。
+      const originLine = getOriginLine(lines, line, destination);
+
+      const viaLines = getViaLines(lines, originLine, destination);
 
       const title = `${isJapanese ? item.name : item.nameRoman}`;
 
@@ -226,10 +157,11 @@ export const TrainTypeListModal = ({
             })
             .join('\n');
 
+      // この一覧では駅番号は出さず路線シンボル（静的画像）を固定表示する仕様のため、
+      // targetStation は渡さない（番号マッチが起きず line のシンボルが描画される）。
       return (
         <CommonCard
-          targetStation={line.station ?? undefined}
-          line={line}
+          line={originLine}
           title={title}
           subtitle={subtitle}
           loading={loading}
@@ -248,43 +180,13 @@ export const TrainTypeListModal = ({
   const trainTypes = useMemo(() => {
     if (!line) return [];
 
-    const trainTypesWithSelectedLine = fetchedTrainTypes
-      .map((tt) => {
-        const nestedTrainType = tt.lines?.find((l) => l.id === line.id)
-          ?.trainType as TrainType | undefined;
-        return { ...tt, ...nestedTrainType, id: tt.id };
-      })
-      .filter((tt): tt is TrainType => {
-        if (!tt || !tt.line) return false;
-
-        const lines = uniqBy(tt.lines ?? [], 'id');
-        const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
-        if (selectedLineIndex === -1) return false;
-
-        return true;
-      });
-
-    if (!destination?.line?.id) {
-      return trainTypesWithSelectedLine;
-    }
-
-    const trainTypesWithDestination = trainTypesWithSelectedLine.filter(
-      (tt) => {
-        const lines = uniqBy(tt.lines ?? [], 'id');
-        const destinationLineIndex = lines.findIndex(
-          (l) => l.id === destination.line?.id
-        );
-        return destinationLineIndex !== -1;
-      }
-    );
-
-    // destination路線がデータ都合で欠落している場合は0件表示を避けるためフォールバック
-    if (!trainTypesWithDestination.length) {
-      return trainTypesWithSelectedLine;
-    }
-
-    return trainTypesWithDestination;
-  }, [fetchedTrainTypes, line, destination]);
+    // 種別名は選択路線上の表記に合わせたいので、選択路線にぶら下がる種別をマージする
+    return fetchedTrainTypes.map((tt) => {
+      const nestedTrainType = tt.lines?.find((l) => l.id === line.id)
+        ?.trainType as TrainType | undefined;
+      return { ...tt, ...nestedTrainType, id: tt.id };
+    });
+  }, [fetchedTrainTypes, line]);
 
   // ヘッダー(72) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
   const dynamicMinHeight = useMemo(() => {
