@@ -1,6 +1,7 @@
 import { type AudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Platform } from 'react-native';
 import { TransportType } from '~/@types/graphql';
 import { STORAGE_KEYS } from '../constants';
 import { getSessionToken } from '../lib/session';
@@ -76,33 +77,53 @@ export const useTTS = (): void => {
 
   const jaHandleRef = useRef<PlayAudioHandle | null>(null);
   const enHandleRef = useRef<PlayAudioHandle | null>(null);
-  // プレイヤーは使い回す。createAudioPlayerを発話のたびに呼ぶとAndroidの
-  // AudioTrackが枯渇してTTSが停止するため、永続インスタンスをreplace()で再利用する
+  // Androidでは createAudioPlayer を発話のたびに呼ぶと AudioTrack が枯渇して
+  // TTS が停止するため、永続インスタンスを replace() で再利用する。
+  // 一方 iOS では replace() による再利用がバックグラウンド再生を壊す。
+  // ネイティブ(expo-audio AudioPlayer.swift)の replace は「差し替え時点で再生中
+  // だった場合のみ」ロード完了後に再生を再開する実装で、JS から replace 直前に
+  // pause() するため wasPlaying=false となり自動再開されない。直後の play() は
+  // まだ readyToPlay でない差し替え後アイテムに対する呼び出しとなり、
+  // フォアグラウンドでは間に合うがバックグラウンドでは再生が始まらない。
+  // AudioTrack 枯渇は Android 固有の問題のため、再利用は Android に限定し、
+  // iOS は従来どおり発話ごとに生成・破棄して背景再生を維持する。
+  const reusePlayers = Platform.OS === 'android';
   const jaPlayerRef = useRef<AudioPlayer | null>(null);
   const enPlayerRef = useRef<AudioPlayer | null>(null);
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 現在の再生を止める（リスナー/ウォッチドッグを解放し一時停止）が、
-  // 永続プレイヤー自体は破棄せず次の発話で再利用する
+  // 現在の再生を止める（リスナー/ウォッチドッグを解放）。
+  // Android は永続プレイヤーを破棄せず一時停止して次の発話で再利用し、
+  // iOS は今回再生したプレイヤーをネイティブごと解放する。
   const cleanupAllPlayers = useCallback(() => {
     safeRemoveListener(jaHandleRef.current?.listener ?? null);
     safeRemoveListener(enHandleRef.current?.listener ?? null);
-    try {
-      jaPlayerRef.current?.pause();
-    } catch {}
-    try {
-      enPlayerRef.current?.pause();
-    } catch {}
+    if (reusePlayers) {
+      try {
+        jaPlayerRef.current?.pause();
+      } catch {}
+      try {
+        enPlayerRef.current?.pause();
+      } catch {}
+    } else {
+      safeRemovePlayer(jaHandleRef.current?.player ?? null);
+      safeRemovePlayer(enHandleRef.current?.player ?? null);
+      jaPlayerRef.current = null;
+      enPlayerRef.current = null;
+    }
     jaHandleRef.current = null;
     enHandleRef.current = null;
-  }, []);
+  }, [reusePlayers]);
 
-  // アンマウント時のみ永続プレイヤーをネイティブごと解放する
+  // アンマウント時に全プレイヤーをネイティブごと解放する。
+  // 再利用中の永続プレイヤーと再生中ハンドルのプレイヤー双方を確実に解放する。
   const releaseAllPlayers = useCallback(() => {
     safeRemoveListener(jaHandleRef.current?.listener ?? null);
     safeRemoveListener(enHandleRef.current?.listener ?? null);
     safeRemovePlayer(jaPlayerRef.current);
     safeRemovePlayer(enPlayerRef.current);
+    safeRemovePlayer(jaHandleRef.current?.player ?? null);
+    safeRemovePlayer(enHandleRef.current?.player ?? null);
     jaHandleRef.current = null;
     enHandleRef.current = null;
     jaPlayerRef.current = null;
@@ -197,19 +218,30 @@ export const useTTS = (): void => {
       playingRef.current = true;
       armPlaybackWatchdog();
 
-      // 再生終了/失敗時は永続プレイヤーを破棄せず、リスナーだけ解放して一時停止する
+      // 再生終了/失敗時の停止処理。Android はリスナーだけ解放してプレイヤーを
+      // 一時停止し再利用、iOS はプレイヤーをネイティブごと破棄する。
       const stopEn = () => {
         safeRemoveListener(enHandleRef.current?.listener ?? null);
-        try {
-          enPlayerRef.current?.pause();
-        } catch {}
+        if (reusePlayers) {
+          try {
+            enPlayerRef.current?.pause();
+          } catch {}
+        } else {
+          safeRemovePlayer(enHandleRef.current?.player ?? null);
+          enPlayerRef.current = null;
+        }
         enHandleRef.current = null;
       };
       const stopJa = () => {
         safeRemoveListener(jaHandleRef.current?.listener ?? null);
-        try {
-          jaPlayerRef.current?.pause();
-        } catch {}
+        if (reusePlayers) {
+          try {
+            jaPlayerRef.current?.pause();
+          } catch {}
+        } else {
+          safeRemovePlayer(jaHandleRef.current?.player ?? null);
+          jaPlayerRef.current = null;
+        }
         jaHandleRef.current = null;
       };
 
@@ -221,18 +253,18 @@ export const useTTS = (): void => {
 
         enHandleRef.current = playAudio({
           uri: pathEn,
-          player: enPlayerRef.current,
+          player: reusePlayers ? enPlayerRef.current : null,
           onFinish: enCleanup,
           onError: () => enCleanup(),
         });
-        enPlayerRef.current = enHandleRef.current.player;
+        enPlayerRef.current = reusePlayers ? enHandleRef.current.player : null;
         return;
       }
 
       // JA（+ 任意で EN）再生
       jaHandleRef.current = playAudio({
         uri: pathJa,
-        player: jaPlayerRef.current,
+        player: reusePlayers ? jaPlayerRef.current : null,
         onFinish: () => {
           if (!isLoadableRef.current || !playEnglish) {
             stopJa();
@@ -240,7 +272,8 @@ export const useTTS = (): void => {
             return;
           }
 
-          // プレイヤーを使い回すため、JA完了後すぐに英語へ差し替えて再生する
+          // JA完了後すぐに英語を再生する（Androidは同一プレイヤーをreplace、
+          // iOSは英語用プレイヤーを新規生成する）
           const enCleanup = () => {
             stopEn();
             stopJa();
@@ -251,11 +284,13 @@ export const useTTS = (): void => {
           try {
             enHandleRef.current = playAudio({
               uri: pathEn,
-              player: enPlayerRef.current,
+              player: reusePlayers ? enPlayerRef.current : null,
               onFinish: enCleanup,
               onError: () => enCleanup(),
             });
-            enPlayerRef.current = enHandleRef.current.player;
+            enPlayerRef.current = reusePlayers
+              ? enHandleRef.current.player
+              : null;
           } catch (e) {
             console.warn('[useTTS] EN playback failed to start:', e);
             enCleanup();
@@ -266,12 +301,13 @@ export const useTTS = (): void => {
           finishPlaying();
         },
       });
-      jaPlayerRef.current = jaHandleRef.current.player;
+      jaPlayerRef.current = reusePlayers ? jaHandleRef.current.player : null;
     },
     [
       armPlaybackWatchdog,
       cleanupAllPlayers,
       finishPlaying,
+      reusePlayers,
       shouldSpeakEnglish,
       shouldSpeakJapanese,
     ]
