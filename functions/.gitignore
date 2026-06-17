@@ -13,3 +13,9 @@ node_modules/
 .secrets.bulk.*.json
 secrets*.json
 !.secrets.env.example
+
+# 実フィードバック原文を含む few-shot データ（public リポジトリに載せない。KV へ直接アップロード）
+# サンプルの fewshot.example.jsonl のみコミットする
+fewshot.jsonl
+fewshot.*.jsonl
+!fewshot.example.jsonl

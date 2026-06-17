@@ -159,7 +159,9 @@ export function coerceReport(raw: unknown, titleMax = 72): AIReport {
 
   if (!title) title = '要約未取得';
   if (title.length > titleMax) title = `${title.slice(0, titleMax - 1)}…`;
-  if (!summary) summary = '';
+  // 要約が空だと Issue 本文の節が空になり、Discord embed も value 空でリジェクトされるため
+  // タイトルにフォールバックして常に何らかのテキストを入れる
+  if (!summary) summary = title;
 
   return {
     title,
@@ -170,6 +172,90 @@ export function coerceReport(raw: unknown, titleMax = 72): AIReport {
     reason,
     category,
     triageLevel,
+  };
+}
+
+/**
+ * モデル応答から最初のバランスした JSON オブジェクトだけを取り出してパースする。
+ * 小型モデルは few-shot を真似て複数オブジェクトを続けて吐いたり、コードフェンスや
+ * 末尾カンマを混ぜることがある。貪欲マッチ（最初の { 〜 最後の }）だとそれらを丸ごと
+ * 掴んで全体が壊れるため、文字列・エスケープを考慮して最初の 1 個だけを抽出する。
+ * 取り出せない／パースできない場合は null を返す（呼び出し側で生成失敗として扱う）。
+ */
+export function extractReportJson(text: string): unknown | null {
+  if (!text) return null;
+  // ```json ... ``` のコードフェンスを除去
+  const stripped = text.replace(/```(?:json)?/gi, '');
+  const start = stripped.indexOf('{');
+  if (start === -1) return null;
+
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  let end = -1;
+  for (let i = start; i < stripped.length; i++) {
+    const c = stripped[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{') depth++;
+    else if (c === '}') {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  // 閉じ括弧が見つからない＝出力途中で切れている可能性。候補は得られないので失敗扱い。
+  if (end === -1) return null;
+
+  const candidate = stripped.slice(start, end + 1);
+  const tryParse = (s: string): unknown | undefined => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      return undefined;
+    }
+  };
+  const parsed =
+    tryParse(candidate) ??
+    // 末尾カンマ（ }, や ], の直前）など軽微な崩れを 1 度だけ修復して再挑戦
+    tryParse(candidate.replace(/,(\s*[}\]])/g, '$1'));
+  return parsed === undefined ? null : parsed;
+}
+
+/** 自動要約欄に出す、失敗を明示する文言（空欄や偽の要約は出さない）。 */
+export const TRIAGE_FAILED_SUMMARY =
+  '⚠️ 自動要約に失敗しました。上記の本文（原文）をご確認ください。';
+
+/**
+ * トリアージ生成が最後まで失敗したときの、原文を捨てないためのレポート。
+ * 要約は失敗を明示し、誤ったカテゴリ/トリアージは付けない（スパム扱いにもしない）。
+ * タイトルには原文の冒頭を残し、Issue 一覧から内容を判別できるようにする。
+ */
+export function buildFailedReport(
+  description: string,
+  titleMax = 72
+): AIReport {
+  const snippet = String(description ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 48);
+  const title = `要約失敗: ${snippet || '（本文なし）'}`.slice(0, titleMax);
+  return {
+    title,
+    summary: TRIAGE_FAILED_SUMMARY,
+    isSpam: false,
+    labels: [],
+    confidence: 0,
+    reason: 'triage_failed',
+    category: 'question',
+    triageLevel: 'medium',
   };
 }
 
@@ -204,6 +290,27 @@ Output JSON only:
 
 Return ONLY that JSON. No prose, no markdown.
 `.trim();
+
+// Workers AI の JSON Mode（response_format）に渡すスキーマ。
+// summary を required にして「フィールド欠落で要約が空」になるのを構造的に防ぐ。
+// category / triageLevel はスパム時に省ける運用なので optional のまま。
+const TRIAGE_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    summary: { type: 'string' },
+    isSpam: { type: 'boolean' },
+    labels: { type: 'array', items: { type: 'string' } },
+    category: {
+      type: 'string',
+      enum: ['bug', 'feature_request', 'improvement', 'question'],
+    },
+    triageLevel: { type: 'string', enum: ['urgent', 'high', 'medium', 'low'] },
+    confidence: { type: 'number' },
+    reason: { type: 'string' },
+  },
+  required: ['title', 'summary', 'isSpam', 'labels', 'confidence', 'reason'],
+} as const;
 
 // ---- Few-shot loader（CONFIG_KV） ----
 const FEW_SHOT_TTL_MS = 10 * 60 * 1000;
@@ -255,21 +362,44 @@ async function getFewShotText(env: Env): Promise<string> {
   return text;
 }
 
+// JSON Mode 利用時、Workers AI は response をパース済みオブジェクトで返すことがある
+// （非対応・複雑すぎでエラーのときは文字列になることもある）。両方を受けられるよう unknown で返す。
 async function runTriage(
   env: Env,
   fewshot: string,
-  userText: string
-): Promise<string> {
+  userText: string,
+  strict = false
+): Promise<unknown> {
+  // strict: 1 回パースに失敗した後の再試行。few-shot の模倣で複数オブジェクトを
+  // 吐く／途中で切れるのを抑えるため、出力を 1 個の JSON に厳しく制約し直す。
+  const strictNudge = strict
+    ? '\n\nIMPORTANT: Output exactly ONE minified JSON object and nothing else. Do not repeat the examples. Do not add prose, comments, or code fences.'
+    : '';
   const prompt = `${fewshot}\n\nNow process this message:\n\n<<FEEDBACK>>\n${userText}`;
   const result = (await env.AI.run(env.AI_TRIAGE_MODEL, {
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT + strictNudge },
       { role: 'user', content: prompt },
     ],
     max_tokens: 768,
-    temperature: 0.2,
-  })) as { response?: string };
-  return typeof result?.response === 'string' ? result.response : '{}';
+    temperature: strict ? 0 : 0.2,
+    // JSON Schema を強制し、summary などのフィールド欠落を防ぐ。
+    response_format: { type: 'json_schema', json_schema: TRIAGE_JSON_SCHEMA },
+  })) as { response?: unknown };
+  return result?.response ?? null;
+}
+
+/** runTriage の戻り（オブジェクト or 文字列）からトリアージ JSON を取り出す。 */
+function normalizeTriageResponse(resp: unknown): unknown | null {
+  if (resp && typeof resp === 'object') return resp;
+  if (typeof resp === 'string') return extractReportJson(resp);
+  return null;
+}
+
+/** ログ用に応答を短いプレビュー文字列へ。 */
+function previewResponse(resp: unknown): string {
+  const s = typeof resp === 'string' ? resp : JSON.stringify(resp ?? null);
+  return s.slice(0, 200);
 }
 
 export const processFeedbackMessage = async (
@@ -280,17 +410,51 @@ export const processFeedbackMessage = async (
   const { report } = data;
 
   const fewshot = await getFewShotText(env);
-  const text = await runTriage(env, fewshot, report.description);
 
-  const raw = (() => {
-    try {
-      const m = text.match(/\{[\s\S]*\}/);
-      return JSON.parse(m ? m[0] : text);
-    } catch {
-      return {};
+  // 生成 → 最初のバランスした JSON を抽出。失敗したら厳格モードで数回まで再生成する。
+  // ここで諦めても原文（report.description）は Issue 本文に必ず残すため、フィードバックは捨てない。
+  const MAX_TRIAGE_ATTEMPTS = 3;
+  let raw: unknown = null;
+  let lastPreview = '';
+  for (let attempt = 1; attempt <= MAX_TRIAGE_ATTEMPTS; attempt++) {
+    const resp = await runTriage(env, fewshot, report.description, attempt > 1);
+    lastPreview = previewResponse(resp);
+    raw = normalizeTriageResponse(resp);
+    if (raw !== null) break;
+    console.warn('feedbackTriage: モデル応答の JSON パースに失敗（再試行）', {
+      reportId: report.id,
+      attempt,
+      maxAttempts: MAX_TRIAGE_ATTEMPTS,
+      responsePreview: lastPreview,
+    });
+  }
+
+  const triageFailed = raw === null;
+  let aiReport: AIReport;
+  if (triageFailed) {
+    // 生成に失敗しても破棄しない。原文を保全したまま、要約欄に失敗を明示して起票する。
+    console.error(
+      'feedbackTriage: トリアージ生成に失敗。要約失敗マーカー付きで起票する',
+      { reportId: report.id }
+    );
+    aiReport = buildFailedReport(report.description, 72);
+  } else {
+    aiReport = coerceReport(raw, 72);
+    // 非スパムで要約だけ空のときは観測ログを残す（coerceReport が title にフォールバック）。
+    const rawSummary =
+      raw && typeof raw === 'object'
+        ? Object.entries(raw).find(
+            ([k]) => k.toLowerCase().replace(/\s+/g, '').trim() === 'summary'
+          )?.[1]
+        : undefined;
+    if (!aiReport.isSpam && String(rawSummary ?? '').trim() === '') {
+      console.warn(
+        'feedbackTriage: モデルが summary を空/欠落で返却（title にフォールバック）',
+        { reportId: report.id, responsePreview: lastPreview }
+      );
     }
-  })();
-  let aiReport = coerceReport(raw, 72);
+  }
+
   if (!aiReport.isSpam && looksLikeSpam(report.description)) {
     aiReport = {
       ...aiReport,
@@ -330,7 +494,9 @@ export const processFeedbackMessage = async (
     ? GITHUB_LABELS.AUTOMODE_ENABLED
     : undefined;
 
-  const shouldTagTriage = reportType === 'feedback' && !aiReport.isSpam;
+  // トリアージ生成に失敗したときは誤ったカテゴリ/優先度を付けない。
+  const shouldTagTriage =
+    reportType === 'feedback' && !aiReport.isSpam && !triageFailed;
   const categoryLabel = shouldTagTriage
     ? CATEGORY_LABELS[aiReport.category]
     : undefined;
@@ -359,7 +525,7 @@ ${'```'}
 ${description}
 ${'```'}
 
-## Geminiによる要約
+## AIによる要約
 ${aiReport.summary}
 
 ## 発行日時
@@ -405,6 +571,7 @@ ${reporterUid}
             appEdition === 'canary' && GITHUB_LABELS.CANARY_APP,
             appClip && GITHUB_LABELS.PLATFORM_APPCLIP,
             aiReport.isSpam && GITHUB_LABELS.SPAM_TYPE,
+            triageFailed && GITHUB_LABELS.UNKNOWN_TYPE,
             osNameLabel,
             autoModeLabel,
             categoryLabel,
@@ -432,7 +599,7 @@ ${reporterUid}
                 name: '発行日時',
                 value: dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss'),
               },
-              { name: 'Geminiによる要約', value: aiReport.summary },
+              { name: 'AIによる要約', value: aiReport.summary },
               ...(shouldTagTriage && categoryLabel && triageLabel
                 ? [
                     { name: 'カテゴリ', value: categoryLabel },
@@ -470,7 +637,7 @@ ${reporterUid}
                 name: '発行日時',
                 value: dayjs(createdAt).format('YYYY/MM/DD HH:mm:ss'),
               },
-              { name: 'Geminiによる要約', value: aiReport.summary },
+              { name: 'AIによる要約', value: aiReport.summary },
               ...(shouldTagTriage && categoryLabel && triageLabel
                 ? [
                     { name: 'カテゴリ', value: categoryLabel },
