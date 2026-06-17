@@ -1,6 +1,8 @@
 import type { Line, Station } from '~/@types/graphql';
 import { formatLineNames, getOriginLine, getViaLines } from './trainTypeList';
 
+afterEach(() => jest.clearAllMocks());
+
 const createLine = (id: number, over: Partial<Line> = {}): Line =>
   ({
     __typename: 'Line',

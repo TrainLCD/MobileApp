@@ -101,6 +101,12 @@ export const formatLineNames = (lines: Line[], ja: boolean): string => {
         const companyName = ja
           ? group[0]?.company?.nameShort
           : group[0]?.company?.nameEnglishShort;
+        if (!companyName) {
+          // Fallback to individual line names when company name is undefined
+          return Array.from(new Set(group.map(names)))
+            .filter(Boolean)
+            .join(sep);
+        }
         return ja ? `${companyName}線` : `${companyName} Line`;
       }
       return names(group[0]);
