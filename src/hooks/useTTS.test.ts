@@ -524,8 +524,12 @@ describe('useTTS', () => {
       nextText: [],
     });
 
-    const mockPlayer = createMockPlayer({ autoFinish: true });
-    mockCreateAudioPlayer.mockReturnValue(mockPlayer);
+    // 1回目/2回目で別インスタンスを返し、使い回しではなく新規生成であることを保証する
+    const firstPlayer = createMockPlayer({ autoFinish: true });
+    const secondPlayer = createMockPlayer({ autoFinish: true });
+    mockCreateAudioPlayer
+      .mockImplementationOnce(() => firstPlayer)
+      .mockImplementationOnce(() => secondPlayer);
 
     const { rerender } = renderHook(() => useTTS(), {
       wrapper: createWrapper(store),
@@ -572,7 +576,12 @@ describe('useTTS', () => {
     expect(mockCreateAudioPlayer).toHaveBeenLastCalledWith({
       uri: '/tmp/tts-id-2_en.mp3',
     });
-    expect(mockPlayer.replace).not.toHaveBeenCalled();
+    // 別インスタンスが生成され、どちらも replace で使い回されていないこと
+    expect(firstPlayer).not.toBe(secondPlayer);
+    expect(firstPlayer.replace).not.toHaveBeenCalled();
+    expect(secondPlayer.replace).not.toHaveBeenCalled();
+    // 1回目のプレイヤーは発話完了時にネイティブごと破棄される
+    expect(firstPlayer.remove).toHaveBeenCalled();
   });
 
   it('resetFirstSpeechAtom変更時にuseTTSTextへfirstSpeech=trueが同期的に渡される', async () => {
