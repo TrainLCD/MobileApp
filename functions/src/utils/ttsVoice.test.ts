@@ -1,6 +1,10 @@
 import { isAwsVoiceName, resolveAwsVoiceName } from './ttsVoice';
 
 describe('ttsVoice (AWS Polly)', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('accepts known Polly voices', () => {
     expect(isAwsVoiceName('Kazuha')).toBe(true);
     expect(isAwsVoiceName('Takumi')).toBe(true);
@@ -29,5 +33,15 @@ describe('ttsVoice (AWS Polly)', () => {
     expect(
       resolveAwsVoiceName('ja-JP-Standard-B', 'ja-JP-Neural2-B', 'Kazuha')
     ).toBe('Kazuha');
+  });
+
+  it('trims a valid default voice before returning', () => {
+    expect(resolveAwsVoiceName('', '', '  Joanna  ')).toBe('Joanna');
+  });
+
+  it('throws when the default voice itself is invalid', () => {
+    expect(() =>
+      resolveAwsVoiceName('ja-JP-Standard-B', 'ja-JP-Neural2-B', 'ja-JP-Bogus')
+    ).toThrow('Invalid default AWS Polly voice id: ja-JP-Bogus');
   });
 });

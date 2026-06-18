@@ -63,8 +63,13 @@ const computeId = async (payload: {
   jaVoiceName: string;
   ssmlEn: string;
   ssmlJa: string;
+  pollyEngine: string;
+  pollyOutputFormat: string;
+  pollyRate: string;
+  pollyVolume: string;
 }): Promise<string> => {
   const obj = { ...payload, version: HASH_VERSION } as const;
+  // 配列リプレーサはネストせず全キーを列挙する必要があるため、設定値はフラットに持つ
   const hashPayload = JSON.stringify(obj, Object.keys(obj).sort());
   return sha256Hex(hashPayload);
 };
@@ -151,7 +156,25 @@ export const handleTts = async (
     );
   }
 
-  const id = await computeId({ enVoiceName, jaVoiceName, ssmlEn, ssmlJa });
+  // 音質・エンジン・プロソディは env で調整可能（未設定なら neural / mp3 の既定のみ）。
+  // キャッシュキーにも含め、設定変更時に旧音声がヒットし続けないようにする。
+  const ttsOptions: TtsOptions = {
+    engine: env.AWS_POLLY_ENGINE || undefined,
+    outputFormat: env.AWS_POLLY_OUTPUT_FORMAT || undefined,
+    rate: env.AWS_POLLY_RATE || undefined,
+    volume: env.AWS_POLLY_VOLUME || undefined,
+  };
+
+  const id = await computeId({
+    enVoiceName,
+    jaVoiceName,
+    ssmlEn,
+    ssmlJa,
+    pollyEngine: ttsOptions.engine ?? '',
+    pollyOutputFormat: ttsOptions.outputFormat ?? '',
+    pollyRate: ttsOptions.rate ?? '',
+    pollyVolume: ttsOptions.volume ?? '',
+  });
 
   // --- キャッシュ照会 ---
   const meta = await env.TTS_KV.get<VoiceCacheMeta>(`voice:${id}`, 'json');
@@ -183,13 +206,6 @@ export const handleTts = async (
   }
 
   // --- 合成（AWS Polly） ---
-  // エンジン・音質・プロソディは env で調整可能（未設定なら neural / mp3 の既定のみ）
-  const ttsOptions: TtsOptions = {
-    engine: env.AWS_POLLY_ENGINE || undefined,
-    outputFormat: env.AWS_POLLY_OUTPUT_FORMAT || undefined,
-    rate: env.AWS_POLLY_RATE || undefined,
-    volume: env.AWS_POLLY_VOLUME || undefined,
-  };
   const [jaAudio, enAudio] = await Promise.all([
     synthesizeSpeech(
       env.AWS_REGION,

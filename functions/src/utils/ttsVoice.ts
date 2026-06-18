@@ -50,5 +50,10 @@ export const resolveAwsVoiceName = (
     return configured;
   }
 
-  return defaultVoiceName;
+  // 既定値（env 由来）も検証する。typo / 余白混入で未知 VoiceId が下流へ流れるのを防ぐ。
+  const fallback = defaultVoiceName.trim();
+  if (fallback && isAwsVoiceName(fallback)) {
+    return fallback;
+  }
+  throw new Error(`Invalid default AWS Polly voice id: ${defaultVoiceName}`);
 };
