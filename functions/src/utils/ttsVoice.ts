@@ -12,6 +12,15 @@ const AZURE_VOICE_PATTERN = /^[a-z]{2,3}-[A-Za-z]+-[A-Za-z0-9:]+Neural$/;
 export const isAzureVoiceName = (voiceName: string): boolean =>
   AZURE_VOICE_PATTERN.test(voiceName);
 
+// HD（DragonHD）ボイス判定。HD ボイスは id に `:DragonHD...Neural` を含む
+// （例: `ja-JP-Nanami:DragonHDLatestNeural`, `en-US-Jenny:DragonHDLatestNeural`）。
+// HD は <prosody> と <mstts:express-as> を非対応のため、SSML 構築時に
+// 未サポート要素を出し分ける用途で使う。
+const AZURE_HD_VOICE_PATTERN = /:DragonHD[A-Za-z0-9]*Neural$/i;
+
+export const isAzureHdVoiceName = (voiceName: string): boolean =>
+  AZURE_HD_VOICE_PATTERN.test(voiceName);
+
 export const resolveAzureVoiceName = (
   requestedVoiceName: unknown,
   configuredVoiceName: unknown,

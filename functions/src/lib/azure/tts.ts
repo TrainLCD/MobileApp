@@ -3,6 +3,7 @@
  * Azure は SSML 必須。クライアントが送る `<speak>…</speak>` の中身を取り出し、
  * voice/lang/スタイル/プロソディを含む Azure 準拠 SSML に包み直して合成する。出力は MP3。
  */
+import { isAzureHdVoiceName } from '../../utils/ttsVoice';
 import { bytesToBase64 } from '../crypto';
 
 // 音質。低ビットレートだと圧縮ノイズで機械っぽく聞こえるため既定を高めにする。
@@ -28,7 +29,7 @@ const extractSpeakInner = (ssml: string): string => {
   return (match ? match[1] : trimmed).trim();
 };
 
-const buildAzureSsml = (
+export const buildAzureSsml = (
   inner: string,
   languageCode: string,
   voiceName: string,
@@ -36,7 +37,11 @@ const buildAzureSsml = (
 ): string => {
   let content = inner;
 
-  if (opts.rate || opts.pitch) {
+  // HD（DragonHD）ボイスは <prosody> と <mstts:express-as> を非対応のため、
+  // これらの装飾を付けると合成エラー・無視の原因になる。HD では出力しない。
+  const isHd = isAzureHdVoiceName(voiceName);
+
+  if (!isHd && (opts.rate || opts.pitch)) {
     const attrs = [
       opts.rate ? `rate="${opts.rate}"` : '',
       opts.pitch ? `pitch="${opts.pitch}"` : '',
@@ -46,7 +51,7 @@ const buildAzureSsml = (
     content = `<prosody ${attrs}>${content}</prosody>`;
   }
 
-  if (opts.style) {
+  if (!isHd && opts.style) {
     const degree = opts.styleDegree ? ` styledegree="${opts.styleDegree}"` : '';
     content = `<mstts:express-as style="${opts.style}"${degree}>${content}</mstts:express-as>`;
   }
