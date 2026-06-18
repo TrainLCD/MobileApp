@@ -37,7 +37,7 @@
 
   "vars": {
     "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
-    "AZURE_SPEECH_REGION": "japaneast",
+    "AZURE_SPEECH_REGION": "southeastasia",
     "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
     // HD（DragonHD）ボイスは <prosody> 非対応のため AZURE_TTS_RATE は設定しない
     "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
@@ -79,7 +79,7 @@
       },
       "vars": {
         "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
-        "AZURE_SPEECH_REGION": "japaneast",
+        "AZURE_SPEECH_REGION": "southeastasia",
         "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
         // HD（DragonHD）ボイスは <prosody> 非対応のため AZURE_TTS_RATE は設定しない
         "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
