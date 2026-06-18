@@ -14,7 +14,8 @@ import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import {
   formatLineNames,
-  getOriginLine,
+  getBoardingLine,
+  getBoardingLineStation,
   getViaLines,
 } from '~/utils/trainTypeList';
 import Button from './Button';
@@ -77,6 +78,12 @@ type Props = {
   visible: boolean;
   line: Line | null;
   destination?: Station | null;
+  /**
+   * 乗車駅。起点路線ごとの駅番号（ナンバリング）を引くために使う。
+   * 経路検索の item.lines[].station は API が null を返すため、乗車駅の
+   * 路線別 station からナンバリングを解決する。
+   */
+  boardingStation?: Station | null;
   loading?: boolean;
   onClose: () => void;
   onSelect: (trainType: TrainType) => void;
@@ -86,6 +93,7 @@ export const TrainTypeListModal = ({
   visible,
   line,
   destination,
+  boardingStation,
   loading,
   onClose,
   onSelect,
@@ -115,11 +123,18 @@ export const TrainTypeListModal = ({
 
       const lines = uniqBy(item.lines ?? [], 'id');
 
-      // カードの配色・路線シンボルは種別ごとの起点路線で描画する（選択中の line で
-      // 固定すると東武東上線経由の種別に西武池袋線のデザインが当たってしまう）。
-      const originLine = getOriginLine(lines, line, destination);
+      // カードの配色・路線シンボル・ナンバリングは、種別ごとに乗車駅で実際に乗車する
+      // 路線で統一する（選択中の line で固定すると東武東上線経由の種別に西武池袋線の
+      // デザインが当たってしまう）。経路の途中駅から乗る場合は終端路線ではなく乗車路線
+      // を使うことで、乗車駅に必ず存在する駅番号でナンバリングを安定表示できる。
+      const boardingLine = getBoardingLine(
+        lines,
+        boardingStation,
+        line,
+        destination
+      );
 
-      const viaLines = getViaLines(lines, originLine, destination);
+      const viaLines = getViaLines(lines, boardingLine, destination);
 
       const title = `${isJapanese ? item.name : item.nameRoman}`;
 
@@ -157,11 +172,19 @@ export const TrainTypeListModal = ({
             })
             .join('\n');
 
-      // この一覧では駅番号は出さず路線シンボル（静的画像）を固定表示する仕様のため、
-      // targetStation は渡さない（番号マッチが起きず line のシンボルが描画される）。
+      // 駅番号（ナンバリング）は乗車路線の乗車駅基準で表示する。乗車路線はカードの
+      // デザインと同一なので CommonCard の路線記号一致が必ず成立し、番号が安定して
+      // 描画される。
+      const boardingLineStation = getBoardingLineStation(
+        boardingStation,
+        boardingLine,
+        line
+      );
+
       return (
         <CommonCard
-          line={originLine}
+          targetStation={boardingLineStation ?? undefined}
+          line={boardingLine}
           title={title}
           subtitle={subtitle}
           loading={loading}
@@ -169,7 +192,7 @@ export const TrainTypeListModal = ({
         />
       );
     },
-    [destination, line, loading, onSelect]
+    [boardingStation, destination, line, loading, onSelect]
   );
 
   const keyExtractor = useCallback(

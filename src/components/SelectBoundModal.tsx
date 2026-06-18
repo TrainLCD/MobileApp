@@ -1004,6 +1004,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         visible={isTrainTypeModalVisible}
         line={trainTypeModalLine}
         destination={targetDestination ?? wantedDestination}
+        boardingStation={station}
         onClose={() => {
           setIsTrainTypeModalVisible(false);
         }}
