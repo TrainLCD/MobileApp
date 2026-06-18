@@ -187,7 +187,6 @@ export const handleTts = async (
     outputFormat: env.AZURE_TTS_OUTPUT_FORMAT || undefined,
     style: env.AZURE_TTS_STYLE || undefined,
     styleDegree: env.AZURE_TTS_STYLE_DEGREE || undefined,
-    rate: env.AZURE_TTS_RATE || undefined,
     pitch: env.AZURE_TTS_PITCH || undefined,
   };
   const [jaAudio, enAudio] = await Promise.all([
