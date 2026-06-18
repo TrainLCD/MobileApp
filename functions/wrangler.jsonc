@@ -37,12 +37,13 @@
 
   "vars": {
     "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
-    "AZURE_SPEECH_REGION": "japaneast",
-    "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
-    "AZURE_TTS_RATE": "-3%",
+    "AWS_REGION": "ap-northeast-1",
+    "AWS_POLLY_ENGINE": "neural",
+    "AWS_POLLY_OUTPUT_FORMAT": "mp3",
+    "AWS_POLLY_RATE": "97%",
     "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
-    "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
-    "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
+    "TTS_JA_VOICE_NAME": "Kazuha",
+    "TTS_EN_VOICE_NAME": "Joanna",
     "SESSION_TOKEN_TTL_SECONDS": "3600",
     "UPLOAD_PUBLIC_BASE_URL": "https://uploads-dev.trainlcd.app",
     "FEW_SHOT_KV_KEY": "config:fewshot",
@@ -51,7 +52,7 @@
   },
 
   // secrets（`wrangler secret put <NAME>` で投入。コミットしない）:
-  //   SESSION_JWT_SECRET / AZURE_SPEECH_KEY / GOOGLE_SA_KEY /
+  //   SESSION_JWT_SECRET / AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / GOOGLE_SA_KEY /
   //   OCTOKIT_PAT / DISCORD_CS_WEBHOOK_URL / DISCORD_CRASH_WEBHOOK_URL / DISCORD_REVIEW_WEBHOOK_URL
 
   "env": {
@@ -79,12 +80,13 @@
       },
       "vars": {
         "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
-        "AZURE_SPEECH_REGION": "japaneast",
-        "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
-        "AZURE_TTS_RATE": "-3%",
+        "AWS_REGION": "ap-northeast-1",
+        "AWS_POLLY_ENGINE": "neural",
+        "AWS_POLLY_OUTPUT_FORMAT": "mp3",
+        "AWS_POLLY_RATE": "97%",
         "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
-        "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
-        "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
+        "TTS_JA_VOICE_NAME": "Kazuha",
+        "TTS_EN_VOICE_NAME": "Joanna",
         "SESSION_TOKEN_TTL_SECONDS": "3600",
         "UPLOAD_PUBLIC_BASE_URL": "https://uploads.trainlcd.app",
         "FEW_SHOT_KV_KEY": "config:fewshot",

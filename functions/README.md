@@ -6,7 +6,7 @@ single Worker.
 
 ## Features
 
-- **TTS synthesis** (`POST /tts`): synthesizes SSML into audio via Azure Speech and caches it in KV/R2.
+- **TTS synthesis** (`POST /tts`): synthesizes SSML into audio via AWS Polly and caches it in KV/R2.
 - **Session issuance** (`POST /auth/token`): issues a short-lived session JWT from an install ID (the replacement for Firebase anonymous auth).
 - **Feedback intake** (`POST /postFeedback`): enqueues feedback onto the triage queue.
 - **Image upload** (`POST /feedback/upload-image`): stores feedback images in R2 and returns a public URL.
@@ -22,7 +22,7 @@ single Worker.
 - **R2** — audio binaries and feedback images
 - **Cloudflare Queues** — `feedback-triage`
 - **Workers AI** — feedback triage
-- **Azure Speech** — TTS synthesis (SSML)
+- **AWS Polly** — TTS synthesis (SSML, SigV4-signed via `aws4fetch`)
 - **Google Android Publisher API** — Google Play review retrieval (service-account JWT)
 - **TypeScript / Biome / Jest / Wrangler**
 
@@ -60,7 +60,8 @@ wrangler queues create feedback-triage-dev
 
 ```bash
 wrangler secret put SESSION_JWT_SECRET          # signing key for session JWTs (any long random string)
-wrangler secret put AZURE_SPEECH_KEY            # Azure Speech subscription key
+wrangler secret put AWS_ACCESS_KEY_ID           # AWS IAM access key (needs polly:SynthesizeSpeech)
+wrangler secret put AWS_SECRET_ACCESS_KEY       # AWS IAM secret access key
 wrangler secret put GOOGLE_SA_KEY              # Android Publisher SA key JSON (single-line string)
 wrangler secret put OCTOKIT_PAT
 wrangler secret put DISCORD_CS_WEBHOOK_URL
@@ -76,9 +77,9 @@ You can also bulk-load secrets with the helper scripts: copy
 
 ### Non-secret configuration (vars)
 
-See `vars` in `wrangler.jsonc`. Configure the Azure region, voice names, AI model
-name, package name, public upload URL (the R2 public domain), and so on per
-environment.
+See `vars` in `wrangler.jsonc`. Configure the AWS region, Polly engine, voice
+names, AI model name, package name, public upload URL (the R2 public domain),
+and so on per environment.
 
 ## Develop & deploy
 

@@ -1,6 +1,7 @@
-/** POST /tts — Azure Speech で音声合成し、KV/R2 キャッシュを介して返す（callable 互換）。 */
+/** POST /tts — AWS Polly で音声合成し、KV/R2 キャッシュを介して返す（callable 互換）。 */
+
 import { verifySessionToken } from '../lib/auth/session';
-import { synthesizeSpeech, type TtsOptions } from '../lib/azure/tts';
+import { synthesizeSpeech, type TtsOptions } from '../lib/aws/tts';
 import {
   CallableError,
   callableSuccess,
@@ -11,7 +12,7 @@ import { writeTtsCache } from '../lib/ttsCache';
 import type { Env } from '../types';
 import { normalizeRomanText } from '../utils/normalize';
 import { stripSsml, utf8ByteLength } from '../utils/ssml';
-import { resolveAzureVoiceName } from '../utils/ttsVoice';
+import { resolveAwsVoiceName } from '../utils/ttsVoice';
 
 interface TtsRequest {
   ssmlJa?: unknown;
@@ -98,12 +99,12 @@ export const handleTts = async (
   }
 
   const ttsConfig = await getTtsConfig(env);
-  const jaVoiceName = resolveAzureVoiceName(
+  const jaVoiceName = resolveAwsVoiceName(
     data.jaVoiceName,
     ttsConfig.jaVoiceName,
     env.TTS_JA_VOICE_NAME
   );
-  const enVoiceName = resolveAzureVoiceName(
+  const enVoiceName = resolveAwsVoiceName(
     data.enVoiceName,
     ttsConfig.enVoiceName,
     env.TTS_EN_VOICE_NAME
@@ -181,27 +182,28 @@ export const handleTts = async (
     }
   }
 
-  // --- 合成（Azure） ---
-  // 音質・スタイル・プロソディは env で調整可能（未設定なら高音質既定のみ）
+  // --- 合成（AWS Polly） ---
+  // エンジン・音質・プロソディは env で調整可能（未設定なら neural / mp3 の既定のみ）
   const ttsOptions: TtsOptions = {
-    outputFormat: env.AZURE_TTS_OUTPUT_FORMAT || undefined,
-    style: env.AZURE_TTS_STYLE || undefined,
-    styleDegree: env.AZURE_TTS_STYLE_DEGREE || undefined,
-    rate: env.AZURE_TTS_RATE || undefined,
-    pitch: env.AZURE_TTS_PITCH || undefined,
+    engine: env.AWS_POLLY_ENGINE || undefined,
+    outputFormat: env.AWS_POLLY_OUTPUT_FORMAT || undefined,
+    rate: env.AWS_POLLY_RATE || undefined,
+    volume: env.AWS_POLLY_VOLUME || undefined,
   };
   const [jaAudio, enAudio] = await Promise.all([
     synthesizeSpeech(
-      env.AZURE_SPEECH_REGION,
-      env.AZURE_SPEECH_KEY,
+      env.AWS_REGION,
+      env.AWS_ACCESS_KEY_ID,
+      env.AWS_SECRET_ACCESS_KEY,
       ssmlJa,
       'ja-JP',
       jaVoiceName,
       ttsOptions
     ),
     synthesizeSpeech(
-      env.AZURE_SPEECH_REGION,
-      env.AZURE_SPEECH_KEY,
+      env.AWS_REGION,
+      env.AWS_ACCESS_KEY_ID,
+      env.AWS_SECRET_ACCESS_KEY,
       ssmlEn,
       'en-US',
       enVoiceName,

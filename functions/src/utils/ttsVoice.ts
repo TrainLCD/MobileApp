@@ -1,31 +1,52 @@
 /**
- * Azure Speech のニューラルボイス名を扱うユーティリティ。
+ * AWS Polly のボイス id を扱うユーティリティ。
  *
- * Azure のボイス id は `<locale>-<Name>Neural` 形式（例: `ja-JP-NanamiNeural`,
- * `en-US-JennyNeural`, `en-US-AvaMultilingualNeural`）。Google の Standard/WaveNet の
- * ような価格差はなく、ニューラルが標準ティアのため「コストガード」は不要だが、
- * クライアントから任意文字列が渡るため最低限の妥当性チェックは行う。
+ * Polly のボイス id は PascalCase の単語（例: `Kazuha`, `Tomoko`, `Takumi`,
+ * `Joanna`, `Matthew`）。Azure と異なりロケールを id に埋め込まないため、
+ * 既知のボイス id の許可リストで妥当性を判定する。クライアントからは任意文字列が
+ * 渡るため、未知の id は弾いて設定値・既定値へフォールバックする。
  */
-// 標準ニューラル（ja-JP-NanamiNeural）と HD ボイス（ja-JP-Nanami:DragonHDLatestNeural）の両方を許可
-const AZURE_VOICE_PATTERN = /^[a-z]{2,3}-[A-Za-z]+-[A-Za-z0-9:]+Neural$/;
+// Polly の主要なニューラル対応ボイス id（ja-JP / en-US）。新ボイス追加時はここに足す。
+const KNOWN_AWS_VOICES = new Set<string>([
+  // ja-JP
+  'Mizuki',
+  'Takumi',
+  'Kazuha',
+  'Tomoko',
+  // en-US
+  'Ivy',
+  'Joanna',
+  'Kendra',
+  'Kimberly',
+  'Salli',
+  'Joey',
+  'Justin',
+  'Kevin',
+  'Matthew',
+  'Ruth',
+  'Stephen',
+  'Gregory',
+  'Danielle',
+  'Patrick',
+]);
 
-export const isAzureVoiceName = (voiceName: string): boolean =>
-  AZURE_VOICE_PATTERN.test(voiceName);
+export const isAwsVoiceName = (voiceName: string): boolean =>
+  KNOWN_AWS_VOICES.has(voiceName);
 
-export const resolveAzureVoiceName = (
+export const resolveAwsVoiceName = (
   requestedVoiceName: unknown,
   configuredVoiceName: unknown,
   defaultVoiceName: string
 ): string => {
   const requested =
     typeof requestedVoiceName === 'string' ? requestedVoiceName.trim() : '';
-  if (requested && isAzureVoiceName(requested)) {
+  if (requested && isAwsVoiceName(requested)) {
     return requested;
   }
 
   const configured =
     typeof configuredVoiceName === 'string' ? configuredVoiceName.trim() : '';
-  if (configured && isAzureVoiceName(configured)) {
+  if (configured && isAwsVoiceName(configured)) {
     return configured;
   }
 

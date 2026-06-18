@@ -8,7 +8,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const SECRET_NAMES = [
   'SESSION_JWT_SECRET',
-  'AZURE_SPEECH_KEY',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
   'GOOGLE_SA_KEY',
   'OCTOKIT_PAT',
   'DISCORD_CS_WEBHOOK_URL',

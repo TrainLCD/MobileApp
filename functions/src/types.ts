@@ -14,7 +14,7 @@ export interface Env {
 
   // --- Vars（非機密。wrangler.jsonc の vars） ---
   GOOGLE_PLAY_PACKAGE_NAME: string;
-  AZURE_SPEECH_REGION: string;
+  AWS_REGION: string;
   AI_TRIAGE_MODEL: string;
   TTS_JA_VOICE_NAME: string;
   TTS_EN_VOICE_NAME: string;
@@ -26,7 +26,9 @@ export interface Env {
 
   // --- Secrets（wrangler secret put で投入） ---
   SESSION_JWT_SECRET: string;
-  AZURE_SPEECH_KEY: string;
+  /** AWS Polly 用アクセスキー（IAM ユーザーの polly:SynthesizeSpeech 権限のみで足りる） */
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
   /** Android Publisher 用 Google サービスアカウント鍵 JSON 文字列 */
   GOOGLE_SA_KEY: string;
   OCTOKIT_PAT: string;
@@ -34,12 +36,11 @@ export interface Env {
   DISCORD_CRASH_WEBHOOK_URL: string;
   DISCORD_REVIEW_WEBHOOK_URL: string;
 
-  // --- Azure TTS チューニング（任意。未設定なら高音質既定のみ適用） ---
-  AZURE_TTS_OUTPUT_FORMAT?: string;
-  AZURE_TTS_STYLE?: string;
-  AZURE_TTS_STYLE_DEGREE?: string;
-  AZURE_TTS_RATE?: string;
-  AZURE_TTS_PITCH?: string;
+  // --- AWS Polly チューニング（任意。未設定なら neural / mp3 の既定のみ適用） ---
+  AWS_POLLY_ENGINE?: string;
+  AWS_POLLY_OUTPUT_FORMAT?: string;
+  AWS_POLLY_RATE?: string;
+  AWS_POLLY_VOLUME?: string;
 
   // --- 任意のデバッグ変数（未設定可） ---
   REVIEWS_DEBUG?: string;

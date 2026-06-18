@@ -1,45 +1,33 @@
-import { isAzureVoiceName, resolveAzureVoiceName } from './ttsVoice';
+import { isAwsVoiceName, resolveAwsVoiceName } from './ttsVoice';
 
-describe('ttsVoice (Azure)', () => {
-  it('accepts Azure neural voices', () => {
-    expect(isAzureVoiceName('ja-JP-NanamiNeural')).toBe(true);
-    expect(isAzureVoiceName('en-US-JennyNeural')).toBe(true);
-    expect(isAzureVoiceName('en-US-AvaMultilingualNeural')).toBe(true);
+describe('ttsVoice (AWS Polly)', () => {
+  it('accepts known Polly voices', () => {
+    expect(isAwsVoiceName('Kazuha')).toBe(true);
+    expect(isAwsVoiceName('Takumi')).toBe(true);
+    expect(isAwsVoiceName('Joanna')).toBe(true);
+    expect(isAwsVoiceName('Matthew')).toBe(true);
   });
 
-  it('rejects non-Azure voice ids', () => {
-    expect(isAzureVoiceName('ja-JP-Standard-B')).toBe(false);
-    expect(isAzureVoiceName('en-US-Chirp3-HD-Aoede')).toBe(false);
-    expect(isAzureVoiceName('')).toBe(false);
+  it('rejects unknown / non-Polly voice ids', () => {
+    expect(isAwsVoiceName('ja-JP-NanamiNeural')).toBe(false);
+    expect(isAwsVoiceName('en-US-Standard-G')).toBe(false);
+    expect(isAwsVoiceName('en-US-Chirp3-HD-Aoede')).toBe(false);
+    expect(isAwsVoiceName('')).toBe(false);
   });
 
   it('prefers a valid requested voice', () => {
-    expect(
-      resolveAzureVoiceName(
-        'en-US-AriaNeural',
-        'en-US-GuyNeural',
-        'en-US-JennyNeural'
-      )
-    ).toBe('en-US-AriaNeural');
+    expect(resolveAwsVoiceName('Joanna', 'Matthew', 'Ruth')).toBe('Joanna');
   });
 
   it('falls back to a configured voice when the request is invalid', () => {
-    expect(
-      resolveAzureVoiceName(
-        'en-US-Standard-H',
-        'en-US-GuyNeural',
-        'en-US-JennyNeural'
-      )
-    ).toBe('en-US-GuyNeural');
+    expect(resolveAwsVoiceName('en-US-Standard-H', 'Matthew', 'Ruth')).toBe(
+      'Matthew'
+    );
   });
 
   it('falls back to the default voice when both inputs are invalid', () => {
     expect(
-      resolveAzureVoiceName(
-        'ja-JP-Standard-B',
-        'ja-JP-Neural2-B',
-        'ja-JP-NanamiNeural'
-      )
-    ).toBe('ja-JP-NanamiNeural');
+      resolveAwsVoiceName('ja-JP-Standard-B', 'ja-JP-Neural2-B', 'Kazuha')
+    ).toBe('Kazuha');
   });
 });
