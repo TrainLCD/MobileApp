@@ -16,8 +16,6 @@ export interface TtsOptions {
   style?: string;
   /** style の強さ（0.01〜2。未指定なら付けない） */
   styleDegree?: string;
-  /** prosody rate（例: -5%, 0.95, slow）。未指定なら付けない */
-  rate?: string;
   /** prosody pitch（例: -2%, +1st）。未指定なら付けない */
   pitch?: string;
 }
@@ -41,14 +39,8 @@ export const buildAzureSsml = (
   // これらの装飾を付けると合成エラー・無視の原因になる。HD では出力しない。
   const isHd = isAzureHdVoiceName(voiceName);
 
-  if (!isHd && (opts.rate || opts.pitch)) {
-    const attrs = [
-      opts.rate ? `rate="${opts.rate}"` : '',
-      opts.pitch ? `pitch="${opts.pitch}"` : '',
-    ]
-      .filter(Boolean)
-      .join(' ');
-    content = `<prosody ${attrs}>${content}</prosody>`;
+  if (!isHd && opts.pitch) {
+    content = `<prosody pitch="${opts.pitch}">${content}</prosody>`;
   }
 
   if (!isHd && opts.style) {

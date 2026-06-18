@@ -38,7 +38,6 @@ export interface Env {
   AZURE_TTS_OUTPUT_FORMAT?: string;
   AZURE_TTS_STYLE?: string;
   AZURE_TTS_STYLE_DEGREE?: string;
-  AZURE_TTS_RATE?: string;
   AZURE_TTS_PITCH?: string;
 
   // --- 任意のデバッグ変数（未設定可） ---

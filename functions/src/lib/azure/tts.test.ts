@@ -3,12 +3,12 @@ import { buildAzureSsml } from './tts';
 describe('buildAzureSsml', () => {
   it('wraps standard neural voices with prosody/style when provided', () => {
     const ssml = buildAzureSsml('東京', 'ja-JP', 'ja-JP-NanamiNeural', {
-      rate: '-3%',
+      pitch: '+1st',
       style: 'narration-relaxed',
       styleDegree: '1.5',
     });
 
-    expect(ssml).toContain('<prosody rate="-3%">');
+    expect(ssml).toContain('<prosody pitch="+1st">');
     expect(ssml).toContain(
       '<mstts:express-as style="narration-relaxed" styledegree="1.5">'
     );
@@ -20,7 +20,7 @@ describe('buildAzureSsml', () => {
       '東京',
       'ja-JP',
       'ja-JP-Nanami:DragonHDLatestNeural',
-      { rate: '-3%', pitch: '+1st', style: 'narration-relaxed' }
+      { pitch: '+1st', style: 'narration-relaxed' }
     );
 
     // HD は <prosody> / <mstts:express-as> 非対応のため出力しない
@@ -35,7 +35,7 @@ describe('buildAzureSsml', () => {
       'Tokyo',
       'en-US',
       'en-US-Jenny:DragonHDLatestNeural',
-      { rate: '-3%' }
+      { pitch: '+1st' }
     );
 
     expect(ssml).not.toContain('<prosody');
