@@ -1,4 +1,4 @@
-import type { Line, Station } from '~/@types/graphql';
+import type { Line, Station, StationNested } from '~/@types/graphql';
 
 /**
  * 各種別が始発（出発駅）で乗車する起点路線を lines から特定する。
@@ -25,6 +25,40 @@ export const getOriginLine = (
   const originFromStart = destinationLineIndex * 2 >= lines.length - 1;
   return (originFromStart ? lines[0] : lines.at(-1)) ?? selectedLine;
 };
+
+/**
+ * 乗車駅(boardingStation)で実際に乗車する路線を返す。
+ *
+ * 経路順に並ぶ lines のうち、乗車駅を通る最初の路線がその駅で乗車する路線になる。
+ * getOriginLine が返す始発側の終端路線は、乗車駅が経路の途中にある場合（例: 池袋から
+ * S-TRAIN に乗ると終端は西武秩父線だが乗車するのは西武池袋線）に一致しない。
+ * カードの配色・路線記号・ナンバリングはこの乗車路線で統一することで、乗車駅に必ず
+ * 存在する駅番号を使ってナンバリングを安定して表示できる。
+ * 乗車駅情報が無い場合（在来アプリ内利用など）は getOriginLine にフォールバックする。
+ */
+export const getBoardingLine = (
+  lines: Line[],
+  boardingStation: Station | null | undefined,
+  selectedLine: Line,
+  destination?: Station | null
+): Line =>
+  lines.find((l) => boardingStation?.lines?.some((sl) => sl.id === l.id)) ??
+  getOriginLine(lines, selectedLine, destination);
+
+/**
+ * 乗車駅における乗車路線(boardingLine)の駅（駅番号付き）を返す。ナンバリング表示に使う。
+ *
+ * 経路検索では item.lines[].station が API で null になるため、乗車駅の路線別 station
+ * から乗車路線の駅を引く。乗車駅情報が無い場合は、乗車路線が選択中の路線と同じであれば
+ * 選択路線の駅へフォールバックする（在来アプリ内利用など）。
+ */
+export const getBoardingLineStation = (
+  boardingStation: Station | null | undefined,
+  boardingLine: Line,
+  selectedLine: Line
+): StationNested | null =>
+  boardingStation?.lines?.find((l) => l.id === boardingLine.id)?.station ??
+  (boardingLine.id === selectedLine.id ? (selectedLine.station ?? null) : null);
 
 /** 選択された路線と目的地の路線の間にある経由路線を取得する */
 export const getViaLines = (

@@ -706,6 +706,7 @@ const RouteSearchScreen = () => {
         visible={trainTypeListModalVisible}
         line={currentStationLineForTrainTypeModal}
         destination={wantedDestination}
+        boardingStation={station}
         onClose={() => {
           setTrainTypeListModalVisible(false);
         }}

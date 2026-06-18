@@ -1,5 +1,11 @@
 import type { Line, Station } from '~/@types/graphql';
-import { formatLineNames, getOriginLine, getViaLines } from './trainTypeList';
+import {
+  formatLineNames,
+  getBoardingLine,
+  getBoardingLineStation,
+  getOriginLine,
+  getViaLines,
+} from './trainTypeList';
 
 afterEach(() => jest.clearAllMocks());
 
@@ -82,6 +88,101 @@ describe('getOriginLine', () => {
       line: minatomirai,
     } as Station);
     expect(result.id).toBe(seibuIkebukuro.id);
+  });
+});
+
+// 乗車駅(StationNested)を模したヘルパー。lines[].station.stationNumbers から
+// ナンバリングを引くため、各路線に駅番号付きの station を持たせる。
+const createNestedStation = (stationNumber: string, lineSymbol: string) =>
+  ({
+    __typename: 'StationNested',
+    stationNumbers: [{ stationNumber, lineSymbol }],
+  }) as unknown as Line['station'];
+
+const createBoardingStation = (
+  lineEntries: { id: Line['id']; station?: Line['station'] }[]
+): Station =>
+  ({
+    __typename: 'Station',
+    lines: lineEntries,
+  }) as unknown as Station;
+
+describe('getBoardingLine', () => {
+  // 西武秩父線・東急東横線・みなとみらい線は池袋を通らない（乗車駅に含まれない）
+  const seibuChichibu = createLine(6, { nameShort: '西武秩父線' });
+  const ikebukuro = createBoardingStation([
+    { id: seibuIkebukuro.id },
+    { id: tobuTojo.id },
+    { id: fukutoshin.id },
+  ]);
+
+  it('経路順で最初に乗車駅を通る路線を乗車路線とする（S-TRAIN: 終端は西武秩父線でも乗車は西武池袋線）', () => {
+    const lines = [
+      seibuChichibu,
+      seibuIkebukuro,
+      fukutoshin,
+      tokyu,
+      minatomirai,
+    ];
+    const result = getBoardingLine(lines, ikebukuro, seibuIkebukuro, {
+      line: minatomirai,
+    } as Station);
+    expect(result.id).toBe(seibuIkebukuro.id);
+  });
+
+  it('linesが行先始まりの逆順でも乗車駅を通る路線を選ぶ（特急: 副都心線から乗車）', () => {
+    const lines = [minatomirai, tokyu, fukutoshin, seibuChichibu];
+    const result = getBoardingLine(lines, ikebukuro, seibuIkebukuro, {
+      line: minatomirai,
+    } as Station);
+    expect(result.id).toBe(fukutoshin.id);
+  });
+
+  it('乗車駅情報が無い場合は getOriginLine（始発側終端）にフォールバックする', () => {
+    const lines = [tobuTojo, fukutoshin, tokyu, minatomirai];
+    const result = getBoardingLine(lines, null, seibuIkebukuro, {
+      line: minatomirai,
+    } as Station);
+    expect(result.id).toBe(tobuTojo.id);
+  });
+
+  it('乗車駅にどの経路路線も含まれない場合も getOriginLine にフォールバックする', () => {
+    const lines = [tobuTojo, tokyu, minatomirai];
+    const onlyOtherLines = createBoardingStation([{ id: seibuIkebukuro.id }]);
+    const result = getBoardingLine(lines, onlyOtherLines, seibuIkebukuro, {
+      line: minatomirai,
+    } as Station);
+    expect(result.id).toBe(tobuTojo.id);
+  });
+});
+
+describe('getBoardingLineStation', () => {
+  const ikebukuro = createBoardingStation([
+    { id: seibuIkebukuro.id, station: createNestedStation('SI-01', 'SI') },
+    { id: fukutoshin.id, station: createNestedStation('F-09', 'F') },
+  ]);
+
+  it('乗車駅の乗車路線の駅（駅番号付き）を返す', () => {
+    const result = getBoardingLineStation(
+      ikebukuro,
+      fukutoshin,
+      seibuIkebukuro
+    );
+    expect(result?.stationNumbers?.[0]?.stationNumber).toBe('F-09');
+  });
+
+  it('乗車駅情報が無く乗車路線が選択中の路線と同じなら選択路線の駅を返す', () => {
+    const selected = createLine(1, {
+      nameShort: '西武池袋線',
+      station: createNestedStation('SI-01', 'SI'),
+    } as Partial<Line>);
+    const result = getBoardingLineStation(null, selected, selected);
+    expect(result?.stationNumbers?.[0]?.stationNumber).toBe('SI-01');
+  });
+
+  it('乗車駅情報が無く乗車路線が選択中の路線と異なる場合は null を返す', () => {
+    const result = getBoardingLineStation(null, fukutoshin, seibuIkebukuro);
+    expect(result).toBeNull();
   });
 });
 
