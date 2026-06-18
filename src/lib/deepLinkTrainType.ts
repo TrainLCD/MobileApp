@@ -18,7 +18,6 @@ export type TrainTypeOverrideInput = {
   nameKatakana?: unknown;
   nameChinese?: unknown;
   nameKorean?: unknown;
-  nameIpa?: unknown;
   nameRomanIpa?: unknown;
 };
 
@@ -135,7 +134,6 @@ export const parseTrainTypeOverride = (
   const nameKatakana = optionalName(raw.nameKatakana);
   const nameChinese = optionalName(raw.nameChinese);
   const nameKorean = optionalName(raw.nameKorean);
-  const nameIpa = optionalName(raw.nameIpa);
   const nameRomanIpa = optionalName(raw.nameRomanIpa);
 
   if (
@@ -143,7 +141,6 @@ export const parseTrainTypeOverride = (
     !nameKatakana.ok ||
     !nameChinese.ok ||
     !nameKorean.ok ||
-    !nameIpa.ok ||
     !nameRomanIpa.ok
   ) {
     return { status: 'invalid' };
@@ -159,8 +156,11 @@ export const parseTrainTypeOverride = (
     nameKatakana: nameKatakana.value,
     nameChinese: nameChinese.value,
     nameKorean: nameKorean.value,
-    nameIpa: nameIpa.value,
     nameRomanIpa: nameRomanIpa.value,
+    // nameIpa is no longer carried by deep links: Japanese TTS reads names from
+    // kanji + nameKatakana, so an IPA override would have no effect. It remains a
+    // required schema field, so it is explicitly null.
+    nameIpa: null,
     // Server-owned identity / structural fields are explicitly null so the
     // override never carries stale or fabricated lineGroupId / typeId.
     id: null,

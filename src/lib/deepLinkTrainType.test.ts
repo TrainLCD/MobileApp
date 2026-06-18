@@ -191,7 +191,6 @@ describe('parseTrainTypeOverride', () => {
         nameKatakana: 'カイソク',
         nameChinese: '快速',
         nameKorean: '쾌속',
-        nameIpa: 'kaisoku',
         nameRomanIpa: 'ɾæpɪd',
       });
       expect(result.status).toBe('valid');
@@ -201,7 +200,8 @@ describe('parseTrainTypeOverride', () => {
           nameKatakana: 'カイソク',
           nameChinese: '快速',
           nameKorean: '쾌속',
-          nameIpa: 'kaisoku',
+          // nameIpa は deep link で運ばないため、常に null になる。
+          nameIpa: null,
           nameRomanIpa: 'ɾæpɪd',
         });
       }

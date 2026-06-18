@@ -395,7 +395,6 @@ export const useDeepLink = () => {
         ttnamekatakana,
         ttnamechinese,
         ttnamekorean,
-        ttnameipa,
         ttnameromanipa,
       } = parsed.queryParams;
 
@@ -461,7 +460,6 @@ export const useDeepLink = () => {
         nameKatakana: ttnamekatakana,
         nameChinese: ttnamechinese,
         nameKorean: ttnamekorean,
-        nameIpa: ttnameipa,
         nameRomanIpa: ttnameromanipa,
       });
       if (trainTypeResult.status === 'invalid') {

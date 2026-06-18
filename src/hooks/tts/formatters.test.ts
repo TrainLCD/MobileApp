@@ -22,12 +22,9 @@ describe('replaceJapaneseText', () => {
   });
 
   it('returns the provided fallback when both args are nullish', () => {
-    expect(replaceJapaneseText(null, null, undefined, '各駅停車')).toBe(
-      '各駅停車'
-    );
+    expect(replaceJapaneseText(null, null, '各駅停車')).toBe('各駅停車');
     expect(
       replaceJapaneseText(
-        undefined,
         undefined,
         undefined,
         '<sub alias="かくえきていしゃ">各駅停車</sub>'
@@ -46,38 +43,6 @@ describe('replaceJapaneseText', () => {
     );
   });
 
-  it('wraps name with ipa phoneme when nameIpa carries an accent nucleus (ˈ)', () => {
-    // アクセント核を含む IPA がある場合は <phoneme alphabet="ipa"> で読ませる。
-    expect(
-      replaceJapaneseText(
-        '練馬春日町',
-        'ネリマカスガチョウ',
-        'neɾimaˈkasɯɡat͡ɕoː'
-      )
-    ).toBe(
-      '<phoneme alphabet="ipa" ph="neɾimaˈkasɯɡat͡ɕoː">練馬春日町</phoneme>'
-    );
-  });
-
-  it('falls back to sub alias when nameIpa has no accent nucleus', () => {
-    // 核が無い IPA（StationAPI 未対応 or 平板）は従来どおり読みに倒す＝無リグレッション。
-    expect(replaceJapaneseText('新宿', 'シンジュク', 'ɕindʑɯkɯ')).toBe(
-      '<sub alias="しんじゅく">新宿</sub>'
-    );
-  });
-
-  it('escapes XML special characters in the ipa phoneme output', () => {
-    expect(replaceJapaneseText('A&B', 'エービー', 'ˈeːbiː')).toBe(
-      '<phoneme alphabet="ipa" ph="ˈeːbiː">A&amp;B</phoneme>'
-    );
-  });
-
-  it('returns fallback when name is nullish even if nameIpa has an accent nucleus', () => {
-    expect(replaceJapaneseText(null, null, 'ˈabc', '各駅停車')).toBe(
-      '各駅停車'
-    );
-  });
-
   it('does not fall back to 各駅停車 implicitly (#5917)', () => {
     // 駅名・路線名のヘルパとして使われるため、誤って `各駅停車` を返してはならない。
     expect(replaceJapaneseText(null, null)).not.toContain('各駅停車');
@@ -87,7 +52,7 @@ describe('replaceJapaneseText', () => {
     // 以前は sub 内に `null` / `undefined` が混入していた。
     expect(replaceJapaneseText(null, 'シンジュク')).toBe('');
     expect(replaceJapaneseText(undefined, 'シンジュク')).toBe('');
-    expect(replaceJapaneseText(null, 'シンジュク', undefined, '各駅停車')).toBe(
+    expect(replaceJapaneseText(null, 'シンジュク', '各駅停車')).toBe(
       '各駅停車'
     );
 
