@@ -2,10 +2,6 @@ import type { Line, Station, TtsSegment } from '../../@types/graphql';
 import katakanaToHiragana from '../../utils/kanaToHiragana';
 import { escapeXml, escapeXmlAttr, wrapPhoneme } from '../../utils/phoneme';
 
-// IPA のアクセント核（下げ核）マーカー。Azure は <phoneme alphabet="ipa"> 経由で
-// この記号を尊重することを実機確認済み。StationAPI が nameIpa に付与する。
-const ACCENT_NUCLEUS_MARK = 'ˈ';
-
 // 駅名に併記されたカッコ書き (例: 命名権スポンサー名 `電鉄富山(トヨタモビリティ富山)`)
 // を TTS で読み上げないために、半角・全角のカッコと中身を取り除く。
 // 既存の `parenthesisRegexp` は半角のみで駅 API が全角を返すケースをカバー
@@ -63,18 +59,10 @@ export const stripStationParensForTTS = (station: Station): Station => ({
 export const replaceJapaneseText = (
   name: string | null | undefined,
   nameKatakana: string | null | undefined,
-  nameIpa?: string | null | undefined,
   fallback = ''
 ): string => {
   if (!name) {
     return fallback;
-  }
-  // アクセント核(ˈ)を含む IPA がある場合のみ <phoneme> で読ませ、固有名詞の
-  // ピッチアクセントを明示する。核が無い場合（StationAPI 未対応 or 平板）は
-  // 従来どおり読み(<sub>)に倒すことで、アクセントデータ投入前は挙動を一切
-  // 変えず（無リグレッション）、データ投入と同時に自動で有効化される。
-  if (nameIpa?.includes(ACCENT_NUCLEUS_MARK)) {
-    return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(nameIpa)}">${escapeXml(name)}</phoneme>`;
   }
   if (!nameKatakana) {
     return escapeXml(name);
@@ -83,13 +71,12 @@ export const replaceJapaneseText = (
   return `<sub alias="${alias}">${escapeXml(name)}</sub>`;
 };
 
-const replaceLineNameJa = (
-  line: Pick<Line, 'nameShort' | 'nameKatakana' | 'nameIpa'>
-) => replaceJapaneseText(line.nameShort, line.nameKatakana, line.nameIpa);
+const replaceLineNameJa = (line: Pick<Line, 'nameShort' | 'nameKatakana'>) =>
+  replaceJapaneseText(line.nameShort, line.nameKatakana);
 
 const replaceStationNameJa = (
-  station: Pick<Station, 'name' | 'nameKatakana' | 'nameIpa'>
-) => replaceJapaneseText(station.name, station.nameKatakana, station.nameIpa);
+  station: Pick<Station, 'name' | 'nameKatakana'>
+) => replaceJapaneseText(station.name, station.nameKatakana);
 
 /** 路線名を sub alias 付きで `、` 連結する。 */
 export const formatLinesListJa = (lines: Line[]): string =>

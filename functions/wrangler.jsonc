@@ -37,12 +37,12 @@
 
   "vars": {
     "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
-    "AZURE_SPEECH_REGION": "japaneast",
+    "AZURE_SPEECH_REGION": "southeastasia",
     "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
-    "AZURE_TTS_RATE": "-3%",
+    // HD（DragonHD）ボイスは <prosody> 非対応のため AZURE_TTS_RATE は設定しない
     "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
-    "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
-    "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
+    "TTS_JA_VOICE_NAME": "ja-JP-Nanami:DragonHDLatestNeural",
+    "TTS_EN_VOICE_NAME": "en-US-Jenny:DragonHDLatestNeural",
     "SESSION_TOKEN_TTL_SECONDS": "3600",
     "UPLOAD_PUBLIC_BASE_URL": "https://uploads-dev.trainlcd.app",
     "FEW_SHOT_KV_KEY": "config:fewshot",
@@ -79,12 +79,12 @@
       },
       "vars": {
         "GOOGLE_PLAY_PACKAGE_NAME": "me.tinykitten.trainlcd",
-        "AZURE_SPEECH_REGION": "japaneast",
+        "AZURE_SPEECH_REGION": "southeastasia",
         "AZURE_TTS_OUTPUT_FORMAT": "audio-48khz-192kbitrate-mono-mp3",
-        "AZURE_TTS_RATE": "-3%",
+        // HD（DragonHD）ボイスは <prosody> 非対応のため AZURE_TTS_RATE は設定しない
         "AI_TRIAGE_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast",
-        "TTS_JA_VOICE_NAME": "ja-JP-NanamiNeural",
-        "TTS_EN_VOICE_NAME": "en-US-JennyNeural",
+        "TTS_JA_VOICE_NAME": "ja-JP-Nanami:DragonHDLatestNeural",
+        "TTS_EN_VOICE_NAME": "en-US-Jenny:DragonHDLatestNeural",
         "SESSION_TOKEN_TTL_SECONDS": "3600",
         "UPLOAD_PUBLIC_BASE_URL": "https://uploads.trainlcd.app",
         "FEW_SHOT_KV_KEY": "config:fewshot",
