@@ -294,15 +294,16 @@ describe('useTTS', () => {
     expect(mockCreateAudioPlayer).not.toHaveBeenCalled();
   });
 
-  it('タイムアウト後に強制リセットされる', async () => {
+  it('再生が始まった後は時間が経過しても打ち切られない', async () => {
     const store = createStore();
     store.set(speechState, {
       ...defaultSpeechState,
       ttsEnabledLanguages: ['EN'],
     });
 
-    // didJustFinish を発火しないが再生中(playing=true)であり続けるプレイヤー
-    // （ストール検知に掛からず最終タイムアウトまで到達するケース）
+    // didJustFinish を発火しないが再生中(playing=true)であり続ける長尺プレイヤー。
+    // 準備段階の安全タイムアウトは再生開始時に解除されるため、何分経過しても
+    // 強制リセットされず、進行停止検知はttsAudioPlayerのストール監視に委ねられる。
     mockCreateAudioPlayer.mockImplementation(() =>
       createMockPlayer({ autoFinish: false, playing: true })
     );
@@ -322,10 +323,10 @@ describe('useTTS', () => {
       expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
     });
 
-    // 300秒のタイムアウトを発火
+    // 再生開始後に長時間（300秒）経過させても強制リセットは起きない
     jest.advanceTimersByTime(300_000);
 
-    expect(warnSpy).toHaveBeenCalledWith(
+    expect(warnSpy).not.toHaveBeenCalledWith(
       '[useTTS] Playback safety timeout reached, force resetting'
     );
 
