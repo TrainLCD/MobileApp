@@ -37,9 +37,17 @@ describe('replaceJapaneseText', () => {
     expect(replaceJapaneseText('新宿', undefined)).toBe('新宿');
   });
 
-  it('wraps name with sub alias when both name and nameKatakana are provided', () => {
+  it('wraps name with sub alias using the katakana reading as-is', () => {
+    // alias はカタカナのまま渡す。ひらがな化すると Azure が alias を再解析した際に
+    // 先頭モーラを助詞と誤認してアクセント句が割れる崩れが起きるため (例: 都営)。
     expect(replaceJapaneseText('新宿', 'シンジュク')).toBe(
-      '<sub alias="しんじゅく">新宿</sub>'
+      '<sub alias="シンジュク">新宿</sub>'
+    );
+  });
+
+  it('keeps katakana so 都営 is not split into と・えい', () => {
+    expect(replaceJapaneseText('都営', 'トエイ')).toBe(
+      '<sub alias="トエイ">都営</sub>'
     );
   });
 
