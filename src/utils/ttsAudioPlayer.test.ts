@@ -1,4 +1,6 @@
 import {
+  FINISH_END_EPSILON_SEC,
+  MAX_RESUME_ATTEMPTS,
   playAudio,
   STALL_CHECK_INTERVAL_MS,
   STALL_TIMEOUT_MS,
@@ -12,17 +14,24 @@ jest.mock('expo-audio', () => ({
   createAudioPlayer: (...args: unknown[]) => mockCreateAudioPlayer(...args),
 }));
 
-type StatusCallback = (status: {
+type EmittedStatus = {
   didJustFinish?: boolean;
   error?: string;
-}) => void;
+  currentTime?: number;
+  duration?: number;
+  playbackState?: string;
+  reasonForWaitingToPlay?: string;
+};
 
-const createMockPlayer = (opts?: { playing?: boolean }) => {
+type StatusCallback = (status: EmittedStatus) => void;
+
+const createMockPlayer = (opts?: { playing?: boolean; duration?: number }) => {
   let statusCallback: StatusCallback | null = null;
   const listenerRemove = jest.fn();
   const player = {
     playing: opts?.playing ?? false,
     currentTime: 0,
+    duration: opts?.duration ?? 0,
     addListener: jest.fn((_event: string, callback: StatusCallback) => {
       statusCallback = callback;
       return { remove: listenerRemove };
@@ -31,11 +40,12 @@ const createMockPlayer = (opts?: { playing?: boolean }) => {
     pause: jest.fn(),
     remove: jest.fn(),
     replace: jest.fn(),
+    seekTo: jest.fn().mockResolvedValue(undefined),
   };
   return {
     player,
     listenerRemove,
-    emitStatus: (status: { didJustFinish?: boolean; error?: string }) => {
+    emitStatus: (status: EmittedStatus) => {
       statusCallback?.(status);
     },
   };
@@ -272,6 +282,89 @@ describe('playAudio', () => {
 
     expect(onFinish).toHaveBeenCalledTimes(1);
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('終端付近の didJustFinish は正常完了として扱う', () => {
+    const mock = createMockPlayer({ playing: true, duration: 30 });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'complete.mp3', onFinish, onError });
+
+    // 終端(30s)付近で完了 → そのまま完了扱い
+    mock.emitStatus({ didJustFinish: true, currentTime: 29.9, duration: 30 });
+
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    expect(mock.player.seekTo).not.toHaveBeenCalled();
+  });
+
+  it('終端手前の didJustFinish は早期完了とみなしその位置から再開する', () => {
+    const mock = createMockPlayer({ playing: true, duration: 30 });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'long.mp3', onFinish, onError });
+
+    // 本来30sあるのに10sで完了報告（iOSの早期 didJustFinish 誤報を再現）
+    mock.emitStatus({ didJustFinish: true, currentTime: 10, duration: 30 });
+
+    // 完了扱いせず、10sの位置から再生を継続する
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+    expect(mock.player.seekTo).toHaveBeenCalledWith(10);
+    // 初回 play() に続く再開の play()
+    expect(mock.player.play).toHaveBeenCalledTimes(2);
+
+    warnSpy.mockRestore();
+  });
+
+  it('位置が0の早期 didJustFinish は再開せず完了として扱う', () => {
+    const mock = createMockPlayer({ playing: true, duration: 30 });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'reset.mp3', onFinish, onError });
+
+    // 位置が0にリセットされて報告された場合は頭から再生し直しを避け、完了として進む
+    mock.emitStatus({ didJustFinish: true, currentTime: 0, duration: 30 });
+
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    expect(mock.player.seekTo).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
+  it('早期 didJustFinish が続いても最大回数で完了として打ち切る', () => {
+    const mock = createMockPlayer({ playing: true, duration: 30 });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    playAudio({ uri: 'stuck.mp3', onFinish, onError });
+
+    // 上限回数までは再開を試み、それを超えたら完了として進む（無限ループ防止）
+    for (let i = 0; i < MAX_RESUME_ATTEMPTS; i++) {
+      mock.emitStatus({ didJustFinish: true, currentTime: 10, duration: 30 });
+    }
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(mock.player.seekTo).toHaveBeenCalledTimes(MAX_RESUME_ATTEMPTS);
+
+    // 上限超過の早期完了は通常完了として扱う
+    mock.emitStatus({ didJustFinish: true, currentTime: 10, duration: 30 });
+    expect(onFinish).toHaveBeenCalledTimes(1);
+
+    warnSpy.mockRestore();
+  });
+
+  it('FINISH_END_EPSILON_SEC は正の有限値', () => {
+    expect(Number.isFinite(FINISH_END_EPSILON_SEC)).toBe(true);
+    expect(FINISH_END_EPSILON_SEC).toBeGreaterThan(0);
   });
 
   it('listener.remove() 後はウォッチドッグが停止する', () => {

@@ -26,7 +26,7 @@ import { useTTSText } from './useTTSText';
 // 再生開始前（フェッチ・トークン取得など）のハングに対する安全タイムアウト（ミリ秒）
 // プレイヤー未生成の準備段階はttsAudioPlayerのストール検知ウォッチドッグが効かないため、
 // この区間がハングしてもplayingRefを確実に解放してTTS全体の停止を防ぐ。
-// 実際の音声再生が始まった時点でこのタイムアウトは解除し（armPlaybackWatchdogを参照）、
+// 実際の音声再生が始まった時点でこのタイムアウトは解除し（clearPlaybackWatchdogを参照）、
 // 以降の再生中の進行停止検知はttsAudioPlayerのストール監視に委ねる。
 // これにより健全な長尺再生が一定時間で打ち切られることはなくなる。
 const PLAYBACK_TIMEOUT_MS = 300_000;

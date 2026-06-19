@@ -9,6 +9,15 @@ export const STALL_TIMEOUT_MS = 10_000;
 // ストール監視のポーリング間隔
 export const STALL_CHECK_INTERVAL_MS = 1_000;
 
+// didJustFinish 受信時、再生位置がこの秒数以内まで終端へ達していれば正常終了とみなす。
+// iOS は長尺音声で、音声セッションの一時中断やデコード境界などにより本来の終端より
+// 手前で didJustFinish を誤報することがある。これをそのまま「完了」と扱うと、日本語
+// アナウンスが途中で打ち切られて次（英語）へ飛んでしまうため、終端付近に達していない
+// 完了報告は早期完了とみなして再生を継続する。
+export const FINISH_END_EPSILON_SEC = 0.5;
+// 早期 didJustFinish からの再開を試みる最大回数（誤検知時の無限ループを防ぐ安全弁）
+export const MAX_RESUME_ATTEMPTS = 5;
+
 export const safeRemoveListener = (
   listener: { remove: () => void } | null
 ): void => {
@@ -46,13 +55,55 @@ export const playAudio = (options: {
   let settled = false;
   let stalledTicks = 0;
   let lastCurrentTime = -1;
+  let resumeAttempts = 0;
   const maxStalledTicks = Math.ceil(STALL_TIMEOUT_MS / STALL_CHECK_INTERVAL_MS);
+
+  // 終端付近に達していない didJustFinish（iOS の早期完了誤報）を「正常終了」と
+  // 扱わないためのガード。位置が取れる場合はその位置から再開して打ち切りを防ぎ、
+  // 位置が取れない/終端付近の場合は従来どおり完了として進む（=最悪でも現状維持）。
+  const handleDidJustFinish = (status: {
+    currentTime?: number;
+    duration?: number;
+    playbackState?: string;
+    reasonForWaitingToPlay?: string;
+  }) => {
+    const duration = status.duration || player.duration || 0;
+    const position = status.currentTime ?? player.currentTime ?? 0;
+    const reachedEnd =
+      duration <= 0 || position >= duration - FINISH_END_EPSILON_SEC;
+
+    if (!reachedEnd) {
+      // 早期完了の実測値をログに残す（実機での原因特定と再開判定の検証用）
+      console.warn(
+        `[ttsAudioPlayer] early didJustFinish at ${position.toFixed(2)}/${duration.toFixed(2)}s ` +
+          `(state=${status.playbackState ?? 'n/a'}, waiting=${status.reasonForWaitingToPlay ?? 'n/a'}):`,
+        uri
+      );
+      // 位置が取れていれば、その位置から再開して途中打ち切りを防ぐ。
+      // 位置が 0（=リセット報告）だと頭から再生し直しになるため再開しない。
+      if (position > 0 && resumeAttempts < MAX_RESUME_ATTEMPTS) {
+        resumeAttempts += 1;
+        // 再開直後はストール監視を誤発火させないようカウンタを戻す
+        stalledTicks = 0;
+        lastCurrentTime = -1;
+        try {
+          // didJustFinish で位置が末尾/0 へ移動する実装に備え、明示的に戻してから再生
+          player.seekTo(position).catch(() => {});
+          player.play();
+        } catch (e) {
+          settle(() => onError(e));
+        }
+        return;
+      }
+    }
+    settle(onFinish);
+  };
 
   const statusListener = player.addListener(
     'playbackStatusUpdate',
     (status) => {
       if (status.didJustFinish) {
-        settle(onFinish);
+        handleDidJustFinish(status);
       } else if ('error' in status && status.error) {
         console.warn('[ttsAudioPlayer] playback error:', status.error);
         settle(() => onError(status.error));
