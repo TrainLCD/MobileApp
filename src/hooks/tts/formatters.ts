@@ -1,5 +1,4 @@
 import type { Line, Station, TtsSegment } from '../../@types/graphql';
-import katakanaToHiragana from '../../utils/kanaToHiragana';
 import { escapeXml, escapeXmlAttr, wrapPhoneme } from '../../utils/phoneme';
 
 // 駅名に併記されたカッコ書き (例: 命名権スポンサー名 `電鉄富山(トヨタモビリティ富山)`)
@@ -55,6 +54,12 @@ export const stripStationParensForTTS = (station: Station): Station => ({
  *
  * NOTE: `name` だけ nullish で `nameKatakana` が埋まっているケースでは sub 内に
  * `null` / `undefined` が混入していたため、`name` がない時点で fallback に倒す。
+ *
+ * NOTE: alias にはカタカナの `nameKatakana` をそのまま渡す。以前はひらがなへ
+ * 変換していたが、Azure Speech の日本語フロントエンドは alias 文字列を形態素解析し
+ * 直すため、ひらがなだと「とえい(都営)」の先頭「と」が助詞と誤認されてアクセント句が
+ * 「と・えい」と分割される崩れが起きていた。カタカナは助詞(基本ひらがな)に化けにくく、
+ * 固有名詞を1トークンとして読ませやすいため、先頭が助詞由来モーラの読み全般で安定する (#6276 系)。
  */
 export const replaceJapaneseText = (
   name: string | null | undefined,
@@ -67,7 +72,7 @@ export const replaceJapaneseText = (
   if (!nameKatakana) {
     return escapeXml(name);
   }
-  const alias = escapeXmlAttr(katakanaToHiragana(nameKatakana));
+  const alias = escapeXmlAttr(nameKatakana);
   return `<sub alias="${alias}">${escapeXml(name)}</sub>`;
 };
 
