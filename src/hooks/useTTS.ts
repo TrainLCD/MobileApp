@@ -23,10 +23,12 @@ import { usePrevious } from './usePrevious';
 import { useStoppingState } from './useStoppingState';
 import { useTTSText } from './useTTSText';
 
-// 再生が完了しない場合の最終フォールバックタイムアウト（ミリ秒）
-// 通常のストール（Androidでのネイティブエラーや音声フォーカス喪失など）は
-// ttsAudioPlayerのストール検知ウォッチドッグが先に打ち切って復帰させるため、
-// これはウォッチドッグでも捕捉できない異常系に対する最後の砦
+// 再生開始前（フェッチ・トークン取得など）のハングに対する安全タイムアウト（ミリ秒）
+// プレイヤー未生成の準備段階はttsAudioPlayerのストール検知ウォッチドッグが効かないため、
+// この区間がハングしてもplayingRefを確実に解放してTTS全体の停止を防ぐ。
+// 実際の音声再生が始まった時点でこのタイムアウトは解除し（armPlaybackWatchdogを参照）、
+// 以降の再生中の進行停止検知はttsAudioPlayerのストール監視に委ねる。
+// これにより健全な長尺再生が一定時間で打ち切られることはなくなる。
 const PLAYBACK_TIMEOUT_MS = 300_000;
 
 export const useTTS = (): void => {
@@ -171,9 +173,11 @@ export const useTTS = (): void => {
     }
   }, []);
 
-  // playingRefがtrueになった時点で必ず安全タイムアウトを張る。
+  // playingRefがtrueになった時点で安全タイムアウトを張る。
   // フェッチやトークン取得がハングしてもplayingRefが解放されずTTS全体が
-  // 停止するのを防ぐため、再生開始前のフェッチ段階も含めて監視する。
+  // 停止するのを防ぐための、再生開始前の準備段階専用の監視。
+  // 実際の再生が始まったらclearPlaybackWatchdogで解除し、以降は再生時間に
+  // よらず打ち切らない（進行停止はttsAudioPlayerのストール監視が担う）。
   const armPlaybackWatchdog = useCallback(
     (runId: number = speechRunIdRef.current) => {
       if (playingTimeoutRef.current) {
@@ -194,6 +198,16 @@ export const useTTS = (): void => {
     },
     [cleanupAllPlayers, finishPlaying]
   );
+
+  // 実際の音声再生が始まったら準備段階の安全タイムアウトを解除する。
+  // これ以降は再生が何分続いても打ち切らず、進行停止の検知は
+  // ttsAudioPlayerのストール監視（STALL_TIMEOUT_MS）に委ねる。
+  const clearPlaybackWatchdog = useCallback(() => {
+    if (playingTimeoutRef.current) {
+      clearTimeout(playingTimeoutRef.current);
+      playingTimeoutRef.current = null;
+    }
+  }, []);
 
   const speakFromPath = useCallback(
     async (pathJa: string, pathEn: string) => {
@@ -216,7 +230,6 @@ export const useTTS = (): void => {
       cleanupAllPlayers();
 
       playingRef.current = true;
-      armPlaybackWatchdog();
 
       // 再生終了/失敗時の停止処理。Android はリスナーだけ解放してプレイヤーを
       // 一時停止し再利用、iOS はプレイヤーをネイティブごと破棄する。
@@ -258,6 +271,8 @@ export const useTTS = (): void => {
           onError: () => enCleanup(),
         });
         enPlayerRef.current = reusePlayers ? enHandleRef.current.player : null;
+        // 再生が始まったので準備段階の安全タイムアウトを解除する
+        clearPlaybackWatchdog();
         return;
       }
 
@@ -302,10 +317,12 @@ export const useTTS = (): void => {
         },
       });
       jaPlayerRef.current = reusePlayers ? jaHandleRef.current.player : null;
+      // 再生が始まったので準備段階の安全タイムアウトを解除する
+      clearPlaybackWatchdog();
     },
     [
-      armPlaybackWatchdog,
       cleanupAllPlayers,
+      clearPlaybackWatchdog,
       finishPlaying,
       reusePlayers,
       shouldSpeakEnglish,
