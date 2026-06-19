@@ -87,9 +87,19 @@ export const playAudio = (options: {
         stalledTicks = 0;
         lastCurrentTime = -1;
         try {
-          // didJustFinish で位置が末尾/0 へ移動する実装に備え、明示的に戻してから再生
-          player.seekTo(position).catch(() => {});
-          player.play();
+          // didJustFinish で位置が末尾/0 へ移動する実装に備え、明示的に戻してから再生。
+          // seekTo は非同期のため、完了を待ってから play() しないと古い位置から
+          // 再生が始まりうる。エラー時も含め確実に再生を開始する。
+          player
+            .seekTo(position)
+            .catch(() => {})
+            .finally(() => {
+              try {
+                player.play();
+              } catch (e) {
+                settle(() => onError(e));
+              }
+            });
         } catch (e) {
           settle(() => onError(e));
         }

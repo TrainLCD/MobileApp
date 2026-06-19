@@ -299,7 +299,7 @@ describe('playAudio', () => {
     expect(mock.player.seekTo).not.toHaveBeenCalled();
   });
 
-  it('終端手前の didJustFinish は早期完了とみなしその位置から再開する', () => {
+  it('終端手前の didJustFinish は早期完了とみなしその位置から再開する', async () => {
     const mock = createMockPlayer({ playing: true, duration: 30 });
     mockCreateAudioPlayer.mockReturnValue(mock.player);
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -311,11 +311,17 @@ describe('playAudio', () => {
     // 本来30sあるのに10sで完了報告（iOSの早期 didJustFinish 誤報を再現）
     mock.emitStatus({ didJustFinish: true, currentTime: 10, duration: 30 });
 
-    // 完了扱いせず、10sの位置から再生を継続する
+    // 完了扱いせず、10sの位置へ seek してから再生を継続する
     expect(onFinish).not.toHaveBeenCalled();
     expect(onError).not.toHaveBeenCalled();
     expect(mock.player.seekTo).toHaveBeenCalledWith(10);
-    // 初回 play() に続く再開の play()
+
+    // seekTo の Promise チェーン（.catch → .finally → play）を消化する
+    for (let i = 0; i < 5; i++) {
+      await Promise.resolve();
+    }
+
+    // seek 完了後に再開の play() が呼ばれる（初回 play と合わせて 2 回）
     expect(mock.player.play).toHaveBeenCalledTimes(2);
 
     warnSpy.mockRestore();
