@@ -52,14 +52,14 @@ export default {
     },
   },
   ios: {
-    buildNumber: '2713',
+    buildNumber: '2714',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     supportsTablet: true,
   },
   android: {
     package: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000500,
+    versionCode: 100000501,
   },
   owner: 'trainlcd',
   experiments: {
