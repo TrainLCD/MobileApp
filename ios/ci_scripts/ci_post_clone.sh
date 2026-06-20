@@ -2,9 +2,8 @@
 
 set -ueo pipefail
 
-echo "$SENTRY_PROPERTIES_BASE64" | base64 --decode > /Volumes/workspace/repository/ios/sentry.properties
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to write sentry.properties file"
+if ! printf '%s' "$SENTRY_PROPERTIES_BASE64" | base64 --decode > /Volumes/workspace/repository/ios/sentry.properties; then
+  echo 'Error: Failed to write sentry.properties file'
   exit 1
 fi
 
