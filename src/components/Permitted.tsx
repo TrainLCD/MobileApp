@@ -36,6 +36,7 @@ import {
   useCheckStoreVersion,
   useCurrentLine,
   useFeedback,
+  useIsAppActive,
   useWarningInfo,
   useWrongDirectionDetectorEffect,
 } from '../hooks';
@@ -74,7 +75,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
   const setPortraitModeEnabled = useSetAtom(portraitModeEnabledAtom);
-  const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
+  const { enabled: pictureInPictureEnabled, active: pictureInPictureActive } =
+    useAtomValue(pictureInPictureAtom);
+  const isAppActive = useIsAppActive();
   const setTuning = useSetAtom(tuningState);
   const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
@@ -632,10 +635,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ]
   );
 
+  // PiP を有効にしている場合、バックグラウンド(PiP 表示含む)へ移行した際は
+  // トーストが PiP ウィンドウへ写り込んでしまうため非表示にする。
+  // PiP 無効時はそもそも写り込まないので、通常どおり表示し続ける。
+  const hideWarningForPictureInPicture =
+    pictureInPictureEnabled && (pictureInPictureActive || !isAppActive);
+
   const warningPanel =
-    warningInfo?.text && warningInfo?.level ? (
+    !hideWarningForPictureInPicture &&
+    warningInfo?.text &&
+    warningInfo?.level ? (
       <WarningPanel
-        behindContent={pictureInPictureActive}
         onPress={clearWarningInfo}
         text={warningInfo.text}
         warningLevel={warningInfo.level}
@@ -649,9 +659,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.container}>
-          {pictureInPictureActive && warningPanel}
           {children}
-          {!pictureInPictureActive && warningPanel}
+          {warningPanel}
         </View>
       </LongPressGestureHandler>
       <SelectBoundSettingListModal
