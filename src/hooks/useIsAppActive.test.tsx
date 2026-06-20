@@ -25,6 +25,10 @@ describe('useIsAppActive', () => {
     (AppState as { currentState: string }).currentState = 'active';
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('マウント時点でAppStateがactiveならtrueを返す', () => {
     (AppState as { currentState: string }).currentState = 'active';
     render(<TestComponent />);
