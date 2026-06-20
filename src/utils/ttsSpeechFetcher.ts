@@ -2,6 +2,11 @@ import { fetch } from 'expo/fetch';
 import { File, Paths } from 'expo-file-system';
 import { base64ToUint8Array } from './base64ToUint8Array';
 
+// ネットワーク切り替えやドーズ状態に入るとリクエストが応答もエラーも返さず
+// 永久にハングすることがある。その場合に呼び出し側(useTTS)のplayingRefが
+// 解放されずTTS全体が停止してしまうため、AbortControllerで上限時間を設ける。
+export const TTS_FETCH_TIMEOUT_MS = 20_000;
+
 export interface FetchSpeechOptions {
   textJa: string;
   textEn: string;
@@ -9,6 +14,7 @@ export interface FetchSpeechOptions {
   idToken: string;
   jaVoiceName?: string;
   enVoiceName?: string;
+  timeoutMs?: number;
 }
 
 const getSampleRateFromMimeType = (mimeType: string): number => {
@@ -110,7 +116,21 @@ export const clearFetchCache = (): void => {
 export const fetchSpeechAudio = async (
   options: FetchSpeechOptions
 ): Promise<{ id: string; pathJa: string; pathEn: string } | null> => {
-  const { textJa, textEn, apiUrl, idToken, jaVoiceName, enVoiceName } = options;
+  const {
+    textJa,
+    textEn,
+    apiUrl,
+    idToken,
+    jaVoiceName,
+    enVoiceName,
+    timeoutMs = TTS_FETCH_TIMEOUT_MS,
+  } = options;
+  // 0・負値・NaN・Infinity が明示的に渡された場合もタイムアウト保護が
+  // 効くよう、正の有限値に正規化する
+  const effectiveTimeoutMs =
+    Number.isFinite(timeoutMs) && timeoutMs > 0
+      ? timeoutMs
+      : TTS_FETCH_TIMEOUT_MS;
 
   if (!textJa.length || !textEn.length) {
     return null;
@@ -134,6 +154,9 @@ export const fetchSpeechAudio = async (
     },
   };
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), effectiveTimeoutMs);
+
   try {
     const response = await fetch(apiUrl, {
       headers: {
@@ -142,6 +165,7 @@ export const fetchSpeechAudio = async (
       },
       body: JSON.stringify(reqBody),
       method: 'POST',
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -190,5 +214,7 @@ export const fetchSpeechAudio = async (
   } catch (error) {
     console.error('[ttsSpeechFetcher] fetchSpeech error:', error);
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 };

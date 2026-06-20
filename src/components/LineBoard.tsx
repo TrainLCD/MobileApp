@@ -1,10 +1,10 @@
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { parenthesisRegexp } from '~/constants';
-import { useCurrentStation } from '../hooks';
+import { useDisplayCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
+import { leftStationsAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
@@ -35,8 +35,11 @@ const styles = StyleSheet.create({
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   const theme = useAtomValue(themeAtom);
-  const { leftStations } = useAtomValue(navigationState);
-  const station = useCurrentStation();
+  // navigationStateはheaderStateローテーション(数秒間隔)で頻繁に更新されるため、
+  // 必要なleftStationsだけを派生atomで購読する
+  const leftStations = useAtomValue(leftStationsAtom);
+  // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
+  const station = useDisplayCurrentStation();
   const isBus = isBusLine(station?.line);
 
   const slicedLeftStations = useMemo(() => {
@@ -71,8 +74,11 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     [slicedLeftStations]
   );
 
-  // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る
-  const Inner = useCallback(() => {
+  // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る。
+  // また、コンポーネント関数(useCallback)を<Inner />として描画すると依存が変わるたびに
+  // 「別のコンポーネント型」と判定されてサブツリー全体が再マウントされるため、
+  // useMemoで要素を生成して型を安定させる。
+  const inner = useMemo(() => {
     switch (theme) {
       case APP_THEME.TOKYO_METRO:
       case APP_THEME.TY:
@@ -158,11 +164,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     theme,
   ]);
 
-  return (
-    <View style={styles.flexOne}>
-      <Inner />
-    </View>
-  );
+  return <View style={styles.flexOne}>{inner}</View>;
 };
 
 export default React.memo(LineBoard);

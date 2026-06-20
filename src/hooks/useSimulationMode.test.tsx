@@ -28,11 +28,15 @@ jest.mock('jotai', () => ({
 jest.mock('~/store/atoms/station', () => ({
   __esModule: true,
   default: { toString: () => 'stationState' },
+  stationAtom: { toString: () => 'stationAtom' },
+  stationsAtom: { toString: () => 'stationsAtom' },
+  selectedDirectionAtom: { toString: () => 'selectedDirectionAtom' },
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({
   __esModule: true,
   default: { toString: () => 'navigationState' },
+  autoModeEnabledAtom: { toString: () => 'autoModeEnabledAtom' },
 }));
 
 jest.mock('~/store', () => ({
@@ -132,17 +136,18 @@ const setupAtomMocks = (
 ) => {
   // biome-ignore lint/suspicious/noExplicitAny: モック用コールバックの引数型が不明
   (useAtomValue as jest.Mock).mockImplementation((atom: any) => {
-    if (atom.toString() === 'stationState') {
-      return {
-        station: stationStateValue.station ?? null,
-        stations: stationStateValue.stations,
-        selectedDirection: stationStateValue.selectedDirection,
-      };
+    switch (atom.toString()) {
+      case 'stationAtom':
+        return stationStateValue.station ?? null;
+      case 'stationsAtom':
+        return stationStateValue.stations;
+      case 'selectedDirectionAtom':
+        return stationStateValue.selectedDirection;
+      case 'autoModeEnabledAtom':
+        return navigationStateValue.autoModeEnabled;
+      default:
+        return undefined;
     }
-    if (atom.toString() === 'navigationState') {
-      return navigationStateValue;
-    }
-    return undefined;
   });
 };
 
@@ -715,13 +720,10 @@ describe('useSimulationMode', () => {
       );
 
       // 初回レンダー: 空の駅リスト
-      (useAtomValue as jest.Mock)
-        .mockReturnValueOnce({
-          station: null,
-          stations: [],
-          selectedDirection: 'INBOUND',
-        })
-        .mockReturnValueOnce({ autoModeEnabled: true });
+      setupAtomMocks(
+        { station: null, stations: [], selectedDirection: 'INBOUND' },
+        { autoModeEnabled: true }
+      );
 
       const { rerender } = renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -736,13 +738,10 @@ describe('useSimulationMode', () => {
         mockStation(2, 2, 35.691, 139.777),
       ];
 
-      (useAtomValue as jest.Mock)
-        .mockReturnValueOnce({
-          station: stations[0],
-          stations,
-          selectedDirection: 'INBOUND',
-        })
-        .mockReturnValueOnce({ autoModeEnabled: true });
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: true }
+      );
 
       (store.get as jest.Mock).mockReturnValue(
         mockLocationObject(35.681, 139.767)

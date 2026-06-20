@@ -1,6 +1,6 @@
-import { useLazyQuery } from '@apollo/client/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Orientation } from 'expo-screen-orientation';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -31,7 +31,9 @@ import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { TrainTypeListModal } from '~/components/TrainTypeListModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
+import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
+import { graphqlQueryKey } from '~/lib/gql';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -45,8 +47,11 @@ import {
   getStationWithMatchingLine,
 } from '~/utils/routeSearch';
 import { findLocalType } from '~/utils/trainTypeString';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
+import lineState, { pendingLineAtom } from '../store/atoms/line';
+import stationState, {
+  stationAtom,
+  wantedDestinationAtom,
+} from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 
@@ -140,11 +145,12 @@ const RouteSearchScreen = () => {
     [isPortraitOrientation]
   );
 
-  const [{ station, wantedDestination }, setStationState] =
-    useAtom(stationState);
+  const station = useAtomValue(stationAtom);
+  const wantedDestination = useAtomValue(wantedDestinationAtom);
+  const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
-  const [lineAtom, setLineState] = useAtom(lineState);
-  const { pendingLine } = lineAtom;
+  const pendingLine = useAtomValue(pendingLineAtom);
+  const setLineState = useSetAtom(lineState);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
@@ -190,12 +196,12 @@ const RouteSearchScreen = () => {
       loading: fetchRouteTypesLoading,
       error: fetchRouteTypesError,
     },
-  ] = useLazyQuery<GetRouteTypesData, GetRouteTypesVariables>(
+  ] = useLazyGraphQLQuery<GetRouteTypesData, GetRouteTypesVariables>(
     GET_ROUTE_TYPES_LIGHT
   );
 
   const [fetchByName, { loading: byNameLoading, error: byNameError }] =
-    useLazyQuery<GetStationsByNameData, GetStationsByNameVariables>(
+    useLazyGraphQLQuery<GetStationsByNameData, GetStationsByNameVariables>(
       GET_STATIONS_BY_NAME
     );
 
@@ -205,7 +211,7 @@ const RouteSearchScreen = () => {
       loading: fetchStationsByLineIdLoading,
       error: fetchStationsByLineIdError,
     },
-  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+  ] = useLazyGraphQLQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
   );
 
@@ -214,11 +220,13 @@ const RouteSearchScreen = () => {
     {
       loading: fetchStationsByLineGroupIdLoading,
       error: fetchStationsByLineGroupIdError,
-      client: fetchStationsByLineGroupIdClient,
     },
-  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
-    GET_LINE_GROUP_STATIONS
-  );
+  ] = useLazyGraphQLQuery<
+    GetLineGroupStationsData,
+    GetLineGroupStationsVariables
+  >(GET_LINE_GROUP_STATIONS);
+
+  const queryClient = useQueryClient();
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -482,11 +490,12 @@ const RouteSearchScreen = () => {
         pendingTrainType: trainType,
       }));
 
-      fetchStationsByLineGroupIdClient.cache.evict({
-        fieldName: 'lineGroupStations',
-        args: { lineGroupId: trainType.groupId },
+      // キャッシュ済みでも常に最新の駅一覧を取得したいので該当キーを破棄する
+      queryClient.removeQueries({
+        queryKey: graphqlQueryKey(GET_LINE_GROUP_STATIONS, {
+          lineGroupId: trainType.groupId,
+        }),
       });
-      fetchStationsByLineGroupIdClient.cache.gc();
 
       const pendingStationsData = await fetchStationsByLineGroupId({
         variables: {
@@ -503,7 +512,7 @@ const RouteSearchScreen = () => {
       fetchStationsByLineGroupId,
       setStationState,
       setNavigationState,
-      fetchStationsByLineGroupIdClient,
+      queryClient,
     ]
   );
 
@@ -697,6 +706,7 @@ const RouteSearchScreen = () => {
         visible={trainTypeListModalVisible}
         line={currentStationLineForTrainTypeModal}
         destination={wantedDestination}
+        boardingStation={station}
         onClose={() => {
           setTrainTypeListModalVisible(false);
         }}

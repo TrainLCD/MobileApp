@@ -5,14 +5,14 @@ import { Text } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { usePreviousStation } from './usePreviousStation';
 
 jest.mock('jotai', () => ({
-  __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 jest.mock('./useCurrentStation', () => ({
@@ -45,6 +45,24 @@ describe('usePreviousStation', () => {
   >;
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 
+  const mockAtomValues = ({
+    stations,
+    selectedDirection,
+  }: {
+    stations: Station[];
+    selectedDirection: 'INBOUND' | 'OUTBOUND';
+  }) => {
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === stationsAtom) {
+        return stations;
+      }
+      if (atom === selectedDirectionAtom) {
+        return selectedDirection;
+      }
+      return undefined;
+    });
+  };
+
   beforeEach(() => {
     mockGetIsPass.mockReturnValue(false);
   });
@@ -60,7 +78,7 @@ describe('usePreviousStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station2);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -79,7 +97,7 @@ describe('usePreviousStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station2);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'OUTBOUND',
     });
@@ -98,7 +116,7 @@ describe('usePreviousStation', () => {
 
     mockUseCurrentStation.mockReturnValue(station1);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -110,7 +128,7 @@ describe('usePreviousStation', () => {
   it('currentStationがundefinedの場合、undefinedを返す', () => {
     mockUseCurrentStation.mockReturnValue(undefined);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [],
       selectedDirection: 'INBOUND',
     });
@@ -130,7 +148,7 @@ describe('usePreviousStation', () => {
     mockUseCurrentStation.mockReturnValue(station3);
     mockGetIsPass.mockReturnValue(true); // 通過駅判定
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -154,7 +172,7 @@ describe('usePreviousStation', () => {
     // station2 のみ通過駅として判定
     mockGetIsPass.mockImplementation((s: Station | undefined) => s?.id !== 2);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });
@@ -176,7 +194,7 @@ describe('usePreviousStation', () => {
     // getIsPass が true を返すと、その駅は停車駅として残る
     mockGetIsPass.mockReturnValue(true);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3, station4],
       selectedDirection: 'INBOUND',
     });
@@ -198,7 +216,7 @@ describe('usePreviousStation', () => {
     // getIsPass が true を返すと、その駅は停車駅として残る
     mockGetIsPass.mockReturnValue(true);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3, station4],
       selectedDirection: 'OUTBOUND',
     });
@@ -214,7 +232,7 @@ describe('usePreviousStation', () => {
     mockUseCurrentStation.mockReturnValue(createStation(1, { groupId: 1 }));
     mockGetIsPass.mockReturnValue(true);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [],
       selectedDirection: 'INBOUND',
     });
@@ -231,7 +249,7 @@ describe('usePreviousStation', () => {
     mockUseCurrentStation.mockReturnValue(currentStation);
     mockGetIsPass.mockReturnValue(true);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2],
       selectedDirection: 'INBOUND',
     });
@@ -251,7 +269,7 @@ describe('usePreviousStation', () => {
     // getIsPass が true を返すと、その駅は停車駅として残る
     mockGetIsPass.mockReturnValue(true);
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       stations: [station1, station2, station3],
       selectedDirection: 'INBOUND',
     });

@@ -1,27 +1,28 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
-  useInterval,
+  useDisplayCurrentStation,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useAfterNextStation } from '~/hooks/useAfterNextStation';
-import { useNextStation } from '~/hooks/useNextStation';
+import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
 import { useScale } from '~/hooks/useScale';
+import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
+import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
 import { BarTerminalOdakyu } from './BarTerminalOdakyu';
-import { type ChevronColor, ChevronTY } from './ChevronTY';
+import type { ChevronColor } from './ChevronTY';
 import { Heading } from './Heading';
 import {
+  BlinkingChevron,
   EmptyStationNameCell,
   LineDot,
   StationName,
@@ -104,7 +105,7 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: ChevronColor;
+  chevronColors: readonly [ChevronColor, ChevronColor];
   isOdakyu?: boolean;
 }
 
@@ -295,17 +296,19 @@ const renderBarGradients = ({
   return gradients;
 };
 
-const StationNameCell: React.FC<StationNameCellProps> = ({
+const StationNameCellBase: React.FC<StationNameCellProps> = ({
   station,
   index,
   stations,
   line,
   lineColors,
   hasTerminus,
-  chevronColor,
+  chevronColors,
   isOdakyu,
 }: StationNameCellProps) => {
-  const { station: currentStation, arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
+  const currentStation = useDisplayCurrentStation();
   const isEn = useAtomValue(isEnAtom);
 
   const currentStationIndex = useMemo(
@@ -452,12 +455,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       >
         {(currentStationIndex < 1 && index === 0) ||
         currentStationIndex === index ? (
-          <ChevronTY color={chevronColor} />
+          <BlinkingChevron colors={chevronColors} />
         ) : null}
       </View>
     </>
   );
 };
+
+// 点滅チェブロンを分離したことでセルのpropsは駅データ変化時にしか変わらないため、
+// memo化により毎秒・毎tickの不要な再レンダーを防ぐ
+const StationNameCell = React.memo(StationNameCellBase);
 
 const DEFAULT_CHEVRON_PAIR: readonly [ChevronColor, ChevronColor] = [
   'RED',
@@ -471,12 +478,11 @@ const LineBoardEast: React.FC<Props> = ({
   chevronColorPair = DEFAULT_CHEVRON_PAIR,
   isOdakyu,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<ChevronColor>(
-    chevronColorPair[1]
-  );
-  const { selectedLine } = useAtomValue(lineState);
+  const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
-  const nextStation = useNextStation();
+  // useAfterNextStation が案内面共通の次駅 (useDisplayNextStation) 起点に
+  // なったため、バナーの「◯◯のつぎは」側も同じ次駅を参照して整合を保つ
+  const nextStation = useDisplayNextStation();
   const afterNextStation = useAfterNextStation();
 
   const dim = useLandscapeWindowDimensions();
@@ -501,15 +507,11 @@ const LineBoardEast: React.FC<Props> = ({
     [isOdakyu, hasPassStation, nextStation?.name, afterNextStation?.name]
   );
 
-  const intervalStep = useCallback(
-    () =>
-      setChevronColor((prev) =>
-        prev === chevronColorPair[0] ? chevronColorPair[1] : chevronColorPair[0]
-      ),
+  // 旧実装の点滅順(初期=pair[1]、次=pair[0])を保ったままBlinkingChevronへ渡す
+  const chevronColors = useMemo<readonly [ChevronColor, ChevronColor]>(
+    () => [chevronColorPair[1], chevronColorPair[0]],
     [chevronColorPair]
   );
-
-  useInterval(intervalStep, 1000);
 
   const stationsWithEmpty = useMemo(() => {
     const filled = stations.length >= 8 ? stations : [...stations];
@@ -549,13 +551,13 @@ const LineBoardEast: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
-            chevronColor={chevronColor}
+            chevronColors={chevronColors}
             isOdakyu={isOdakyu}
           />
         </React.Fragment>
       );
     },
-    [chevronColor, hasTerminus, line, lineColors, stations, isOdakyu]
+    [chevronColors, hasTerminus, line, lineColors, stations, isOdakyu]
   );
 
   return (

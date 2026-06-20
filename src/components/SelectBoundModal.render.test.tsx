@@ -1,6 +1,20 @@
 import { fireEvent, render, within } from '@testing-library/react-native';
 import { useAtom, useAtomValue } from 'jotai';
 import type React from 'react';
+import { pendingLineAtom, selectedLineAtom } from '../store/atoms/line';
+import {
+  autoModeEnabledAtom,
+  fetchedTrainTypesAtom,
+  pendingTrainTypeAtom,
+} from '../store/atoms/navigation';
+import notifyState from '../store/atoms/notify';
+import {
+  pendingStationAtom,
+  pendingStationsAtom,
+  stationAtom,
+  wantedDestinationAtom,
+} from '../store/atoms/station';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { SelectBoundModal } from './SelectBoundModal';
 
 const mockRouteInfoModal = jest.fn();
@@ -11,9 +25,10 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtom: jest.fn(),
   useAtomValue: jest.fn(),
-  atom: jest.fn((initialValue) => initialValue),
+  useSetAtom: jest.fn(() => jest.fn()),
 }));
 
 jest.mock('~/hooks', () => ({
@@ -127,57 +142,46 @@ jest.mock('../stacks/rootNavigation', () => ({
   },
 }));
 
-jest.mock('../store/atoms/station', () => 'stationState');
-jest.mock('../store/atoms/navigation', () => 'navigationState');
-jest.mock('../store/atoms/line', () => 'lineState');
-jest.mock('../store/atoms/notify', () => 'notifyState');
-jest.mock('../store/atoms/theme', () => ({
-  isLEDThemeAtom: 'isLEDThemeAtom',
-}));
+// 渡されたatomの同一性で読み出し値を出し分ける
+const mockAtomValues = ({
+  station = null as unknown,
+  pendingStation = null as unknown,
+  pendingStations = [] as unknown[],
+  wantedDestination = null as unknown,
+  fetchedTrainTypes = [] as unknown[],
+  pendingTrainType = null as unknown,
+  pendingLine = null as unknown,
+  selectedLine = null as unknown,
+} = {}) => {
+  (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+    if (atom === stationAtom) return station;
+    if (atom === pendingStationAtom) return pendingStation;
+    if (atom === pendingStationsAtom) return pendingStations;
+    if (atom === wantedDestinationAtom) return wantedDestination;
+    if (atom === autoModeEnabledAtom) return false;
+    if (atom === fetchedTrainTypesAtom) return fetchedTrainTypes;
+    if (atom === pendingTrainTypeAtom) return pendingTrainType;
+    if (atom === pendingLineAtom) return pendingLine;
+    if (atom === selectedLineAtom) return selectedLine;
+    if (atom === isLEDThemeAtom) return false;
+    return false;
+  });
+};
 
 describe('SelectBoundModal', () => {
   beforeEach(() => {
-    (useAtomValue as jest.Mock).mockReturnValue(false);
-    (useAtom as jest.Mock).mockImplementation((atom: string) => {
-      if (atom === 'stationState') {
-        return [
-          {
-            pendingStation: { id: 1, groupId: 1, lines: [{ id: 10 }] },
-            pendingStations: [
-              { id: 1, groupId: 1, line: { id: 10 }, lines: [{ id: 10 }] },
-              { id: 2, groupId: 2, line: { id: 10 }, lines: [{ id: 10 }] },
-            ],
-            wantedDestination: null,
-          },
-          jest.fn(),
-        ];
-      }
-      if (atom === 'navigationState') {
-        return [
-          {
-            autoModeEnabled: false,
-            fetchedTrainTypes: [
-              { groupId: 100, name: 'Rapid', nameRoman: 'Rapid' },
-            ],
-            pendingTrainType: null,
-          },
-          jest.fn(),
-        ];
-      }
-      if (atom === 'lineState') {
-        return [
-          {
-            pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
-            selectedLine: {
-              id: 10,
-              name: '山手線',
-              nameRoman: 'Yamanote Line',
-            },
-          },
-          jest.fn(),
-        ];
-      }
-      if (atom === 'notifyState') {
+    mockAtomValues({
+      pendingStation: { id: 1, groupId: 1, lines: [{ id: 10 }] },
+      pendingStations: [
+        { id: 1, groupId: 1, line: { id: 10 }, lines: [{ id: 10 }] },
+        { id: 2, groupId: 2, line: { id: 10 }, lines: [{ id: 10 }] },
+      ],
+      fetchedTrainTypes: [{ groupId: 100, name: 'Rapid', nameRoman: 'Rapid' }],
+      pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      selectedLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+    });
+    (useAtom as jest.Mock).mockImplementation((atom: unknown) => {
+      if (atom === notifyState) {
         return [{ targetStationIds: [] }, jest.fn()];
       }
       return [{}, jest.fn()];
@@ -211,44 +215,15 @@ describe('SelectBoundModal', () => {
   });
 
   it('終着駅設定中でも RouteInfoModal には全駅が渡される', () => {
-    (useAtom as jest.Mock).mockImplementation((atom: string) => {
-      if (atom === 'stationState') {
-        return [
-          {
-            pendingStation: { id: 2, groupId: 2, lines: [{ id: 10 }] },
-            pendingStations: [
-              { id: 1, groupId: 1, line: { id: 10 }, lines: [{ id: 10 }] },
-              { id: 2, groupId: 2, line: { id: 10 }, lines: [{ id: 10 }] },
-              { id: 3, groupId: 3, line: { id: 10 }, lines: [{ id: 10 }] },
-            ],
-            wantedDestination: { id: 3, groupId: 3 },
-          },
-          jest.fn(),
-        ];
-      }
-      if (atom === 'navigationState') {
-        return [
-          {
-            autoModeEnabled: false,
-            fetchedTrainTypes: [],
-            pendingTrainType: null,
-          },
-          jest.fn(),
-        ];
-      }
-      if (atom === 'lineState') {
-        return [
-          {
-            pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
-            selectedLine: null,
-          },
-          jest.fn(),
-        ];
-      }
-      if (atom === 'notifyState') {
-        return [{ targetStationIds: [] }, jest.fn()];
-      }
-      return [{}, jest.fn()];
+    mockAtomValues({
+      pendingStation: { id: 2, groupId: 2, lines: [{ id: 10 }] },
+      pendingStations: [
+        { id: 1, groupId: 1, line: { id: 10 }, lines: [{ id: 10 }] },
+        { id: 2, groupId: 2, line: { id: 10 }, lines: [{ id: 10 }] },
+        { id: 3, groupId: 3, line: { id: 10 }, lines: [{ id: 10 }] },
+      ],
+      wantedDestination: { id: 3, groupId: 3 },
+      pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
     });
 
     render(

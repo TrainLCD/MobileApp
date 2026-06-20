@@ -1,12 +1,13 @@
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
-import navigationState from '~/store/atoms/navigation';
-import stationState from '~/store/atoms/station';
+import navigationState, { firstStopAtom } from '~/store/atoms/navigation';
+import { arrivedAtom } from '~/store/atoms/station';
 import { usePrevious } from './usePrevious';
 
 export const useFirstStop = (shouldUpdate = false) => {
-  const [{ firstStop }, setNavigationState] = useAtom(navigationState);
-  const { arrived } = useAtomValue(stationState);
+  const firstStop = useAtomValue(firstStopAtom);
+  const setNavigationState = useSetAtom(navigationState);
+  const arrived = useAtomValue(arrivedAtom);
   const prevArrived = usePrevious(arrived);
 
   useEffect(() => {

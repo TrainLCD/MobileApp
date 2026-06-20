@@ -1,10 +1,18 @@
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ALL_AVAILABLE_LANGUAGES, type AvailableLanguage } from '~/constants';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import navigationState, {
+  enabledLanguagesAtom,
+  headerStateAtom,
+  stationForHeaderAtom,
+} from '../store/atoms/navigation';
+import {
+  approachingAtom,
+  arrivedAtom,
+  selectedBoundAtom,
+} from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { isJapanese } from '../translation';
@@ -107,16 +115,14 @@ const getFallbackStateWithoutJapanese = (
 };
 
 export const useTransitionHeaderState = (): void => {
-  const { arrived, approaching, selectedBound } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  const approaching = useAtomValue(approachingAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const [
-    {
-      headerState,
-      enabledLanguages: enabledLanguagesFromState,
-      stationForHeader,
-    },
-    setNavigation,
-  ] = useAtom(navigationState);
+  const headerState = useAtomValue(headerStateAtom);
+  const enabledLanguagesFromState = useAtomValue(enabledLanguagesAtom);
+  const stationForHeader = useAtomValue(stationForHeaderAtom);
+  const setNavigation = useSetAtom(navigationState);
   const { headerTransitionInterval } = useAtomValue(tuningState);
   const station = useCurrentStation();
 
@@ -260,6 +266,26 @@ export const useTransitionHeaderState = (): void => {
         enabledLanguages,
         targetStation
       );
+
+      // 接近が解除されたのに ARRIVING のまま貼り付くのを防ぐ。
+      // ARRIVING からの離脱は本来 arrived のリセット useEffect でしか起きないため、
+      // 到着を挟まず approaching が true→false に戻るケース(到着検知の取りこぼし・
+      // GPS補正・接近駅の切替など)では「まもなく」が解除されず、displayNextStation が
+      // 記録基準の次駅へフォールバックして「まもなく(遠い駅)」と誤表示され続ける。
+      // 未到着で接近も解除されたら NEXT/CURRENT へ明示的に戻す。
+      if (!approaching && !arrived && currentHeaderState === 'ARRIVING') {
+        const fallbackState = showNextExpression ? 'NEXT' : 'CURRENT';
+        setHeaderStateIfChanged(
+          isJapaneseEnabled
+            ? fallbackState
+            : getFallbackStateWithoutJapanese(
+                fallbackState,
+                currentHeaderStateLang,
+                enabledLanguages
+              )
+        );
+        return;
+      }
 
       switch (currentHeaderState) {
         case 'ARRIVING': {
@@ -433,6 +459,7 @@ export const useTransitionHeaderState = (): void => {
       }
     }, [
       approaching,
+      arrived,
       enabledLanguages,
       headerStateRef,
       isJapaneseEnabled,

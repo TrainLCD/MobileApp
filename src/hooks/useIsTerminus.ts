@@ -1,10 +1,10 @@
 import { useAtomValue } from 'jotai';
 import type { Station } from '~/@types/graphql';
-import stationState from '../store/atoms/station';
+import { stationsAtom } from '../store/atoms/station';
 import { useLoopLine } from './useLoopLine';
 
 export const useIsTerminus = (station: Station | undefined) => {
-  const { stations } = useAtomValue(stationState);
+  const stations = useAtomValue(stationsAtom);
   const { isLoopLine } = useLoopLine();
 
   if (!station || isLoopLine) {

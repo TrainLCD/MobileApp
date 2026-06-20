@@ -1,4 +1,9 @@
-import { initialNavigationState } from './navigation';
+import { createStore } from 'jotai';
+import navigationState, {
+  enabledLanguagesAtom,
+  initialNavigationState,
+  leftStationsAtom,
+} from './navigation';
 
 describe('navigationState', () => {
   it('initialNavigationStateにpendingWantedDestinationが含まれていない', () => {
@@ -48,5 +53,34 @@ describe('navigationState', () => {
 
   it('presetsFetchedがfalseで初期化される', () => {
     expect(initialNavigationState.presetsFetched).toBe(false);
+  });
+});
+
+describe('navigationState (互換ファサード)', () => {
+  it('フィールドatomの値を集約して返す', () => {
+    const store = createStore();
+    const { leftStations, enabledLanguages } = store.get(navigationState);
+    expect(store.get(leftStationsAtom)).toBe(leftStations);
+    expect(store.get(enabledLanguagesAtom)).toBe(enabledLanguages);
+  });
+
+  it('headerStateのローテーションでは無関係なフィールドの購読者に通知しない', () => {
+    const store = createStore();
+    const listener = jest.fn();
+    const unsub = store.sub(leftStationsAtom, listener);
+
+    store.set(navigationState, {
+      ...store.get(navigationState),
+      headerState: 'NEXT',
+    });
+    expect(listener).not.toHaveBeenCalled();
+
+    store.set(navigationState, {
+      ...store.get(navigationState),
+      leftStations: [],
+    });
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    unsub();
   });
 });

@@ -1,13 +1,19 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
-import stationState from '../store/atoms/station';
+import {
+  arrivedAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 
 export const useSlicedStations = (): Station[] => {
-  const { stations, arrived, selectedDirection } = useAtomValue(stationState);
+  const stations = useAtomValue(stationsAtom);
+  const arrived = useAtomValue(arrivedAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
 
   const currentStation = useCurrentStation();
   const { isLoopLine } = useLoopLine();

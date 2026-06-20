@@ -1,12 +1,13 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { TrainType } from '~/@types/graphql';
-import stationState from '../store/atoms/station';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 
 export const useNextTrainType = (): TrainType | null => {
-  const { stations, selectedDirection } = useAtomValue(stationState);
+  const stations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
   const currentStation = useCurrentStation(true);
   const trainType = useCurrentTrainType();
 

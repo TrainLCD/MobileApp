@@ -1,37 +1,37 @@
 import findNearest from 'geolib/es/findNearest';
 import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { locationAtom } from '~/store/atoms/location';
-import stationState from '../store/atoms/station';
+import { memoizeLastCalls, memoizeWeak } from '~/utils/memoizeLastCalls';
+import { stationsAtom } from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 
-export const useNearestStation = (): Station | undefined => {
-  const location = useAtomValue(locationAtom);
-  const latitude = location?.coords.latitude;
-  const longitude = location?.coords.longitude;
-  const { stations } = useAtomValue(stationState);
-  const currentStation = useCurrentStation(false);
-  const nextStation = useNextStation(false);
+// GPS更新(約5秒間隔)ごとに走る計算のため、複数のフックインスタンス間で
+// 結果を共有できるようモジュールレベルでメモ化する。
 
-  // 座標が有効な駅リストをキャッシュする
-  const validStations = useMemo(
-    () => stations.filter((s) => s.latitude != null && s.longitude != null),
-    [stations]
-  );
+// 座標が有効な駅リスト(駅リスト変更時にだけ作り直す)
+const getValidStations = memoizeWeak((stations: Station[]): Station[] =>
+  stations.filter((s) => s.latitude != null && s.longitude != null)
+);
 
-  // findNearestへ毎回渡す座標タプルは駅リスト変更時にだけ作り直す
-  const stationCoordinates = useMemo(
-    () =>
-      validStations.map((sta) => ({
-        latitude: sta.latitude as number,
-        longitude: sta.longitude as number,
-      })),
-    [validStations]
-  );
+// findNearestへ毎回渡す座標タプルも駅リスト変更時にだけ作り直す
+const getStationCoordinates = memoizeWeak((validStations: Station[]) =>
+  validStations.map((sta) => ({
+    latitude: sta.latitude as number,
+    longitude: sta.longitude as number,
+  }))
+);
 
-  const nearestStation = useMemo<Station | undefined>(() => {
+const computeNearestStation = memoizeLastCalls(
+  (
+    validStations: Station[],
+    stationCoordinates: { latitude: number; longitude: number }[],
+    latitude: number | undefined,
+    longitude: number | undefined,
+    currentStation: Station | undefined,
+    nextStation: Station | undefined
+  ): Station | undefined => {
     if (
       latitude == null ||
       longitude == null ||
@@ -70,14 +70,27 @@ export const useNearestStation = (): Station | undefined => {
         sta.latitude === nearestCoordinates.latitude &&
         sta.longitude === nearestCoordinates.longitude
     );
-  }, [
-    latitude,
-    longitude,
+  },
+  4
+);
+
+export const useNearestStation = (): Station | undefined => {
+  const location = useAtomValue(locationAtom);
+  const latitude = location?.coords.latitude;
+  const longitude = location?.coords.longitude;
+  const stations = useAtomValue(stationsAtom);
+  const currentStation = useCurrentStation(false);
+  const nextStation = useNextStation(false);
+
+  const validStations = getValidStations(stations);
+  const stationCoordinates = getStationCoordinates(validStations);
+
+  return computeNearestStation(
     validStations,
     stationCoordinates,
+    latitude,
+    longitude,
     currentStation,
-    nextStation,
-  ]);
-
-  return nearestStation;
+    nextStation
+  );
 };

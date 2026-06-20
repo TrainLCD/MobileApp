@@ -8,7 +8,7 @@ import { TrainTypeKind } from '~/@types/graphql';
 import { FONTS, parenthesisRegexp } from '~/constants';
 import { useCurrentLine } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
-import navigationState from '~/store/atoms/navigation';
+import { headerStateAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -134,7 +134,7 @@ const formatCjk = (
 };
 
 const TrainTypeBoxE231: React.FC<Props> = ({ trainType }: Props) => {
-  const { headerState } = useAtomValue(navigationState);
+  const headerState = useAtomValue(headerStateAtom);
   const currentLine = useCurrentLine();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 

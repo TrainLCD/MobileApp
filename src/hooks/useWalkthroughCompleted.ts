@@ -1,10 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type {
   WalkthroughStep,
   WalkthroughStepId,
 } from '../components/WalkthroughOverlay';
-import { ASYNC_STORAGE_KEYS } from '../constants/asyncStorage';
+import { STORAGE_KEYS } from '../constants/storage';
+import { storage } from '../lib/storage';
 
 const WALKTHROUGH_STEPS: WalkthroughStep[] = [
   {
@@ -46,7 +46,7 @@ const WALKTHROUGH_STEPS: WalkthroughStep[] = [
 ];
 
 type UseWalkthroughResult = {
-  isWalkthroughCompleted: boolean | null;
+  isWalkthroughCompleted: boolean;
   isWalkthroughActive: boolean;
   currentStepIndex: number;
   currentStepId: WalkthroughStepId | null;
@@ -59,36 +59,18 @@ type UseWalkthroughResult = {
 };
 
 export const useWalkthroughCompleted = (): UseWalkthroughResult => {
-  const [isWalkthroughCompleted, setIsWalkthroughCompleted] = useState<
-    boolean | null
-  >(null);
+  // MMKV は同期 API のため初回レンダー時に完了状態が確定する
+  const [isWalkthroughCompleted, setIsWalkthroughCompleted] = useState(
+    () => storage.getString(STORAGE_KEYS.WALKTHROUGH_COMPLETED) === 'true'
+  );
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [spotlightArea, setSpotlightAreaState] =
     useState<WalkthroughStep['spotlightArea']>(undefined);
 
-  useEffect(() => {
-    const checkWalkthroughCompleted = async () => {
-      try {
-        const completed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED
-        );
-        setIsWalkthroughCompleted(completed === 'true');
-      } catch (error) {
-        console.error('Failed to check walkthrough completion status:', error);
-        setIsWalkthroughCompleted(false);
-      }
-    };
-    checkWalkthroughCompleted();
-  }, []);
-
   const completeWalkthrough = useCallback(async () => {
-    // UIを即座に更新（楽観的更新）
     setIsWalkthroughCompleted(true);
     try {
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.WALKTHROUGH_COMPLETED,
-        'true'
-      );
+      storage.set(STORAGE_KEYS.WALKTHROUGH_COMPLETED, 'true');
     } catch (error) {
       // ストレージエラーは非ブロッキングとして扱う
       console.error('Failed to save walkthrough completion status:', error);

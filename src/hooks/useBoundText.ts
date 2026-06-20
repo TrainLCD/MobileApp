@@ -8,7 +8,11 @@ import {
   TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID,
 } from '../constants/station';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
-import stationState from '../store/atoms/station';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
@@ -17,8 +21,9 @@ import { useLoopLine } from './useLoopLine';
 export const useBoundText = (
   excludePrefixAndSuffix?: boolean
 ): Record<HeaderLangState, string> => {
-  const { selectedBound, selectedDirection, stations } =
-    useAtomValue(stationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const stations = useAtomValue(stationsAtom);
 
   const { isLoopLine } = useLoopLine();
   const { directionalStops } = useBounds(stations);

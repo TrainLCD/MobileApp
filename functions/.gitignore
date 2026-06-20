@@ -1,12 +1,21 @@
-# Compiled JavaScript files
-lib/**/*.js
-lib/**/*.js.map
-
-# TypeScript v1 declaration files
-typings/
-
 # Node.js dependency directory
 node_modules/
 
+# Wrangler / local dev
+.wrangler/
+.dev.vars
+.dev.vars.*
+
 # Secrets
 .env.*
+.secrets.env
+.secrets.*.env
+.secrets.bulk.*.json
+secrets*.json
+!.secrets.env.example
+
+# 実フィードバック原文を含む few-shot データ（public リポジトリに載せない。KV へ直接アップロード）
+# サンプルの fewshot.example.jsonl のみコミットする
+fewshot.jsonl
+fewshot.*.jsonl
+!fewshot.example.jsonl

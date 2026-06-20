@@ -1,13 +1,13 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { act, render } from '@testing-library/react-native';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import { useFetchNearbyStation } from './useFetchNearbyStation';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
-jest.mock('@apollo/client/react', () => ({
-  useLazyQuery: jest.fn(),
+jest.mock('./useLazyGraphQLQuery', () => ({
+  useLazyGraphQLQuery: jest.fn(),
 }));
 
 type HookResult = ReturnType<typeof useFetchNearbyStation> | null;
@@ -20,7 +20,7 @@ const HookBridge: React.FC<{ onReady: (value: HookResult) => void }> = ({
 };
 
 describe('useFetchNearbyStation', () => {
-  const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;
+  const mockUseLazyQuery = useLazyGraphQLQuery as unknown as jest.Mock;
 
   const setupQuery = ({
     loading = false,

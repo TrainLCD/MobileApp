@@ -1,7 +1,8 @@
 // ErrorScreenのnavigationない版
 import * as Linking from 'expo-linking';
+import * as SplashScreen from 'expo-splash-screen';
 import type React from 'react';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isDevApp } from '~/utils/isDevApp';
@@ -63,6 +64,15 @@ const FatalErrorScreen: React.FC<Props> = ({
   reason,
   stacktrace,
 }: Props) => {
+  // index.tsx で preventAutoHideAsync 済みのため、AppContent 到達前に例外が出ると
+  // スプラッシュが閉じられずエラー画面が裏に隠れてしまう。エラー画面表示時は
+  // 必ずスプラッシュを閉じてエラーを前面に出す（既に閉じていれば no-op）。
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {
+      // 既に非表示の場合などは無視してよい
+    });
+  }, []);
+
   const openStatusPage = useCallback(() => Linking.openURL(STATUS_URL), []);
   const showStacktrace = useCallback(() => {
     if (!isDevApp || !stacktrace) {

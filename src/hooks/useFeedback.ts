@@ -1,11 +1,3 @@
-import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import { getIdToken } from '@react-native-firebase/auth';
-import {
-  getDownloadURL,
-  getStorage,
-  ref as getStorageRef,
-  uploadString,
-} from '@react-native-firebase/storage';
 import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
 import * as Device from 'expo-device';
@@ -13,13 +5,12 @@ import * as Localization from 'expo-localization';
 import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
 import { isClip } from 'react-native-app-clip';
-import {
-  DEV_FEEDBACK_API_URL,
-  PRODUCTION_FEEDBACK_API_URL,
-} from 'react-native-dotenv';
-import navigationState from '~/store/atoms/navigation';
+import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from '../constants';
+import { getSessionToken } from '../lib/session';
+import { workerUrl } from '../lib/workerApi';
 import type { Report, ReportType } from '../models/Report';
+import type { AppUser } from '../store/atoms/auth';
 import { isJapanese } from '../translation';
 import { isDevApp } from '../utils/isDevApp';
 
@@ -42,7 +33,7 @@ const {
 } = Device;
 
 export const useFeedback = (
-  user: FirebaseAuthTypes.User | null
+  user: AppUser | null
 ): {
   sendReport: ({
     reportType,
@@ -59,7 +50,7 @@ export const useFeedback = (
   }) => Promise<void>;
   descriptionLowerLimit: number;
 } => {
-  const { autoModeEnabled } = useAtomValue(navigationState);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
 
   const sendReport = useCallback(
     async ({
@@ -83,28 +74,44 @@ export const useFeedback = (
       }
 
       try {
-        const storage = getStorage();
-
-        const API_URL = isDevApp
-          ? DEV_FEEDBACK_API_URL
-          : PRODUCTION_FEEDBACK_API_URL;
+        const API_URL = workerUrl('/postFeedback');
 
         const [locale] = Localization.getLocales();
 
         const feedbackId = Crypto.randomUUID();
 
-        const idToken = await getIdToken(user);
+        const idToken = await getSessionToken();
+        if (!idToken) {
+          throw new Error('セッショントークンの取得に失敗しました');
+        }
 
         let imageUrl: string | null = null;
         if (screenShotBase64) {
-          const storageRef = getStorageRef(
-            storage,
-            `public/report-images/${feedbackId}.png`
-          );
-          await uploadString(storageRef, screenShotBase64, 'base64' as never, {
-            contentType: 'image/png',
-          });
-          imageUrl = await getDownloadURL(storageRef);
+          // 画像アップロードは補助機能。失敗してもフィードバック本体送信は継続する
+          try {
+            const uploadRes = await fetch(workerUrl('/feedback/upload-image'), {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json; charset=UTF-8',
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({
+                data: { feedbackId, imageBase64: screenShotBase64 },
+              }),
+            });
+            if (uploadRes.ok) {
+              const uploadJson = (await uploadRes.json()) as {
+                result?: { imageUrl?: string };
+              };
+              imageUrl = uploadJson?.result?.imageUrl ?? null;
+            } else {
+              console.warn(
+                `[useFeedback] image upload failed: ${uploadRes.status}`
+              );
+            }
+          } catch (e) {
+            console.warn('[useFeedback] image upload error', e);
+          }
         }
 
         const report: Report = {

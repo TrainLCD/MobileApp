@@ -14,14 +14,12 @@ import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
 
 interface Props {
-  behindContent?: boolean;
   onPress: (event: GestureResponderEvent) => void;
   text: string;
   warningLevel: 'URGENT' | 'WARNING' | 'INFO';
 }
 
 const WarningPanel: React.FC<Props> = ({
-  behindContent = false,
   text,
   onPress,
   warningLevel,
@@ -48,7 +46,7 @@ const WarningPanel: React.FC<Props> = ({
       right: 24,
       bottom: 24,
       padding: 16,
-      zIndex: behindContent ? 0 : 9999,
+      zIndex: 9999,
       opacity: 0.9,
     },
     message: {

@@ -1,25 +1,24 @@
-import { useLazyQuery } from '@apollo/client/react';
 import { act, render } from '@testing-library/react-native';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
 import { createLine, createStation } from '~/utils/test/factories';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
+import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 import { useTrainTypeModal } from './useTrainTypeModal';
 
 jest.mock('react-native-device-info', () => ({
   getBundleId: jest.fn(() => 'com.test'),
 }));
 
-jest.mock('@apollo/client/react', () => ({
-  useLazyQuery: jest.fn(),
+jest.mock('./useLazyGraphQLQuery', () => ({
+  useLazyGraphQLQuery: jest.fn(),
 }));
 
 jest.mock('jotai', () => ({
   __esModule: true,
-  useAtom: jest.fn(),
   useAtomValue: jest.fn(),
   useSetAtom: jest.fn(() => jest.fn()),
   atom: jest.fn(),
@@ -40,16 +39,22 @@ jest.mock('../translation', () => ({
 jest.mock('../store/atoms/station', () => ({
   __esModule: true,
   default: Symbol('stationState'),
+  selectedBoundAtom: Symbol('selectedBoundAtom'),
+  selectedDirectionAtom: Symbol('selectedDirectionAtom'),
+  stationAtom: Symbol('stationAtom'),
 }));
 
 jest.mock('../store/atoms/navigation', () => ({
   __esModule: true,
   default: Symbol('navigationState'),
+  fetchedTrainTypesAtom: Symbol('fetchedTrainTypesAtom'),
+  trainTypeAtom: Symbol('trainTypeAtom'),
 }));
 
 jest.mock('../store/atoms/line', () => ({
   __esModule: true,
   default: Symbol('lineState'),
+  selectedLineAtom: Symbol('selectedLineAtom'),
 }));
 
 jest.mock('../store/atoms/speech', () => ({
@@ -67,8 +72,7 @@ jest.mock('~/utils/findNearestStation', () => ({
   findNearestStation: jest.fn(),
 }));
 
-const mockUseLazyQuery = useLazyQuery as unknown as jest.Mock;
-const mockUseAtom = useAtom as unknown as jest.Mock;
+const mockUseLazyQuery = useLazyGraphQLQuery as unknown as jest.Mock;
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
 >;
@@ -164,21 +168,45 @@ describe('useTrainTypeModal', () => {
     mockSetNavigation = jest.fn();
     mockSetResetFirstSpeech = jest.fn();
 
-    const stationAtom = require('../store/atoms/station').default;
-    const navigationAtom = require('../store/atoms/navigation').default;
+    const stationAtoms = require('../store/atoms/station');
+    const navigationAtoms = require('../store/atoms/navigation');
+    const lineAtoms = require('../store/atoms/line');
+    const speechAtoms = require('../store/atoms/speech');
 
-    mockUseAtom.mockImplementation((atom: unknown) => {
-      if (atom === stationAtom) {
-        return [stationStateValue, mockSetStationState];
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === stationAtoms.selectedBoundAtom) {
+        return stationStateValue.selectedBound;
       }
-      if (atom === navigationAtom) {
-        return [navigationStateValue, mockSetNavigation];
+      if (atom === stationAtoms.stationAtom) {
+        return stationStateValue.station;
       }
-      return [undefined, jest.fn()];
+      if (atom === stationAtoms.selectedDirectionAtom) {
+        return stationStateValue.selectedDirection;
+      }
+      if (atom === lineAtoms.selectedLineAtom) {
+        return lineStateValue.selectedLine;
+      }
+      if (atom === navigationAtoms.fetchedTrainTypesAtom) {
+        return navigationStateValue.fetchedTrainTypes;
+      }
+      if (atom === navigationAtoms.trainTypeAtom) {
+        return navigationStateValue.trainType;
+      }
+      return undefined;
     });
 
-    mockUseAtomValue.mockReturnValue(lineStateValue);
-    mockUseSetAtom.mockReturnValue(mockSetResetFirstSpeech);
+    mockUseSetAtom.mockImplementation((atom: unknown) => {
+      if (atom === stationAtoms.default) {
+        return mockSetStationState;
+      }
+      if (atom === navigationAtoms.default) {
+        return mockSetNavigation;
+      }
+      if (atom === speechAtoms.resetFirstSpeechAtom) {
+        return mockSetResetFirstSpeech;
+      }
+      return jest.fn();
+    });
 
     const lineGroupQuery =
       require('~/lib/graphql/queries').GET_LINE_GROUP_STATIONS;

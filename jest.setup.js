@@ -1,3 +1,16 @@
+// react-native-mmkv 本体は import 時に react-native-nitro-modules（ネイティブ
+// バイナリ必須）を引き込んで落ちるため、ライブラリ同梱のインメモリ実装
+// createMockMMKV だけを取り出して createMMKV を差し替える。
+jest.mock("react-native-mmkv", () => {
+  const {
+    createMockMMKV,
+  } = require("react-native-mmkv/lib/createMMKV/createMockMMKV");
+  return {
+    createMMKV: (config) => createMockMMKV(config),
+  };
+});
+
+// AsyncStorage は MMKV への移行処理（src/lib/storage.ts）でのみ参照される
 jest.mock("@react-native-async-storage/async-storage", () => ({
   __esModule: true,
   default: {
@@ -6,7 +19,7 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
     removeItem: jest.fn(() => Promise.resolve()),
     clear: jest.fn(() => Promise.resolve()),
     getAllKeys: jest.fn(() => Promise.resolve([])),
-    multiGet: jest.fn(() => Promise.resolve([])),
+    multiGet: jest.fn((keys) => Promise.resolve(keys.map((key) => [key, null]))),
     multiSet: jest.fn(() => Promise.resolve()),
     multiRemove: jest.fn(() => Promise.resolve()),
   },
@@ -52,35 +65,33 @@ jest.mock("react-native-localize", () => ({
   findBestLanguageTag: jest.fn(() => "ja"),
 }));
 
-// Remote Config はネイティブモジュール依存のためモックする。
-// setDefaults で登録した既定値を getValue から読み出せるようにし、未設定キーは
-// asNumber が 0 を返すことで getMaxPermitAccuracy 側のフォールバックを発火させる。
+// react-native-device-info はネイティブ依存（NativeEventEmitter）のためモックする。
+// isDevApp 経由で広く import されるため、グローバル setup でモックしておく。
+jest.mock("react-native-device-info", () =>
+  require("react-native-device-info/jest/react-native-device-info-mock")
+);
+
+// SecureStore はネイティブモジュール依存のためインメモリでモックする。
 // store はモジュールスコープで保持されるため、テスト間で値がリークしないよう
-// 各テスト前にリセットする（jest.mock のファクトリ外から参照するため mock 接頭辞が必要）。
-const mockRemoteConfigStore = {};
-jest.mock("@react-native-firebase/remote-config", () => {
-  return {
-    getRemoteConfig: jest.fn(() => ({})),
-    setConfigSettings: jest.fn(() => Promise.resolve()),
-    setDefaults: jest.fn((_remoteConfig, defaults) => {
-      Object.assign(mockRemoteConfigStore, defaults);
-      return Promise.resolve();
-    }),
-    fetchAndActivate: jest.fn(() => Promise.resolve(true)),
-    getValue: jest.fn((_remoteConfig, key) => {
-      const value = mockRemoteConfigStore[key];
-      return {
-        asNumber: () => (typeof value === "number" ? value : Number(value) || 0),
-        asString: () => (value == null ? "" : String(value)),
-        asBoolean: () => Boolean(value),
-        getSource: () => (key in mockRemoteConfigStore ? "default" : "static"),
-      };
-    }),
-  };
-});
+// 各テスト前にリセットする（mock 接頭辞が必要）。
+const mockSecureStore = {};
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn(async (key) => mockSecureStore[key] ?? null),
+  setItemAsync: jest.fn(async (key, value) => {
+    mockSecureStore[key] = value;
+  }),
+  deleteItemAsync: jest.fn(async (key) => {
+    delete mockSecureStore[key];
+  }),
+}));
 
 beforeEach(() => {
-  for (const key of Object.keys(mockRemoteConfigStore)) {
-    delete mockRemoteConfigStore[key];
+  for (const key of Object.keys(mockSecureStore)) {
+    delete mockSecureStore[key];
   }
+
+  // 共有 MMKV インスタンス（Jest では react-native-mmkv 組み込みの
+  // インメモリ実装）をテストごとに空へ戻す
+  const { storage } = require("./src/lib/storage");
+  storage.clearAll();
 });

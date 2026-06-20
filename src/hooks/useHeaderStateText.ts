@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { APP_THEME } from '~/models/Theme';
 import { themeAtom } from '~/store/atoms/theme';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { headerStateAtom } from '../store/atoms/navigation';
+import { selectedBoundAtom } from '../store/atoms/station';
 import { translate } from '../translation';
 
 type UseHeaderStateTextOptions = {
@@ -23,8 +23,8 @@ export const useHeaderStateText = ({
   headerLangState,
   firstStop,
 }: UseHeaderStateTextOptions): UseHeaderStateTextResult => {
-  const { headerState } = useAtomValue(navigationState);
-  const { selectedBound } = useAtomValue(stationState);
+  const headerState = useAtomValue(headerStateAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const currentTheme = useAtomValue(themeAtom);
 
   const stateText = useMemo<string>(() => {

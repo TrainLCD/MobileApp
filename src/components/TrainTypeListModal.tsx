@@ -1,22 +1,23 @@
+import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
 import { useCallback, useMemo } from 'react';
-import {
-  FlatList,
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
-import navigationState from '~/store/atoms/navigation';
+import { fetchedTrainTypesAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
+import {
+  formatLineNames,
+  getBoardingLine,
+  getBoardingLineStation,
+  getViaLines,
+} from '~/utils/trainTypeList';
 import Button from './Button';
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
@@ -73,91 +74,16 @@ const styles = StyleSheet.create({
   },
 });
 
-// 選択された路線と目的地の路線の間にある経由路線を取得する
-const getViaLines = (
-  lines: Line[],
-  selectedLine: Line,
-  destination?: Station | null
-): Line[] => {
-  const selectedLineIndex = lines.findIndex((l) => l.id === selectedLine.id);
-  const linesWithoutCurrent = lines.filter((l) => l.id !== selectedLine.id);
-
-  if (!destination) {
-    return linesWithoutCurrent;
-  }
-
-  const destinationLineIndex = lines.findIndex(
-    (l) => l.id === destination.line?.id
-  );
-  if (destinationLineIndex === -1) {
-    return linesWithoutCurrent;
-  }
-
-  // 選択された路線と目的地の路線が同じ場合は、選択された路線より後の路線を表示
-  if (selectedLineIndex === destinationLineIndex) {
-    return lines.slice(selectedLineIndex + 1);
-  }
-
-  const start = Math.min(selectedLineIndex, destinationLineIndex);
-  const end = Math.max(selectedLineIndex, destinationLineIndex);
-  let segment = lines.slice(start + 1, end);
-  if (selectedLineIndex > destinationLineIndex) {
-    segment = [...segment].reverse();
-  }
-  return segment.filter((l) => l.id !== selectedLine.id);
-};
-
-// 同じ会社の連続する路線を「〇〇線」にまとめて表示する
-// 全路線が同一会社の場合はまとめずに個別表示する
-const formatLineNames = (lines: Line[], ja: boolean): string => {
-  const names = (l: Line) => (ja ? l.nameShort : l.nameRoman);
-  const sep = ja ? ' ' : ', ';
-
-  // 全路線が同一会社ならグルーピングせず個別表示
-  const allSameCompany =
-    lines.length > 1 &&
-    lines[0]?.company?.id != null &&
-    lines.every((l) => l.company?.id === lines[0]?.company?.id);
-
-  if (allSameCompany) {
-    return Array.from(new Set(lines.map(names)))
-      .filter(Boolean)
-      .join(sep);
-  }
-
-  // 連続する同一会社の路線をサブグループ化（companyがない場合はまとめない）
-  const companyGroups = lines.reduce<Line[][]>((groups, l) => {
-    const lastGroup = groups.at(-1);
-    if (
-      lastGroup &&
-      lastGroup[0]?.company?.id != null &&
-      lastGroup[0].company.id === l.company?.id
-    ) {
-      lastGroup.push(l);
-    } else {
-      groups.push([l]);
-    }
-    return groups;
-  }, []);
-
-  return companyGroups
-    .map((group) => {
-      if (group.length > 1) {
-        const companyName = ja
-          ? group[0]?.company?.nameShort
-          : group[0]?.company?.nameEnglishShort;
-        return ja ? `${companyName}線` : `${companyName} Line`;
-      }
-      return names(group[0]);
-    })
-    .filter(Boolean)
-    .join(sep);
-};
-
 type Props = {
   visible: boolean;
   line: Line | null;
   destination?: Station | null;
+  /**
+   * 乗車駅。起点路線ごとの駅番号（ナンバリング）を引くために使う。
+   * 経路検索の item.lines[].station は API が null を返すため、乗車駅の
+   * 路線別 station からナンバリングを解決する。
+   */
+  boardingStation?: Station | null;
   loading?: boolean;
   onClose: () => void;
   onSelect: (trainType: TrainType) => void;
@@ -167,17 +93,20 @@ export const TrainTypeListModal = ({
   visible,
   line,
   destination,
+  boardingStation,
   loading,
   onClose,
   onSelect,
 }: Props) => {
-  const { fetchedTrainTypes } = useAtomValue(navigationState);
+  const fetchedTrainTypes = useAtomValue(fetchedTrainTypesAtom);
   const { height: windowHeight } = useWindowDimensions();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   const title = useMemo(() => {
-    return (isJapanese ? line?.nameShort : line?.nameRoman) ?? '';
-  }, [line?.nameRoman, line?.nameShort]);
+    // 行先がある経路検索では行先の路線名を、無い場合は選択路線名を表示する
+    const headerLine = destination?.line ?? line;
+    return (isJapanese ? headerLine?.nameShort : headerLine?.nameRoman) ?? '';
+  }, [destination?.line, line]);
   const subtitle = useMemo(() => {
     if (!destination) {
       return '';
@@ -193,7 +122,19 @@ export const TrainTypeListModal = ({
       if (!line) return null;
 
       const lines = uniqBy(item.lines ?? [], 'id');
-      const viaLines = getViaLines(lines, line, destination);
+
+      // カードの配色・路線シンボル・ナンバリングは、種別ごとに乗車駅で実際に乗車する
+      // 路線で統一する（選択中の line で固定すると東武東上線経由の種別に西武池袋線の
+      // デザインが当たってしまう）。経路の途中駅から乗る場合は終端路線ではなく乗車路線
+      // を使うことで、乗車駅に必ず存在する駅番号でナンバリングを安定表示できる。
+      const boardingLine = getBoardingLine(
+        lines,
+        boardingStation,
+        line,
+        destination
+      );
+
+      const viaLines = getViaLines(lines, boardingLine, destination);
 
       const title = `${isJapanese ? item.name : item.nameRoman}`;
 
@@ -231,10 +172,19 @@ export const TrainTypeListModal = ({
             })
             .join('\n');
 
+      // 駅番号（ナンバリング）は乗車路線の乗車駅基準で表示する。乗車路線はカードの
+      // デザインと同一なので CommonCard の路線記号一致が必ず成立し、番号が安定して
+      // 描画される。
+      const boardingLineStation = getBoardingLineStation(
+        boardingStation,
+        boardingLine,
+        line
+      );
+
       return (
         <CommonCard
-          targetStation={line.station ?? undefined}
-          line={line}
+          targetStation={boardingLineStation ?? undefined}
+          line={boardingLine}
           title={title}
           subtitle={subtitle}
           loading={loading}
@@ -242,7 +192,7 @@ export const TrainTypeListModal = ({
         />
       );
     },
-    [destination, line, loading, onSelect]
+    [boardingStation, destination, line, loading, onSelect]
   );
 
   const keyExtractor = useCallback(
@@ -253,43 +203,13 @@ export const TrainTypeListModal = ({
   const trainTypes = useMemo(() => {
     if (!line) return [];
 
-    const trainTypesWithSelectedLine = fetchedTrainTypes
-      .map((tt) => {
-        const nestedTrainType = tt.lines?.find((l) => l.id === line.id)
-          ?.trainType as TrainType | undefined;
-        return { ...tt, ...nestedTrainType, id: tt.id };
-      })
-      .filter((tt): tt is TrainType => {
-        if (!tt || !tt.line) return false;
-
-        const lines = uniqBy(tt.lines ?? [], 'id');
-        const selectedLineIndex = lines.findIndex((l) => l.id === line.id);
-        if (selectedLineIndex === -1) return false;
-
-        return true;
-      });
-
-    if (!destination?.line?.id) {
-      return trainTypesWithSelectedLine;
-    }
-
-    const trainTypesWithDestination = trainTypesWithSelectedLine.filter(
-      (tt) => {
-        const lines = uniqBy(tt.lines ?? [], 'id');
-        const destinationLineIndex = lines.findIndex(
-          (l) => l.id === destination.line?.id
-        );
-        return destinationLineIndex !== -1;
-      }
-    );
-
-    // destination路線がデータ都合で欠落している場合は0件表示を避けるためフォールバック
-    if (!trainTypesWithDestination.length) {
-      return trainTypesWithSelectedLine;
-    }
-
-    return trainTypesWithDestination;
-  }, [fetchedTrainTypes, line, destination]);
+    // 種別名は選択路線上の表記に合わせたいので、選択路線にぶら下がる種別をマージする
+    return fetchedTrainTypes.map((tt) => {
+      const nestedTrainType = tt.lines?.find((l) => l.id === line.id)
+        ?.trainType as TrainType | undefined;
+      return { ...tt, ...nestedTrainType, id: tt.id };
+    });
+  }, [fetchedTrainTypes, line]);
 
   // ヘッダー(72) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
   const dynamicMinHeight = useMemo(() => {
@@ -353,7 +273,7 @@ export const TrainTypeListModal = ({
         ) : null}
       </View>
 
-      <FlatList<TrainType>
+      <FlashList<TrainType>
         style={StyleSheet.absoluteFill}
         data={trainTypes}
         renderItem={renderItem}
@@ -362,7 +282,6 @@ export const TrainTypeListModal = ({
         scrollEventThrottle={16}
         contentContainerStyle={styles.flatListContentContainer}
         scrollIndicatorInsets={{ top: 72, bottom: 72 }}
-        removeClippedSubviews={Platform.OS === 'android'}
         ListEmptyComponent={
           loading ? (
             <SkeletonPlaceholder borderRadius={4} speed={1500}>

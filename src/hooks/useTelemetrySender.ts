@@ -14,7 +14,7 @@ import {
   subscribeGnss,
 } from '~/utils/native/android/gnssModule';
 import { sanitizeTelemetryMessage } from '~/utils/sanitizeTelemetryMessage';
-import stationState from '../store/atoms/station';
+import { approachingAtom, arrivedAtom } from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useIsPassing } from './useIsPassing';
@@ -77,9 +77,8 @@ export const useTelemetrySender = (
 
   const coords = useAtomValue(locationAtom)?.coords;
 
-  const stationStateValue = useAtomValue(stationState);
-  const { arrived: arrivedFromState, approaching: approachingFromState } =
-    stationStateValue ?? { arrived: false, approaching: false };
+  const arrivedFromState = useAtomValue(arrivedAtom);
+  const approachingFromState = useAtomValue(approachingAtom);
   const isTelemetryEnabled = useTelemetryEnabled();
 
   const passing = useIsPassing();

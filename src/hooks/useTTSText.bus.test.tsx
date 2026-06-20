@@ -170,8 +170,7 @@ describe('useTTSText (bus mode)', () => {
       expect(jaText).toContain('このバスは');
       expect(jaText).toContain('ゆきです');
       expect(enText).toContain('The next stop is');
-      expect(enText).toContain('This bus is on the');
-      expect(enText).toContain('bound for');
+      expect(enText).toContain('This bus is bound for');
     });
 
     test('should generate NEXT text with firstSpeech=false', () => {
@@ -185,7 +184,7 @@ describe('useTTSText (bus mode)', () => {
       expect(jaText).toContain('次は');
       expect(jaText).not.toContain('ご利用くださいまして');
       expect(enText).toContain('The next stop is');
-      expect(enText).not.toContain('This bus is on the');
+      expect(enText).not.toContain('This bus is bound for');
     });
 
     test('should generate ARRIVING text', () => {
@@ -239,8 +238,9 @@ describe('useTTSText (bus mode)', () => {
         }
       );
       const [jaText, enText] = result.current.text;
-      expect(jaText).toContain('今日も');
+      // 公式のJR東日本 通勤型放送は始発挨拶なしで列車案内のみ
       expect(jaText).toContain('このバスは');
+      expect(jaText).toContain('ゆきです');
       expect(jaText).toContain('次は');
       expect(enText).toContain('This is the');
       expect(enText).toContain('bus bound for');
@@ -298,8 +298,9 @@ describe('useTTSText (bus mode)', () => {
         }
       );
       const [jaText, enText] = result.current.text;
-      expect(jaText).toContain('今日も');
+      // 公式のJR東日本 通勤型放送は始発挨拶なしで列車案内のみ
       expect(jaText).toContain('このバスは');
+      expect(jaText).toContain('ゆきです');
       expect(jaText).toContain('次は');
       expect(enText).toContain('This is the');
       expect(enText).toContain('bus bound for');
@@ -401,7 +402,7 @@ describe('useTTSText (bus mode)', () => {
         }
       );
       const [jaText, enText] = result.current.text;
-      expect(jaText).toContain('今日も');
+      expect(jaText).toContain('このバスは');
       expect(jaText).toContain('次は');
       expect(enText).toContain('This is the');
     });
@@ -428,7 +429,7 @@ describe('useTTSText (bus mode)', () => {
         }
       );
       const [jaText, enText] = result.current.text;
-      expect(jaText).toContain('今日も');
+      expect(jaText).toContain('このバスは');
       expect(jaText).toContain('次は');
       expect(enText).toContain('This is the');
     });

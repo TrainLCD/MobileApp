@@ -14,6 +14,7 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useHasPassStationInRegion: jest.fn(() => false),
   useIsPassing: jest.fn(() => false),
   useNextStation: jest.fn(() => null),
@@ -66,7 +67,8 @@ jest.mock('./LineBoard/shared/components', () => ({
 
 describe('LineBoardWest', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine } = require('~/hooks');
+  const { useCurrentLine, useCurrentStation, useDisplayCurrentStation } =
+    require('~/hooks');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -90,15 +92,45 @@ describe('LineBoardWest', () => {
     } as unknown as Station,
   ];
 
-  beforeEach(() => {
-    useAtomValue.mockReturnValue({
-      leftStations: mockStations,
-      arrived: true,
-      approaching: false,
-      stations: mockStations,
-      selectedLine: mockLine,
+  // 派生atom(leftStations/arrived/approaching/stations)とlineStateを
+  // atom参照で出し分けるディスパッチ型モック
+  const mockAtoms = ({
+    leftStations = mockStations,
+    arrived = true,
+    approaching = false,
+    stations = mockStations,
+    selectedLine = mockLine,
+  }: {
+    leftStations?: Station[];
+    arrived?: boolean;
+    approaching?: boolean;
+    stations?: Station[];
+    selectedLine?: Line | null;
+  }) => {
+    const { leftStationsAtom } = require('~/store/atoms/navigation');
+    const {
+      arrivedAtom,
+      approachingAtom,
+      stationsAtom,
+    } = require('~/store/atoms/station');
+    const { selectedLineAtom } = require('~/store/atoms/line');
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === leftStationsAtom) return leftStations;
+      if (a === arrivedAtom) return arrived;
+      if (a === approachingAtom) return approaching;
+      if (a === stationsAtom) return stations;
+      if (a === selectedLineAtom) return selectedLine;
+      return { selectedLine };
     });
+  };
+
+  beforeEach(() => {
+    mockAtoms({});
     useCurrentLine.mockReturnValue(mockLine);
+    // 現在駅と表示用現在駅を同一駅に固定し、isHealed=false(前方補正なし)の
+    // 通常運行パスを決定論的に検証する。
+    useCurrentStation.mockReturnValue(mockStations[0]);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {
@@ -117,12 +149,7 @@ describe('LineBoardWest', () => {
 
   it('lineがnullの場合、nullを返す', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockReturnValue({
-      selectedLine: null,
-      arrived: true,
-      approaching: false,
-      stations: mockStations,
-    });
+    mockAtoms({ selectedLine: null });
     const result = render(
       <LineBoardWest
         stations={mockStations}
@@ -182,13 +209,7 @@ describe('LineBoardWest', () => {
 
   it('arrived=falseの場合、ChevronJRWestが表示される', () => {
     const { ChevronJRWest } = require('./ChevronJRWest');
-    useAtomValue.mockReturnValue({
-      leftStations: mockStations,
-      selectedLine: mockLine,
-      arrived: false,
-      approaching: false,
-      stations: mockStations,
-    });
+    mockAtoms({ arrived: false });
     render(
       <LineBoardWest
         stations={mockStations}

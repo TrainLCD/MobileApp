@@ -1,4 +1,3 @@
-import { ApolloProvider } from '@apollo/client/react';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { Roboto_400Regular, Roboto_700Bold } from '@expo-google-fonts/roboto';
 import { PortalProvider } from '@gorhom/portal';
@@ -7,18 +6,20 @@ import {
   createNativeStackNavigator,
   type NativeStackNavigationOptions,
 } from '@react-navigation/native-stack';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider } from 'jotai';
-import React, { StrictMode, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import { GlobalToast } from './components/GlobalToast';
 import TuningSettings from './components/TuningSettings';
-import { gqlClient } from './lib/gql';
+import { queryClient } from './lib/gql';
+import { migrateFromAsyncStorage } from './lib/storage';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import QuickActionsProvider from './providers/QuickActionsProvider';
 import PrivacyScreen from './screens/Privacy';
@@ -110,19 +111,36 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+  // 画面側は MMKV を同期的に読むため、AsyncStorage からの移行完了を待ってから
+  // マウントする。移行はキー数十件のコピー一回分なので体感遅延はない。
+  // 失敗時も既定値で起動できるため、エラーは記録して描画は継続する。
+  const [storageReady, setStorageReady] = useState(false);
+  useEffect(() => {
+    migrateFromAsyncStorage()
+      .catch((error) => {
+        console.error('Failed to migrate AsyncStorage to MMKV:', error);
+      })
+      .finally(() => {
+        setStorageReady(true);
+      });
+  }, []);
+
+  if (!storageReady) {
+    // SplashScreen.preventAutoHideAsync 済みのためスプラッシュが表示され続ける
+    return null;
+  }
+
   return (
     <CustomErrorBoundary>
       <GestureHandlerRootView>
-        <ApolloProvider client={gqlClient}>
+        <QueryClientProvider client={queryClient}>
           <ActionSheetProvider>
             <Provider store={store}>
               <NavigationContainer ref={navigationRef}>
                 <DeepLinkProvider>
                   <QuickActionsProvider>
                     <PortalProvider>
-                      <StrictMode>
-                        <AppContent />
-                      </StrictMode>
+                      <AppContent />
                     </PortalProvider>
                   </QuickActionsProvider>
                   <GlobalToast />
@@ -130,7 +148,7 @@ const App: React.FC = () => {
               </NavigationContainer>
             </Provider>
           </ActionSheetProvider>
-        </ApolloProvider>
+        </QueryClientProvider>
       </GestureHandlerRootView>
     </CustomErrorBoundary>
   );

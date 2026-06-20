@@ -5,6 +5,7 @@
   "build": {
     "development": {
       "distribution": "store",
+      "environment": "development",
       "env": {
         "EAS_USE_CACHE": "1"
       },

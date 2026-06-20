@@ -36,7 +36,7 @@ describe('useIsPassing', () => {
   });
 
   it('arrived=false の場合、falseを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: false });
+    mockUseAtomValue.mockReturnValue(false);
     mockUseCurrentStation.mockReturnValue(
       createStation(1, { stopCondition: StopCondition.Not })
     );
@@ -46,7 +46,7 @@ describe('useIsPassing', () => {
   });
 
   it('arrived=true, stopCondition=All の場合、falseを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockUseAtomValue.mockReturnValue(true);
     mockUseCurrentStation.mockReturnValue(
       createStation(1, { stopCondition: StopCondition.All })
     );
@@ -56,7 +56,7 @@ describe('useIsPassing', () => {
   });
 
   it('arrived=true, stopCondition=Not の場合、trueを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockUseAtomValue.mockReturnValue(true);
     mockUseCurrentStation.mockReturnValue(
       createStation(1, { stopCondition: StopCondition.Not })
     );
@@ -66,7 +66,7 @@ describe('useIsPassing', () => {
   });
 
   it('arrived=true, stopCondition=PartialStop の場合、falseを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockUseAtomValue.mockReturnValue(true);
     mockUseCurrentStation.mockReturnValue(
       createStation(1, { stopCondition: StopCondition.PartialStop })
     );
@@ -76,7 +76,7 @@ describe('useIsPassing', () => {
   });
 
   it('arrived=true, stopCondition=Partial の場合、falseを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockUseAtomValue.mockReturnValue(true);
     mockUseCurrentStation.mockReturnValue(
       createStation(1, { stopCondition: StopCondition.Partial })
     );
@@ -86,7 +86,7 @@ describe('useIsPassing', () => {
   });
 
   it('currentStation が undefined の場合、falseを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockUseAtomValue.mockReturnValue(true);
     mockUseCurrentStation.mockReturnValue(undefined);
 
     const { getByTestId } = render(<TestComponent />);
@@ -94,7 +94,7 @@ describe('useIsPassing', () => {
   });
 
   it('stopCondition が null の場合、falseを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockUseAtomValue.mockReturnValue(true);
     const stationWithNullCondition = createStation(1, {
       stopCondition: StopCondition.All,
     });
@@ -106,7 +106,7 @@ describe('useIsPassing', () => {
   });
 
   it('stopCondition が undefined の場合、falseを返す', () => {
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockUseAtomValue.mockReturnValue(true);
     const stationWithUndefinedCondition = createStation(1, {
       stopCondition: StopCondition.All,
     });

@@ -1,5 +1,5 @@
 import { act, render } from '@testing-library/react-native';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { createStation } from '~/utils/test/factories';
 import { useCurrentStation } from './useCurrentStation';
@@ -10,18 +10,24 @@ import { useTransitionHeaderState } from './useTransitionHeaderState';
 
 jest.mock('jotai', () => ({
   __esModule: true,
-  useAtom: jest.fn(),
   useAtomValue: jest.fn(),
+  useSetAtom: jest.fn(),
 }));
 
 jest.mock('../store/atoms/navigation', () => ({
   __esModule: true,
   default: 'NAVIGATION_ATOM',
+  headerStateAtom: 'HEADER_STATE_ATOM',
+  enabledLanguagesAtom: 'ENABLED_LANGUAGES_ATOM',
+  stationForHeaderAtom: 'STATION_FOR_HEADER_ATOM',
 }));
 
 jest.mock('../store/atoms/station', () => ({
   __esModule: true,
   default: 'STATION_ATOM',
+  arrivedAtom: 'ARRIVED_ATOM',
+  approachingAtom: 'APPROACHING_ATOM',
+  selectedBoundAtom: 'SELECTED_BOUND_ATOM',
 }));
 
 jest.mock('../store/atoms/theme', () => ({
@@ -81,7 +87,7 @@ const TestComponent: React.FC = () => {
 };
 
 describe('useTransitionHeaderState', () => {
-  const mockUseAtom = useAtom as jest.Mock;
+  const mockUseSetAtom = useSetAtom as jest.Mock;
   const mockUseAtomValue = useAtomValue as jest.Mock;
   const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
     typeof useCurrentStation
@@ -137,16 +143,31 @@ describe('useTransitionHeaderState', () => {
     (globalThis as { __headerStateGetter?: () => string }).__headerStateGetter =
       () => navigationAtomValue.headerState;
 
-    mockUseAtom.mockImplementation((atom: unknown) => {
+    mockUseSetAtom.mockImplementation((atom: unknown) => {
       if (atom === 'NAVIGATION_ATOM') {
-        return [navigationAtomValue, setNavigationMock];
+        return setNavigationMock;
       }
       throw new Error('unknown atom');
     });
 
     mockUseAtomValue.mockImplementation((atom: unknown) => {
-      if (atom === 'STATION_ATOM') {
-        return stationAtomValue;
+      if (atom === 'ARRIVED_ATOM') {
+        return stationAtomValue.arrived;
+      }
+      if (atom === 'APPROACHING_ATOM') {
+        return stationAtomValue.approaching;
+      }
+      if (atom === 'SELECTED_BOUND_ATOM') {
+        return stationAtomValue.selectedBound;
+      }
+      if (atom === 'HEADER_STATE_ATOM') {
+        return navigationAtomValue.headerState;
+      }
+      if (atom === 'ENABLED_LANGUAGES_ATOM') {
+        return navigationAtomValue.enabledLanguages;
+      }
+      if (atom === 'STATION_FOR_HEADER_ATOM') {
+        return navigationAtomValue.stationForHeader;
       }
       if (atom === 'TUNING_ATOM') {
         return { headerTransitionInterval: 1000 };
@@ -213,6 +234,35 @@ describe('useTransitionHeaderState', () => {
     tick();
 
     expect(navigationAtomValue.headerState).toBe('CURRENT');
+  });
+
+  it('未到着のまま approaching が解除されたら ARRIVING から NEXT へ戻る', () => {
+    // 到着を挟まず接近が解除されるケース(到着検知の取りこぼし・GPS補正・接近駅切替)。
+    // arrived のリセット useEffect が効かないため、interval 側で ARRIVING を抜ける。
+    navigationAtomValue.enabledLanguages = ['JA'];
+    navigationAtomValue.headerState = 'ARRIVING';
+    stationAtomValue.arrived = false;
+    stationAtomValue.approaching = false;
+
+    render(<TestComponent />);
+
+    tick();
+
+    expect(navigationAtomValue.headerState).toBe('NEXT');
+  });
+
+  it('到着中は ARRIVING から interval では NEXT に戻さない（arrived の useEffect に委ねる）', () => {
+    navigationAtomValue.enabledLanguages = ['JA'];
+    navigationAtomValue.headerState = 'ARRIVING';
+    stationAtomValue.arrived = true;
+    stationAtomValue.approaching = false;
+
+    render(<TestComponent />);
+
+    tick();
+
+    // interval は NEXT へ遷移させない（言語循環のみ）。CURRENT への復帰は別 useEffect の責務。
+    expect(navigationAtomValue.headerState).not.toBe('NEXT');
   });
 
   it('日本語無効かつ次言語が見つからない場合は JA に戻らない', () => {

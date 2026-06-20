@@ -15,7 +15,7 @@ import {
   useLandscapeWindowDimensions,
   useTransferLines,
 } from '../hooks';
-import navigationState from '../store/atoms/navigation';
+import { enabledLanguagesAtom } from '../store/atoms/navigation';
 import { translate } from '../translation';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -72,7 +72,7 @@ const TransfersYamanote: React.FC<Props> = ({ onPress, station }: Props) => {
   const getLineMarkFunc = useGetLineMark();
   const lines = useTransferLines();
   const dim = useLandscapeWindowDimensions();
-  const { enabledLanguages } = useAtomValue(navigationState);
+  const enabledLanguages = useAtomValue(enabledLanguagesAtom);
 
   const isJaEnabled = enabledLanguages.includes('JA');
   const isEnEnabled = enabledLanguages.includes('EN');

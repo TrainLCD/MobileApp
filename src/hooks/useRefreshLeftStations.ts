@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { APP_THEME } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import {
+  selectedDirectionAtom,
+  stationAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
@@ -15,11 +19,9 @@ import { useLoopLine } from './useLoopLine';
 
 export const useRefreshLeftStations = (): void => {
   const setNavigation = useSetAtom(navigationState);
-  const {
-    station: normalStation,
-    stations: normalStations,
-    selectedDirection,
-  } = useAtomValue(stationState);
+  const normalStation = useAtomValue(stationAtom);
+  const normalStations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
 
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
@@ -206,13 +208,17 @@ export const useRefreshLeftStations = (): void => {
       loopLine && getIsLocal(trainType)
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
-    setNavigation((prev) => ({
-      ...prev,
-      leftStations:
-        leftStations[0]?.groupId !== prev.leftStations[0]?.groupId
-          ? leftStations
-          : prev.leftStations,
-    }));
+    setNavigation((prev) => {
+      // 先頭駅が同じでもリストの中身が変わることがある
+      // (例: テーマをJR西日本風/LEDへ切り替えると通過駅が除外される)ため、
+      // 全要素を比較して差分があるときだけ置き換える。
+      const isSameList =
+        leftStations.length === prev.leftStations.length &&
+        leftStations.every(
+          (s, i) => s.groupId === prev.leftStations[i]?.groupId
+        );
+      return isSameList ? prev : { ...prev, leftStations };
+    });
   }, [
     getStations,
     getStationsForLoopLine,

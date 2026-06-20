@@ -1,0 +1,13 @@
+diff --git a/node_modules/cross-fetch/dist/react-native-ponyfill.js b/node_modules/cross-fetch/dist/react-native-ponyfill.js
+index 8e5baff..969b550 100644
+--- a/node_modules/cross-fetch/dist/react-native-ponyfill.js
++++ b/node_modules/cross-fetch/dist/react-native-ponyfill.js
+@@ -4,3 +4,8 @@ module.exports.fetch = global.fetch // To enable: import {fetch} from 'cross-fet
+ module.exports.Headers = global.Headers
+ module.exports.Request = global.Request
+ module.exports.Response = global.Response
++// __esModule マーカーがないと、Expo SDK 55 (live bindings) の _interopNamespace が
++// default をゲッターのみのプロパティとして複製した後 n.default = e で代入しようとして
++// 起動時に TypeError (Cannot assign to property 'default' which has only a getter) になる。
++// マーカーを立てて interop をそのまま素通りさせる。
++module.exports.__esModule = true

@@ -2,15 +2,20 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
+import type { Station } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
+import {
+  arrivedAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 import { useSlicedStations } from './useSlicedStations';
 
 jest.mock('jotai', () => ({
-  __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 jest.mock('./useCurrentStation', () => ({
@@ -51,6 +56,29 @@ describe('useSlicedStations', () => {
     createStation(5, { groupId: 5, name: 'E' }),
   ];
 
+  const mockAtomValues = ({
+    stations: mockStations,
+    arrived,
+    selectedDirection,
+  }: {
+    stations: Station[];
+    arrived: boolean;
+    selectedDirection: 'INBOUND' | 'OUTBOUND';
+  }) => {
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === stationsAtom) {
+        return mockStations;
+      }
+      if (atom === arrivedAtom) {
+        return arrived;
+      }
+      if (atom === selectedDirectionAtom) {
+        return selectedDirection;
+      }
+      return undefined;
+    });
+  };
+
   beforeEach(() => {
     mockUseLoopLine.mockReturnValue({
       isLoopLine: false,
@@ -71,7 +99,7 @@ describe('useSlicedStations', () => {
 
   describe('通常路線（非環状線）', () => {
     it('arrived=true, INBOUND: 現在駅から終点までを返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: true,
         selectedDirection: 'INBOUND',
@@ -85,7 +113,7 @@ describe('useSlicedStations', () => {
     });
 
     it('arrived=true, OUTBOUND: 始点から現在駅までを逆順で返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: true,
         selectedDirection: 'OUTBOUND',
@@ -99,7 +127,7 @@ describe('useSlicedStations', () => {
     });
 
     it('arrived=false, INBOUND: 現在駅から終点までを返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'INBOUND',
@@ -113,7 +141,7 @@ describe('useSlicedStations', () => {
     });
 
     it('arrived=false, OUTBOUND: 始点から前駅までを逆順で返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'OUTBOUND',
@@ -127,7 +155,7 @@ describe('useSlicedStations', () => {
     });
 
     it('currentStationIndex=0の場合、2番目の駅から返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'INBOUND',
@@ -157,7 +185,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=false, INBOUND, 中間駅: 先頭から現在駅の前までを逆順で返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'INBOUND',
@@ -171,7 +199,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=false, OUTBOUND, 中間駅: 現在駅から終点までを返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'OUTBOUND',
@@ -185,7 +213,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=false, currentStationIndex=末尾, INBOUND: 先頭から前までを逆順で返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'INBOUND',
@@ -199,7 +227,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=false, currentStationIndex=末尾, OUTBOUND: 先頭から前までを返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'OUTBOUND',
@@ -213,7 +241,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=false, currentStationIndex=0, INBOUND: 先頭から終点までを逆順で返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'INBOUND',
@@ -227,7 +255,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=false, currentStationIndex=0, OUTBOUND: 先頭から終点までを返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: false,
         selectedDirection: 'OUTBOUND',
@@ -241,7 +269,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=true, INBOUND: 現在駅から終点までを返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: true,
         selectedDirection: 'INBOUND',
@@ -255,7 +283,7 @@ describe('useSlicedStations', () => {
     });
 
     it('環状線, arrived=true, OUTBOUND: 始点から現在駅までを逆順で返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: true,
         selectedDirection: 'OUTBOUND',
@@ -271,7 +299,7 @@ describe('useSlicedStations', () => {
 
   describe('エッジケース', () => {
     it('currentStationがundefinedの場合、空配列を返す', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations,
         arrived: true,
         selectedDirection: 'INBOUND',
@@ -288,7 +316,7 @@ describe('useSlicedStations', () => {
 
     it('駅が1つしかない場合', () => {
       const singleStation = [createStation(1, { groupId: 1, name: 'A' })];
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations: singleStation,
         arrived: true,
         selectedDirection: 'INBOUND',
@@ -302,7 +330,7 @@ describe('useSlicedStations', () => {
     });
 
     it('駅が空の場合', () => {
-      mockUseAtomValue.mockReturnValue({
+      mockAtomValues({
         stations: [],
         arrived: true,
         selectedDirection: 'INBOUND',

@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react-native';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
@@ -9,6 +9,9 @@ import { useLineSelection } from '~/hooks/useLineSelection';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
+import { pendingQuickActionRouteIdAtom } from '~/store/atoms/navigation';
+import { stationsCacheAtom } from '~/store/atoms/station';
+import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { createLine, createStation } from '~/utils/test/factories';
 import SelectLineScreen from './SelectLineScreen';
 
@@ -19,9 +22,9 @@ jest.mock('react-native-device-info', () => ({
 }));
 
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  useAtom: jest.fn(() => [{ pendingQuickActionRouteId: null }, jest.fn()]),
-  atom: jest.fn(),
+  useSetAtom: jest.fn(() => jest.fn()),
 }));
 
 // usePresetCarouselData → useSavedRoutes → expo-sqlite のチェーンを断つ
@@ -144,6 +147,7 @@ jest.mock('../components/FooterTabBar', () => {
     __esModule: true,
     default: FooterTabBar,
     FOOTER_BASE_HEIGHT: 72,
+    useFooterHeight: () => 80,
   };
 });
 
@@ -245,6 +249,7 @@ const setupDefaults = ({
   lineSelection = defaultLineSelection(),
   walkthrough = defaultWalkthrough(),
   stationsCache = [] as Station[][],
+  pendingQuickActionRouteId = null as string | null,
 } = {}) => {
   (useInitialNearbyStation as jest.Mock).mockReturnValue({
     station,
@@ -259,12 +264,13 @@ const setupDefaults = ({
   (useLineSelection as jest.Mock).mockReturnValue(lineSelection);
   (useSelectLineWalkthrough as jest.Mock).mockReturnValue(walkthrough);
   (useDeviceOrientation as jest.Mock).mockReturnValue(1); // PORTRAIT_UP
-  // stationState を1回目、isLEDThemeAtom を2回目に返す
-  let atomCallCount = 0;
-  (useAtomValue as jest.Mock).mockImplementation(() => {
-    atomCallCount++;
-    if (atomCallCount % 2 === 1) return { stationsCache };
-    return false; // isLEDTheme
+  // 渡されたatomの同一性で読み出し値を出し分ける
+  (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+    if (atom === stationsCacheAtom) return stationsCache;
+    if (atom === pendingQuickActionRouteIdAtom)
+      return pendingQuickActionRouteId;
+    if (atom === isLEDThemeAtom) return false;
+    return undefined;
   });
 };
 
@@ -503,7 +509,7 @@ describe('SelectLineScreen', () => {
       const mockSetNavigationState = jest.fn();
       const routeId = '00000000-0000-0000-0000-000000000001';
 
-      setupDefaults();
+      setupDefaults({ pendingQuickActionRouteId: routeId });
 
       // handlePresetPress を差し替え
       (useLineSelection as jest.Mock).mockReturnValue({
@@ -530,10 +536,7 @@ describe('SelectLineScreen', () => {
         isRoutesDBInitialized: true,
       });
 
-      (useAtom as jest.Mock).mockReturnValue([
-        { pendingQuickActionRouteId: routeId },
-        mockSetNavigationState,
-      ]);
+      (useSetAtom as jest.Mock).mockReturnValue(mockSetNavigationState);
 
       render(<SelectLineScreen />);
 
@@ -550,7 +553,7 @@ describe('SelectLineScreen', () => {
     it('pendingQuickActionRouteId に該当するルートがない場合は handlePresetPress を呼ばない', () => {
       const mockSetNavigationState = jest.fn();
 
-      setupDefaults();
+      setupDefaults({ pendingQuickActionRouteId: 'non-existent-id' });
 
       (usePresetCarouselData as jest.Mock).mockReturnValue({
         carouselData: [],
@@ -558,10 +561,7 @@ describe('SelectLineScreen', () => {
         isRoutesDBInitialized: true,
       });
 
-      (useAtom as jest.Mock).mockReturnValue([
-        { pendingQuickActionRouteId: 'non-existent-id' },
-        mockSetNavigationState,
-      ]);
+      (useSetAtom as jest.Mock).mockReturnValue(mockSetNavigationState);
 
       render(<SelectLineScreen />);
 

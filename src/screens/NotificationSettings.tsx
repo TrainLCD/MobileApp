@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
@@ -20,7 +19,8 @@ import Typography from '~/components/Typography';
 import notifyState from '~/store/atoms/notify';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { ASYNC_STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS } from '../constants';
+import { storage } from '../lib/storage';
 
 const styles = StyleSheet.create({
   root: {
@@ -42,11 +42,11 @@ const NotificationSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const handleToggleWrongDirectionNotify = useCallback(async () => {
+  const handleToggleWrongDirectionNotify = useCallback(() => {
     const newValue = !wrongDirectionNotifyEnabled;
     try {
-      await AsyncStorage.setItem(
-        ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED,
+      storage.set(
+        STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED,
         newValue ? 'true' : 'false'
       );
       setNotifyState((prev) => ({

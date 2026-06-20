@@ -18,6 +18,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
+import { useApproachingStation } from './useApproachingStation';
 import { useCanGoForward } from './useCanGoForward';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
@@ -51,6 +52,9 @@ export const useRefreshStation = (): void => {
 
   const nextStation = useNextStation();
   const nextStationId = nextStation?.id ?? null;
+  // 接近判定は最後に到着した駅起点の次駅ではなく、現在地起点で実際に接近して
+  // いる停車駅を基準にすることで、到着取りこぼし等による次駅ずれを自己修復する。
+  const approachingStation = useApproachingStation();
   const approachingNotifiedIdRef = useRef<number | null>(null);
   const arrivedNotifiedIdRef = useRef<number | null>(null);
   const lastArrivedTimeRef = useRef<number>(0);
@@ -144,9 +148,9 @@ export const useRefreshStation = (): void => {
     if (
       latitude == null ||
       longitude == null ||
-      nextStation == null ||
-      nextStation.latitude == null ||
-      nextStation.longitude == null
+      approachingStation == null ||
+      approachingStation.latitude == null ||
+      approachingStation.longitude == null
     ) {
       return false;
     }
@@ -154,12 +158,12 @@ export const useRefreshStation = (): void => {
     return isPointWithinRadius(
       { latitude, longitude },
       {
-        latitude: nextStation.latitude as number,
-        longitude: nextStation.longitude as number,
+        latitude: approachingStation.latitude as number,
+        longitude: approachingStation.longitude as number,
       },
       effectiveApproachingThreshold
     );
-  }, [effectiveApproachingThreshold, latitude, longitude, nextStation]);
+  }, [effectiveApproachingThreshold, latitude, longitude, approachingStation]);
 
   const sendApproachingNotification = useCallback(
     async (s: Station, notifyType: NotifyType) => {
@@ -185,36 +189,42 @@ export const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
-    if (!nearestStation || !canGoForward) {
+    if (!canGoForward) {
       return;
     }
 
-    const isNearestStationNotifyTarget = !!targetStationIds.find(
-      (id) => id === nearestStation.id
-    );
+    // 接近通知はヘッダーの「まもなく」と同じく現在地基準の接近駅(次に到着する停車駅)を
+    // 基準にする。通知される駅名・発火対象がヘッダー表示と一致し、発車直後の駅や通過駅で
+    // 誤って鳴らない。到着判定の取りこぼし時も接近駅側へ自己修復する。
+    if (
+      isApproaching &&
+      approachingStation?.id != null &&
+      targetStationIds.includes(approachingStation.id) &&
+      approachingStation.id !== approachingNotifiedIdRef.current
+    ) {
+      void sendApproachingNotification(approachingStation, 'APPROACHING').catch(
+        () => {}
+      );
+      approachingNotifiedIdRef.current = approachingStation.id;
+    }
 
-    if (isNearestStationNotifyTarget) {
-      if (
-        isApproaching &&
-        nearestStation.id !== undefined &&
-        nearestStation.id !== approachingNotifiedIdRef.current
-      ) {
-        sendApproachingNotification(nearestStation, 'APPROACHING');
-        approachingNotifiedIdRef.current = nearestStation.id ?? null;
-      }
-      if (
-        isArrived &&
-        nearestStation.id !== undefined &&
-        nearestStation.id !== arrivedNotifiedIdRef.current
-      ) {
-        sendApproachingNotification(nearestStation, 'ARRIVED');
-        arrivedNotifiedIdRef.current = nearestStation.id ?? null;
-      }
+    // 到着通知は実際に到着した最寄り駅を基準にする
+    if (
+      isArrived &&
+      nearestStation?.id != null &&
+      targetStationIds.includes(nearestStation.id) &&
+      nearestStation.id !== arrivedNotifiedIdRef.current
+    ) {
+      void sendApproachingNotification(nearestStation, 'ARRIVED').catch(
+        () => {}
+      );
+      arrivedNotifiedIdRef.current = nearestStation.id;
     }
   }, [
     canGoForward,
     isApproaching,
     isArrived,
+    approachingStation,
     nearestStation,
     sendApproachingNotification,
     targetStationIds,
@@ -258,24 +268,31 @@ export const useRefreshStation = (): void => {
       return;
     }
 
-    setStation((prev) => ({
-      ...prev,
-      approaching: !isArrived && !getIsPass(nearestStation) && isApproaching,
-      arrived: isArrived,
-      station:
+    // 値が変わらない場合はprevをそのまま返し、新オブジェクト生成による
+    // 全購読者への不要な再レンダー通知を避ける
+    setStation((prev) => {
+      const approaching =
+        !isArrived && !getIsPass(nearestStation) && isApproaching;
+      const station =
         isArrived && prev.station?.id !== nearestStation.id
           ? nearestStation
-          : prev.station,
-    }));
+          : prev.station;
+      if (
+        prev.approaching === approaching &&
+        prev.arrived === isArrived &&
+        prev.station === station
+      ) {
+        return prev;
+      }
+      return { ...prev, approaching, arrived: isArrived, station };
+    });
 
     if (isArrived && !getIsPass(nearestStation)) {
-      setNavigation((prev) => ({
-        ...prev,
-        stationForHeader:
-          prev.stationForHeader?.id !== nearestStation.id
-            ? nearestStation
-            : prev.stationForHeader,
-      }));
+      setNavigation((prev) =>
+        prev.stationForHeader?.id !== nearestStation.id
+          ? { ...prev, stationForHeader: nearestStation }
+          : prev
+      );
     }
   }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
 };

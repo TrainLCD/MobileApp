@@ -13,6 +13,7 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useInterval: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
   useTransferLinesFromStation: jest.fn(() => []),
@@ -24,11 +25,6 @@ jest.mock('~/hooks/useScale', () => ({
 
 jest.mock('~/store/selectors/isEn', () => ({
   isEnAtom: { __brand: 'isEnAtom' },
-}));
-
-jest.mock('~/store/atoms/navigation', () => ({
-  __esModule: true,
-  default: { __brand: 'navigationState' },
 }));
 
 jest.mock('~/utils/getStationNameR', () => ({
@@ -55,6 +51,7 @@ jest.mock('./ChevronTY', () => ({
 }));
 
 jest.mock('./LineBoard/shared/components', () => ({
+  BlinkingChevron: jest.fn(() => null),
   EmptyStationNameCell: jest.fn(() => null),
   LineDot: jest.fn(() => null),
 }));
@@ -75,7 +72,7 @@ jest.mock('./Typography', () => {
 
 describe('LineBoardToei', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine } = require('~/hooks');
+  const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -122,14 +119,23 @@ describe('LineBoardToei', () => {
       stationOverrides = {} as Record<string, unknown>,
     } = {}) =>
     (atomVal: unknown) => {
-      if (atomVal && (atomVal as { __brand?: string }).__brand === 'isEnAtom') {
+      const { enabledLanguagesAtom } = require('~/store/atoms/navigation');
+      const { arrivedAtom } = require('~/store/atoms/station');
+      const { selectedLineAtom } = require('~/store/atoms/line');
+      const brand = (atomVal as { __brand?: string } | null)?.__brand;
+      if (brand === 'isEnAtom') {
         return isEn;
       }
-      if (
-        atomVal &&
-        (atomVal as { __brand?: string }).__brand === 'navigationState'
-      ) {
-        return { enabledLanguages };
+      if (atomVal === enabledLanguagesAtom) {
+        return enabledLanguages;
+      }
+      if (atomVal === arrivedAtom) {
+        return (stationOverrides.arrived as boolean | undefined) ?? true;
+      }
+      if (atomVal === selectedLineAtom) {
+        return (
+          (stationOverrides.selectedLine as Line | null | undefined) ?? null
+        );
       }
       return {
         station: mockStations[0],
@@ -141,6 +147,7 @@ describe('LineBoardToei', () => {
   beforeEach(() => {
     useAtomValue.mockImplementation(createUseAtomValueMock());
     useCurrentLine.mockReturnValue(mockLine);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {
@@ -182,8 +189,8 @@ describe('LineBoardToei', () => {
     expect(LineDot).toHaveBeenCalled();
   });
 
-  it('ChevronTYコンポーネントが表示される', () => {
-    const { ChevronTY } = require('./ChevronTY');
+  it('点滅チェブロンが表示される', () => {
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardToei
         stations={mockStations}
@@ -191,7 +198,10 @@ describe('LineBoardToei', () => {
         hasTerminus={false}
       />
     );
-    expect(ChevronTY).toHaveBeenCalled();
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['BLUE', 'RED'] }),
+      undefined
+    );
   });
 
   it('hasTerminus=trueの場合、BarTerminalEastが正しく表示される', () => {
@@ -233,7 +243,7 @@ describe('LineBoardToei', () => {
     expect(result.toJSON()).toBeTruthy();
   });
 
-  it('useIntervalフックが1秒間隔で呼ばれる', () => {
+  it('点滅処理はボード本体ではなくBlinkingChevronに委譲される', () => {
     const { useInterval } = require('~/hooks');
     render(
       <LineBoardToei
@@ -242,7 +252,8 @@ describe('LineBoardToei', () => {
         hasTerminus={false}
       />
     );
-    expect(useInterval).toHaveBeenCalledWith(expect.any(Function), 1000);
+    // 毎秒の点滅で全セルが再レンダーされないよう、ボード本体はintervalを持たない
+    expect(useInterval).not.toHaveBeenCalled();
   });
 
   it('lineがnullの場合、駅セルがレンダリングされない', () => {

@@ -8,14 +8,15 @@ import {
   useBounds,
   useCurrentLine,
   useCurrentTrainType,
+  useDisplayNextStation,
   useLoopLine,
-  useNextStation,
+  type useNextStation,
   useNumbering,
   useTransferLines,
 } from '../hooks';
 import type { HeaderStoppingState } from '../models/HeaderTransitionState';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { headerStateAtom } from '../store/atoms/navigation';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import Marquee from './Marquee';
 import Typography from './Typography';
 
@@ -278,8 +279,9 @@ const NextStopContent = ({
 );
 
 const LineBoardLED = () => {
-  const { selectedDirection, stations } = useAtomValue(stationState);
-  const { headerState } = useAtomValue(navigationState);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const stations = useAtomValue(stationsAtom);
+  const headerState = useAtomValue(headerStateAtom);
   const line = useCurrentLine();
 
   const stoppingState = useMemo(
@@ -287,7 +289,8 @@ const LineBoardLED = () => {
     [headerState]
   );
 
-  const nextStation = useNextStation();
+  // ヘッダーの「まもなく」と一致させるため現在地基準の次駅を使う
+  const nextStation = useDisplayNextStation();
   const trainType = useCurrentTrainType();
   const { directionalStops } = useBounds(stations);
   const transferLines = useTransferLines();

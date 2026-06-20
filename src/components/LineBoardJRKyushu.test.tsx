@@ -4,8 +4,8 @@ import LineBoardJRKyushu from './LineBoardJRKyushu';
 
 // モック設定
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn((initialValue) => initialValue),
   useAtom: jest.fn((val) => [val, jest.fn()]),
   useSetAtom: jest.fn(() => jest.fn()),
 }));
@@ -13,6 +13,7 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useInterval: jest.fn(),
   useTransferLinesFromStation: jest.fn(() => []),
 }));
@@ -44,6 +45,7 @@ jest.mock('./ChevronTY', () => ({
 }));
 
 jest.mock('./LineBoard/shared/components', () => ({
+  BlinkingChevron: jest.fn(() => null),
   EmptyStationNameCell: jest.fn(() => null),
   LineDot: jest.fn(() => null),
   StationName: jest.fn(() => null),
@@ -62,7 +64,10 @@ jest.mock('./NumberingIcon', () => ({
 
 describe('LineBoardJRKyushu', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine } = require('~/hooks');
+  const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
+  const { selectedLineAtom } = require('~/store/atoms/line');
+  const { arrivedAtom } = require('~/store/atoms/station');
+  const { isEnAtom } = require('~/store/selectors/isEn');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -103,11 +108,15 @@ describe('LineBoardJRKyushu', () => {
   ];
 
   beforeEach(() => {
-    useAtomValue.mockReturnValue({
-      station: mockStations[0],
-      arrived: true,
+    // 渡されたatomの同一性で読み出し値を出し分ける
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === arrivedAtom) return true;
+      if (a === selectedLineAtom) return null;
+      if (a === isEnAtom) return false;
+      return undefined;
     });
     useCurrentLine.mockReturnValue(mockLine);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {
@@ -164,8 +173,8 @@ describe('LineBoardJRKyushu', () => {
     expect(NumberingIcon).toHaveBeenCalledTimes(mockStations.length);
   });
 
-  it('ChevronTYコンポーネントが表示される', () => {
-    const { ChevronTY } = require('./ChevronTY');
+  it('点滅チェブロンが表示される', () => {
+    const { BlinkingChevron } = require('./LineBoard/shared/components');
     render(
       <LineBoardJRKyushu
         stations={mockStations}
@@ -173,7 +182,10 @@ describe('LineBoardJRKyushu', () => {
         hasTerminus={false}
       />
     );
-    expect(ChevronTY).toHaveBeenCalled();
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['BLACK', 'BLUE'] }),
+      undefined
+    );
     expect(useCurrentLine).toHaveBeenCalled();
   });
 
@@ -217,7 +229,7 @@ describe('LineBoardJRKyushu', () => {
     expect(useAtomValue).toHaveBeenCalled();
   });
 
-  it('useIntervalフックが1秒間隔で呼ばれる', () => {
+  it('点滅処理はボード本体ではなくBlinkingChevronに委譲される', () => {
     const { useInterval } = require('~/hooks');
     render(
       <LineBoardJRKyushu
@@ -226,7 +238,8 @@ describe('LineBoardJRKyushu', () => {
         hasTerminus={false}
       />
     );
-    expect(useInterval).toHaveBeenCalledWith(expect.any(Function), 1000);
+    // 毎秒の点滅で全セルが再レンダーされないよう、ボード本体はintervalを持たない
+    expect(useInterval).not.toHaveBeenCalled();
   });
 
   it('駅番号がない駅の場合、NumberingIconが表示されない', () => {
@@ -251,10 +264,11 @@ describe('LineBoardJRKyushu', () => {
 
   it('lineがnullの場合、駅セルがレンダリングされない', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockReturnValue({
-      station: mockStations[0],
-      arrived: true,
-      selectedLine: null,
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === arrivedAtom) return true;
+      if (a === selectedLineAtom) return null;
+      if (a === isEnAtom) return false;
+      return undefined;
     });
     const { LineDot } = require('./LineBoard/shared/components');
     LineDot.mockClear();

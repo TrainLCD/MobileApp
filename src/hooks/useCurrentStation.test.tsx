@@ -4,13 +4,18 @@ import type React from 'react';
 import { Text } from 'react-native';
 import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
+import {
+  selectedDirectionAtom,
+  stationAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 
 jest.mock('jotai', () => ({
   __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 jest.mock('../utils/isPass', () => ({
@@ -32,6 +37,24 @@ describe('useCurrentStation', () => {
   >;
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
 
+  // useCurrentStation が useAtomValue で読むフィールドatomを、atomの同一性で出し分ける
+  const setAtomValues = ({
+    stations,
+    station,
+    selectedDirection,
+  }: {
+    stations: ReturnType<typeof createStation>[];
+    station: ReturnType<typeof createStation> | null;
+    selectedDirection: 'INBOUND' | 'OUTBOUND';
+  }) => {
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === stationsAtom) return stations;
+      if (atom === stationAtom) return station;
+      if (atom === selectedDirectionAtom) return selectedDirection;
+      return undefined;
+    });
+  };
+
   beforeEach(() => {
     mockGetIsPass.mockReturnValue(false);
   });
@@ -45,7 +68,7 @@ describe('useCurrentStation', () => {
     const station2 = createStation(2, { groupId: 2 });
     const station3 = createStation(3, { groupId: 3 });
 
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       stations: [station1, station2, station3],
       station: station2,
       selectedDirection: 'INBOUND',
@@ -62,7 +85,7 @@ describe('useCurrentStation', () => {
     const station2 = createStation(2, { groupId: 2 });
     const station3 = createStation(3, { groupId: 2 }); // same groupId as station2
 
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       stations: [station1, station3],
       station: station2, // has id:2, but not in stations list
       selectedDirection: 'INBOUND',
@@ -76,7 +99,7 @@ describe('useCurrentStation', () => {
   });
 
   it('stationがnullの場合、undefinedを返す', () => {
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       stations: [],
       station: null,
       selectedDirection: 'INBOUND',
@@ -104,7 +127,7 @@ describe('useCurrentStation', () => {
       (s) => s?.stopCondition === StopCondition.Not
     );
 
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       stations: [station1, station2, station3],
       station: station2,
       selectedDirection: 'INBOUND',
@@ -122,7 +145,7 @@ describe('useCurrentStation', () => {
     const station2 = createStation(2, { groupId: 2 });
     const station3 = createStation(3, { groupId: 3 });
 
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       stations: [station1, station2, station3],
       station: station2,
       selectedDirection: 'INBOUND',
@@ -152,7 +175,7 @@ describe('useCurrentStation', () => {
       (s) => s?.stopCondition === StopCondition.Not
     );
 
-    mockUseAtomValue.mockReturnValue({
+    setAtomValues({
       stations: [station1, station2, station3],
       station: station2,
       selectedDirection: 'OUTBOUND',

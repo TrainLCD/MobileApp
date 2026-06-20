@@ -1,8 +1,6 @@
-import { useLazyQuery } from '@apollo/client/react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -31,7 +29,7 @@ import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureVie
 import DevOverlay from '~/components/DevOverlay';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import { ASYNC_STORAGE_KEYS } from '~/constants';
+import { STORAGE_KEYS } from '~/constants';
 import {
   useAndroidPictureInPicture,
   useConsoleTelemetry,
@@ -40,6 +38,7 @@ import {
   useCurrentTrainType,
   useFirstStop,
   useKeepAwake,
+  useLazyGraphQLQuery,
   useLoopLine,
   useNextStation,
   useRefreshLeftStations,
@@ -61,7 +60,9 @@ import {
   GET_LINE_STATIONS,
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
+import { storage } from '~/lib/storage';
 import { APP_THEME } from '~/models/Theme';
+import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import lineState from '~/store/atoms/line';
 import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
@@ -71,12 +72,20 @@ import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import { getIsLocal } from '~/utils/trainTypeString';
 import LineBoard from '../components/LineBoard';
+import PortraitMain from '../components/PortraitMain';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
-import navigationState from '../store/atoms/navigation';
+import navigationState, {
+  bottomStateAtom,
+  leftStationsAtom,
+} from '../store/atoms/navigation';
 import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
-import stationState from '../store/atoms/station';
+import stationState, {
+  arrivedAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
 import getIsPass from '../utils/isPass';
@@ -113,13 +122,17 @@ const MainScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
 
-  const [{ stations, selectedDirection, arrived }, setStationState] =
-    useAtom(stationState);
-  const [{ leftStations, bottomState }, setNavigationState] =
-    useAtom(navigationState);
+  const stations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const arrived = useAtomValue(arrivedAtom);
+  const setStationState = useSetAtom(stationState);
+  const leftStations = useAtomValue(leftStationsAtom);
+  const bottomState = useAtomValue(bottomStateAtom);
+  const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
   const { devOverlayEnabled } = useAtomValue(tuningState);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
+  const portraitModeEnabled = useAtomValue(portraitModeEnabledAtom);
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
@@ -158,9 +171,10 @@ const MainScreen: React.FC = () => {
       loading: fetchStationsByLineGroupIdLoading,
       error: fetchStationsByLineGroupIdError,
     },
-  ] = useLazyQuery<GetLineGroupStationsData, GetLineGroupStationsVariables>(
-    GET_LINE_GROUP_STATIONS
-  );
+  ] = useLazyGraphQLQuery<
+    GetLineGroupStationsData,
+    GetLineGroupStationsVariables
+  >(GET_LINE_GROUP_STATIONS);
 
   const [
     fetchStationsByLineId,
@@ -168,16 +182,17 @@ const MainScreen: React.FC = () => {
       loading: fetchStationsByLineIdLoading,
       error: fetchStationsByLineIdError,
     },
-  ] = useLazyQuery<GetLineStationsData, GetLineStationsVariables>(
+  ] = useLazyGraphQLQuery<GetLineStationsData, GetLineStationsVariables>(
     GET_LINE_STATIONS
   );
 
   const [
     fetchTrainTypes,
     { loading: fetchTrainTypesLoading, error: fetchTrainTypesError },
-  ] = useLazyQuery<GetStationTrainTypesData, GetStationTrainTypesVariables>(
-    GET_STATION_TRAIN_TYPES_LIGHT
-  );
+  ] = useLazyGraphQLQuery<
+    GetStationTrainTypesData,
+    GetStationTrainTypesVariables
+  >(GET_STATION_TRAIN_TYPES_LIGHT);
 
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);
@@ -282,135 +297,116 @@ const MainScreen: React.FC = () => {
         (s) => s.line?.lineType === LineType.Subway
       )
     ) {
-      const alertAsync = async () => {
-        const subwayAlertDismissed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED
-        );
+      const subwayAlertDismissed = storage.getString(
+        STORAGE_KEYS.SUBWAY_ALERT_DISMISSED
+      );
 
-        if (subwayAlertDismissed !== 'true') {
-          showAlertWhilePresenting(
-            ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
-            translate('subwayAlertTitle'),
-            translate('subwayAlertText'),
-            [
-              {
-                text: translate('doNotShowAgain'),
-                style: 'cancel',
-                onPress: async (): Promise<void> => {
-                  await AsyncStorage.setItem(
-                    ASYNC_STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
-                    'true'
-                  );
-                },
+      if (subwayAlertDismissed !== 'true') {
+        showAlertWhilePresenting(
+          STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
+          translate('subwayAlertTitle'),
+          translate('subwayAlertText'),
+          [
+            {
+              text: translate('doNotShowAgain'),
+              style: 'cancel',
+              onPress: (): void => {
+                storage.set(STORAGE_KEYS.SUBWAY_ALERT_DISMISSED, 'true');
               },
-              { text: 'OK' },
-            ]
-          );
-        }
-      };
-
-      alertAsync();
+            },
+            { text: 'OK' },
+          ]
+        );
+      }
     }
   }, [stationsFromCurrentStation]);
 
   const isHoliday = useMemo(() => getIsHoliday(new Date()), []);
 
   useEffect(() => {
-    const alertAsync = async () => {
-      // 土休日通過
-      const holidayNoticeDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED
-      );
-      if (
-        stationsFromCurrentStation.some(
-          (s) => s.stopCondition === StopCondition.Weekday
-        ) &&
-        isHoliday &&
-        holidayNoticeDismissed !== 'true'
-      ) {
-        showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
-          translate('notice'),
-          translate('holidayNotice'),
-          [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
-                  'true'
-                );
-              },
+    // 土休日通過
+    const holidayNoticeDismissed = storage.getString(
+      STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED
+    );
+    if (
+      stationsFromCurrentStation.some(
+        (s) => s.stopCondition === StopCondition.Weekday
+      ) &&
+      isHoliday &&
+      holidayNoticeDismissed !== 'true'
+    ) {
+      showAlertWhilePresenting(
+        STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
+        translate('notice'),
+        translate('holidayNotice'),
+        [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: (): void => {
+              storage.set(STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED, 'true');
             },
-            { text: 'OK' },
-          ]
-        );
-      }
-
-      // 平日通過
-      const weekdayNoticeDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED
+          },
+          { text: 'OK' },
+        ]
       );
+    }
 
-      if (
-        stationsFromCurrentStation.some(
-          (s) => s.stopCondition === StopCondition.Holiday
-        ) &&
-        !isHoliday &&
-        weekdayNoticeDismissed !== 'true'
-      ) {
-        showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
-          translate('notice'),
-          translate('weekdayNotice'),
-          [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
-                  'true'
-                );
-              },
+    // 平日通過
+    const weekdayNoticeDismissed = storage.getString(
+      STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED
+    );
+
+    if (
+      stationsFromCurrentStation.some(
+        (s) => s.stopCondition === StopCondition.Holiday
+      ) &&
+      !isHoliday &&
+      weekdayNoticeDismissed !== 'true'
+    ) {
+      showAlertWhilePresenting(
+        STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
+        translate('notice'),
+        translate('weekdayNotice'),
+        [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: (): void => {
+              storage.set(STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED, 'true');
             },
-            { text: 'OK' },
-          ]
-        );
-      }
-
-      // 一部通過
-      const partiallyPassNoticeDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED
+          },
+          { text: 'OK' },
+        ]
       );
-      if (
-        stationsFromCurrentStation.findIndex(
-          (s) => s.stopCondition === StopCondition.Partial
-        ) !== -1 &&
-        partiallyPassNoticeDismissed !== 'true'
-      ) {
-        showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
-          translate('notice'),
-          translate('partiallyPassNotice'),
-          [
-            {
-              text: translate('doNotShowAgain'),
-              style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
-                  'true'
-                );
-              },
+    }
+
+    // 一部通過
+    const partiallyPassNoticeDismissed = storage.getString(
+      STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED
+    );
+    if (
+      stationsFromCurrentStation.findIndex(
+        (s) => s.stopCondition === StopCondition.Partial
+      ) !== -1 &&
+      partiallyPassNoticeDismissed !== 'true'
+    ) {
+      showAlertWhilePresenting(
+        STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
+        translate('notice'),
+        translate('partiallyPassNotice'),
+        [
+          {
+            text: translate('doNotShowAgain'),
+            style: 'cancel',
+            onPress: (): void => {
+              storage.set(STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED, 'true');
             },
-            { text: 'OK' },
-          ]
-        );
-      }
-    };
-    alertAsync();
+          },
+          { text: 'OK' },
+        ]
+      );
+    }
   }, [stationsFromCurrentStation, isHoliday]);
 
   const transferLines = useTransferLines();
@@ -468,8 +464,8 @@ const MainScreen: React.FC = () => {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      const warningDismissed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
+      const warningDismissed = storage.getString(
+        STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED
       );
       // NOTE: フォアグラウンドも許可しない設定の場合はそもそもオートモード前提で使われていると思うので警告は不要
       const fgPermStatus = await Location.getForegroundPermissionsAsync();
@@ -480,16 +476,16 @@ const MainScreen: React.FC = () => {
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
         showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+          STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
           translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
               text: translate('doNotShowAgain'),
               style: 'cancel',
-              onPress: async (): Promise<void> => {
-                await AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
+              onPress: (): void => {
+                storage.set(
+                  STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
                   'true'
                 );
               },
@@ -519,23 +515,20 @@ const MainScreen: React.FC = () => {
       if (Platform.OS === 'android' && bgPermStatus.granted) {
         const { status: bgStatus } =
           await Location.getBackgroundPermissionsAsync();
-        const dozeAlertDismissed = await AsyncStorage.getItem(
-          ASYNC_STORAGE_KEYS.DOZE_CONFIRMED
+        const dozeAlertDismissed = storage.getString(
+          STORAGE_KEYS.DOZE_CONFIRMED
         );
         if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
           showAlertWhilePresenting(
-            ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
+            STORAGE_KEYS.DOZE_CONFIRMED,
             translate('announcementTitle'),
             translate('dozeAlertText'),
             [
               {
                 text: translate('doNotShowAgain'),
                 style: 'cancel',
-                onPress: async (): Promise<void> => {
-                  await AsyncStorage.setItem(
-                    ASYNC_STORAGE_KEYS.DOZE_CONFIRMED,
-                    'true'
-                  );
+                onPress: (): void => {
+                  storage.set(STORAGE_KEYS.DOZE_CONFIRMED, 'true');
                 },
               },
               {
@@ -569,15 +562,17 @@ const MainScreen: React.FC = () => {
 
       setIsSelectBoundModalOpen(true);
 
-      const { data } = await fetchStationsByLineId({
-        variables: { lineId: selectedLine.id, stationId: selectedStation.id },
-      });
-
-      const fetchedTrainTypesData = await fetchTrainTypes({
-        variables: {
-          stationId: selectedStation.id as number,
-        },
-      });
+      // 駅一覧と種別一覧は互いに独立したクエリなので並列で取得する
+      const [{ data }, fetchedTrainTypesData] = await Promise.all([
+        fetchStationsByLineId({
+          variables: { lineId: selectedLine.id, stationId: selectedStation.id },
+        }),
+        fetchTrainTypes({
+          variables: {
+            stationId: selectedStation.id as number,
+          },
+        }),
+      ]);
       const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
 
       setNavigationState((prev) => ({
@@ -677,6 +672,17 @@ const MainScreen: React.FC = () => {
 
   if (pictureInPictureActive) {
     return <AndroidPictureInPictureView />;
+  }
+
+  // ポートレートモード有効時、端末が縦向きの間はテーマ非依存の
+  // 縦画面最適化レイアウトへ切り替える(横向きに戻すと通常表示)。
+  if (portraitModeEnabled && windowHeight > windowWidth) {
+    return (
+      <>
+        <PortraitMain />
+        {isDevApp && devOverlayEnabled && <DevOverlay />}
+      </>
+    );
   }
 
   if (isLEDTheme) {

@@ -21,10 +21,7 @@ import {
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
 import Animated from 'react-native-reanimated';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardChevron } from '~/components/CardChevron';
 import { Heading } from '~/components/Heading';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -33,7 +30,7 @@ import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { isBetaBuild } from '~/utils/isBetaBuild';
 import { isDevApp } from '~/utils/isDevApp';
-import FooterTabBar, { FOOTER_BASE_HEIGHT } from '../components/FooterTabBar';
+import FooterTabBar, { useFooterHeight } from '../components/FooterTabBar';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
@@ -43,6 +40,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_tts: 'personalize_tts',
   personalize_languages: 'personalize_languages',
   personalize_notifications: 'personalize_notifications',
+  personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
   about_app_licenses: 'about_app_licenses',
   developer_tuning: 'developer_tuning',
@@ -112,6 +110,8 @@ const SettingsItem = ({
         return 'globe';
       case 'personalize_notifications':
         return 'notifications';
+      case 'personalize_experimental':
+        return 'flask';
       case 'personalize_android':
         return 'phone-portrait';
       case 'about_app_licenses':
@@ -185,7 +185,7 @@ const AppSettingsScreen: React.FC = () => {
     useState<ItemLayout | null>(null);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
-  const { bottom: safeAreaBottom } = useSafeAreaInsets();
+  const footerHeight = useFooterHeight();
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const navigation = useNavigation();
@@ -312,6 +312,18 @@ const AppSettingsScreen: React.FC = () => {
           color: '#FF3B30',
           onPress: () => navigation.navigate('NotificationSettings' as never),
         },
+        // 試験的機能はカナリアリリース(devアプリ)限定で表示する
+        ...(isDevApp
+          ? [
+              {
+                id: SETTING_ITEM_ID_MAP.personalize_experimental,
+                title: translate('experimentalSettings'),
+                color: '#AF52DE',
+                onPress: () =>
+                  navigation.navigate('ExperimentalSettings' as never),
+              },
+            ]
+          : []),
         ...(Platform.OS === 'android'
           ? [
               {
@@ -362,8 +374,6 @@ const AppSettingsScreen: React.FC = () => {
     [scrollY]
   );
 
-  const showTtsItem = !isClip();
-
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
@@ -374,7 +384,7 @@ const AppSettingsScreen: React.FC = () => {
           contentContainerStyle={[
             styles.listContainerStyle,
             headerHeight ? { paddingTop: headerHeight } : null,
-            { paddingBottom: FOOTER_BASE_HEIGHT + safeAreaBottom },
+            { paddingBottom: footerHeight },
           ]}
         >
           {/* パーソナライズセクション */}
@@ -382,46 +392,48 @@ const AppSettingsScreen: React.FC = () => {
             <Heading style={styles.sectionHeading}>
               {translate('personalize')}
             </Heading>
-            <View ref={themeRef} onLayout={handleThemeLayout}>
-              <SettingsItem
-                item={personalizeItems[0]}
-                isFirst={true}
-                isLast={!showTtsItem && personalizeItems.length === 1}
-                onPress={personalizeItems[0].onPress}
-              />
-            </View>
-            {showTtsItem && (
-              <View ref={ttsRef} onLayout={handleTtsLayout}>
+            {personalizeItems.map((item, index) => {
+              const row = (
                 <SettingsItem
-                  item={personalizeItems[1]}
-                  isFirst={false}
-                  isLast={false}
-                  onPress={personalizeItems[1].onPress}
+                  key={item.id}
+                  item={item}
+                  isFirst={index === 0}
+                  isLast={index === personalizeItems.length - 1}
+                  onPress={item.onPress}
                 />
-              </View>
-            )}
-            <View ref={languagesRef} onLayout={handleLanguagesLayout}>
-              <SettingsItem
-                item={personalizeItems[showTtsItem ? 2 : 1]}
-                isFirst={false}
-                isLast={false}
-                onPress={personalizeItems[showTtsItem ? 2 : 1].onPress}
-              />
-            </View>
-            <SettingsItem
-              item={personalizeItems[showTtsItem ? 3 : 2]}
-              isFirst={false}
-              isLast={Platform.OS !== 'android'}
-              onPress={personalizeItems[showTtsItem ? 3 : 2].onPress}
-            />
-            {Platform.OS === 'android' && (
-              <SettingsItem
-                item={personalizeItems[showTtsItem ? 4 : 3]}
-                isFirst={false}
-                isLast={true}
-                onPress={personalizeItems[showTtsItem ? 4 : 3].onPress}
-              />
-            )}
+              );
+              // ウォークスルーのスポットライト対象はレイアウト計測用のViewで包む
+              switch (item.id) {
+                case 'personalize_theme':
+                  return (
+                    <View
+                      key={item.id}
+                      ref={themeRef}
+                      onLayout={handleThemeLayout}
+                    >
+                      {row}
+                    </View>
+                  );
+                case 'personalize_tts':
+                  return (
+                    <View key={item.id} ref={ttsRef} onLayout={handleTtsLayout}>
+                      {row}
+                    </View>
+                  );
+                case 'personalize_languages':
+                  return (
+                    <View
+                      key={item.id}
+                      ref={languagesRef}
+                      onLayout={handleLanguagesLayout}
+                    >
+                      {row}
+                    </View>
+                  );
+                default:
+                  return row;
+              }
+            })}
           </View>
 
           {/* アプリについてセクション */}

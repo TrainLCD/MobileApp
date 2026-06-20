@@ -1,6 +1,5 @@
 import type { Line, Station, TtsSegment } from '../../@types/graphql';
-import katakanaToHiragana from '../../utils/kanaToHiragana';
-import { wrapPhoneme } from '../../utils/phoneme';
+import { escapeXml, escapeXmlAttr, wrapPhoneme } from '../../utils/phoneme';
 
 // 駅名に併記されたカッコ書き (例: 命名権スポンサー名 `電鉄富山(トヨタモビリティ富山)`)
 // を TTS で読み上げないために、半角・全角のカッコと中身を取り除く。
@@ -55,6 +54,12 @@ export const stripStationParensForTTS = (station: Station): Station => ({
  *
  * NOTE: `name` だけ nullish で `nameKatakana` が埋まっているケースでは sub 内に
  * `null` / `undefined` が混入していたため、`name` がない時点で fallback に倒す。
+ *
+ * NOTE: alias にはカタカナの `nameKatakana` をそのまま渡す。以前はひらがなへ
+ * 変換していたが、Azure Speech の日本語フロントエンドは alias 文字列を形態素解析し
+ * 直すため、ひらがなだと「とえい(都営)」の先頭「と」が助詞と誤認されてアクセント句が
+ * 「と・えい」と分割される崩れが起きていた。カタカナは助詞(基本ひらがな)に化けにくく、
+ * 固有名詞を1トークンとして読ませやすいため、先頭が助詞由来モーラの読み全般で安定する (#6276 系)。
  */
 export const replaceJapaneseText = (
   name: string | null | undefined,
@@ -65,9 +70,10 @@ export const replaceJapaneseText = (
     return fallback;
   }
   if (!nameKatakana) {
-    return name;
+    return escapeXml(name);
   }
-  return `<sub alias="${katakanaToHiragana(nameKatakana)}">${name}</sub>`;
+  const alias = escapeXmlAttr(nameKatakana);
+  return `<sub alias="${alias}">${escapeXml(name)}</sub>`;
 };
 
 const replaceLineNameJa = (line: Pick<Line, 'nameShort' | 'nameKatakana'>) =>
@@ -149,20 +155,28 @@ export const formatJrWestStopsListJa = (
     .join('、');
 
 /**
- * JR_WEST 用 (英語): `X, Y terminal, Z` 形式で先頭5駅を `, ` 連結する。
- * 終着駅には末尾に ` terminal` を付与する。
+ * JR_WEST 用 (英語): 先頭5駅を `A, B, and C` 形式で連結する。
+ * バッチ末尾が終着駅 (= selectedBound) の場合は終着駅を列挙から外し、
+ * 公式放送 (みやこ路快速) と同じ `A, B, and C before arriving at X` 形式にする。
  */
 export const formatJrWestStopsListEn = (
   stops: Station[],
   isBoundStop: (s: Station) => boolean
-): string =>
-  stops
-    .slice(0, 5)
-    .map((s) => {
-      const name = wrapPhoneme(s.nameTtsSegments, s.nameRoman);
-      return isBoundStop(s) ? `${name} terminal` : name;
-    })
-    .join(', ');
+): string => {
+  const joinWithAnd = (names: string[]): string => {
+    if (names.length <= 1) return names[0] ?? '';
+    // 2件のときにシリアルカンマを入れると `A, and B` と不自然になるため分岐する
+    if (names.length === 2) return `${names[0]} and ${names[1]}`;
+    return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+  };
+  const batch = stops.slice(0, 5);
+  const names = batch.map((s) => wrapPhoneme(s.nameTtsSegments, s.nameRoman));
+  const last = batch[batch.length - 1];
+  if (last && isBoundStop(last) && names.length > 1) {
+    return `${joinWithAnd(names.slice(0, -1))} before arriving at ${names[names.length - 1]}`;
+  }
+  return joinWithAnd(names);
+};
 
 /**
  * TY 用: 直通先1路線目のみを `on the X` 形式に整形する。該当がなければ空文字。

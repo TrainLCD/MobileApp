@@ -1,15 +1,17 @@
 import { render, waitFor } from '@testing-library/react-native';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
+import { firstStopAtom } from '~/store/atoms/navigation';
+import { arrivedAtom } from '~/store/atoms/station';
 import { useFirstStop } from './useFirstStop';
 import { usePrevious } from './usePrevious';
 
 jest.mock('jotai', () => ({
   __esModule: true,
-  useAtom: jest.fn(),
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
+  useSetAtom: jest.fn(),
 }));
 
 jest.mock('./usePrevious', () => ({
@@ -25,18 +27,37 @@ const TestComponent: React.FC<{ shouldUpdate?: boolean }> = ({
 };
 
 describe('useFirstStop', () => {
-  const mockUseAtom = useAtom as jest.MockedFunction<typeof useAtom>;
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
     typeof useAtomValue
   >;
+  const mockUseSetAtom = useSetAtom as jest.MockedFunction<typeof useSetAtom>;
   const mockUsePrevious = usePrevious as jest.MockedFunction<
     typeof usePrevious
   >;
 
   let setNavigationStateMock: jest.Mock;
 
+  const mockAtomValues = ({
+    firstStop,
+    arrived,
+  }: {
+    firstStop: boolean;
+    arrived: boolean;
+  }) => {
+    mockUseAtomValue.mockImplementation((atom) => {
+      if (atom === firstStopAtom) {
+        return firstStop;
+      }
+      if (atom === arrivedAtom) {
+        return arrived;
+      }
+      return undefined;
+    });
+  };
+
   beforeEach(() => {
     setNavigationStateMock = jest.fn();
+    mockUseSetAtom.mockReturnValue(setNavigationStateMock);
   });
 
   afterEach(() => {
@@ -44,11 +65,7 @@ describe('useFirstStop', () => {
   });
 
   it('firstStop=true の場合、trueを返す', () => {
-    mockUseAtom.mockReturnValue([
-      { firstStop: true },
-      setNavigationStateMock,
-    ] as unknown as ReturnType<typeof useAtom>);
-    mockUseAtomValue.mockReturnValue({ arrived: false });
+    mockAtomValues({ firstStop: true, arrived: false });
     mockUsePrevious.mockReturnValue(false);
 
     const { getByTestId } = render(<TestComponent />);
@@ -56,11 +73,7 @@ describe('useFirstStop', () => {
   });
 
   it('firstStop=false の場合、falseを返す', () => {
-    mockUseAtom.mockReturnValue([
-      { firstStop: false },
-      setNavigationStateMock,
-    ] as unknown as ReturnType<typeof useAtom>);
-    mockUseAtomValue.mockReturnValue({ arrived: false });
+    mockAtomValues({ firstStop: false, arrived: false });
     mockUsePrevious.mockReturnValue(false);
 
     const { getByTestId } = render(<TestComponent />);
@@ -68,11 +81,7 @@ describe('useFirstStop', () => {
   });
 
   it('shouldUpdate=false の場合、状態を更新しない', () => {
-    mockUseAtom.mockReturnValue([
-      { firstStop: true },
-      setNavigationStateMock,
-    ] as unknown as ReturnType<typeof useAtom>);
-    mockUseAtomValue.mockReturnValue({ arrived: false });
+    mockAtomValues({ firstStop: true, arrived: false });
     mockUsePrevious.mockReturnValue(true); // prevArrived=true, arrived=false
 
     render(<TestComponent shouldUpdate={false} />);
@@ -80,11 +89,7 @@ describe('useFirstStop', () => {
   });
 
   it('shouldUpdate=true, arrived=false, prevArrived=true の場合、firstStopをfalseに更新する', async () => {
-    mockUseAtom.mockReturnValue([
-      { firstStop: true },
-      setNavigationStateMock,
-    ] as unknown as ReturnType<typeof useAtom>);
-    mockUseAtomValue.mockReturnValue({ arrived: false });
+    mockAtomValues({ firstStop: true, arrived: false });
     mockUsePrevious.mockReturnValue(true); // prevArrived=true
 
     render(<TestComponent shouldUpdate={true} />);
@@ -100,11 +105,7 @@ describe('useFirstStop', () => {
   });
 
   it('shouldUpdate=true, arrived=true の場合、状態を更新しない', () => {
-    mockUseAtom.mockReturnValue([
-      { firstStop: true },
-      setNavigationStateMock,
-    ] as unknown as ReturnType<typeof useAtom>);
-    mockUseAtomValue.mockReturnValue({ arrived: true });
+    mockAtomValues({ firstStop: true, arrived: true });
     mockUsePrevious.mockReturnValue(true);
 
     render(<TestComponent shouldUpdate={true} />);
@@ -112,11 +113,7 @@ describe('useFirstStop', () => {
   });
 
   it('shouldUpdate=true, prevArrived=false の場合、状態を更新しない', () => {
-    mockUseAtom.mockReturnValue([
-      { firstStop: true },
-      setNavigationStateMock,
-    ] as unknown as ReturnType<typeof useAtom>);
-    mockUseAtomValue.mockReturnValue({ arrived: false });
+    mockAtomValues({ firstStop: true, arrived: false });
     mockUsePrevious.mockReturnValue(false);
 
     render(<TestComponent shouldUpdate={true} />);
@@ -124,11 +121,7 @@ describe('useFirstStop', () => {
   });
 
   it('firstStop=false の場合、更新後もfalseのまま', async () => {
-    mockUseAtom.mockReturnValue([
-      { firstStop: false },
-      setNavigationStateMock,
-    ] as unknown as ReturnType<typeof useAtom>);
-    mockUseAtomValue.mockReturnValue({ arrived: false });
+    mockAtomValues({ firstStop: false, arrived: false });
     mockUsePrevious.mockReturnValue(true);
 
     render(<TestComponent shouldUpdate={true} />);

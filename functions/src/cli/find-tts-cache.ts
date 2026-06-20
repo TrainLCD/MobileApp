@@ -1,47 +1,57 @@
-import * as readline from 'node:readline';
-import admin from 'firebase-admin';
-
-function printUsage(): void {
-  console.error(
-    'Usage: npm run find-tts-cache -- <search-term> [--field ssmlJa|ssmlEn] [--exact] [--delete] [--bucket <name>] [--project <project-id>]'
-  );
-  console.error('');
-  console.error('Options:');
-  console.error(
-    '  --field <ssmlJa|ssmlEn>  検索対象フィールドを指定（省略時は両方）'
-  );
-  console.error('  --exact                  部分一致ではなく完全一致で検索');
-  console.error(
-    '  --delete                 検索結果を確認後、Firestoreドキュメントとストレージ音声を削除'
-  );
-  console.error(
-    '  --bucket <name>          Cloud Storageバケット名を指定（--delete時は必須）'
-  );
-  console.error('  --project <project-id>   Firebaseプロジェクトを指定');
-}
+/**
+ * KV(TTS_KV) の voice:* メタを SSML 本文で検索し、必要なら KV ドキュメントと
+ * R2 上の音声ファイルを削除する。旧 Firestore+GCS 版の Cloudflare 移植。
+ *
+ * 例:
+ *   CF_ACCOUNT_ID=... CF_API_TOKEN=... CF_KV_NAMESPACE_ID=... \
+ *   R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... R2_BUCKET=trainlcd-tts-dev \
+ *   npm run find-tts-cache -- "東京" --field ssmlJa --delete
+ */
+import {
+  confirm,
+  kvDelete,
+  kvGet,
+  kvListKeys,
+  loadConfig,
+  r2Delete,
+  requireKvConfig,
+  requireR2Config,
+  type VoiceCacheRecord,
+} from './lib/cloudflare';
 
 interface CliArgs {
   searchTerm: string;
   field?: 'ssmlJa' | 'ssmlEn';
   exact: boolean;
   delete: boolean;
-  bucket?: string;
-  projectId?: string;
+}
+
+function printUsage(): void {
+  console.error(
+    'Usage: npm run find-tts-cache -- <search-term> [--field ssmlJa|ssmlEn] [--exact] [--delete]'
+  );
+  console.error('');
+  console.error('Options:');
+  console.error(
+    '  --field <ssmlJa|ssmlEn>  検索対象フィールド（省略時は両方）'
+  );
+  console.error('  --exact                  部分一致ではなく完全一致で検索');
+  console.error('  --delete                 KV ドキュメントと R2 音声を削除');
+  console.error('');
+  console.error(
+    '接続情報は環境変数で指定: CF_ACCOUNT_ID / CF_API_TOKEN / CF_KV_NAMESPACE_ID /'
+  );
+  console.error('  R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET');
 }
 
 function parseArgs(argv: string[]): CliArgs | null {
   const args = argv.slice(2);
-
-  if (args.length === 0) {
-    return null;
-  }
+  if (args.length === 0) return null;
 
   let searchTerm = '';
   let field: 'ssmlJa' | 'ssmlEn' | undefined;
   let exact = false;
   let deleteMode = false;
-  let bucket: string | undefined;
-  let projectId: string | undefined;
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
@@ -60,185 +70,113 @@ function parseArgs(argv: string[]): CliArgs | null {
       case '--delete':
         deleteMode = true;
         break;
-      case '--bucket': {
-        const value = args[++i];
-        if (!value || value.startsWith('--')) {
-          console.error('Error: --bucket には値の指定が必要です');
-          process.exit(1);
-        }
-        bucket = value;
-        break;
-      }
-      case '--project': {
-        const value = args[++i];
-        if (!value || value.startsWith('--')) {
-          console.error('Error: --project には値の指定が必要です');
-          process.exit(1);
-        }
-        projectId = value;
-        break;
-      }
       default:
         searchTerm = args[i];
         break;
     }
   }
 
-  if (!searchTerm) {
-    return null;
-  }
-
-  return { searchTerm, field, exact, delete: deleteMode, bucket, projectId };
+  if (!searchTerm) return null;
+  return { searchTerm, field, exact, delete: deleteMode };
 }
 
 async function main(): Promise<void> {
   const cliArgs = parseArgs(process.argv);
-
   if (!cliArgs) {
     printUsage();
     process.exit(1);
   }
 
-  const {
-    searchTerm,
-    field,
-    exact,
-    delete: deleteMode,
-    bucket,
-    projectId,
-  } = cliArgs;
-
-  const resolvedProjectId = projectId ?? process.env.GCLOUD_PROJECT;
-  if (!resolvedProjectId) {
-    console.error(
-      'Error: プロジェクトIDが不明です。--project を指定するか GCLOUD_PROJECT 環境変数を設定してください。'
-    );
-    process.exit(1);
-  }
-
-  const app = admin.initializeApp({
-    projectId: resolvedProjectId,
-    ...(bucket ? { storageBucket: bucket } : {}),
-  });
-  const firestore = app.firestore();
-
-  const voicesRef = firestore
-    .collection('caches')
-    .doc('tts')
-    .collection('voices');
+  const { searchTerm, field, exact, delete: deleteMode } = cliArgs;
+  const cfg = loadConfig();
+  requireKvConfig(cfg);
+  if (deleteMode) requireR2Config(cfg);
 
   console.log(
     `検索中: "${searchTerm}"${field ? ` (${field})` : ''}${exact ? ' [完全一致]' : ''}...\n`
   );
 
-  let results: admin.firestore.QueryDocumentSnapshot[];
+  const keys = await kvListKeys(cfg, 'voice:');
+  const matches: VoiceCacheRecord[] = [];
 
-  if (exact && field) {
-    const snapshot = await voicesRef.where(field, '==', searchTerm).get();
-    results = snapshot.docs;
-  } else {
-    const snapshot = await voicesRef.get();
-    results = snapshot.docs.filter((doc) => {
-      const data = doc.data();
-      const match = (value: string | undefined): boolean => {
-        if (!value) return false;
-        return exact ? value === searchTerm : value.includes(searchTerm);
-      };
+  const matchValue = (value: string | undefined): boolean => {
+    if (!value) return false;
+    return exact ? value === searchTerm : value.includes(searchTerm);
+  };
 
-      if (field) {
-        return match(data[field]);
-      }
-      return match(data.ssmlJa) || match(data.ssmlEn);
-    });
+  for (const key of keys) {
+    const raw = await kvGet(cfg, key);
+    if (!raw) continue;
+    let rec: VoiceCacheRecord;
+    try {
+      rec = JSON.parse(raw) as VoiceCacheRecord;
+    } catch {
+      continue;
+    }
+    // id 欠落レコードは voice:undefined / undefined.mp3 の誤削除を招くためスキップ
+    if (typeof rec.id !== 'string' || rec.id.length === 0) {
+      continue;
+    }
+    const hit = field
+      ? matchValue(rec[field])
+      : matchValue(rec.ssmlJa) || matchValue(rec.ssmlEn);
+    if (hit) matches.push(rec);
   }
 
-  if (results.length === 0) {
+  if (matches.length === 0) {
     console.log('一致するドキュメントが見つかりませんでした。');
     return;
   }
 
-  console.log(`${results.length}件のドキュメントが見つかりました:\n`);
-
-  for (const doc of results) {
-    const data = doc.data();
-    console.log(`ID:         ${doc.id}`);
-    console.log(`SSML (JA):  ${data.ssmlJa}`);
-    console.log(`SSML (EN):  ${data.ssmlEn}`);
-    console.log(`Path (JA):  ${data.pathJa}`);
-    console.log(`Path (EN):  ${data.pathEn}`);
-    console.log(`Voice (JA): ${data.voiceJa}`);
-    console.log(`Voice (EN): ${data.voiceEn}`);
-    const createdAt = data.createdAt?.toDate?.()?.toISOString() ?? 'N/A';
-    console.log(`Created:    ${createdAt}`);
+  console.log(`${matches.length}件のドキュメントが見つかりました:\n`);
+  for (const rec of matches) {
+    console.log(`ID:         ${rec.id}`);
+    console.log(`SSML (JA):  ${rec.ssmlJa ?? ''}`);
+    console.log(`SSML (EN):  ${rec.ssmlEn ?? ''}`);
+    console.log(`Path (JA):  ${rec.pathJa ?? ''}`);
+    console.log(`Path (EN):  ${rec.pathEn ?? ''}`);
+    console.log(`Voice (JA): ${rec.voiceJa ?? ''}`);
+    console.log(`Voice (EN): ${rec.voiceEn ?? ''}`);
+    console.log(`Created:    ${rec.createdAt ?? 'N/A'}`);
     console.log('---');
   }
 
-  if (!deleteMode) {
-    return;
-  }
-
-  if (!bucket) {
-    console.error('Error: --delete には --bucket の指定が必要です。');
-    process.exit(1);
-  }
+  if (!deleteMode) return;
 
   const confirmed = await confirm(
-    `\n上記 ${results.length}件のドキュメントとストレージ音声ファイルを削除しますか？ (y/N): `
+    `\n上記 ${matches.length}件の KV ドキュメントと R2 音声ファイルを削除しますか？ (y/N): `
   );
   if (!confirmed) {
     console.log('削除をキャンセルしました。');
     return;
   }
 
-  const storageBucket = app.storage().bucket();
-
-  for (const doc of results) {
-    const data = doc.data();
-    const id: string = doc.id;
-    const storagePathJa =
-      typeof data.pathJa === 'string' ? data.pathJa : `caches/tts/ja/${id}.mp3`;
-    const storagePathEn =
-      typeof data.pathEn === 'string' ? data.pathEn : `caches/tts/en/${id}.mp3`;
-
+  for (const rec of matches) {
+    const id = rec.id;
+    const pathJa = rec.pathJa ?? `caches/tts/ja/${id}.mp3`;
+    const pathEn = rec.pathEn ?? `caches/tts/en/${id}.mp3`;
     console.log(`削除中: ${id}...`);
 
-    const deleteResults = await Promise.allSettled([
-      doc.ref.delete(),
-      storageBucket.file(storagePathJa).delete(),
-      storageBucket.file(storagePathEn).delete(),
+    const results = await Promise.allSettled([
+      kvDelete(cfg, `voice:${id}`),
+      r2Delete(cfg, pathJa),
+      r2Delete(cfg, pathEn),
     ]);
-
-    const labels = ['Firestore', 'Storage (JA)', 'Storage (EN)'];
+    const labels = ['KV', 'R2 (JA)', 'R2 (EN)'];
     let hasFailure = false;
-    for (let i = 0; i < deleteResults.length; i++) {
-      const result = deleteResults[i];
-      if (result.status === 'rejected') {
-        console.warn(`  ${labels[i]} の削除に失敗: ${result.reason}`);
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
+      if (r.status === 'rejected') {
+        console.warn(`  ${labels[i]} の削除に失敗: ${r.reason}`);
         hasFailure = true;
       }
     }
-
-    if (hasFailure) {
-      console.log(`  削除完了（部分失敗）: ${id}`);
-    } else {
-      console.log(`  削除完了: ${id}`);
-    }
+    console.log(
+      hasFailure ? `  削除完了（部分失敗）: ${id}` : `  削除完了: ${id}`
+    );
   }
 
-  console.log(`\n${results.length}件の削除が完了しました。`);
-}
-
-function confirm(prompt: string): Promise<boolean> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise((resolve) => {
-    rl.question(prompt, (answer) => {
-      rl.close();
-      resolve(answer.toLowerCase() === 'y');
-    });
-  });
+  console.log(`\n${matches.length}件の削除が完了しました。`);
 }
 
 main().catch((err: Error) => {

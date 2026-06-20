@@ -1,6 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions, Link, useNavigation } from '@react-navigation/native';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -19,10 +18,13 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import navigationState from '~/store/atoms/navigation';
+import navigationState, {
+  enabledLanguagesAtom,
+} from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { ASYNC_STORAGE_KEYS, type AvailableLanguage } from '../constants';
+import { type AvailableLanguage, STORAGE_KEYS } from '../constants';
+import { storage } from '../lib/storage';
 import {
   getToggledEnabledLanguages,
   isLanguageToggleDisabled,
@@ -107,7 +109,8 @@ const EnabledLanguagesSettings: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const [{ enabledLanguages }, setNavigation] = useAtom(navigationState);
+  const enabledLanguages = useAtomValue(enabledLanguagesAtom);
+  const setNavigation = useSetAtom(navigationState);
 
   const navigation = useNavigation();
 
@@ -139,7 +142,7 @@ const EnabledLanguagesSettings: React.FC = () => {
   );
 
   const handleToggleLanguage = useCallback(
-    async (language: AvailableLanguage) => {
+    (language: AvailableLanguage) => {
       const newEnabledLanguages = getToggledEnabledLanguages(
         enabledLanguages,
         language
@@ -151,8 +154,8 @@ const EnabledLanguagesSettings: React.FC = () => {
       }));
 
       try {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES,
+        storage.set(
+          STORAGE_KEYS.ENABLED_LANGUAGES,
           JSON.stringify(newEnabledLanguages)
         );
       } catch (error) {

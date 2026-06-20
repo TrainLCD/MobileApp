@@ -1,24 +1,27 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
-  useInterval,
+  useDisplayCurrentStation,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
+import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
 import { RFValue } from '~/utils/rfValue';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
+import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalSaikyo } from './BarTerminalSaikyo';
-import { ChevronTY } from './ChevronTY';
-import { LineDot, StationName } from './LineBoard/shared/components';
+import {
+  BlinkingChevron,
+  LineDot,
+  StationName,
+} from './LineBoard/shared/components';
 import {
   useBarStyles,
   useChevronPosition,
@@ -73,7 +76,6 @@ interface StationNameCellProps {
   line: Line | null;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
-  chevronColor: 'RED' | 'BLUE' | 'WHITE';
 }
 
 const useStationCellState = (
@@ -81,7 +83,9 @@ const useStationCellState = (
   index: number,
   stations: Station[]
 ) => {
-  const { station: currentStation, arrived } = useAtomValue(stationState);
+  const arrived = useAtomValue(arrivedAtom);
+  // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
+  const currentStation = useDisplayCurrentStation();
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
     omitRepeatingLine: true,
@@ -199,14 +203,16 @@ const BarGradients: React.FC<{
   );
 };
 
-const StationNameCell: React.FC<StationNameCellProps> = ({
+// 旧実装の点滅順(初期=RED、次=WHITE)を保つ
+const SAIKYO_CHEVRON_COLORS = ['RED', 'WHITE'] as const;
+
+const StationNameCellBase: React.FC<StationNameCellProps> = ({
   station,
   index,
   stations,
   line,
   lineColors,
   hasTerminus,
-  chevronColor,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
   const dim = useLandscapeWindowDimensions();
@@ -288,19 +294,22 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           },
         ]}
       >
-        {showChevron && <ChevronTY color={chevronColor} />}
+        {showChevron && <BlinkingChevron colors={SAIKYO_CHEVRON_COLORS} />}
       </View>
     </>
   );
 };
+
+// 点滅チェブロンを分離したことでセルのpropsは駅データ変化時にしか変わらないため、
+// memo化により毎秒・毎tickの不要な再レンダーを防ぐ
+const StationNameCell = React.memo(StationNameCellBase);
 
 const LineBoardSaikyo: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
 }: Props) => {
-  const [chevronColor, setChevronColor] = useState<'RED' | 'WHITE'>('RED');
-  const { selectedLine } = useAtomValue(lineState);
+  const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
 
@@ -308,13 +317,6 @@ const LineBoardSaikyo: React.FC<Props> = ({
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
   );
-
-  const intervalStep = useCallback(
-    () => setChevronColor((prev) => (prev === 'RED' ? 'WHITE' : 'RED')),
-    []
-  );
-
-  useInterval(intervalStep, 1000);
 
   const stationNameCellForMap = useCallback(
     (s: Station, i: number): React.ReactNode | null => {
@@ -331,12 +333,11 @@ const LineBoardSaikyo: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
-            chevronColor={chevronColor}
           />
         </React.Fragment>
       );
     },
-    [chevronColor, hasTerminus, line, lineColors, stations]
+    [hasTerminus, line, lineColors, stations]
   );
 
   const stationsWithEmpty = useMemo(

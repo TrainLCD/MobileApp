@@ -1,12 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
-import { ASYNC_STORAGE_KEYS, LOCATION_TASK_NAME } from '../constants';
+import { LOCATION_TASK_NAME, STORAGE_KEYS } from '../constants';
+import { storage } from '../lib/storage';
 import { locationAtom, setLocation } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import stationState, { stationAtom } from '../store/atoms/station';
 import { translate } from '../translation';
 import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
@@ -21,13 +21,13 @@ export type UseInitialNearbyStationResult = {
 };
 
 export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
-  const [stationAtomState, setStationState] = useAtom(stationState);
+  const stationFromAtom = useAtomValue(stationAtom);
+  const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
 
-  const { station: stationFromAtom } = stationAtomState;
   const fetchInFlightRef = useRef(false);
 
   const {
@@ -123,30 +123,21 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
 
   // 初回起動アラート
   useEffect(() => {
-    const checkFirstLaunch = async () => {
-      const firstLaunchPassed = await AsyncStorage.getItem(
-        ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED
-      );
-      if (firstLaunchPassed === null) {
-        showAlertWhilePresenting(
-          ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-          translate('notice'),
-          translate('firstAlertText'),
-          [
-            {
-              text: 'OK',
-              onPress: (): void => {
-                AsyncStorage.setItem(
-                  ASYNC_STORAGE_KEYS.FIRST_LAUNCH_PASSED,
-                  'true'
-                );
-              },
+    if (!storage.contains(STORAGE_KEYS.FIRST_LAUNCH_PASSED)) {
+      showAlertWhilePresenting(
+        STORAGE_KEYS.FIRST_LAUNCH_PASSED,
+        translate('notice'),
+        translate('firstAlertText'),
+        [
+          {
+            text: 'OK',
+            onPress: (): void => {
+              storage.set(STORAGE_KEYS.FIRST_LAUNCH_PASSED, 'true');
             },
-          ]
-        );
-      }
-    };
-    checkFirstLaunch();
+          },
+        ]
+      );
+    }
   }, []);
 
   // 最寄り駅取得エラーのアラート

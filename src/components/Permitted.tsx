@@ -1,5 +1,4 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackActions, useNavigation } from '@react-navigation/native';
 import { File } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
@@ -23,12 +22,12 @@ import { getSettingsThemes } from '~/utils/theme';
 import {
   ALL_AVAILABLE_LANGUAGES,
   APP_STORE_URL,
-  ASYNC_STORAGE_KEYS,
   AUTO_THEME_GRADIENT_COLORS,
   GOOGLE_PLAY_URL,
   IN_USE_COLOR_MAP,
   LONG_PRESS_DURATION,
   parenthesisRegexp,
+  STORAGE_KEYS,
 } from '../constants';
 import {
   useAndroidWearable,
@@ -37,16 +36,22 @@ import {
   useCheckStoreVersion,
   useCurrentLine,
   useFeedback,
+  useIsAppActive,
   useWarningInfo,
   useWrongDirectionDetectorEffect,
 } from '../hooks';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
+import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
-import navigationState from '../store/atoms/navigation';
+import { portraitModeEnabledAtom } from '../store/atoms/experimental';
+import navigationState, {
+  autoModeEnabledAtom,
+  isAppLatestAtom,
+} from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
 import speechState from '../store/atoms/speech';
-import stationState from '../store/atoms/station';
+import { selectedBoundAtom } from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import NewReportModal from './NewReportModal';
@@ -60,15 +65,19 @@ type Props = {
 };
 
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
-  const { selectedBound } = useAtomValue(stationState);
+  const selectedBound = useAtomValue(selectedBoundAtom);
   const { untouchableModeEnabled, devOverlayEnabled } =
     useAtomValue(tuningState);
-  const [{ autoModeEnabled, isAppLatest }, setNavigation] =
-    useAtom(navigationState);
+  const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
+  const isAppLatest = useAtomValue(isAppLatestAtom);
+  const setNavigation = useSetAtom(navigationState);
   const setSpeech = useSetAtom(speechState);
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
-  const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
+  const setPortraitModeEnabled = useSetAtom(portraitModeEnabledAtom);
+  const { enabled: pictureInPictureEnabled, active: pictureInPictureActive } =
+    useAtomValue(pictureInPictureAtom);
+  const isAppActive = useIsAppActive();
   const setTuning = useSetAtom(tuningState);
   const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
@@ -152,10 +161,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
       try {
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
-          preference
-        );
+        storage.set(STORAGE_KEYS.THEME_PREFERENCE, preference);
         setThemePreference(preference);
       } catch (err) {
         console.error(err);
@@ -341,10 +347,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               devOverlayEnabled: nextValue,
             }));
             try {
-              await AsyncStorage.setItem(
-                ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED,
-                String(nextValue)
-              );
+              storage.set(STORAGE_KEYS.DEV_OVERLAY_ENABLED, String(nextValue));
             } catch (error) {
               console.error(error);
               setTuning((prev) => ({
@@ -393,48 +396,53 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   );
 
   useEffect(() => {
-    const loadSettings = async () => {
-      const [
-        themePreferenceKey,
-        prevThemeKey,
-        enabledLanguagesStr,
-        speechEnabledStr,
-        bgTTSEnabledStr,
-        ttsEnabledLanguagesStr,
-        telemetryEnabledStr,
-        devOverlayEnabledStr,
-        headerTransitionIntervalStr,
-        headerTransitionDelayStr,
-        bottomTransitionIntervalStr,
-        untouchableModeEnabledStr,
-        wrongDirectionNotifyEnabledStr,
-        pictureInPictureEnabledStr,
-      ] = await Promise.all([
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.THEME_PREFERENCE),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PREVIOUS_THEME),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.ENABLED_LANGUAGES),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.SPEECH_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BG_TTS_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TTS_ENABLED_LANGUAGES),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.TELEMETRY_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.DEV_OVERLAY_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_INTERVAL),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.HEADER_TRANSITION_DELAY),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED),
-        AsyncStorage.getItem(ASYNC_STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED),
-      ]);
+    const loadSettings = () => {
+      const themePreferenceKey = storage.getString(
+        STORAGE_KEYS.THEME_PREFERENCE
+      );
+      const prevThemeKey = storage.getString(STORAGE_KEYS.PREVIOUS_THEME);
+      const enabledLanguagesStr = storage.getString(
+        STORAGE_KEYS.ENABLED_LANGUAGES
+      );
+      const speechEnabledStr = storage.getString(STORAGE_KEYS.SPEECH_ENABLED);
+      const bgTTSEnabledStr = storage.getString(STORAGE_KEYS.BG_TTS_ENABLED);
+      const ttsEnabledLanguagesStr = storage.getString(
+        STORAGE_KEYS.TTS_ENABLED_LANGUAGES
+      );
+      const telemetryEnabledStr = storage.getString(
+        STORAGE_KEYS.TELEMETRY_ENABLED
+      );
+      const devOverlayEnabledStr = storage.getString(
+        STORAGE_KEYS.DEV_OVERLAY_ENABLED
+      );
+      const headerTransitionIntervalStr = storage.getString(
+        STORAGE_KEYS.HEADER_TRANSITION_INTERVAL
+      );
+      const headerTransitionDelayStr = storage.getString(
+        STORAGE_KEYS.HEADER_TRANSITION_DELAY
+      );
+      const bottomTransitionIntervalStr = storage.getString(
+        STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL
+      );
+      const untouchableModeEnabledStr = storage.getString(
+        STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED
+      );
+      const wrongDirectionNotifyEnabledStr = storage.getString(
+        STORAGE_KEYS.WRONG_DIRECTION_NOTIFY_ENABLED
+      );
+      const pictureInPictureEnabledStr = storage.getString(
+        STORAGE_KEYS.PICTURE_IN_PICTURE_ENABLED
+      );
+      const portraitModeEnabledStr = storage.getString(
+        STORAGE_KEYS.PORTRAIT_MODE_ENABLED
+      );
 
       if (themePreferenceKey) {
         setThemePreference(themePreferenceKey as ThemePreference);
       } else if (prevThemeKey) {
         // 既存ユーザーの移行: 明示的に選択していたテーマを維持
         setThemePreference(prevThemeKey as ThemePreference);
-        await AsyncStorage.setItem(
-          ASYNC_STORAGE_KEYS.THEME_PREFERENCE,
-          prevThemeKey
-        );
+        storage.set(STORAGE_KEYS.THEME_PREFERENCE, prevThemeKey);
       }
       if (enabledLanguagesStr) {
         setNavigation((prev) => ({
@@ -534,6 +542,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           enabled: pictureInPictureEnabledStr === 'true',
         }));
       }
+      if (portraitModeEnabledStr) {
+        setPortraitModeEnabled(portraitModeEnabledStr === 'true');
+      }
     };
 
     loadSettings();
@@ -544,6 +555,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setThemePreference,
     setNotify,
     setPictureInPicture,
+    setPortraitModeEnabled,
   ]);
 
   useEffect(() => {
@@ -623,10 +635,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     ]
   );
 
+  // PiP を有効にしている場合、バックグラウンド(PiP 表示含む)へ移行した際は
+  // トーストが PiP ウィンドウへ写り込んでしまうため非表示にする。
+  // PiP 無効時はそもそも写り込まないので、通常どおり表示し続ける。
+  const hideWarningForPictureInPicture =
+    pictureInPictureEnabled && (pictureInPictureActive || !isAppActive);
+
   const warningPanel =
-    warningInfo?.text && warningInfo?.level ? (
+    !hideWarningForPictureInPicture &&
+    warningInfo?.text &&
+    warningInfo?.level ? (
       <WarningPanel
-        behindContent={pictureInPictureActive}
         onPress={clearWarningInfo}
         text={warningInfo.text}
         warningLevel={warningInfo.level}
@@ -640,9 +659,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.container}>
-          {pictureInPictureActive && warningPanel}
           {children}
-          {!pictureInPictureActive && warningPanel}
+          {warningPanel}
         </View>
       </LongPressGestureHandler>
       <SelectBoundSettingListModal

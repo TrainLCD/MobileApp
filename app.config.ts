@@ -1,9 +1,9 @@
-import type { ConfigContext } from 'expo/config';
+const IS_DEV = process.env.APP_VARIANT === 'dev';
 
-export default ({ config }: ConfigContext) => ({
+export default {
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.7.1',
+  version: '10.8.0',
   plugins: [
     'expo-image',
     'expo-font',
@@ -12,6 +12,7 @@ export default ({ config }: ConfigContext) => ({
     'expo-sqlite',
     'expo-asset',
     'expo-quick-actions',
+    'expo-secure-store',
     [
       'expo-location',
       {
@@ -47,33 +48,22 @@ export default ({ config }: ConfigContext) => ({
   ],
   extra: {
     eas: {
-      projectId:
-        process.env.EAS_BUILD_PROJECT_ID ||
-        'dad36dde-0056-4760-8eda-37f05e7c9c6c',
+      projectId: 'dad36dde-0056-4760-8eda-37f05e7c9c6c',
     },
   },
   ios: {
-    buildNumber: '2669',
-    bundleIdentifier:
-      process.env.EAS_BUILD_PROFILE === 'production'
-        ? 'me.tinykitten.trainlcd'
-        : 'me.tinykitten.trainlcd.dev',
-    scheme:
-      process.env.EAS_BUILD_PROFILE === 'production'
-        ? 'TrainLCD'
-        : 'CanaryTrainLCD',
+    buildNumber: '2716',
+    scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
+    bundleIdentifier: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     supportsTablet: true,
   },
   android: {
-    package:
-      process.env.EAS_BUILD_PROFILE === 'production'
-        ? 'me.tinykitten.trainlcd'
-        : 'me.tinykitten.trainlcd.dev',
+    package: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000456,
+    versionCode: 100000503,
   },
   owner: 'trainlcd',
   experiments: {
     reactCompiler: true,
   },
-});
+};

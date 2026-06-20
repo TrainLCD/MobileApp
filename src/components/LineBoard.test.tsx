@@ -13,7 +13,7 @@ jest.mock('jotai', () => ({
 
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
-  useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
 }));
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
@@ -66,7 +66,7 @@ jest.mock('./LineBoardJRKyushu', () => ({
 }));
 
 describe('LineBoard', () => {
-  const { useCurrentStation } = require('~/hooks');
+  const { useDisplayCurrentStation } = require('~/hooks');
   const LineBoardEast = require('./LineBoardEast').default;
   const LineBoardToei = require('./LineBoardToei').default;
   const LineBoardWest = require('./LineBoardWest').default;
@@ -82,8 +82,8 @@ describe('LineBoard', () => {
   const setupMocks = (theme: string, leftStations = defaultLeftStations) => {
     mockUseAtomValue
       .mockReturnValueOnce(theme) // themeAtom
-      .mockReturnValueOnce({ leftStations }); // navigationState
-    useCurrentStation.mockReturnValue({
+      .mockReturnValueOnce(leftStations); // leftStationsAtom
+    useDisplayCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
       name: '東京',

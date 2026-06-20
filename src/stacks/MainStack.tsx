@@ -5,6 +5,7 @@ import {
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import AndroidSettings from '~/screens/AndroidSettings';
+import ExperimentalSettings from '~/screens/ExperimentalSettings';
 import Licenses from '~/screens/Licenses';
 import NotificationSettings from '~/screens/NotificationSettings';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
@@ -17,7 +18,7 @@ import EnabledLanguagesSettings from '../screens/EnabledLanguagesSettings';
 import Main from '../screens/Main';
 import SelectLine from '../screens/SelectLineScreen';
 import ThemeSettings from '../screens/ThemeSettings';
-import stationState from '../store/atoms/station';
+import { selectedBoundAtom, stationAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 
@@ -29,7 +30,8 @@ const screenOptions: NativeStackNavigationOptions = {
 };
 
 const MainStack: React.FC = () => {
-  const { station, selectedBound } = useAtomValue(stationState);
+  const station = useAtomValue(stationAtom);
+  const selectedBound = useAtomValue(selectedBoundAtom);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -110,6 +112,11 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="AndroidSettings"
           component={AndroidSettings}
+        />
+        <Stack.Screen
+          options={optionsWithCustomStyle}
+          name="ExperimentalSettings"
+          component={ExperimentalSettings}
         />
         <Stack.Screen
           options={optionsWithCustomStyle}

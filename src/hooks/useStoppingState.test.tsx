@@ -4,23 +4,23 @@ import type React from 'react';
 import { Text } from 'react-native';
 import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
+import { approachingAtom, arrivedAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
-import { useNextStation } from './useNextStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useStoppingState } from './useStoppingState';
 
 jest.mock('jotai', () => ({
-  __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 
 jest.mock('./useCurrentStation', () => ({
   useCurrentStation: jest.fn(),
 }));
 
-jest.mock('./useNextStation', () => ({
-  useNextStation: jest.fn(),
+jest.mock('./useDisplayNextStation', () => ({
+  useDisplayNextStation: jest.fn(),
 }));
 
 jest.mock('../utils/isPass', () => ({
@@ -40,10 +40,28 @@ describe('useStoppingState', () => {
   const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
     typeof useCurrentStation
   >;
-  const mockUseNextStation = useNextStation as jest.MockedFunction<
-    typeof useNextStation
+  const mockUseNextStation = useDisplayNextStation as jest.MockedFunction<
+    typeof useDisplayNextStation
   >;
   const mockGetIsPass = getIsPass as jest.MockedFunction<typeof getIsPass>;
+
+  const mockAtomValues = ({
+    arrived,
+    approaching,
+  }: {
+    arrived: boolean;
+    approaching: boolean;
+  }) => {
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === arrivedAtom) {
+        return arrived;
+      }
+      if (atom === approachingAtom) {
+        return approaching;
+      }
+      return undefined;
+    });
+  };
 
   beforeEach(() => {
     mockGetIsPass.mockReturnValue(false);
@@ -61,7 +79,7 @@ describe('useStoppingState', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: true,
       approaching: false,
     });
@@ -79,7 +97,7 @@ describe('useStoppingState', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       approaching: false,
     });
@@ -99,7 +117,7 @@ describe('useStoppingState', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       approaching: true,
     });
@@ -121,7 +139,7 @@ describe('useStoppingState', () => {
       stopCondition: StopCondition.Not,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       approaching: true,
     });
@@ -144,7 +162,7 @@ describe('useStoppingState', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: false,
       approaching: false,
     });
@@ -166,7 +184,7 @@ describe('useStoppingState', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: true,
       approaching: false,
     });
@@ -189,7 +207,7 @@ describe('useStoppingState', () => {
       stopCondition: StopCondition.All,
     });
 
-    mockUseAtomValue.mockReturnValue({
+    mockAtomValues({
       arrived: true,
       approaching: true,
     });

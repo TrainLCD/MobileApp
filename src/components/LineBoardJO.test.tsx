@@ -13,7 +13,7 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
-  useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useIsPassing: jest.fn(() => false),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
   useTransferLinesFromStation: jest.fn(() => []),
@@ -81,7 +81,7 @@ jest.mock('./LineBoard/shared/components', () => ({
 
 describe('LineBoardJO', () => {
   const { useAtomValue } = require('jotai');
-  const { useCurrentLine, useCurrentStation } = require('~/hooks');
+  const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
 
   const mockLine: Line = {
     __typename: 'Line',
@@ -105,13 +105,21 @@ describe('LineBoardJO', () => {
     } as unknown as Station,
   ];
 
-  beforeEach(() => {
-    useAtomValue.mockReturnValue({
-      arrived: true,
-      selectedLine: mockLine,
+  // arrivedAtom/selectedLineAtomとその他のatomで返す値を分けるディスパッチ型モック
+  const mockAtoms = (arrived: boolean, selectedLine: Line | null) => {
+    const { arrivedAtom } = require('~/store/atoms/station');
+    const { selectedLineAtom } = require('~/store/atoms/line');
+    useAtomValue.mockImplementation((a: unknown) => {
+      if (a === arrivedAtom) return arrived;
+      if (a === selectedLineAtom) return selectedLine;
+      return { selectedLine };
     });
+  };
+
+  beforeEach(() => {
+    mockAtoms(true, mockLine);
     useCurrentLine.mockReturnValue(mockLine);
-    useCurrentStation.mockReturnValue(mockStations[0]);
+    useDisplayCurrentStation.mockReturnValue(mockStations[0]);
   });
 
   afterEach(() => {
@@ -130,10 +138,7 @@ describe('LineBoardJO', () => {
 
   it('lineがnullの場合、nullを返す', () => {
     useCurrentLine.mockReturnValue(null);
-    useAtomValue.mockReturnValue({
-      arrived: true,
-      selectedLine: null,
-    });
+    mockAtoms(true, null);
     const result = render(
       <LineBoardJO
         stations={mockStations}
@@ -145,10 +150,7 @@ describe('LineBoardJO', () => {
 
   it('arrived=trueの場合、JOCurrentArrowEdgeが表示される', () => {
     const { JOCurrentArrowEdge } = require('./JOCurrentArrowEdge');
-    useAtomValue.mockReturnValue({
-      arrived: true,
-      selectedLine: mockLine,
-    });
+    mockAtoms(true, mockLine);
     render(
       <LineBoardJO
         stations={mockStations}
@@ -160,10 +162,7 @@ describe('LineBoardJO', () => {
 
   it('arrived=falseの場合、ChevronJOが表示される', () => {
     const { ChevronJO } = require('./ChevronJO');
-    useAtomValue.mockReturnValue({
-      arrived: false,
-      selectedLine: mockLine,
-    });
+    mockAtoms(false, mockLine);
     render(
       <LineBoardJO
         stations={mockStations}

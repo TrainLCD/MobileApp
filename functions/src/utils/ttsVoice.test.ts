@@ -1,44 +1,66 @@
 import {
-  isStandardVoiceName,
-  resolveStandardVoiceName,
+  isAzureHdVoiceName,
+  isAzureVoiceName,
+  resolveAzureVoiceName,
 } from './ttsVoice';
 
-describe('ttsVoice', () => {
-  it('accepts Google Standard voices', () => {
-    expect(isStandardVoiceName('ja-JP-Standard-B')).toBe(true);
+describe('ttsVoice (Azure)', () => {
+  it('accepts Azure neural voices', () => {
+    expect(isAzureVoiceName('ja-JP-NanamiNeural')).toBe(true);
+    expect(isAzureVoiceName('en-US-JennyNeural')).toBe(true);
+    expect(isAzureVoiceName('en-US-AvaMultilingualNeural')).toBe(true);
   });
 
-  it('rejects voices that require a model name', () => {
-    expect(isStandardVoiceName('ja-JP-Chirp3-HD-Charon')).toBe(false);
+  it('accepts Azure HD (DragonHD) voices as valid voice names', () => {
+    expect(isAzureVoiceName('ja-JP-Nanami:DragonHDLatestNeural')).toBe(true);
+    expect(isAzureVoiceName('en-US-Jenny:DragonHDLatestNeural')).toBe(true);
   });
 
-  it('prefers a requested standard voice', () => {
+  it('detects HD (DragonHD) voices', () => {
+    expect(isAzureHdVoiceName('ja-JP-Nanami:DragonHDLatestNeural')).toBe(true);
+    expect(isAzureHdVoiceName('en-US-Jenny:DragonHDLatestNeural')).toBe(true);
+    expect(isAzureHdVoiceName('en-US-Ava:DragonHDLatestNeural')).toBe(true);
+  });
+
+  it('treats standard neural voices as non-HD', () => {
+    expect(isAzureHdVoiceName('ja-JP-NanamiNeural')).toBe(false);
+    expect(isAzureHdVoiceName('en-US-JennyNeural')).toBe(false);
+    expect(isAzureHdVoiceName('')).toBe(false);
+  });
+
+  it('rejects non-Azure voice ids', () => {
+    expect(isAzureVoiceName('ja-JP-Standard-B')).toBe(false);
+    expect(isAzureVoiceName('en-US-Chirp3-HD-Aoede')).toBe(false);
+    expect(isAzureVoiceName('')).toBe(false);
+  });
+
+  it('prefers a valid requested voice', () => {
     expect(
-      resolveStandardVoiceName(
+      resolveAzureVoiceName(
+        'en-US-AriaNeural',
+        'en-US-GuyNeural',
+        'en-US-JennyNeural'
+      )
+    ).toBe('en-US-AriaNeural');
+  });
+
+  it('falls back to a configured voice when the request is invalid', () => {
+    expect(
+      resolveAzureVoiceName(
         'en-US-Standard-H',
-        'en-US-Chirp3-HD-Aoede',
-        'en-US-Standard-G'
+        'en-US-GuyNeural',
+        'en-US-JennyNeural'
       )
-    ).toBe('en-US-Standard-H');
+    ).toBe('en-US-GuyNeural');
   });
 
-  it('falls back to a configured standard voice when the request is invalid', () => {
+  it('falls back to the default voice when both inputs are invalid', () => {
     expect(
-      resolveStandardVoiceName(
-        'en-US-Chirp3-HD-Aoede',
-        'en-US-Standard-F',
-        'en-US-Standard-G'
-      )
-    ).toBe('en-US-Standard-F');
-  });
-
-  it('falls back to the default standard voice when both inputs are invalid', () => {
-    expect(
-      resolveStandardVoiceName(
-        'ja-JP-Chirp3-HD-Charon',
+      resolveAzureVoiceName(
+        'ja-JP-Standard-B',
         'ja-JP-Neural2-B',
-        'ja-JP-Standard-B'
+        'ja-JP-NanamiNeural'
       )
-    ).toBe('ja-JP-Standard-B');
+    ).toBe('ja-JP-NanamiNeural');
   });
 });

@@ -1,15 +1,15 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
 import type { Station, TrainType } from '~/@types/graphql';
-import navigationState from '../store/atoms/navigation';
-import stationState from '../store/atoms/station';
+import { trainTypeAtom } from '../store/atoms/navigation';
+import { stationsAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 
 export const useCurrentTrainType = (): TrainType | null => {
-  const { stations } = useAtomValue(stationState);
-  const { trainType } = useAtomValue(navigationState);
+  const stations = useAtomValue(stationsAtom);
+  const trainType = useAtomValue(trainTypeAtom);
 
   const currentStation = useCurrentStation(true);
   const currentLine = useCurrentLine();

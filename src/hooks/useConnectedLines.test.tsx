@@ -4,14 +4,18 @@ import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { createLine, createStation } from '~/utils/test/factories';
-import stationState from '../store/atoms/station';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { useConnectedLines } from './useConnectedLines';
 import { useCurrentLine } from './useCurrentLine';
 
 jest.mock('jotai', () => ({
   __esModule: true,
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
 }));
 jest.mock('./useCurrentLine', () => ({
   useCurrentLine: jest.fn(),
@@ -47,8 +51,14 @@ describe('useConnectedLines', () => {
     };
     currentLineValue = createLine(1);
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return stationAtomValue;
+      if (atom === selectedBoundAtom) {
+        return stationAtomValue.selectedBound;
+      }
+      if (atom === selectedDirectionAtom) {
+        return stationAtomValue.selectedDirection;
+      }
+      if (atom === stationsAtom) {
+        return stationAtomValue.stations;
       }
       throw new Error('unknown atom');
     });
