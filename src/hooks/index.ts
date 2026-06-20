@@ -37,6 +37,7 @@ export { useHeaderStationText } from './useHeaderStationText';
 export { useInitialNearbyStation } from './useInitialNearbyStation';
 export { useInRadiusStation } from './useInRadiusStation';
 export { useInterval } from './useInterval';
+export { useIsAppActive } from './useIsAppActive';
 export { useIsDifferentStationName } from './useIsDifferentStationName';
 export { useIsNextLastStop } from './useIsNextLastStop';
 export { useIsPassing } from './useIsPassing';
