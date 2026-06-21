@@ -39,7 +39,7 @@ wrangler queues create feedback-triage-dev # TTS キャッシュはキューを�
 # シークレット投入
 wrangler secret put SESSION_JWT_SECRET
 wrangler secret put AZURE_SPEECH_KEY
-wrangler secret put GOOGLE_SA_KEY
+wrangler secret put GOOGLE_PLAY_SA_KEY
 wrangler secret put OCTOKIT_PAT
 wrangler secret put DISCORD_CS_WEBHOOK_URL
 wrangler secret put DISCORD_CRASH_WEBHOOK_URL
