@@ -28,7 +28,9 @@ export interface Env {
   SESSION_JWT_SECRET: string;
   AZURE_SPEECH_KEY: string;
   /** Android Publisher 用 Google サービスアカウント鍵 JSON 文字列 */
-  GOOGLE_SA_KEY: string;
+  GOOGLE_PLAY_SA_KEY: string;
+  /** App Store Connect API 鍵 JSON 文字列 ({keyId, issuerId, privateKey}) */
+  APPSTORE_CONNECT_KEY: string;
   OCTOKIT_PAT: string;
   DISCORD_CS_WEBHOOK_URL: string;
   DISCORD_CRASH_WEBHOOK_URL: string;
@@ -44,7 +46,7 @@ export interface Env {
   REVIEWS_DEBUG?: string;
   REVIEWS_DRY_RUN?: string;
   REVIEWS_FORCE_LATEST_COUNT?: string;
-  APPSTORE_REVIEW_FEED_URL?: string;
+  APPSTORE_APP_ID?: string;
 }
 
 /** TTS キャッシュ書き込みのペイロード（R2+KV へ直接保存。キューは介さない） */

@@ -16,7 +16,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SEARCH_STATION_RESULT_LIMIT } from 'react-native-dotenv';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Station, TrainType } from '~/@types/graphql';
@@ -121,6 +120,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
+
+const SEARCH_STATION_RESULT_LIMIT = 100;
 
 const RouteSearchScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
@@ -239,11 +240,10 @@ const RouteSearchScreen = () => {
         return [] as Station[];
       }
       setHasSearched(true);
-      const limit = Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10);
       const result = await fetchByName({
         variables: {
           name: query.trim(),
-          limit,
+          limit: SEARCH_STATION_RESULT_LIMIT,
           fromStationGroupId: station.groupId,
         },
       });
@@ -295,7 +295,7 @@ const RouteSearchScreen = () => {
         variables: {
           fromStationGroupId: station.groupId,
           toStationGroupId: selectedStation.groupId,
-          pageSize: Number.parseInt(SEARCH_STATION_RESULT_LIMIT, 10),
+          pageSize: SEARCH_STATION_RESULT_LIMIT,
           viaLineId: selectedStation.line.id,
         },
       });
