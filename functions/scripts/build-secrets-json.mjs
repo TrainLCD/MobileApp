@@ -1,4 +1,4 @@
-// .secrets.env(KEY=VALUE) と GOOGLE_SA_KEY_FILE から `wrangler secret bulk` 用の
+// .secrets.env(KEY=VALUE) と *_FILE 指定から `wrangler secret bulk` 用の
 // JSON を生成する。JSON エスケープは Node に任せ、SA 鍵の改行・引用符も安全に扱う。
 //
 // usage: node scripts/build-secrets-json.mjs <secretsFile> <outFile>
@@ -9,7 +9,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const SECRET_NAMES = [
   'SESSION_JWT_SECRET',
   'AZURE_SPEECH_KEY',
-  'GOOGLE_SA_KEY',
+  'GOOGLE_PLAY_SA_KEY',
   'OCTOKIT_PAT',
   'DISCORD_CS_WEBHOOK_URL',
   'DISCORD_CRASH_WEBHOOK_URL',
@@ -49,22 +49,22 @@ try {
   if (e?.code !== 'ENOENT') throw e;
 }
 
-// GOOGLE_SA_KEY はファイル指定があれば中身をそのまま採用。
-// 指定は 環境変数 GOOGLE_SA_KEY_FILE でも .secrets.env の GOOGLE_SA_KEY_FILE 行でも可。
-const saFile = process.env.GOOGLE_SA_KEY_FILE ?? values.GOOGLE_SA_KEY_FILE;
+// GOOGLE_PLAY_SA_KEY はファイル指定があれば中身をそのまま採用。
+// 指定は 環境変数 GOOGLE_PLAY_SA_KEY_FILE でも .secrets.env の GOOGLE_PLAY_SA_KEY_FILE 行でも可。
+const saFile = process.env.GOOGLE_PLAY_SA_KEY_FILE ?? values.GOOGLE_PLAY_SA_KEY_FILE;
 if (saFile) {
   try {
-    values.GOOGLE_SA_KEY = readFileSync(saFile, 'utf8');
+    values.GOOGLE_PLAY_SA_KEY = readFileSync(saFile, 'utf8');
   } catch (e) {
     process.stderr.write(
-      `GOOGLE_SA_KEY_FILE を読めません: ${saFile} (${e.message})\n` +
+      `GOOGLE_PLAY_SA_KEY_FILE を読めません: ${saFile} (${e.message})\n` +
         '（パスは functions/ からの相対、または絶対パスで指定してください）\n'
     );
     process.exit(2);
   }
 }
 // 補助キーは secret として出力しない
-delete values.GOOGLE_SA_KEY_FILE;
+delete values.GOOGLE_PLAY_SA_KEY_FILE;
 
 const out = {};
 for (const name of SECRET_NAMES) {

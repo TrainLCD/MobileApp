@@ -176,14 +176,14 @@ export async function runGooglePlayReviewJob(env: Env): Promise<void> {
     console.log('[PlayJob] DISCORD_REVIEW_WEBHOOK_URL not set, skipping');
     return;
   }
-  if (!env.GOOGLE_SA_KEY) {
+  if (!env.GOOGLE_PLAY_SA_KEY) {
     // SA 鍵が無いと Android Publisher 認証ができないためスキップ
-    console.log('[PlayJob] GOOGLE_SA_KEY not set, skipping');
+    console.log('[PlayJob] GOOGLE_PLAY_SA_KEY not set, skipping');
     return;
   }
 
   const accessToken = await getGoogleAccessToken(
-    env.GOOGLE_SA_KEY,
+    env.GOOGLE_PLAY_SA_KEY,
     ANDROID_PUBLISHER_SCOPE
   );
 
