@@ -1,12 +1,12 @@
-/** App Store の最新レビューを取得し Discord へ通知する（Cron）。状態は KV。 */
+/** App Store Connect API から最新レビューを取得し Discord へ通知する（Cron）。状態は KV。 */
 import dayjs from 'dayjs';
+import { createAppStoreConnectJwt } from '../lib/apple/accessToken';
 import { loadReviewState, saveReviewState } from '../lib/reviewState';
 import type { DiscordEmbed } from '../models/common';
 import type { Env } from '../types';
 
 const STATE_KEY = 'state:appstore-reviews';
-const DEFAULT_FEED_URL =
-  'https://itunes.apple.com/jp/rss/customerreviews/page=1/id=1486355943/sortBy=mostRecent/json';
+const DEFAULT_APP_ID = '1486355943';
 
 type AppStoreReview = {
   id: string;
@@ -14,88 +14,71 @@ type AppStoreReview = {
   title: string;
   content: string;
   rating: number;
-  version?: string;
   author?: string;
-  url?: string;
+  territory?: string;
 };
 
-type JsonObj = Record<string, unknown>;
+type ApiCustomerReview = {
+  id?: string;
+  attributes?: {
+    rating?: number;
+    title?: string;
+    body?: string;
+    reviewerNickname?: string;
+    createdDate?: string;
+    territory?: string;
+  };
+};
 
-function deepGet(obj: unknown, path: string): unknown {
-  return path.split('.').reduce<unknown>((acc, key) => {
-    if (acc && typeof acc === 'object' && key in (acc as JsonObj)) {
-      return (acc as JsonObj)[key];
-    }
-    return undefined;
-  }, obj);
-}
+type ApiResponse = {
+  data?: ApiCustomerReview[];
+  links?: { next?: string };
+};
 
-function labelOf(v: unknown, d = ''): string {
-  if (typeof v === 'string') return v;
-  if (v && typeof v === 'object' && 'label' in (v as JsonObj)) {
-    const lv = (v as JsonObj).label;
-    if (typeof lv === 'string') return lv;
+export function parseApiReviews(data: ApiResponse): AppStoreReview[] {
+  const entries = data?.data ?? [];
+  const reviews: AppStoreReview[] = [];
+  for (const e of entries) {
+    const id = e.id;
+    const attrs = e.attributes;
+    if (!id || !attrs?.createdDate) continue;
+    reviews.push({
+      id,
+      updated: attrs.createdDate,
+      title: attrs.title ?? '',
+      content: attrs.body ?? '',
+      rating: attrs.rating ?? 0,
+      author: attrs.reviewerNickname ?? undefined,
+      territory: attrs.territory ?? undefined,
+    });
   }
-  return d;
+  return reviews;
 }
 
-function hrefOf(link: unknown): string | undefined {
-  if (Array.isArray(link)) {
-    for (const it of link) {
-      const href = deepGet(it, 'attributes.href');
-      if (typeof href === 'string') return href;
-    }
+async function fetchReviewsPage(
+  url: string,
+  jwt: string
+): Promise<ApiResponse> {
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+      Accept: 'application/json',
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(
+      `App Store Connect reviews fetch failed ${res.status}: ${detail.slice(0, 300)}`
+    );
   }
-  const single = deepGet(link, 'attributes.href');
-  return typeof single === 'string' ? single : undefined;
+  return (await res.json()) as ApiResponse;
 }
 
-export function parseAppStoreJson(jsonText: string): AppStoreReview[] {
-  try {
-    const data = JSON.parse(jsonText) as unknown;
-    const entryNode = deepGet(data, 'feed.entry');
-    const entries: unknown[] = Array.isArray(entryNode)
-      ? entryNode
-      : entryNode != null
-        ? [entryNode]
-        : [];
-
-    const reviews: AppStoreReview[] = [];
-    for (const e of entries) {
-      const id = labelOf(deepGet(e, 'id'));
-      const updated = labelOf(deepGet(e, 'updated'));
-      const title = labelOf(deepGet(e, 'title'));
-      const content = labelOf(deepGet(e, 'content'));
-      const ratingStr = labelOf(deepGet(e, 'im:rating'));
-      const version = labelOf(deepGet(e, 'im:version')) || undefined;
-      const author =
-        labelOf(deepGet(e, 'author.name')) ||
-        labelOf(deepGet(e, 'author')) ||
-        undefined;
-      const url = hrefOf(deepGet(e, 'link')) || id;
-      if (!id || !updated) continue;
-      const rating = Number(ratingStr) || 0;
-      reviews.push({
-        id,
-        updated,
-        title,
-        content,
-        rating,
-        version,
-        author,
-        url,
-      });
-    }
-    return reviews;
-  } catch {
-    return [];
-  }
-}
-
-// 全件 2xx で送れたら true。1 件でも失敗したら false（呼び出し側は state を進めない）
 async function postToDiscord(
   webhookUrl: string,
-  reviews: AppStoreReview[]
+  reviews: AppStoreReview[],
+  appId: string
 ): Promise<boolean> {
   if (!reviews.length) return true;
   let allOk = true;
@@ -117,13 +100,15 @@ async function postToDiscord(
           { name: '評価', value: ratingText },
           { name: 'タイトル', value: r.title || '(タイトルなし)' },
           { name: '本文', value: contentVal },
-          { name: 'バージョン', value: r.version || '不明' },
           { name: '投稿者', value: r.author || '不明' },
           {
             name: '投稿日',
             value: dayjs(r.updated).format('YYYY/MM/DD HH:mm:ss'),
           },
-          { name: 'リンク', value: r.url || r.id },
+          {
+            name: 'リンク',
+            value: `https://apps.apple.com/app/id${appId}`,
+          },
         ],
       };
     });
@@ -147,31 +132,34 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
   const debug = env.REVIEWS_DEBUG === '1';
   const dryRun = env.REVIEWS_DRY_RUN === '1';
   const forceCount = Number(env.REVIEWS_FORCE_LATEST_COUNT ?? 0);
-  const appStoreUrl = env.APPSTORE_REVIEW_FEED_URL || DEFAULT_FEED_URL;
+  const appId = env.APPSTORE_APP_ID || DEFAULT_APP_ID;
   const discordWebhook = env.DISCORD_REVIEW_WEBHOOK_URL;
   if (!discordWebhook) {
-    // 未設定はエラーではなく「通知オフ」として静かにスキップする
     console.log('[AppStoreJob] DISCORD_REVIEW_WEBHOOK_URL not set, skipping');
     return;
   }
+  if (!env.APPSTORE_CONNECT_KEY) {
+    console.log('[AppStoreJob] APPSTORE_CONNECT_KEY not set, skipping');
+    return;
+  }
+
+  const jwt = await createAppStoreConnectJwt(env.APPSTORE_CONNECT_KEY);
 
   const state = await loadReviewState(env.STATE_KV, STATE_KEY);
   const lastUpdated = state.lastUpdated ? dayjs(state.lastUpdated) : null;
   const lastIds = new Set(state.lastIds ?? []);
 
-  const r = await fetch(appStoreUrl, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
-      Accept: 'application/json',
-    },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!r.ok) throw new Error(`App Store Reviews fetch failed: ${r.status}`);
-  const items = parseAppStoreJson(await r.text());
-  if (debug) console.log('[AppStoreJob] parsed', { count: items.length });
+  const all: AppStoreReview[] = [];
+  let nextUrl: string | undefined =
+    `https://api.appstoreconnect.apple.com/v1/apps/${encodeURIComponent(appId)}/customerReviews?sort=-createdDate&limit=50`;
+  for (let page = 0; page < 5 && nextUrl; page++) {
+    const data = await fetchReviewsPage(nextUrl, jwt);
+    all.push(...parseApiReviews(data));
+    nextUrl = data.links?.next ?? undefined;
+  }
+  if (debug) console.log('[AppStoreJob] fetched', { count: all.length });
 
-  const newcomers = items
+  const newcomers = all
     .filter(
       (x) =>
         !lastUpdated ||
@@ -182,8 +170,8 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
     .sort((a, b) => dayjs(a.updated).valueOf() - dayjs(b.updated).valueOf());
 
   let postTargets = newcomers;
-  if (forceCount > 0 && items.length > 0) {
-    postTargets = items
+  if (forceCount > 0 && all.length > 0) {
+    postTargets = all
       .slice()
       .sort((a, b) => dayjs(a.updated).valueOf() - dayjs(b.updated).valueOf())
       .slice(-Math.max(1, forceCount));
@@ -198,19 +186,18 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
         .slice(0, 5)
     );
   } else {
-    posted = await postToDiscord(discordWebhook, postTargets);
+    posted = await postToDiscord(discordWebhook, postTargets, appId);
   }
 
-  // DRY_RUN や送信失敗時は state を進めない（通知の恒久取りこぼしを防ぐ）
-  if (items.length && !dryRun && posted) {
-    const newest = items.reduce(
+  if (all.length && !dryRun && posted) {
+    const newest = all.reduce(
       (p, c) => (dayjs(c.updated).isAfter(dayjs(p.updated)) ? c : p),
-      items[0]
+      all[0]
     );
     const updatedIds = [
       ...new Set([
         ...(state.lastIds ?? []).slice(-20),
-        ...items.slice(0, 5).map((x) => x.id),
+        ...all.slice(0, 5).map((x) => x.id),
       ]),
     ].slice(-40);
     await saveReviewState(env.STATE_KV, STATE_KEY, {
