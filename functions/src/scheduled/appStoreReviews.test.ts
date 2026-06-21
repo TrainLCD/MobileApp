@@ -1,5 +1,9 @@
 import { parseApiReviews } from './appStoreReviews';
 
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 describe('parseApiReviews', () => {
   it('parses entries from the App Store Connect API response', () => {
     const data = {

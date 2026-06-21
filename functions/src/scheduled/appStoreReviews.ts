@@ -7,6 +7,17 @@ import type { Env } from '../types';
 
 const STATE_KEY = 'state:appstore-reviews';
 const DEFAULT_APP_ID = '1486355943';
+const APP_STORE_CONNECT_ORIGIN = 'https://api.appstoreconnect.apple.com';
+
+const assertAppStoreConnectUrl = (url: string): string => {
+  const parsed = new URL(url);
+  if (parsed.origin !== APP_STORE_CONNECT_ORIGIN) {
+    throw new Error(
+      `Unexpected App Store Connect pagination URL: ${parsed.origin}`
+    );
+  }
+  return parsed.toString();
+};
 
 type AppStoreReview = {
   id: string;
@@ -59,7 +70,7 @@ async function fetchReviewsPage(
   url: string,
   jwt: string
 ): Promise<ApiResponse> {
-  const res = await fetch(url, {
+  const res = await fetch(assertAppStoreConnectUrl(url), {
     headers: {
       Authorization: `Bearer ${jwt}`,
       Accept: 'application/json',
@@ -194,10 +205,14 @@ export async function runAppStoreReviewJob(env: Env): Promise<void> {
       (p, c) => (dayjs(c.updated).isAfter(dayjs(p.updated)) ? c : p),
       all[0]
     );
+    const newestUpdated = dayjs(newest.updated);
+    const newestIds = all
+      .filter((x) => dayjs(x.updated).isSame(newestUpdated))
+      .map((x) => x.id);
     const updatedIds = [
       ...new Set([
         ...(state.lastIds ?? []).slice(-20),
-        ...all.slice(0, 5).map((x) => x.id),
+        ...newestIds,
       ]),
     ].slice(-40);
     await saveReviewState(env.STATE_KV, STATE_KEY, {
