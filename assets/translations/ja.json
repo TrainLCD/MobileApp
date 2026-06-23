@@ -217,7 +217,7 @@
   "betaNotice": "このTrainLCDは現在ベータリリースです。",
   "canaryNotice": "このTrainLCDはカナリアリリースです。",
   "setAsTerminus": "終着駅に設定",
-  "optInTelemetryTitle": "テレメトリを有効にする",
+  "optInTelemetryTitle": "テレメトリ",
   "showDevOverlay": "開発者オーバレイを表示",
   "hideDevOverlay": "開発者オーバレイを非表示",
   "telemetrySettingWillPersist": "テレメトリ有効化は永続的に保持されます。",
@@ -316,5 +316,6 @@
   "experimentalSettingsNotice": "試験的機能は開発中のため、予告なく変更または削除されることがあります。",
   "portraitModeTitle": "ポートレートモード",
   "portraitModeDescription": "有効にすると、走行画面で端末を縦向きにした際に、縦画面に最適化されたデザインで表示します。",
+  "telemetryDescription": "お使いの端末の地理的座標を解析用サーバに送信します。送信された情報は解析以外に使用されません。",
   "passStationLabel": "通過"
 }
