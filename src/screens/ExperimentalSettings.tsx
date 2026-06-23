@@ -18,6 +18,7 @@ import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
@@ -34,6 +35,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#8B8B8B',
     lineHeight: 21,
+  },
+  toggleSpacer: {
+    marginTop: 16,
   },
   notice: {
     marginTop: 32,
@@ -91,6 +95,7 @@ const ExperimentalSettingsScreen: React.FC = () => {
   const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
     portraitModeEnabledAtom
   );
+  const [tuning, setTuning] = useAtom(tuningState);
 
   const navigation = useNavigation();
 
@@ -107,6 +112,18 @@ const ExperimentalSettingsScreen: React.FC = () => {
       Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, [portraitModeEnabled, setPortraitModeEnabled]);
+
+  const handleToggleTelemetry = useCallback(() => {
+    const flag = !tuning.telemetryEnabled;
+    setTuning((prev) => ({ ...prev, telemetryEnabled: flag }));
+    try {
+      storage.set(STORAGE_KEYS.TELEMETRY_ENABLED, flag ? 'true' : 'false');
+    } catch (error) {
+      setTuning((prev) => ({ ...prev, telemetryEnabled: !flag }));
+      console.error('Failed to save telemetry setting', error);
+      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  }, [tuning.telemetryEnabled, setTuning]);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -134,6 +151,16 @@ const ExperimentalSettingsScreen: React.FC = () => {
           />
           <Typography style={styles.description}>
             {translate('portraitModeDescription')}
+          </Typography>
+          <View style={styles.toggleSpacer}>
+            <ToggleItem
+              title={translate('optInTelemetryTitle')}
+              state={tuning.telemetryEnabled}
+              onToggle={handleToggleTelemetry}
+            />
+          </View>
+          <Typography style={styles.description}>
+            {translate('telemetryDescription')}
           </Typography>
           <Typography style={styles.notice}>
             {translate('experimentalSettingsNotice')}
