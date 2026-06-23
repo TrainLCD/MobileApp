@@ -137,7 +137,6 @@ src/
 
 android/               # Native Android project
 ios/                   # Native iOS project
-functions/             # Firebase Cloud Functions
 docs/                  # Architectural notes and runbooks
 assets/                # Static media bundled with the app
 utils/                 # Tooling scripts and codegen helpers
@@ -169,29 +168,9 @@ For watch mode during development:
 npm run watch:test
 ```
 
-### Firebase Cloud Functions
+### Backend (Cloudflare Workers)
 
-This project includes Firebase Cloud Functions located in the `functions/` directory. To work with Cloud Functions:
-
-1. Navigate to the functions directory:
-   ```bash
-   cd functions
-   ```
-
-2. Install function dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Build the functions:
-   ```bash
-   npm run build
-   ```
-
-4. Run functions locally (requires Firebase CLI):
-   ```bash
-   firebase emulators:start
-   ```
+The backend (TTS, feedback triage, review notifiers) now lives in the dedicated [TrainLCD/BFF](https://github.com/TrainLCD/BFF) monorepo and is no longer part of this repository.
 
 ## Contributing
 

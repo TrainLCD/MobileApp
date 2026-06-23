@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import { STORAGE_KEYS } from '~/constants';
 import { storage } from '~/lib/storage';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
+import tuningState from '~/store/atoms/tuning';
 import ExperimentalSettingsScreen from './ExperimentalSettings';
 
 jest.mock('@react-navigation/native', () => ({
@@ -21,9 +22,13 @@ jest.mock('~/translation', () => ({
   translate: (key: string) => key,
 }));
 
-const renderWithStore = (portraitModeEnabled: boolean) => {
+const renderWithStore = (
+  portraitModeEnabled: boolean,
+  telemetryEnabled = false
+) => {
   const store = createStore();
   store.set(portraitModeEnabledAtom, portraitModeEnabled);
+  store.set(tuningState, (prev) => ({ ...prev, telemetryEnabled }));
 
   const screen = render(
     <Provider store={store}>
@@ -76,6 +81,53 @@ describe('ExperimentalSettingsScreen', () => {
     // エラーログとユーザーへのアラート表示を検証
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to save portrait mode setting',
+      expect.any(Error)
+    );
+    expect(alertSpy).toHaveBeenCalledWith(
+      'errorTitle',
+      'failedToSavePreference'
+    );
+
+    setSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
+    alertSpy.mockRestore();
+  });
+
+  it('テレメトリをONにするとatomとストレージへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore(false);
+
+    fireEvent.press(getByLabelText('optInTelemetryTitle'));
+
+    expect(store.get(tuningState).telemetryEnabled).toBe(true);
+    expect(storage.getString(STORAGE_KEYS.TELEMETRY_ENABLED)).toBe('true');
+  });
+
+  it('テレメトリをOFFにするとatomとストレージへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore(false, true);
+
+    fireEvent.press(getByLabelText('optInTelemetryTitle'));
+
+    expect(store.get(tuningState).telemetryEnabled).toBe(false);
+    expect(storage.getString(STORAGE_KEYS.TELEMETRY_ENABLED)).toBe('false');
+  });
+
+  it('テレメトリのストレージ保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
+    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw new Error('storage failure');
+    });
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+
+    const { getByLabelText, store } = renderWithStore(false);
+
+    fireEvent.press(getByLabelText('optInTelemetryTitle'));
+
+    expect(store.get(tuningState).telemetryEnabled).toBe(false);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to save telemetry setting',
       expect.any(Error)
     );
     expect(alertSpy).toHaveBeenCalledWith(
