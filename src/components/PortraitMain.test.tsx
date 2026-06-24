@@ -146,7 +146,7 @@ describe('PortraitMain', () => {
       buildStation(1, '品川', StopCondition.All, 'JY-25'),
     ]);
 
-    // スロット幅 300 に対し自然幅 200 ならバッファ込み 208 でも収まる
+    // スロット幅 300 に対し自然幅 200 ならバッファ込み 216 でも収まる
     fireEvent(getByTestId('portrait-station-name-slot'), 'layout', {
       nativeEvent: { layout: { width: 300 } },
     });
@@ -157,7 +157,7 @@ describe('PortraitMain', () => {
     const style = StyleSheet.flatten(
       getByTestId('portrait-station-name').props.style
     );
-    expect(style.width).toBe(208);
+    expect(style.width).toBe(216);
     expect(style.transform).toEqual([{ scaleX: 1 }]);
   });
 
@@ -177,9 +177,9 @@ describe('PortraitMain', () => {
     const style = StyleSheet.flatten(
       getByTestId('portrait-station-name').props.style
     );
-    // 描画幅 = 392 + 8(バッファ) = 400、利用可能幅 = 108 - 8 = 100
-    expect(style.width).toBe(400);
-    expect(style.transform).toEqual([{ scaleX: 100 / 400 }]);
+    // 描画幅 = 392 + 16(バッファ) = 408、利用可能幅 = 108 - 8 = 100
+    expect(style.width).toBe(408);
+    expect(style.transform).toEqual([{ scaleX: 100 / 408 }]);
     // 左端基準で圧縮する。数値配列形式 [x, y, z] で指定し、New Architecture でも
     // 確実に左端アンカーになるようにする(2 値キーワード文字列は中央へフォールバックする)。
     expect(style.transformOrigin).toEqual([0, '50%', 0]);
