@@ -543,8 +543,8 @@ describe('SelectLineScreen - バス路線のみの場合のプリセット表示
     // 鉄道路線/バス路線の区別には依存しない
     const mockOnPress = jest.fn();
     const stations = [
-      createMockStation(1, '都営バス停A', 'Bus Stop A'),
-      createMockStation(2, '都営バス停B', 'Bus Stop B'),
+      createMockStation(1, '路線バス停A', 'Bus Stop A'),
+      createMockStation(2, '路線バス停B', 'Bus Stop B'),
     ];
     const carouselData = [
       createMockLoopItem(1, 'バス路線プリセット', stations),

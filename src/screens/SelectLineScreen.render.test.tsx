@@ -341,7 +341,7 @@ describe('SelectLineScreen', () => {
         transportType: null,
       });
       const busLine = createLine(200, {
-        nameShort: '都営バス',
+        nameShort: '路線バス',
         station: { id: 1, hasTrainTypes: false } as Line['station'],
         transportType: TransportType.Bus,
       });

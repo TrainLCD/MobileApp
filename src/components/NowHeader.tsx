@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
   busBadgeText: {
     fontSize: isTablet ? 16 : 12,
     fontWeight: '600',
-    color: '#fff',
   },
 });
 
@@ -145,11 +144,13 @@ export const NowHeader = ({
 
   const busBadgeStyle: ViewStyle = useMemo(
     () => ({
-      backgroundColor: isLEDTheme ? '#2E7D32' : '#388E3C',
-      borderColor: isLEDTheme ? '#43A047' : '#2E7D32',
+      backgroundColor: isLEDTheme ? '#3a3a3a' : '#e0e0e0',
+      borderColor: isLEDTheme ? '#555' : '#bdbdbd',
     }),
     [isLEDTheme]
   );
+
+  const busBadgeTextColor = isLEDTheme ? '#ccc' : '#333';
 
   const COLLAPSE_RANGE = 64;
   const stackedOpacity = scrollY.interpolate({
@@ -268,8 +269,13 @@ export const NowHeader = ({
                     </Typography>
                     {nowHeader.isBus ? (
                       <View style={[styles.busBadge, busBadgeStyle]}>
-                        <Typography style={styles.busBadgeText}>
-                          {translate('toeiBusBadge')}
+                        <Typography
+                          style={[
+                            styles.busBadgeText,
+                            { color: busBadgeTextColor },
+                          ]}
+                        >
+                          {translate('busBadge')}
                         </Typography>
                       </View>
                     ) : null}
@@ -303,8 +309,10 @@ export const NowHeader = ({
               </Typography>
               {nowHeader.isBus ? (
                 <View style={[styles.busBadge, busBadgeStyle]}>
-                  <Typography style={styles.busBadgeText}>
-                    {translate('toeiBusBadge')}
+                  <Typography
+                    style={[styles.busBadgeText, { color: busBadgeTextColor }]}
+                  >
+                    {translate('busBadge')}
                   </Typography>
                 </View>
               ) : null}
