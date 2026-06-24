@@ -1,6 +1,6 @@
 import { LineType, TrainTypeKind } from '~/@types/graphql';
 
-// バスの速度パラメータ（都営バス基準）
+// バスの速度パラメータ（路線バス基準）
 // 都市部での実運用を考慮
 export const BUS_MAX_SPEED_IN_M_S = 11.11111111111; // 40km/h
 export const BUS_MAX_ACCEL_IN_M_S = 1.2; // 1.2 m/s² - 立ち客を考慮した緩やかな加速

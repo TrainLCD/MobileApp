@@ -94,8 +94,7 @@ const styles = StyleSheet.create({
   },
   busBadgeText: {
     fontSize: isTablet ? 16 : 12,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 
@@ -145,8 +144,8 @@ export const NowHeader = ({
 
   const busBadgeStyle: ViewStyle = useMemo(
     () => ({
-      backgroundColor: isLEDTheme ? '#2E7D32' : '#388E3C',
-      borderColor: isLEDTheme ? '#43A047' : '#2E7D32',
+      backgroundColor: isLEDTheme ? '#2a2a2a' : '#f0f0f0',
+      borderColor: isLEDTheme ? '#444' : '#ddd',
     }),
     [isLEDTheme]
   );
@@ -269,7 +268,7 @@ export const NowHeader = ({
                     {nowHeader.isBus ? (
                       <View style={[styles.busBadge, busBadgeStyle]}>
                         <Typography style={styles.busBadgeText}>
-                          {translate('toeiBusBadge')}
+                          {translate('busBadge')}
                         </Typography>
                       </View>
                     ) : null}
@@ -304,7 +303,7 @@ export const NowHeader = ({
               {nowHeader.isBus ? (
                 <View style={[styles.busBadge, busBadgeStyle]}>
                   <Typography style={styles.busBadgeText}>
-                    {translate('toeiBusBadge')}
+                    {translate('busBadge')}
                   </Typography>
                 </View>
               ) : null}

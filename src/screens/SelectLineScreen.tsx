@@ -358,7 +358,7 @@ const SelectLineScreen = () => {
               {busesLines.length > 0 && (
                 <>
                   <Heading style={styles.busHeading} singleLine>
-                    {translate('toeiBusStopsNearby')}
+                    {translate('busStopsNearby')}
                   </Heading>
                   {Array.from({
                     length: Math.ceil(busesLines.length / numColumns),
