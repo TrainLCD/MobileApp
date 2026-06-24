@@ -127,7 +127,8 @@ const NUMBERING_COLUMN_WIDTH = isTablet ? 72 * 1.5 : 72;
 // 日本語グリフでネイティブのテキスト計測幅がわずかに過小評価されると、
 // 表示用 Typography に計測幅ぴったりの width を与えたとき末尾の文字が
 // 欠ける。HeaderStationName と同じく計測幅にこの分を加えて余白を確保する。
-const STATION_NAME_MEASURE_BUFFER = 8;
+// iOS ではフォントメトリクスの誤差が大きめに出ることがあるため余裕を持たせる。
+const STATION_NAME_MEASURE_BUFFER = 16;
 
 // 駅名の自然幅を測る非表示コンテナの幅。どんなに長い駅名でも打ち切られない
 // よう十分大きく取る。フォールバック計測でこの値以上なら未確定とみなす。
@@ -757,21 +758,26 @@ const StationName = ({
         </Typography>
       </View>
       {/* 表示用。描画幅(width)を与えて省略させず、左基準で横圧縮して
-          スロット内に収める(はみ出しはスロットの overflow:hidden でクリップ)。 */}
+          スロット内に収める(はみ出しはスロットの overflow:hidden でクリップ)。
+          計測完了前(renderWidth===0)は opacity:0 にして、スケーリング未適用の
+          テキストが overflow:hidden でクリップされるのを防ぐ。 */}
       <Typography
         numberOfLines={1}
+        ellipsizeMode="clip"
         testID="portrait-station-name"
         style={[
           styles.stationNameText,
-          renderWidth > 0 && {
-            width: renderWidth,
-            transform: [{ scaleX }],
-            // 左端を基準に横圧縮する。2 値のキーワード文字列('left center')は
-            // New Architecture でパースされず中央基準にフォールバックし、圧縮した
-            // 駅名(主に文字数の多いひらがな表記)が右へ寄ってしまう。数値配列形式
-            // [x, y, z] で指定するとパースを介さず確実に左端基準になる。
-            transformOrigin: [0, '50%', 0],
-          },
+          renderWidth > 0
+            ? {
+                width: renderWidth,
+                transform: [{ scaleX }],
+                // 左端を基準に横圧縮する。2 値のキーワード文字列('left center')は
+                // New Architecture でパースされず中央基準にフォールバックし、圧縮した
+                // 駅名(主に文字数の多いひらがな表記)が右へ寄ってしまう。数値配列形式
+                // [x, y, z] で指定するとパースを介さず確実に左端基準になる。
+                transformOrigin: [0, '50%', 0],
+              }
+            : { opacity: 0 },
         ]}
       >
         {text}
