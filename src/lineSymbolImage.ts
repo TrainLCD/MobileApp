@@ -172,7 +172,7 @@ const LINE_SYMBOL_IMAGE_WITH_COLOR: Record<number, LineSymbolImage> = {
   11602: { signPath: require('../assets/marks/jrw/a.webp') }, // 京都線
   11603: { signPath: require('../assets/marks/jrw/a.webp') }, // 神戸線
   11608: { signPath: require('../assets/marks/jrw/a.webp') }, // 山陽線
-  11609: { signPath: require('../assets/marks/jrw/s2.webp') }, // JR山陽本線(姫路～岡山)
+  11609: { signPath: require('../assets/marks/jrw/a.webp') }, // JR山陽本線(姫路～岡山)
   11610: {
     signPath: require('../assets/marks/jrw/w.webp'),
     subSignPath: require('../assets/marks/jrw/x.webp'),
