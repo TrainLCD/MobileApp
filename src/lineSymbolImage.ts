@@ -221,8 +221,8 @@ const LINE_SYMBOL_IMAGE_WITH_COLOR: Record<number, LineSymbolImage> = {
   11720: { signPath: require('../assets/marks/jrw/z.webp') }, // 福塩線
   11710: { signPath: require('../assets/marks/jrw/m.webp') }, // 瀬戸大橋線
   11631: {
-    signPath: require('../assets/marks/jrw/n.webp'),
-    subSignPath: require('../assets/marks/jrw/a.webp'),
+    signPath: require('../assets/marks/jrw/a.webp'),
+    subSignPath: require('../assets/marks/jrw/n.webp'),
   }, // 赤穂線
   11704: { signPath: require('../assets/marks/jrw/b2.webp') }, // 因美線
   11717: { signPath: require('../assets/marks/jrw/b3.webp') }, // 可部線
