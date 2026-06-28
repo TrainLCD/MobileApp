@@ -172,7 +172,7 @@ const LINE_SYMBOL_IMAGE_WITH_COLOR: Record<number, LineSymbolImage> = {
   11602: { signPath: require('../assets/marks/jrw/a.webp') }, // 京都線
   11603: { signPath: require('../assets/marks/jrw/a.webp') }, // 神戸線
   11608: { signPath: require('../assets/marks/jrw/a.webp') }, // 山陽線
-  11609: { signPath: require('../assets/marks/jrw/s2.webp') }, // JR山陽本線(姫路～岡山)
+  11609: { signPath: require('../assets/marks/jrw/a.webp') }, // JR山陽本線(姫路～岡山)
   11610: {
     signPath: require('../assets/marks/jrw/w.webp'),
     subSignPath: require('../assets/marks/jrw/x.webp'),
@@ -221,8 +221,8 @@ const LINE_SYMBOL_IMAGE_WITH_COLOR: Record<number, LineSymbolImage> = {
   11720: { signPath: require('../assets/marks/jrw/z.webp') }, // 福塩線
   11710: { signPath: require('../assets/marks/jrw/m.webp') }, // 瀬戸大橋線
   11631: {
-    signPath: require('../assets/marks/jrw/n.webp'),
-    subSignPath: require('../assets/marks/jrw/a.webp'),
+    signPath: require('../assets/marks/jrw/a.webp'),
+    subSignPath: require('../assets/marks/jrw/n.webp'),
   }, // 赤穂線
   11704: { signPath: require('../assets/marks/jrw/b2.webp') }, // 因美線
   11717: { signPath: require('../assets/marks/jrw/b3.webp') }, // 可部線
@@ -504,7 +504,7 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   11602: { signPath: require('../assets/marks/jrw/a_g.webp') }, // 京都線
   11603: { signPath: require('../assets/marks/jrw/a_g.webp') }, // 神戸線
   11608: { signPath: require('../assets/marks/jrw/a_g.webp') }, // 山陽線
-  11609: { signPath: require('../assets/marks/jrw/s2_g.webp') }, // JR山陽本線(姫路～岡山)
+  11609: { signPath: require('../assets/marks/jrw/a_g.webp') }, // JR山陽本線(姫路～岡山)
   11610: {
     signPath: require('../assets/marks/jrw/w_g.webp'),
     subSignPath: require('../assets/marks/jrw/x_g.webp'),
@@ -553,8 +553,8 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageWithImage> = {
   11720: { signPath: require('../assets/marks/jrw/z_g.webp') }, // 福塩線
   11710: { signPath: require('../assets/marks/jrw/m_g.webp') }, // 瀬戸大橋線
   11631: {
-    signPath: require('../assets/marks/jrw/n_g.webp'),
-    subSignPath: require('../assets/marks/jrw/a_g.webp'),
+    signPath: require('../assets/marks/jrw/a_g.webp'),
+    subSignPath: require('../assets/marks/jrw/n_g.webp'),
   }, // 赤穂線
   11704: { signPath: require('../assets/marks/jrw/b2_g.webp') }, // 因美線
   11717: { signPath: require('../assets/marks/jrw/b3_g.webp') }, // 可部線
