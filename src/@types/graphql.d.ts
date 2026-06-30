@@ -121,6 +121,7 @@ export enum OperationStatus {
 export type Query = {
   __typename: 'Query';
   connectedRoutes: Array<Route>;
+  estimateArrivalTimes: EstimatedArrivalPage;
   line: Maybe<Line>;
   lineGroupListStations: Array<Station>;
   lineGroupStations: Array<Station>;
@@ -141,6 +142,12 @@ export type Query = {
 export type QueryConnectedRoutesArgs = {
   fromStationGroupId: Scalars['Int']['input'];
   toStationGroupId: Scalars['Int']['input'];
+};
+
+export type QueryEstimateArrivalTimesArgs = {
+  fromStationId: Scalars['Int']['input'];
+  toStationId: Scalars['Int']['input'];
+  viaLineIds: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
 export type QueryLineArgs = {
@@ -226,6 +233,25 @@ export type QueryStationsNearbyArgs = {
   limit: InputMaybe<Scalars['Int']['input']>;
   longitude: Scalars['Float']['input'];
   transportType: InputMaybe<TransportType>;
+};
+
+export type EstimatedArrivalStop = {
+  __typename: 'EstimatedArrivalStop';
+  cumulativeMinutes: Maybe<Scalars['Float']['output']>;
+  stationGroupId: Maybe<Scalars['Int']['output']>;
+  stationId: Maybe<Scalars['Int']['output']>;
+  stopsHere: Maybe<Scalars['Boolean']['output']>;
+};
+
+export type EstimatedArrivalRoute = {
+  __typename: 'EstimatedArrivalRoute';
+  id: Maybe<Scalars['Int']['output']>;
+  stops: Maybe<Array<EstimatedArrivalStop>>;
+};
+
+export type EstimatedArrivalPage = {
+  __typename: 'EstimatedArrivalPage';
+  routes: Maybe<Array<EstimatedArrivalRoute>>;
 };
 
 export type Route = {
@@ -4314,4 +4340,35 @@ export type GetStationTrainTypesLightQuery = {
       | null
       | undefined;
   }>;
+};
+
+export type EstimateArrivalTimesQueryVariables = Exact<{
+  fromStationId: Scalars['Int']['input'];
+  toStationId: Scalars['Int']['input'];
+  viaLineIds: InputMaybe<
+    Array<Scalars['Int']['input']> | Scalars['Int']['input']
+  >;
+}>;
+
+export type EstimateArrivalTimesQuery = {
+  estimateArrivalTimes: {
+    __typename: 'EstimatedArrivalPage';
+    routes:
+      | Array<{
+          __typename: 'EstimatedArrivalRoute';
+          id: number | null | undefined;
+          stops:
+            | Array<{
+                __typename: 'EstimatedArrivalStop';
+                stationId: number | null | undefined;
+                stationGroupId: number | null | undefined;
+                cumulativeMinutes: number | null | undefined;
+                stopsHere: boolean | null | undefined;
+              }>
+            | null
+            | undefined;
+        }>
+      | null
+      | undefined;
+  };
 };

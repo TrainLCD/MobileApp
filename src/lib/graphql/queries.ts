@@ -473,3 +473,28 @@ export const GET_STATION_TRAIN_TYPES_LIGHT = gql`
     }
   }
 `;
+
+// Query for estimating arrival times between two stations
+export const ESTIMATE_ARRIVAL_TIMES = gql`
+  query EstimateArrivalTimes(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $viaLineIds: [Int!]
+  ) {
+    estimateArrivalTimes(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      viaLineIds: $viaLineIds
+    ) {
+      routes {
+        id
+        stops {
+          stationId
+          stationGroupId
+          cumulativeMinutes
+          stopsHere
+        }
+      }
+    }
+  }
+`;
