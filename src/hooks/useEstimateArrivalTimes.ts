@@ -64,7 +64,6 @@ export const useEstimateArrivalTimes = () => {
     skip,
   });
 
-
   // レスポンスの routes から filteringId に一致するルートを1件取り出す
   const matchedRoute = useMemo(() => {
     const routes = data?.estimateArrivalTimes?.routes;
