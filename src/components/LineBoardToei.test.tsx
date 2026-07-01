@@ -14,6 +14,7 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useDisplayCurrentStation: jest.fn(),
+  useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
   useInterval: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
   useTransferLinesFromStation: jest.fn(() => []),
