@@ -6,18 +6,25 @@ import type {
 } from '~/@types/graphql';
 import { ESTIMATE_ARRIVAL_TIMES } from '~/lib/graphql/queries';
 import { selectedLineAtom } from '../store/atoms/line';
-import { selectedBoundAtom, stationsAtom } from '../store/atoms/station';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useGraphQLQuery } from './useGraphQLQuery';
 
 export const useEstimateArrivalTimes = () => {
   const stations = useAtomValue(stationsAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const trainType = useCurrentTrainType();
 
-  const fromStationId = stations[0]?.id;
-  const toStationId = stations.at(-1)?.id;
+  const fromStationId =
+    selectedDirection === 'OUTBOUND' ? stations.at(-1)?.id : stations[0]?.id;
+  const toStationId =
+    selectedDirection === 'OUTBOUND' ? stations[0]?.id : stations.at(-1)?.id;
 
   const viaLineIds = useMemo(
     () => [
