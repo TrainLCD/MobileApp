@@ -21,6 +21,7 @@ export { useDeepLink } from './useDeepLink';
 export { useDisplayCurrentStation } from './useDisplayCurrentStation';
 export { useDisplayNextStation } from './useDisplayNextStation';
 export { useDistanceToNextStation } from './useDistanceToNextStation';
+export { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
 export { useFeedback } from './useFeedback';
 export { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
 export { useFetchNearbyStation } from './useFetchNearbyStation';
