@@ -6,11 +6,13 @@ import type { Line, Station, TrainType } from '~/@types/graphql';
 import { gqlRequest } from '~/lib/gql';
 import { createLine, createStation } from '~/utils/test/factories';
 import { selectedLineAtom } from '../store/atoms/line';
+import { leftStationsAtom } from '../store/atoms/navigation';
 import {
   selectedBoundAtom,
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
 
@@ -29,8 +31,15 @@ jest.mock('../store/atoms/line', () => ({
   __esModule: true,
   selectedLineAtom: { __atom: 'selectedLine' },
 }));
+jest.mock('../store/atoms/navigation', () => ({
+  __esModule: true,
+  leftStationsAtom: { __atom: 'leftStations' },
+}));
 jest.mock('./useCurrentTrainType', () => ({
   useCurrentTrainType: jest.fn(),
+}));
+jest.mock('./useCurrentStation', () => ({
+  useCurrentStation: jest.fn(),
 }));
 jest.mock('~/lib/gql', () => ({
   gqlRequest: jest.fn(),
@@ -81,6 +90,9 @@ describe('useEstimateArrivalTimes', () => {
   const mockUseCurrentTrainType = useCurrentTrainType as jest.MockedFunction<
     typeof useCurrentTrainType
   >;
+  const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
+    typeof useCurrentStation
+  >;
   const mockGqlRequest = gqlRequest as unknown as jest.Mock;
 
   const stationA = createStation(1, { line: { id: 100 } });
@@ -93,12 +105,14 @@ describe('useEstimateArrivalTimes', () => {
     selectedBound = stationC as Station | null,
     selectedDirection = 'INBOUND' as string | null,
     line = selectedLine as Line | null,
+    leftStations = [stationA, stationB, stationC] as Station[],
   } = {}) => {
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === stationsAtom) return stations;
       if (atom === selectedBoundAtom) return selectedBound;
       if (atom === selectedDirectionAtom) return selectedDirection;
       if (atom === selectedLineAtom) return line;
+      if (atom === leftStationsAtom) return leftStations;
       throw new Error('unknown atom');
     });
   };
@@ -106,6 +120,7 @@ describe('useEstimateArrivalTimes', () => {
   beforeEach(() => {
     setupAtoms();
     mockUseCurrentTrainType.mockReturnValue(null);
+    mockUseCurrentStation.mockReturnValue(stationA);
   });
 
   afterEach(() => {
@@ -223,6 +238,130 @@ describe('useEstimateArrivalTimes', () => {
       expect(hookRef.current?.loading).toBe(false);
     });
     expect(hookRef.current?.route).toBeNull();
+  });
+
+  it('leftStations に含まれない駅は stops から除外される', async () => {
+    setupAtoms({ leftStations: [stationB, stationC] });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: {
+        routes: [
+          {
+            id: 100,
+            stops: [
+              { stationGroupId: stationA.groupId, cumulativeMinutes: 0 },
+              { stationGroupId: stationB.groupId, cumulativeMinutes: 10 },
+              { stationGroupId: stationC.groupId, cumulativeMinutes: 20 },
+            ],
+          },
+        ],
+      },
+    });
+
+    const { hookRef } = renderHook();
+
+    await waitFor(() => {
+      expect(hookRef.current?.route?.stops).toHaveLength(2);
+    });
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
+      [stationB.groupId, stationC.groupId]
+    );
+  });
+
+  it('現在駅の到着時刻を基準(0分)とした相対値に変換する', async () => {
+    mockUseCurrentStation.mockReturnValue(stationB);
+    setupAtoms({ leftStations: [stationB, stationC] });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: {
+        routes: [
+          {
+            id: 100,
+            stops: [
+              { stationGroupId: stationA.groupId, cumulativeMinutes: 0 },
+              { stationGroupId: stationB.groupId, cumulativeMinutes: 10 },
+              { stationGroupId: stationC.groupId, cumulativeMinutes: 22.5 },
+            ],
+          },
+        ],
+      },
+    });
+
+    const { hookRef } = renderHook();
+
+    await waitFor(() => {
+      expect(hookRef.current?.route?.stops).toHaveLength(1);
+    });
+    expect(hookRef.current?.route?.stops?.[0]?.stationGroupId).toBe(
+      stationC.groupId
+    );
+    expect(hookRef.current?.route?.stops?.[0]?.cumulativeMinutes).toBe(12.5);
+  });
+
+  it('現在駅自身（0分）とそれより前（マイナス値）の stop は除外される', async () => {
+    mockUseCurrentStation.mockReturnValue(stationB);
+    setupAtoms({ leftStations: [stationA, stationB, stationC] });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: {
+        routes: [
+          {
+            id: 100,
+            stops: [
+              { stationGroupId: stationA.groupId, cumulativeMinutes: 0 },
+              { stationGroupId: stationB.groupId, cumulativeMinutes: 10 },
+              { stationGroupId: stationC.groupId, cumulativeMinutes: 22.5 },
+            ],
+          },
+        ],
+      },
+    });
+
+    const { hookRef } = renderHook();
+
+    await waitFor(() => {
+      expect(hookRef.current?.route?.stops).toHaveLength(1);
+    });
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
+      [stationC.groupId]
+    );
+  });
+
+  it('環状路線で同じ駅(都庁前)が2回出現しても現在地に近い出現を基準にする', async () => {
+    // 大江戸線: 都庁前が全stops中に2回出現するケース。
+    // 1回目(cumulativeMinutes=1.0)は現在地と無関係な別区間の出現、
+    // 2回目(cumulativeMinutes=56.2)が実際に現在地として使うべき出現。
+    const tochomae = createStation(900, { line: { id: 100 } });
+    mockUseCurrentStation.mockReturnValue(tochomae);
+    setupAtoms({ leftStations: [tochomae, stationA, stationB] });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: {
+        routes: [
+          {
+            id: 100,
+            stops: [
+              { stationGroupId: tochomae.groupId, cumulativeMinutes: 1.0 },
+              { stationGroupId: stationC.groupId, cumulativeMinutes: 30 },
+              { stationGroupId: tochomae.groupId, cumulativeMinutes: 56.2 },
+              { stationGroupId: stationA.groupId, cumulativeMinutes: 58.0 },
+              { stationGroupId: stationB.groupId, cumulativeMinutes: 59.9 },
+            ],
+          },
+        ],
+      },
+    });
+
+    const { hookRef } = renderHook();
+
+    await waitFor(() => {
+      expect(hookRef.current?.route?.stops).toHaveLength(2);
+    });
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
+      [stationA.groupId, stationB.groupId]
+    );
+    expect(hookRef.current?.route?.stops?.[0]?.cumulativeMinutes).toBeCloseTo(
+      1.8
+    );
+    expect(hookRef.current?.route?.stops?.[1]?.cumulativeMinutes).toBeCloseTo(
+      3.7
+    );
   });
 
   it('viaLineIds に全路線IDが重複なく含まれる', async () => {

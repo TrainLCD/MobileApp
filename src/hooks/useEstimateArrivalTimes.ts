@@ -6,23 +6,29 @@ import type {
 } from '~/@types/graphql';
 import { ESTIMATE_ARRIVAL_TIMES } from '~/lib/graphql/queries';
 import { selectedLineAtom } from '../store/atoms/line';
+import { leftStationsAtom } from '../store/atoms/navigation';
 import {
   selectedBoundAtom,
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useGraphQLQuery } from './useGraphQLQuery';
 
 /**
  * 選択中の路線・駅情報から estimateArrivalTimes クエリの変数を組み立て、
  * 現在の種別 (groupId) または選択中の路線 ID に一致するルートを返すフック。
+ * 返す route.stops は LineBoard に表示中の駅（leftStations）に限定し、
+ * 現在駅の到着時刻を基準（0分）とした相対時間に変換する。
  */
 export const useEstimateArrivalTimes = () => {
   const stations = useAtomValue(stationsAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
+  const leftStations = useAtomValue(leftStationsAtom);
+  const currentStation = useCurrentStation();
   const trainType = useCurrentTrainType();
 
   // stations 配列は [上り方面の終点, ..., 下り方面の終点] の順。
@@ -64,15 +70,86 @@ export const useEstimateArrivalTimes = () => {
     skip,
   });
 
-  // レスポンスの routes から filteringId に一致するルートを1件取り出す
+  // レスポンスの routes から filteringId に一致するルートを1件取り出し、
+  // stops を LineBoard 表示中の駅（leftStations）だけに絞り込んだ上で、
+  // 現在駅の到着時刻を基準（0分）とした相対時間に変換する
   const matchedRoute = useMemo(() => {
     const routes = data?.estimateArrivalTimes?.routes;
     if (!routes || filteringId == null) {
       return null;
     }
 
-    return routes.find((r) => r.id === filteringId) ?? null;
-  }, [data, filteringId]);
+    const route = routes.find((r) => r.id === filteringId) ?? null;
+    if (!route) {
+      return null;
+    }
+
+    const allStops = route.stops ?? [];
+
+    // 大江戸線の都庁前のように、環状区間で同じ駅が全stops中に複数回
+    // 出現することがある（例: 新宿→光が丘は都庁前を1回だけ通るはずだが、
+    // 環状部分を含む都庁前は他の時点でも別途出現する）。
+    // 単純な find() / filter() だと現在地と無関係な出現（別時点の都庁前）を
+    // 拾ってしまうため、leftStations の並び順をそのまま部分列として
+    // 辿れる区間を stops 内から探す。開始位置の候補が複数ある場合は、
+    // 最も範囲が短い（＝現在地に最も近い）候補を採用する。
+    const firstGroupId = leftStations[0]?.groupId;
+    let windowStartIndex = -1;
+    let windowEndIndex = -1;
+    let bestSpan = Number.POSITIVE_INFINITY;
+    if (firstGroupId != null) {
+      outer: for (let i = 0; i < allStops.length; i++) {
+        if (allStops[i]?.stationGroupId !== firstGroupId) {
+          continue;
+        }
+        let cursor = i;
+        for (const ls of leftStations) {
+          while (
+            cursor < allStops.length &&
+            allStops[cursor]?.stationGroupId !== ls.groupId
+          ) {
+            cursor++;
+          }
+          if (cursor >= allStops.length) {
+            continue outer;
+          }
+          cursor++;
+        }
+        const span = cursor - i;
+        if (span < bestSpan) {
+          bestSpan = span;
+          windowStartIndex = i;
+          windowEndIndex = cursor;
+        }
+      }
+    }
+
+    const windowStops =
+      windowStartIndex !== -1
+        ? allStops.slice(windowStartIndex, windowEndIndex)
+        : allStops;
+    // 特定した区間内で現在駅の到着時刻を探し、基準（0分）として使う。
+    // 区間内に現在駅が見つからない場合はオフセットせず生の値を返す。
+    const baseMinutes =
+      windowStops.find((s) => s.stationGroupId === currentStation?.groupId)
+        ?.cumulativeMinutes ?? 0;
+
+    const visibleGroupIds = new Set(leftStations.map((s) => s.groupId));
+    const relativeStops = windowStops
+      .filter(
+        (s) => s.stationGroupId != null && visibleGroupIds.has(s.stationGroupId)
+      )
+      .map((s) => ({
+        ...s,
+        cumulativeMinutes:
+          s.cumulativeMinutes == null
+            ? null
+            : s.cumulativeMinutes - baseMinutes,
+      }))
+      .filter((s) => s.cumulativeMinutes == null || s.cumulativeMinutes > 0);
+
+    return { ...route, stops: relativeStops };
+  }, [data, filteringId, leftStations, currentStation?.groupId]);
 
   return { route: matchedRoute, loading, error };
 };
