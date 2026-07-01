@@ -12,8 +12,8 @@ import {
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
-import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useGraphQLQuery } from './useGraphQLQuery';
 
 /**
@@ -28,7 +28,9 @@ export const useEstimateArrivalTimes = () => {
   const selectedDirection = useAtomValue(selectedDirectionAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const leftStations = useAtomValue(leftStationsAtom);
-  const currentStation = useCurrentStation();
+  // LineBoard 側の passed/グレーアウト判定と同じ基準駅を使うことで、取りこぼし時の
+  // 前方補正(healed)が効いた際に基準駅がずれ、出発済み駅にETAが残るのを防ぐ。
+  const currentStation = useDisplayCurrentStation();
   const trainType = useCurrentTrainType();
 
   // stations 配列は [上り方面の終点, ..., 下り方面の終点] の順。

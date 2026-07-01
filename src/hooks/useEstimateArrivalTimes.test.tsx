@@ -12,8 +12,8 @@ import {
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
-import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
 
 jest.mock('jotai', () => ({
@@ -38,8 +38,8 @@ jest.mock('../store/atoms/navigation', () => ({
 jest.mock('./useCurrentTrainType', () => ({
   useCurrentTrainType: jest.fn(),
 }));
-jest.mock('./useCurrentStation', () => ({
-  useCurrentStation: jest.fn(),
+jest.mock('./useDisplayCurrentStation', () => ({
+  useDisplayCurrentStation: jest.fn(),
 }));
 jest.mock('~/lib/gql', () => ({
   gqlRequest: jest.fn(),
@@ -90,9 +90,10 @@ describe('useEstimateArrivalTimes', () => {
   const mockUseCurrentTrainType = useCurrentTrainType as jest.MockedFunction<
     typeof useCurrentTrainType
   >;
-  const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
-    typeof useCurrentStation
-  >;
+  const mockUseDisplayCurrentStation =
+    useDisplayCurrentStation as jest.MockedFunction<
+      typeof useDisplayCurrentStation
+    >;
   const mockGqlRequest = gqlRequest as unknown as jest.Mock;
 
   const stationA = createStation(1, { line: { id: 100 } });
@@ -120,7 +121,7 @@ describe('useEstimateArrivalTimes', () => {
   beforeEach(() => {
     setupAtoms();
     mockUseCurrentTrainType.mockReturnValue(null);
-    mockUseCurrentStation.mockReturnValue(stationA);
+    mockUseDisplayCurrentStation.mockReturnValue(stationA);
   });
 
   afterEach(() => {
@@ -268,7 +269,7 @@ describe('useEstimateArrivalTimes', () => {
   });
 
   it('現在駅の到着時刻を基準(0分)とした相対値に変換する', async () => {
-    mockUseCurrentStation.mockReturnValue(stationB);
+    mockUseDisplayCurrentStation.mockReturnValue(stationB);
     setupAtoms({ leftStations: [stationB, stationC] });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
@@ -297,7 +298,7 @@ describe('useEstimateArrivalTimes', () => {
   });
 
   it('現在駅自身（0分）とそれより前（マイナス値）の stop は除外される', async () => {
-    mockUseCurrentStation.mockReturnValue(stationB);
+    mockUseDisplayCurrentStation.mockReturnValue(stationB);
     setupAtoms({ leftStations: [stationA, stationB, stationC] });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
@@ -329,7 +330,7 @@ describe('useEstimateArrivalTimes', () => {
     // 1回目(cumulativeMinutes=1.0)は現在地と無関係な別区間の出現、
     // 2回目(cumulativeMinutes=56.2)が実際に現在地として使うべき出現。
     const tochomae = createStation(900, { line: { id: 100 } });
-    mockUseCurrentStation.mockReturnValue(tochomae);
+    mockUseDisplayCurrentStation.mockReturnValue(tochomae);
     setupAtoms({ leftStations: [tochomae, stationA, stationB] });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
