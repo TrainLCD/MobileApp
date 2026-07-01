@@ -78,8 +78,9 @@ describe('useEstimateArrivalTimes', () => {
   const mockUseAtomValue = useAtomValue as jest.MockedFunction<
     typeof useAtomValue
   >;
-  const mockUseCurrentTrainType =
-    useCurrentTrainType as jest.MockedFunction<typeof useCurrentTrainType>;
+  const mockUseCurrentTrainType = useCurrentTrainType as jest.MockedFunction<
+    typeof useCurrentTrainType
+  >;
   const mockGqlRequest = gqlRequest as unknown as jest.Mock;
 
   const stationA = createStation(1, { line: { id: 100 } });
@@ -240,9 +241,7 @@ describe('useEstimateArrivalTimes', () => {
     });
 
     const variables = mockGqlRequest.mock.calls[0][1];
-    expect(variables.viaLineIds).toEqual(
-      expect.arrayContaining([200, 300])
-    );
+    expect(variables.viaLineIds).toEqual(expect.arrayContaining([200, 300]));
     expect(variables.viaLineIds).toHaveLength(2);
   });
 });
