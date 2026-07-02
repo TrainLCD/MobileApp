@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
+import { FONTS } from '~/constants';
 import { useScale } from '~/hooks/useScale';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
@@ -21,8 +22,9 @@ const localStyles = StyleSheet.create({
     color: '#000',
     fontSize: isTablet ? 30 : 22,
     lineHeight: isTablet ? 32 : 24,
-    fontWeight: '900',
     textAlign: 'center',
+    fontFamily: FONTS.RobotoBold,
+    letterSpacing: -1,
   },
 });
 
