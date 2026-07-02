@@ -130,16 +130,25 @@ export const useEstimateArrivalTimes = () => {
       windowStartIndex !== -1
         ? allStops.slice(windowStartIndex, windowEndIndex)
         : allStops;
-    // 特定した区間内で現在駅の到着時刻を探し、基準（0分）として使う。
+    // 特定した区間内で現在駅の出発時刻を探し、基準（0分）として使う。
+    // 停車時間がある駅では到着時刻ではなく出発時刻を基準にしないと、
+    // 停車中に後続駅のETAがズレて表示されてしまう。
     // 区間内に現在駅が見つからない場合はオフセットせず生の値を返す。
     const baseMinutes =
       windowStops.find((s) => s.stationGroupId === currentStation?.groupId)
-        ?.cumulativeMinutes ?? 0;
+        ?.departureCumulativeMinutes ?? 0;
 
     const visibleGroupIds = new Set(leftStations.map((s) => s.groupId));
+    // 現在駅自身は cumulativeMinutes - baseMinutes が0以下になり通常は下のfilterで
+    // 除外されるが、windowStops内に現在駅のエントリが見つからずbaseMinutesが0に
+    // フォールバックするケースでは生の値が残ってしまう。停車中の駅にはETAを出さない
+    // という表示上の不変条件を計算結果に依存せず保証するため、ここで明示的に除く。
     const relativeStops = windowStops
       .filter(
-        (s) => s.stationGroupId != null && visibleGroupIds.has(s.stationGroupId)
+        (s) =>
+          s.stationGroupId != null &&
+          visibleGroupIds.has(s.stationGroupId) &&
+          s.stationGroupId !== currentStation?.groupId
       )
       .map((s) => ({
         ...s,

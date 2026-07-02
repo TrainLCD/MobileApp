@@ -492,6 +492,7 @@ export const ESTIMATE_ARRIVAL_TIMES = gql`
           stationId
           stationGroupId
           cumulativeMinutes
+          departureCumulativeMinutes
           stopsHere
         }
       }

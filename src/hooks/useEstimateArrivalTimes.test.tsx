@@ -268,7 +268,7 @@ describe('useEstimateArrivalTimes', () => {
     );
   });
 
-  it('現在駅の到着時刻を基準(0分)とした相対値に変換する', async () => {
+  it('現在駅の出発時刻を基準(0分)とした相対値に変換する', async () => {
     mockUseDisplayCurrentStation.mockReturnValue(stationB);
     setupAtoms({ leftStations: [stationB, stationC] });
     mockGqlRequest.mockResolvedValue({
@@ -278,7 +278,11 @@ describe('useEstimateArrivalTimes', () => {
             id: 100,
             stops: [
               { stationGroupId: stationA.groupId, cumulativeMinutes: 0 },
-              { stationGroupId: stationB.groupId, cumulativeMinutes: 10 },
+              {
+                stationGroupId: stationB.groupId,
+                cumulativeMinutes: 10,
+                departureCumulativeMinutes: 10,
+              },
               { stationGroupId: stationC.groupId, cumulativeMinutes: 22.5 },
             ],
           },
@@ -340,7 +344,11 @@ describe('useEstimateArrivalTimes', () => {
             stops: [
               { stationGroupId: tochomae.groupId, cumulativeMinutes: 1.0 },
               { stationGroupId: stationC.groupId, cumulativeMinutes: 30 },
-              { stationGroupId: tochomae.groupId, cumulativeMinutes: 56.2 },
+              {
+                stationGroupId: tochomae.groupId,
+                cumulativeMinutes: 56.2,
+                departureCumulativeMinutes: 56.2,
+              },
               { stationGroupId: stationA.groupId, cumulativeMinutes: 58.0 },
               { stationGroupId: stationB.groupId, cumulativeMinutes: 59.9 },
             ],
