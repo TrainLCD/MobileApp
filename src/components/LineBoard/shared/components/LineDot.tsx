@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { FONTS } from '~/constants';
 import { useScale } from '~/hooks/useScale';
@@ -24,7 +24,7 @@ const localStyles = StyleSheet.create({
     lineHeight: isTablet ? 32 : 24,
     textAlign: 'center',
     fontFamily: FONTS.RobotoBold,
-    letterSpacing: -1,
+    letterSpacing: Platform.OS === 'ios' ? 0 : -1,
   },
 });
 
