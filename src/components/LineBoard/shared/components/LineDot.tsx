@@ -21,7 +21,7 @@ const localStyles = StyleSheet.create({
     color: '#000',
     fontSize: isTablet ? 30 : 22,
     lineHeight: isTablet ? 32 : 24,
-    fontWeight: '900',
+    fontWeight: '600',
     textAlign: 'center',
   },
 });
