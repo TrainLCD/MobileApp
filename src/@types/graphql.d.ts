@@ -258,9 +258,9 @@ export type QueryStationsNearbyArgs = {
 };
 
 export type QueryTrainRouteArgs = {
-  fromStationGroupId: Scalars['Int']['input'];
+  fromStationId: Scalars['Int']['input'];
   lineGroupId: InputMaybe<Scalars['Int']['input']>;
-  toStationGroupId: Scalars['Int']['input'];
+  toStationId: Scalars['Int']['input'];
 };
 
 export type Route = {
