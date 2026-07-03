@@ -5,6 +5,7 @@ import type {
   EstimateArrivalTimesQueryVariables,
 } from '~/@types/graphql';
 import { ESTIMATE_ARRIVAL_TIMES } from '~/lib/graphql/queries';
+import type { LineDirection } from '../models/Bound';
 import { selectedLineAtom } from '../store/atoms/line';
 import { leftStationsAtom } from '../store/atoms/navigation';
 import {
@@ -15,6 +16,14 @@ import {
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useGraphQLQuery } from './useGraphQLQuery';
+import { useLoopLine } from './useLoopLine';
+
+// StationAPI EstimateArrivalTimesRequest.direction_id (0 = 格納順, 1 = 逆順) に対応。
+// stations 配列は API の格納順なので、先頭→末尾に進む INBOUND が 0、逆の OUTBOUND が 1。
+const LOOP_LINE_DIRECTION_ID: Record<LineDirection, number> = {
+  INBOUND: 0,
+  OUTBOUND: 1,
+};
 
 /**
  * 選択中の路線・駅情報から estimateArrivalTimes クエリの変数を組み立て、
@@ -32,6 +41,7 @@ export const useEstimateArrivalTimes = () => {
   // 前方補正(healed)が効いた際に基準駅がずれ、出発済み駅にETAが残るのを防ぐ。
   const currentStation = useDisplayCurrentStation();
   const trainType = useCurrentTrainType();
+  const { isLoopLine } = useLoopLine();
 
   // stations 配列は [上り方面の終点, ..., 下り方面の終点] の順。
   // OUTBOUND は末尾→先頭方向、INBOUND は先頭→末尾方向に進むので from/to を入れ替える。
@@ -53,6 +63,15 @@ export const useEstimateArrivalTimes = () => {
   // routes.id は種別選択時は trainType.groupId、未選択時は路線IDに対応する
   const filteringId = trainType?.groupId ?? selectedLine?.id;
 
+  // 環状路線は from/to 駅だけでは周回方向が一意に定まらず、directionId 未指定だと
+  // バックエンドは直線距離が短い方の弧を選ぶヒューリスティックにフォールバックする
+  // (TrainLCD/StationAPI#1581)。逆回り方向の ETA が返るのを防ぐため、環状路線の
+  // ときだけ進行方向を明示的に指定する。undefined はシリアライズ時に落ちるので送信されない。
+  const directionId =
+    isLoopLine && selectedDirection != null
+      ? LOOP_LINE_DIRECTION_ID[selectedDirection]
+      : undefined;
+
   // 方面未選択・始発/終着が不明・フィルタ先が無い場合はクエリを実行しない
   const skip =
     !selectedBound ||
@@ -68,6 +87,7 @@ export const useEstimateArrivalTimes = () => {
       fromStationId: fromStationId ?? 0,
       toStationId: toStationId ?? 0,
       viaLineIds,
+      directionId,
     },
     skip,
   });
