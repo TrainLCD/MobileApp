@@ -19,10 +19,12 @@ import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
 
 // StationAPI EstimateArrivalTimesRequest.direction_id (0 = 格納順, 1 = 逆順) に対応。
-// stations 配列は API の格納順なので、先頭→末尾に進む INBOUND が 0、逆の OUTBOUND が 1。
+// 環状路線の進行方向は線形路線と逆の規約で、INBOUND(内回り)は stations 配列の逆順、
+// OUTBOUND(外回り)は格納順に進む (useNextStation の環状分岐・useLoopLine と同じ)。
+// 例: 山手線は 大崎→渋谷→新宿→池袋→上野→東京→品川 の順で格納されており、これは外回り。
 const LOOP_LINE_DIRECTION_ID: Record<LineDirection, number> = {
-  INBOUND: 0,
-  OUTBOUND: 1,
+  INBOUND: 1,
+  OUTBOUND: 0,
 };
 
 /**
@@ -44,11 +46,19 @@ export const useEstimateArrivalTimes = () => {
   const { isLoopLine } = useLoopLine();
 
   // stations 配列は [上り方面の終点, ..., 下り方面の終点] の順。
-  // OUTBOUND は末尾→先頭方向、INBOUND は先頭→末尾方向に進むので from/to を入れ替える。
-  const fromStationId =
-    selectedDirection === 'OUTBOUND' ? stations.at(-1)?.id : stations[0]?.id;
-  const toStationId =
-    selectedDirection === 'OUTBOUND' ? stations[0]?.id : stations.at(-1)?.id;
+  // 線形路線では OUTBOUND は末尾→先頭方向、INBOUND は先頭→末尾方向に進むので from/to を入れ替える。
+  // 環状路線は進行方向の規約が線形と逆 (INBOUND=配列逆順・OUTBOUND=格納順) なので、
+  // from/to も進行方向の始端→終端になるよう逆に割り当てる。こうしないと directionId で
+  // 指定した向きの弧が from→to の全周区間ではなく継ぎ目を跨いだ2駅分に潰れてしまう。
+  const travelsInStoredOrder = isLoopLine
+    ? selectedDirection === 'OUTBOUND'
+    : selectedDirection === 'INBOUND';
+  const fromStationId = travelsInStoredOrder
+    ? stations[0]?.id
+    : stations.at(-1)?.id;
+  const toStationId = travelsInStoredOrder
+    ? stations.at(-1)?.id
+    : stations[0]?.id;
 
   // 経由路線ID: stations に含まれる全路線IDを重複排除して渡す
   const viaLineIds = useMemo(
