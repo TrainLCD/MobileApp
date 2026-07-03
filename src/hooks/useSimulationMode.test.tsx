@@ -53,7 +53,9 @@ jest.mock('~/hooks/useLoopLine', () => ({
   })),
 }));
 
-jest.mock('~/hooks/useGraphQLQuery');
+jest.mock('~/hooks/useGraphQLQuery', () => ({
+  useGraphQLQuery: jest.fn(),
+}));
 
 jest.mock('expo-location', () => ({
   hasStartedLocationUpdatesAsync: jest.fn(),
