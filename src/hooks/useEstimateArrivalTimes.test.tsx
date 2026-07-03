@@ -249,6 +249,25 @@ describe('useEstimateArrivalTimes', () => {
     expect(variables.directionId).toBe(1);
   });
 
+  it('環状路線でも方面未選択のとき directionId を送信しない', async () => {
+    mockUseLoopLine.mockReturnValue({
+      isLoopLine: true,
+    } as ReturnType<typeof useLoopLine>);
+    setupAtoms({ selectedDirection: null });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: { routes: [] },
+    });
+
+    renderHook();
+
+    await waitFor(() => {
+      expect(mockGqlRequest).toHaveBeenCalled();
+    });
+
+    const variables = mockGqlRequest.mock.calls[0][1];
+    expect(variables.directionId).toBeUndefined();
+  });
+
   it('trainType.groupId でルートをフィルタリングする', async () => {
     mockUseCurrentTrainType.mockReturnValue({
       groupId: 42,
