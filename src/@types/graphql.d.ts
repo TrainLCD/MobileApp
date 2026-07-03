@@ -4809,6 +4809,28 @@ export type GetStationTrainTypesLightQuery = {
   }>;
 };
 
+export type GetTrainRouteQueryVariables = Exact<{
+  fromStationId: Scalars['Int']['input'];
+  toStationId: Scalars['Int']['input'];
+  lineGroupId: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+export type GetTrainRouteQuery = {
+  trainRoute: {
+    __typename: 'TrainRouteResponse';
+    segments:
+      | Array<{
+          __typename: 'TrainRouteSegment';
+          distanceFromPrevious: number | null | undefined;
+          maxAcceleration: number | null | undefined;
+          maxDeceleration: number | null | undefined;
+          maxSpeed: number | null | undefined;
+        }>
+      | null
+      | undefined;
+  };
+};
+
 export type EstimateArrivalTimesQueryVariables = Exact<{
   fromStationId: Scalars['Int']['input'];
   toStationId: Scalars['Int']['input'];
