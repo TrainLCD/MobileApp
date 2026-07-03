@@ -64,7 +64,6 @@ Before you begin, ensure you have met the following requirements:
 - **npm 10.x** (bundled with Node.js 22; `engines` + `engine-strict=true` block `npm install` on other versions)
 - **React Native development environment** set up
 - **Expo CLI** installed globally
-- **Firebase CLI** (for Cloud Functions development)
 - **Android Studio** (for Android development)
 - **Xcode** (for iOS development, macOS only)
 
@@ -227,7 +226,7 @@ TrainLCD is built with:
 - **TypeScript** - Type safety and better developer experience
 - **React Navigation** - Navigation library
 - **Tanstack Query** - Data fetching and caching
-- **Firebase** - Backend services (Analytics, Auth, Firestore, Storage)
+- **Cloudflare Workers** - Backend API (auth, TTS, feedback, remote config) with R2/KV storage
 - **Sentry** - Error tracking and performance monitoring
 - **GraphQL** with Code Generator - Typed queries and operations
 
