@@ -4815,6 +4815,7 @@ export type EstimateArrivalTimesQueryVariables = Exact<{
   viaLineIds: InputMaybe<
     Array<Scalars['Int']['input']> | Scalars['Int']['input']
   >;
+  directionId: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 export type EstimateArrivalTimesQuery = {

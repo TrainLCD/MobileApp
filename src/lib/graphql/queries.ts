@@ -480,11 +480,13 @@ export const ESTIMATE_ARRIVAL_TIMES = gql`
     $fromStationId: Int!
     $toStationId: Int!
     $viaLineIds: [Int!]
+    $directionId: Int
   ) {
     estimateArrivalTimes(
       fromStationId: $fromStationId
       toStationId: $toStationId
       viaLineIds: $viaLineIds
+      directionId: $directionId
     ) {
       routes {
         id

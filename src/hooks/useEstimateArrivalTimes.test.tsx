@@ -15,6 +15,7 @@ import {
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
+import { useLoopLine } from './useLoopLine';
 
 jest.mock('jotai', () => ({
   __esModule: true,
@@ -40,6 +41,9 @@ jest.mock('./useCurrentTrainType', () => ({
 }));
 jest.mock('./useDisplayCurrentStation', () => ({
   useDisplayCurrentStation: jest.fn(),
+}));
+jest.mock('./useLoopLine', () => ({
+  useLoopLine: jest.fn(),
 }));
 jest.mock('~/lib/gql', () => ({
   gqlRequest: jest.fn(),
@@ -94,6 +98,9 @@ describe('useEstimateArrivalTimes', () => {
     useDisplayCurrentStation as jest.MockedFunction<
       typeof useDisplayCurrentStation
     >;
+  const mockUseLoopLine = useLoopLine as jest.MockedFunction<
+    typeof useLoopLine
+  >;
   const mockGqlRequest = gqlRequest as unknown as jest.Mock;
 
   const stationA = createStation(1, { line: { id: 100 } });
@@ -122,6 +129,9 @@ describe('useEstimateArrivalTimes', () => {
     setupAtoms();
     mockUseCurrentTrainType.mockReturnValue(null);
     mockUseDisplayCurrentStation.mockReturnValue(stationA);
+    mockUseLoopLine.mockReturnValue({
+      isLoopLine: false,
+    } as ReturnType<typeof useLoopLine>);
   });
 
   afterEach(() => {
@@ -184,6 +194,78 @@ describe('useEstimateArrivalTimes', () => {
     const variables = mockGqlRequest.mock.calls[0][1];
     expect(variables.fromStationId).toBe(stationC.id);
     expect(variables.toStationId).toBe(stationA.id);
+  });
+
+  it('環状路線でないとき directionId を送信しない', async () => {
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: { routes: [] },
+    });
+
+    renderHook();
+
+    await waitFor(() => {
+      expect(mockGqlRequest).toHaveBeenCalled();
+    });
+
+    const variables = mockGqlRequest.mock.calls[0][1];
+    expect(variables.directionId).toBeUndefined();
+  });
+
+  it('環状路線かつ INBOUND のとき directionId=0(格納順) を送信する', async () => {
+    mockUseLoopLine.mockReturnValue({
+      isLoopLine: true,
+    } as ReturnType<typeof useLoopLine>);
+    setupAtoms({ selectedDirection: 'INBOUND' });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: { routes: [] },
+    });
+
+    renderHook();
+
+    await waitFor(() => {
+      expect(mockGqlRequest).toHaveBeenCalled();
+    });
+
+    const variables = mockGqlRequest.mock.calls[0][1];
+    expect(variables.directionId).toBe(0);
+  });
+
+  it('環状路線かつ OUTBOUND のとき directionId=1(逆順) を送信する', async () => {
+    mockUseLoopLine.mockReturnValue({
+      isLoopLine: true,
+    } as ReturnType<typeof useLoopLine>);
+    setupAtoms({ selectedDirection: 'OUTBOUND' });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: { routes: [] },
+    });
+
+    renderHook();
+
+    await waitFor(() => {
+      expect(mockGqlRequest).toHaveBeenCalled();
+    });
+
+    const variables = mockGqlRequest.mock.calls[0][1];
+    expect(variables.directionId).toBe(1);
+  });
+
+  it('環状路線でも方面未選択のとき directionId を送信しない', async () => {
+    mockUseLoopLine.mockReturnValue({
+      isLoopLine: true,
+    } as ReturnType<typeof useLoopLine>);
+    setupAtoms({ selectedDirection: null });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: { routes: [] },
+    });
+
+    renderHook();
+
+    await waitFor(() => {
+      expect(mockGqlRequest).toHaveBeenCalled();
+    });
+
+    const variables = mockGqlRequest.mock.calls[0][1];
+    expect(variables.directionId).toBeUndefined();
   });
 
   it('trainType.groupId でルートをフィルタリングする', async () => {
