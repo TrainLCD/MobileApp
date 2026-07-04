@@ -29,6 +29,16 @@ const setAtomValues = ({
   });
 };
 
+const setLoopLine = ({
+  isLoopLine = false,
+  isOedoLine = false,
+}: {
+  isLoopLine?: boolean;
+  isOedoLine?: boolean;
+} = {}) => {
+  (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine, isOedoLine });
+};
+
 const TestComponent: React.FC<{ station?: Station }> = ({ station }) => {
   const isTerminus = useIsTerminus(station);
   return <Text testID="isTerminus">{String(isTerminus)}</Text>;
@@ -41,10 +51,7 @@ describe('useIsTerminus フック', () => {
 
   it('station が未指定なら false を返す', () => {
     setAtomValues({ stations: [] });
-    (useLoopLine as jest.Mock).mockReturnValue({
-      isLoopLine: false,
-      isOedoLine: false,
-    });
+    setLoopLine();
 
     const { getByTestId } = render(<TestComponent />);
     expect(getByTestId('isTerminus').props.children).toBe('false');
@@ -56,10 +63,7 @@ describe('useIsTerminus フック', () => {
       { id: 2, groupId: 2 },
     ] as unknown as Station[];
     setAtomValues({ stations });
-    (useLoopLine as jest.Mock).mockReturnValue({
-      isLoopLine: true,
-      isOedoLine: false,
-    });
+    setLoopLine({ isLoopLine: true });
 
     const { getByTestId } = render(<TestComponent station={stations[0]} />);
     expect(getByTestId('isTerminus').props.children).toBe('false');
@@ -72,10 +76,7 @@ describe('useIsTerminus フック', () => {
       { id: 3, groupId: 3 },
     ] as unknown as Station[];
     setAtomValues({ stations });
-    (useLoopLine as jest.Mock).mockReturnValue({
-      isLoopLine: false,
-      isOedoLine: false,
-    });
+    setLoopLine();
 
     const { getByTestId, rerender } = render(
       <TestComponent station={stations[0]} />
@@ -99,10 +100,7 @@ describe('useIsTerminus フック', () => {
       hikarigaoka, // 光が丘
     ] as unknown as Station[];
     setAtomValues({ stations, selectedBound: hikarigaoka as Station });
-    (useLoopLine as jest.Mock).mockReturnValue({
-      isLoopLine: false,
-      isOedoLine: true,
-    });
+    setLoopLine({ isOedoLine: true });
 
     const { getByTestId } = render(
       <TestComponent station={shinjukuTochomaeOuter as Station} />
@@ -122,10 +120,7 @@ describe('useIsTerminus フック', () => {
       tochomaeOuter, // 都庁前(外回り) - 末尾
     ] as unknown as Station[];
     setAtomValues({ stations, selectedBound: hikarigaoka as Station });
-    (useLoopLine as jest.Mock).mockReturnValue({
-      isLoopLine: false,
-      isOedoLine: true,
-    });
+    setLoopLine({ isOedoLine: true });
 
     const { getByTestId } = render(
       <TestComponent station={tochomaeOuter as Station} />
@@ -140,14 +135,28 @@ describe('useIsTerminus フック', () => {
       tochomaeOuter,
     ] as unknown as Station[];
     setAtomValues({ stations, selectedBound: tochomaeOuter as Station });
-    (useLoopLine as jest.Mock).mockReturnValue({
-      isLoopLine: false,
-      isOedoLine: true,
-    });
+    setLoopLine({ isOedoLine: true });
 
     const { getByTestId } = render(
       <TestComponent station={tochomaeOuter as Station} />
     );
     expect(getByTestId('isTerminus').props.children).toBe('true');
+  });
+
+  it('大江戸線で selectedBound が未選択(null)の場合は終点扱いしない', () => {
+    // 目的地未選択のまま都庁前を通過するケースで、selectedBound?.id === station.id が
+    // 安全に false を返すことを確認する
+    const tochomaeOuter = { id: 9930100, groupId: 9930100 };
+    const stations = [
+      { id: 9930101, groupId: 9930101 },
+      tochomaeOuter,
+    ] as unknown as Station[];
+    setAtomValues({ stations, selectedBound: null });
+    setLoopLine({ isOedoLine: true });
+
+    const { getByTestId } = render(
+      <TestComponent station={tochomaeOuter as Station} />
+    );
+    expect(getByTestId('isTerminus').props.children).toBe('false');
   });
 });
