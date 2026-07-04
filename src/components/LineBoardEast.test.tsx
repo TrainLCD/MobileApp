@@ -15,6 +15,7 @@ jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
   useDisplayCurrentStation: jest.fn(),
   useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
+  useEstimatedMinutesByStationId: jest.fn(() => new Map()),
   useInterval: jest.fn(),
   useTransferLinesFromStation: jest.fn(() => []),
 }));
@@ -184,6 +185,23 @@ describe('LineBoardEast', () => {
       />
     );
     expect(LineDot).toHaveBeenCalled();
+  });
+
+  it('stationIdに対応するestimatedMinutesがLineDotへ渡される', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
+    const { LineDot } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ estimatedMinutes: 5 }),
+      undefined
+    );
   });
 
   it('lineがnullの場合、何もレンダリングされない', () => {

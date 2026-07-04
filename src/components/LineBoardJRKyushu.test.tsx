@@ -15,6 +15,7 @@ jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
   useDisplayCurrentStation: jest.fn(),
   useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
+  useEstimatedMinutesByStationId: jest.fn(() => new Map()),
   useInterval: jest.fn(),
   useTransferLinesFromStation: jest.fn(() => []),
 }));
@@ -159,6 +160,23 @@ describe('LineBoardJRKyushu', () => {
     );
     expect(LineDot).toHaveBeenCalled();
     expect(LineDot).toHaveBeenCalledTimes(mockStations.length);
+  });
+
+  it('stationIdに対応するestimatedMinutesがLineDotへ渡される', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
+    const { LineDot } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardJRKyushu
+        stations={mockStations}
+        lineColors={['#f60', '#f60']}
+        hasTerminus={false}
+      />
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ estimatedMinutes: 5 }),
+      undefined
+    );
   });
 
   it('NumberingIconコンポーネントが駅番号付きの駅に対してレンダリングされる', () => {
