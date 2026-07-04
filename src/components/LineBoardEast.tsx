@@ -7,6 +7,7 @@ import {
   useCurrentLine,
   useDisplayCurrentStation,
   useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -489,16 +490,8 @@ const LineBoardEast: React.FC<Props> = ({
   const nextStation = useDisplayNextStation();
   const afterNextStation = useAfterNextStation();
   const { route: estimatedRoute } = useEstimateArrivalTimes();
-
-  const estimatedMinutesByGroupId = useMemo(
-    () =>
-      new Map(
-        estimatedRoute?.stops
-          ?.filter((s) => s.stationGroupId != null)
-          .map((s) => [s.stationGroupId as number, s.cumulativeMinutes]) ?? []
-      ),
-    [estimatedRoute]
-  );
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const dim = useLandscapeWindowDimensions();
 
@@ -569,9 +562,7 @@ const LineBoardEast: React.FC<Props> = ({
             chevronColors={chevronColors}
             isOdakyu={isOdakyu}
             estimatedMinutes={
-              s.groupId != null
-                ? estimatedMinutesByGroupId.get(s.groupId)
-                : null
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
             }
           />
         </React.Fragment>
@@ -584,7 +575,7 @@ const LineBoardEast: React.FC<Props> = ({
       lineColors,
       stations,
       isOdakyu,
-      estimatedMinutesByGroupId,
+      estimatedMinutesByStationId,
     ]
   );
 

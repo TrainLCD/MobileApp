@@ -15,6 +15,7 @@ jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
   useDisplayCurrentStation: jest.fn(),
   useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
+  useEstimatedMinutesByStationId: jest.fn(() => new Map()),
   useInterval: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
   useTransferLinesFromStation: jest.fn(() => []),

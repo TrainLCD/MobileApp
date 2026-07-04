@@ -22,6 +22,7 @@ export { useDisplayCurrentStation } from './useDisplayCurrentStation';
 export { useDisplayNextStation } from './useDisplayNextStation';
 export { useDistanceToNextStation } from './useDistanceToNextStation';
 export { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
+export { useEstimatedMinutesByStationId } from './useEstimatedMinutesByStationId';
 export { useFeedback } from './useFeedback';
 export { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
 export { useFetchNearbyStation } from './useFetchNearbyStation';
