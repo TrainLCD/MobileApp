@@ -78,7 +78,7 @@ export const useSimulationMode = (): void => {
   const fromStationId = maybeRevsersedStations[0]?.id;
   const toStationId = maybeRevsersedStations.at(-1)?.id;
 
-  const { data: trainRouteData } = useGraphQLQuery<
+  const { data: trainRouteData, error: trainRouteError } = useGraphQLQuery<
     GetTrainRouteQuery,
     GetTrainRouteQueryVariables
   >(GET_TRAIN_ROUTE, {
@@ -147,6 +147,13 @@ export const useSimulationMode = (): void => {
 
     stopLocationUpdates();
   }, [enabled]);
+
+  // trainRoute クエリのエラーをログに記録
+  useEffect(() => {
+    if (trainRouteError) {
+      console.error('[useSimulationMode] trainRoute query error:', trainRouteError);
+    }
+  }, [trainRouteError]);
 
   useEffect(() => {
     const segments = trainRouteData?.trainRoute?.segments;
