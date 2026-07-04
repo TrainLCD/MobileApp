@@ -2,6 +2,8 @@ export type { BlinkingChevronProps } from './BlinkingChevron';
 export { BlinkingChevron } from './BlinkingChevron';
 export type { EmptyStationNameCellProps } from './EmptyStationNameCell';
 export { EmptyStationNameCell } from './EmptyStationNameCell';
+export type { EstimatedMinutesBadgeProps } from './EstimatedMinutesBadge';
+export { EstimatedMinutesBadge } from './EstimatedMinutesBadge';
 export type { LineDotProps } from './LineDot';
 export { LineDot } from './LineDot';
 export type { StationNameProps } from './StationName';

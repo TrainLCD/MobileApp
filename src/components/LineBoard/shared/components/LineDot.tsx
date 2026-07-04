@@ -1,14 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type React from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
-import { FONTS } from '~/constants';
 import { useScale } from '~/hooks/useScale';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import PadLineMarks from '../../../PadLineMarks';
 import PassChevronEast from '../../../PassChevronEast';
 import { commonLineBoardStyles as styles } from '../styles/commonStyles';
+import { EstimatedMinutesBadge } from './EstimatedMinutesBadge';
 
 const localStyles = StyleSheet.create({
   estimatedMinutesOverlay: {
@@ -17,14 +17,6 @@ const localStyles = StyleSheet.create({
     left: 0,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  estimatedMinutesText: {
-    color: '#000',
-    fontSize: isTablet ? 30 : 22,
-    lineHeight: isTablet ? 32 : 24,
-    textAlign: 'center',
-    fontFamily: FONTS.RobotoBold,
-    letterSpacing: Platform.OS === 'ios' ? 0 : -1,
   },
 });
 
@@ -113,9 +105,7 @@ export const LineDot: React.FC<LineDotProps> = ({
             ]}
             pointerEvents="none"
           >
-            <Text style={localStyles.estimatedMinutesText}>
-              {Math.round(estimatedMinutes)}
-            </Text>
+            <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
           </View>
         ) : null}
       </View>

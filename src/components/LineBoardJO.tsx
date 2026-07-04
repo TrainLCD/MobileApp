@@ -5,6 +5,8 @@ import type { Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useIsPassing,
   useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
@@ -19,6 +21,7 @@ import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
 import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
+import { EstimatedMinutesBadge } from './LineBoard/shared/components';
 import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import {
   BAR_BOTTOM_JO,
@@ -233,6 +236,9 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const station = useDisplayCurrentStation();
   const currentLine = useCurrentLine();
   const barWidth = useBarWidth();
+  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -300,83 +306,97 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
 
   return (
     <View style={styles.root}>
-      {[...lineColors, ...emptyArray].map((lc, i) => (
-        <React.Fragment key={`${lc}${i.toString()}`}>
-          <View
-            key={`${lc}${i.toString()}`}
-            style={[
-              styles.barJO,
-              {
-                width: barWidth,
-                left: barWidth * i,
-                backgroundColor: (() => {
-                  if (i <= currentStationIndex) {
-                    if (!arrived) {
+      {[...lineColors, ...emptyArray].map((lc, i) => {
+        const stationId = stations[i]?.id;
+        const estimatedMinutes =
+          stationId != null && i > currentStationIndex
+            ? estimatedMinutesByStationId.get(stationId)
+            : null;
+
+        return (
+          <React.Fragment key={`${lc}${i.toString()}`}>
+            <View
+              key={`${lc}${i.toString()}`}
+              style={[
+                styles.barJO,
+                {
+                  width: barWidth,
+                  left: barWidth * i,
+                  backgroundColor: (() => {
+                    if (i <= currentStationIndex) {
+                      if (!arrived) {
+                        return '#888';
+                      }
+                      if (i === currentStationIndex) {
+                        return '#dc143c';
+                      }
                       return '#888';
                     }
-                    if (i === currentStationIndex) {
-                      return '#dc143c';
-                    }
-                    return '#888';
-                  }
 
-                  return lc ?? '#888';
-                })(),
-              },
-            ]}
-          />
-          <View
-            style={[
-              styles.barJO,
-              {
-                left: barWidth * i,
-                backgroundColor: (() => {
-                  if (i <= currentStationIndex) {
-                    if (!arrived) {
-                      return '#888';
-                    }
-                    if (i === currentStationIndex) {
-                      return '#dc143c';
-                    }
-                    return '#888';
-                  }
-
-                  return lc ?? '#888';
-                })(),
-              },
-            ]}
-          />
-          {getIsPass(stations[i]) ? (
-            <View
-              style={[
-                styles.barDotJO,
-                {
-                  left: getLeft(i),
-                  bottom: getBottom(i),
-                  width: i <= currentStationIndex ? 16 : 32,
-                  height: i <= currentStationIndex ? 16 : 32,
-                },
-              ]}
-            >
-              <PassChevronEast />
-            </View>
-          ) : (
-            <View
-              style={[
-                styles.barDotJO,
-                {
-                  backgroundColor:
-                    stations.length <= i ? 'transparent' : 'white',
-                  left: getLeft(i),
-                  bottom: getBottom(i),
-                  width: i <= currentStationIndex ? 16 : 32,
-                  height: i <= currentStationIndex ? 16 : 32,
+                    return lc ?? '#888';
+                  })(),
                 },
               ]}
             />
-          )}
-        </React.Fragment>
-      ))}
+            <View
+              style={[
+                styles.barJO,
+                {
+                  left: barWidth * i,
+                  backgroundColor: (() => {
+                    if (i <= currentStationIndex) {
+                      if (!arrived) {
+                        return '#888';
+                      }
+                      if (i === currentStationIndex) {
+                        return '#dc143c';
+                      }
+                      return '#888';
+                    }
+
+                    return lc ?? '#888';
+                  })(),
+                },
+              ]}
+            />
+            {getIsPass(stations[i]) ? (
+              <View
+                style={[
+                  styles.barDotJO,
+                  {
+                    left: getLeft(i),
+                    bottom: getBottom(i),
+                    width: i <= currentStationIndex ? 16 : 32,
+                    height: i <= currentStationIndex ? 16 : 32,
+                  },
+                ]}
+              >
+                <PassChevronEast />
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.barDotJO,
+                  {
+                    backgroundColor:
+                      stations.length <= i ? 'transparent' : 'white',
+                    left: getLeft(i),
+                    bottom: getBottom(i),
+                    width: i <= currentStationIndex ? 16 : 32,
+                    height: i <= currentStationIndex ? 16 : 32,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  },
+                ]}
+              >
+                {estimatedMinutes != null ? (
+                  <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
+                ) : null}
+              </View>
+            )}
+          </React.Fragment>
+        );
+      })}
 
       {arrived ? (
         <View

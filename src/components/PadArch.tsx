@@ -17,6 +17,7 @@ import {
 import type { LineMark } from '../models/LineMark';
 import getIsPass from '../utils/isPass';
 import { ChevronYamanote } from './ChevronYamanote';
+import { EstimatedMinutesBadge } from './LineBoard/shared/components';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
@@ -38,6 +39,7 @@ type Props = {
   lineMarks: (LineMark | null)[];
   trainTypeLines: LineNested[];
   isEn: boolean;
+  estimatedMinutesByStationId?: Map<number, number | null>;
 };
 
 type ColorSegment = {
@@ -213,6 +215,17 @@ const styles = StyleSheet.create({
     height: 18,
     marginLeft: 21,
     marginTop: 25,
+  },
+  estimatedMinutesOverlay: {
+    position: 'absolute',
+    width: 68,
+    height: 68,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  estimatedMinutesText: {
+    fontSize: 28,
+    lineHeight: 30,
   },
   clipViewStyle: {
     overflow: 'hidden',
@@ -405,6 +418,7 @@ const PadArch: React.FC<Props> = ({
   lineMarks,
   trainTypeLines,
   isEn,
+  estimatedMinutesByStationId,
 }: Props) => {
   const { width: windowWidth, height: windowHeight } =
     useLandscapeWindowDimensions();
@@ -641,13 +655,25 @@ const PadArch: React.FC<Props> = ({
           return null;
         }
         const isPass = getIsPass(s);
+        const isSmallCircle = (arrived && i === stations.length - 2) || isPass;
+        const estimatedMinutes =
+          !isSmallCircle && s.id != null
+            ? estimatedMinutesByStationId?.get(s.id)
+            : null;
         return {
           isPass,
           dotStyle: getCustomDotStyle(i, stations, arrived, isPass),
           nameStyle: getCustomStationNameStyle(i),
+          estimatedMinutes,
         };
       }),
-    [stations, arrived, getCustomDotStyle, getCustomStationNameStyle]
+    [
+      stations,
+      arrived,
+      getCustomDotStyle,
+      getCustomStationNameStyle,
+      estimatedMinutesByStationId,
+    ]
   );
 
   return (
@@ -746,7 +772,7 @@ const PadArch: React.FC<Props> = ({
         {stations.map((s, i) => {
           const renderInfo = stationRenderInfos[i];
           if (!s || !renderInfo) return null;
-          const { isPass, dotStyle, nameStyle } = renderInfo;
+          const { isPass, dotStyle, nameStyle, estimatedMinutes } = renderInfo;
           return (
             <React.Fragment key={s.id}>
               <View
@@ -758,6 +784,20 @@ const PadArch: React.FC<Props> = ({
                   dotStyle,
                 ]}
               />
+              {estimatedMinutes != null ? (
+                <View
+                  style={[
+                    styles.estimatedMinutesOverlay,
+                    { left: dotStyle.left, top: dotStyle.top },
+                  ]}
+                  pointerEvents="none"
+                >
+                  <EstimatedMinutesBadge
+                    estimatedMinutes={estimatedMinutes}
+                    style={styles.estimatedMinutesText}
+                  />
+                </View>
+              ) : null}
               <View
                 style={[
                   styles.stationNameContainer,

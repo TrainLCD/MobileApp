@@ -15,6 +15,8 @@ jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
   useCurrentTrainType: jest.fn(() => null),
   useDisplayCurrentStation: jest.fn(),
+  useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
+  useEstimatedMinutesByStationId: jest.fn(() => new Map()),
   useGetLineMark: jest.fn(() => jest.fn(() => null)),
   useNextStation: jest.fn(() => null),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
@@ -208,6 +210,20 @@ describe('LineBoardYamanotePad', () => {
     expect(PadArch).toHaveBeenCalled();
     const callArgs = PadArch.mock.calls[0][0];
     expect(callArgs.stations).toHaveLength(6);
+  });
+
+  it('estimatedMinutesByStationIdがPadArchへ渡される', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    const mockMap = new Map([[2, 5]]);
+    useEstimatedMinutesByStationId.mockReturnValueOnce(mockMap);
+
+    render(<LineBoardYamanotePad stations={mockStations} />);
+    expect(PadArch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        estimatedMinutesByStationId: mockMap,
+      }),
+      undefined
+    );
   });
 
   it('transferLinesが正しく渡される', () => {

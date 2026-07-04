@@ -5,6 +5,8 @@ import {
   useCurrentLine,
   useCurrentTrainType,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useGetLineMark,
   useNextStation,
   useTransferLines,
@@ -31,6 +33,9 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
   const getLineMarkFunc = useGetLineMark();
   const nextStation = useNextStation();
   const transferLines = useTransferLines();
+  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
   const switchedStation = useMemo(
     () =>
       arrived && station && !getIsPass(station)
@@ -118,6 +123,7 @@ const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
       lineMarks={lineMarks}
       trainTypeLines={trainType?.lines ?? []}
       isEn={isEn}
+      estimatedMinutesByStationId={estimatedMinutesByStationId}
     />
   );
 };
