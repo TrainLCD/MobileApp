@@ -7,6 +7,7 @@ import {
   useCurrentLine,
   useDisplayCurrentStation,
   useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -410,16 +411,8 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const padCount = Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
   const { route: estimatedRoute } = useEstimateArrivalTimes();
-
-  const estimatedMinutesByStationId = useMemo(
-    () =>
-      new Map(
-        estimatedRoute?.stops
-          ?.filter((s) => s.stationId != null)
-          .map((s) => [s.stationId as number, s.cumulativeMinutes]) ?? []
-      ),
-    [estimatedRoute]
-  );
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const line = useMemo(
     () => currentLine || selectedLine,

@@ -7,6 +7,7 @@ import {
   useCurrentLine,
   useDisplayCurrentStation,
   useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -489,16 +490,8 @@ const LineBoardEast: React.FC<Props> = ({
   const nextStation = useDisplayNextStation();
   const afterNextStation = useAfterNextStation();
   const { route: estimatedRoute } = useEstimateArrivalTimes();
-
-  const estimatedMinutesByStationId = useMemo(
-    () =>
-      new Map(
-        estimatedRoute?.stops
-          ?.filter((s) => s.stationId != null)
-          .map((s) => [s.stationId as number, s.cumulativeMinutes]) ?? []
-      ),
-    [estimatedRoute]
-  );
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const dim = useLandscapeWindowDimensions();
 
