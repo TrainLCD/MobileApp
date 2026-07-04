@@ -1,21 +1,18 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import * as Location from 'expo-location';
+import getDistance from 'geolib/es/getDistance';
 import { Provider, useAtomValue } from 'jotai';
 import {
   LineType,
   OperationStatus,
   type Station,
   StopCondition,
-  TrainTypeKind,
 } from '~/@types/graphql';
-import {
-  LINE_TYPE_MAX_SPEEDS_IN_M_S,
-  TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
-  YAMANOTE_LINE_ID,
-} from '~/constants';
-import * as useCurrentLineModule from '~/hooks/useCurrentLine';
+import { YAMANOTE_LINE_ID } from '~/constants';
 import * as useCurrentTrainTypeModule from '~/hooks/useCurrentTrainType';
+import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
+import { GET_TRAIN_ROUTE } from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
 import * as trainSpeedModule from '~/utils/trainSpeed';
@@ -54,6 +51,10 @@ jest.mock('~/hooks/useLoopLine', () => ({
   useLoopLine: jest.fn(() => ({
     isLoopLine: false,
   })),
+}));
+
+jest.mock('~/hooks/useGraphQLQuery', () => ({
+  useGraphQLQuery: jest.fn(),
 }));
 
 jest.mock('expo-location', () => ({
@@ -151,20 +152,62 @@ const setupAtomMocks = (
   });
 };
 
+/**
+ * useGraphQLQuery(GET_TRAIN_ROUTE) のモック応答を設定する。
+ * segments はフックが maybeRevsersedStations と同じ並び順・同じ要素数で
+ * 返ってくることを前提に位置対応させているため、引数には実際にシミュレーションが
+ * 辿る並び順（INBOUND ならそのまま、OUTBOUNDなら reverse 済み）の駅配列を渡す。
+ */
+const mockTrainRoute = (
+  stationsInWalkOrder: Station[],
+  overrides: { maxSpeed?: number; accel?: number; decel?: number } = {}
+) => {
+  const { maxSpeed = 30, accel = 1.0, decel = 1.5 } = overrides;
+
+  const segments = stationsInWalkOrder.map((s, i) => {
+    const prev = stationsInWalkOrder[i - 1];
+    const distanceFromPrevious =
+      i === 0 ||
+      prev?.latitude == null ||
+      prev?.longitude == null ||
+      s.latitude == null ||
+      s.longitude == null
+        ? 0
+        : getDistance(
+            { latitude: prev.latitude, longitude: prev.longitude },
+            { latitude: s.latitude, longitude: s.longitude }
+          );
+
+    return {
+      __typename: 'TrainRouteSegment' as const,
+      distanceFromPrevious,
+      maxAcceleration: accel,
+      maxDeceleration: decel,
+      maxSpeed,
+    };
+  });
+
+  (useGraphQLQuery as jest.Mock).mockReturnValue({
+    data: { trainRoute: { __typename: 'TrainRouteResponse', segments } },
+    loading: false,
+    error: undefined,
+  });
+};
+
 describe('useSimulationMode', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(100000));
 
-    jest.spyOn(useCurrentLineModule, 'useCurrentLine').mockReturnValue({
-      id: YAMANOTE_LINE_ID,
-      lineType: LineType.Normal,
-      // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
-    } as any);
-
     jest
       .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
       .mockReturnValue(null);
+
+    (useGraphQLQuery as jest.Mock).mockReturnValue({
+      data: undefined,
+      loading: false,
+      error: undefined,
+    });
 
     (Location.hasStartedLocationUpdatesAsync as jest.Mock).mockResolvedValue(
       false
@@ -432,6 +475,8 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
+      mockTrainRoute([...stations].reverse());
+
       (store.get as jest.Mock).mockReturnValue(
         mockLocationObject(35.691, 139.777)
       );
@@ -463,6 +508,8 @@ describe('useSimulationMode', () => {
         },
         { autoModeEnabled: true }
       );
+
+      mockTrainRoute([...stations].reverse());
 
       (store.get as jest.Mock).mockReturnValue(
         mockLocationObject(35.681, 139.767)
@@ -502,6 +549,8 @@ describe('useSimulationMode', () => {
         },
         { autoModeEnabled: true }
       );
+
+      mockTrainRoute(stations);
 
       jest
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
@@ -588,6 +637,8 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
+      mockTrainRoute([...stations].reverse());
+
       (store.get as jest.Mock).mockReturnValue(
         mockLocationObject(35.683, 139.769)
       );
@@ -643,7 +694,7 @@ describe('useSimulationMode', () => {
     });
   });
 
-  describe('速度プロファイル生成', () => {
+  describe('速度プロファイル生成（trainRouteクエリへの委譲）', () => {
     it('通過駅を除外して速度プロファイルを生成する', () => {
       const stations = [
         mockStation(1, 1, 35.681, 139.767),
@@ -659,6 +710,8 @@ describe('useSimulationMode', () => {
         },
         { autoModeEnabled: false }
       );
+
+      mockTrainRoute(stations);
 
       const generateSpy = jest.spyOn(
         trainSpeedModule,
@@ -693,6 +746,8 @@ describe('useSimulationMode', () => {
         },
         { autoModeEnabled: true }
       );
+
+      mockTrainRoute([...stations].reverse());
 
       const generateSpy = jest.spyOn(
         trainSpeedModule,
@@ -732,7 +787,7 @@ describe('useSimulationMode', () => {
       // 駅が空なのでプロファイル生成は呼ばれない
       expect(generateSpy).not.toHaveBeenCalled();
 
-      // 再レンダー: 駅リストが到着
+      // 再レンダー: 駅リストとtrainRouteのデータが到着
       const stations = [
         mockStation(1, 1, 35.681, 139.767),
         mockStation(2, 2, 35.691, 139.777),
@@ -743,17 +798,19 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
+      mockTrainRoute(stations);
+
       (store.get as jest.Mock).mockReturnValue(
         mockLocationObject(35.681, 139.767)
       );
 
       rerender({});
 
-      // 駅が到着したのでプロファイル生成が呼ばれる
+      // 駅とtrainRouteのデータが到着したのでプロファイル生成が呼ばれる
       expect(generateSpy).toHaveBeenCalled();
     });
 
-    it('新幹線の路線タイプでは最高速度が適用される', () => {
+    it('trainType.groupIdがlineGroupIdとしてクエリに渡される', () => {
       const stations = [
         mockStation(1, 1, 35.681, 139.767),
         mockStation(2, 2, 35.691, 139.777),
@@ -761,48 +818,49 @@ describe('useSimulationMode', () => {
 
       setupAtomMocks(
         { station: stations[0], stations, selectedDirection: 'OUTBOUND' },
-        { autoModeEnabled: false }
-      );
-
-      jest
-        .spyOn(useCurrentLineModule, 'useCurrentLine')
-        // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
-        .mockReturnValue({ id: 1, lineType: LineType.BulletTrain } as any);
-
-      const generateSpy = jest.spyOn(
-        trainSpeedModule,
-        'generateTrainSpeedProfile'
-      );
-
-      renderHook(() => useSimulationMode(), {
-        wrapper: ({ children }) => <Provider>{children}</Provider>,
-      });
-
-      expect(generateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          maxSpeed: LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain],
-        })
-      );
-    });
-
-    it('列車種別の最高速度が適用される', () => {
-      const stations = [
-        mockStation(1, 1, 35.681, 139.767),
-        mockStation(2, 2, 35.691, 139.777),
-      ];
-
-      setupAtomMocks(
-        { station: stations[0], stations, selectedDirection: 'OUTBOUND' },
-        { autoModeEnabled: false }
+        { autoModeEnabled: true }
       );
 
       jest
         .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
         .mockReturnValue({
           id: 1,
-          kind: TrainTypeKind.LimitedExpress,
+          groupId: 42,
           // biome-ignore lint/suspicious/noExplicitAny: 部分的なモック戻り値
         } as any);
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(useGraphQLQuery).toHaveBeenCalledWith(
+        GET_TRAIN_ROUTE,
+        expect.objectContaining({
+          variables: expect.objectContaining({
+            fromStationId: stations[1].id,
+            toStationId: stations[0].id,
+            lineGroupId: 42,
+          }),
+        })
+      );
+    });
+
+    it('trainRouteが返す最高速度・加減速度がそのままgenerateTrainSpeedProfileに渡される', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'OUTBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      mockTrainRoute([...stations].reverse(), {
+        maxSpeed: 99,
+        accel: 2,
+        decel: 3,
+      });
 
       const generateSpy = jest.spyOn(
         trainSpeedModule,
@@ -814,10 +872,7 @@ describe('useSimulationMode', () => {
       });
 
       expect(generateSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          maxSpeed:
-            TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[TrainTypeKind.LimitedExpress],
-        })
+        expect.objectContaining({ maxSpeed: 99, accel: 2, decel: 3 })
       );
     });
   });
@@ -832,7 +887,8 @@ describe('useSimulationMode', () => {
      *   index 4: E (id=50)
      *
      * dropEitherJunctionStation は隣接groupIdの重複のみ除去するため、
-     * 非隣接の同一IDは残る。
+     * 非隣接の同一IDは残る。trainRouteのsegmentsは駅IDではなく配列位置で
+     * 対応付けられるため、同一IDの重複があっても位置がずれない。
      */
     const duplicateIdStations = () => [
       mockStation(10, 10, 35.0, 139.0),
@@ -850,6 +906,8 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: false }
       );
 
+      mockTrainRoute(stations);
+
       const generateSpy = jest.spyOn(
         trainSpeedModule,
         'generateTrainSpeedProfile'
@@ -863,7 +921,7 @@ describe('useSimulationMode', () => {
       expect(generateSpy).toHaveBeenCalledTimes(4);
 
       // D→E (4番目) の距離がD→E直線距離と同程度（約7km）であること
-      // バグ時は findIndex(id=20) が B(index=1) を返すため
+      // バグ時は id=20 のルックアップが B(index=1) を指してしまい
       // betweenNextStation に C,D を含むジグザグ経路（約35km）になる
       const deDistance = generateSpy.mock.calls[3][0].distance;
       expect(deDistance).toBeLessThan(10000);
@@ -881,6 +939,8 @@ describe('useSimulationMode', () => {
         },
         { autoModeEnabled: true }
       );
+
+      mockTrainRoute(stations);
 
       jest
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
@@ -909,7 +969,7 @@ describe('useSimulationMode', () => {
       );
 
       // C→D(tick1) と D→E(tick4) の2回、D以降の緯度(>= 35.15)に到達するはず
-      // バグ時は findIndex(id=20) が B を返すため D→Eステップが
+      // バグ時は id=20 のルックアップが B を指してしまい D→Eステップが
       // B→C区間(lat ≈ 35.05〜35.1)を通り、1回しか >= 35.15 にならない
       const callsBeyondMidpoint = steppingCalls.filter(
         (loc) => loc.coords.latitude >= 35.15
@@ -938,6 +998,8 @@ describe('useSimulationMode', () => {
         },
         { autoModeEnabled: true }
       );
+
+      mockTrainRoute(stations);
 
       jest
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
@@ -983,6 +1045,8 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: false }
       );
 
+      mockTrainRoute(stations);
+
       const generateSpy = jest.spyOn(
         trainSpeedModule,
         'generateTrainSpeedProfile'
@@ -995,8 +1059,8 @@ describe('useSimulationMode', () => {
       // C→D (3番目) の距離が通過駅経由の経路距離であること
       // 直線 C(35.1,139.1)→D(35.2,139.1) ≈ 11km
       // 経路 C→pass(35.1,139.2)→D ≈ 9km + 14km ≈ 23km
-      // バグ時は findIndex(id=20) が B(index=1) を返し、
-      // arr.slice(3, 1) が空配列となって通過駅ウェイポイントが失われる
+      // バグ時は id=20 のルックアップが B(index=1) を指してしまい、
+      // 通過駅ウェイポイントの距離が失われる
       const cdDistance = generateSpy.mock.calls[2][0].distance;
       expect(cdDistance).toBeGreaterThan(15000);
     });
