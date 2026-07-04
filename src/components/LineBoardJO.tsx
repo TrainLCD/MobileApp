@@ -320,7 +320,11 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
               style={[
                 styles.barJO,
                 {
-                  width: barWidth,
+                  // barWidthは小数を含むためセグメント境界が物理ピクセルに
+                  // 揃わず、丸めの具合で白い継ぎ目が出ることがある。右へ1px
+                  // 食み出させて隣接セグメントを重ね、継ぎ目が出ないようにする
+                  // (後続セグメントが上に描画されるため境界位置は変わらない)。
+                  width: barWidth + 1,
                   left: barWidth * i,
                   backgroundColor: (() => {
                     if (i <= currentStationIndex) {

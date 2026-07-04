@@ -489,7 +489,10 @@ const LineBoardEast: React.FC<Props> = ({
   // なったため、バナーの「◯◯のつぎは」側も同じ次駅を参照して整合を保つ
   const nextStation = useDisplayNextStation();
   const afterNextStation = useAfterNextStation();
-  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  // 小田急テーマはETA表示の対象外のためクエリごと実行しない
+  const { route: estimatedRoute } = useEstimateArrivalTimes({
+    skip: isOdakyu,
+  });
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
 
