@@ -151,7 +151,10 @@ export const useSimulationMode = (): void => {
   // trainRoute クエリのエラーをログに記録
   useEffect(() => {
     if (trainRouteError) {
-      console.error('[useSimulationMode] trainRoute query error:', trainRouteError);
+      console.error(
+        '[useSimulationMode] trainRoute query error:',
+        trainRouteError
+      );
     }
   }, [trainRouteError]);
 
