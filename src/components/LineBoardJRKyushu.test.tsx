@@ -164,7 +164,7 @@ describe('LineBoardJRKyushu', () => {
 
   it('stationIdに対応するestimatedMinutesがLineDotへ渡される', () => {
     const { useEstimatedMinutesByStationId } = require('~/hooks');
-    useEstimatedMinutesByStationId.mockReturnValue(new Map([[2, 5]]));
+    useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
     const { LineDot } = require('./LineBoard/shared/components');
     render(
       <LineBoardJRKyushu
