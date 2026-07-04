@@ -41,8 +41,11 @@ export const useBounds = (
     const outboundStation = stations[0];
 
     if (isOedoLine) {
+      // 都庁前(外回り/内回り)のようにgroupIdが同じでもidが異なる駅があるため、
+      // idで位置を特定する(groupId一致だと配列中で先に見つかる方に固定され、
+      // 実際の現在地と異なる位置を基準に行き先・経由駅の区間を切り出してしまう)。
       const stationIndex = stations.findIndex(
-        (s) => s.groupId === currentStation?.groupId
+        (s) => s.id === currentStation?.id
       );
       if (stationIndex < 0) return [[], []];
 

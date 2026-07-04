@@ -96,7 +96,7 @@ describe('findNearestStation', () => {
   });
 
   describe('エッジケース', () => {
-    it('currentGroupIdがnullの場合、nullを返す', () => {
+    it('currentStationIdがnullの場合、nullを返す', () => {
       const result = findNearestStation(
         localStations,
         expressStations,
@@ -106,7 +106,7 @@ describe('findNearestStation', () => {
       expect(result).toBeNull();
     });
 
-    it('currentGroupIdがundefinedの場合、nullを返す', () => {
+    it('currentStationIdがundefinedの場合、nullを返す', () => {
       const result = findNearestStation(
         localStations,
         expressStations,
@@ -146,37 +146,37 @@ describe('findNearestStation', () => {
       expect(result).toBeNull();
     });
 
-    it('旧リストにgroupIdがnullの駅がある場合、その駅をスキップして探す', () => {
+    it('旧リストにidがnullの駅がある場合、その駅をスキップして探す', () => {
       const stationsWithNull = [
         createStation(1),
         createStation(2),
-        createStation(3, { groupId: null }),
+        createStation(3, { id: null }),
         createStation(4),
         createStation(5),
       ];
       const express = [createStation(1), createStation(5)];
-      // 駅2にいてINBOUND → 駅3はgroupId=nullなのでスキップ → 駅5にマッチ
+      // 駅2にいてINBOUND → 駅3はidがnullなのでスキップ → 駅5にマッチ
       const result = findNearestStation(
         stationsWithNull,
         express,
         2,
         'INBOUND'
       );
-      expect(result?.groupId).toBe(5);
+      expect(result?.id).toBe(5);
     });
 
-    it('新リストにgroupIdがnullの駅がある場合、誤マッチしない', () => {
+    it('新リストにidがnullの駅がある場合、誤マッチしない', () => {
       const stationsWithNull = [
         createStation(1),
         createStation(2),
-        createStation(3, { groupId: null }),
+        createStation(3, { id: null }),
         createStation(4),
       ];
       const expressWithNull = [
-        createStation(10, { groupId: null }),
+        createStation(10, { id: null }),
         createStation(5),
       ];
-      // 駅2にいてINBOUND → 駅3はgroupId=nullなのでスキップ、駅4はexpressに無い → null
+      // 駅2にいてINBOUND → 駅3はidがnullなのでスキップ、駅4はexpressに無い → null
       const result = findNearestStation(
         stationsWithNull,
         expressWithNull,
@@ -184,6 +184,50 @@ describe('findNearestStation', () => {
         'INBOUND'
       );
       expect(result).toBeNull();
+    });
+
+    it('groupIdが同じでもidが異なる駅がある場合、id一致で現在地を特定する(都庁前の外回り/内回り相当)', () => {
+      // 大江戸線の都庁前は外回り/内回りでgroupIdが同一だがidは別々。
+      // groupIdだけで現在地を特定すると配列中で先に見つかる方(outer)に
+      // 固定されてしまい、実際の現在地(inner)より手前の駅を誤って
+      // 「次の停車駅」として返してしまう。
+      const outer = createStation(9930100, { groupId: 100 });
+      const between = createStation(50, { groupId: 50 });
+      const inner = createStation(9930101, { groupId: 100 });
+      const after = createStation(60, { groupId: 60 });
+      const oldStations = [outer, between, inner, after];
+      const newStations = [between, after];
+
+      const result = findNearestStation(
+        oldStations,
+        newStations,
+        inner.id,
+        'INBOUND'
+      );
+
+      expect(result?.id).toBe(after.id);
+    });
+
+    it('OUTBOUND方向でも、groupIdが同じでもidが異なる駅がある場合はid一致で現在地を特定する', () => {
+      // INBOUND版と同じ配置。groupIdだけでcurrentIdxを求めると常に先に出現する
+      // outer(index 0)に固定され、OUTBOUND(index減少方向)には駅が無い
+      // (currentIdx-1 = -1)ため誤ってnullを返してしまう。id一致ならinner
+      // (index 2)を起点にでき、手前のbetweenを正しく返せる。
+      const outer = createStation(9930100, { groupId: 100 });
+      const between = createStation(50, { groupId: 50 });
+      const inner = createStation(9930101, { groupId: 100 });
+      const after = createStation(60, { groupId: 60 });
+      const oldStations = [outer, between, inner, after];
+      const newStations = [between, after];
+
+      const result = findNearestStation(
+        oldStations,
+        newStations,
+        inner.id,
+        'OUTBOUND'
+      );
+
+      expect(result?.id).toBe(between.id);
     });
   });
 });
