@@ -109,92 +109,28 @@ export const useEstimateArrivalTimes = () => {
 
     const allStops = route.stops ?? [];
 
-    // 大江戸線の都庁前のように、環状区間で同じ駅が全stops中に複数回
-    // 出現することがある（例: 新宿→光が丘は都庁前を1回だけ通るはずだが、
-    // 環状部分を含む都庁前は他の時点でも別途出現する）。
-    // 単純な find() / filter() だと現在地と無関係な出現（別時点の都庁前）を
-    // 拾ってしまうため、leftStations の並び順をそのまま部分列として
-    // 辿れる区間を stops 内から探す。開始位置の候補が複数ある場合は、
-    // 最も範囲が短い（＝現在地に最も近い）候補を採用する。
-    const firstGroupId = leftStations[0]?.groupId;
-    let windowStartIndex = -1;
-    let windowEndIndex = -1;
-    let bestSpan = Number.POSITIVE_INFINITY;
-    // leftStations の各要素が allStops 中のどのインデックスに一致したかを、
-    // 最良区間の分だけ記録する。区間の再フィルタではなく、この一致インデックスを
-    // 直接使うことで、環状区間内に紛れ込む無関係な重複出現(下記コメント参照)を
-    // relativeStops に混入させない。
-    let bestMatchedIndices: number[] = [];
-    if (firstGroupId != null) {
-      outer: for (let i = 0; i < allStops.length; i++) {
-        if (allStops[i]?.stationGroupId !== firstGroupId) {
-          continue;
-        }
-        let cursor = i;
-        const matchedIndices: number[] = [];
-        for (const ls of leftStations) {
-          while (
-            cursor < allStops.length &&
-            allStops[cursor]?.stationGroupId !== ls.groupId
-          ) {
-            cursor++;
-          }
-          if (cursor >= allStops.length) {
-            continue outer;
-          }
-          matchedIndices.push(cursor);
-          cursor++;
-        }
-        const span = cursor - i;
-        if (span < bestSpan) {
-          bestSpan = span;
-          windowStartIndex = i;
-          windowEndIndex = cursor;
-          bestMatchedIndices = matchedIndices;
-        }
-      }
-    }
-
-    const windowStops =
-      windowStartIndex !== -1
-        ? allStops.slice(windowStartIndex, windowEndIndex)
-        : allStops;
-    // 特定した区間内で現在駅の出発時刻を探し、基準（0分）として使う。
-    // 停車時間がある駅では到着時刻ではなく出発時刻を基準にしないと、
-    // 停車中に後続駅のETAがズレて表示されてしまう。
-    // 区間内に現在駅が見つからない場合はオフセットせず生の値を返す。
-    // windowStops[0] は firstGroupId(= leftStations[0]) との一致地点なので、
-    // currentStation が leftStations[0] と同じ駅である限りこの find() は
-    // 必ず windowStops[0] で短絡し、区間内の後続の重複出現を拾わない。
+    // 大江戸線の都庁前のように、環状区間(6の字運転)では同じ駅が全stops中に
+    // 複数回出現する。ただしこれらは stationGroupId(同一駅を束ねる論理グループ)
+    // こそ共通だが、stationId は出現ごとに別々に採番されている(例: 都庁前の
+    // 外回り/内回りはそれぞれ別の stationId を持つ)。そのため stationGroupId
+    // で突き合わせると無関係な出現まで拾ってしまうが、stationId なら出現ごとに
+    // 一意なので誤って混同することがない。
     const baseMinutes =
-      windowStops.find((s) => s.stationGroupId === currentStation?.groupId)
+      allStops.find((s) => s.stationId === currentStation?.id)
         ?.departureCumulativeMinutes ?? 0;
 
-    // 大江戸線の都庁前のように、環状区間で同じ駅が全stops中に複数回出現する場合、
-    // windowStops を stationGroupId の集合一致で再フィルタすると、leftStationsの
-    // 特定の1要素に対応しない無関係な重複出現まで relativeStops に含まれてしまい、
-    // 後段の Map化(stationGroupId をキーにする)で後勝ちの誤ったETAが表示される
-    // (例: 都庁前だけ本来より遥かに大きい分数になる)。
-    // そのため区間全体を再フィルタするのではなく、leftStations の各要素に対して
-    // 一意に特定できた allStops 上のインデックス(bestMatchedIndices)だけを使う。
-    const visibleGroupIds = new Set(leftStations.map((ls) => ls.groupId));
-    const matchedStops =
-      windowStartIndex !== -1
-        ? bestMatchedIndices.map((idx) => allStops[idx])
-        : windowStops.filter(
-            (s) =>
-              s.stationGroupId != null && visibleGroupIds.has(s.stationGroupId)
-          );
+    const visibleStationIds = new Set(leftStations.map((ls) => ls.id));
 
     // 現在駅自身は cumulativeMinutes - baseMinutes が0以下になり通常は下のfilterで
-    // 除外されるが、windowStops内に現在駅のエントリが見つからずbaseMinutesが0に
+    // 除外されるが、区間内に現在駅のエントリが見つからずbaseMinutesが0に
     // フォールバックするケースでは生の値が残ってしまう。停車中の駅にはETAを出さない
     // という表示上の不変条件を計算結果に依存せず保証するため、ここで明示的に除く。
-    const relativeStops = matchedStops
+    const relativeStops = allStops
       .filter(
         (s) =>
-          s.stationGroupId != null &&
-          s.stationGroupId !== currentStation?.groupId
+          s.stationId != null &&
+          visibleStationIds.has(s.stationId) &&
+          s.stationId !== currentStation?.id
       )
       .map((s) => ({
         ...s,
@@ -206,7 +142,7 @@ export const useEstimateArrivalTimes = () => {
       .filter((s) => s.cumulativeMinutes == null || s.cumulativeMinutes > 0);
 
     return { ...route, stops: relativeStops };
-  }, [data, filteringId, leftStations, currentStation?.groupId]);
+  }, [data, filteringId, leftStations, currentStation?.id]);
 
   return { route: matchedRoute, loading, error };
 };

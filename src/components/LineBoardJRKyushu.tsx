@@ -411,12 +411,12 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const totalStations = stations.length + padCount;
   const { route: estimatedRoute } = useEstimateArrivalTimes();
 
-  const estimatedMinutesByGroupId = useMemo(
+  const estimatedMinutesByStationId = useMemo(
     () =>
       new Map(
         estimatedRoute?.stops
-          ?.filter((s) => s.stationGroupId != null)
-          .map((s) => [s.stationGroupId as number, s.cumulativeMinutes]) ?? []
+          ?.filter((s) => s.stationId != null)
+          .map((s) => [s.stationId as number, s.cumulativeMinutes]) ?? []
       ),
     [estimatedRoute]
   );
@@ -455,9 +455,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             estimatedMinutes={
-              s.groupId != null
-                ? estimatedMinutesByGroupId.get(s.groupId)
-                : null
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
             }
           />
         </React.Fragment>
@@ -469,7 +467,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       lineColors,
       stations,
       totalStations,
-      estimatedMinutesByGroupId,
+      estimatedMinutesByStationId,
     ]
   );
 

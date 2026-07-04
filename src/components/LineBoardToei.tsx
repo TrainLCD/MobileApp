@@ -516,12 +516,12 @@ const LineBoardToei: React.FC<Props> = ({
   const dim = useLandscapeWindowDimensions();
   const { route: estimatedRoute } = useEstimateArrivalTimes();
 
-  const estimatedMinutesByGroupId = useMemo(
+  const estimatedMinutesByStationId = useMemo(
     () =>
       new Map(
         estimatedRoute?.stops
-          ?.filter((s) => s.stationGroupId != null)
-          .map((s) => [s.stationGroupId as number, s.cumulativeMinutes]) ?? []
+          ?.filter((s) => s.stationId != null)
+          .map((s) => [s.stationId as number, s.cumulativeMinutes]) ?? []
       ),
     [estimatedRoute]
   );
@@ -563,15 +563,13 @@ const LineBoardToei: React.FC<Props> = ({
             lineColors={lineColors}
             hasTerminus={hasTerminus}
             estimatedMinutes={
-              s.groupId != null
-                ? estimatedMinutesByGroupId.get(s.groupId)
-                : null
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
             }
           />
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations, estimatedMinutesByGroupId]
+    [hasTerminus, line, lineColors, stations, estimatedMinutesByStationId]
   );
 
   const stationsWithEmpty = useMemo(

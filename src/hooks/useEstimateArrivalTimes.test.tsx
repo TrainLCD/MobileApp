@@ -284,8 +284,8 @@ describe('useEstimateArrivalTimes', () => {
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
         routes: [
-          { id: 100, stops: [{ stationGroupId: 1, cumulativeMinutes: 0 }] },
-          { id: 42, stops: [{ stationGroupId: 1, cumulativeMinutes: 5 }] },
+          { id: 100, stops: [{ stationId: 1, cumulativeMinutes: 0 }] },
+          { id: 42, stops: [{ stationId: 1, cumulativeMinutes: 5 }] },
         ],
       },
     });
@@ -302,8 +302,8 @@ describe('useEstimateArrivalTimes', () => {
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
         routes: [
-          { id: 100, stops: [{ stationGroupId: 1, cumulativeMinutes: 0 }] },
-          { id: 999, stops: [{ stationGroupId: 1, cumulativeMinutes: 5 }] },
+          { id: 100, stops: [{ stationId: 1, cumulativeMinutes: 0 }] },
+          { id: 999, stops: [{ stationId: 1, cumulativeMinutes: 5 }] },
         ],
       },
     });
@@ -318,9 +318,7 @@ describe('useEstimateArrivalTimes', () => {
   it('一致するルートがないとき route は null', async () => {
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
-        routes: [
-          { id: 999, stops: [{ stationGroupId: 1, cumulativeMinutes: 0 }] },
-        ],
+        routes: [{ id: 999, stops: [{ stationId: 1, cumulativeMinutes: 0 }] }],
       },
     });
 
@@ -340,9 +338,9 @@ describe('useEstimateArrivalTimes', () => {
           {
             id: 100,
             stops: [
-              { stationGroupId: stationA.groupId, cumulativeMinutes: 0 },
-              { stationGroupId: stationB.groupId, cumulativeMinutes: 10 },
-              { stationGroupId: stationC.groupId, cumulativeMinutes: 20 },
+              { stationId: stationA.id, cumulativeMinutes: 0 },
+              { stationId: stationB.id, cumulativeMinutes: 10 },
+              { stationId: stationC.id, cumulativeMinutes: 20 },
             ],
           },
         ],
@@ -354,9 +352,10 @@ describe('useEstimateArrivalTimes', () => {
     await waitFor(() => {
       expect(hookRef.current?.route?.stops).toHaveLength(2);
     });
-    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
-      [stationB.groupId, stationC.groupId]
-    );
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationId)).toEqual([
+      stationB.id,
+      stationC.id,
+    ]);
   });
 
   it('現在駅の出発時刻を基準(0分)とした相対値に変換する', async () => {
@@ -368,13 +367,13 @@ describe('useEstimateArrivalTimes', () => {
           {
             id: 100,
             stops: [
-              { stationGroupId: stationA.groupId, cumulativeMinutes: 0 },
+              { stationId: stationA.id, cumulativeMinutes: 0 },
               {
-                stationGroupId: stationB.groupId,
+                stationId: stationB.id,
                 cumulativeMinutes: 10,
                 departureCumulativeMinutes: 10,
               },
-              { stationGroupId: stationC.groupId, cumulativeMinutes: 22.5 },
+              { stationId: stationC.id, cumulativeMinutes: 22.5 },
             ],
           },
         ],
@@ -386,9 +385,7 @@ describe('useEstimateArrivalTimes', () => {
     await waitFor(() => {
       expect(hookRef.current?.route?.stops).toHaveLength(1);
     });
-    expect(hookRef.current?.route?.stops?.[0]?.stationGroupId).toBe(
-      stationC.groupId
-    );
+    expect(hookRef.current?.route?.stops?.[0]?.stationId).toBe(stationC.id);
     expect(hookRef.current?.route?.stops?.[0]?.cumulativeMinutes).toBe(12.5);
   });
 
@@ -401,9 +398,9 @@ describe('useEstimateArrivalTimes', () => {
           {
             id: 100,
             stops: [
-              { stationGroupId: stationA.groupId, cumulativeMinutes: 0 },
-              { stationGroupId: stationB.groupId, cumulativeMinutes: 10 },
-              { stationGroupId: stationC.groupId, cumulativeMinutes: 22.5 },
+              { stationId: stationA.id, cumulativeMinutes: 0 },
+              { stationId: stationB.id, cumulativeMinutes: 10 },
+              { stationId: stationC.id, cumulativeMinutes: 22.5 },
             ],
           },
         ],
@@ -415,33 +412,37 @@ describe('useEstimateArrivalTimes', () => {
     await waitFor(() => {
       expect(hookRef.current?.route?.stops).toHaveLength(1);
     });
-    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
-      [stationC.groupId]
-    );
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationId)).toEqual([
+      stationC.id,
+    ]);
   });
 
-  it('環状路線で同じ駅(都庁前)が2回出現しても現在地に近い出現を基準にする', async () => {
-    // 大江戸線: 都庁前が全stops中に2回出現するケース。
-    // 1回目(cumulativeMinutes=1.0)は現在地と無関係な別区間の出現、
-    // 2回目(cumulativeMinutes=56.2)が実際に現在地として使うべき出現。
-    const tochomae = createStation(900, { line: { id: 100 } });
-    mockUseDisplayCurrentStation.mockReturnValue(tochomae);
-    setupAtoms({ leftStations: [tochomae, stationA, stationB] });
+  it('環状路線で同じ駅(都庁前)が2回出現しても、stationIdが異なる出現を混同しない', async () => {
+    // 大江戸線: 都庁前は外回り/内回りでgroupIdは同一だがstationIdは別々。
+    // 現在駅が内回り側の出現(tochomaeInner)のとき、groupIdが同じ外回り側
+    // (tochomaeOuter, cumulativeMinutes=1.0)の無関係な出現を基準に使ってはいけない。
+    const tochomaeOuter = createStation(900, { line: { id: 100 } });
+    const tochomaeInner = createStation(901, {
+      line: { id: 100 },
+      groupId: tochomaeOuter.groupId,
+    });
+    mockUseDisplayCurrentStation.mockReturnValue(tochomaeInner);
+    setupAtoms({ leftStations: [tochomaeInner, stationA, stationB] });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
         routes: [
           {
             id: 100,
             stops: [
-              { stationGroupId: tochomae.groupId, cumulativeMinutes: 1.0 },
-              { stationGroupId: stationC.groupId, cumulativeMinutes: 30 },
+              { stationId: tochomaeOuter.id, cumulativeMinutes: 1.0 },
+              { stationId: stationC.id, cumulativeMinutes: 30 },
               {
-                stationGroupId: tochomae.groupId,
+                stationId: tochomaeInner.id,
                 cumulativeMinutes: 56.2,
                 departureCumulativeMinutes: 56.2,
               },
-              { stationGroupId: stationA.groupId, cumulativeMinutes: 58.0 },
-              { stationGroupId: stationB.groupId, cumulativeMinutes: 59.9 },
+              { stationId: stationA.id, cumulativeMinutes: 58.0 },
+              { stationId: stationB.id, cumulativeMinutes: 59.9 },
             ],
           },
         ],
@@ -453,9 +454,10 @@ describe('useEstimateArrivalTimes', () => {
     await waitFor(() => {
       expect(hookRef.current?.route?.stops).toHaveLength(2);
     });
-    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
-      [stationA.groupId, stationB.groupId]
-    );
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationId)).toEqual([
+      stationA.id,
+      stationB.id,
+    ]);
     expect(hookRef.current?.route?.stops?.[0]?.cumulativeMinutes).toBeCloseTo(
       1.8
     );
@@ -464,15 +466,18 @@ describe('useEstimateArrivalTimes', () => {
     );
   });
 
-  it('leftStationsに1回しか出現しない駅でも、区間内にAPI側の無関係な重複出現があれば混同しない', async () => {
-    // 都庁前がleftStationsの中間(現在駅ではない)に1回だけ出現するケース。
-    // allStops側は環状区間の影響で都庁前が2回出現し、そのうち1回(58.0)は
-    // stationBへ辿り着くための区間内に紛れ込んだ無関係な出現。
-    // stationGroupIdの集合一致で区間を再フィルタすると両方拾ってしまい、
-    // 後段のMap化で無関係な方(58.0)が後勝ちして誤表示される。
-    const tochomae = createStation(900, { line: { id: 100 } });
+  it('leftStationsに含まれる出現(stationId)だけを拾い、groupIdが同じ無関係な出現は除外する', async () => {
+    // 都庁前(内回り: tochomaeInner)がleftStationsの中間(現在駅ではない)に
+    // 1回だけ出現するケース。allStops側には groupId が同じ外回り(tochomaeOuter,
+    // cumulativeMinutes=58.0)も別途出現するが、stationIdが異なるため
+    // leftStationsが指す tochomaeInner の出現(3.0)だけが採用されるべき。
+    const tochomaeOuter = createStation(900, { line: { id: 100 } });
+    const tochomaeInner = createStation(901, {
+      line: { id: 100 },
+      groupId: tochomaeOuter.groupId,
+    });
     mockUseDisplayCurrentStation.mockReturnValue(stationA);
-    setupAtoms({ leftStations: [stationA, tochomae, stationB] });
+    setupAtoms({ leftStations: [stationA, tochomaeInner, stationB] });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
         routes: [
@@ -480,13 +485,13 @@ describe('useEstimateArrivalTimes', () => {
             id: 100,
             stops: [
               {
-                stationGroupId: stationA.groupId,
+                stationId: stationA.id,
                 cumulativeMinutes: 0,
                 departureCumulativeMinutes: 0,
               },
-              { stationGroupId: tochomae.groupId, cumulativeMinutes: 3.0 },
-              { stationGroupId: tochomae.groupId, cumulativeMinutes: 58.0 },
-              { stationGroupId: stationB.groupId, cumulativeMinutes: 5.0 },
+              { stationId: tochomaeInner.id, cumulativeMinutes: 3.0 },
+              { stationId: tochomaeOuter.id, cumulativeMinutes: 58.0 },
+              { stationId: stationB.id, cumulativeMinutes: 5.0 },
             ],
           },
         ],
@@ -498,9 +503,10 @@ describe('useEstimateArrivalTimes', () => {
     await waitFor(() => {
       expect(hookRef.current?.route?.stops).toHaveLength(2);
     });
-    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
-      [tochomae.groupId, stationB.groupId]
-    );
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationId)).toEqual([
+      tochomaeInner.id,
+      stationB.id,
+    ]);
     expect(hookRef.current?.route?.stops?.[0]?.cumulativeMinutes).toBeCloseTo(
       3.0
     );
