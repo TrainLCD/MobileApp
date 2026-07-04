@@ -204,6 +204,31 @@ describe('LineBoardEast', () => {
     );
   });
 
+  it('isOdakyu時はETAクエリをskipして呼び出す', () => {
+    const { useEstimateArrivalTimes } = require('~/hooks');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+        isOdakyu
+      />
+    );
+    expect(useEstimateArrivalTimes).toHaveBeenCalledWith({ skip: true });
+  });
+
+  it('isOdakyuでない場合はETAクエリをskipしない', () => {
+    const { useEstimateArrivalTimes } = require('~/hooks');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(useEstimateArrivalTimes).toHaveBeenCalledWith({ skip: undefined });
+  });
+
   it('lineがnullの場合、何もレンダリングされない', () => {
     useCurrentLine.mockReturnValue(null);
     const { StationName } = require('./LineBoard/shared/components');

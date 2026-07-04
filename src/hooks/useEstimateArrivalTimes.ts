@@ -23,7 +23,7 @@ import { useLoopLine } from './useLoopLine';
  * 返す route.stops は LineBoard に表示中の駅（leftStations）に限定し、
  * 現在駅の到着時刻を基準（0分）とした相対時間に変換する。
  */
-export const useEstimateArrivalTimes = () => {
+export const useEstimateArrivalTimes = (options?: { skip?: boolean }) => {
   const stations = useAtomValue(stationsAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
@@ -73,8 +73,9 @@ export const useEstimateArrivalTimes = () => {
   const directionId =
     selectedDirection != null ? (travelsInStoredOrder ? 0 : 1) : undefined;
 
-  // 方面未選択・始発/終着が不明・フィルタ先が無い場合はクエリを実行しない
+  // 呼び出し側がETA不要な場合・方面未選択・始発/終着が不明・フィルタ先が無い場合はクエリを実行しない
   const skip =
+    !!options?.skip ||
     !selectedBound ||
     fromStationId == null ||
     toStationId == null ||
@@ -97,6 +98,11 @@ export const useEstimateArrivalTimes = () => {
   // stops を LineBoard 表示中の駅（leftStations）だけに絞り込んだ上で、
   // 現在駅の到着時刻を基準（0分）とした相対時間に変換する
   const matchedRoute = useMemo(() => {
+    // skip時でも同一queryKeyのキャッシュがあるとdataは返ってくる(enabledはfetch抑止のみ)
+    // ため、ルートを返さないことをここで保証する
+    if (skip) {
+      return null;
+    }
     const routes = data?.estimateArrivalTimes?.routes;
     if (!routes || filteringId == null) {
       return null;
@@ -142,7 +148,7 @@ export const useEstimateArrivalTimes = () => {
       .filter((s) => s.cumulativeMinutes == null || s.cumulativeMinutes > 0);
 
     return { ...route, stops: relativeStops };
-  }, [data, filteringId, leftStations, currentStation?.id]);
+  }, [data, filteringId, leftStations, currentStation?.id, skip]);
 
   return { route: matchedRoute, loading, error };
 };

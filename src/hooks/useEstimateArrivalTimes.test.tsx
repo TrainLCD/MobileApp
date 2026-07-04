@@ -54,11 +54,13 @@ jest.mock('~/lib/gql', () => ({
 }));
 
 type HookResult = ReturnType<typeof useEstimateArrivalTimes> | null;
+type HookOptions = Parameters<typeof useEstimateArrivalTimes>[0];
 
-const HookBridge: React.FC<{ onReady: (v: HookResult) => void }> = ({
-  onReady,
-}) => {
-  onReady(useEstimateArrivalTimes());
+const HookBridge: React.FC<{
+  onReady: (v: HookResult) => void;
+  options?: HookOptions;
+}> = ({ onReady, options }) => {
+  onReady(useEstimateArrivalTimes(options));
   return null;
 };
 
@@ -73,11 +75,12 @@ const createQueryClient = () =>
     },
   });
 
-const renderHook = () => {
+const renderHook = (options?: HookOptions) => {
   const hookRef: { current: HookResult } = { current: null };
   const utils = render(
     <QueryClientProvider client={createQueryClient()}>
       <HookBridge
+        options={options}
         onReady={(v) => {
           hookRef.current = v;
         }}
@@ -143,6 +146,14 @@ describe('useEstimateArrivalTimes', () => {
     mockUseCurrentTrainType.mockReturnValue(null);
 
     const { hookRef } = renderHook();
+
+    expect(mockGqlRequest).not.toHaveBeenCalled();
+    expect(hookRef.current?.route).toBeNull();
+  });
+
+  it('skip オプション指定時はクエリを実行せず route も返さない', () => {
+    // デフォルトの setupAtoms は本来クエリが実行される条件
+    const { hookRef } = renderHook({ skip: true });
 
     expect(mockGqlRequest).not.toHaveBeenCalled();
     expect(hookRef.current?.route).toBeNull();
