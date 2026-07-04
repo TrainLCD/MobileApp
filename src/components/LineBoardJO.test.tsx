@@ -14,6 +14,8 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useDisplayCurrentStation: jest.fn(),
+  useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
+  useEstimatedMinutesByStationId: jest.fn(() => new Map()),
   useIsPassing: jest.fn(() => false),
   useStationNumberIndexFunc: jest.fn(() => jest.fn(() => 0)),
   useTransferLinesFromStation: jest.fn(() => []),
@@ -73,11 +75,17 @@ jest.mock('./Typography', () => {
   };
 });
 
-jest.mock('./LineBoard/shared/components', () => ({
-  EmptyStationNameCell: jest.fn(() => null),
-  LineDot: jest.fn(() => null),
-  StationName: jest.fn(() => null),
-}));
+jest.mock('./LineBoard/shared/components', () => {
+  const { Text } = require('react-native');
+  return {
+    EmptyStationNameCell: jest.fn(() => null),
+    EstimatedMinutesBadge: jest.fn(({ estimatedMinutes }) => (
+      <Text>{estimatedMinutes}</Text>
+    )),
+    LineDot: jest.fn(() => null),
+    StationName: jest.fn(() => null),
+  };
+});
 
 describe('LineBoardJO', () => {
   const { useAtomValue } = require('jotai');
@@ -226,6 +234,22 @@ describe('LineBoardJO', () => {
       />
     );
     expect(result.toJSON()).toBeTruthy();
+  });
+
+  it('stationIdに対応するestimatedMinutesがbarDotへ表示される', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
+    const { EstimatedMinutesBadge } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardJO
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+      />
+    );
+    expect(EstimatedMinutesBadge).toHaveBeenCalledWith(
+      expect.objectContaining({ estimatedMinutes: 5 }),
+      undefined
+    );
   });
 
   it('通過駅の場合、PassChevronEastが表示される', () => {

@@ -5,6 +5,8 @@ import type { Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useIsPassing,
   useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
@@ -19,6 +21,7 @@ import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
 import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
+import { EstimatedMinutesBadge } from './LineBoard/shared/components';
 import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import {
   BAR_BOTTOM_JO,
@@ -233,6 +236,9 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   const station = useDisplayCurrentStation();
   const currentLine = useCurrentLine();
   const barWidth = useBarWidth();
+  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -371,9 +377,20 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
                   bottom: getBottom(i),
                   width: i <= currentStationIndex ? 16 : 32,
                   height: i <= currentStationIndex ? 16 : 32,
+                  justifyContent: 'center',
+                  alignItems: 'center',
                 },
               ]}
-            />
+            >
+              {stations[i]?.id != null &&
+              estimatedMinutesByStationId.get(stations[i].id) != null ? (
+                <EstimatedMinutesBadge
+                  estimatedMinutes={
+                    estimatedMinutesByStationId.get(stations[i].id) as number
+                  }
+                />
+              ) : null}
+            </View>
           )}
         </React.Fragment>
       ))}
