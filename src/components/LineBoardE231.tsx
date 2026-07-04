@@ -109,6 +109,8 @@ const localStyles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+    width: isTablet ? 44 : 36,
+    height: isTablet ? 36 : 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -261,12 +263,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   passed && !arrived && localStyles.dotInnerPassed,
                 ]}
               >
-                {estimatedMinutes != null ? (
+                {estimatedMinutes != null && !(passed && !arrived) ? (
                   <View
-                    style={[
-                      localStyles.dotInner,
-                      localStyles.estimatedMinutesOverlay,
-                    ]}
+                    style={localStyles.estimatedMinutesOverlay}
                     pointerEvents="none"
                   >
                     <EstimatedMinutesBadge

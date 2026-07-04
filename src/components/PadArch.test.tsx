@@ -84,9 +84,8 @@ describe('PadArch', () => {
   it('stationIdに対応するestimatedMinutesがEstimatedMinutesBadgeへ渡される', () => {
     const { EstimatedMinutesBadge } = require('./LineBoard/shared/components');
     renderPadArch(mockStations, new Map([[2, 5]]));
-    expect(EstimatedMinutesBadge).toHaveBeenCalledWith(
-      expect.objectContaining({ estimatedMinutes: 5 }),
-      undefined
+    expect(EstimatedMinutesBadge.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ estimatedMinutes: 5 })
     );
   });
 
@@ -100,6 +99,12 @@ describe('PadArch', () => {
     getIsPass.mockReturnValue(true);
     const { EstimatedMinutesBadge } = require('./LineBoard/shared/components');
     renderPadArch(mockStations, new Map([[2, 5]]));
+    expect(EstimatedMinutesBadge).not.toHaveBeenCalled();
+  });
+
+  it('到着時の最後から2番目の駅にはestimatedMinutesを表示しない', () => {
+    const { EstimatedMinutesBadge } = require('./LineBoard/shared/components');
+    renderPadArch(mockStations, new Map([[2, 5]]), true);
     expect(EstimatedMinutesBadge).not.toHaveBeenCalled();
   });
 });

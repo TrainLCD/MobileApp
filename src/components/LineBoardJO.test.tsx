@@ -246,9 +246,8 @@ describe('LineBoardJO', () => {
         lineColors={['#9acd32', '#9acd32']}
       />
     );
-    expect(EstimatedMinutesBadge).toHaveBeenCalledWith(
-      expect.objectContaining({ estimatedMinutes: 5 }),
-      undefined
+    expect(EstimatedMinutesBadge.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ estimatedMinutes: 5 })
     );
   });
 

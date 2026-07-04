@@ -133,10 +133,26 @@ describe('LineBoardE231', () => {
         hasTerminus={false}
       />
     );
-    expect(EstimatedMinutesBadge).toHaveBeenCalledWith(
-      expect.objectContaining({ estimatedMinutes: 5 }),
-      undefined
+    expect(EstimatedMinutesBadge.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ estimatedMinutes: 5 })
     );
+  });
+
+  it('useEstimateArrivalTimesが返すrouteがuseEstimatedMinutesByStationIdへ渡される', () => {
+    const {
+      useEstimateArrivalTimes,
+      useEstimatedMinutesByStationId,
+    } = require('~/hooks');
+    const mockRoute = { stops: [] };
+    useEstimateArrivalTimes.mockReturnValueOnce({ route: mockRoute });
+    render(
+      <LineBoardE231
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(useEstimatedMinutesByStationId).toHaveBeenCalledWith(mockRoute);
   });
 
   it('estimatedMinutesが無い場合、EstimatedMinutesBadgeは表示されない', () => {
