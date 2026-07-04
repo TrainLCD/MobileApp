@@ -10,7 +10,6 @@ export * from './native';
 export * from './numbering';
 export * from './province';
 export * from './regexp';
-export * from './simulationMode';
 export * from './size';
 export * from './social';
 export * from './station';

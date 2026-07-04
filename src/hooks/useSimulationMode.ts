@@ -2,17 +2,12 @@ import * as Location from 'expo-location';
 import getDistance from 'geolib/es/getDistance';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { LineType } from '~/@types/graphql';
-import {
-  BUS_MAX_ACCEL_IN_M_S,
-  BUS_MAX_DECEL_IN_M_S,
-  BUS_MAX_SPEED_IN_M_S,
-  LINE_TYPE_MAX_ACCEL_IN_M_S,
-  LINE_TYPE_MAX_DECEL_IN_M_S,
-  LINE_TYPE_MAX_SPEEDS_IN_M_S,
-  LOCATION_TASK_NAME,
-  TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S,
-} from '~/constants';
+import type {
+  GetTrainRouteQuery,
+  GetTrainRouteQueryVariables,
+} from '~/@types/graphql';
+import { LOCATION_TASK_NAME } from '~/constants';
+import { GET_TRAIN_ROUTE } from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
@@ -24,9 +19,8 @@ import {
 } from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
-import { isBusLine } from '../utils/line';
-import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
 
 export const useSimulationMode = (): void => {
@@ -38,7 +32,6 @@ export const useSimulationMode = (): void => {
   const currentStationRef = useRef(currentStation);
   currentStationRef.current = currentStation;
 
-  const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
   const { isLoopLine } = useLoopLine();
 
@@ -62,33 +55,6 @@ export const useSimulationMode = (): void => {
     [rawStations, selectedDirection]
   );
 
-  const currentLineType = useMemo(
-    () => currentLine?.lineType ?? LineType.Normal,
-    [currentLine]
-  );
-
-  const isBus = useMemo(() => isBusLine(currentLine), [currentLine]);
-
-  const maxSpeed = useMemo<number>(() => {
-    if (isBus) {
-      return BUS_MAX_SPEED_IN_M_S;
-    }
-
-    if (currentLineType === LineType.BulletTrain) {
-      return LINE_TYPE_MAX_SPEEDS_IN_M_S[LineType.BulletTrain];
-    }
-
-    const defaultMaxSpeed = LINE_TYPE_MAX_SPEEDS_IN_M_S[currentLineType];
-
-    if (trainType?.kind && TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[trainType?.kind]) {
-      return (
-        TRAIN_TYPE_KIND_MAX_SPEEDS_IN_M_S[trainType.kind] ?? defaultMaxSpeed
-      );
-    }
-
-    return defaultMaxSpeed;
-  }, [isBus, currentLineType, trainType]);
-
   const maybeRevsersedStations = useMemo(
     () =>
       // ループ線では INBOUND/OUTBOUND の進行方向が非ループ線と逆になる
@@ -105,6 +71,28 @@ export const useSimulationMode = (): void => {
   const enabled = useMemo(() => {
     return autoModeEnabled;
   }, [autoModeEnabled]);
+
+  // シミュレーション区間全体 (先頭駅→末尾駅) の距離・最高速度・加減速度を
+  // バックエンドから取得し、路線種別/種別ベースの定数テーブルを廃してサーバー側の
+  // 実測値に委譲する。
+  const fromStationId = maybeRevsersedStations[0]?.id;
+  const toStationId = maybeRevsersedStations.at(-1)?.id;
+
+  const { data: trainRouteData, error: trainRouteError } = useGraphQLQuery<
+    GetTrainRouteQuery,
+    GetTrainRouteQueryVariables
+  >(GET_TRAIN_ROUTE, {
+    variables: {
+      fromStationId: fromStationId ?? 0,
+      toStationId: toStationId ?? 0,
+      lineGroupId: trainType?.groupId,
+    },
+    skip:
+      !enabled ||
+      fromStationId == null ||
+      toStationId == null ||
+      fromStationId === toStationId,
+  });
 
   const resolveStartIndex = useCallback((): number => {
     const cs = currentStationRef.current;
@@ -160,18 +148,30 @@ export const useSimulationMode = (): void => {
     stopLocationUpdates();
   }, [enabled]);
 
+  // trainRoute クエリのエラーをログに記録
   useEffect(() => {
+    if (trainRouteError) {
+      console.error(
+        '[useSimulationMode] trainRoute query error:',
+        trainRouteError
+      );
+    }
+  }, [trainRouteError]);
+
+  useEffect(() => {
+    const segments = trainRouteData?.trainRoute?.segments;
+    if (!segments || segments.length === 0) {
+      return;
+    }
+
+    // trainRoute は fromStationId(= maybeRevsersedStations[0])→toStationId(= 末尾)の
+    // 並びで1駅1セグメントを返すため、駅IDではなく配列位置で対応付ける。
+    // 同一駅IDが非隣接位置に複数回出現するケース(接続駅の再登場等)があり、
+    // ID をキーにしたルックアップだと後勝ちで別位置の値を誤って使ってしまうため。
     const speedProfiles: number[][] = new Array(maybeRevsersedStations.length);
     const segmentGeometry: SegmentGeometry[] = new Array(
       maybeRevsersedStations.length
     );
-
-    const accel = isBus
-      ? BUS_MAX_ACCEL_IN_M_S
-      : LINE_TYPE_MAX_ACCEL_IN_M_S[currentLineType];
-    const decel = isBus
-      ? BUS_MAX_DECEL_IN_M_S
-      : LINE_TYPE_MAX_DECEL_IN_M_S[currentLineType];
     const emptyGeometry: SegmentGeometry = {
       waypoints: [],
       cumulativeDistances: [],
@@ -206,12 +206,16 @@ export const useSimulationMode = (): void => {
         continue;
       }
       const next = maybeRevsersedStations[nextStationIndex];
+      const arrivalSegment = segments[nextStationIndex];
       if (
         !next ||
         cur.latitude == null ||
         cur.longitude == null ||
         next.latitude == null ||
-        next.longitude == null
+        next.longitude == null ||
+        arrivalSegment?.maxSpeed == null ||
+        arrivalSegment?.maxAcceleration == null ||
+        arrivalSegment?.maxDeceleration == null
       ) {
         speedProfiles[curMapIndex] = [];
         segmentGeometry[curMapIndex] = emptyGeometry;
@@ -219,40 +223,28 @@ export const useSimulationMode = (): void => {
       }
 
       // step() で参照する waypoints と累積距離を一度だけ計算してキャッシュする。
-      // step() は毎秒呼ばれるため、ここで先払いすればその分のCPU負荷が減る。
+      // 距離は trainRoute の distanceFromPrevious を積算する(直線距離ではなく
+      // 実際の線路長ベースの値をサーバーから取得できる)。
       const waypoints: { latitude: number; longitude: number }[] = [
         {
           latitude: cur.latitude as number,
           longitude: cur.longitude as number,
         },
       ];
-      for (let idx = curMapIndex + 1; idx < nextStationIndex; idx++) {
+      const cumulative: number[] = [0];
+      let distanceForNextStation = 0;
+      for (let idx = curMapIndex + 1; idx <= nextStationIndex; idx++) {
         const wp = maybeRevsersedStations[idx];
         if (!wp || wp.latitude == null || wp.longitude == null) {
           continue;
         }
+        distanceForNextStation += segments[idx]?.distanceFromPrevious ?? 0;
         waypoints.push({
           latitude: wp.latitude as number,
           longitude: wp.longitude as number,
         });
+        cumulative.push(distanceForNextStation);
       }
-      waypoints.push({
-        latitude: next.latitude as number,
-        longitude: next.longitude as number,
-      });
-
-      const cumulative = new Array<number>(waypoints.length);
-      cumulative[0] = 0;
-      for (let i = 1; i < waypoints.length; i++) {
-        const prev = waypoints[i - 1];
-        const cur = waypoints[i];
-        const d = getDistance(
-          { latitude: prev.latitude, longitude: prev.longitude },
-          { latitude: cur.latitude, longitude: cur.longitude }
-        );
-        cumulative[i] = (cumulative[i - 1] ?? 0) + d;
-      }
-      const distanceForNextStation = cumulative[cumulative.length - 1] ?? 0;
 
       segmentGeometry[curMapIndex] = {
         waypoints,
@@ -262,9 +254,9 @@ export const useSimulationMode = (): void => {
 
       const speedProfile = generateTrainSpeedProfile({
         distance: distanceForNextStation,
-        maxSpeed,
-        accel,
-        decel,
+        maxSpeed: arrivalSegment.maxSpeed,
+        accel: arrivalSegment.maxAcceleration,
+        decel: arrivalSegment.maxDeceleration,
         interval: 1,
       });
 
@@ -290,13 +282,7 @@ export const useSimulationMode = (): void => {
     childIndexRef.current = 0;
     segmentProgressDistanceRef.current = 0;
     dwellPendingRef.current = false;
-  }, [
-    maybeRevsersedStations,
-    isBus,
-    currentLineType,
-    maxSpeed,
-    resolveStartIndex,
-  ]);
+  }, [maybeRevsersedStations, trainRouteData, resolveStartIndex]);
 
   const step = useCallback(
     (speed: number) => {
