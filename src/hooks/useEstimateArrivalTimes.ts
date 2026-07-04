@@ -177,17 +177,14 @@ export const useEstimateArrivalTimes = () => {
     // (例: 都庁前だけ本来より遥かに大きい分数になる)。
     // そのため区間全体を再フィルタするのではなく、leftStations の各要素に対して
     // 一意に特定できた allStops 上のインデックス(bestMatchedIndices)だけを使う。
+    const visibleGroupIds = new Set(leftStations.map((ls) => ls.groupId));
     const matchedStops =
       windowStartIndex !== -1
         ? bestMatchedIndices.map((idx) => allStops[idx])
-        : windowStops.filter((s) => {
-            const visibleGroupIds = new Set(
-              leftStations.map((ls) => ls.groupId)
-            );
-            return (
+        : windowStops.filter(
+            (s) =>
               s.stationGroupId != null && visibleGroupIds.has(s.stationGroupId)
-            );
-          });
+          );
 
     // 現在駅自身は cumulativeMinutes - baseMinutes が0以下になり通常は下のfilterで
     // 除外されるが、windowStops内に現在駅のエントリが見つからずbaseMinutesが0に
