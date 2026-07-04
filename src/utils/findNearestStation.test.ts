@@ -207,5 +207,27 @@ describe('findNearestStation', () => {
 
       expect(result?.id).toBe(after.id);
     });
+
+    it('OUTBOUND方向でも、groupIdが同じでもidが異なる駅がある場合はid一致で現在地を特定する', () => {
+      // INBOUND版と同じ配置。groupIdだけでcurrentIdxを求めると常に先に出現する
+      // outer(index 0)に固定され、OUTBOUND(index減少方向)には駅が無い
+      // (currentIdx-1 = -1)ため誤ってnullを返してしまう。id一致ならinner
+      // (index 2)を起点にでき、手前のbetweenを正しく返せる。
+      const outer = createStation(9930100, { groupId: 100 });
+      const between = createStation(50, { groupId: 50 });
+      const inner = createStation(9930101, { groupId: 100 });
+      const after = createStation(60, { groupId: 60 });
+      const oldStations = [outer, between, inner, after];
+      const newStations = [between, after];
+
+      const result = findNearestStation(
+        oldStations,
+        newStations,
+        inner.id,
+        'OUTBOUND'
+      );
+
+      expect(result?.id).toBe(between.id);
+    });
   });
 });
