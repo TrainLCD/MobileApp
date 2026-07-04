@@ -187,6 +187,23 @@ describe('LineBoardEast', () => {
     expect(LineDot).toHaveBeenCalled();
   });
 
+  it('stationIdに対応するestimatedMinutesがLineDotへ渡される', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    useEstimatedMinutesByStationId.mockReturnValue(new Map([[2, 5]]));
+    const { LineDot } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ estimatedMinutes: 5 }),
+      undefined
+    );
+  });
+
   it('lineがnullの場合、何もレンダリングされない', () => {
     useCurrentLine.mockReturnValue(null);
     const { StationName } = require('./LineBoard/shared/components');
