@@ -158,7 +158,7 @@ describe('useEstimateArrivalTimes', () => {
     expect(hookRef.current?.route).toBeNull();
   });
 
-  it('INBOUND のとき fromStationId=先頭, toStationId=末尾 で送信する', async () => {
+  it('INBOUND のとき fromStationId=先頭, toStationId=末尾, directionId=0 で送信する', async () => {
     setupAtoms({ selectedDirection: 'INBOUND' });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
@@ -175,9 +175,10 @@ describe('useEstimateArrivalTimes', () => {
     const variables = mockGqlRequest.mock.calls[0][1];
     expect(variables.fromStationId).toBe(stationA.id);
     expect(variables.toStationId).toBe(stationC.id);
+    expect(variables.directionId).toBe(0);
   });
 
-  it('OUTBOUND のとき fromStationId=末尾, toStationId=先頭 で送信する', async () => {
+  it('OUTBOUND のとき fromStationId=末尾, toStationId=先頭, directionId=1 で送信する', async () => {
     setupAtoms({ selectedDirection: 'OUTBOUND' });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
@@ -194,9 +195,11 @@ describe('useEstimateArrivalTimes', () => {
     const variables = mockGqlRequest.mock.calls[0][1];
     expect(variables.fromStationId).toBe(stationC.id);
     expect(variables.toStationId).toBe(stationA.id);
+    expect(variables.directionId).toBe(1);
   });
 
-  it('環状路線でないとき directionId を送信しない', async () => {
+  it('方面未選択のとき directionId を送信しない', async () => {
+    setupAtoms({ selectedDirection: null });
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: { routes: [] },
     });
