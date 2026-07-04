@@ -464,6 +464,51 @@ describe('useEstimateArrivalTimes', () => {
     );
   });
 
+  it('leftStationsに1回しか出現しない駅でも、区間内にAPI側の無関係な重複出現があれば混同しない', async () => {
+    // 都庁前がleftStationsの中間(現在駅ではない)に1回だけ出現するケース。
+    // allStops側は環状区間の影響で都庁前が2回出現し、そのうち1回(58.0)は
+    // stationBへ辿り着くための区間内に紛れ込んだ無関係な出現。
+    // stationGroupIdの集合一致で区間を再フィルタすると両方拾ってしまい、
+    // 後段のMap化で無関係な方(58.0)が後勝ちして誤表示される。
+    const tochomae = createStation(900, { line: { id: 100 } });
+    mockUseDisplayCurrentStation.mockReturnValue(stationA);
+    setupAtoms({ leftStations: [stationA, tochomae, stationB] });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: {
+        routes: [
+          {
+            id: 100,
+            stops: [
+              {
+                stationGroupId: stationA.groupId,
+                cumulativeMinutes: 0,
+                departureCumulativeMinutes: 0,
+              },
+              { stationGroupId: tochomae.groupId, cumulativeMinutes: 3.0 },
+              { stationGroupId: tochomae.groupId, cumulativeMinutes: 58.0 },
+              { stationGroupId: stationB.groupId, cumulativeMinutes: 5.0 },
+            ],
+          },
+        ],
+      },
+    });
+
+    const { hookRef } = renderHook();
+
+    await waitFor(() => {
+      expect(hookRef.current?.route?.stops).toHaveLength(2);
+    });
+    expect(hookRef.current?.route?.stops?.map((s) => s.stationGroupId)).toEqual(
+      [tochomae.groupId, stationB.groupId]
+    );
+    expect(hookRef.current?.route?.stops?.[0]?.cumulativeMinutes).toBeCloseTo(
+      3.0
+    );
+    expect(hookRef.current?.route?.stops?.[1]?.cumulativeMinutes).toBeCloseTo(
+      5.0
+    );
+  });
+
   it('viaLineIds に全路線IDが重複なく含まれる', async () => {
     const s1 = createStation(10, { line: { id: 200 } });
     const s2 = createStation(20, { line: { id: 200 } });
