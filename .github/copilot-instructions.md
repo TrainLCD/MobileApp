@@ -73,7 +73,7 @@ src/
 - **React Navigation**: ナビゲーション管理
 - **Tanstack Query**: データフェッチングとキャッシング
 - **Zustand**: 状態管理
-- **Firebase**: バックエンドサービス（Analytics、Auth、Firestore、Storage）
+- **Cloudflare Workers**: バックエンドAPI（認証・TTS・フィードバック・リモート設定）、R2/KVでストレージ
 - **Sentry**: エラートラッキングとパフォーマンス監視
 - **GraphQL**: 型付きクエリとオペレーション
 
@@ -104,7 +104,7 @@ npm run gql:codegen       # GraphQL型定義再生成
 - Jest のグローバルセットアップは`jest.setup.js`と`src/setupTests.ts`で管理
 - 単体テストは対象モジュールと同じ階層に`.test.ts`/`.test.tsx`として配置
 - テストヘルパーは`src/utils/test/`から再利用
-- ネットワークと Firebase レイヤーは`jest.mock`でモック化
+- ネットワークとバックエンドAPIレイヤーは`jest.mock`でモック化
 - `afterEach`で`jest.clearAllMocks()`を呼び出す
 - 統合フローのテストは`src/test/e2e.ts`を拡張
 - フィクスチャは`src/__fixtures__/`から利用

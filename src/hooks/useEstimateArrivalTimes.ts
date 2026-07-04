@@ -5,7 +5,6 @@ import type {
   EstimateArrivalTimesQueryVariables,
 } from '~/@types/graphql';
 import { ESTIMATE_ARRIVAL_TIMES } from '~/lib/graphql/queries';
-import type { LineDirection } from '../models/Bound';
 import { selectedLineAtom } from '../store/atoms/line';
 import { leftStationsAtom } from '../store/atoms/navigation';
 import {
@@ -17,15 +16,6 @@ import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
-
-// StationAPI EstimateArrivalTimesRequest.direction_id (0 = 格納順, 1 = 逆順) に対応。
-// 環状路線の進行方向は線形路線と逆の規約で、INBOUND(内回り)は stations 配列の逆順、
-// OUTBOUND(外回り)は格納順に進む (useNextStation の環状分岐・useLoopLine と同じ)。
-// 例: 山手線は 大崎→渋谷→新宿→池袋→上野→東京→品川 の順で格納されており、これは外回り。
-const LOOP_LINE_DIRECTION_ID: Record<LineDirection, number> = {
-  INBOUND: 1,
-  OUTBOUND: 0,
-};
 
 /**
  * 選択中の路線・駅情報から estimateArrivalTimes クエリの変数を組み立て、
@@ -73,14 +63,15 @@ export const useEstimateArrivalTimes = () => {
   // routes.id は種別選択時は trainType.groupId、未選択時は路線IDに対応する
   const filteringId = trainType?.groupId ?? selectedLine?.id;
 
+  // StationAPI EstimateArrivalTimesRequest.direction_id (0 = 格納順, 1 = 逆順) に対応。
   // 環状路線は from/to 駅だけでは周回方向が一意に定まらず、directionId 未指定だと
   // バックエンドは直線距離が短い方の弧を選ぶヒューリスティックにフォールバックする
-  // (TrainLCD/StationAPI#1581)。逆回り方向の ETA が返るのを防ぐため、環状路線の
-  // ときだけ進行方向を明示的に指定する。undefined はシリアライズ時に落ちるので送信されない。
+  // (TrainLCD/StationAPI#1581)。この曖昧さは環状路線に限らないため、路線種別を問わず
+  // 進行方向が判明していれば常に directionId を明示的に指定する。travelsInStoredOrder は
+  // 路線種別ごとの進行方向規約を織り込み済みなので、そのまま 格納順=0 / 逆順=1 に
+  // 変換すればよい。undefined はシリアライズ時に落ちるので方面未選択時は送信されない。
   const directionId =
-    isLoopLine && selectedDirection != null
-      ? LOOP_LINE_DIRECTION_ID[selectedDirection]
-      : undefined;
+    selectedDirection != null ? (travelsInStoredOrder ? 0 : 1) : undefined;
 
   // 方面未選択・始発/終着が不明・フィルタ先が無い場合はクエリを実行しない
   const skip =
