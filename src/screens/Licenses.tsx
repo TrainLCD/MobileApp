@@ -21,24 +21,24 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
 
-const LICENSE_MAP = {
-  ekidata_jp: 'ekidata_jp',
-  toei: 'toei',
-  kyoto_city: 'kyoto_city',
-  yokohama_city: 'yokohama_city',
-  seibu_bus: 'seibu_bus',
-  hakodate_city: 'hakodate_city',
-  roboto: 'roboto',
-  other_oss: 'other_oss',
-} as const;
+type LicenseId =
+  | 'ekidata_jp'
+  | 'toei'
+  | 'kyoto_city'
+  | 'yokohama_city'
+  | 'seibu_bus'
+  | 'hakodate_city'
+  | 'roboto'
+  | 'other_oss';
 
 type LicenseItem = {
-  id: keyof typeof LICENSE_MAP;
+  id: LicenseId;
   title: string;
   icon: string;
   href: string;
   devOnly: boolean;
   license?: string;
+  licenseUrl?: string;
 };
 
 const styles = StyleSheet.create({
@@ -110,27 +110,8 @@ const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 const MIT_URL = 'https://opensource.org/licenses/MIT';
 const ODPT_BASIC_LICENSE_URL =
   'https://developer.odpt.org/terms/data_basic_license.html';
-
-const getLicenseInfo = (
-  license: string
-): { url: string; name: string } | null => {
-  if (license.includes('Apache')) {
-    return { url: APACHE_2_URL, name: 'Apache License 2.0' };
-  }
-  if (license.includes('MIT')) {
-    return { url: MIT_URL, name: 'MIT License' };
-  }
-  if (license.includes('CC BY')) {
-    return { url: CC_BY_URL, name: 'CC BY 4.0' };
-  }
-  if (
-    license.includes('公共交通オープンデータ基本ライセンス') ||
-    license.includes('Public Transportation Open Data Basic License')
-  ) {
-    return { url: ODPT_BASIC_LICENSE_URL, name: license };
-  }
-  return null;
-};
+// 公共交通オープンデータセンターのGTFSデータ利用規約 (ckan.odpt.org の函館市電データセットが指定するライセンス)
+const GTFS_RUL_URL = 'https://gtfs-jp.org/GTFS-RUL(ODPT).pdf';
 
 const Licenses: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -159,6 +140,7 @@ const Licenses: React.FC = () => {
             icon: '🚌',
             href: 'https://www.kotsu.metro.tokyo.jp/',
             license: translate('ccby'),
+            licenseUrl: CC_BY_URL,
             devOnly: false,
           },
           {
@@ -167,6 +149,7 @@ const Licenses: React.FC = () => {
             icon: '🚇',
             href: 'https://www.city.kyoto.lg.jp/kotsu/',
             license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
             devOnly: false,
           },
           {
@@ -175,6 +158,7 @@ const Licenses: React.FC = () => {
             icon: '🚇',
             href: 'https://www.city.yokohama.lg.jp/kotsu/',
             license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
             devOnly: false,
           },
           {
@@ -183,6 +167,7 @@ const Licenses: React.FC = () => {
             icon: '🚌',
             href: 'https://www.seibubus.co.jp/',
             license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
             devOnly: false,
           },
           {
@@ -191,6 +176,7 @@ const Licenses: React.FC = () => {
             icon: '🚋',
             href: 'https://www.city.hakodate.hokkaido.jp/tram/',
             license: translate('odptGtfs'),
+            licenseUrl: GTFS_RUL_URL,
             devOnly: false,
           },
           {
@@ -199,6 +185,7 @@ const Licenses: React.FC = () => {
             icon: '🔤',
             href: 'https://fonts.google.com/specimen/Roboto',
             license: 'Apache License 2.0',
+            licenseUrl: APACHE_2_URL,
             devOnly: false,
           },
           {
@@ -207,6 +194,7 @@ const Licenses: React.FC = () => {
             icon: '📦',
             href: MIT_URL,
             license: 'MIT License',
+            licenseUrl: MIT_URL,
             devOnly: false,
           },
         ] as const
@@ -216,10 +204,10 @@ const Licenses: React.FC = () => {
 
   const handlePressLicenseItem = useCallback(
     (item: LicenseItem) => {
-      const licenseInfo = item.license ? getLicenseInfo(item.license) : null;
+      const { license, licenseUrl } = item;
 
-      if (licenseInfo) {
-        const options = [item.title, licenseInfo.name, translate('cancel')];
+      if (license && licenseUrl) {
+        const options = [item.title, license, translate('cancel')];
         const cancelButtonIndex = 2;
 
         showActionSheetWithOptions(
@@ -231,7 +219,7 @@ const Licenses: React.FC = () => {
             if (selectedIndex === 0) {
               Linking.openURL(item.href);
             } else if (selectedIndex === 1) {
-              Linking.openURL(licenseInfo.url);
+              Linking.openURL(licenseUrl);
             }
           }
         );
