@@ -7,7 +7,7 @@ import { createLine, createStation } from '~/utils/test/factories';
 import stationState from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
-import { useNextStation } from './useNextStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
 import { useTransferLines } from './useTransferLines';
 import { useTransferLinesFromStation } from './useTransferLinesFromStation';
 
@@ -19,8 +19,8 @@ jest.mock('jotai', () => ({
 jest.mock('./useCurrentStation', () => ({
   useCurrentStation: jest.fn(),
 }));
-jest.mock('./useNextStation', () => ({
-  useNextStation: jest.fn(),
+jest.mock('./useDisplayNextStation', () => ({
+  useDisplayNextStation: jest.fn(),
 }));
 jest.mock('./useTransferLinesFromStation', () => ({
   useTransferLinesFromStation: jest.fn(),
@@ -44,9 +44,8 @@ describe('useTransferLines', () => {
   const mockUseCurrentStation = useCurrentStation as jest.MockedFunction<
     typeof useCurrentStation
   >;
-  const mockUseNextStation = useNextStation as jest.MockedFunction<
-    typeof useNextStation
-  >;
+  const mockUseDisplayNextStation =
+    useDisplayNextStation as jest.MockedFunction<typeof useDisplayNextStation>;
   const mockUseTransferLinesFromStation =
     useTransferLinesFromStation as jest.MockedFunction<
       typeof useTransferLinesFromStation
@@ -68,7 +67,9 @@ describe('useTransferLines', () => {
       throw new Error('unknown atom');
     });
     mockUseCurrentStation.mockImplementation(() => currentStationValue);
-    mockUseNextStation.mockImplementation(() => nextStationValue ?? undefined);
+    mockUseDisplayNextStation.mockImplementation(
+      () => nextStationValue ?? undefined
+    );
     mockUseTransferLinesFromStation.mockReturnValue([]);
     mockGetIsPass.mockReturnValue(false);
   });
@@ -119,16 +120,22 @@ describe('useTransferLines', () => {
     );
   });
 
-  it('未到着時も次駅を対象にする', () => {
-    const nextStation = createStation(20);
+  it('未到着時は表示用の次駅 (接近中はGPS基準の接近駅) を対象にする', () => {
+    // useDisplayNextStation は接近中に路線順の次駅ではなく実際に接近している駅を
+    // 返すことがある。乗換案内はヘッダー・TTS の「まもなく」駅名と同じ駅を
+    // 対象にしなければならない。
+    const displayNextStation = createStation(20);
     stationAtomValue.arrived = false;
-    nextStationValue = nextStation;
+    nextStationValue = displayNextStation;
 
     render(<TestComponent />);
 
-    expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(nextStation, {
-      omitRepeatingLine: false,
-      omitJR: false,
-    });
+    expect(mockUseTransferLinesFromStation).toHaveBeenCalledWith(
+      displayNextStation,
+      {
+        omitRepeatingLine: false,
+        omitJR: false,
+      }
+    );
   });
 });
