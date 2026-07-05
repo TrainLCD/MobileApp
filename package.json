@@ -89,7 +89,6 @@
     "react-native-view-shot": "4.0.3",
     "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "^0.21.1",
-    "rxjs": "^7.3.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
