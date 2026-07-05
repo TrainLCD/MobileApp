@@ -24,7 +24,10 @@ import { isDevApp } from '~/utils/isDevApp';
 const LICENSE_MAP = {
   ekidata_jp: 'ekidata_jp',
   toei: 'toei',
-  rxjs: 'rxjs',
+  kyoto_city: 'kyoto_city',
+  yokohama_city: 'yokohama_city',
+  seibu_bus: 'seibu_bus',
+  hakodate_city: 'hakodate_city',
   roboto: 'roboto',
   other_oss: 'other_oss',
 } as const;
@@ -105,6 +108,8 @@ const LicenseHolder = ({
 const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/';
 const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 const MIT_URL = 'https://opensource.org/licenses/MIT';
+const ODPT_BASIC_LICENSE_URL =
+  'https://developer.odpt.org/terms/data_basic_license.html';
 
 const getLicenseInfo = (
   license: string
@@ -117,6 +122,12 @@ const getLicenseInfo = (
   }
   if (license.includes('CC BY')) {
     return { url: CC_BY_URL, name: 'CC BY 4.0' };
+  }
+  if (
+    license.includes('公共交通オープンデータ基本ライセンス') ||
+    license.includes('Public Transportation Open Data Basic License')
+  ) {
+    return { url: ODPT_BASIC_LICENSE_URL, name: license };
   }
   return null;
 };
@@ -151,11 +162,35 @@ const Licenses: React.FC = () => {
             devOnly: false,
           },
           {
-            id: 'rxjs',
-            title: 'RxJS',
-            icon: '⚡',
-            href: 'https://rxjs.dev/',
-            license: 'Apache License 2.0',
+            id: 'kyoto_city',
+            title: translate('kyotoCity'),
+            icon: '🚇',
+            href: 'https://www.city.kyoto.lg.jp/kotsu/',
+            license: translate('odptBasicLicense'),
+            devOnly: false,
+          },
+          {
+            id: 'yokohama_city',
+            title: translate('yokohamaCity'),
+            icon: '🚇',
+            href: 'https://www.city.yokohama.lg.jp/kotsu/',
+            license: translate('odptBasicLicense'),
+            devOnly: false,
+          },
+          {
+            id: 'seibu_bus',
+            title: translate('seibuBus'),
+            icon: '🚌',
+            href: 'https://www.seibubus.co.jp/',
+            license: translate('odptBasicLicense'),
+            devOnly: false,
+          },
+          {
+            id: 'hakodate_city',
+            title: translate('hakodateCity'),
+            icon: '🚋',
+            href: 'https://www.city.hakodate.hokkaido.jp/tram/',
+            license: translate('odptGtfs'),
             devOnly: false,
           },
           {
