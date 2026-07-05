@@ -37,9 +37,10 @@ type LicenseItem = {
   icon: string;
   href: string;
   devOnly: boolean;
-  license?: string;
-  licenseUrl?: string;
-};
+} & (
+  | { license?: undefined; licenseUrl?: undefined }
+  | { license: string; licenseUrl: string }
+);
 
 const styles = StyleSheet.create({
   root: {
