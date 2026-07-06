@@ -1,114 +1,26 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
-import type {
-  EstimateArrivalTimesQuery,
-  EstimateArrivalTimesQueryVariables,
-} from '~/@types/graphql';
-import { ESTIMATE_ARRIVAL_TIMES } from '~/lib/graphql/queries';
-import { selectedLineAtom } from '../store/atoms/line';
 import { leftStationsAtom } from '../store/atoms/navigation';
-import {
-  selectedBoundAtom,
-  selectedDirectionAtom,
-  stationsAtom,
-} from '../store/atoms/station';
-import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayCurrentStation } from './useDisplayCurrentStation';
-import { useGraphQLQuery } from './useGraphQLQuery';
-import { useLoopLine } from './useLoopLine';
+import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 
 /**
- * 選択中の路線・駅情報から estimateArrivalTimes クエリの変数を組み立て、
- * 現在の種別 (groupId) または選択中の路線 ID に一致するルートを返すフック。
+ * クエリ変数の組み立て・実行・ルート抽出は useEstimateArrivalTimesRoute に委譲し、
+ * ここでは表示都合の整形だけを行う薄いラッパー。
  * 返す route.stops は LineBoard に表示中の駅（leftStations）に限定し、
  * 現在駅の到着時刻を基準（0分）とした相対時間に変換する。
  */
 export const useEstimateArrivalTimes = (options?: { skip?: boolean }) => {
-  const stations = useAtomValue(stationsAtom);
-  const selectedBound = useAtomValue(selectedBoundAtom);
-  const selectedDirection = useAtomValue(selectedDirectionAtom);
-  const selectedLine = useAtomValue(selectedLineAtom);
   const leftStations = useAtomValue(leftStationsAtom);
   // LineBoard 側の passed/グレーアウト判定と同じ基準駅を使うことで、取りこぼし時の
   // 前方補正(healed)が効いた際に基準駅がずれ、出発済み駅にETAが残るのを防ぐ。
   const currentStation = useDisplayCurrentStation();
-  const trainType = useCurrentTrainType();
-  const { isLoopLine } = useLoopLine();
 
-  // stations 配列は [上り方面の終点, ..., 下り方面の終点] の順。
-  // 線形路線では OUTBOUND は末尾→先頭方向、INBOUND は先頭→末尾方向に進むので from/to を入れ替える。
-  // 環状路線は進行方向の規約が線形と逆 (INBOUND=配列逆順・OUTBOUND=格納順) なので、
-  // from/to も進行方向の始端→終端になるよう逆に割り当てる。こうしないと directionId で
-  // 指定した向きの弧が from→to の全周区間ではなく継ぎ目を跨いだ2駅分に潰れてしまう。
-  const travelsInStoredOrder = isLoopLine
-    ? selectedDirection === 'OUTBOUND'
-    : selectedDirection === 'INBOUND';
-  const fromStationId = travelsInStoredOrder
-    ? stations[0]?.id
-    : stations.at(-1)?.id;
-  const toStationId = travelsInStoredOrder
-    ? stations.at(-1)?.id
-    : stations[0]?.id;
+  const { route, loading, error } = useEstimateArrivalTimesRoute(options);
 
-  // 経由路線ID: stations に含まれる全路線IDを重複排除して渡す
-  const viaLineIds = useMemo(
-    () => [
-      ...new Set(
-        stations.map((s) => s.line?.id).filter((id): id is number => id != null)
-      ),
-    ],
-    [stations]
-  );
-
-  // routes.id は種別選択時は trainType.groupId、未選択時は路線IDに対応する
-  const filteringId = trainType?.groupId ?? selectedLine?.id;
-
-  // StationAPI EstimateArrivalTimesRequest.direction_id (0 = 格納順, 1 = 逆順) に対応。
-  // 環状路線は from/to 駅だけでは周回方向が一意に定まらず、directionId 未指定だと
-  // バックエンドは直線距離が短い方の弧を選ぶヒューリスティックにフォールバックする
-  // (TrainLCD/StationAPI#1581)。この曖昧さは環状路線に限らないため、路線種別を問わず
-  // 進行方向が判明していれば常に directionId を明示的に指定する。travelsInStoredOrder は
-  // 路線種別ごとの進行方向規約を織り込み済みなので、そのまま 格納順=0 / 逆順=1 に
-  // 変換すればよい。undefined はシリアライズ時に落ちるので方面未選択時は送信されない。
-  const directionId =
-    selectedDirection != null ? (travelsInStoredOrder ? 0 : 1) : undefined;
-
-  // 呼び出し側がETA不要な場合・方面未選択・始発/終着が不明・フィルタ先が無い場合はクエリを実行しない
-  const skip =
-    !!options?.skip ||
-    !selectedBound ||
-    fromStationId == null ||
-    toStationId == null ||
-    filteringId == null;
-
-  const { data, loading, error } = useGraphQLQuery<
-    EstimateArrivalTimesQuery,
-    EstimateArrivalTimesQueryVariables
-  >(ESTIMATE_ARRIVAL_TIMES, {
-    variables: {
-      fromStationId: fromStationId ?? 0,
-      toStationId: toStationId ?? 0,
-      viaLineIds,
-      directionId,
-    },
-    skip,
-  });
-
-  // レスポンスの routes から filteringId に一致するルートを1件取り出し、
-  // stops を LineBoard 表示中の駅（leftStations）だけに絞り込んだ上で、
+  // route の stops を LineBoard 表示中の駅（leftStations）だけに絞り込んだ上で、
   // 現在駅の到着時刻を基準（0分）とした相対時間に変換する
   const matchedRoute = useMemo(() => {
-    // skip時でも同一queryKeyのキャッシュがあるとdataは返ってくる(enabledはfetch抑止のみ)
-    // ため、ルートを返さないことをここで保証する
-    if (skip) {
-      return null;
-    }
-    const routes = data?.estimateArrivalTimes?.routes;
-    if (!routes || filteringId == null) {
-      return null;
-    }
-
-    const route = routes.find((r) => r.id === filteringId) ?? null;
     if (!route) {
       return null;
     }
@@ -148,7 +60,7 @@ export const useEstimateArrivalTimes = (options?: { skip?: boolean }) => {
       .filter((s) => s.cumulativeMinutes == null || s.cumulativeMinutes > 0);
 
     return { ...route, stops: relativeStops };
-  }, [data, filteringId, leftStations, currentStation?.id, skip]);
+  }, [route, leftStations, currentStation?.id]);
 
   return { route: matchedRoute, loading, error };
 };
