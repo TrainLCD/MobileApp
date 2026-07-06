@@ -61,6 +61,12 @@ export const locationAccuracyOutlierAtom = atom(false);
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
+// setLocation()を通過して受理された最後の実測位の時刻(ms)。ETAフォールバックの
+// 無信号(staleness)判定に使う。store.set(locationAtom, …)の直書き(シミュレーション/
+// フォールバックの座標スナップ)では更新されないことが重要で、GPSが実際に生きているか
+// どうかをこの値の新しさだけで判定できるようにする。
+export const lastAcceptedFixAtMsAtom = atom<number | null>(null);
+
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
   store.set(locationAtom, null);
@@ -68,6 +74,7 @@ export const resetLocationState = () => {
   store.set(accuracyHistoryAtom, []);
   store.set(lastFilteredLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
+  store.set(lastAcceptedFixAtMsAtom, null);
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -114,6 +121,7 @@ export const setLocation = (location: Location.LocationObject) => {
   if (skipSmoothing) {
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
+    store.set(lastAcceptedFixAtMsAtom, Date.now());
     return;
   }
 
@@ -122,6 +130,7 @@ export const setLocation = (location: Location.LocationObject) => {
     store.set(locationAtom, location);
     store.set(lastFilteredLocationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
+    store.set(lastAcceptedFixAtMsAtom, Date.now());
     return;
   }
 
@@ -169,4 +178,5 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(locationAtom, smoothedLocation);
   store.set(lastFilteredLocationAtom, smoothedLocation);
   store.set(accuracyHistoryAtom, updatedHistory);
+  store.set(lastAcceptedFixAtMsAtom, Date.now());
 };
