@@ -269,6 +269,7 @@ export const useRefreshStation = (): void => {
     }
 
     if (
+      etaFallbackActive ||
       !wrongDirectionNotifyEnabled ||
       (!isWrongDirection && !isLoopLineWrongDirection) ||
       nextStationId == null ||
@@ -286,6 +287,7 @@ export const useRefreshStation = (): void => {
     }).catch(() => {});
     lastNotifiedWrongDirectionStationIdRef.current = nextStationId;
   }, [
+    etaFallbackActive,
     isWrongDirection,
     isLoopLineWrongDirection,
     nextStationId,

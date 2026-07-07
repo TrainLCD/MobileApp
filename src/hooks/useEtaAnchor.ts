@@ -39,9 +39,11 @@ export const useEtaAnchor = (): void => {
     const prevArrived = prevArrivedRef.current;
     const prevStation = prevStationRef.current;
 
-    if (etaFallbackActive) {
-      // フォールバック活性中はETA由来の状態を観測してしまうため記録しない。
-      // ただし遷移検出用のrefは更新し、活性解除後に古い遷移を誤検出しないようにする。
+    if (etaFallbackActive || selectedBound == null) {
+      // フォールバック活性中(ETA由来の状態を観測してしまう)・行き先未選択中は
+      // 記録しない。行き先未選択中に記録すると、下の clear effect と競合して
+      // 古いアンカーが復活し、次回選択時のETA推定起点が汚染される。
+      // ただし遷移検出用のrefは更新し、ガード解除後に古い遷移を誤検出しないようにする。
       prevArrivedRef.current = arrived;
       prevStationRef.current = station;
       return;
@@ -64,12 +66,17 @@ export const useEtaAnchor = (): void => {
 
     prevArrivedRef.current = arrived;
     prevStationRef.current = station;
-  }, [arrived, station, etaFallbackActive, setAnchor]);
+  }, [arrived, station, selectedBound, etaFallbackActive, setAnchor]);
 
   // arrived/station が変化しない間も経過時間だけは進むため、数秒おきに
   // observedAtMsを更新し続ける(仮想時計の基準時刻を最新に保つ)
   useInterval(() => {
-    if (!etaFallbackActive && arrived && station?.id != null) {
+    if (
+      selectedBound != null &&
+      !etaFallbackActive &&
+      arrived &&
+      station?.id != null
+    ) {
       setAnchor({
         stationId: station.id,
         kind: 'AT_STATION',

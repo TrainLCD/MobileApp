@@ -79,7 +79,11 @@ const extractStops = (
  * - 推定フェーズは etaPhaseAtom に常時公開し、精度劣化時の到着しきい値緩和(R1)に使う。
  */
 export const useEtaFallback = (): void => {
-  const { route } = useEstimateArrivalTimesRoute();
+  // 機能が無効な間はETAルートのGraphQL取得自体を止める(LineBoard表示側が
+  // 取得しないテーマでも、無効時に不要なフェッチを走らせない)。
+  const { route } = useEstimateArrivalTimesRoute({
+    skip: !isEtaAssistEnabled(),
+  });
   const routeRef = useRef(route);
   routeRef.current = route;
 
@@ -119,16 +123,18 @@ export const useEtaFallback = (): void => {
     });
   };
 
+  // 駆動できたら true、DWELLING駅がstationsAtom上に見つからず駆動不能なら false。
+  // false のとき呼び出し側はフォールバックを解除し、状態更新の凍結を防ぐ。
   const drive = (
     phase: NonNullable<ReturnType<typeof estimateEtaPhase>>,
     nowMs: number
-  ): void => {
+  ): boolean => {
     if (phase.kind === 'DWELLING') {
       const station = store
         .get(stationsAtom)
         .find((s) => s.id === phase.stationId);
       if (!station) {
-        return;
+        return false;
       }
       // 到着した駅が変わった瞬間にのみ座標スナップとヘッダー駅更新を行う。
       if (snappedStationIdRef.current !== station.id) {
@@ -149,7 +155,7 @@ export const useEtaFallback = (): void => {
           ? prev
           : { ...prev, arrived: true, approaching: false, station }
       );
-      return;
+      return true;
     }
 
     // RUNNING / APPROACHING: 現在駅(=直前の停車駅)は据え置き、フラグのみ駆動する。
@@ -161,6 +167,7 @@ export const useEtaFallback = (): void => {
         ? prev
         : { ...prev, arrived: false, approaching }
     );
+    return true;
   };
 
   const tick = (): void => {
@@ -229,7 +236,10 @@ export const useEtaFallback = (): void => {
         deactivate();
         return;
       }
-      drive(phase, now);
+      // 駆動不能(DWELLING駅がstationsAtom上に無い)なら解除して凍結を防ぐ。
+      if (!drive(phase, now)) {
+        deactivate();
+      }
       return;
     }
 
@@ -237,7 +247,9 @@ export const useEtaFallback = (): void => {
       store.set(etaFallbackActiveAtom, true);
       activatedAtRef.current = now;
       snappedStationIdRef.current = null;
-      drive(phase, now);
+      if (!drive(phase, now)) {
+        deactivate();
+      }
     }
   };
 

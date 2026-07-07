@@ -37,6 +37,12 @@ const ETA_FALLBACK_ARRIVAL_CONFIRM_MARGIN_SEC_FALLBACK = 30;
 // ETAフォールバックを継続してよい最大時間(分)のフォールバック既定値。
 const ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK = 30;
 
+// リモート設定の数値は「有限かつ正」のみ受理する(0・負値・非数はフォールバックへ倒す)。
+const parsePositiveFiniteNumber = (value: unknown): number | null => {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
 // getMaxPermitAccuracy / isForceNotArrivedOnLowAccuracyEnabled 等はGPS更新のたびに
 // 呼ばれるホットパスのため、起動時に /config/remote から取得した値をモジュール内に
 // キャッシュし、以降は同期的に返す。取得失敗時はキャッシュせずフォールバックを返す。
@@ -66,8 +72,8 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   const data = (await res.json()) as RemoteConfigResponse;
 
-  const maxAccuracy = Number(data.max_permit_accuracy);
-  if (Number.isFinite(maxAccuracy) && maxAccuracy > 0) {
+  const maxAccuracy = parsePositiveFiniteNumber(data.max_permit_accuracy);
+  if (maxAccuracy != null) {
     cachedMaxPermitAccuracy = maxAccuracy;
   }
   if (typeof data.force_not_arrived_on_low_accuracy === 'boolean') {
@@ -76,14 +82,16 @@ export const setupRemoteConfig = async (): Promise<void> => {
   if (typeof data.eta_assist_enabled === 'boolean') {
     cachedEtaAssistEnabled = data.eta_assist_enabled;
   }
-  const arrivalConfirmMarginSec = Number(
+  const arrivalConfirmMarginSec = parsePositiveFiniteNumber(
     data.eta_fallback_arrival_confirm_margin_sec
   );
-  if (Number.isFinite(arrivalConfirmMarginSec) && arrivalConfirmMarginSec > 0) {
+  if (arrivalConfirmMarginSec != null) {
     cachedEtaFallbackArrivalConfirmMarginSec = arrivalConfirmMarginSec;
   }
-  const maxDurationMin = Number(data.eta_fallback_max_duration_min);
-  if (Number.isFinite(maxDurationMin) && maxDurationMin > 0) {
+  const maxDurationMin = parsePositiveFiniteNumber(
+    data.eta_fallback_max_duration_min
+  );
+  if (maxDurationMin != null) {
     cachedEtaFallbackMaxDurationMin = maxDurationMin;
   }
 };

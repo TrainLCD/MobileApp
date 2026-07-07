@@ -239,14 +239,19 @@ describe('useEtaFallback', () => {
   });
 
   it('タイムキャップ(最大継続時間)超過で解除する', () => {
+    // 短い上限を設定し、ETAフェーズがまだ返る時刻でcapを踏ませることで、
+    // !phase 解除ではなく capExceeded 経路が働くことを確実に検証する。
+    jest
+      .spyOn(remoteConfigModule, 'getEtaFallbackMaxDurationMin')
+      .mockReturnValue(0.01);
     renderHook(() => useEtaFallback(), { wrapper });
 
     setNow(T0 + 1000);
     runTick();
     expect(store.get(etaFallbackActiveAtom)).toBe(true);
 
-    // 発動(T0+1秒)から30分を超過 → キャップ超過で解除
-    setNow(T0 + 31 * 60_000);
+    // 発動(T0+1秒)から0.01分(0.6秒)を超過。ETAフェーズはまだRUNNINGのまま。
+    setNow(T0 + 2000);
     runTick();
     expect(store.get(etaFallbackActiveAtom)).toBe(false);
   });
@@ -269,6 +274,22 @@ describe('useEtaFallback', () => {
     setNow(T0 + 1000);
     runTick();
 
+    expect(store.get(etaFallbackActiveAtom)).toBe(false);
+  });
+
+  it('DWELLING駅がstationsAtom上に見つからない場合は解除して凍結を防ぐ', () => {
+    // stationsAtomからBを除くと、B停車帯の駆動時に駅解決できず解除される。
+    store.set(stationsAtom, [STATIONS[0], STATIONS[2]]);
+    renderHook(() => useEtaFallback(), { wrapper });
+
+    // 発動(走行中)
+    setNow(T0 + 1000);
+    runTick();
+    expect(store.get(etaFallbackActiveAtom)).toBe(true);
+
+    // B停車帯(m∈[2.5,3.0))へ進める → Bが見つからず解除
+    setNow(T0 + 2.2 * 60_000);
+    runTick();
     expect(store.get(etaFallbackActiveAtom)).toBe(false);
   });
 });
