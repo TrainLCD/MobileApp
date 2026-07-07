@@ -38,9 +38,12 @@ const ETA_FALLBACK_ARRIVAL_CONFIRM_MARGIN_SEC_FALLBACK = 30;
 const ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK = 30;
 
 // リモート設定の数値は「有限かつ正」のみ受理する(0・負値・非数はフォールバックへ倒す)。
+// 真偽値や配列は Number() で 1 や 5 に化けるため、number 型に限定してから検証する。
 const parsePositiveFiniteNumber = (value: unknown): number | null => {
-  const n = Number(value);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  if (typeof value !== 'number') {
+    return null;
+  }
+  return Number.isFinite(value) && value > 0 ? value : null;
 };
 
 // getMaxPermitAccuracy / isForceNotArrivedOnLowAccuracyEnabled 等はGPS更新のたびに

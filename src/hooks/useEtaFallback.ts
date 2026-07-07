@@ -12,6 +12,7 @@ import {
   etaPhaseAtom,
 } from '~/store/atoms/etaFallback';
 import {
+  lastAcceptedFixAccuracyAtom,
   lastAcceptedFixAtMsAtom,
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -202,6 +203,10 @@ export const useEtaFallback = (): void => {
     const accuracy = location?.coords.accuracy ?? null;
     const outlier = store.get(locationAccuracyOutlierAtom);
     const lastFixMs = store.get(lastAcceptedFixAtMsAtom);
+    // 解除判定は locationAtom の精度ではなく「最後に受理された実測位」の精度で見る。
+    // 到着スナップが locationAtom を accuracy:0 で直書きするため、locationAtom を見ると
+    // 実測位がまだ劣化していても goodFix が偽陽性になり早期解除してしまう。
+    const lastFixAccuracy = store.get(lastAcceptedFixAccuracyAtom);
 
     // 精度劣化の継続時間を追跡する。
     const accuracyBad = accuracy != null && accuracy > BAD_ACCURACY_THRESHOLD;
@@ -222,8 +227,8 @@ export const useEtaFallback = (): void => {
     // 良好測位の受理。中途半端な測位(200〜1500m)では解除しない(ヒステリシス)。
     const goodFix =
       !outlier &&
-      accuracy != null &&
-      accuracy <= BAD_ACCURACY_THRESHOLD &&
+      lastFixAccuracy != null &&
+      lastFixAccuracy <= BAD_ACCURACY_THRESHOLD &&
       lastFixMs != null &&
       now - lastFixMs <= FIX_STALENESS_MS;
 

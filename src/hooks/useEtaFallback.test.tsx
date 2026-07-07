@@ -10,6 +10,7 @@ import {
   etaPhaseAtom,
 } from '~/store/atoms/etaFallback';
 import {
+  lastAcceptedFixAccuracyAtom,
   lastAcceptedFixAtMsAtom,
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -128,6 +129,7 @@ describe('useEtaFallback', () => {
     store.set(stationAtom, STATIONS[0]);
     store.set(locationAccuracyOutlierAtom, true);
     store.set(lastAcceptedFixAtMsAtom, T0);
+    store.set(lastAcceptedFixAccuracyAtom, 30);
     store.set(locationAtom, {
       timestamp: T0,
       coords: {
@@ -204,6 +206,7 @@ describe('useEtaFallback', () => {
     setNow(T0 + 2000);
     store.set(locationAccuracyOutlierAtom, false);
     store.set(lastAcceptedFixAtMsAtom, now);
+    store.set(lastAcceptedFixAccuracyAtom, 800);
     store.set(locationAtom, {
       timestamp: now,
       coords: {
@@ -222,6 +225,7 @@ describe('useEtaFallback', () => {
     // 良好測位(50m)を受理 → 解除
     setNow(T0 + 3000);
     store.set(lastAcceptedFixAtMsAtom, now);
+    store.set(lastAcceptedFixAccuracyAtom, 50);
     store.set(locationAtom, {
       timestamp: now,
       coords: {
@@ -291,5 +295,50 @@ describe('useEtaFallback', () => {
     setNow(T0 + 2.2 * 60_000);
     runTick();
     expect(store.get(etaFallbackActiveAtom)).toBe(false);
+  });
+
+  it('到着スナップでlocationAtomがaccuracy:0になっても、実測位が劣化中なら解除しない', () => {
+    // 精度劣化継続(800m)で発動するケース。外れ値ではなく実測位が流れ続ける。
+    const badFix = (ts: number) => {
+      store.set(lastAcceptedFixAtMsAtom, ts);
+      store.set(lastAcceptedFixAccuracyAtom, 800);
+      store.set(locationAtom, {
+        timestamp: ts,
+        coords: {
+          latitude: 35.0,
+          longitude: 139.0,
+          accuracy: 800,
+          altitude: null,
+          altitudeAccuracy: null,
+          speed: null,
+          heading: null,
+        },
+      });
+    };
+
+    store.set(locationAccuracyOutlierAtom, false);
+    badFix(T0);
+    renderHook(() => useEtaFallback(), { wrapper });
+
+    // 1回目のtickで精度劣化の起点を記録(まだ継続時間0なので発動しない)
+    setNow(T0 + 1000);
+    badFix(now);
+    runTick();
+    expect(store.get(etaFallbackActiveAtom)).toBe(false);
+
+    // 精度劣化が20秒継続 → 発動
+    setNow(T0 + 22_000);
+    badFix(now);
+    runTick();
+    expect(store.get(etaFallbackActiveAtom)).toBe(true);
+
+    // B到着でスナップが走りlocationAtomはaccuracy:0になる。直後も実測位(800m)は
+    // まだ新しいが劣化したまま。locationAtomの精度で見ると誤って解除しうるが、
+    // lastAcceptedFixAccuracy(800m)で判定するため解除しない。
+    setNow(T0 + 2.2 * 60_000);
+    store.set(lastAcceptedFixAtMsAtom, now); // 実測位は届いているが精度は800mのまま
+    runTick();
+    expect(store.get(locationAtom)?.coords.accuracy).toBe(0); // スナップ済み
+    expect(store.get(etaFallbackActiveAtom)).toBe(true); // 早期解除しない
   });
 });

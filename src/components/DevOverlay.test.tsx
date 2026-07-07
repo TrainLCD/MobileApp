@@ -225,6 +225,25 @@ describe('DevOverlay', () => {
         'assist ON / #42'
       );
     });
+
+    it('ETAフォールバック稼働時(DWELLING)は停車駅IDを表示する', () => {
+      // DWELLINGは targetStationId ではなく stationId を参照するため別途検証する。
+      jest
+        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
+        .mockReturnValue(true);
+      setupAtomValues({
+        etaFallbackActive: true,
+        etaPhase: { kind: 'DWELLING', stationId: 7 },
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
+        'DWELLING'
+      );
+      expect(getByTestId('dev-overlay-eta-fallback-meta')).toHaveTextContent(
+        'assist ON / #7'
+      );
+    });
   });
 
   describe('D&D座標変換', () => {
