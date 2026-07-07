@@ -500,22 +500,20 @@ const DevOverlay: React.FC = () => {
   const footerTextStyle = isLandscape ? { fontSize: 9 } : null;
   const bodyRowStyle = isLandscape ? styles.landscapeBodyRow : null;
   const contentWidth = panelWidth - compactPaddingX * 2;
-  const chartColumnWidth = isLandscape ? panelWidth * 0.4 : panelWidth;
   const metricsGap = isLandscape ? 8 : 10;
-  const metricsColumnWidth = isLandscape
-    ? contentWidth - chartColumnWidth - metricsGap
-    : contentWidth;
-  const metricWidth = (metricsColumnWidth - metricsGap) / 2;
-  const nextCardWidth = metricsColumnWidth;
+  // すべてのボックスを2列・均一幅に揃える。横画面はチャートも含めて2列×3段
+  // (チャート/NEXT・精度/速度・FALLBACK/ANCHOR)、縦画面もメトリクスカードを
+  // 同じ幅に揃える(チャートのみ単独で全幅)。
+  const boxWidth = (contentWidth - metricsGap) / 2;
+  const chartColumnWidth = isLandscape ? boxWidth : panelWidth;
+  const metricWidth = boxWidth;
+  const nextCardWidth = boxWidth;
+  const leftMetricWidth = boxWidth;
   // 折れ線グラフの描画サイズ。chartShellの内側(paddingHorizontal分を差し引いた幅)に収める
   const accuracyChartWidth = isLandscape
     ? chartColumnWidth - 20
     : contentWidth - 24;
   const accuracyChartHeight = isLandscape ? 30 : 40;
-  // 横画面の下段(精度/速度・フォールバック/アンカー)はチャートの下ではなく単独の行なので、
-  // チャート幅を差し引いた metricWidth ではなくコンテンツ全幅で2分割する。
-  // これをしないと metricsColumnWidth 基準で右側にチャート幅ぶんの余白が残る。
-  const leftMetricWidth = (contentWidth - metricsGap) / 2;
   const nextTargetCardStyle: ViewStyle = {
     justifyContent: 'flex-start',
     gap: 6,
