@@ -332,6 +332,13 @@ const MetricCard: React.FC<MetricCardProps> = ({
 const DevOverlay: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedHeight, setExpandedHeight] = useState(0);
+  // アンカーの経過秒表示用の現在時刻。レンダー中に Date.now() を直接呼ぶと純粋性違反に
+  // なる(React Compilerの自動メモ化で更新されなくなる)ため、1秒間隔でstateへ取り込む。
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
   // DevOverlayは診断用途のため、速度・精度ともにEMAスムージングやMAX_PERMIT_ACCURACY
   // フィルタを通らない生の測位値（rawLocationAtom）から取得する。
   // 継続測位（watch/background両経路）はhandleTrackingLocation経由でフィルタ前に
@@ -425,14 +432,14 @@ const DevOverlay: React.FC = () => {
   }`;
   // ETA仮想時計の起点(アンカー)。フォールバックが正しい駅から時計を進めているかを
   // 確認できるよう、種別(到着中/発車)・起点駅ID・観測からの経過秒を出す。
-  // 経過秒は精度チャートの1秒サンプリングによる再レンダーで更新される。
+  // 経過秒は nowTick(1秒間隔で更新するstate)から導出する。
   const etaAnchorValue = etaAnchor
     ? etaAnchor.kind === 'AT_STATION'
       ? 'AT STOP'
       : 'DEPARTED'
     : '--';
   const etaAnchorAgeSec = etaAnchor
-    ? Math.max(0, Math.round((Date.now() - etaAnchor.observedAtMs) / 1000))
+    ? Math.max(0, Math.round((nowTick - etaAnchor.observedAtMs) / 1000))
     : null;
   const etaAnchorMeta = etaAnchor
     ? `#${etaAnchor.stationId} · ${etaAnchorAgeSec}s ago`

@@ -199,17 +199,17 @@ export const useEtaFallback = (): void => {
 
     const bound = store.get(selectedBoundAtom);
     const autoMode = store.get(autoModeEnabledAtom);
-    const location = store.get(locationAtom);
-    const accuracy = location?.coords.accuracy ?? null;
     const outlier = store.get(locationAccuracyOutlierAtom);
     const lastFixMs = store.get(lastAcceptedFixAtMsAtom);
-    // 解除判定は locationAtom の精度ではなく「最後に受理された実測位」の精度で見る。
+    // 精度判定は locationAtom ではなく「最後に受理された実測位」の精度で見る。
     // 到着スナップが locationAtom を accuracy:0 で直書きするため、locationAtom を見ると
-    // 実測位がまだ劣化していても goodFix が偽陽性になり早期解除してしまう。
+    // (1) goodFix が偽陽性になり早期解除する、(2) accuracyBad が毎tickリセットされ
+    // 精度劣化の継続を追えなくなる。両者を snapshot 非依存の実測位精度で判定する。
     const lastFixAccuracy = store.get(lastAcceptedFixAccuracyAtom);
 
     // 精度劣化の継続時間を追跡する。
-    const accuracyBad = accuracy != null && accuracy > BAD_ACCURACY_THRESHOLD;
+    const accuracyBad =
+      lastFixAccuracy != null && lastFixAccuracy > BAD_ACCURACY_THRESHOLD;
     if (accuracyBad) {
       if (badSinceRef.current == null) {
         badSinceRef.current = now;
