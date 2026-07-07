@@ -20,7 +20,8 @@ import {
   useNextStation,
 } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
-import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
+import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
+import { etaFallbackActiveAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -346,6 +347,11 @@ const DevOverlay: React.FC = () => {
   const isBackgroundLocationTracking = useAtomValue(
     backgroundLocationTrackingAtom
   );
+  // ETAフォールバックの診断表示。有効フラグ(リモート設定)は非リアクティブなgetter、
+  // R2の稼働状態と推定フェーズはatomから購読する。
+  const etaAssistEnabled = isEtaAssistEnabled();
+  const isEtaFallbackActive = useAtomValue(etaFallbackActiveAtom);
+  const etaPhase = useAtomValue(etaPhaseAtom);
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
   const accuracyMeters =
@@ -397,6 +403,21 @@ const DevOverlay: React.FC = () => {
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
   const telemetryValue = isTelemetryEnabled ? 'ON' : 'OFF';
   const backgroundValue = isBackgroundLocationTracking ? 'ON' : 'OFF';
+  // 稼働中は現在フェーズ(RUNNING/APPROACHING/DWELLING)を、非稼働時は IDLE を表示する。
+  const etaFallbackValue = isEtaFallbackActive
+    ? (etaPhase?.kind ?? 'ACTIVE')
+    : 'IDLE';
+  // 推定対象の駅ID(走行/接近中は目標駅、停車中は当該駅)。
+  const etaPhaseTargetId =
+    etaPhase == null
+      ? null
+      : etaPhase.kind === 'DWELLING'
+        ? etaPhase.stationId
+        : etaPhase.targetStationId;
+  // メタ行に有効フラグ(リモート設定の配信状態)と対象駅を出す。
+  const etaFallbackMeta = `assist ${etaAssistEnabled ? 'ON' : 'OFF'}${
+    etaPhaseTargetId != null ? ` / #${etaPhaseTargetId}` : ''
+  }`;
   const nextStationNumber =
     nextStation?.stationNumbers?.find((item) => !!item?.stationNumber)
       ?.stationNumber ?? undefined;
@@ -784,6 +805,21 @@ const DevOverlay: React.FC = () => {
                   />
                 </View>
 
+                <MetricCard
+                  label="ETA FALLBACK"
+                  value={etaFallbackValue}
+                  meta={etaFallbackMeta}
+                  style={[{ width: nextCardWidth }, metricCardStyle]}
+                  valueTestID="dev-overlay-eta-fallback-value"
+                  metaTestID="dev-overlay-eta-fallback-meta"
+                  labelStyle={metricLabelStyle}
+                  valueStyle={[
+                    metricValueStyle,
+                    isEtaFallbackActive && styles.metricValueWarning,
+                  ]}
+                  metaStyle={metricMetaStyle}
+                />
+
                 <Typography style={[styles.footerText, footerTextStyle]}>
                   LIVE SENSOR TRACE / INTERNAL BUILD
                 </Typography>
@@ -850,6 +886,24 @@ const DevOverlay: React.FC = () => {
                     metaTestID="dev-overlay-next-meta"
                     labelStyle={metricLabelStyle}
                     valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                  <MetricCard
+                    label="ETA FALLBACK"
+                    value={etaFallbackValue}
+                    meta={etaFallbackMeta}
+                    style={[
+                      { width: nextCardWidth },
+                      metricCardStyle,
+                      nextTargetCardStyle,
+                    ]}
+                    valueTestID="dev-overlay-eta-fallback-value"
+                    metaTestID="dev-overlay-eta-fallback-meta"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={[
+                      metricValueStyle,
+                      isEtaFallbackActive && styles.metricValueWarning,
+                    ]}
                     metaStyle={metricMetaStyle}
                   />
                 </View>
