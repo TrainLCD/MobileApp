@@ -5,6 +5,12 @@ import { Dimensions, StyleSheet } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
+import * as remoteConfigModule from '~/lib/remoteConfig';
+import {
+  etaAnchorAtom,
+  etaFallbackActiveAtom,
+  etaPhaseAtom,
+} from '~/store/atoms/etaFallback';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -80,11 +86,17 @@ describe('DevOverlay', () => {
     },
     backgroundLocationTracking = false,
     autoModeEnabled = false,
+    etaFallbackActive = false,
+    etaPhase = null,
+    etaAnchor = null,
   }: {
     location?: unknown;
     rawLocation?: unknown;
     backgroundLocationTracking?: boolean;
     autoModeEnabled?: boolean;
+    etaFallbackActive?: boolean;
+    etaPhase?: unknown;
+    etaAnchor?: unknown;
   } = {}) => {
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === locationAtom) {
@@ -98,6 +110,15 @@ describe('DevOverlay', () => {
       }
       if (atom === autoModeEnabledAtom) {
         return autoModeEnabled as never;
+      }
+      if (atom === etaFallbackActiveAtom) {
+        return etaFallbackActive as never;
+      }
+      if (atom === etaPhaseAtom) {
+        return etaPhase as never;
+      }
+      if (atom === etaAnchorAtom) {
+        return etaAnchor as never;
       }
       if (atom === isLEDThemeAtom) {
         return false as never;
@@ -179,6 +200,89 @@ describe('DevOverlay', () => {
 
       const { getByTestId } = render(<DevOverlay />);
       expect(getByTestId('dev-overlay-landscape')).toBeTruthy();
+    });
+
+    it('ETAフォールバック非稼働時は IDLE と有効フラグを表示する', () => {
+      jest
+        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
+        .mockReturnValue(false);
+      setupAtomValues({ etaFallbackActive: false, etaPhase: null });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
+        'IDLE'
+      );
+      expect(getByTestId('dev-overlay-eta-fallback-meta')).toHaveTextContent(
+        'assist OFF'
+      );
+    });
+
+    it('ETAフォールバック稼働時は現在フェーズと対象駅・有効フラグを表示する', () => {
+      jest
+        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
+        .mockReturnValue(true);
+      setupAtomValues({
+        etaFallbackActive: true,
+        etaPhase: { kind: 'APPROACHING', targetStationId: 42 },
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
+        'APPROACHING'
+      );
+      expect(getByTestId('dev-overlay-eta-fallback-meta')).toHaveTextContent(
+        'assist ON / #42'
+      );
+    });
+
+    it('ETAフォールバック稼働時(DWELLING)は停車駅IDを表示する', () => {
+      // DWELLINGは targetStationId ではなく stationId を参照するため別途検証する。
+      jest
+        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
+        .mockReturnValue(true);
+      setupAtomValues({
+        etaFallbackActive: true,
+        etaPhase: { kind: 'DWELLING', stationId: 7 },
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
+        'DWELLING'
+      );
+      expect(getByTestId('dev-overlay-eta-fallback-meta')).toHaveTextContent(
+        'assist ON / #7'
+      );
+    });
+
+    it('アンカー未設定時は ETA ANCHOR に no anchor を表示する', () => {
+      setupAtomValues({ etaAnchor: null });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
+        '--'
+      );
+      expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
+        'no anchor'
+      );
+    });
+
+    it('アンカー設定時は種別・起点駅ID・経過秒を表示する', () => {
+      jest.spyOn(Date, 'now').mockReturnValue(100_000);
+      setupAtomValues({
+        etaAnchor: {
+          stationId: 5,
+          kind: 'DEPARTED',
+          observedAtMs: 88_000, // 12秒前
+        },
+      });
+
+      const { getByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
+        'DEPARTED'
+      );
+      expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
+        '#5 · 12s ago'
+      );
     });
   });
 

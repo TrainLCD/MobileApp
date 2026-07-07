@@ -3,11 +3,14 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
-import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
+import { ARRIVED_GRACE_PERIOD_MS, BAD_ACCURACY_THRESHOLD } from '~/constants';
 import {
   getMaxPermitAccuracy,
+  isEtaAssistEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
 } from '~/lib/remoteConfig';
+import { store } from '~/store';
+import { etaFallbackActiveAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
 import {
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -30,6 +33,9 @@ type NotifyType = 'ARRIVED' | 'APPROACHING';
 
 // GPS精度に応じた閾値補正の上限(m)
 const MAX_ACCURACY_BONUS = 150;
+// ETA確認による到着圏緩和(R1)の補正上限(m)。GPSとETAの双方が同じ停車駅を
+// 指すときに限り、粗い測位でも到着圏へ届くよう通常の上限(150m)より広げる。
+const ETA_ARRIVED_BONUS_CAP = 500;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -46,6 +52,9 @@ export const useRefreshStation = (): void => {
   const setNavigation = useSetAtom(navigationState);
   const location = useAtomValue(locationAtom);
   const isAccuracyOutlier = useAtomValue(locationAccuracyOutlierAtom);
+  // ETAフォールバック(R2)活性中は本フックの状態書き込みを停止し、ETA駆動と
+  // 凍結座標基準の判定が同一atomを奪い合う2ライター競合を防ぐ。
+  const etaFallbackActive = useAtomValue(etaFallbackActiveAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
   const accuracy = location?.coords.accuracy;
@@ -121,13 +130,31 @@ export const useRefreshStation = (): void => {
       return true;
     }
 
+    // R1(到着圏の緩和): 精度劣化(>200m)時に、ETA仮想時計が最寄り停車駅での
+    // 停車(DWELLING)を示す場合に限り、その駅の到着圏を広げる。GPSの最寄り駅と
+    // ETAが同じ駅を指すときのみ効く確認的な緩和で、精度が良い通常時(≤200m)は
+    // この分岐に入らず到着判定は一切変わらない。etaPhaseAtom は毎秒更新されるため
+    // 再レンダーを避けて非リアクティブに参照し、測位更新時の再評価で拾う。
+    let arrivedRadius = effectiveArrivedThreshold;
+    if (
+      isEtaAssistEnabled() &&
+      accuracy != null &&
+      accuracy > BAD_ACCURACY_THRESHOLD
+    ) {
+      const phase = store.get(etaPhaseAtom);
+      if (phase?.kind === 'DWELLING' && phase.stationId === nearestStation.id) {
+        arrivedRadius =
+          arrivedThreshold + Math.min(accuracy * 0.5, ETA_ARRIVED_BONUS_CAP);
+      }
+    }
+
     const arrived = isPointWithinRadius(
       { latitude, longitude },
       {
         latitude: nearestStation.latitude as number,
         longitude: nearestStation.longitude as number,
       },
-      effectiveArrivedThreshold
+      arrivedRadius
     );
 
     if (arrived) {
@@ -139,6 +166,7 @@ export const useRefreshStation = (): void => {
     accuracy,
     isAccuracyOutlier,
     effectiveArrivedThreshold,
+    arrivedThreshold,
     latitude,
     longitude,
     nearestStation,
@@ -189,7 +217,7 @@ export const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
-    if (!canGoForward) {
+    if (!canGoForward || etaFallbackActive) {
       return;
     }
 
@@ -222,6 +250,7 @@ export const useRefreshStation = (): void => {
     }
   }, [
     canGoForward,
+    etaFallbackActive,
     isApproaching,
     isArrived,
     approachingStation,
@@ -240,6 +269,7 @@ export const useRefreshStation = (): void => {
     }
 
     if (
+      etaFallbackActive ||
       !wrongDirectionNotifyEnabled ||
       (!isWrongDirection && !isLoopLineWrongDirection) ||
       nextStationId == null ||
@@ -257,6 +287,7 @@ export const useRefreshStation = (): void => {
     }).catch(() => {});
     lastNotifiedWrongDirectionStationIdRef.current = nextStationId;
   }, [
+    etaFallbackActive,
     isWrongDirection,
     isLoopLineWrongDirection,
     nextStationId,
@@ -264,7 +295,7 @@ export const useRefreshStation = (): void => {
   ]);
 
   useEffect(() => {
-    if (!nearestStation) {
+    if (!nearestStation || etaFallbackActive) {
       return;
     }
 
@@ -294,5 +325,12 @@ export const useRefreshStation = (): void => {
           : prev
       );
     }
-  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
+  }, [
+    etaFallbackActive,
+    isApproaching,
+    isArrived,
+    nearestStation,
+    setNavigation,
+    setStation,
+  ]);
 };

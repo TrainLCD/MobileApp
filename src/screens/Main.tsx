@@ -36,6 +36,8 @@ import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useEtaAnchor,
+  useEtaFallback,
   useFirstStop,
   useKeepAwake,
   useLazyGraphQLQuery,
@@ -261,6 +263,8 @@ const MainScreen: React.FC = () => {
   useTransitionHeaderState();
   useRefreshLeftStations();
   useRefreshStation();
+  useEtaAnchor();
+  useEtaFallback();
   useKeepAwake();
   useStartBackgroundLocationUpdates();
   const resetMainState = useResetMainState();
