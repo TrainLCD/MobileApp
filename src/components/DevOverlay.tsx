@@ -21,7 +21,11 @@ import {
 } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
-import { etaFallbackActiveAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
+import {
+  etaAnchorAtom,
+  etaFallbackActiveAtom,
+  etaPhaseAtom,
+} from '~/store/atoms/etaFallback';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -348,10 +352,11 @@ const DevOverlay: React.FC = () => {
     backgroundLocationTrackingAtom
   );
   // ETAフォールバックの診断表示。有効フラグ(リモート設定)は非リアクティブなgetter、
-  // R2の稼働状態と推定フェーズはatomから購読する。
+  // R2の稼働状態・推定フェーズ・アンカーはatomから購読する。
   const etaAssistEnabled = isEtaAssistEnabled();
   const isEtaFallbackActive = useAtomValue(etaFallbackActiveAtom);
   const etaPhase = useAtomValue(etaPhaseAtom);
+  const etaAnchor = useAtomValue(etaAnchorAtom);
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
   const accuracyMeters =
@@ -418,6 +423,20 @@ const DevOverlay: React.FC = () => {
   const etaFallbackMeta = `assist ${etaAssistEnabled ? 'ON' : 'OFF'}${
     etaPhaseTargetId != null ? ` / #${etaPhaseTargetId}` : ''
   }`;
+  // ETA仮想時計の起点(アンカー)。フォールバックが正しい駅から時計を進めているかを
+  // 確認できるよう、種別(到着中/発車)・起点駅ID・観測からの経過秒を出す。
+  // 経過秒は精度チャートの1秒サンプリングによる再レンダーで更新される。
+  const etaAnchorValue = etaAnchor
+    ? etaAnchor.kind === 'AT_STATION'
+      ? 'AT STOP'
+      : 'DEPARTED'
+    : '--';
+  const etaAnchorAgeSec = etaAnchor
+    ? Math.max(0, Math.round((Date.now() - etaAnchor.observedAtMs) / 1000))
+    : null;
+  const etaAnchorMeta = etaAnchor
+    ? `#${etaAnchor.stationId} · ${etaAnchorAgeSec}s ago`
+    : 'no anchor';
   const nextStationNumber =
     nextStation?.stationNumbers?.find((item) => !!item?.stationNumber)
       ?.stationNumber ?? undefined;
@@ -486,7 +505,10 @@ const DevOverlay: React.FC = () => {
     ? chartColumnWidth - 20
     : contentWidth - 24;
   const accuracyChartHeight = isLandscape ? 30 : 40;
-  const leftMetricWidth = metricWidth;
+  // 横画面の下段(精度/速度・フォールバック/アンカー)はチャートの下ではなく単独の行なので、
+  // チャート幅を差し引いた metricWidth ではなくコンテンツ全幅で2分割する。
+  // これをしないと metricsColumnWidth 基準で右側にチャート幅ぶんの余白が残る。
+  const leftMetricWidth = (contentWidth - metricsGap) / 2;
   const nextTargetCardStyle: ViewStyle = {
     justifyContent: 'flex-start',
     gap: 6,
@@ -805,20 +827,33 @@ const DevOverlay: React.FC = () => {
                   />
                 </View>
 
-                <MetricCard
-                  label="ETA FALLBACK"
-                  value={etaFallbackValue}
-                  meta={etaFallbackMeta}
-                  style={[{ width: nextCardWidth }, metricCardStyle]}
-                  valueTestID="dev-overlay-eta-fallback-value"
-                  metaTestID="dev-overlay-eta-fallback-meta"
-                  labelStyle={metricLabelStyle}
-                  valueStyle={[
-                    metricValueStyle,
-                    isEtaFallbackActive && styles.metricValueWarning,
-                  ]}
-                  metaStyle={metricMetaStyle}
-                />
+                <View style={styles.landscapeSubGrid}>
+                  <MetricCard
+                    label="ETA FALLBACK"
+                    value={etaFallbackValue}
+                    meta={etaFallbackMeta}
+                    style={[{ width: leftMetricWidth }, metricCardStyle]}
+                    valueTestID="dev-overlay-eta-fallback-value"
+                    metaTestID="dev-overlay-eta-fallback-meta"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={[
+                      metricValueStyle,
+                      isEtaFallbackActive && styles.metricValueWarning,
+                    ]}
+                    metaStyle={metricMetaStyle}
+                  />
+                  <MetricCard
+                    label="ETA ANCHOR"
+                    value={etaAnchorValue}
+                    meta={etaAnchorMeta}
+                    style={[{ width: leftMetricWidth }, metricCardStyle]}
+                    valueTestID="dev-overlay-eta-anchor-value"
+                    metaTestID="dev-overlay-eta-anchor-meta"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
+                    metaStyle={metricMetaStyle}
+                  />
+                </View>
 
                 <Typography style={[styles.footerText, footerTextStyle]}>
                   LIVE SENSOR TRACE / INTERNAL BUILD
@@ -892,11 +927,7 @@ const DevOverlay: React.FC = () => {
                     label="ETA FALLBACK"
                     value={etaFallbackValue}
                     meta={etaFallbackMeta}
-                    style={[
-                      { width: nextCardWidth },
-                      metricCardStyle,
-                      nextTargetCardStyle,
-                    ]}
+                    style={[{ width: metricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-eta-fallback-value"
                     metaTestID="dev-overlay-eta-fallback-meta"
                     labelStyle={metricLabelStyle}
@@ -904,6 +935,17 @@ const DevOverlay: React.FC = () => {
                       metricValueStyle,
                       isEtaFallbackActive && styles.metricValueWarning,
                     ]}
+                    metaStyle={metricMetaStyle}
+                  />
+                  <MetricCard
+                    label="ETA ANCHOR"
+                    value={etaAnchorValue}
+                    meta={etaAnchorMeta}
+                    style={[{ width: metricWidth }, metricCardStyle]}
+                    valueTestID="dev-overlay-eta-anchor-value"
+                    metaTestID="dev-overlay-eta-anchor-meta"
+                    labelStyle={metricLabelStyle}
+                    valueStyle={metricValueStyle}
                     metaStyle={metricMetaStyle}
                   />
                 </View>
