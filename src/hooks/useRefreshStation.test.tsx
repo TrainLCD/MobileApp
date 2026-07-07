@@ -90,7 +90,7 @@ describe('useRefreshStation', () => {
   });
 
   it('runs without crashing with basic mocks', () => {
-    // locationAtom, locationAccuracyOutlierAtom, notifyStateの順で呼ばれる
+    // locationAtom, locationAccuracyOutlierAtom, etaFallbackActiveAtom, notifyStateの順で呼ばれる
     mockUseAtomValue
       .mockReturnValueOnce({
         coords: {
@@ -99,6 +99,7 @@ describe('useRefreshStation', () => {
         },
       }) // locationAtom
       .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(false) // etaFallbackActiveAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     jest
@@ -138,6 +139,7 @@ describe('useRefreshStation', () => {
         },
       }) // locationAtom
       .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(false) // etaFallbackActiveAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     // useRefreshStation内のuseSetAtom呼び出し順:
@@ -185,6 +187,7 @@ describe('useRefreshStation', () => {
         },
       }) // locationAtom
       .mockReturnValueOnce(true) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(false) // etaFallbackActiveAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     const setStation = jest.fn();
@@ -234,6 +237,7 @@ describe('useRefreshStation', () => {
         },
       }) // locationAtom
       .mockReturnValueOnce(true) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(false) // etaFallbackActiveAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     const setStation = jest.fn();
@@ -296,6 +300,7 @@ describe('useRefreshStation', () => {
         },
       }) // locationAtom
       .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(false) // etaFallbackActiveAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     const setStation = jest.fn();
@@ -364,6 +369,7 @@ describe('useRefreshStation', () => {
         },
       }) // locationAtom
       .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(false) // etaFallbackActiveAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     const setStation = jest.fn();
@@ -428,6 +434,7 @@ describe('useRefreshStation', () => {
         coords: { latitude: 35.0, longitude: 135.0 },
       }) // locationAtom
       .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(false) // etaFallbackActiveAtom
       .mockReturnValue({ targetStationIds: [2] }); // notifyState(接近駅id=2が通知対象)
 
     mockUseSetAtom.mockReturnValue(jest.fn());
@@ -461,5 +468,48 @@ describe('useRefreshStation', () => {
     const body = mockSendNotification.mock.calls[0][0].body;
     expect(body).toContain('Approaching Station');
     expect(body).not.toContain('Nearest Station');
+  });
+
+  it('ETAフォールバック活性中は状態書き込み・通知を行わない(2ライター競合の抑止)', () => {
+    // locationAtom, locationAccuracyOutlierAtom, etaFallbackActiveAtom, notifyStateの順で呼ばれる
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: { latitude: 35.0, longitude: 135.0, accuracy: 10 },
+      }) // locationAtom(最寄り駅と同一座標=通常なら到着)
+      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValueOnce(true) // etaFallbackActiveAtom(活性)
+      .mockReturnValue({ targetStationIds: [1] }); // notifyState
+
+    const setStation = jest.fn();
+    mockUseSetAtom.mockReturnValueOnce(setStation).mockReturnValue(jest.fn());
+
+    jest
+      .spyOn(useNearestStationModule, 'useNearestStation')
+      .mockReturnValue(mockStation);
+    jest
+      .spyOn(useApproachingStationModule, 'useApproachingStation')
+      .mockReturnValue(mockStation);
+    jest
+      .spyOn(useNextStationModule, 'useNextStation')
+      .mockReturnValue(mockStation);
+    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
+    jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
+      arrivedThreshold: 100,
+      approachingThreshold: 300,
+    });
+    jest
+      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
+      .mockReturnValue({
+        isWrongDirection: false,
+        isLoopLineWrongDirection: false,
+      });
+
+    renderHook(() => useRefreshStation(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    // 活性中は駅状態の書き込みも到着/接近通知も抑止される
+    expect(setStation).not.toHaveBeenCalled();
+    expect(mockSendNotification).not.toHaveBeenCalled();
   });
 });
