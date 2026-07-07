@@ -24,6 +24,10 @@ import { isDevApp } from '~/utils/isDevApp';
 type LicenseId =
   | 'ekidata_jp'
   | 'toei'
+  | 'tokyo_metro'
+  | 'mir'
+  | 'tama_monorail'
+  | 'twr'
   | 'kyoto_city'
   | 'yokohama_city'
   | 'seibu_bus'
@@ -142,6 +146,42 @@ const Licenses: React.FC = () => {
             href: 'https://www.kotsu.metro.tokyo.jp/',
             license: translate('ccby'),
             licenseUrl: CC_BY_URL,
+            devOnly: false,
+          },
+          {
+            id: 'tokyo_metro',
+            title: translate('tokyoMetro'),
+            icon: '🚇',
+            href: 'https://www.tokyometro.jp/',
+            license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
+            devOnly: false,
+          },
+          {
+            id: 'mir',
+            title: translate('mir'),
+            icon: '🚃',
+            href: 'https://www.mir.co.jp/',
+            license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
+            devOnly: false,
+          },
+          {
+            id: 'tama_monorail',
+            title: translate('tamaMonorail'),
+            icon: '🚝',
+            href: 'https://www.tama-monorail.co.jp/',
+            license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
+            devOnly: false,
+          },
+          {
+            id: 'twr',
+            title: translate('twr'),
+            icon: '🚃',
+            href: 'https://www.twr.co.jp/',
+            license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
             devOnly: false,
           },
           {
@@ -279,13 +319,23 @@ const Licenses: React.FC = () => {
           renderItem={renderItem}
           onScroll={handleScroll}
           ListFooterComponent={() => (
-            <Button
-              style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-              textStyle={{ fontWeight: 'bold' }}
-              onPress={() => navigation.goBack()}
-            >
-              OK
-            </Button>
+            <>
+              <Typography
+                style={[
+                  { marginTop: 24, fontSize: 14, lineHeight: 21 },
+                  !isLEDTheme && { color: '#666' },
+                ]}
+              >
+                {translate('odptDisclaimer')}
+              </Typography>
+              <Button
+                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+                textStyle={{ fontWeight: 'bold' }}
+                onPress={() => navigation.goBack()}
+              >
+                OK
+              </Button>
+            </>
           )}
         />
       </View>

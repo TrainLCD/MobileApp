@@ -61,6 +61,17 @@ export const locationAccuracyOutlierAtom = atom(false);
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
+// setLocation()を通過して受理された最後の実測位の時刻(ms)。ETAフォールバックの
+// 無信号(staleness)判定に使う。store.set(locationAtom, …)の直書き(シミュレーション/
+// フォールバックの座標スナップ)では更新されないことが重要で、GPSが実際に生きているか
+// どうかをこの値の新しさだけで判定できるようにする。
+export const lastAcceptedFixAtMsAtom = atom<number | null>(null);
+
+// 上記と対になる「最後に受理された実測位の精度(m)」。フォールバックの座標スナップは
+// locationAtom を accuracy:0 で直書きするため、locationAtom の精度だけを見ると
+// 「良好測位が来た」と誤判定しうる。スナップの影響を受けないこの値で解除判定を行う。
+export const lastAcceptedFixAccuracyAtom = atom<number | null>(null);
+
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
   store.set(locationAtom, null);
@@ -68,6 +79,8 @@ export const resetLocationState = () => {
   store.set(accuracyHistoryAtom, []);
   store.set(lastFilteredLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
+  store.set(lastAcceptedFixAtMsAtom, null);
+  store.set(lastAcceptedFixAccuracyAtom, null);
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -114,6 +127,8 @@ export const setLocation = (location: Location.LocationObject) => {
   if (skipSmoothing) {
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
+    store.set(lastAcceptedFixAtMsAtom, Date.now());
+    store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
     return;
   }
 
@@ -122,6 +137,8 @@ export const setLocation = (location: Location.LocationObject) => {
     store.set(locationAtom, location);
     store.set(lastFilteredLocationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
+    store.set(lastAcceptedFixAtMsAtom, Date.now());
+    store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
     return;
   }
 
@@ -169,4 +186,6 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(locationAtom, smoothedLocation);
   store.set(lastFilteredLocationAtom, smoothedLocation);
   store.set(accuracyHistoryAtom, updatedHistory);
+  store.set(lastAcceptedFixAtMsAtom, Date.now());
+  store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
 };
