@@ -1,4 +1,6 @@
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import { store } from '~/store';
+import { etaAssistManualEnabledAtom } from '~/store/atoms/experimental';
 import {
   getEtaFallbackArrivalConfirmMarginSec,
   getEtaFallbackMaxDurationMin,
@@ -28,6 +30,8 @@ const mockRemoteConfig = (body: unknown, ok = true) => {
 afterEach(() => {
   jest.clearAllMocks();
   resetRemoteConfigCache();
+  // 手動トグルは共有ストアに残るため、テスト間の汚染を防ぐべく毎回戻す。
+  store.set(etaAssistManualEnabledAtom, false);
 });
 
 afterAll(() => {
@@ -98,6 +102,16 @@ describe('isEtaAssistEnabled', () => {
     mockRemoteConfig({ max_permit_accuracy: 1500 });
     await setupRemoteConfig();
     expect(isEtaAssistEnabled()).toBe(false);
+  });
+
+  it('手動トグル(試験的機能)がONならリモート設定に依らず有効を返す', async () => {
+    // リモートは無効(未配信=フォールバックfalse)でも、手動トグルONで有効化される。
+    store.set(etaAssistManualEnabledAtom, true);
+    expect(isEtaAssistEnabled()).toBe(true);
+
+    mockRemoteConfig({ eta_assist_enabled: false });
+    await setupRemoteConfig();
+    expect(isEtaAssistEnabled()).toBe(true);
   });
 });
 

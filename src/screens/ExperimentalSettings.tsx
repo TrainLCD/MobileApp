@@ -16,7 +16,10 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
+import {
+  etaAssistManualEnabledAtom,
+  portraitModeEnabledAtom,
+} from '~/store/atoms/experimental';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
@@ -95,6 +98,9 @@ const ExperimentalSettingsScreen: React.FC = () => {
   const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
     portraitModeEnabledAtom
   );
+  const [etaAssistManualEnabled, setEtaAssistManualEnabled] = useAtom(
+    etaAssistManualEnabledAtom
+  );
   const [tuning, setTuning] = useAtom(tuningState);
 
   const navigation = useNavigation();
@@ -112,6 +118,23 @@ const ExperimentalSettingsScreen: React.FC = () => {
       Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, [portraitModeEnabled, setPortraitModeEnabled]);
+
+  const handleToggleEtaAssist = useCallback(() => {
+    const flag = !etaAssistManualEnabled;
+    setEtaAssistManualEnabled(flag);
+    try {
+      storage.set(
+        STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED,
+        flag ? 'true' : 'false'
+      );
+    } catch (error) {
+      // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
+      // UIと永続値の不整合を防ぐべくatom状態をロールバックする
+      setEtaAssistManualEnabled(!flag);
+      console.error('Failed to save ETA assist setting', error);
+      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  }, [etaAssistManualEnabled, setEtaAssistManualEnabled]);
 
   const handleToggleTelemetry = useCallback(() => {
     const flag = !tuning.telemetryEnabled;
@@ -161,6 +184,16 @@ const ExperimentalSettingsScreen: React.FC = () => {
           </View>
           <Typography style={styles.description}>
             {translate('telemetryDescription')}
+          </Typography>
+          <View style={styles.toggleSpacer}>
+            <ToggleItem
+              title={translate('etaAssistTitle')}
+              state={etaAssistManualEnabled}
+              onToggle={handleToggleEtaAssist}
+            />
+          </View>
+          <Typography style={styles.description}>
+            {translate('etaAssistDescription')}
           </Typography>
           <Typography style={styles.notice}>
             {translate('experimentalSettingsNotice')}

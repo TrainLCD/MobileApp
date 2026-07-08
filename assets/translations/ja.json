@@ -328,5 +328,7 @@
   "portraitModeTitle": "ポートレートモード",
   "portraitModeDescription": "有効にすると、走行画面で端末を縦向きにした際に、縦画面に最適化されたデザインで表示します。",
   "telemetryDescription": "お使いの端末の地理的座標を解析用サーバに送信します。送信された情報は解析以外に使用されません。",
+  "etaAssistTitle": "ETAによる到着判定の補助",
+  "etaAssistDescription": "有効にすると、地下鉄などGPSの精度が落ちる区間で、サーバーの到着予測(ETA)を使って到着判定を補助します。到着や現在地はGPSが基準で、ETAはあくまで補助です。手動A/Bテスト用のトグルで、サーバー設定より優先して有効化します。",
   "passStationLabel": "通過"
 }

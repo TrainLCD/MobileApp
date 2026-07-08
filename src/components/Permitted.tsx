@@ -43,7 +43,10 @@ import {
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
-import { portraitModeEnabledAtom } from '../store/atoms/experimental';
+import {
+  etaAssistManualEnabledAtom,
+  portraitModeEnabledAtom,
+} from '../store/atoms/experimental';
 import navigationState, {
   autoModeEnabledAtom,
   isAppLatestAtom,
@@ -75,6 +78,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
   const setPortraitModeEnabled = useSetAtom(portraitModeEnabledAtom);
+  const setEtaAssistManualEnabled = useSetAtom(etaAssistManualEnabledAtom);
   const { enabled: pictureInPictureEnabled, active: pictureInPictureActive } =
     useAtomValue(pictureInPictureAtom);
   const isAppActive = useIsAppActive();
@@ -436,6 +440,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const portraitModeEnabledStr = storage.getString(
         STORAGE_KEYS.PORTRAIT_MODE_ENABLED
       );
+      const etaAssistManualEnabledStr = storage.getString(
+        STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED
+      );
 
       if (themePreferenceKey) {
         setThemePreference(themePreferenceKey as ThemePreference);
@@ -545,6 +552,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       if (portraitModeEnabledStr) {
         setPortraitModeEnabled(portraitModeEnabledStr === 'true');
       }
+      if (etaAssistManualEnabledStr) {
+        setEtaAssistManualEnabled(etaAssistManualEnabledStr === 'true');
+      }
     };
 
     loadSettings();
@@ -556,6 +566,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setNotify,
     setPictureInPicture,
     setPortraitModeEnabled,
+    setEtaAssistManualEnabled,
   ]);
 
   useEffect(() => {

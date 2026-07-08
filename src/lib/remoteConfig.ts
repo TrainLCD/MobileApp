@@ -1,4 +1,6 @@
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import { store } from '~/store';
+import { etaAssistManualEnabledAtom } from '~/store/atoms/experimental';
 import { workerUrl } from './workerApi';
 
 // Cloudflare Worker(/config/remote) 配信の設定キー。Worker 側のレスポンスキーと一致させる。
@@ -119,9 +121,14 @@ export const isForceNotArrivedOnLowAccuracyEnabled = (): boolean => {
   return FORCE_NOT_ARRIVED_ON_LOW_ACCURACY_FALLBACK;
 };
 
-// ETAフォールバック機能の有効/無効を同期的に取得する。setupRemoteConfig 完了後は
-// 取得済みのリモート値を、未設定・取得失敗時はフォールバック(false=既定無効)を返す。
+// ETAフォールバック機能の有効/無効を同期的に取得する。
+// 設定画面の試験的機能トグル(手動A/Bテスト用)が有効なら、リモート設定に依らず有効化する。
+// それ以外は setupRemoteConfig 完了後の取得済みリモート値を、未設定・取得失敗時は
+// フォールバック(false=既定無効)を返す。
 export const isEtaAssistEnabled = (): boolean => {
+  if (store.get(etaAssistManualEnabledAtom)) {
+    return true;
+  }
   if (cachedEtaAssistEnabled != null) {
     return cachedEtaAssistEnabled;
   }
