@@ -2,6 +2,7 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { Alert } from 'react-native';
 import { STORAGE_KEYS } from '~/constants';
+import * as remoteConfigModule from '~/lib/remoteConfig';
 import { storage } from '~/lib/storage';
 import {
   etaAssistManualEnabledAtom,
@@ -98,7 +99,10 @@ describe('ExperimentalSettingsScreen', () => {
     alertSpy.mockRestore();
   });
 
-  it('ETA補助をONにするとatomとストレージへ保存される', () => {
+  it('Remote Config が許可していればETA補助をONにできる(atomとストレージへ保存)', () => {
+    jest
+      .spyOn(remoteConfigModule, 'isEtaAssistRemoteEnabled')
+      .mockReturnValue(true);
     const { getByLabelText, store } = renderWithStore(false);
 
     fireEvent.press(getByLabelText('etaAssistTitle'));
@@ -109,7 +113,10 @@ describe('ExperimentalSettingsScreen', () => {
     );
   });
 
-  it('ETA補助をOFFにするとatomとストレージへ保存される', () => {
+  it('Remote Config が許可していればETA補助をOFFにできる(atomとストレージへ保存)', () => {
+    jest
+      .spyOn(remoteConfigModule, 'isEtaAssistRemoteEnabled')
+      .mockReturnValue(true);
     const { getByLabelText, store } = renderWithStore(false, false, true);
 
     fireEvent.press(getByLabelText('etaAssistTitle'));
@@ -117,6 +124,21 @@ describe('ExperimentalSettingsScreen', () => {
     expect(store.get(etaAssistManualEnabledAtom)).toBe(false);
     expect(storage.getString(STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED)).toBe(
       'false'
+    );
+  });
+
+  it('Remote Config が false のときはETA補助トグルを操作できない', () => {
+    jest
+      .spyOn(remoteConfigModule, 'isEtaAssistRemoteEnabled')
+      .mockReturnValue(false);
+    const { getByLabelText, store } = renderWithStore(false);
+
+    // 操作不可(disabled)。押してもatomはONにならず、ONの永続化も走らない。
+    fireEvent.press(getByLabelText('etaAssistTitle'));
+
+    expect(store.get(etaAssistManualEnabledAtom)).toBe(false);
+    expect(storage.getString(STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED)).not.toBe(
+      'true'
     );
   });
 

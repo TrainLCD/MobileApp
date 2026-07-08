@@ -6,6 +6,7 @@ import {
   getEtaFallbackMaxDurationMin,
   getMaxPermitAccuracy,
   isEtaAssistEnabled,
+  isEtaAssistRemoteEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
   resetRemoteConfigCache,
   setupRemoteConfig,
@@ -83,9 +84,9 @@ describe('isForceNotArrivedOnLowAccuracyEnabled', () => {
   });
 });
 
-describe('isEtaAssistEnabled', () => {
+describe('isEtaAssistRemoteEnabled（マスタースイッチ）', () => {
   it('falls back to false before setup', () => {
-    expect(isEtaAssistEnabled()).toBe(false);
+    expect(isEtaAssistRemoteEnabled()).toBe(false);
   });
 
   it('returns the remote boolean after setup', async () => {
@@ -95,23 +96,37 @@ describe('isEtaAssistEnabled', () => {
       eta_assist_enabled: true,
     });
     await setupRemoteConfig();
-    expect(isEtaAssistEnabled()).toBe(true);
+    expect(isEtaAssistRemoteEnabled()).toBe(true);
   });
 
   it('falls back to false when the boolean is missing', async () => {
     mockRemoteConfig({ max_permit_accuracy: 1500 });
     await setupRemoteConfig();
+    expect(isEtaAssistRemoteEnabled()).toBe(false);
+  });
+});
+
+describe('isEtaAssistEnabled（Remote AND 手動トグル）', () => {
+  it('Remoteと手動トグルの両方がONのときだけ有効', async () => {
+    mockRemoteConfig({ eta_assist_enabled: true });
+    await setupRemoteConfig();
+    // Remoteがtrueでも手動トグルOFFなら無効
+    expect(isEtaAssistEnabled()).toBe(false);
+    // 手動トグルONで有効
+    store.set(etaAssistManualEnabledAtom, true);
+    expect(isEtaAssistEnabled()).toBe(true);
+  });
+
+  it('Remoteがfalseなら手動トグルONでも無効(マスターOFF)', async () => {
+    store.set(etaAssistManualEnabledAtom, true);
+    mockRemoteConfig({ eta_assist_enabled: false });
+    await setupRemoteConfig();
     expect(isEtaAssistEnabled()).toBe(false);
   });
 
-  it('手動トグル(試験的機能)がONならリモート設定に依らず有効を返す', async () => {
-    // リモートは無効(未配信=フォールバックfalse)でも、手動トグルONで有効化される。
+  it('セットアップ前(Remote未取得=false)は手動トグルONでも無効', () => {
     store.set(etaAssistManualEnabledAtom, true);
-    expect(isEtaAssistEnabled()).toBe(true);
-
-    mockRemoteConfig({ eta_assist_enabled: false });
-    await setupRemoteConfig();
-    expect(isEtaAssistEnabled()).toBe(true);
+    expect(isEtaAssistEnabled()).toBe(false);
   });
 });
 

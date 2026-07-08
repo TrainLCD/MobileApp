@@ -16,6 +16,7 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { isEtaAssistRemoteEnabled } from '~/lib/remoteConfig';
 import {
   etaAssistManualEnabledAtom,
   portraitModeEnabledAtom,
@@ -58,10 +59,12 @@ const ToggleItem = ({
   title,
   state,
   onToggle,
+  disabled = false,
 }: {
   title: string;
   state: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -69,7 +72,8 @@ const ToggleItem = ({
     <Pressable
       accessibilityRole="switch"
       accessibilityLabel={title}
-      accessibilityState={{ checked: state }}
+      accessibilityState={{ checked: state, disabled }}
+      disabled={disabled}
       onPress={onToggle}
       style={{
         flexDirection: 'row',
@@ -78,6 +82,8 @@ const ToggleItem = ({
         paddingVertical: 16,
         backgroundColor: isLEDTheme ? '#333' : 'white',
         borderRadius: isLEDTheme ? 0 : 12,
+        // Remote Config で許可されていない等、操作不可のときは淡色にして無効を示す。
+        opacity: disabled ? 0.4 : 1,
       }}
     >
       <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
@@ -103,6 +109,10 @@ const ExperimentalSettingsScreen: React.FC = () => {
   );
   const [tuning, setTuning] = useAtom(tuningState);
 
+  // Remote Config(マスタースイッチ)が許可していない間は、手動トグルを操作不可にする。
+  // 配信状態は起動時に確定する非リアクティブ値のため、レンダー時に一度参照すれば足りる。
+  const etaAssistRemoteEnabled = isEtaAssistRemoteEnabled();
+
   const navigation = useNavigation();
 
   const handleTogglePortraitMode = useCallback(() => {
@@ -120,6 +130,10 @@ const ExperimentalSettingsScreen: React.FC = () => {
   }, [portraitModeEnabled, setPortraitModeEnabled]);
 
   const handleToggleEtaAssist = useCallback(() => {
+    // Remote Config が許可していないときは操作させない(UI側でも disabled)。
+    if (!etaAssistRemoteEnabled) {
+      return;
+    }
     const flag = !etaAssistManualEnabled;
     setEtaAssistManualEnabled(flag);
     try {
@@ -134,7 +148,11 @@ const ExperimentalSettingsScreen: React.FC = () => {
       console.error('Failed to save ETA assist setting', error);
       Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
-  }, [etaAssistManualEnabled, setEtaAssistManualEnabled]);
+  }, [
+    etaAssistManualEnabled,
+    setEtaAssistManualEnabled,
+    etaAssistRemoteEnabled,
+  ]);
 
   const handleToggleTelemetry = useCallback(() => {
     const flag = !tuning.telemetryEnabled;
@@ -188,8 +206,9 @@ const ExperimentalSettingsScreen: React.FC = () => {
           <View style={styles.toggleSpacer}>
             <ToggleItem
               title={translate('etaAssistTitle')}
-              state={etaAssistManualEnabled}
+              state={etaAssistRemoteEnabled && etaAssistManualEnabled}
               onToggle={handleToggleEtaAssist}
+              disabled={!etaAssistRemoteEnabled}
             />
           </View>
           <Typography style={styles.description}>
