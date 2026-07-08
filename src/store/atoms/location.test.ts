@@ -327,6 +327,18 @@ describe('setLocation', () => {
       expect(store.get(lastMovingAtMsAtom)).toBeNull();
     });
 
+    it('長時間停車後に単発の粗いドリフトが来ても(低速なら)実移動とみなさない', () => {
+      // 基準サンプルを確立。
+      setLocation(makeLocation(35.0, 139.0, 60, 1000));
+      // 10分静止(この間は棄却などで打刻されず基準サンプルは古いまま)。
+      currentNow = 1_000_000 + 600_000;
+      // 10分後に約222mジャンプ。dist>閾値だが 222m/600s≒0.37m/s と低速なので、
+      // 走行ではなくドリフトとみなして打刻しない。
+      setLocation(makeLocation(35.002, 139.0, 60, 1_601_000));
+
+      expect(store.get(lastMovingAtMsAtom)).toBeNull();
+    });
+
     it('resetLocationStateで lastMovingAtMs が null に戻る', () => {
       store.set(lastMovingAtMsAtom, 12_345);
       resetLocationState();

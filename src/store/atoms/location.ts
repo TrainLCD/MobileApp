@@ -92,9 +92,16 @@ const lastMotionSampleAtom = atom<{
 // 変位を蓄積する(徒歩・静止ジッタの誤検知を抑える)。
 const MOTION_MIN_DISTANCE_M = 150;
 
+// 実移動とみなす実効速度の下限(m/s ≒ 5.4km/h)。長時間停車後は基準サンプルが古くなり
+// dtSec が肥大化するため、単発の粗い測位ドリフト(例:10分停車→200mジャンプ=0.33m/s)でも
+// dist 閾値を超えると誤打刻しうる。列車走行は徐行でもこれを上回るため、下限速度で
+// 「ゆっくりドリフト」と「走行」を切り分ける。
+const MOTION_MIN_SPEED_MPS = 1.5;
+
 // 受理測位ごとに、直前サンプルからの正味変位で実移動(=電車が動いている)を検知して
-// 打刻する。ジッタ(≤max(150m, 前後の精度))は無視、ワープ(>MAX_PLAUSIBLE_SPEED)も除外。
-// GPS凍結(棄却)中は受理測位が来ないため呼ばれず、駅で待機中に誤って移動と判定しない。
+// 打刻する。ジッタ(≤max(150m, 前後の精度))は無視、速度が下限〜ワープの範囲外(=停車中の
+// 緩慢なドリフトや非現実的なジャンプ)も除外。GPS凍結(棄却)中は受理測位が来ないため
+// 呼ばれず、駅で待機中に誤って移動と判定しない。
 const recordMotion = (
   location: Location.LocationObject,
   nowMs: number
@@ -111,7 +118,7 @@ const recordMotion = (
     return;
   }
   const dtSec = (nowMs - prev.timestampMs) / 1000;
-  // 同一時刻・時刻逆行では速度を評価できず、ワープガードが機能しない。実移動とみなさず
+  // 同一時刻・時刻逆行では速度を評価できず、速度ガードが機能しない。実移動とみなさず
   // 打ち切る(サンプルも据え置き、次の正の経過時間の測位で正しく判定する)。
   if (dtSec <= 0) {
     return;
@@ -129,7 +136,11 @@ const recordMotion = (
     accuracy ?? 0,
     prev.accuracy ?? 0
   );
-  if (dist > threshold && speed < MAX_PLAUSIBLE_SPEED) {
+  if (
+    dist > threshold &&
+    speed > MOTION_MIN_SPEED_MPS &&
+    speed < MAX_PLAUSIBLE_SPEED
+  ) {
     store.set(lastMovingAtMsAtom, nowMs);
     store.set(lastMotionSampleAtom, {
       latitude,
