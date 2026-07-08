@@ -3,7 +3,6 @@ import { LineType, type Station } from '~/@types/graphql';
 import { store } from '..';
 import {
   accuracyHistoryAtom,
-  lastAcceptedFixAtMsAtom,
   lastMovingAtMsAtom,
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -189,63 +188,6 @@ describe('setLocation', () => {
       const result = store.get(locationAtom);
       expect(result?.coords.latitude).toBe(35.0);
       expect(result?.coords.longitude).toBe(139.0);
-    });
-  });
-
-  describe('lastAcceptedFixAtMsAtom（ETAフォールバックのstaleness判定用）', () => {
-    it('通常のsetLocation受理でlastAcceptedFixAtMsが更新される', () => {
-      const before = Date.now();
-      setLocation(makeLocation(35.0, 139.0, 30, 1000));
-      const after = Date.now();
-
-      const recordedAt = store.get(lastAcceptedFixAtMsAtom);
-      expect(recordedAt).not.toBeNull();
-      expect(recordedAt as number).toBeGreaterThanOrEqual(before);
-      expect(recordedAt as number).toBeLessThanOrEqual(after);
-    });
-
-    it('地下鉄でスムージングスキップされた受理パスでもlastAcceptedFixAtMsが更新される', () => {
-      setStationLineType(LineType.Subway);
-      // 高い変動の精度履歴をセット（スムージングスキップ条件を満たす）
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
-
-      const before = Date.now();
-      setLocation(makeLocation(35.0, 139.0, 500, 1000));
-      const after = Date.now();
-
-      const recordedAt = store.get(lastAcceptedFixAtMsAtom);
-      expect(recordedAt).not.toBeNull();
-      expect(recordedAt as number).toBeGreaterThanOrEqual(before);
-      expect(recordedAt as number).toBeLessThanOrEqual(after);
-    });
-
-    it('speedフィルタでワープ棄却される場合はlastAcceptedFixAtMsが更新されない', () => {
-      // フィルタ基準となる前回値を用意する
-      setLocation(makeLocation(35.0, 139.0, 30, 1000));
-      const recordedAfterFirst = store.get(lastAcceptedFixAtMsAtom);
-
-      // 1秒で遠方へジャンプ → MAX_PLAUSIBLE_SPEED超過で座標は棄却される
-      setLocation(makeLocation(36.0, 140.0, 30, 2000));
-
-      expect(store.get(lastAcceptedFixAtMsAtom)).toBe(recordedAfterFirst);
-    });
-
-    it('store.set(locationAtom, …)の直書きではlastAcceptedFixAtMsは更新されない', () => {
-      expect(store.get(lastAcceptedFixAtMsAtom)).toBeNull();
-
-      store.set(locationAtom, makeLocation(35.0, 139.0, 30, 1000));
-
-      expect(store.get(locationAtom)).not.toBeNull();
-      expect(store.get(lastAcceptedFixAtMsAtom)).toBeNull();
-    });
-
-    it('resetLocationStateでnullに戻る', () => {
-      setLocation(makeLocation(35.0, 139.0, 30, 1000));
-      expect(store.get(lastAcceptedFixAtMsAtom)).not.toBeNull();
-
-      resetLocationState();
-
-      expect(store.get(lastAcceptedFixAtMsAtom)).toBeNull();
     });
   });
 

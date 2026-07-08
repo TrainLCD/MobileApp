@@ -4,11 +4,7 @@ import type { ReactNode } from 'react';
 import type { Station } from '~/@types/graphql';
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { store } from '~/store';
-import {
-  etaAnchorAtom,
-  etaFallbackActiveAtom,
-  etaPhaseAtom,
-} from '~/store/atoms/etaFallback';
+import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
 import { locationAtom } from '~/store/atoms/location';
 import {
   approachingAtom,
@@ -124,7 +120,6 @@ describe('useEtaFallback', () => {
       observedAtMs: T0,
     });
     store.set(etaPhaseAtom, null);
-    store.set(etaFallbackActiveAtom, false);
     store.set(arrivedAtom, false);
     store.set(approachingAtom, false);
     store.set(stationAtom, STATIONS[0]);
@@ -182,7 +177,7 @@ describe('useEtaFallback', () => {
     expect(store.get(etaPhaseAtom)).toBeNull();
   });
 
-  it('到着・接近・現在駅・位置・活性フラグは一切駆動しない(GPSが唯一の権威)', () => {
+  it('到着・接近・現在駅・位置は一切駆動しない(GPSが唯一の権威)', () => {
     renderHook(() => useEtaFallback(), { wrapper });
 
     // ETA上は到着帯(DWELLING)へ進む時刻でも、状態は書き換えないこと。
@@ -194,11 +189,10 @@ describe('useEtaFallback', () => {
       kind: 'DWELLING',
       stationId: 2,
     });
-    // …到着/接近/現在駅/位置/活性フラグはすべて初期値のまま。
+    // …到着/接近/現在駅/位置はすべて初期値のまま。
     expect(store.get(arrivedAtom)).toBe(false);
     expect(store.get(approachingAtom)).toBe(false);
     expect(store.get(stationAtom)?.id).toBe(1);
     expect(store.get(locationAtom)).toBe(BASE_LOCATION);
-    expect(store.get(etaFallbackActiveAtom)).toBe(false);
   });
 });

@@ -6,11 +6,7 @@ import type { Station } from '~/@types/graphql';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import * as remoteConfigModule from '~/lib/remoteConfig';
-import {
-  etaAnchorAtom,
-  etaFallbackActiveAtom,
-  etaPhaseAtom,
-} from '~/store/atoms/etaFallback';
+import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -86,7 +82,6 @@ describe('DevOverlay', () => {
     },
     backgroundLocationTracking = false,
     autoModeEnabled = false,
-    etaFallbackActive = false,
     etaPhase = null,
     etaAnchor = null,
   }: {
@@ -94,7 +89,6 @@ describe('DevOverlay', () => {
     rawLocation?: unknown;
     backgroundLocationTracking?: boolean;
     autoModeEnabled?: boolean;
-    etaFallbackActive?: boolean;
     etaPhase?: unknown;
     etaAnchor?: unknown;
   } = {}) => {
@@ -110,9 +104,6 @@ describe('DevOverlay', () => {
       }
       if (atom === autoModeEnabledAtom) {
         return autoModeEnabled as never;
-      }
-      if (atom === etaFallbackActiveAtom) {
-        return etaFallbackActive as never;
       }
       if (atom === etaPhaseAtom) {
         return etaPhase as never;
@@ -206,7 +197,7 @@ describe('DevOverlay', () => {
       jest
         .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
         .mockReturnValue(false);
-      setupAtomValues({ etaFallbackActive: false, etaPhase: null });
+      setupAtomValues({ etaPhase: null });
 
       const { getByTestId } = render(<DevOverlay />);
       expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
@@ -217,12 +208,11 @@ describe('DevOverlay', () => {
       );
     });
 
-    it('ETAフォールバック稼働時は現在フェーズと対象駅・有効フラグを表示する', () => {
+    it('ETA推定フェーズがあるときは現在フェーズと対象駅・有効フラグを表示する', () => {
       jest
         .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
         .mockReturnValue(true);
       setupAtomValues({
-        etaFallbackActive: true,
         etaPhase: { kind: 'APPROACHING', targetStationId: 42 },
       });
 
@@ -235,13 +225,12 @@ describe('DevOverlay', () => {
       );
     });
 
-    it('ETAフォールバック稼働時(DWELLING)は停車駅IDを表示する', () => {
+    it('ETA推定フェーズが DWELLING のときは停車駅IDを表示する', () => {
       // DWELLINGは targetStationId ではなく stationId を参照するため別途検証する。
       jest
         .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
         .mockReturnValue(true);
       setupAtomValues({
-        etaFallbackActive: true,
         etaPhase: { kind: 'DWELLING', stationId: 7 },
       });
 

@@ -61,17 +61,6 @@ export const locationAccuracyOutlierAtom = atom(false);
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
-// setLocation()を通過して受理された最後の実測位の時刻(ms)。ETAフォールバックの
-// 無信号(staleness)判定に使う。store.set(locationAtom, …)の直書き(シミュレーション/
-// フォールバックの座標スナップ)では更新されないことが重要で、GPSが実際に生きているか
-// どうかをこの値の新しさだけで判定できるようにする。
-export const lastAcceptedFixAtMsAtom = atom<number | null>(null);
-
-// 上記と対になる「最後に受理された実測位の精度(m)」。フォールバックの座標スナップは
-// locationAtom を accuracy:0 で直書きするため、locationAtom の精度だけを見ると
-// 「良好測位が来た」と誤判定しうる。スナップの影響を受けないこの値で解除判定を行う。
-export const lastAcceptedFixAccuracyAtom = atom<number | null>(null);
-
 // 実移動(=電車が実際に動いている)を最後に観測した時刻(ms)。ETAフォールバックが
 // 「駅で静止して待っているだけ」を「走行中」と誤認して位置を進めてしまう問題を防ぐため、
 // GPS喪失直前に電車が動いていたかの判定に使う。人の静止・GPS凍結中は更新されない。
@@ -158,8 +147,6 @@ export const resetLocationState = () => {
   store.set(accuracyHistoryAtom, []);
   store.set(lastFilteredLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
-  store.set(lastAcceptedFixAtMsAtom, null);
-  store.set(lastAcceptedFixAccuracyAtom, null);
   store.set(lastMovingAtMsAtom, null);
   store.set(lastMotionSampleAtom, null);
 };
@@ -209,8 +196,6 @@ export const setLocation = (location: Location.LocationObject) => {
   if (skipSmoothing) {
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
-    store.set(lastAcceptedFixAtMsAtom, nowMs);
-    store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
     recordMotion(location, nowMs);
     return;
   }
@@ -220,8 +205,6 @@ export const setLocation = (location: Location.LocationObject) => {
     store.set(locationAtom, location);
     store.set(lastFilteredLocationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
-    store.set(lastAcceptedFixAtMsAtom, nowMs);
-    store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
     recordMotion(location, nowMs);
     return;
   }
@@ -270,8 +253,6 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(locationAtom, smoothedLocation);
   store.set(lastFilteredLocationAtom, smoothedLocation);
   store.set(accuracyHistoryAtom, updatedHistory);
-  store.set(lastAcceptedFixAtMsAtom, nowMs);
-  store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
   // 移動検知は生の測位座標(smoothedではなく実測変位)で行う。
   recordMotion(location, nowMs);
 };

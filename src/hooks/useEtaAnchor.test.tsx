@@ -5,10 +5,7 @@ import type { Station } from '~/@types/graphql';
 import { store as globalStore } from '~/store';
 import { MOVING_RECENCY_MS } from '~/utils/etaFallback';
 import { createStation } from '~/utils/test/factories';
-import {
-  etaAnchorAtom,
-  etaFallbackActiveAtom,
-} from '../store/atoms/etaFallback';
+import { etaAnchorAtom } from '../store/atoms/etaFallback';
 import { lastMovingAtMsAtom } from '../store/atoms/location';
 import {
   arrivedAtom,
@@ -29,13 +26,11 @@ const renderWithStore = (
     arrived = true,
     station = stationA as Station | null,
     selectedBound = boundStation as Station | null,
-    etaFallbackActive = false,
   } = {}
 ) => {
   store.set(arrivedAtom, arrived);
   store.set(stationAtom, station);
   store.set(selectedBoundAtom, selectedBound);
-  store.set(etaFallbackActiveAtom, etaFallbackActive);
 
   const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Provider store={store}>{children}</Provider>
@@ -156,32 +151,6 @@ describe('useEtaAnchor', () => {
       kind: 'AT_STATION',
       observedAtMs: 6_000_000,
     });
-  });
-
-  it('etaFallbackActiveAtom が true の間は記録されない', () => {
-    jest.spyOn(Date, 'now').mockReturnValue(3_000_000);
-    const store = createStore();
-
-    renderWithStore(store, {
-      arrived: true,
-      station: stationA,
-      etaFallbackActive: true,
-    });
-
-    expect(store.get(etaAnchorAtom)).toBeNull();
-
-    jest.spyOn(Date, 'now').mockReturnValue(3_005_000);
-    act(() => {
-      jest.advanceTimersByTime(AT_STATION_REFRESH_INTERVAL_MS);
-    });
-
-    expect(store.get(etaAnchorAtom)).toBeNull();
-
-    // 発車遷移が起きても、フォールバック活性中は記録しない
-    act(() => {
-      store.set(arrivedAtom, false);
-    });
-    expect(store.get(etaAnchorAtom)).toBeNull();
   });
 
   it('selectedBound が null になると anchor が null にクリアされる', () => {
