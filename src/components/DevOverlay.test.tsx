@@ -193,19 +193,18 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-landscape')).toBeTruthy();
     });
 
-    it('ETAフォールバック非稼働時は IDLE と有効フラグを表示する', () => {
+    it('機能が無効(isEtaAssistEnabled=false)なら ETA FALLBACK / ANCHOR カードを表示しない', () => {
       jest
         .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
         .mockReturnValue(false);
-      setupAtomValues({ etaPhase: null });
+      setupAtomValues({
+        etaPhase: null,
+        etaAnchor: { stationId: 5, kind: 'DEPARTED', observedAtMs: 88_000 },
+      });
 
-      const { getByTestId } = render(<DevOverlay />);
-      expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
-        'IDLE'
-      );
-      expect(getByTestId('dev-overlay-eta-fallback-meta')).toHaveTextContent(
-        'assist OFF'
-      );
+      const { queryByTestId } = render(<DevOverlay />);
+      expect(queryByTestId('dev-overlay-eta-fallback-value')).toBeNull();
+      expect(queryByTestId('dev-overlay-eta-anchor-value')).toBeNull();
     });
 
     it('ETA推定フェーズがあるときは現在フェーズと対象駅・有効フラグを表示する', () => {
@@ -244,6 +243,9 @@ describe('DevOverlay', () => {
     });
 
     it('アンカー未設定時は ETA ANCHOR に no anchor を表示する', () => {
+      jest
+        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
+        .mockReturnValue(true);
       setupAtomValues({ etaAnchor: null });
 
       const { getByTestId } = render(<DevOverlay />);
@@ -256,6 +258,9 @@ describe('DevOverlay', () => {
     });
 
     it('アンカー設定時は種別・起点駅ID・経過秒を表示する', () => {
+      jest
+        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
+        .mockReturnValue(true);
       jest.spyOn(Date, 'now').mockReturnValue(100_000);
       setupAtomValues({
         etaAnchor: {

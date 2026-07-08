@@ -825,33 +825,37 @@ const DevOverlay: React.FC = () => {
                   />
                 </View>
 
-                <View style={styles.landscapeSubGrid}>
-                  <MetricCard
-                    label="ETA FALLBACK"
-                    value={etaFallbackValue}
-                    meta={etaFallbackMeta}
-                    style={[{ width: leftMetricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-fallback-value"
-                    metaTestID="dev-overlay-eta-fallback-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={[
-                      metricValueStyle,
-                      etaPhase != null && styles.metricValueWarning,
-                    ]}
-                    metaStyle={metricMetaStyle}
-                  />
-                  <MetricCard
-                    label="ETA ANCHOR"
-                    value={etaAnchorValue}
-                    meta={etaAnchorMeta}
-                    style={[{ width: leftMetricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-anchor-value"
-                    metaTestID="dev-overlay-eta-anchor-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
-                </View>
+                {etaAssistEnabled ? (
+                  <View style={styles.landscapeSubGrid}>
+                    <MetricCard
+                      label="ETA FALLBACK"
+                      value={etaFallbackValue}
+                      meta={etaFallbackMeta}
+                      style={[{ width: leftMetricWidth }, metricCardStyle]}
+                      valueTestID="dev-overlay-eta-fallback-value"
+                      metaTestID="dev-overlay-eta-fallback-meta"
+                      labelStyle={metricLabelStyle}
+                      valueStyle={[
+                        metricValueStyle,
+                        etaPhase != null &&
+                          isAccuracyWarning &&
+                          styles.metricValueWarning,
+                      ]}
+                      metaStyle={metricMetaStyle}
+                    />
+                    <MetricCard
+                      label="ETA ANCHOR"
+                      value={etaAnchorValue}
+                      meta={etaAnchorMeta}
+                      style={[{ width: leftMetricWidth }, metricCardStyle]}
+                      valueTestID="dev-overlay-eta-anchor-value"
+                      metaTestID="dev-overlay-eta-anchor-meta"
+                      labelStyle={metricLabelStyle}
+                      valueStyle={metricValueStyle}
+                      metaStyle={metricMetaStyle}
+                    />
+                  </View>
+                ) : null}
 
                 <Typography style={[styles.footerText, footerTextStyle]}>
                   LIVE SENSOR TRACE / INTERNAL BUILD
@@ -921,31 +925,37 @@ const DevOverlay: React.FC = () => {
                     valueStyle={metricValueStyle}
                     metaStyle={metricMetaStyle}
                   />
-                  <MetricCard
-                    label="ETA FALLBACK"
-                    value={etaFallbackValue}
-                    meta={etaFallbackMeta}
-                    style={[{ width: metricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-fallback-value"
-                    metaTestID="dev-overlay-eta-fallback-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={[
-                      metricValueStyle,
-                      etaPhase != null && styles.metricValueWarning,
-                    ]}
-                    metaStyle={metricMetaStyle}
-                  />
-                  <MetricCard
-                    label="ETA ANCHOR"
-                    value={etaAnchorValue}
-                    meta={etaAnchorMeta}
-                    style={[{ width: metricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-anchor-value"
-                    metaTestID="dev-overlay-eta-anchor-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
+                  {etaAssistEnabled ? (
+                    <>
+                      <MetricCard
+                        label="ETA FALLBACK"
+                        value={etaFallbackValue}
+                        meta={etaFallbackMeta}
+                        style={[{ width: metricWidth }, metricCardStyle]}
+                        valueTestID="dev-overlay-eta-fallback-value"
+                        metaTestID="dev-overlay-eta-fallback-meta"
+                        labelStyle={metricLabelStyle}
+                        valueStyle={[
+                          metricValueStyle,
+                          etaPhase != null &&
+                            isAccuracyWarning &&
+                            styles.metricValueWarning,
+                        ]}
+                        metaStyle={metricMetaStyle}
+                      />
+                      <MetricCard
+                        label="ETA ANCHOR"
+                        value={etaAnchorValue}
+                        meta={etaAnchorMeta}
+                        style={[{ width: metricWidth }, metricCardStyle]}
+                        valueTestID="dev-overlay-eta-anchor-value"
+                        metaTestID="dev-overlay-eta-anchor-meta"
+                        labelStyle={metricLabelStyle}
+                        valueStyle={metricValueStyle}
+                        metaStyle={metricMetaStyle}
+                      />
+                    </>
+                  ) : null}
                 </View>
               </View>
             )}
