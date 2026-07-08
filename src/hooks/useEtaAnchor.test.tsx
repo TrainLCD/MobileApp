@@ -2,11 +2,8 @@ import { act, renderHook } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
-import { store as globalStore } from '~/store';
-import { MOVING_RECENCY_MS } from '~/utils/etaFallback';
 import { createStation } from '~/utils/test/factories';
 import { etaAnchorAtom } from '../store/atoms/etaFallback';
-import { lastMovingAtMsAtom } from '../store/atoms/location';
 import {
   arrivedAtom,
   selectedBoundAtom,
@@ -44,8 +41,6 @@ describe('useEtaAnchor', () => {
   });
 
   afterEach(() => {
-    // useEtaAnchor は lastMovingAtMs をシングルトンストアから読むためリセットする。
-    globalStore.set(lastMovingAtMsAtom, null);
     jest.clearAllMocks();
     jest.useRealTimers();
   });
@@ -75,10 +70,8 @@ describe('useEtaAnchor', () => {
     });
   });
 
-  it('直近に実移動があれば arrived true→false で DEPARTED が一発記録され、その後falseのままでは上書きされない', () => {
+  it('arrived true→false 遷移で DEPARTED が一発記録され、その後falseのままでは上書きされない', () => {
     jest.spyOn(Date, 'now').mockReturnValue(2_000_000);
-    // 直近に実移動を観測済み(=電車が動いていた)。これがないと発車とみなさない。
-    globalStore.set(lastMovingAtMsAtom, 2_000_000);
     const store = createStore();
 
     renderWithStore(store, { arrived: true, station: stationA });
@@ -105,51 +98,6 @@ describe('useEtaAnchor', () => {
       stationId: stationA.id,
       kind: 'DEPARTED',
       observedAtMs: 2_001_000,
-    });
-  });
-
-  it('実移動が無い(静止中に精度悪化で arrived が false)場合は DEPARTED を記録しない', () => {
-    jest.spyOn(Date, 'now').mockReturnValue(5_000_000);
-    // lastMovingAtMs は未設定(null)=直近に実移動なし。駅で待機中に強制未到着で
-    // arrived が false に倒れただけの状況を模す。
-    globalStore.set(lastMovingAtMsAtom, null);
-    const store = createStore();
-
-    renderWithStore(store, { arrived: true, station: stationA });
-    expect(store.get(etaAnchorAtom)?.kind).toBe('AT_STATION');
-
-    jest.spyOn(Date, 'now').mockReturnValue(5_001_000);
-    act(() => {
-      store.set(arrivedAtom, false);
-    });
-
-    // 偽発車は記録されず、直前の AT_STATION アンカーが保持される。
-    expect(store.get(etaAnchorAtom)).toEqual({
-      stationId: stationA.id,
-      kind: 'AT_STATION',
-      observedAtMs: 5_000_000,
-    });
-  });
-
-  it('実移動はあったが MOVING_RECENCY_MS を超えて古い場合は DEPARTED を記録しない', () => {
-    jest.spyOn(Date, 'now').mockReturnValue(6_000_000);
-    // 実移動の観測はあるが有効期間(90秒)より前=期限切れ。発車判定の時間しきい値を跨いだ
-    // 直後に強制未到着で false へ倒れても、偽発車として記録しないことを検証する。
-    globalStore.set(lastMovingAtMsAtom, 6_000_000 - MOVING_RECENCY_MS - 1_000);
-    const store = createStore();
-
-    renderWithStore(store, { arrived: true, station: stationA });
-    expect(store.get(etaAnchorAtom)?.kind).toBe('AT_STATION');
-
-    jest.spyOn(Date, 'now').mockReturnValue(6_001_000);
-    act(() => {
-      store.set(arrivedAtom, false);
-    });
-
-    expect(store.get(etaAnchorAtom)).toEqual({
-      stationId: stationA.id,
-      kind: 'AT_STATION',
-      observedAtMs: 6_000_000,
     });
   });
 

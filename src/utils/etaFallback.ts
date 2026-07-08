@@ -58,24 +58,6 @@ export const APPROACH_LEAD_MIN_MIN = 0.5;
 /** 接近リードの上限(分)。長い駅間でも接近開始が早すぎないよう頭打ちにする。 */
 export const APPROACH_LEAD_MAX_MIN = 1.5;
 
-/**
- * 「電車が実際に動いていた」とみなす有効期間(ms)。GPS喪失の直前この時間内に実移動が
- * 観測されていれば R2 の発動・発車(DEPARTED)記録を許可する。静止が続くと期限切れになり、
- * 駅で待機中に位置が勝手に進む誤動作を防ぐ(motion gate)。実機チューニング前提。
- */
-export const MOVING_RECENCY_MS = 90_000;
-
-/**
- * GPS喪失の直前この時間内に実移動が観測されていたか(=電車が実際に動いていた証拠)。
- * useEtaAnchor(発車記録)と useEtaFallback(R2発動)が同じ基準を使うよう共通化し、
- * しきい値や判定条件を変えても両者がずれないようにする。
- */
-export const isRecentlyMoving = (
-  lastMovingAtMs: number | null,
-  nowMs: number
-): boolean =>
-  lastMovingAtMs != null && nowMs - lastMovingAtMs < MOVING_RECENCY_MS;
-
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
 
