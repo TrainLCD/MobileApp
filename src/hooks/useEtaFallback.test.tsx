@@ -1,7 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { Provider } from 'jotai';
 import type { ReactNode } from 'react';
-import type { Station } from '~/@types/graphql';
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { store } from '~/store';
 import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
@@ -13,6 +12,7 @@ import {
   stationAtom,
   stationsAtom,
 } from '~/store/atoms/station';
+import { createStation } from '~/utils/test/factories';
 import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 import { useEtaFallback } from './useEtaFallback';
 
@@ -43,25 +43,13 @@ const routeStop = (
   stopsHere,
 });
 
-const station = (id: number, lat: number, lng: number): Station =>
-  ({
-    id,
-    groupId: id,
-    latitude: lat,
-    longitude: lng,
-  }) as unknown as Station;
-
 // A(id1) 発 → B(id2, 到着2分/発車2.5分) → C(id3, 到着4分/発車4.5分)
 const STOPS = [
   routeStop(1, 0, 0.5),
   routeStop(2, 2, 2.5),
   routeStop(3, 4, 4.5),
 ];
-const STATIONS = [
-  station(1, 35.0, 139.0),
-  station(2, 35.1, 139.1),
-  station(3, 35.2, 139.2),
-];
+const STATIONS = [createStation(1), createStation(2), createStation(3)];
 
 const T0 = 1_000_000;
 let now = T0;
@@ -113,7 +101,7 @@ describe('useEtaFallback', () => {
     mockRoute({ id: 1, stops: STOPS });
 
     store.set(stationsAtom, STATIONS);
-    store.set(selectedBoundAtom, station(3, 35.2, 139.2));
+    store.set(selectedBoundAtom, createStation(3));
     store.set(etaAnchorAtom, {
       stationId: 1,
       kind: 'DEPARTED',
