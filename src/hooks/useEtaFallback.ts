@@ -1,43 +1,16 @@
 import { useRef } from 'react';
-import { BAD_ACCURACY_THRESHOLD } from '~/constants';
 import {
   getEtaFallbackArrivalConfirmMarginSec,
-  getEtaFallbackMaxDurationMin,
   isEtaAssistEnabled,
 } from '~/lib/remoteConfig';
 import { store } from '~/store';
-import {
-  etaAnchorAtom,
-  etaFallbackActiveAtom,
-  etaPhaseAtom,
-} from '~/store/atoms/etaFallback';
-import {
-  lastAcceptedFixAccuracyAtom,
-  lastAcceptedFixAtMsAtom,
-  lastMovingAtMsAtom,
-  locationAccuracyOutlierAtom,
-  locationAtom,
-} from '~/store/atoms/location';
-import navigationState, { autoModeEnabledAtom } from '~/store/atoms/navigation';
-import stationState, {
-  selectedBoundAtom,
-  stationsAtom,
-} from '~/store/atoms/station';
-import {
-  type EtaFallbackStop,
-  estimateEtaPhase,
-  isRecentlyMoving,
-} from '~/utils/etaFallback';
+import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
+import { type EtaFallbackStop, estimateEtaPhase } from '~/utils/etaFallback';
 import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 import { useInterval } from './useInterval';
 
-// 発動・解除判定の周期(ms)。ETA仮想時計は1秒粒度で進める。
+// フェーズ再評価の周期(ms)。ETA仮想時計は1秒粒度で進める。
 const TICK_INTERVAL_MS = 1_000;
-// 受理測位がこの時間以上途絶したら「無信号」とみなす(ms)。
-const FIX_STALENESS_MS = 30_000;
-// GPS劣化(外れ値/精度>200m)がこの時間「持続」して初めてGPS不良とみなす(ms)。
-// 一瞬の劣化(地上の高架下・ビル街等)では発動させないための持続喪失ゲート。
-const GPS_LOST_SUSTAIN_MS = 20_000;
 // ETAデータの分解能で発車分−到着分が0になる駅の停車時間の底上げ(分)。
 const MIN_DWELL_MIN = 0.5;
 
@@ -72,18 +45,15 @@ const extractStops = (
 };
 
 /**
- * GPS精度が劣化・喪失した区間(地下鉄など)で、サーバー計算のETAとGPSで最後に
- * 確定した駅イベント(アンカー)からの経過時間で走行状態を推定し、接近/到着状態を
- * 前進駆動するフォールバック(R2)。
+ * ETA(サーバー計算の到着予測)とGPSで最後に確定した駅イベント(アンカー)からの経過時間で、
+ * 現在の走行フェーズ(走行中/接近中/停車中)を推定して etaPhaseAtom へ公開するフック。
  *
- * - 発動: リモート設定有効・ナビ中・autoMode無効・GPS不良(外れ値/受理測位の途絶/
- *   精度劣化の継続)・アンカーが有効ルート上にある、をすべて満たすとき。
- * - 解除: 良好測位の受理(≤200m)/ナビ終了/タイムキャップ超過/推定不能。解除後は
- *   GPS優先へ戻り、useRefreshStation が権威を回復する。
- * - 活性中は毎tick estimateEtaPhase を評価し、RUNNING/APPROACHING/DWELLING に応じて
- *   arrived/approaching/現在駅を駆動。到着(DWELLING)へ移った駅では駅座標を
- *   locationAtom へ1回スナップして下流(最寄り駅・距離表示)と整合させる。
- * - 推定フェーズは etaPhaseAtom に常時公開し、精度劣化時の到着しきい値緩和(R1)に使う。
+ * 位置・到着・接近の状態は**駆動しない**(GPS = useRefreshStation を唯一の権威に保つ)。
+ * かつて ETA が状態を独占駆動する R2 フォールバックを備えていたが、GPSが凍結する地下では
+ * ETA時刻がそのまま位置を進め、駅に到着後も現在地が勝手に動く重大なデグレを招いたため撤去した。
+ * 現在の ETA の役割は「GPSの補助」に限定する:
+ * - etaPhaseAtom を公開し、useRefreshStation が精度劣化時に「ETAが同じ駅で停車を示すときだけ
+ *   その駅の到着しきい値を緩和する(R1)」ために使う。到着判定自体は常にGPSが行う。
  */
 export const useEtaFallback = (): void => {
   // 機能が無効な間はETAルートのGraphQL取得自体を止める(LineBoard表示側が
@@ -93,89 +63,6 @@ export const useEtaFallback = (): void => {
   });
   const routeRef = useRef(route);
   routeRef.current = route;
-
-  // GPS劣化(外れ値/精度>200m)が始まった時刻(持続判定用)。良好時は null に戻す。
-  const degradedSinceRef = useRef<number | null>(null);
-  // フォールバックを発動した時刻(タイムキャップ用)。
-  const activatedAtRef = useRef<number | null>(null);
-  // 直近で座標スナップ済みの駅ID(到着ごとに1回だけスナップする)。
-  const snappedStationIdRef = useRef<number | null>(null);
-
-  const deactivate = (): void => {
-    if (store.get(etaFallbackActiveAtom)) {
-      store.set(etaFallbackActiveAtom, false);
-    }
-    activatedAtRef.current = null;
-    snappedStationIdRef.current = null;
-  };
-
-  const snapshotLocation = (
-    latitude: number,
-    longitude: number,
-    nowMs: number
-  ): void => {
-    // setLocation() を通さず直接スナップする。lastFilteredLocation・外れ値フラグ・
-    // 受理測位時刻(staleness判定)を汚染しないため(useSimulationMode と同じ流儀)。
-    store.set(locationAtom, {
-      timestamp: nowMs,
-      coords: {
-        latitude,
-        longitude,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: null,
-        heading: null,
-      },
-    });
-  };
-
-  // 駆動できたら true、DWELLING駅がstationsAtom上に見つからず駆動不能なら false。
-  // false のとき呼び出し側はフォールバックを解除し、状態更新の凍結を防ぐ。
-  const drive = (
-    phase: NonNullable<ReturnType<typeof estimateEtaPhase>>,
-    nowMs: number
-  ): boolean => {
-    if (phase.kind === 'DWELLING') {
-      const station = store
-        .get(stationsAtom)
-        .find((s) => s.id === phase.stationId);
-      if (!station) {
-        return false;
-      }
-      // 到着した駅が変わった瞬間にのみ座標スナップとヘッダー駅更新を行う。
-      if (snappedStationIdRef.current !== station.id) {
-        if (station.latitude != null && station.longitude != null) {
-          snapshotLocation(station.latitude, station.longitude, nowMs);
-        }
-        store.set(navigationState, (prev) =>
-          prev.stationForHeader?.id !== station.id
-            ? { ...prev, stationForHeader: station }
-            : prev
-        );
-        snappedStationIdRef.current = phase.stationId;
-      }
-      store.set(stationState, (prev) =>
-        prev.arrived === true &&
-        prev.approaching === false &&
-        prev.station?.id === station.id
-          ? prev
-          : { ...prev, arrived: true, approaching: false, station }
-      );
-      return true;
-    }
-
-    // RUNNING / APPROACHING: 現在駅(=直前の停車駅)は据え置き、フラグのみ駆動する。
-    const approaching = phase.kind === 'APPROACHING';
-    // 次の停車駅へ走り出したら、次に到着する駅で再びスナップできるよう解除する。
-    snappedStationIdRef.current = null;
-    store.set(stationState, (prev) =>
-      prev.arrived === false && prev.approaching === approaching
-        ? prev
-        : { ...prev, arrived: false, approaching }
-    );
-    return true;
-  };
 
   const tick = (): void => {
     const now = Date.now();
@@ -191,99 +78,8 @@ export const useEtaFallback = (): void => {
             minDwellMin: MIN_DWELL_MIN,
           })
         : null;
-    // R1(到着しきい値緩和)のために推定フェーズを常時公開する。
+    // R1(到着しきい値緩和)のために推定フェーズを公開する。状態の駆動は行わない。
     store.set(etaPhaseAtom, phase);
-
-    const active = store.get(etaFallbackActiveAtom);
-
-    if (!enabled) {
-      if (active) {
-        deactivate();
-      }
-      return;
-    }
-
-    const bound = store.get(selectedBoundAtom);
-    const autoMode = store.get(autoModeEnabledAtom);
-    const outlier = store.get(locationAccuracyOutlierAtom);
-    const lastFixMs = store.get(lastAcceptedFixAtMsAtom);
-    // 精度判定は locationAtom ではなく「最後に受理された実測位」の精度で見る。
-    // 到着スナップが locationAtom を accuracy:0 で直書きするため、locationAtom を見ると
-    // (1) goodFix が偽陽性になり早期解除する、(2) accuracyBad が毎tickリセットされ
-    // 精度劣化の継続を追えなくなる。両者を snapshot 非依存の実測位精度で判定する。
-    const lastFixAccuracy = store.get(lastAcceptedFixAccuracyAtom);
-
-    // 瞬間的な劣化シグナル(外れ値棄却 or 実測位精度>200m)。一瞬の劣化では発動させない。
-    const degraded =
-      outlier ||
-      (lastFixAccuracy != null && lastFixAccuracy > BAD_ACCURACY_THRESHOLD);
-    if (degraded) {
-      if (degradedSinceRef.current == null) {
-        degradedSinceRef.current = now;
-      }
-    } else {
-      degradedSinceRef.current = null;
-    }
-    // 劣化が約20秒「持続」して初めてGPS不良とみなす。これにより地上鉄道の一瞬のGPS飛び
-    // (高架下・ビル街等)では発動せず、地下鉄トンネルや地上の長いトンネルのように
-    // 持続的に喪失した区間だけを対象にする(路線種別で絞らずに本来の意図へ収束させる)。
-    const sustainedDegraded =
-      degradedSinceRef.current != null &&
-      now - degradedSinceRef.current >= GPS_LOST_SUSTAIN_MS;
-    // 受理測位が途絶している(スナップの直書きでは lastFixMs は更新されない)。
-    const stale = lastFixMs != null && now - lastFixMs > FIX_STALENESS_MS;
-    const gpsLost = stale || sustainedDegraded;
-
-    // 良好測位の受理。中途半端な測位(200〜1500m)では解除しない(ヒステリシス)。
-    const goodFix =
-      !outlier &&
-      lastFixAccuracy != null &&
-      lastFixAccuracy <= BAD_ACCURACY_THRESHOLD &&
-      lastFixMs != null &&
-      now - lastFixMs <= FIX_STALENESS_MS;
-
-    // 直近に実移動(電車が動いていた)を観測したか。駅で静止したまま(待機・遅延停車)は
-    // 発動させないための発動ゲート。乗車待ち(実移動なし)ではここで発動を止める。
-    const recentlyMoving = isRecentlyMoving(store.get(lastMovingAtMsAtom), now);
-
-    if (active) {
-      const maxDurationMs = getEtaFallbackMaxDurationMin() * 60_000;
-      const capExceeded =
-        activatedAtRef.current != null &&
-        now - activatedAtRef.current > maxDurationMs;
-      if (
-        bound == null ||
-        autoMode ||
-        goodFix ||
-        capExceeded ||
-        !phase ||
-        !anchor
-      ) {
-        deactivate();
-        return;
-      }
-      // 駆動不能(DWELLING駅がstationsAtom上に無い)なら解除して凍結を防ぐ。
-      if (!drive(phase, now)) {
-        deactivate();
-      }
-      return;
-    }
-
-    if (
-      bound != null &&
-      !autoMode &&
-      gpsLost &&
-      recentlyMoving &&
-      phase &&
-      anchor
-    ) {
-      store.set(etaFallbackActiveAtom, true);
-      activatedAtRef.current = now;
-      snappedStationIdRef.current = null;
-      if (!drive(phase, now)) {
-        deactivate();
-      }
-    }
   };
 
   useInterval(tick, TICK_INTERVAL_MS);
