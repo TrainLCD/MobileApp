@@ -65,6 +65,17 @@ export const APPROACH_LEAD_MAX_MIN = 1.5;
  */
 export const MOVING_RECENCY_MS = 90_000;
 
+/**
+ * GPS喪失の直前この時間内に実移動が観測されていたか(=電車が実際に動いていた証拠)。
+ * useEtaAnchor(発車記録)と useEtaFallback(R2発動)が同じ基準を使うよう共通化し、
+ * しきい値や判定条件を変えても両者がずれないようにする。
+ */
+export const isRecentlyMoving = (
+  lastMovingAtMs: number | null,
+  nowMs: number
+): boolean =>
+  lastMovingAtMs != null && nowMs - lastMovingAtMs < MOVING_RECENCY_MS;
+
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max);
 

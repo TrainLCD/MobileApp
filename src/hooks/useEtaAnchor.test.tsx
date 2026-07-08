@@ -3,6 +3,7 @@ import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
 import { store as globalStore } from '~/store';
+import { MOVING_RECENCY_MS } from '~/utils/etaFallback';
 import { createStation } from '~/utils/test/factories';
 import {
   etaAnchorAtom,
@@ -132,6 +133,28 @@ describe('useEtaAnchor', () => {
       stationId: stationA.id,
       kind: 'AT_STATION',
       observedAtMs: 5_000_000,
+    });
+  });
+
+  it('実移動はあったが MOVING_RECENCY_MS を超えて古い場合は DEPARTED を記録しない', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(6_000_000);
+    // 実移動の観測はあるが有効期間(90秒)より前=期限切れ。発車判定の時間しきい値を跨いだ
+    // 直後に強制未到着で false へ倒れても、偽発車として記録しないことを検証する。
+    globalStore.set(lastMovingAtMsAtom, 6_000_000 - MOVING_RECENCY_MS - 1_000);
+    const store = createStore();
+
+    renderWithStore(store, { arrived: true, station: stationA });
+    expect(store.get(etaAnchorAtom)?.kind).toBe('AT_STATION');
+
+    jest.spyOn(Date, 'now').mockReturnValue(6_001_000);
+    act(() => {
+      store.set(arrivedAtom, false);
+    });
+
+    expect(store.get(etaAnchorAtom)).toEqual({
+      stationId: stationA.id,
+      kind: 'AT_STATION',
+      observedAtMs: 6_000_000,
     });
   });
 

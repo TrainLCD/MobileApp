@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useRef } from 'react';
 import { store } from '~/store';
-import { MOVING_RECENCY_MS } from '~/utils/etaFallback';
+import { isRecentlyMoving } from '~/utils/etaFallback';
 import {
   etaAnchorAtom,
   etaFallbackActiveAtom,
@@ -62,10 +62,10 @@ export const useEtaAnchor = (): void => {
       // 到着中→非到着への遷移。ただし精度悪化(強制未到着)で静止のまま arrived が
       // false に倒れただけの場合は「発車」ではない。直近に実移動が観測された時だけ
       // DEPARTED として記録し、駅で待機中の偽発車→位置前進を防ぐ(motion gate)。
-      const lastMovingAtMs = store.get(lastMovingAtMsAtom);
-      const recentlyMoving =
-        lastMovingAtMs != null &&
-        Date.now() - lastMovingAtMs < MOVING_RECENCY_MS;
+      const recentlyMoving = isRecentlyMoving(
+        store.get(lastMovingAtMsAtom),
+        Date.now()
+      );
       if (recentlyMoving) {
         setAnchor({
           stationId: prevStation.id,

@@ -294,6 +294,18 @@ describe('setLocation', () => {
       expect(store.get(lastMovingAtMsAtom)).toBeNull();
     });
 
+    it('低精度で基準点を確立後、良好測位が閾値超で離れても基準の不確実性内なら実移動としない', () => {
+      // 精度400mの粗い基準点。真の位置は±400mの不確実性を持つ。
+      setLocation(makeLocation(35.0, 139.0, 400, 1000));
+      currentNow = 1_030_000;
+      // その後、精度20mの良好測位。基準点から約333m離れているが、これは基準点(400m)の
+      // 不確実性で説明でき、実際の移動とは限らない。閾値 max(150, 20, 前回400)=400 を
+      // 超えないため打刻しない(劣化→復帰直後の誤検知を防ぐ)。
+      setLocation(makeLocation(35.003, 139.0, 20, 31000));
+
+      expect(store.get(lastMovingAtMsAtom)).toBeNull();
+    });
+
     it('スムージングスキップ経路(地下鉄・不安定)でも閾値超の正味変位を検知する', () => {
       setStationLineType(LineType.Subway);
       store.set(accuracyHistoryAtom, [10, 300, 20, 400]); // 不安定=スキップ

@@ -28,7 +28,7 @@ import {
   type EtaAnchor,
   type EtaFallbackStop,
   estimateEtaPhase,
-  MOVING_RECENCY_MS,
+  isRecentlyMoving,
 } from '~/utils/etaFallback';
 import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 import { useInterval } from './useInterval';
@@ -320,9 +320,7 @@ export const useEtaFallback = (): void => {
 
     // 直近に実移動(電車が動いていた)を観測したか。駅で静止したまま(待機・遅延停車)は
     // 発動させないための発動ゲート。前進ゲート(driveGated)と併せて誤前進を防ぐ。
-    const lastMovingAtMs = store.get(lastMovingAtMsAtom);
-    const recentlyMoving =
-      lastMovingAtMs != null && now - lastMovingAtMs < MOVING_RECENCY_MS;
+    const recentlyMoving = isRecentlyMoving(store.get(lastMovingAtMsAtom), now);
 
     if (active) {
       const maxDurationMs = getEtaFallbackMaxDurationMin() * 60_000;

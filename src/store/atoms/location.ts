@@ -77,12 +77,14 @@ export const lastAcceptedFixAccuracyAtom = atom<number | null>(null);
 // GPS喪失直前に電車が動いていたかの判定に使う。人の静止・GPS凍結中は更新されない。
 export const lastMovingAtMsAtom = atom<number | null>(null);
 
-// 移動検知用の直近サンプル(受理測位の座標+時刻)。lastFilteredLocationは地下鉄スキップ
-// 経路で更新されないため、全受理経路で更新する専用サンプルを使う。
+// 移動検知用の直近サンプル(受理測位の座標+時刻+精度)。lastFilteredLocationは地下鉄
+// スキップ経路で更新されないため、全受理経路で更新する専用サンプルを使う。精度も持たせ、
+// 劣化区間の粗い基準点が残ったまま良好測位が復帰した際の誤検知抑止に使う。
 const lastMotionSampleAtom = atom<{
   latitude: number;
   longitude: number;
   timestampMs: number;
+  accuracy: number | null;
 } | null>(null);
 
 // 実移動とみなす正味変位の下限(m)。粗い測位のジッタ(±精度)を超える移動のみ拾うため、
@@ -91,7 +93,7 @@ const lastMotionSampleAtom = atom<{
 const MOTION_MIN_DISTANCE_M = 150;
 
 // 受理測位ごとに、直前サンプルからの正味変位で実移動(=電車が動いている)を検知して
-// 打刻する。ジッタ(≤max(150m, 精度))は無視、ワープ(>MAX_PLAUSIBLE_SPEED)も除外。
+// 打刻する。ジッタ(≤max(150m, 前後の精度))は無視、ワープ(>MAX_PLAUSIBLE_SPEED)も除外。
 // GPS凍結(棄却)中は受理測位が来ないため呼ばれず、駅で待機中に誤って移動と判定しない。
 const recordMotion = (
   location: Location.LocationObject,
@@ -104,22 +106,36 @@ const recordMotion = (
       latitude,
       longitude,
       timestampMs: nowMs,
+      accuracy: accuracy ?? null,
     });
+    return;
+  }
+  const dtSec = (nowMs - prev.timestampMs) / 1000;
+  // 同一時刻・時刻逆行では速度を評価できず、ワープガードが機能しない。実移動とみなさず
+  // 打ち切る(サンプルも据え置き、次の正の経過時間の測位で正しく判定する)。
+  if (dtSec <= 0) {
     return;
   }
   const dist = getDistance(
     { latitude: prev.latitude, longitude: prev.longitude },
     { latitude, longitude }
   );
-  const dtSec = (nowMs - prev.timestampMs) / 1000;
-  const speed = dtSec > 0 ? dist / dtSec : 0;
-  const threshold = Math.max(MOTION_MIN_DISTANCE_M, accuracy ?? 0);
+  const speed = dist / dtSec;
+  // 前後どちらの測位の精度も不確実性として効く。劣化区間の粗い基準点(例:400m)が
+  // 残ったままGPSが良好復帰した直後、その不確実性の範囲内の見かけの変位を実移動と
+  // 誤認しないよう、前サンプルと現在の精度の大きい方まで閾値を引き上げる。
+  const threshold = Math.max(
+    MOTION_MIN_DISTANCE_M,
+    accuracy ?? 0,
+    prev.accuracy ?? 0
+  );
   if (dist > threshold && speed < MAX_PLAUSIBLE_SPEED) {
     store.set(lastMovingAtMsAtom, nowMs);
     store.set(lastMotionSampleAtom, {
       latitude,
       longitude,
       timestampMs: nowMs,
+      accuracy: accuracy ?? null,
     });
   }
 };
