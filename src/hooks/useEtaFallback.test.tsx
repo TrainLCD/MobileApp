@@ -325,8 +325,9 @@ describe('useEtaFallback', () => {
     expect(store.get(etaFallbackActiveAtom)).toBe(false);
   });
 
-  it('AT_STATIONアンカーでは出発を確認するまで前進せず、現在駅でホールドする', () => {
-    // B(id2)に到着済み・現在位置もB座標のまま(まだ発車していない)。
+  it('AT_STATIONアンカーは estimateEtaPhase の停車判定で予定発車まで駅に留まり、その後前進する', () => {
+    // B(id2)に到着した状態でGPSを喪失。ホールドゲートは撤去したが、AT_STATION
+    // アンカーは estimateEtaPhase が予定発車まで DWELLING(B) を返すため自然に駅へ留まる。
     store.set(etaAnchorAtom, {
       stationId: 2,
       kind: 'AT_STATION',
@@ -334,75 +335,17 @@ describe('useEtaFallback', () => {
     });
     store.set(arrivedAtom, true);
     store.set(stationAtom, STATIONS[1]);
-    store.set(locationAtom, {
-      timestamp: T0,
-      coords: {
-        latitude: 35.1,
-        longitude: 139.1,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: null,
-        heading: null,
-      },
-    });
     renderHook(() => useEtaFallback(), { wrapper });
 
     activate();
+    // 発動直後(m≈2.4分)はBの停車帯(effDep=2.5分)なのでBに留まる。
     expect(store.get(etaFallbackActiveAtom)).toBe(true);
-
-    // 十分に時間が経過し仮想時計上は次駅へ進むはずでも、位置がB駅から離れない限り
-    // 前進させずBでホールドし続ける(待機中に位置が勝手に進む誤動作を防ぐ)。
-    setNow(T0 + 5 * 60_000);
-    runTick();
-
     expect(store.get(arrivedAtom)).toBe(true);
-    expect(store.get(approachingAtom)).toBe(false);
     expect(store.get(stationAtom)?.id).toBe(2);
-  });
 
-  it('AT_STATIONアンカーでも位置が駅から離れれば出発を確認して前進駆動する', () => {
-    store.set(etaAnchorAtom, {
-      stationId: 2,
-      kind: 'AT_STATION',
-      observedAtMs: T0,
-    });
-    store.set(arrivedAtom, true);
-    store.set(stationAtom, STATIONS[1]);
-    store.set(locationAtom, {
-      timestamp: T0,
-      coords: {
-        latitude: 35.1,
-        longitude: 139.1,
-        accuracy: 0,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: null,
-        heading: null,
-      },
-    });
-    renderHook(() => useEtaFallback(), { wrapper });
-
-    activate();
-    // 発動直後はまだBでホールド(位置がBのまま)。
-    expect(store.get(stationAtom)?.id).toBe(2);
-    expect(store.get(arrivedAtom)).toBe(true);
-
-    // 現在位置がB駅から明確に離れた(=実際に発車した)。以降は通常どおり前進駆動。
-    store.set(locationAtom, {
-      timestamp: now,
-      coords: {
-        latitude: 35.2,
-        longitude: 139.2,
-        accuracy: 30,
-        altitude: null,
-        altitudeAccuracy: null,
-        speed: null,
-        heading: null,
-      },
-    });
-    // 経過3分 → 仮想時計は終端C(id3)方面。出発確認済みなので前進する。
-    setNow(T0 + 3 * 60_000);
+    // 予定発車を過ぎたら(m=4.7分)ETA時計どおり前進し、C(id3)へ到着駆動する。
+    // GPSが凍結して位置が動かなくても、待機ではなく走行として表示を進める。
+    setNow(T0 + 2.7 * 60_000);
     runTick();
 
     expect(store.get(stationAtom)?.id).toBe(3);

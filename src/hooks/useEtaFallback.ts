@@ -1,4 +1,3 @@
-import getDistance from 'geolib/es/getDistance';
 import { useRef } from 'react';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants';
 import {
@@ -25,7 +24,6 @@ import stationState, {
   stationsAtom,
 } from '~/store/atoms/station';
 import {
-  type EtaAnchor,
   type EtaFallbackStop,
   estimateEtaPhase,
   isRecentlyMoving,
@@ -42,10 +40,6 @@ const FIX_STALENESS_MS = 30_000;
 const GPS_LOST_SUSTAIN_MS = 20_000;
 // ETAデータの分解能で発車分−到着分が0になる駅の停車時間の底上げ(分)。
 const MIN_DWELL_MIN = 0.5;
-// 出発確認の変位下限(m)。AT_STATIONアンカーから発動した場合、現在位置がアンカー駅から
-// この距離(精度が粗いときはmax(これ, 精度))を超えて離れるまで前進させず現在駅ホールド。
-// 駅で待機中に位置が勝手に進む誤動作を防ぐ(motion gate の中核)。
-const DEPARTURE_MIN_M = 300;
 
 /**
  * route.stops(絶対累積分・全stops)から、停車駅かつ累積分が揃っているものだけを
@@ -106,9 +100,6 @@ export const useEtaFallback = (): void => {
   const activatedAtRef = useRef<number | null>(null);
   // 直近で座標スナップ済みの駅ID(到着ごとに1回だけスナップする)。
   const snappedStationIdRef = useRef<number | null>(null);
-  // アンカー駅からの出発が確認済みか(前進ゲート)。発動毎にリセットし、確認されるまでは
-  // 現在駅でホールドして前進させない。
-  const departureConfirmedRef = useRef(false);
 
   const deactivate = (): void => {
     if (store.get(etaFallbackActiveAtom)) {
@@ -116,30 +107,6 @@ export const useEtaFallback = (): void => {
     }
     activatedAtRef.current = null;
     snappedStationIdRef.current = null;
-    departureConfirmedRef.current = false;
-  };
-
-  // 出発未確認の間、現在駅(アンカー駅)でホールドする。drive の DWELLING と違い、
-  // 座標スナップはしない(実GPS位置を残し、出発の変位検知を継続できるようにする)。
-  // 駅が見つからなければ false(呼び出し側で解除)。
-  const holdAtStation = (stationId: number): boolean => {
-    const station = store.get(stationsAtom).find((s) => s.id === stationId);
-    if (!station) {
-      return false;
-    }
-    store.set(navigationState, (prev) =>
-      prev.stationForHeader?.id !== station.id
-        ? { ...prev, stationForHeader: station }
-        : prev
-    );
-    store.set(stationState, (prev) =>
-      prev.arrived === true &&
-      prev.approaching === false &&
-      prev.station?.id === station.id
-        ? prev
-        : { ...prev, arrived: true, approaching: false, station }
-    );
-    return true;
   };
 
   const snapshotLocation = (
@@ -210,49 +177,6 @@ export const useEtaFallback = (): void => {
     return true;
   };
 
-  // 前進ゲート: アンカー駅からの出発が確認できるまで現在駅ホールドし、確認後に drive する。
-  // DEPARTED アンカーは motion gate 済み=実発車の確証なので即確認。AT_STATION は現在位置が
-  // アンカー駅から max(DEPARTURE_MIN_M, 実測位精度) を超えて離れたら確認。GPS凍結時は変位
-  // 0のままホールドされ続け、駅で待機中に位置が勝手に進むのを防ぐ。
-  const driveGated = (
-    phase: NonNullable<ReturnType<typeof estimateEtaPhase>>,
-    anchor: EtaAnchor,
-    nowMs: number,
-    lastFixAccuracy: number | null
-  ): boolean => {
-    if (!departureConfirmedRef.current) {
-      if (anchor.kind === 'DEPARTED') {
-        departureConfirmedRef.current = true;
-      } else {
-        const anchorStation = store
-          .get(stationsAtom)
-          .find((s) => s.id === anchor.stationId);
-        const loc = store.get(locationAtom);
-        if (
-          anchorStation?.latitude != null &&
-          anchorStation?.longitude != null &&
-          loc?.coords != null
-        ) {
-          const dist = getDistance(
-            { latitude: loc.coords.latitude, longitude: loc.coords.longitude },
-            {
-              latitude: anchorStation.latitude,
-              longitude: anchorStation.longitude,
-            }
-          );
-          if (dist > Math.max(DEPARTURE_MIN_M, lastFixAccuracy ?? 0)) {
-            departureConfirmedRef.current = true;
-          }
-        }
-      }
-    }
-    if (!departureConfirmedRef.current) {
-      // 未出発: 現在駅ホールド(前進しない・座標スナップしない)。
-      return holdAtStation(anchor.stationId);
-    }
-    return drive(phase, nowMs);
-  };
-
   const tick = (): void => {
     const now = Date.now();
     const enabled = isEtaAssistEnabled();
@@ -319,7 +243,7 @@ export const useEtaFallback = (): void => {
       now - lastFixMs <= FIX_STALENESS_MS;
 
     // 直近に実移動(電車が動いていた)を観測したか。駅で静止したまま(待機・遅延停車)は
-    // 発動させないための発動ゲート。前進ゲート(driveGated)と併せて誤前進を防ぐ。
+    // 発動させないための発動ゲート。乗車待ち(実移動なし)ではここで発動を止める。
     const recentlyMoving = isRecentlyMoving(store.get(lastMovingAtMsAtom), now);
 
     if (active) {
@@ -339,7 +263,7 @@ export const useEtaFallback = (): void => {
         return;
       }
       // 駆動不能(DWELLING駅がstationsAtom上に無い)なら解除して凍結を防ぐ。
-      if (!driveGated(phase, anchor, now, lastFixAccuracy)) {
+      if (!drive(phase, now)) {
         deactivate();
       }
       return;
@@ -356,8 +280,7 @@ export const useEtaFallback = (): void => {
       store.set(etaFallbackActiveAtom, true);
       activatedAtRef.current = now;
       snappedStationIdRef.current = null;
-      departureConfirmedRef.current = false;
-      if (!driveGated(phase, anchor, now, lastFixAccuracy)) {
+      if (!drive(phase, now)) {
         deactivate();
       }
     }
