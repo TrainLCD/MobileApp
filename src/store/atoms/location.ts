@@ -72,6 +72,58 @@ export const lastAcceptedFixAtMsAtom = atom<number | null>(null);
 // 「良好測位が来た」と誤判定しうる。スナップの影響を受けないこの値で解除判定を行う。
 export const lastAcceptedFixAccuracyAtom = atom<number | null>(null);
 
+// 実移動(=電車が実際に動いている)を最後に観測した時刻(ms)。ETAフォールバックが
+// 「駅で静止して待っているだけ」を「走行中」と誤認して位置を進めてしまう問題を防ぐため、
+// GPS喪失直前に電車が動いていたかの判定に使う。人の静止・GPS凍結中は更新されない。
+export const lastMovingAtMsAtom = atom<number | null>(null);
+
+// 移動検知用の直近サンプル(受理測位の座標+時刻)。lastFilteredLocationは地下鉄スキップ
+// 経路で更新されないため、全受理経路で更新する専用サンプルを使う。
+const lastMotionSampleAtom = atom<{
+  latitude: number;
+  longitude: number;
+  timestampMs: number;
+} | null>(null);
+
+// 実移動とみなす正味変位の下限(m)。粗い測位のジッタ(±精度)を超える移動のみ拾うため、
+// 精度と併せて max を取る。閾値以下ではサンプルを更新せず、真の移動でのみ超えるよう
+// 変位を蓄積する(徒歩・静止ジッタの誤検知を抑える)。
+const MOTION_MIN_DISTANCE_M = 150;
+
+// 受理測位ごとに、直前サンプルからの正味変位で実移動(=電車が動いている)を検知して
+// 打刻する。ジッタ(≤max(150m, 精度))は無視、ワープ(>MAX_PLAUSIBLE_SPEED)も除外。
+// GPS凍結(棄却)中は受理測位が来ないため呼ばれず、駅で待機中に誤って移動と判定しない。
+const recordMotion = (
+  location: Location.LocationObject,
+  nowMs: number
+): void => {
+  const prev = store.get(lastMotionSampleAtom);
+  const { latitude, longitude, accuracy } = location.coords;
+  if (prev == null) {
+    store.set(lastMotionSampleAtom, {
+      latitude,
+      longitude,
+      timestampMs: nowMs,
+    });
+    return;
+  }
+  const dist = getDistance(
+    { latitude: prev.latitude, longitude: prev.longitude },
+    { latitude, longitude }
+  );
+  const dtSec = (nowMs - prev.timestampMs) / 1000;
+  const speed = dtSec > 0 ? dist / dtSec : 0;
+  const threshold = Math.max(MOTION_MIN_DISTANCE_M, accuracy ?? 0);
+  if (dist > threshold && speed < MAX_PLAUSIBLE_SPEED) {
+    store.set(lastMovingAtMsAtom, nowMs);
+    store.set(lastMotionSampleAtom, {
+      latitude,
+      longitude,
+      timestampMs: nowMs,
+    });
+  }
+};
+
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
   store.set(locationAtom, null);
@@ -81,6 +133,8 @@ export const resetLocationState = () => {
   store.set(locationAccuracyOutlierAtom, false);
   store.set(lastAcceptedFixAtMsAtom, null);
   store.set(lastAcceptedFixAccuracyAtom, null);
+  store.set(lastMovingAtMsAtom, null);
+  store.set(lastMotionSampleAtom, null);
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -107,6 +161,7 @@ export const setLocation = (location: Location.LocationObject) => {
   // フィルタ判定より前で解除する。
   store.set(locationAccuracyOutlierAtom, false);
 
+  const nowMs = Date.now();
   const filteredPrev = store.get(lastFilteredLocationAtom);
   const currentHistory = store.get(accuracyHistoryAtom);
   const newAccuracy = location.coords.accuracy;
@@ -127,8 +182,9 @@ export const setLocation = (location: Location.LocationObject) => {
   if (skipSmoothing) {
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
-    store.set(lastAcceptedFixAtMsAtom, Date.now());
+    store.set(lastAcceptedFixAtMsAtom, nowMs);
     store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
+    recordMotion(location, nowMs);
     return;
   }
 
@@ -137,8 +193,9 @@ export const setLocation = (location: Location.LocationObject) => {
     store.set(locationAtom, location);
     store.set(lastFilteredLocationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
-    store.set(lastAcceptedFixAtMsAtom, Date.now());
+    store.set(lastAcceptedFixAtMsAtom, nowMs);
     store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
+    recordMotion(location, nowMs);
     return;
   }
 
@@ -186,6 +243,8 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(locationAtom, smoothedLocation);
   store.set(lastFilteredLocationAtom, smoothedLocation);
   store.set(accuracyHistoryAtom, updatedHistory);
-  store.set(lastAcceptedFixAtMsAtom, Date.now());
+  store.set(lastAcceptedFixAtMsAtom, nowMs);
   store.set(lastAcceptedFixAccuracyAtom, newAccuracy ?? null);
+  // 移動検知は生の測位座標(smoothedではなく実測変位)で行う。
+  recordMotion(location, nowMs);
 };

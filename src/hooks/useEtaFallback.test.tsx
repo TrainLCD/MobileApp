@@ -12,6 +12,7 @@ import {
 import {
   lastAcceptedFixAccuracyAtom,
   lastAcceptedFixAtMsAtom,
+  lastMovingAtMsAtom,
   locationAccuracyOutlierAtom,
   locationAtom,
 } from '~/store/atoms/location';
@@ -23,6 +24,7 @@ import {
   stationAtom,
   stationsAtom,
 } from '~/store/atoms/station';
+import { MOVING_RECENCY_MS } from '~/utils/etaFallback';
 import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 import { useEtaFallback } from './useEtaFallback';
 
@@ -75,6 +77,8 @@ const STATIONS = [
 ];
 
 const T0 = 1_000_000;
+// GPS喪失(外れ値/精度劣化)が発動するまでの持続閾値。フック内 GPS_LOST_SUSTAIN_MS と同じ。
+const SUSTAIN_MS = 20_000;
 let now = T0;
 
 const setNow = (value: number) => {
@@ -87,6 +91,16 @@ const runTick = () => {
   act(() => {
     jest.advanceTimersByTime(1000);
   });
+};
+
+// GPS喪失(外れ値)が持続閾値を超え、かつ直近に実移動がある状態でフォールバックを発動させる。
+// 1tick目で劣化の起点を記録し、2tick目(持続20秒超)で発動する。発動時の仮想時計は
+// m = 発車累積0.5 + 22秒 ≒ 0.87 分でまだ走行中(RUNNING)。
+const activate = () => {
+  setNow(T0 + 1000);
+  runTick();
+  setNow(T0 + SUSTAIN_MS + 2000);
+  runTick();
 };
 
 const mockRoute = (route: unknown) => {
@@ -113,7 +127,9 @@ describe('useEtaFallback', () => {
 
     mockRoute({ id: 1, stops: STOPS });
 
-    // 既定: ナビ中・autoMode無効・A発車アンカー・GPS外れ値(=喪失)
+    // 既定: ナビ中・autoMode無効・A発車アンカー・GPS外れ値(=喪失)・直近に実移動あり。
+    // lastMovingAtMs は最後の受理測位時刻(T0)と一致させ(実移動は受理測位時にのみ記録される
+    // ため lastMovingAtMs <= lastAcceptedFixAtMs が不変条件)、発動ゲート recentlyMoving を満たす。
     store.set(stationsAtom, STATIONS);
     store.set(selectedBoundAtom, station(3, 35.2, 139.2));
     store.set(autoModeEnabledAtom, false);
@@ -130,6 +146,7 @@ describe('useEtaFallback', () => {
     store.set(locationAccuracyOutlierAtom, true);
     store.set(lastAcceptedFixAtMsAtom, T0);
     store.set(lastAcceptedFixAccuracyAtom, 30);
+    store.set(lastMovingAtMsAtom, T0);
     store.set(locationAtom, {
       timestamp: T0,
       coords: {
@@ -149,11 +166,10 @@ describe('useEtaFallback', () => {
     jest.useRealTimers();
   });
 
-  it('GPS外れ値・アンカーあり・有効時に発動し、発車直後は走行中(未到着・未接近)を駆動する', () => {
+  it('GPS喪失が持続・直近に実移動あり・アンカーありで発動し、発車直後は走行中(未到着・未接近)を駆動する', () => {
     renderHook(() => useEtaFallback(), { wrapper });
 
-    setNow(T0 + 1000); // A発車から1秒: まだB到着(2分)には遠い
-    runTick();
+    activate();
 
     expect(store.get(etaFallbackActiveAtom)).toBe(true);
     expect(store.get(arrivedAtom)).toBe(false);
@@ -164,6 +180,9 @@ describe('useEtaFallback', () => {
 
   it('B到着時刻+マージン経過で到着を駆動し、駅座標をlocationAtomへスナップする', () => {
     renderHook(() => useEtaFallback(), { wrapper });
+
+    activate();
+    expect(store.get(etaFallbackActiveAtom)).toBe(true);
 
     // 仮想時計 m = 発車累積0.5 + 経過分。B停車帯は m∈[2.5, 3.0)。
     // 経過2.2分 → m=2.7 → DWELLING(B)。
@@ -182,6 +201,8 @@ describe('useEtaFallback', () => {
   it('B到着直前(マージン内)は接近(まもなく)に留める', () => {
     renderHook(() => useEtaFallback(), { wrapper });
 
+    activate();
+
     // 仮想時計 m = 発車累積0.5 + 経過分。B接近帯は m∈[到着2.0-lead0.6, 確定2.5)=[1.4,2.5)。
     // 経過1.2分 → m=1.7 → APPROACHING(B)。
     setNow(T0 + 1.2 * 60_000);
@@ -198,12 +219,11 @@ describe('useEtaFallback', () => {
   it('中途半端な測位(200〜1500m)では解除せず、良好測位(≤200m)で解除する', () => {
     renderHook(() => useEtaFallback(), { wrapper });
 
-    setNow(T0 + 1000);
-    runTick();
+    activate();
     expect(store.get(etaFallbackActiveAtom)).toBe(true);
 
     // 800mの測位が受理された(外れ値解除・lastFix更新)が、ヒステリシスで解除しない
-    setNow(T0 + 2000);
+    setNow(T0 + SUSTAIN_MS + 3000);
     store.set(locationAccuracyOutlierAtom, false);
     store.set(lastAcceptedFixAtMsAtom, now);
     store.set(lastAcceptedFixAccuracyAtom, 800);
@@ -223,7 +243,7 @@ describe('useEtaFallback', () => {
     expect(store.get(etaFallbackActiveAtom)).toBe(true);
 
     // 良好測位(50m)を受理 → 解除
-    setNow(T0 + 3000);
+    setNow(T0 + SUSTAIN_MS + 4000);
     store.set(lastAcceptedFixAtMsAtom, now);
     store.set(lastAcceptedFixAccuracyAtom, 50);
     store.set(locationAtom, {
@@ -250,12 +270,11 @@ describe('useEtaFallback', () => {
       .mockReturnValue(0.01);
     renderHook(() => useEtaFallback(), { wrapper });
 
-    setNow(T0 + 1000);
-    runTick();
+    activate();
     expect(store.get(etaFallbackActiveAtom)).toBe(true);
 
-    // 発動(T0+1秒)から0.01分(0.6秒)を超過。ETAフェーズはまだRUNNINGのまま。
-    setNow(T0 + 2000);
+    // 発動(T0+22秒)から0.01分(0.6秒)を超過。ETAフェーズはまだRUNNINGのまま。
+    setNow(T0 + SUSTAIN_MS + 3000);
     runTick();
     expect(store.get(etaFallbackActiveAtom)).toBe(false);
   });
@@ -264,21 +283,130 @@ describe('useEtaFallback', () => {
     jest.spyOn(remoteConfigModule, 'isEtaAssistEnabled').mockReturnValue(false);
     renderHook(() => useEtaFallback(), { wrapper });
 
-    setNow(T0 + 1000);
-    runTick();
+    activate();
 
     expect(store.get(etaFallbackActiveAtom)).toBe(false);
     expect(store.get(etaPhaseAtom)).toBeNull();
   });
 
-  it('GPSが健全(外れ値なし・良好精度)なら発動しない', () => {
+  it('GPSが健全(外れ値なし・良好精度・受理測位が新しい)なら発動しない', () => {
     store.set(locationAccuracyOutlierAtom, false);
     renderHook(() => useEtaFallback(), { wrapper });
 
+    // 良好測位が流れ続ける限り劣化とみなされず、持続喪失ゲートも成立しない。
     setNow(T0 + 1000);
+    store.set(lastAcceptedFixAtMsAtom, now);
     runTick();
 
     expect(store.get(etaFallbackActiveAtom)).toBe(false);
+  });
+
+  it('GPS喪失が一瞬(持続20秒未満)では発動しない', () => {
+    renderHook(() => useEtaFallback(), { wrapper });
+
+    // 外れ値だが劣化継続はまだ数秒。持続喪失ゲート(20秒)を満たさないため発動しない。
+    setNow(T0 + 1000);
+    runTick();
+    expect(store.get(etaFallbackActiveAtom)).toBe(false);
+
+    setNow(T0 + 5000);
+    runTick();
+    expect(store.get(etaFallbackActiveAtom)).toBe(false);
+  });
+
+  it('直近に実移動がなければ(駅で静止・待機)GPS喪失が持続しても発動しない', () => {
+    // lastMovingAtMs を発動有効期間より前に置く=直近に電車が動いた証拠がない。
+    store.set(lastMovingAtMsAtom, T0 - MOVING_RECENCY_MS - 10_000);
+    renderHook(() => useEtaFallback(), { wrapper });
+
+    activate();
+
+    // 持続喪失は満たすが recentlyMoving が偽なので発動しない(待機中の誤前進を防ぐ)。
+    expect(store.get(etaFallbackActiveAtom)).toBe(false);
+  });
+
+  it('AT_STATIONアンカーでは出発を確認するまで前進せず、現在駅でホールドする', () => {
+    // B(id2)に到着済み・現在位置もB座標のまま(まだ発車していない)。
+    store.set(etaAnchorAtom, {
+      stationId: 2,
+      kind: 'AT_STATION',
+      observedAtMs: T0,
+    });
+    store.set(arrivedAtom, true);
+    store.set(stationAtom, STATIONS[1]);
+    store.set(locationAtom, {
+      timestamp: T0,
+      coords: {
+        latitude: 35.1,
+        longitude: 139.1,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: null,
+        heading: null,
+      },
+    });
+    renderHook(() => useEtaFallback(), { wrapper });
+
+    activate();
+    expect(store.get(etaFallbackActiveAtom)).toBe(true);
+
+    // 十分に時間が経過し仮想時計上は次駅へ進むはずでも、位置がB駅から離れない限り
+    // 前進させずBでホールドし続ける(待機中に位置が勝手に進む誤動作を防ぐ)。
+    setNow(T0 + 5 * 60_000);
+    runTick();
+
+    expect(store.get(arrivedAtom)).toBe(true);
+    expect(store.get(approachingAtom)).toBe(false);
+    expect(store.get(stationAtom)?.id).toBe(2);
+  });
+
+  it('AT_STATIONアンカーでも位置が駅から離れれば出発を確認して前進駆動する', () => {
+    store.set(etaAnchorAtom, {
+      stationId: 2,
+      kind: 'AT_STATION',
+      observedAtMs: T0,
+    });
+    store.set(arrivedAtom, true);
+    store.set(stationAtom, STATIONS[1]);
+    store.set(locationAtom, {
+      timestamp: T0,
+      coords: {
+        latitude: 35.1,
+        longitude: 139.1,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: null,
+        heading: null,
+      },
+    });
+    renderHook(() => useEtaFallback(), { wrapper });
+
+    activate();
+    // 発動直後はまだBでホールド(位置がBのまま)。
+    expect(store.get(stationAtom)?.id).toBe(2);
+    expect(store.get(arrivedAtom)).toBe(true);
+
+    // 現在位置がB駅から明確に離れた(=実際に発車した)。以降は通常どおり前進駆動。
+    store.set(locationAtom, {
+      timestamp: now,
+      coords: {
+        latitude: 35.2,
+        longitude: 139.2,
+        accuracy: 30,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: null,
+        heading: null,
+      },
+    });
+    // 経過3分 → 仮想時計は終端C(id3)方面。出発確認済みなので前進する。
+    setNow(T0 + 3 * 60_000);
+    runTick();
+
+    expect(store.get(stationAtom)?.id).toBe(3);
+    expect(store.get(arrivedAtom)).toBe(true);
   });
 
   it('DWELLING駅がstationsAtom上に見つからない場合は解除して凍結を防ぐ', () => {
@@ -286,9 +414,7 @@ describe('useEtaFallback', () => {
     store.set(stationsAtom, [STATIONS[0], STATIONS[2]]);
     renderHook(() => useEtaFallback(), { wrapper });
 
-    // 発動(走行中)
-    setNow(T0 + 1000);
-    runTick();
+    activate();
     expect(store.get(etaFallbackActiveAtom)).toBe(true);
 
     // B停車帯(m∈[2.5,3.0))へ進める → Bが見つからず解除

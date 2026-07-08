@@ -4,6 +4,7 @@ import { store } from '..';
 import {
   accuracyHistoryAtom,
   lastAcceptedFixAtMsAtom,
+  lastMovingAtMsAtom,
   locationAccuracyOutlierAtom,
   locationAtom,
   rawLocationAtom,
@@ -245,6 +246,79 @@ describe('setLocation', () => {
       resetLocationState();
 
       expect(store.get(lastAcceptedFixAtMsAtom)).toBeNull();
+    });
+  });
+
+  describe('lastMovingAtMsAtom（実移動の検知）', () => {
+    // recordMotion は dt を Date.now() 差で測るため、決定的にするため now を固定する。
+    let currentNow = 1_000_000;
+
+    beforeEach(() => {
+      currentNow = 1_000_000;
+      jest.spyOn(Date, 'now').mockImplementation(() => currentNow);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('初回の受理測位では基準サンプルを初期化するだけで lastMovingAtMs は立たない', () => {
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      expect(store.get(lastMovingAtMsAtom)).toBeNull();
+    });
+
+    it('閾値(150m)を超える正味変位で lastMovingAtMs が更新される', () => {
+      setLocation(makeLocation(35.0, 139.0, 30, 1000)); // 基準サンプル
+      currentNow = 1_030_000; // 30秒後
+      // 緯度 +0.003 度 ≒ 333m の北進。速度 333/30 ≒ 11 m/s で現実的。
+      setLocation(makeLocation(35.003, 139.0, 30, 31000));
+
+      expect(store.get(lastMovingAtMsAtom)).toBe(1_030_000);
+    });
+
+    it('閾値以下の微小変位(静止ジッタ)では lastMovingAtMs は更新されない', () => {
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      currentNow = 1_030_000;
+      // 緯度 +0.0005 度 ≒ 55m。閾値 max(150, 精度30)=150 未満なので実移動とみなさない。
+      setLocation(makeLocation(35.0005, 139.0, 30, 31000));
+
+      expect(store.get(lastMovingAtMsAtom)).toBeNull();
+    });
+
+    it('測位精度が粗い場合は閾値が精度まで引き上げられ、精度内の変位は無視する', () => {
+      setLocation(makeLocation(35.0, 139.0, 400, 1000));
+      currentNow = 1_030_000;
+      // 約333mの変位だが精度400mなので閾値 max(150,400)=400 を超えず未更新。
+      setLocation(makeLocation(35.003, 139.0, 400, 31000));
+
+      expect(store.get(lastMovingAtMsAtom)).toBeNull();
+    });
+
+    it('スムージングスキップ経路(地下鉄・不安定)でも閾値超の正味変位を検知する', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]); // 不安定=スキップ
+      setLocation(makeLocation(35.0, 139.0, 100, 1000));
+      currentNow = 1_030_000;
+      setLocation(makeLocation(35.003, 139.0, 100, 31000)); // 約333m / 30秒
+
+      expect(store.get(lastMovingAtMsAtom)).toBe(1_030_000);
+    });
+
+    it('スムージングスキップ経路でも非現実的速度のワープは実移動とみなさない', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+      currentNow = 1_000_100; // わずか0.1秒後
+      // 緯度 +0.01 度 ≒ 1113m を0.1秒 = 11130 m/s。MAX_PLAUSIBLE_SPEED超で除外。
+      setLocation(makeLocation(35.01, 139.0, 500, 1100));
+
+      expect(store.get(lastMovingAtMsAtom)).toBeNull();
+    });
+
+    it('resetLocationStateで lastMovingAtMs が null に戻る', () => {
+      store.set(lastMovingAtMsAtom, 12_345);
+      resetLocationState();
+      expect(store.get(lastMovingAtMsAtom)).toBeNull();
     });
   });
 });

@@ -1,3 +1,4 @@
+import getDistance from 'geolib/es/getDistance';
 import { useRef } from 'react';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants';
 import {
@@ -14,6 +15,7 @@ import {
 import {
   lastAcceptedFixAccuracyAtom,
   lastAcceptedFixAtMsAtom,
+  lastMovingAtMsAtom,
   locationAccuracyOutlierAtom,
   locationAtom,
 } from '~/store/atoms/location';
@@ -22,7 +24,12 @@ import stationState, {
   selectedBoundAtom,
   stationsAtom,
 } from '~/store/atoms/station';
-import { type EtaFallbackStop, estimateEtaPhase } from '~/utils/etaFallback';
+import {
+  type EtaAnchor,
+  type EtaFallbackStop,
+  estimateEtaPhase,
+  MOVING_RECENCY_MS,
+} from '~/utils/etaFallback';
 import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 import { useInterval } from './useInterval';
 
@@ -30,10 +37,15 @@ import { useInterval } from './useInterval';
 const TICK_INTERVAL_MS = 1_000;
 // 受理測位がこの時間以上途絶したら「無信号」とみなす(ms)。
 const FIX_STALENESS_MS = 30_000;
-// 精度劣化(>200m)がこの時間継続したらGPS不良とみなす(ms)。
-const ACCURACY_SUSTAIN_MS = 20_000;
+// GPS劣化(外れ値/精度>200m)がこの時間「持続」して初めてGPS不良とみなす(ms)。
+// 一瞬の劣化(地上の高架下・ビル街等)では発動させないための持続喪失ゲート。
+const GPS_LOST_SUSTAIN_MS = 20_000;
 // ETAデータの分解能で発車分−到着分が0になる駅の停車時間の底上げ(分)。
 const MIN_DWELL_MIN = 0.5;
+// 出発確認の変位下限(m)。AT_STATIONアンカーから発動した場合、現在位置がアンカー駅から
+// この距離(精度が粗いときはmax(これ, 精度))を超えて離れるまで前進させず現在駅ホールド。
+// 駅で待機中に位置が勝手に進む誤動作を防ぐ(motion gate の中核)。
+const DEPARTURE_MIN_M = 300;
 
 /**
  * route.stops(絶対累積分・全stops)から、停車駅かつ累積分が揃っているものだけを
@@ -88,12 +100,15 @@ export const useEtaFallback = (): void => {
   const routeRef = useRef(route);
   routeRef.current = route;
 
-  // 精度劣化が始まった時刻(継続判定用)。良好時は null に戻す。
-  const badSinceRef = useRef<number | null>(null);
+  // GPS劣化(外れ値/精度>200m)が始まった時刻(持続判定用)。良好時は null に戻す。
+  const degradedSinceRef = useRef<number | null>(null);
   // フォールバックを発動した時刻(タイムキャップ用)。
   const activatedAtRef = useRef<number | null>(null);
   // 直近で座標スナップ済みの駅ID(到着ごとに1回だけスナップする)。
   const snappedStationIdRef = useRef<number | null>(null);
+  // アンカー駅からの出発が確認済みか(前進ゲート)。発動毎にリセットし、確認されるまでは
+  // 現在駅でホールドして前進させない。
+  const departureConfirmedRef = useRef(false);
 
   const deactivate = (): void => {
     if (store.get(etaFallbackActiveAtom)) {
@@ -101,6 +116,30 @@ export const useEtaFallback = (): void => {
     }
     activatedAtRef.current = null;
     snappedStationIdRef.current = null;
+    departureConfirmedRef.current = false;
+  };
+
+  // 出発未確認の間、現在駅(アンカー駅)でホールドする。drive の DWELLING と違い、
+  // 座標スナップはしない(実GPS位置を残し、出発の変位検知を継続できるようにする)。
+  // 駅が見つからなければ false(呼び出し側で解除)。
+  const holdAtStation = (stationId: number): boolean => {
+    const station = store.get(stationsAtom).find((s) => s.id === stationId);
+    if (!station) {
+      return false;
+    }
+    store.set(navigationState, (prev) =>
+      prev.stationForHeader?.id !== station.id
+        ? { ...prev, stationForHeader: station }
+        : prev
+    );
+    store.set(stationState, (prev) =>
+      prev.arrived === true &&
+      prev.approaching === false &&
+      prev.station?.id === station.id
+        ? prev
+        : { ...prev, arrived: true, approaching: false, station }
+    );
+    return true;
   };
 
   const snapshotLocation = (
@@ -171,6 +210,49 @@ export const useEtaFallback = (): void => {
     return true;
   };
 
+  // 前進ゲート: アンカー駅からの出発が確認できるまで現在駅ホールドし、確認後に drive する。
+  // DEPARTED アンカーは motion gate 済み=実発車の確証なので即確認。AT_STATION は現在位置が
+  // アンカー駅から max(DEPARTURE_MIN_M, 実測位精度) を超えて離れたら確認。GPS凍結時は変位
+  // 0のままホールドされ続け、駅で待機中に位置が勝手に進むのを防ぐ。
+  const driveGated = (
+    phase: NonNullable<ReturnType<typeof estimateEtaPhase>>,
+    anchor: EtaAnchor,
+    nowMs: number,
+    lastFixAccuracy: number | null
+  ): boolean => {
+    if (!departureConfirmedRef.current) {
+      if (anchor.kind === 'DEPARTED') {
+        departureConfirmedRef.current = true;
+      } else {
+        const anchorStation = store
+          .get(stationsAtom)
+          .find((s) => s.id === anchor.stationId);
+        const loc = store.get(locationAtom);
+        if (
+          anchorStation?.latitude != null &&
+          anchorStation?.longitude != null &&
+          loc?.coords != null
+        ) {
+          const dist = getDistance(
+            { latitude: loc.coords.latitude, longitude: loc.coords.longitude },
+            {
+              latitude: anchorStation.latitude,
+              longitude: anchorStation.longitude,
+            }
+          );
+          if (dist > Math.max(DEPARTURE_MIN_M, lastFixAccuracy ?? 0)) {
+            departureConfirmedRef.current = true;
+          }
+        }
+      }
+    }
+    if (!departureConfirmedRef.current) {
+      // 未出発: 現在駅ホールド(前進しない・座標スナップしない)。
+      return holdAtStation(anchor.stationId);
+    }
+    return drive(phase, nowMs);
+  };
+
   const tick = (): void => {
     const now = Date.now();
     const enabled = isEtaAssistEnabled();
@@ -207,22 +289,26 @@ export const useEtaFallback = (): void => {
     // 精度劣化の継続を追えなくなる。両者を snapshot 非依存の実測位精度で判定する。
     const lastFixAccuracy = store.get(lastAcceptedFixAccuracyAtom);
 
-    // 精度劣化の継続時間を追跡する。
-    const accuracyBad =
-      lastFixAccuracy != null && lastFixAccuracy > BAD_ACCURACY_THRESHOLD;
-    if (accuracyBad) {
-      if (badSinceRef.current == null) {
-        badSinceRef.current = now;
+    // 瞬間的な劣化シグナル(外れ値棄却 or 実測位精度>200m)。一瞬の劣化では発動させない。
+    const degraded =
+      outlier ||
+      (lastFixAccuracy != null && lastFixAccuracy > BAD_ACCURACY_THRESHOLD);
+    if (degraded) {
+      if (degradedSinceRef.current == null) {
+        degradedSinceRef.current = now;
       }
     } else {
-      badSinceRef.current = null;
+      degradedSinceRef.current = null;
     }
-    const accuracySustainedBad =
-      badSinceRef.current != null &&
-      now - badSinceRef.current >= ACCURACY_SUSTAIN_MS;
+    // 劣化が約20秒「持続」して初めてGPS不良とみなす。これにより地上鉄道の一瞬のGPS飛び
+    // (高架下・ビル街等)では発動せず、地下鉄トンネルや地上の長いトンネルのように
+    // 持続的に喪失した区間だけを対象にする(路線種別で絞らずに本来の意図へ収束させる)。
+    const sustainedDegraded =
+      degradedSinceRef.current != null &&
+      now - degradedSinceRef.current >= GPS_LOST_SUSTAIN_MS;
     // 受理測位が途絶している(スナップの直書きでは lastFixMs は更新されない)。
     const stale = lastFixMs != null && now - lastFixMs > FIX_STALENESS_MS;
-    const gpsLost = outlier || stale || accuracySustainedBad;
+    const gpsLost = stale || sustainedDegraded;
 
     // 良好測位の受理。中途半端な測位(200〜1500m)では解除しない(ヒステリシス)。
     const goodFix =
@@ -232,27 +318,48 @@ export const useEtaFallback = (): void => {
       lastFixMs != null &&
       now - lastFixMs <= FIX_STALENESS_MS;
 
+    // 直近に実移動(電車が動いていた)を観測したか。駅で静止したまま(待機・遅延停車)は
+    // 発動させないための発動ゲート。前進ゲート(driveGated)と併せて誤前進を防ぐ。
+    const lastMovingAtMs = store.get(lastMovingAtMsAtom);
+    const recentlyMoving =
+      lastMovingAtMs != null && now - lastMovingAtMs < MOVING_RECENCY_MS;
+
     if (active) {
       const maxDurationMs = getEtaFallbackMaxDurationMin() * 60_000;
       const capExceeded =
         activatedAtRef.current != null &&
         now - activatedAtRef.current > maxDurationMs;
-      if (bound == null || autoMode || goodFix || capExceeded || !phase) {
+      if (
+        bound == null ||
+        autoMode ||
+        goodFix ||
+        capExceeded ||
+        !phase ||
+        !anchor
+      ) {
         deactivate();
         return;
       }
       // 駆動不能(DWELLING駅がstationsAtom上に無い)なら解除して凍結を防ぐ。
-      if (!drive(phase, now)) {
+      if (!driveGated(phase, anchor, now, lastFixAccuracy)) {
         deactivate();
       }
       return;
     }
 
-    if (bound != null && !autoMode && gpsLost && phase) {
+    if (
+      bound != null &&
+      !autoMode &&
+      gpsLost &&
+      recentlyMoving &&
+      phase &&
+      anchor
+    ) {
       store.set(etaFallbackActiveAtom, true);
       activatedAtRef.current = now;
       snappedStationIdRef.current = null;
-      if (!drive(phase, now)) {
+      departureConfirmedRef.current = false;
+      if (!driveGated(phase, anchor, now, lastFixAccuracy)) {
         deactivate();
       }
     }

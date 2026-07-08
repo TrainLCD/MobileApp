@@ -1,9 +1,12 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useRef } from 'react';
+import { store } from '~/store';
+import { MOVING_RECENCY_MS } from '~/utils/etaFallback';
 import {
   etaAnchorAtom,
   etaFallbackActiveAtom,
 } from '../store/atoms/etaFallback';
+import { lastMovingAtMsAtom } from '../store/atoms/location';
 import {
   arrivedAtom,
   selectedBoundAtom,
@@ -56,12 +59,20 @@ export const useEtaAnchor = (): void => {
         observedAtMs: Date.now(),
       });
     } else if (prevArrived && !arrived && prevStation?.id != null) {
-      // 到着中→非到着への遷移(=発車)を検出した瞬間にだけ一発記録する
-      setAnchor({
-        stationId: prevStation.id,
-        kind: 'DEPARTED',
-        observedAtMs: Date.now(),
-      });
+      // 到着中→非到着への遷移。ただし精度悪化(強制未到着)で静止のまま arrived が
+      // false に倒れただけの場合は「発車」ではない。直近に実移動が観測された時だけ
+      // DEPARTED として記録し、駅で待機中の偽発車→位置前進を防ぐ(motion gate)。
+      const lastMovingAtMs = store.get(lastMovingAtMsAtom);
+      const recentlyMoving =
+        lastMovingAtMs != null &&
+        Date.now() - lastMovingAtMs < MOVING_RECENCY_MS;
+      if (recentlyMoving) {
+        setAnchor({
+          stationId: prevStation.id,
+          kind: 'DEPARTED',
+          observedAtMs: Date.now(),
+        });
+      }
     }
 
     prevArrivedRef.current = arrived;
