@@ -10,7 +10,7 @@ import {
   isForceNotArrivedOnLowAccuracyEnabled,
 } from '~/lib/remoteConfig';
 import { store } from '~/store';
-import { etaPhaseAtom } from '~/store/atoms/etaFallback';
+import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
 import {
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -132,14 +132,26 @@ export const useRefreshStation = (): void => {
     // ETAが同じ駅を指すときのみ効く確認的な緩和で、精度が良い通常時(≤200m)は
     // この分岐に入らず到着判定は一切変わらない。etaPhaseAtom は毎秒更新されるため
     // 再レンダーを避けて非リアクティブに参照し、測位更新時の再評価で拾う。
+    //
+    // 前方駅限定: アンカーが DEPARTED(=発車を観測済み)のときだけ緩和する。
+    // AT_STATION アンカーから出る DWELLING は必ず自駅であり、これを緩和すると
+    // その駅の到着圏が広がって arrived が張り付く→DEPARTED が記録されず→フェーズが
+    // 自駅DWELLINGに固定される、という自己強化ロック(始発駅から進めない)に陥る。
+    // DEPARTED アンカーから出る DWELLING は前方の次駅なので、発車後の次駅到着検出
+    // という本来の目的だけを助け、停車中の駅を過剰に保持しない。
     let arrivedRadius = effectiveArrivedThreshold;
     if (
       isEtaAssistEnabled() &&
       accuracy != null &&
       accuracy > BAD_ACCURACY_THRESHOLD
     ) {
+      const anchor = store.get(etaAnchorAtom);
       const phase = store.get(etaPhaseAtom);
-      if (phase?.kind === 'DWELLING' && phase.stationId === nearestStation.id) {
+      if (
+        anchor?.kind === 'DEPARTED' &&
+        phase?.kind === 'DWELLING' &&
+        phase.stationId === nearestStation.id
+      ) {
         arrivedRadius =
           arrivedThreshold + Math.min(accuracy * 0.5, ETA_ARRIVED_BONUS_CAP);
       }
