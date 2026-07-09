@@ -3,10 +3,7 @@ import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
-import {
-  etaAnchorAtom,
-  etaFallbackActiveAtom,
-} from '../store/atoms/etaFallback';
+import { etaAnchorAtom } from '../store/atoms/etaFallback';
 import {
   arrivedAtom,
   selectedBoundAtom,
@@ -26,13 +23,11 @@ const renderWithStore = (
     arrived = true,
     station = stationA as Station | null,
     selectedBound = boundStation as Station | null,
-    etaFallbackActive = false,
   } = {}
 ) => {
   store.set(arrivedAtom, arrived);
   store.set(stationAtom, station);
   store.set(selectedBoundAtom, selectedBound);
-  store.set(etaFallbackActiveAtom, etaFallbackActive);
 
   const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Provider store={store}>{children}</Provider>
@@ -75,7 +70,7 @@ describe('useEtaAnchor', () => {
     });
   });
 
-  it('arrived が true→false に遷移すると DEPARTED が一発記録され、その後falseのままでは上書きされない', () => {
+  it('arrived true→false 遷移で DEPARTED が一発記録され、その後falseのままでは上書きされない', () => {
     jest.spyOn(Date, 'now').mockReturnValue(2_000_000);
     const store = createStore();
 
@@ -104,32 +99,6 @@ describe('useEtaAnchor', () => {
       kind: 'DEPARTED',
       observedAtMs: 2_001_000,
     });
-  });
-
-  it('etaFallbackActiveAtom が true の間は記録されない', () => {
-    jest.spyOn(Date, 'now').mockReturnValue(3_000_000);
-    const store = createStore();
-
-    renderWithStore(store, {
-      arrived: true,
-      station: stationA,
-      etaFallbackActive: true,
-    });
-
-    expect(store.get(etaAnchorAtom)).toBeNull();
-
-    jest.spyOn(Date, 'now').mockReturnValue(3_005_000);
-    act(() => {
-      jest.advanceTimersByTime(AT_STATION_REFRESH_INTERVAL_MS);
-    });
-
-    expect(store.get(etaAnchorAtom)).toBeNull();
-
-    // 発車遷移が起きても、フォールバック活性中は記録しない
-    act(() => {
-      store.set(arrivedAtom, false);
-    });
-    expect(store.get(etaAnchorAtom)).toBeNull();
   });
 
   it('selectedBound が null になると anchor が null にクリアされる', () => {

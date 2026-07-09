@@ -10,7 +10,7 @@ import {
   isForceNotArrivedOnLowAccuracyEnabled,
 } from '~/lib/remoteConfig';
 import { store } from '~/store';
-import { etaFallbackActiveAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
+import { etaPhaseAtom } from '~/store/atoms/etaFallback';
 import {
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -52,9 +52,6 @@ export const useRefreshStation = (): void => {
   const setNavigation = useSetAtom(navigationState);
   const location = useAtomValue(locationAtom);
   const isAccuracyOutlier = useAtomValue(locationAccuracyOutlierAtom);
-  // ETAフォールバック(R2)活性中は本フックの状態書き込みを停止し、ETA駆動と
-  // 凍結座標基準の判定が同一atomを奪い合う2ライター競合を防ぐ。
-  const etaFallbackActive = useAtomValue(etaFallbackActiveAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
   const accuracy = location?.coords.accuracy;
@@ -217,7 +214,7 @@ export const useRefreshStation = (): void => {
   );
 
   useEffect(() => {
-    if (!canGoForward || etaFallbackActive) {
+    if (!canGoForward) {
       return;
     }
 
@@ -250,7 +247,6 @@ export const useRefreshStation = (): void => {
     }
   }, [
     canGoForward,
-    etaFallbackActive,
     isApproaching,
     isArrived,
     approachingStation,
@@ -269,7 +265,6 @@ export const useRefreshStation = (): void => {
     }
 
     if (
-      etaFallbackActive ||
       !wrongDirectionNotifyEnabled ||
       (!isWrongDirection && !isLoopLineWrongDirection) ||
       nextStationId == null ||
@@ -287,7 +282,6 @@ export const useRefreshStation = (): void => {
     }).catch(() => {});
     lastNotifiedWrongDirectionStationIdRef.current = nextStationId;
   }, [
-    etaFallbackActive,
     isWrongDirection,
     isLoopLineWrongDirection,
     nextStationId,
@@ -295,7 +289,7 @@ export const useRefreshStation = (): void => {
   ]);
 
   useEffect(() => {
-    if (!nearestStation || etaFallbackActive) {
+    if (!nearestStation) {
       return;
     }
 
@@ -325,12 +319,5 @@ export const useRefreshStation = (): void => {
           : prev
       );
     }
-  }, [
-    etaFallbackActive,
-    isApproaching,
-    isArrived,
-    nearestStation,
-    setNavigation,
-    setStation,
-  ]);
+  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
 };
