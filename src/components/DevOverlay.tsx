@@ -21,11 +21,7 @@ import {
 } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
-import {
-  etaAnchorAtom,
-  etaFallbackActiveAtom,
-  etaPhaseAtom,
-} from '~/store/atoms/etaFallback';
+import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -358,10 +354,9 @@ const DevOverlay: React.FC = () => {
   const isBackgroundLocationTracking = useAtomValue(
     backgroundLocationTrackingAtom
   );
-  // ETAフォールバックの診断表示。有効フラグ(リモート設定)は非リアクティブなgetter、
-  // R2の稼働状態・推定フェーズ・アンカーはatomから購読する。
+  // ETA補助の診断表示。有効フラグ(リモート設定/手動トグル)は非リアクティブなgetter、
+  // 推定フェーズ・アンカーはatomから購読する。
   const etaAssistEnabled = isEtaAssistEnabled();
-  const isEtaFallbackActive = useAtomValue(etaFallbackActiveAtom);
   const etaPhase = useAtomValue(etaPhaseAtom);
   const etaAnchor = useAtomValue(etaAnchorAtom);
 
@@ -415,10 +410,8 @@ const DevOverlay: React.FC = () => {
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
   const telemetryValue = isTelemetryEnabled ? 'ON' : 'OFF';
   const backgroundValue = isBackgroundLocationTracking ? 'ON' : 'OFF';
-  // 稼働中は現在フェーズ(RUNNING/APPROACHING/DWELLING)を、非稼働時は IDLE を表示する。
-  const etaFallbackValue = isEtaFallbackActive
-    ? (etaPhase?.kind ?? 'ACTIVE')
-    : 'IDLE';
+  // ETA推定フェーズ(RUNNING/APPROACHING/DWELLING)を表示。フェーズ未推定時は IDLE。
+  const etaFallbackValue = etaPhase?.kind ?? 'IDLE';
   // 推定対象の駅ID(走行/接近中は目標駅、停車中は当該駅)。
   const etaPhaseTargetId =
     etaPhase == null
@@ -832,33 +825,37 @@ const DevOverlay: React.FC = () => {
                   />
                 </View>
 
-                <View style={styles.landscapeSubGrid}>
-                  <MetricCard
-                    label="ETA FALLBACK"
-                    value={etaFallbackValue}
-                    meta={etaFallbackMeta}
-                    style={[{ width: leftMetricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-fallback-value"
-                    metaTestID="dev-overlay-eta-fallback-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={[
-                      metricValueStyle,
-                      isEtaFallbackActive && styles.metricValueWarning,
-                    ]}
-                    metaStyle={metricMetaStyle}
-                  />
-                  <MetricCard
-                    label="ETA ANCHOR"
-                    value={etaAnchorValue}
-                    meta={etaAnchorMeta}
-                    style={[{ width: leftMetricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-anchor-value"
-                    metaTestID="dev-overlay-eta-anchor-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
-                </View>
+                {etaAssistEnabled ? (
+                  <View style={styles.landscapeSubGrid}>
+                    <MetricCard
+                      label="ETA FALLBACK"
+                      value={etaFallbackValue}
+                      meta={etaFallbackMeta}
+                      style={[{ width: leftMetricWidth }, metricCardStyle]}
+                      valueTestID="dev-overlay-eta-fallback-value"
+                      metaTestID="dev-overlay-eta-fallback-meta"
+                      labelStyle={metricLabelStyle}
+                      valueStyle={[
+                        metricValueStyle,
+                        etaPhase != null &&
+                          isAccuracyWarning &&
+                          styles.metricValueWarning,
+                      ]}
+                      metaStyle={metricMetaStyle}
+                    />
+                    <MetricCard
+                      label="ETA ANCHOR"
+                      value={etaAnchorValue}
+                      meta={etaAnchorMeta}
+                      style={[{ width: leftMetricWidth }, metricCardStyle]}
+                      valueTestID="dev-overlay-eta-anchor-value"
+                      metaTestID="dev-overlay-eta-anchor-meta"
+                      labelStyle={metricLabelStyle}
+                      valueStyle={metricValueStyle}
+                      metaStyle={metricMetaStyle}
+                    />
+                  </View>
+                ) : null}
 
                 <Typography style={[styles.footerText, footerTextStyle]}>
                   LIVE SENSOR TRACE / INTERNAL BUILD
@@ -928,31 +925,37 @@ const DevOverlay: React.FC = () => {
                     valueStyle={metricValueStyle}
                     metaStyle={metricMetaStyle}
                   />
-                  <MetricCard
-                    label="ETA FALLBACK"
-                    value={etaFallbackValue}
-                    meta={etaFallbackMeta}
-                    style={[{ width: metricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-fallback-value"
-                    metaTestID="dev-overlay-eta-fallback-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={[
-                      metricValueStyle,
-                      isEtaFallbackActive && styles.metricValueWarning,
-                    ]}
-                    metaStyle={metricMetaStyle}
-                  />
-                  <MetricCard
-                    label="ETA ANCHOR"
-                    value={etaAnchorValue}
-                    meta={etaAnchorMeta}
-                    style={[{ width: metricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-eta-anchor-value"
-                    metaTestID="dev-overlay-eta-anchor-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
+                  {etaAssistEnabled ? (
+                    <>
+                      <MetricCard
+                        label="ETA FALLBACK"
+                        value={etaFallbackValue}
+                        meta={etaFallbackMeta}
+                        style={[{ width: metricWidth }, metricCardStyle]}
+                        valueTestID="dev-overlay-eta-fallback-value"
+                        metaTestID="dev-overlay-eta-fallback-meta"
+                        labelStyle={metricLabelStyle}
+                        valueStyle={[
+                          metricValueStyle,
+                          etaPhase != null &&
+                            isAccuracyWarning &&
+                            styles.metricValueWarning,
+                        ]}
+                        metaStyle={metricMetaStyle}
+                      />
+                      <MetricCard
+                        label="ETA ANCHOR"
+                        value={etaAnchorValue}
+                        meta={etaAnchorMeta}
+                        style={[{ width: metricWidth }, metricCardStyle]}
+                        valueTestID="dev-overlay-eta-anchor-value"
+                        metaTestID="dev-overlay-eta-anchor-meta"
+                        labelStyle={metricLabelStyle}
+                        valueStyle={metricValueStyle}
+                        metaStyle={metricMetaStyle}
+                      />
+                    </>
+                  ) : null}
                 </View>
               </View>
             )}

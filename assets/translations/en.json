@@ -327,5 +327,7 @@
   "portraitModeTitle": "Portrait Mode",
   "portraitModeDescription": "When enabled, the running screen switches to a layout optimized for portrait orientation while you hold your device upright.",
   "telemetryDescription": "Your device's geographic coordinates are sent to our analytics server. The information is used only for analytics.",
+  "etaAssistTitle": "Improve arrival detection",
+  "etaAssistDescription": "When enabled, in sections where GPS accuracy drops such as subways, the app uses the server's estimated arrival times (ETA) to assist arrival detection. GPS remains the source of truth for arrival and current location; ETA is only an aid.",
   "passStationLabel": "Pass"
 }
