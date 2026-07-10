@@ -5,7 +5,10 @@ import {
   setLocationAccuracyOutlier,
   setRawLocation,
 } from '~/store/atoms/location';
-import { handleTrackingLocation } from './handleTrackingLocation';
+import {
+  handleTrackingLocation,
+  resetTrackingLocationDedup,
+} from './handleTrackingLocation';
 
 jest.mock('~/store/atoms/location', () => ({
   setLocation: jest.fn(),
@@ -24,7 +27,10 @@ const mockSetLocation = setLocation as jest.Mock;
 const mockSetRawLocation = setRawLocation as jest.Mock;
 const mockSetLocationAccuracyOutlier = setLocationAccuracyOutlier as jest.Mock;
 
-const makeLocation = (accuracy: number | null): Location.LocationObject => ({
+const makeLocation = (
+  accuracy: number | null,
+  timestamp = 1000
+): Location.LocationObject => ({
   coords: {
     latitude: 35.0,
     longitude: 139.0,
@@ -34,13 +40,14 @@ const makeLocation = (accuracy: number | null): Location.LocationObject => ({
     heading: 0,
     speed: 0,
   },
-  timestamp: 1000,
+  timestamp,
 });
 
 describe('handleTrackingLocation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockIsDevApp = false;
+    resetTrackingLocationDedup();
   });
 
   it('精度がMAX_PERMIT_ACCURACY以下ならsetLocationに渡す（外れ値フラグの解除はsetLocationに委譲）', () => {
@@ -84,5 +91,51 @@ describe('handleTrackingLocation', () => {
 
     expect(mockSetRawLocation).not.toHaveBeenCalled();
     expect(mockSetLocation).toHaveBeenCalledWith(loc);
+  });
+
+  describe('重複・順序逆転した測位の破棄（Android 16の2系統配信対策）', () => {
+    it('同一タイムスタンプの測位は2回目以降を破棄する', () => {
+      const loc = makeLocation(30, 1000);
+      handleTrackingLocation(loc);
+      handleTrackingLocation({ ...loc });
+
+      expect(mockSetLocation).toHaveBeenCalledTimes(1);
+    });
+
+    it('処理済みより古いタイムスタンプの測位（遅延バッチ再配信）は破棄する', () => {
+      handleTrackingLocation(makeLocation(30, 5000));
+      handleTrackingLocation(makeLocation(30, 3000));
+
+      expect(mockSetLocation).toHaveBeenCalledTimes(1);
+      expect(mockSetLocation).toHaveBeenCalledWith(
+        expect.objectContaining({ timestamp: 5000 })
+      );
+    });
+
+    it('新しいタイムスタンプの測位は通常どおり処理する', () => {
+      handleTrackingLocation(makeLocation(30, 1000));
+      handleTrackingLocation(makeLocation(30, 2000));
+
+      expect(mockSetLocation).toHaveBeenCalledTimes(2);
+    });
+
+    it('破棄した測位は生の値としても記録しない（DevOverlayにも重複を流さない）', () => {
+      mockIsDevApp = true;
+      const loc = makeLocation(30, 1000);
+      handleTrackingLocation(loc);
+      handleTrackingLocation({ ...loc });
+
+      expect(mockSetRawLocation).toHaveBeenCalledTimes(1);
+    });
+
+    it('システム時計が巻き戻された場合はガードをリセットして測位を受理する', () => {
+      // 処理済みタイムスタンプが現在時刻より大きく未来 = 時計巻き戻り発生とみなす
+      const futureTs = Date.now() + 60_000;
+      handleTrackingLocation(makeLocation(30, futureTs));
+      // 巻き戻り後の測位（現在時刻ベース）は futureTs より古いが、凍結せず受理される
+      handleTrackingLocation(makeLocation(30, Date.now()));
+
+      expect(mockSetLocation).toHaveBeenCalledTimes(2);
+    });
   });
 });
