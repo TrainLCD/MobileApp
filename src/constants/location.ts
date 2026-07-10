@@ -2,10 +2,10 @@ import * as Location from 'expo-location';
 
 export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
 export const LOCATION_ACCURACY = Location.Accuracy.Highest;
-// 省電力測位モードではGPSを常時要求しないBalancedを使用する。Androidでは
-// PRIORITY_BALANCED_POWER_ACCURACY、iOSではkCLLocationAccuracyHundredMetersに対応する。
-// 到着判定は測位精度を加味した100m以上の圏内判定なので、粒度を下げても判定可能。
-export const LOCATION_ACCURACY_POWER_SAVING = Location.Accuracy.Balanced;
+// 省電力測位モードでも駅判定の信頼性を維持するためHighを使用する。iOSでは
+// kCLLocationAccuracyBestからNearestTenMetersへ一段下がる。AndroidではHighestと
+// 同じ高精度プロバイダを維持し、更新間隔の緩和によって電池消費を抑える。
+export const LOCATION_ACCURACY_POWER_SAVING = Location.Accuracy.High;
 export const LOCATION_DISTANCE_INTERVAL = 10;
 export const LOCATION_TIME_INTERVAL = 5000;
 export const LOCATION_DISTANCE_INTERVAL_POWER_SAVING = 25;

@@ -402,6 +402,7 @@ describe('useStartBackgroundLocationUpdates', () => {
         LOCATION_TASK_NAME,
         expect.objectContaining({
           ...LOCATION_TASK_OPTIONS_POWER_SAVING,
+          accuracy: Location.Accuracy.High,
           activityType: Location.ActivityType.OtherNavigation,
           foregroundService: expect.objectContaining({
             killServiceOnDestroy: true,
@@ -438,6 +439,7 @@ describe('useStartBackgroundLocationUpdates', () => {
         LOCATION_TASK_NAME,
         expect.objectContaining({
           ...LOCATION_TASK_OPTIONS_POWER_SAVING,
+          accuracy: Location.Accuracy.High,
           foregroundService: expect.objectContaining({
             killServiceOnDestroy: true,
           }),
