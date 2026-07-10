@@ -2,13 +2,14 @@ import * as Location from 'expo-location';
 
 export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
 export const LOCATION_ACCURACY = Location.Accuracy.Highest;
-// 省電力測位モード(実験的機能)時の要求精度。iOSでは kCLLocationAccuracyBest →
-// kCLLocationAccuracyNearestTenMeters(約10m粒度)へ一段下がり電池消費を抑えられる。
-// Androidでは Highest / High とも PRIORITY_HIGH_ACCURACY にマップされるため挙動は変わらない。
-// 到着判定の閾値は最小でも100m+精度ボーナスのため、10m粒度でも判定精度への実害はない想定。
+// 省電力測位モードでも駅判定の信頼性を維持するためHighを使用する。iOSでは
+// kCLLocationAccuracyBestからNearestTenMetersへ一段下がる。AndroidではHighestと
+// 同じ高精度プロバイダを維持し、更新間隔の緩和によって電池消費を抑える。
 export const LOCATION_ACCURACY_POWER_SAVING = Location.Accuracy.High;
 export const LOCATION_DISTANCE_INTERVAL = 10;
 export const LOCATION_TIME_INTERVAL = 5000;
+export const LOCATION_DISTANCE_INTERVAL_POWER_SAVING = 25;
+export const LOCATION_TIME_INTERVAL_POWER_SAVING = 10000;
 
 // 最大許容精度(m)のフォールバック既定値。実効値は Worker の /config/remote が返す
 // max_permit_accuracy を参照する（src/lib/remoteConfig.ts の getMaxPermitAccuracy）。
@@ -24,6 +25,12 @@ export const LOCATION_WATCH_OPTIONS: Location.LocationOptions = {
   timeInterval: LOCATION_TIME_INTERVAL,
 } as const;
 
+export const LOCATION_WATCH_OPTIONS_POWER_SAVING: Location.LocationOptions = {
+  accuracy: LOCATION_ACCURACY_POWER_SAVING,
+  distanceInterval: LOCATION_DISTANCE_INTERVAL_POWER_SAVING,
+  timeInterval: LOCATION_TIME_INTERVAL_POWER_SAVING,
+} as const;
+
 export const LOCATION_TASK_OPTIONS: Location.LocationTaskOptions = {
   ...LOCATION_WATCH_OPTIONS,
   // expo-task-managerはバックグラウンドでJobScheduler経由でJS側にデータを配信する。
@@ -34,3 +41,14 @@ export const LOCATION_TASK_OPTIONS: Location.LocationTaskOptions = {
   deferredUpdatesDistance: 0,
   pausesUpdatesAutomatically: false,
 } as const;
+
+export const LOCATION_TASK_OPTIONS_POWER_SAVING: Location.LocationTaskOptions =
+  {
+    ...LOCATION_WATCH_OPTIONS_POWER_SAVING,
+    // 停車中はiOSに測位ハードウェアの休止を許可し、移動再開時にOtherNavigationの
+    // 活動種別を手掛かりとして自動再開させる。
+    pausesUpdatesAutomatically: true,
+    // バッチ間隔も更新間隔に合わせ、バックグラウンドでのJS起床回数を半減する。
+    deferredUpdatesInterval: LOCATION_TIME_INTERVAL_POWER_SAVING,
+    deferredUpdatesDistance: 0,
+  } as const;
