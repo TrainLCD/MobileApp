@@ -21,13 +21,14 @@ import {
 } from '~/hooks';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
-import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
+import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
   rawLocationAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
 
@@ -355,9 +356,10 @@ const DevOverlay: React.FC = () => {
     backgroundLocationTrackingAtom
   );
   // ETA補助の診断表示。有効フラグ(リモート設定/手動トグル)は非リアクティブなgetter、
-  // 推定フェーズ・アンカーはatomから購読する。
+  // アンカーはatomから購読する。推定フェーズは常駐タイマーで公開されなくなったため、
+  // DevOverlay自身の1秒ティック(nowTick)を評価時刻としてオンデマンド計算する。
   const etaAssistEnabled = isEtaAssistEnabled();
-  const etaPhase = useAtomValue(etaPhaseAtom);
+  const etaPhase = useMemo(() => getEtaPhaseNow(nowTick), [nowTick]);
   const etaAnchor = useAtomValue(etaAnchorAtom);
 
   const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;

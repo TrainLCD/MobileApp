@@ -12,7 +12,8 @@ import * as useThresholdModule from '~/hooks/useThreshold';
 import * as useWrongDirectionDetectorModule from '~/hooks/useWrongDirectionDetector';
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { store } from '~/store';
-import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
+import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import * as etaPhaseNowModule from '~/utils/etaPhaseNow';
 import sendNotificationAsync from '~/utils/native/ios/sensitiveNotificationMoudle';
 
 jest.mock('jotai', () => {
@@ -89,9 +90,8 @@ describe('useRefreshStation', () => {
   afterEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
-    // R1テストで設定したETAアンカー/フェーズを既定(null)へ戻し、他テストへ漏れないようにする
+    // R1テストで設定したETAアンカーを既定(null)へ戻し、他テストへ漏れないようにする
     store.set(etaAnchorAtom, null);
-    store.set(etaPhaseAtom, null);
   });
 
   it('runs without crashing with basic mocks', () => {
@@ -517,7 +517,10 @@ describe('useRefreshStation', () => {
       kind: anchorKind,
       observedAtMs: 0,
     });
-    store.set(etaPhaseAtom, { kind: 'DWELLING', stationId });
+    // フェーズは常駐atomではなくオンデマンド計算になったため、計算結果をスタブする
+    jest
+      .spyOn(etaPhaseNowModule, 'getEtaPhaseNow')
+      .mockReturnValue({ kind: 'DWELLING', stationId });
 
     renderHook(() => useRefreshStation(), {
       wrapper: ({ children }) => <Provider>{children}</Provider>,

@@ -2,6 +2,11 @@ import * as Location from 'expo-location';
 
 export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
 export const LOCATION_ACCURACY = Location.Accuracy.Highest;
+// 省電力測位モード(実験的機能)時の要求精度。iOSでは kCLLocationAccuracyBest →
+// kCLLocationAccuracyNearestTenMeters(約10m粒度)へ一段下がり電池消費を抑えられる。
+// Androidでは Highest / High とも PRIORITY_HIGH_ACCURACY にマップされるため挙動は変わらない。
+// 到着判定の閾値は最小でも100m+精度ボーナスのため、10m粒度でも判定精度への実害はない想定。
+export const LOCATION_ACCURACY_POWER_SAVING = Location.Accuracy.High;
 export const LOCATION_DISTANCE_INTERVAL = 10;
 export const LOCATION_TIME_INTERVAL = 5000;
 

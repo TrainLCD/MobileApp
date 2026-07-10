@@ -10,7 +10,7 @@ import {
   isForceNotArrivedOnLowAccuracyEnabled,
 } from '~/lib/remoteConfig';
 import { store } from '~/store';
-import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
+import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -19,6 +19,7 @@ import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import { getEtaPhaseNow } from '../utils/etaPhaseNow';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useApproachingStation } from './useApproachingStation';
@@ -130,8 +131,9 @@ export const useRefreshStation = (): void => {
     // R1(到着圏の緩和): 精度劣化(>200m)時に、ETA仮想時計が最寄り停車駅での
     // 停車(DWELLING)を示す場合に限り、その駅の到着圏を広げる。GPSの最寄り駅と
     // ETAが同じ駅を指すときのみ効く確認的な緩和で、精度が良い通常時(≤200m)は
-    // この分岐に入らず到着判定は一切変わらない。etaPhaseAtom は毎秒更新されるため
-    // 再レンダーを避けて非リアクティブに参照し、測位更新時の再評価で拾う。
+    // この分岐に入らず到着判定は一切変わらない。フェーズは常駐タイマーで公開せず、
+    // この分岐に入った瞬間に getEtaPhaseNow でオンデマンド計算する(毎秒タイマーより
+    // 評価時点が新しく、精度劣化時以外は計算コスト自体が発生しない)。
     //
     // 前方駅限定: アンカーが DEPARTED(=発車を観測済み)のときだけ緩和する。
     // AT_STATION アンカーから出る DWELLING は必ず自駅であり、これを緩和すると
@@ -146,14 +148,15 @@ export const useRefreshStation = (): void => {
       accuracy > BAD_ACCURACY_THRESHOLD
     ) {
       const anchor = store.get(etaAnchorAtom);
-      const phase = store.get(etaPhaseAtom);
-      if (
-        anchor?.kind === 'DEPARTED' &&
-        phase?.kind === 'DWELLING' &&
-        phase.stationId === nearestStation.id
-      ) {
-        arrivedRadius =
-          arrivedThreshold + Math.min(accuracy * 0.5, ETA_ARRIVED_BONUS_CAP);
+      if (anchor?.kind === 'DEPARTED') {
+        const phase = getEtaPhaseNow();
+        if (
+          phase?.kind === 'DWELLING' &&
+          phase.stationId === nearestStation.id
+        ) {
+          arrivedRadius =
+            arrivedThreshold + Math.min(accuracy * 0.5, ETA_ARRIVED_BONUS_CAP);
+        }
       }
     }
 

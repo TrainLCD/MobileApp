@@ -52,12 +52,6 @@ jest.mock('~/hooks/useIsPassing', () => ({
 jest.mock('~/hooks/useTelemetryEnabled', () => ({
   useTelemetryEnabled: jest.fn(),
 }));
-jest.mock('~/utils/native/android/gnssModule', () => ({
-  subscribeGnss: jest.fn((_callback) => {
-    // No-op for tests
-    return () => {};
-  }),
-}));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <Provider
