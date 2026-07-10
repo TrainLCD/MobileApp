@@ -55,6 +55,7 @@ export const playAudio = (options: {
   let settled = false;
   let stalledTicks = 0;
   let lastCurrentTime = -1;
+  let lastStatusPosition = 0;
   let resumeAttempts = 0;
   const maxStalledTicks = Math.ceil(STALL_TIMEOUT_MS / STALL_CHECK_INTERVAL_MS);
 
@@ -68,7 +69,20 @@ export const playAudio = (options: {
     reasonForWaitingToPlay?: string;
   }) => {
     const duration = status.duration || player.duration || 0;
-    const position = status.currentTime ?? player.currentTime ?? 0;
+    const reportedPosition = status.currentTime ?? player.currentTime ?? 0;
+    // expo-audio (iOS) は AVPlayerItemDidPlayToEndTime を受けると、実際の
+    // 停止位置にかかわらず完了イベントの currentTime を duration で上書きする。
+    // player.currentTime 自体は AVPlayer の実位置を返すため、まずそちらを参照し、
+    // 0 にリセット済みなら通常の状態更新で最後に観測した実再生位置を使う。
+    const playerPosition = player.currentTime ?? 0;
+    const position =
+      playerPosition > 0
+        ? playerPosition
+        : lastStatusPosition > 0 &&
+            duration > 0 &&
+            reportedPosition >= duration - FINISH_END_EPSILON_SEC
+          ? lastStatusPosition
+          : reportedPosition;
     const reachedEnd =
       duration <= 0 || position >= duration - FINISH_END_EPSILON_SEC;
 
@@ -117,6 +131,11 @@ export const playAudio = (options: {
       } else if ('error' in status && status.error) {
         console.warn('[ttsAudioPlayer] playback error:', status.error);
         settle(() => onError(status.error));
+      } else if (
+        Number.isFinite(status.currentTime) &&
+        status.currentTime >= 0
+      ) {
+        lastStatusPosition = status.currentTime;
       }
     }
   );
