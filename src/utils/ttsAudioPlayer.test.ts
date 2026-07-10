@@ -311,7 +311,7 @@ describe('playAudio', () => {
     // iOS は早期終了前の実位置を通常更新で通知した後、完了イベントだけ
     // currentTime=duration に上書きする。この終端値を信用すると英語へ進んでしまう。
     mock.emitStatus({ currentTime: 10, duration: 30 });
-    mock.player.currentTime = 0;
+    mock.player.currentTime = 10;
     mock.emitStatus({ didJustFinish: true, currentTime: 30, duration: 30 });
 
     expect(onFinish).not.toHaveBeenCalled();
@@ -326,6 +326,31 @@ describe('playAudio', () => {
     warnSpy.mockRestore();
   });
 
+  it('プレイヤー位置が0にリセットされた場合は直前の状態位置から再開する', () => {
+    const mock = createMockPlayer({ playing: true, duration: 30 });
+    mockCreateAudioPlayer.mockReturnValue(mock.player);
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const onFinish = jest.fn();
+    const onError = jest.fn();
+    const handle = playAudio({
+      uri: 'ios-reset-early-finish.mp3',
+      onFinish,
+      onError,
+    });
+
+    mock.emitStatus({ currentTime: 10, duration: 30 });
+    mock.player.currentTime = 0;
+    mock.emitStatus({ didJustFinish: true, currentTime: 30, duration: 30 });
+
+    expect(mock.player.seekTo).toHaveBeenCalledWith(10);
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+
+    handle.listener.remove();
+    warnSpy.mockRestore();
+  });
+
   it('直前の実位置が終端付近なら上書きされた完了通知を受理する', () => {
     const mock = createMockPlayer({ playing: true, duration: 30 });
     mockCreateAudioPlayer.mockReturnValue(mock.player);
@@ -335,7 +360,7 @@ describe('playAudio', () => {
     playAudio({ uri: 'ios-complete.mp3', onFinish, onError });
 
     mock.emitStatus({ currentTime: 29.9, duration: 30 });
-    mock.player.currentTime = 0;
+    mock.player.currentTime = 30;
     mock.emitStatus({ didJustFinish: true, currentTime: 30, duration: 30 });
 
     expect(onFinish).toHaveBeenCalledTimes(1);
