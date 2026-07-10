@@ -311,7 +311,7 @@ describe('playAudio', () => {
     // iOS は早期終了前の実位置を通常更新で通知した後、完了イベントだけ
     // currentTime=duration に上書きする。この終端値を信用すると英語へ進んでしまう。
     mock.emitStatus({ currentTime: 10, duration: 30 });
-    mock.player.currentTime = 10;
+    mock.player.currentTime = 0;
     mock.emitStatus({ didJustFinish: true, currentTime: 30, duration: 30 });
 
     expect(onFinish).not.toHaveBeenCalled();
@@ -335,7 +335,7 @@ describe('playAudio', () => {
     playAudio({ uri: 'ios-complete.mp3', onFinish, onError });
 
     mock.emitStatus({ currentTime: 29.9, duration: 30 });
-    mock.player.currentTime = 30;
+    mock.player.currentTime = 0;
     mock.emitStatus({ didJustFinish: true, currentTime: 30, duration: 30 });
 
     expect(onFinish).toHaveBeenCalledTimes(1);
