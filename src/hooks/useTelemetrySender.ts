@@ -9,10 +9,6 @@ import {
 import { z } from 'zod';
 import { TELEMETRY_THROTTLE_MS } from '~/constants/telemetry';
 import { locationAtom } from '~/store/atoms/location';
-import {
-  type GnssState,
-  subscribeGnss,
-} from '~/utils/native/android/gnssModule';
 import { sanitizeTelemetryMessage } from '~/utils/sanitizeTelemetryMessage';
 import { approachingAtom, arrivedAtom } from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
@@ -62,18 +58,9 @@ export const useTelemetrySender = (
   token = EXPERIMENTAL_TELEMETRY_TOKEN
 ) => {
   const lastSentTelemetryRef = useRef<number>(0);
-  const gnssRef = useRef<GnssState | null>(null);
 
   const station = useCurrentStation();
   const line = useCurrentLine();
-
-  useEffect(
-    () =>
-      subscribeGnss((gnss) => {
-        gnssRef.current = gnss;
-      }),
-    []
-  );
 
   const coords = useAtomValue(locationAtom)?.coords;
 
