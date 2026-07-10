@@ -91,7 +91,9 @@ export const useStartBackgroundLocationUpdates = () => {
             foregroundService: {
               notificationTitle: translate('bgAlertTitle'),
               notificationBody: translate('bgAlertContent'),
-              // 省電力モードでは、ユーザーがアプリを終了した後まで測位を残さない。
+              // Androidの履歴画面からアプリのタスクが削除されたとき、Expoの
+              // フォアグラウンド測位サービスと常駐通知を停止する。このオプションは
+              // stopLocationUpdatesAsyncを呼ばず、測位タスク自体の登録解除は保証しない。
               killServiceOnDestroy: powerSavingEnabled,
             },
           });
