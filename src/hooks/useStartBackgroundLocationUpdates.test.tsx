@@ -416,6 +416,20 @@ describe('useStartBackgroundLocationUpdates', () => {
         expect.any(Function)
       );
     });
+
+    test('should apply default accuracy to foreground watchPositionAsync when disabled', async () => {
+      mockPowerSavingLocationEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(false);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
+        { ...LOCATION_WATCH_OPTIONS, accuracy: Location.Accuracy.Highest },
+        expect.any(Function)
+      );
+    });
   });
 
   describe('foreground location watch (fallback)', () => {
