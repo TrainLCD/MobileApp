@@ -4,18 +4,24 @@ import {
   LOCATION_START_MAX_RETRIES,
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
+  LOCATION_TASK_OPTIONS_POWER_SAVING,
   LOCATION_WATCH_OPTIONS,
+  LOCATION_WATCH_OPTIONS_POWER_SAVING,
 } from '../constants';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationUpdates';
 
 let mockNeedsJobSchedulerBypass = false;
+let mockSystemLowPowerMode = false;
 jest.mock('../constants/native', () => ({
   get NEEDS_JOBSCHEDULER_BYPASS() {
     return mockNeedsJobSchedulerBypass;
   },
 }));
 
+jest.mock('expo-battery', () => ({
+  useLowPowerMode: () => mockSystemLowPowerMode,
+}));
 jest.mock('expo-location');
 jest.mock('./useLocationPermissionsGranted');
 jest.mock('~/store', () => ({
@@ -79,6 +85,7 @@ describe('useStartBackgroundLocationUpdates', () => {
     jest.clearAllMocks();
     mockAutoModeEnabled = false;
     mockPowerSavingLocationEnabled = false;
+    mockSystemLowPowerMode = false;
     mockNeedsJobSchedulerBypass = false;
     mockStartLocationUpdatesAsync.mockResolvedValue(undefined);
     mockStopLocationUpdatesAsync.mockResolvedValue(undefined);
@@ -375,7 +382,7 @@ describe('useStartBackgroundLocationUpdates', () => {
   });
 
   describe('power saving location mode', () => {
-    test('should request power-saving accuracy for background updates when enabled', async () => {
+    test('should apply the full power-saving profile to background updates when enabled', async () => {
       mockPowerSavingLocationEnabled = true;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
@@ -385,7 +392,13 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME,
-        expect.objectContaining({ accuracy: Location.Accuracy.High })
+        expect.objectContaining({
+          ...LOCATION_TASK_OPTIONS_POWER_SAVING,
+          activityType: Location.ActivityType.OtherNavigation,
+          foregroundService: expect.objectContaining({
+            killServiceOnDestroy: true,
+          }),
+        })
       );
     });
 
@@ -403,7 +416,27 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
     });
 
-    test('should apply power-saving accuracy to foreground watchPositionAsync when enabled', async () => {
+    test('should enable the power-saving profile while the system low-power mode is active', async () => {
+      mockPowerSavingLocationEnabled = false;
+      mockSystemLowPowerMode = true;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining({
+          ...LOCATION_TASK_OPTIONS_POWER_SAVING,
+          foregroundService: expect.objectContaining({
+            killServiceOnDestroy: true,
+          }),
+        })
+      );
+    });
+
+    test('should apply the full power-saving profile to foreground watchPositionAsync when enabled', async () => {
       mockPowerSavingLocationEnabled = true;
       mockUseLocationPermissionsGranted.mockReturnValue(false);
 
@@ -412,7 +445,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       await new Promise(process.nextTick);
 
       expect(mockWatchPositionAsync).toHaveBeenCalledWith(
-        { ...LOCATION_WATCH_OPTIONS, accuracy: Location.Accuracy.High },
+        LOCATION_WATCH_OPTIONS_POWER_SAVING,
         expect.any(Function)
       );
     });
@@ -426,7 +459,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       await new Promise(process.nextTick);
 
       expect(mockWatchPositionAsync).toHaveBeenCalledWith(
-        { ...LOCATION_WATCH_OPTIONS, accuracy: Location.Accuracy.Highest },
+        LOCATION_WATCH_OPTIONS,
         expect.any(Function)
       );
     });

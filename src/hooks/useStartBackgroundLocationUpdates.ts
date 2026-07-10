@@ -1,3 +1,4 @@
+import * as Battery from 'expo-battery';
 import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
@@ -7,13 +8,13 @@ import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { handleTrackingLocation } from '~/utils/handleTrackingLocation';
 import {
-  LOCATION_ACCURACY,
-  LOCATION_ACCURACY_POWER_SAVING,
   LOCATION_START_MAX_RETRIES,
   LOCATION_START_RETRY_BASE_DELAY_MS,
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
+  LOCATION_TASK_OPTIONS_POWER_SAVING,
   LOCATION_WATCH_OPTIONS,
+  LOCATION_WATCH_OPTIONS_POWER_SAVING,
 } from '../constants';
 import { NEEDS_JOBSCHEDULER_BYPASS } from '../constants/native';
 import { translate } from '../translation';
@@ -27,12 +28,19 @@ const wait = (ms: number) =>
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
   const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
-  // 省電力測位モード(実験的機能)。要求精度を一段下げる(実効差はiOSのみ)。
-  // effectの依存に含めることで、トグル切替時は継続測位を新しい精度で開始し直す。
-  const powerSavingEnabled = useAtomValue(powerSavingLocationEnabledAtom);
-  const locationAccuracy = powerSavingEnabled
-    ? LOCATION_ACCURACY_POWER_SAVING
-    : LOCATION_ACCURACY;
+  const systemLowPowerMode = Battery.useLowPowerMode();
+  // 省電力測位モード(実験的機能)。精度と配信頻度を下げ、停車中の自動休止を許可する。
+  // 選択するオブジェクトはモジュール定数なので、effect依存でも参照が安定する。
+  const powerSavingSettingEnabled = useAtomValue(
+    powerSavingLocationEnabledAtom
+  );
+  const powerSavingEnabled = powerSavingSettingEnabled || systemLowPowerMode;
+  const watchOptions = powerSavingEnabled
+    ? LOCATION_WATCH_OPTIONS_POWER_SAVING
+    : LOCATION_WATCH_OPTIONS;
+  const taskOptions = powerSavingEnabled
+    ? LOCATION_TASK_OPTIONS_POWER_SAVING
+    : LOCATION_TASK_OPTIONS;
 
   useEffect(() => {
     if (autoModeEnabled || !bgPermGranted) {
@@ -71,8 +79,7 @@ export const useStartBackgroundLocationUpdates = () => {
           // Androidではフォアグラウンドサービスにより、バックグラウンドでの位置情報更新の
           // スロットリングを回避し、アプリプロセスの生存を維持する（Android 8以降の制約）
           await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-            ...LOCATION_TASK_OPTIONS,
-            accuracy: locationAccuracy,
+            ...taskOptions,
             // NOTE: マップマッチが勝手に行われると電車での経路と大きく異なることがあるはずなので
             // OtherNavigationは必須
             activityType: Location.ActivityType.OtherNavigation,
@@ -80,7 +87,8 @@ export const useStartBackgroundLocationUpdates = () => {
             foregroundService: {
               notificationTitle: translate('bgAlertTitle'),
               notificationBody: translate('bgAlertContent'),
-              killServiceOnDestroy: false,
+              // 省電力モードでは、ユーザーがアプリを終了した後まで測位を残さない。
+              killServiceOnDestroy: powerSavingEnabled,
             },
           });
           // クリーンアップがstartの完了前に実行された場合、
@@ -106,7 +114,7 @@ export const useStartBackgroundLocationUpdates = () => {
             if (NEEDS_JOBSCHEDULER_BYPASS) {
               try {
                 const sub = await Location.watchPositionAsync(
-                  { ...LOCATION_WATCH_OPTIONS, accuracy: locationAccuracy },
+                  watchOptions,
                   handleTrackingLocation
                 );
                 if (cancelled) {
@@ -152,7 +160,13 @@ export const useStartBackgroundLocationUpdates = () => {
         );
       });
     };
-  }, [autoModeEnabled, bgPermGranted, locationAccuracy]);
+  }, [
+    autoModeEnabled,
+    bgPermGranted,
+    powerSavingEnabled,
+    taskOptions,
+    watchOptions,
+  ]);
 
   useEffect(() => {
     let watchPositionSub: Location.LocationSubscription | null = null;
@@ -165,7 +179,7 @@ export const useStartBackgroundLocationUpdates = () => {
     (async () => {
       try {
         const sub = await Location.watchPositionAsync(
-          { ...LOCATION_WATCH_OPTIONS, accuracy: locationAccuracy },
+          watchOptions,
           handleTrackingLocation
         );
         if (cancelled) {
@@ -182,5 +196,5 @@ export const useStartBackgroundLocationUpdates = () => {
       cancelled = true;
       watchPositionSub?.remove();
     };
-  }, [autoModeEnabled, bgPermGranted, locationAccuracy]);
+  }, [autoModeEnabled, bgPermGranted, watchOptions]);
 };
