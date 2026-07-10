@@ -52,7 +52,7 @@ export default {
     },
   },
   ios: {
-    buildNumber: '2739',
+    buildNumber: '2740',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     supportsTablet: true,
@@ -60,7 +60,7 @@ export default {
   android: {
     package: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000526,
+    versionCode: 100000527,
   },
   owner: 'trainlcd',
   experiments: {
