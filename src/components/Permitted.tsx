@@ -46,6 +46,7 @@ import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
 import {
   etaAssistManualEnabledAtom,
   portraitModeEnabledAtom,
+  powerSavingLocationEnabledAtom,
 } from '../store/atoms/experimental';
 import navigationState, {
   autoModeEnabledAtom,
@@ -79,6 +80,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
   const setPortraitModeEnabled = useSetAtom(portraitModeEnabledAtom);
   const setEtaAssistManualEnabled = useSetAtom(etaAssistManualEnabledAtom);
+  const setPowerSavingLocationEnabled = useSetAtom(
+    powerSavingLocationEnabledAtom
+  );
   const { enabled: pictureInPictureEnabled, active: pictureInPictureActive } =
     useAtomValue(pictureInPictureAtom);
   const isAppActive = useIsAppActive();
@@ -443,6 +447,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const etaAssistManualEnabledStr = storage.getString(
         STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED
       );
+      const powerSavingLocationEnabledStr = storage.getString(
+        STORAGE_KEYS.POWER_SAVING_LOCATION_ENABLED
+      );
 
       if (themePreferenceKey) {
         setThemePreference(themePreferenceKey as ThemePreference);
@@ -555,6 +562,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       if (etaAssistManualEnabledStr) {
         setEtaAssistManualEnabled(etaAssistManualEnabledStr === 'true');
       }
+      if (powerSavingLocationEnabledStr) {
+        setPowerSavingLocationEnabled(powerSavingLocationEnabledStr === 'true');
+      }
     };
 
     loadSettings();
@@ -567,6 +577,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setPictureInPicture,
     setPortraitModeEnabled,
     setEtaAssistManualEnabled,
+    setPowerSavingLocationEnabled,
   ]);
 
   useEffect(() => {

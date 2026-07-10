@@ -7,6 +7,7 @@ import { storage } from '~/lib/storage';
 import {
   etaAssistManualEnabledAtom,
   portraitModeEnabledAtom,
+  powerSavingLocationEnabledAtom,
 } from '~/store/atoms/experimental';
 import tuningState from '~/store/atoms/tuning';
 import ExperimentalSettingsScreen from './ExperimentalSettings';
@@ -29,11 +30,13 @@ jest.mock('~/translation', () => ({
 const renderWithStore = (
   portraitModeEnabled: boolean,
   telemetryEnabled = false,
-  etaAssistManualEnabled = false
+  etaAssistManualEnabled = false,
+  powerSavingLocationEnabled = false
 ) => {
   const store = createStore();
   store.set(portraitModeEnabledAtom, portraitModeEnabled);
   store.set(etaAssistManualEnabledAtom, etaAssistManualEnabled);
+  store.set(powerSavingLocationEnabledAtom, powerSavingLocationEnabled);
   store.set(tuningState, (prev) => ({ ...prev, telemetryEnabled }));
 
   const screen = render(
@@ -139,6 +142,33 @@ describe('ExperimentalSettingsScreen', () => {
     expect(store.get(etaAssistManualEnabledAtom)).toBe(false);
     expect(storage.getString(STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED)).not.toBe(
       'true'
+    );
+  });
+
+  it('省電力測位モードをONにするとatomとストレージへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore(false);
+
+    fireEvent.press(getByLabelText('powerSavingLocationTitle'));
+
+    expect(store.get(powerSavingLocationEnabledAtom)).toBe(true);
+    expect(storage.getString(STORAGE_KEYS.POWER_SAVING_LOCATION_ENABLED)).toBe(
+      'true'
+    );
+  });
+
+  it('省電力測位モードをOFFにするとatomとストレージへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore(
+      false,
+      false,
+      false,
+      true
+    );
+
+    fireEvent.press(getByLabelText('powerSavingLocationTitle'));
+
+    expect(store.get(powerSavingLocationEnabledAtom)).toBe(false);
+    expect(storage.getString(STORAGE_KEYS.POWER_SAVING_LOCATION_ENABLED)).toBe(
+      'false'
     );
   });
 
