@@ -6,7 +6,7 @@ import type { Station } from '~/@types/graphql';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import * as remoteConfigModule from '~/lib/remoteConfig';
-import { etaAnchorAtom, etaPhaseAtom } from '~/store/atoms/etaFallback';
+import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -14,6 +14,7 @@ import {
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import DevOverlay, { getDevOverlayDragTranslation } from './DevOverlay';
 
 jest.mock('jotai', () => {
@@ -45,6 +46,11 @@ jest.mock('~/hooks/useTelemetryEnabled', () => ({
   useTelemetryEnabled: jest.fn(() => true),
 }));
 
+// ETA推定フェーズは常駐atomではなくオンデマンド計算になったため、関数ごとモックする
+jest.mock('~/utils/etaPhaseNow', () => ({
+  getEtaPhaseNow: jest.fn(() => null),
+}));
+
 // Import mocked hooks for type safety
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
 
@@ -58,6 +64,9 @@ const mockUseDistanceToNextStation =
   >;
 const mockUseNextStation = useNextStation as jest.MockedFunction<
   typeof useNextStation
+>;
+const mockGetEtaPhaseNow = getEtaPhaseNow as jest.MockedFunction<
+  typeof getEtaPhaseNow
 >;
 
 describe('DevOverlay', () => {
@@ -92,6 +101,7 @@ describe('DevOverlay', () => {
     etaPhase?: unknown;
     etaAnchor?: unknown;
   } = {}) => {
+    mockGetEtaPhaseNow.mockReturnValue(etaPhase as never);
     mockUseAtomValue.mockImplementation((atom) => {
       if (atom === locationAtom) {
         return location as never;
@@ -104,9 +114,6 @@ describe('DevOverlay', () => {
       }
       if (atom === autoModeEnabledAtom) {
         return autoModeEnabled as never;
-      }
-      if (atom === etaPhaseAtom) {
-        return etaPhase as never;
       }
       if (atom === etaAnchorAtom) {
         return etaAnchor as never;

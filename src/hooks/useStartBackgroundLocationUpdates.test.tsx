@@ -32,6 +32,11 @@ jest.mock('~/store/atoms/navigation', () => ({
   default: {},
   autoModeEnabledAtom: { toString: () => 'autoModeEnabledAtom' },
 }));
+jest.mock('~/store/atoms/experimental', () => ({
+  powerSavingLocationEnabledAtom: {
+    toString: () => 'powerSavingLocationEnabledAtom',
+  },
+}));
 
 const mockUseLocationPermissionsGranted =
   useLocationPermissionsGranted as jest.Mock;
@@ -45,11 +50,18 @@ const mockWatchPositionAsync = Location.watchPositionAsync as jest.Mock;
 
 // jotai useAtomValueのモック
 let mockAutoModeEnabled = false;
+let mockPowerSavingLocationEnabled = false;
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
-  useAtomValue: jest.fn((atom: unknown) =>
-    String(atom) === 'autoModeEnabledAtom' ? mockAutoModeEnabled : undefined
-  ),
+  useAtomValue: jest.fn((atom: unknown) => {
+    if (String(atom) === 'autoModeEnabledAtom') {
+      return mockAutoModeEnabled;
+    }
+    if (String(atom) === 'powerSavingLocationEnabledAtom') {
+      return mockPowerSavingLocationEnabled;
+    }
+    return undefined;
+  }),
 }));
 
 describe('useStartBackgroundLocationUpdates', () => {
@@ -66,6 +78,7 @@ describe('useStartBackgroundLocationUpdates', () => {
     // beforeEachでもclearAllMocksを行い、前テストの残留呼び出しを確実にリセットする。
     jest.clearAllMocks();
     mockAutoModeEnabled = false;
+    mockPowerSavingLocationEnabled = false;
     mockNeedsJobSchedulerBypass = false;
     mockStartLocationUpdatesAsync.mockResolvedValue(undefined);
     mockStopLocationUpdatesAsync.mockResolvedValue(undefined);
@@ -358,6 +371,64 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       consoleWarnSpy.mockRestore();
       jest.useRealTimers();
+    });
+  });
+
+  describe('power saving location mode', () => {
+    test('should request power-saving accuracy for background updates when enabled', async () => {
+      mockPowerSavingLocationEnabled = true;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining({ accuracy: Location.Accuracy.High })
+      );
+    });
+
+    test('should request default accuracy for background updates when disabled', async () => {
+      mockPowerSavingLocationEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining({ accuracy: Location.Accuracy.Highest })
+      );
+    });
+
+    test('should apply power-saving accuracy to foreground watchPositionAsync when enabled', async () => {
+      mockPowerSavingLocationEnabled = true;
+      mockUseLocationPermissionsGranted.mockReturnValue(false);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
+        { ...LOCATION_WATCH_OPTIONS, accuracy: Location.Accuracy.High },
+        expect.any(Function)
+      );
+    });
+
+    test('should apply default accuracy to foreground watchPositionAsync when disabled', async () => {
+      mockPowerSavingLocationEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(false);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
+        { ...LOCATION_WATCH_OPTIONS, accuracy: Location.Accuracy.Highest },
+        expect.any(Function)
+      );
     });
   });
 

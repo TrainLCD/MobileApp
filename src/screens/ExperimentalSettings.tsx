@@ -20,6 +20,7 @@ import { isEtaAssistRemoteEnabled } from '~/lib/remoteConfig';
 import {
   etaAssistManualEnabledAtom,
   portraitModeEnabledAtom,
+  powerSavingLocationEnabledAtom,
 } from '~/store/atoms/experimental';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
@@ -107,6 +108,9 @@ const ExperimentalSettingsScreen: React.FC = () => {
   const [etaAssistManualEnabled, setEtaAssistManualEnabled] = useAtom(
     etaAssistManualEnabledAtom
   );
+  const [powerSavingLocationEnabled, setPowerSavingLocationEnabled] = useAtom(
+    powerSavingLocationEnabledAtom
+  );
   const [tuning, setTuning] = useAtom(tuningState);
 
   // Remote Config(マスタースイッチ)が許可していない間は、手動トグルを操作不可にする。
@@ -153,6 +157,23 @@ const ExperimentalSettingsScreen: React.FC = () => {
     setEtaAssistManualEnabled,
     etaAssistRemoteEnabled,
   ]);
+
+  const handleTogglePowerSavingLocation = useCallback(() => {
+    const flag = !powerSavingLocationEnabled;
+    setPowerSavingLocationEnabled(flag);
+    try {
+      storage.set(
+        STORAGE_KEYS.POWER_SAVING_LOCATION_ENABLED,
+        flag ? 'true' : 'false'
+      );
+    } catch (error) {
+      // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
+      // UIと永続値の不整合を防ぐべくatom状態をロールバックする
+      setPowerSavingLocationEnabled(!flag);
+      console.error('Failed to save power saving location setting', error);
+      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  }, [powerSavingLocationEnabled, setPowerSavingLocationEnabled]);
 
   const handleToggleTelemetry = useCallback(() => {
     const flag = !tuning.telemetryEnabled;
@@ -213,6 +234,16 @@ const ExperimentalSettingsScreen: React.FC = () => {
           </View>
           <Typography style={styles.description}>
             {translate('etaAssistDescription')}
+          </Typography>
+          <View style={styles.toggleSpacer}>
+            <ToggleItem
+              title={translate('powerSavingLocationTitle')}
+              state={powerSavingLocationEnabled}
+              onToggle={handleTogglePowerSavingLocation}
+            />
+          </View>
+          <Typography style={styles.description}>
+            {translate('powerSavingLocationDescription')}
           </Typography>
           <Typography style={styles.notice}>
             {translate('experimentalSettingsNotice')}

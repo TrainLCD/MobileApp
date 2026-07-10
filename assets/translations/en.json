@@ -329,5 +329,7 @@
   "telemetryDescription": "Your device's geographic coordinates are sent to our analytics server. The information is used only for analytics.",
   "etaAssistTitle": "Improve arrival detection",
   "etaAssistDescription": "When enabled, in sections where GPS accuracy drops such as subways, the app uses the server's estimated arrival times (ETA) to assist arrival detection. GPS remains the source of truth for arrival and current location; ETA is only an aid.",
+  "powerSavingLocationTitle": "Power-saving location mode",
+  "powerSavingLocationDescription": "When enabled, the app slightly lowers the requested location accuracy (best → roughly 10-meter granularity) to reduce battery drain and heat on long rides. Arrival detection uses radii of 100 meters or more, so it should not be affected; turn this off if you notice any issues. This only takes effect on iOS — behavior on Android is unchanged.",
   "passStationLabel": "Pass"
 }
