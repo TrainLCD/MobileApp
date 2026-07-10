@@ -7,6 +7,7 @@ import { powerSavingLocationEnabledAtom } from '~/store/atoms/experimental';
 import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { handleTrackingLocation } from '~/utils/handleTrackingLocation';
+import { isDevApp } from '~/utils/isDevApp';
 import {
   LOCATION_START_MAX_RETRIES,
   LOCATION_START_RETRY_BASE_DELAY_MS,
@@ -34,7 +35,10 @@ export const useStartBackgroundLocationUpdates = () => {
   const powerSavingSettingEnabled = useAtomValue(
     powerSavingLocationEnabledAtom
   );
-  const powerSavingEnabled = powerSavingSettingEnabled || systemLowPowerMode;
+  // 試験用機能のためdevアプリだけで有効化する。手動設定に加えて、
+  // 端末の省電力モード中も自動的に同じプロファイルへ切り替える。
+  const powerSavingEnabled =
+    isDevApp && (powerSavingSettingEnabled || systemLowPowerMode);
   const watchOptions = powerSavingEnabled
     ? LOCATION_WATCH_OPTIONS_POWER_SAVING
     : LOCATION_WATCH_OPTIONS;

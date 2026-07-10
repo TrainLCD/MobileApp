@@ -13,6 +13,7 @@ import { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationU
 
 let mockNeedsJobSchedulerBypass = false;
 let mockSystemLowPowerMode = false;
+let mockIsDevApp = false;
 jest.mock('../constants/native', () => ({
   get NEEDS_JOBSCHEDULER_BYPASS() {
     return mockNeedsJobSchedulerBypass;
@@ -21,6 +22,11 @@ jest.mock('../constants/native', () => ({
 
 jest.mock('expo-battery', () => ({
   useLowPowerMode: () => mockSystemLowPowerMode,
+}));
+jest.mock('~/utils/isDevApp', () => ({
+  get isDevApp() {
+    return mockIsDevApp;
+  },
 }));
 jest.mock('expo-location');
 jest.mock('./useLocationPermissionsGranted');
@@ -86,6 +92,7 @@ describe('useStartBackgroundLocationUpdates', () => {
     mockAutoModeEnabled = false;
     mockPowerSavingLocationEnabled = false;
     mockSystemLowPowerMode = false;
+    mockIsDevApp = false;
     mockNeedsJobSchedulerBypass = false;
     mockStartLocationUpdatesAsync.mockResolvedValue(undefined);
     mockStopLocationUpdatesAsync.mockResolvedValue(undefined);
@@ -384,6 +391,7 @@ describe('useStartBackgroundLocationUpdates', () => {
   describe('power saving location mode', () => {
     test('should apply the full power-saving profile to background updates when enabled', async () => {
       mockPowerSavingLocationEnabled = true;
+      mockIsDevApp = true;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
       renderHook(() => useStartBackgroundLocationUpdates());
@@ -416,9 +424,10 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
     });
 
-    test('should enable the power-saving profile while the system low-power mode is active', async () => {
+    test('should enable the power-saving profile in the dev app while the system low-power mode is active', async () => {
       mockPowerSavingLocationEnabled = false;
       mockSystemLowPowerMode = true;
+      mockIsDevApp = true;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
       renderHook(() => useStartBackgroundLocationUpdates());
@@ -436,8 +445,30 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
     });
 
+    test('should keep the default profile in production while the system low-power mode is active', async () => {
+      mockPowerSavingLocationEnabled = false;
+      mockSystemLowPowerMode = true;
+      mockIsDevApp = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining({
+          ...LOCATION_TASK_OPTIONS,
+          foregroundService: expect.objectContaining({
+            killServiceOnDestroy: false,
+          }),
+        })
+      );
+    });
+
     test('should apply the full power-saving profile to foreground watchPositionAsync when enabled', async () => {
       mockPowerSavingLocationEnabled = true;
+      mockIsDevApp = true;
       mockUseLocationPermissionsGranted.mockReturnValue(false);
 
       renderHook(() => useStartBackgroundLocationUpdates());
@@ -446,6 +477,21 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       expect(mockWatchPositionAsync).toHaveBeenCalledWith(
         LOCATION_WATCH_OPTIONS_POWER_SAVING,
+        expect.any(Function)
+      );
+    });
+
+    test('should ignore the experimental setting outside the dev app', async () => {
+      mockPowerSavingLocationEnabled = true;
+      mockIsDevApp = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(false);
+
+      renderHook(() => useStartBackgroundLocationUpdates());
+
+      await new Promise(process.nextTick);
+
+      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
+        LOCATION_WATCH_OPTIONS,
         expect.any(Function)
       );
     });
