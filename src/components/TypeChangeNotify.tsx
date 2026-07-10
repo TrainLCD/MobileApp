@@ -1297,6 +1297,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
   const nextTrainType = useNextTrainType();
+  const { isPortrait } = useLandscapeWindowDimensions();
 
   const isJaEnabled = enabledLanguages.includes('JA');
   const isEnEnabled = enabledLanguages.includes('EN');
@@ -1536,7 +1537,10 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
   ]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={styles.container}
+      edges={isPortrait ? ['left', 'right'] : undefined}
+    >
       <View style={styles.top}>
         {isJaEnabled ? <HeadingJa headingTexts={headingTexts} /> : null}
         {isEnEnabled ? (
