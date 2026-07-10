@@ -14,7 +14,7 @@ const AT_STATION_REFRESH_INTERVAL_MS = 5_000;
 
 /**
  * GPSで最後に確定した駅イベント(到着中/発車)を etaAnchorAtom へ記録するフック。
- * このアンカーは ETA 推定フェーズ(etaPhaseAtom)の仮想時計の起点として使われ、
+ * このアンカーは ETA 推定フェーズ(getEtaPhaseNow)の仮想時計の起点として使われ、
  * 精度劣化時の到着しきい値緩和(R1)の対象駅判定に用いられる。
  */
 export const useEtaAnchor = (): void => {
