@@ -101,11 +101,21 @@ const findGraphQLCall = (mutationName: string) =>
 
 describe('useTelemetrySender', () => {
   beforeEach(() => {
+    // どのmutationに対しても有効なレスポンスを返す。app_launchの自動送信が
+    // 失敗扱いになると送信済みフラグが戻り、後続テストのmockResolvedValueOnce等が
+    // app_launch側に消費されてしまうため、成功レスポンスでフラグを確定させる
     mockFetch = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: () => Promise.resolve({ ok: true }),
+      json: () =>
+        Promise.resolve({
+          data: {
+            sendLogEvent: { sessionId: 'test-session-id' },
+            sendLocation: { sessionId: 'test-session-id', warning: null },
+            sendInteractionEvent: { sessionId: 'test-session-id' },
+          },
+        }),
     });
     global.fetch = mockFetch;
 
