@@ -15,6 +15,7 @@ import {
   LOCATION_TASK_OPTIONS,
   LOCATION_TASK_OPTIONS_POWER_SAVING,
   LOCATION_WATCH_OPTIONS,
+  LOCATION_WATCH_OPTIONS_POWER_SAVING,
 } from '../constants';
 import { NEEDS_JOBSCHEDULER_BYPASS } from '../constants/native';
 import { translate } from '../translation';
@@ -29,9 +30,9 @@ export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
   const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
   const systemLowPowerMode = Battery.useLowPowerMode();
-  // 省電力測位モード(実験的機能)。停車中の測位自動休止(iOSのみ)を許可する。
-  // 旧プロファイルの精度・更新間隔の緩和は実車検証を経て既定値へ昇格済み
-  // (constants/location.ts)。
+  // 省電力測位モード(実験的機能)。精度をBalancedへ下げ、停車中の測位自動休止
+  // (iOSのみ)を許可する。旧プロファイルのHigh精度・更新間隔の緩和は実車検証を
+  // 経て既定値へ昇格済み(constants/location.ts)。
   const powerSavingSettingEnabled = useAtomValue(
     powerSavingLocationEnabledAtom
   );
@@ -40,6 +41,9 @@ export const useStartBackgroundLocationUpdates = () => {
   const powerSavingEnabled =
     isDevApp && (powerSavingSettingEnabled || systemLowPowerMode);
   // 選択するオブジェクトはモジュール定数なので、effect依存でも参照が安定する。
+  const watchOptions = powerSavingEnabled
+    ? LOCATION_WATCH_OPTIONS_POWER_SAVING
+    : LOCATION_WATCH_OPTIONS;
   const taskOptions = powerSavingEnabled
     ? LOCATION_TASK_OPTIONS_POWER_SAVING
     : LOCATION_TASK_OPTIONS;
@@ -120,7 +124,7 @@ export const useStartBackgroundLocationUpdates = () => {
             if (NEEDS_JOBSCHEDULER_BYPASS) {
               try {
                 const sub = await Location.watchPositionAsync(
-                  LOCATION_WATCH_OPTIONS,
+                  watchOptions,
                   handleTrackingLocation
                 );
                 if (cancelled) {
@@ -166,7 +170,7 @@ export const useStartBackgroundLocationUpdates = () => {
         );
       });
     };
-  }, [autoModeEnabled, bgPermGranted, taskOptions]);
+  }, [autoModeEnabled, bgPermGranted, taskOptions, watchOptions]);
 
   useEffect(() => {
     let watchPositionSub: Location.LocationSubscription | null = null;
@@ -179,7 +183,7 @@ export const useStartBackgroundLocationUpdates = () => {
     (async () => {
       try {
         const sub = await Location.watchPositionAsync(
-          LOCATION_WATCH_OPTIONS,
+          watchOptions,
           handleTrackingLocation
         );
         if (cancelled) {
@@ -196,5 +200,5 @@ export const useStartBackgroundLocationUpdates = () => {
       cancelled = true;
       watchPositionSub?.remove();
     };
-  }, [autoModeEnabled, bgPermGranted]);
+  }, [autoModeEnabled, bgPermGranted, watchOptions]);
 };

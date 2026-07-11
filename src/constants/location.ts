@@ -6,6 +6,10 @@ export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
 // NearestTenMetersへ一段下がる。AndroidではHighestと同じ高精度プロバイダを維持し、
 // 更新間隔の緩和によって電池消費と発熱を抑える。
 export const LOCATION_ACCURACY = Location.Accuracy.High;
+// 省電力測位モード(実験的機能)では電池優先のBalancedまで精度を下げる。iOSでは
+// kCLLocationAccuracyHundredMeters、AndroidではGPSを常用しない省電力プロバイダに
+// なるため、駅判定の精度低下と引き換えに電池消費をさらに抑える。
+export const LOCATION_ACCURACY_POWER_SAVING = Location.Accuracy.Balanced;
 export const LOCATION_DISTANCE_INTERVAL = 25;
 export const LOCATION_TIME_INTERVAL = 10000;
 
@@ -23,6 +27,11 @@ export const LOCATION_WATCH_OPTIONS: Location.LocationOptions = {
   timeInterval: LOCATION_TIME_INTERVAL,
 } as const;
 
+export const LOCATION_WATCH_OPTIONS_POWER_SAVING: Location.LocationOptions = {
+  ...LOCATION_WATCH_OPTIONS,
+  accuracy: LOCATION_ACCURACY_POWER_SAVING,
+} as const;
+
 export const LOCATION_TASK_OPTIONS: Location.LocationTaskOptions = {
   ...LOCATION_WATCH_OPTIONS,
   // expo-task-managerはバックグラウンドでJobScheduler経由でJS側にデータを配信する。
@@ -35,11 +44,12 @@ export const LOCATION_TASK_OPTIONS: Location.LocationTaskOptions = {
   pausesUpdatesAutomatically: false,
 } as const;
 
-// 省電力測位モード(実験的機能)。精度・更新間隔は既定値と共通で、
-// 停車中の測位自動休止(iOSのみ)だけを追加で許可する。
+// 省電力測位モード(実験的機能)。更新間隔は既定値と共通のまま、精度をBalancedへ
+// 下げ、停車中の測位自動休止(iOSのみ)を追加で許可する。
 export const LOCATION_TASK_OPTIONS_POWER_SAVING: Location.LocationTaskOptions =
   {
     ...LOCATION_TASK_OPTIONS,
+    accuracy: LOCATION_ACCURACY_POWER_SAVING,
     // 停車中はiOSに測位ハードウェアの休止を許可し、移動再開時にOtherNavigationの
     // 活動種別を手掛かりとして自動再開させる。
     pausesUpdatesAutomatically: true,
