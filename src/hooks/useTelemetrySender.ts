@@ -233,10 +233,14 @@ export const useTelemetrySender = (
     return 'moving';
   }, [arrivedFromState, approachingFromState, passing]);
 
+  // 戻り値は送信の成否。呼び出し元が失敗時の再送制御をできるようにする
   const sendInteractionEvent = useCallback(
-    async (eventName: string, properties?: InteractionEventProperties) => {
+    async (
+      eventName: string,
+      properties?: InteractionEventProperties
+    ): Promise<boolean> => {
       if (!isTelemetryEnabled || !baseUrl) {
-        return;
+        return false;
       }
 
       const payload = InteractionEventInput.safeParse({
@@ -252,7 +256,7 @@ export const useTelemetrySender = (
 
       if (payload.error) {
         console.error('Invalid interaction event payload:', payload.error);
-        return;
+        return false;
       }
 
       try {
@@ -272,7 +276,7 @@ export const useTelemetrySender = (
           console.error(
             `HTTP error: ${response.status} ${response.statusText}`
           );
-          return;
+          return false;
         }
 
         let json: unknown;
@@ -280,7 +284,7 @@ export const useTelemetrySender = (
           json = await response.json();
         } catch {
           console.error('Failed to parse response JSON');
-          return;
+          return false;
         }
 
         const result = SendInteractionEventResponse.safeParse(json);
@@ -290,7 +294,7 @@ export const useTelemetrySender = (
             result.error,
             json
           );
-          return;
+          return false;
         }
         if (result.data.errors?.length) {
           console.warn(
@@ -298,8 +302,11 @@ export const useTelemetrySender = (
             result.data.errors.map((e) => e.message).join(', ')
           );
         }
+        // サーバ側でデータとして受理されたことをもって送信成功とみなす
+        return result.data.data?.sendInteractionEvent != null;
       } catch (error) {
         console.error('Failed to send interaction event:', error);
+        return false;
       }
     },
     [isTelemetryEnabled, baseUrl, token]
@@ -506,7 +513,13 @@ export const useTelemetrySender = (
     }
 
     hasAppLaunchEventBeenSent = true;
-    sendInteractionEvent('app_launch');
+    sendInteractionEvent('app_launch').then((sent) => {
+      if (!sent) {
+        // 起動直後の通信不調などで失敗した場合はフラグを戻し、
+        // 後続のマウントや設定変更のタイミングで再送できるようにする
+        hasAppLaunchEventBeenSent = false;
+      }
+    });
   }, [isTelemetryEnabled, baseUrl, sendInteractionEvent]);
 
   return { sendLog, sendInteractionEvent };

@@ -1,122 +1,23 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
-import { renderHook, waitFor } from '@testing-library/react-native';
-import { Provider, useAtomValue } from 'jotai';
-import { useCurrentLine } from '~/hooks/useCurrentLine';
-import { useCurrentStation } from '~/hooks/useCurrentStation';
-import { useIsPassing } from '~/hooks/useIsPassing';
-import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
-import { useTelemetrySender } from '~/hooks/useTelemetrySender';
-import stationState from '~/store/atoms/station';
-
-jest.mock('expo-application', () => ({
-  nativeApplicationVersion: '1.0.0',
-  nativeBuildVersion: '42',
-}));
-jest.mock('expo-crypto', () => ({
-  randomUUID: jest.fn(() => 'test-session-id'),
-}));
-jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
-jest.mock('~/utils/isDevApp', () => ({ isDevApp: false }));
-jest.mock('expo-battery', () => ({
-  BatteryState: {
-    UNKNOWN: 0,
-    UNPLUGGED: 1,
-    CHARGING: 2,
-    FULL: 3,
-  },
-  getBatteryLevelAsync: jest.fn(),
-  getBatteryStateAsync: jest.fn(),
-}));
-jest.mock('expo-network', () => ({
-  useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
-  NetworkStateType: { WIFI: 'WIFI' },
-}));
-jest.mock('~/utils/telemetryConfig', () => ({
-  isTelemetryEnabledByBuild: true,
-}));
-jest.mock('jotai', () => {
-  const actual = jest.requireActual('jotai');
-  return {
-    ...actual,
-    useAtomValue: jest.fn(),
-  };
-});
-jest.mock('~/hooks/useCurrentLine', () => ({
-  useCurrentLine: jest.fn(),
-}));
-jest.mock('~/hooks/useCurrentStation', () => ({
-  useCurrentStation: jest.fn(),
-}));
-jest.mock('~/hooks/useIsPassing', () => ({
-  useIsPassing: jest.fn(),
-}));
-jest.mock('~/hooks/useTelemetryEnabled', () => ({
-  useTelemetryEnabled: jest.fn(),
-}));
-
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider
-    // @ts-expect-error - initialValues is valid for jotai Provider but types are not up to date
-    initialValues={[
-      [
-        stationState,
-        {
-          arrived: false,
-          approaching: false,
-          station: null,
-          stations: [],
-          stationsCache: [],
-          pendingStation: null,
-          pendingStations: [],
-          selectedDirection: null,
-          selectedBound: null,
-          wantedDestination: null,
-        },
-      ],
-    ]}
-  >
-    {children}
-  </Provider>
-);
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+import {
+  findInteractionEventCalls,
+  setupTelemetrySenderMocks,
+  TELEMETRY_TEST_BASE_URL,
+  TelemetryTestWrapper,
+  useTelemetryEnabled,
+  useTelemetrySender,
+} from '~/utils/test/telemetrySenderTestSetup';
 
 let mockFetch: jest.Mock;
 
 const findAppLaunchCalls = () =>
-  mockFetch.mock.calls.filter((call: any[]) => {
-    if (call[0] !== 'https://example.com/graphql') {
-      return false;
-    }
-    const body = JSON.parse(call[1].body);
-    return (
-      body.query.includes('sendInteractionEvent') &&
-      body.variables.input.eventName === 'app_launch'
-    );
-  });
+  findInteractionEventCalls(mockFetch, 'app_launch');
 
 // NOTE: app_launchの一度きり送信はモジュールレベルのフラグで管理されるため、
-// このdescribe内のテストは記述順に依存する(disabled → 初回送信 → 再送なし)
+// このdescribe内のテストは記述順に依存する(disabled → 失敗時再送 → 初回送信 → 再送なし)
 describe('useTelemetrySender (app_launch event)', () => {
   beforeEach(() => {
-    mockFetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      json: () =>
-        Promise.resolve({
-          data: { sendInteractionEvent: { sessionId: 'test-session-id' } },
-        }),
-    });
-    global.fetch = mockFetch;
-
-    (useAtomValue as jest.Mock).mockReturnValue({
-      coords: null,
-      timestamp: Date.now(),
-    });
-
-    (useCurrentLine as jest.Mock).mockReturnValue(null);
-    (useCurrentStation as jest.Mock).mockReturnValue(null);
-    (useIsPassing as jest.Mock).mockReturnValue(false);
-    (useTelemetryEnabled as jest.Mock).mockReturnValue(true);
+    mockFetch = setupTelemetrySenderMocks();
   });
 
   afterEach(() => {
@@ -127,8 +28,8 @@ describe('useTelemetrySender (app_launch event)', () => {
     (useTelemetryEnabled as jest.Mock).mockReturnValue(false);
 
     renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await new Promise((r) => setTimeout(r, 30));
@@ -136,10 +37,63 @@ describe('useTelemetrySender (app_launch event)', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 
+  test('should reset the sent flag and retry app_launch after a failure', async () => {
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    mockFetch.mockRejectedValue(new Error('Network error'));
+
+    const first = renderHook(
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
+    );
+
+    await waitFor(
+      () => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Failed to send interaction event:',
+          expect.any(Error)
+        );
+      },
+      { timeout: 2000 }
+    );
+    // 失敗後のフラグ戻し(.then)まで確実に流してからアンマウントする
+    await act(async () => {
+      await Promise.resolve();
+    });
+    first.unmount();
+
+    // フラグが戻っているため、新しいインスタンスが再送を試みる
+    consoleSpy.mockClear();
+    const second = renderHook(
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
+    );
+
+    await waitFor(
+      () => {
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Failed to send interaction event:',
+          expect.any(Error)
+        );
+      },
+      { timeout: 2000 }
+    );
+    // 2回目の失敗のフラグ戻しも流しきってからテストを終える
+    // (後続テストへ非同期のフラグ操作が漏れるのを防ぐ)
+    await act(async () => {
+      await Promise.resolve();
+    });
+    second.unmount();
+
+    consoleSpy.mockRestore();
+  });
+
   test('should send app_launch once when telemetry becomes enabled', async () => {
     renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await waitFor(
@@ -156,16 +110,20 @@ describe('useTelemetrySender (app_launch event)', () => {
       },
       { timeout: 2000 }
     );
+    // 送信成功の確定(.then)まで流し、フラグを確実にtrueで固定する
+    await act(async () => {
+      await Promise.resolve();
+    });
   });
 
   test('should not send app_launch again from other hook instances', async () => {
     renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
     renderHook(
-      () => useTelemetrySender(true, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(true, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await new Promise((r) => setTimeout(r, 30));

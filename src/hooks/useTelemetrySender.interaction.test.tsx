@@ -1,129 +1,21 @@
-/** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { Provider, useAtomValue } from 'jotai';
-import { useCurrentLine } from '~/hooks/useCurrentLine';
-import { useCurrentStation } from '~/hooks/useCurrentStation';
-import { useIsPassing } from '~/hooks/useIsPassing';
-import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
-import { useTelemetrySender } from '~/hooks/useTelemetrySender';
-import stationState from '~/store/atoms/station';
-
-jest.mock('expo-application', () => ({
-  nativeApplicationVersion: '1.0.0',
-  nativeBuildVersion: '42',
-}));
-jest.mock('expo-crypto', () => ({
-  randomUUID: jest.fn(() => 'test-session-id'),
-}));
-jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
-jest.mock('~/utils/isDevApp', () => ({ isDevApp: false }));
-jest.mock('expo-battery', () => ({
-  BatteryState: {
-    UNKNOWN: 0,
-    UNPLUGGED: 1,
-    CHARGING: 2,
-    FULL: 3,
-  },
-  getBatteryLevelAsync: jest.fn(),
-  getBatteryStateAsync: jest.fn(),
-}));
-jest.mock('expo-network', () => ({
-  useNetworkState: jest.fn().mockReturnValue({ type: 'WIFI' }),
-  NetworkStateType: { WIFI: 'WIFI' },
-}));
-jest.mock('~/utils/telemetryConfig', () => ({
-  isTelemetryEnabledByBuild: true,
-}));
-jest.mock('jotai', () => {
-  const actual = jest.requireActual('jotai');
-  return {
-    ...actual,
-    useAtomValue: jest.fn(),
-  };
-});
-jest.mock('~/hooks/useCurrentLine', () => ({
-  useCurrentLine: jest.fn(),
-}));
-jest.mock('~/hooks/useCurrentStation', () => ({
-  useCurrentStation: jest.fn(),
-}));
-jest.mock('~/hooks/useIsPassing', () => ({
-  useIsPassing: jest.fn(),
-}));
-jest.mock('~/hooks/useTelemetryEnabled', () => ({
-  useTelemetryEnabled: jest.fn(),
-}));
-
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider
-    // @ts-expect-error - initialValues is valid for jotai Provider but types are not up to date
-    initialValues={[
-      [
-        stationState,
-        {
-          arrived: false,
-          approaching: false,
-          station: null,
-          stations: [],
-          stationsCache: [],
-          pendingStation: null,
-          pendingStations: [],
-          selectedDirection: null,
-          selectedBound: null,
-          wantedDestination: null,
-        },
-      ],
-    ]}
-  >
-    {children}
-  </Provider>
-);
+import {
+  findInteractionEventCalls,
+  setupTelemetrySenderMocks,
+  TELEMETRY_TEST_BASE_URL,
+  TelemetryTestWrapper,
+  useTelemetryEnabled,
+  useTelemetrySender,
+} from '~/utils/test/telemetrySenderTestSetup';
 
 let mockFetch: jest.Mock;
 
-// app_launch の自動送信と手動送信イベントが混ざるため、eventName で見分ける
 const findInteractionCall = (eventName: string) =>
-  mockFetch.mock.calls.find((call: any[]) => {
-    if (call[0] !== 'https://example.com/graphql') {
-      return false;
-    }
-    const body = JSON.parse(call[1].body);
-    return (
-      body.query.includes('sendInteractionEvent') &&
-      body.variables.input.eventName === eventName
-    );
-  });
+  findInteractionEventCalls(mockFetch, eventName)[0];
 
 describe('useTelemetrySender (interaction events)', () => {
   beforeEach(() => {
-    mockFetch = jest.fn().mockResolvedValue({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      json: () =>
-        Promise.resolve({
-          data: { sendInteractionEvent: { sessionId: 'test-session-id' } },
-        }),
-    });
-    global.fetch = mockFetch;
-
-    (useAtomValue as jest.Mock).mockReturnValue({
-      coords: {
-        latitude: 35.0,
-        longitude: 139.0,
-        accuracy: 5,
-        speed: 10,
-        altitude: null,
-        altitudeAccuracy: null,
-        heading: null,
-      },
-      timestamp: Date.now(),
-    });
-
-    (useCurrentLine as jest.Mock).mockReturnValue({ id: 11302 });
-    (useCurrentStation as jest.Mock).mockReturnValue({ id: 1130224 });
-    (useIsPassing as jest.Mock).mockReturnValue(false);
-    (useTelemetryEnabled as jest.Mock).mockReturnValue(true);
+    mockFetch = setupTelemetrySenderMocks();
   });
 
   afterEach(() => {
@@ -132,8 +24,8 @@ describe('useTelemetrySender (interaction events)', () => {
 
   test('should send interaction event via GraphQL sendInteractionEvent mutation', async () => {
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await act(async () => {
@@ -168,8 +60,8 @@ describe('useTelemetrySender (interaction events)', () => {
 
   test('should send null properties when omitted', async () => {
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await act(async () => {
@@ -189,8 +81,8 @@ describe('useTelemetrySender (interaction events)', () => {
 
   test('should include Authorization header with token', async () => {
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await act(async () => {
@@ -213,8 +105,8 @@ describe('useTelemetrySender (interaction events)', () => {
     (useTelemetryEnabled as jest.Mock).mockReturnValue(false);
 
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await act(async () => {
@@ -227,7 +119,7 @@ describe('useTelemetrySender (interaction events)', () => {
 
   test('should not send interaction event if baseUrl is not provided', async () => {
     const { result } = renderHook(() => useTelemetrySender(false, ''), {
-      wrapper,
+      wrapper: TelemetryTestWrapper,
     });
 
     await act(async () => {
@@ -249,8 +141,8 @@ describe('useTelemetrySender (interaction events)', () => {
     });
 
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await act(async () => {
@@ -278,8 +170,8 @@ describe('useTelemetrySender (interaction events)', () => {
     mockFetch.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(
-      () => useTelemetrySender(false, 'https://example.com', 'test-token'),
-      { wrapper }
+      () => useTelemetrySender(false, TELEMETRY_TEST_BASE_URL, 'test-token'),
+      { wrapper: TelemetryTestWrapper }
     );
 
     await act(async () => {
