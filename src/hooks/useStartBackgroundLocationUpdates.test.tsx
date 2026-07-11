@@ -6,7 +6,6 @@ import {
   LOCATION_TASK_OPTIONS,
   LOCATION_TASK_OPTIONS_POWER_SAVING,
   LOCATION_WATCH_OPTIONS,
-  LOCATION_WATCH_OPTIONS_POWER_SAVING,
 } from '../constants';
 import { useLocationPermissionsGranted } from './useLocationPermissionsGranted';
 import { useStartBackgroundLocationUpdates } from './useStartBackgroundLocationUpdates';
@@ -115,7 +114,7 @@ describe('useStartBackgroundLocationUpdates', () => {
           ...LOCATION_TASK_OPTIONS,
           activityType: Location.ActivityType.OtherNavigation,
           foregroundService: expect.objectContaining({
-            killServiceOnDestroy: false,
+            killServiceOnDestroy: true,
           }),
         })
       );
@@ -389,7 +388,7 @@ describe('useStartBackgroundLocationUpdates', () => {
   });
 
   describe('power saving location mode', () => {
-    test('should apply the full power-saving profile to background updates when enabled', async () => {
+    test('should allow automatic pauses for background updates when enabled', async () => {
       mockPowerSavingLocationEnabled = true;
       mockIsDevApp = true;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
@@ -402,7 +401,7 @@ describe('useStartBackgroundLocationUpdates', () => {
         LOCATION_TASK_NAME,
         expect.objectContaining({
           ...LOCATION_TASK_OPTIONS_POWER_SAVING,
-          accuracy: Location.Accuracy.High,
+          pausesUpdatesAutomatically: true,
           activityType: Location.ActivityType.OtherNavigation,
           foregroundService: expect.objectContaining({
             killServiceOnDestroy: true,
@@ -411,7 +410,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
     });
 
-    test('should request default accuracy for background updates when disabled', async () => {
+    test('should keep automatic pauses disabled for background updates when disabled', async () => {
       mockPowerSavingLocationEnabled = false;
       mockUseLocationPermissionsGranted.mockReturnValue(true);
 
@@ -421,11 +420,14 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME,
-        expect.objectContaining({ accuracy: Location.Accuracy.Highest })
+        expect.objectContaining({
+          accuracy: Location.Accuracy.High,
+          pausesUpdatesAutomatically: false,
+        })
       );
     });
 
-    test('should enable the power-saving profile in the dev app while the system low-power mode is active', async () => {
+    test('should allow automatic pauses in the dev app while the system low-power mode is active', async () => {
       mockPowerSavingLocationEnabled = false;
       mockSystemLowPowerMode = true;
       mockIsDevApp = true;
@@ -439,10 +441,7 @@ describe('useStartBackgroundLocationUpdates', () => {
         LOCATION_TASK_NAME,
         expect.objectContaining({
           ...LOCATION_TASK_OPTIONS_POWER_SAVING,
-          accuracy: Location.Accuracy.High,
-          foregroundService: expect.objectContaining({
-            killServiceOnDestroy: true,
-          }),
+          pausesUpdatesAutomatically: true,
         })
       );
     });
@@ -461,45 +460,32 @@ describe('useStartBackgroundLocationUpdates', () => {
         LOCATION_TASK_NAME,
         expect.objectContaining({
           ...LOCATION_TASK_OPTIONS,
+          pausesUpdatesAutomatically: false,
           foregroundService: expect.objectContaining({
-            killServiceOnDestroy: false,
+            killServiceOnDestroy: true,
           }),
         })
-      );
-    });
-
-    test('should apply the full power-saving profile to foreground watchPositionAsync when enabled', async () => {
-      mockPowerSavingLocationEnabled = true;
-      mockIsDevApp = true;
-      mockUseLocationPermissionsGranted.mockReturnValue(false);
-
-      renderHook(() => useStartBackgroundLocationUpdates());
-
-      await new Promise(process.nextTick);
-
-      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
-        LOCATION_WATCH_OPTIONS_POWER_SAVING,
-        expect.any(Function)
       );
     });
 
     test('should ignore the experimental setting outside the dev app', async () => {
       mockPowerSavingLocationEnabled = true;
       mockIsDevApp = false;
-      mockUseLocationPermissionsGranted.mockReturnValue(false);
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
 
       renderHook(() => useStartBackgroundLocationUpdates());
 
       await new Promise(process.nextTick);
 
-      expect(mockWatchPositionAsync).toHaveBeenCalledWith(
-        LOCATION_WATCH_OPTIONS,
-        expect.any(Function)
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining({ pausesUpdatesAutomatically: false })
       );
     });
 
-    test('should apply default accuracy to foreground watchPositionAsync when disabled', async () => {
-      mockPowerSavingLocationEnabled = false;
+    test('should use the shared watch options for foreground watchPositionAsync regardless of the setting', async () => {
+      mockPowerSavingLocationEnabled = true;
+      mockIsDevApp = true;
       mockUseLocationPermissionsGranted.mockReturnValue(false);
 
       renderHook(() => useStartBackgroundLocationUpdates());
