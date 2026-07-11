@@ -11,7 +11,15 @@ import stationState from '~/store/atoms/station';
 
 const TELEMETRY_THROTTLE_MS = 1; // NOTE: flakyになるので実運用より短め
 
+jest.mock('expo-application', () => ({
+  nativeApplicationVersion: '1.0.0',
+  nativeBuildVersion: '42',
+}));
+jest.mock('expo-crypto', () => ({
+  randomUUID: jest.fn(() => 'test-session-id'),
+}));
 jest.mock('expo-device', () => ({ modelName: 'MockDevice' }));
+jest.mock('~/utils/isDevApp', () => ({ isDevApp: false }));
 jest.mock('expo-battery', () => ({
   BatteryState: {
     UNKNOWN: 0,
@@ -82,6 +90,15 @@ let mockFetch: jest.Mock;
 const mockGetBatteryLevelAsync = Battery.getBatteryLevelAsync as jest.Mock;
 const mockGetBatteryStateAsync = Battery.getBatteryStateAsync as jest.Mock;
 
+// ログも位置情報も同じ/graphqlに飛ぶため、mutation名でリクエストを見分ける
+const findGraphQLCall = (mutationName: string) =>
+  mockFetch.mock.calls.find((call: any[]) => {
+    return (
+      call[0] === 'https://example.com/graphql' &&
+      JSON.parse(call[1].body).query.includes(mutationName)
+    );
+  });
+
 describe('useTelemetrySender', () => {
   beforeEach(() => {
     mockFetch = jest.fn().mockResolvedValue({
@@ -121,7 +138,7 @@ describe('useTelemetrySender', () => {
     jest.useRealTimers();
   });
 
-  test('should send log via fetch API', async () => {
+  test('should send log via GraphQL sendLogEvent mutation', async () => {
     const { result } = renderHook(
       () => useTelemetrySender(false, 'https://example.com', 'test-token'),
       { wrapper }
@@ -135,16 +152,17 @@ describe('useTelemetrySender', () => {
     await waitFor(
       () => {
         expect(mockFetch).toHaveBeenCalled();
-        const calls = mockFetch.mock.calls;
-        const logCall = calls.find((call: any[]) => {
-          return call[0] === 'https://example.com/api/log';
-        });
+        const logCall = findGraphQLCall('sendLogEvent');
         expect(logCall).toBeDefined();
-        const body = JSON.parse(logCall[1].body);
-        expect(body.log.message).toBe('Test log from the app');
-        expect(body.log.level).toBe('info');
-        expect(body.log.type).toBe('app');
-        expect(body.device).toBe('MockDevice');
+        const input = JSON.parse(logCall[1].body).variables.input;
+        expect(input.message).toBe('Test log from the app');
+        expect(input.level).toBe('info');
+        expect(input.type).toBe('app');
+        expect(input.device).toBe('MockDevice');
+        expect(input.sessionId).toBe('test-session-id');
+        expect(input.appVersion).toBe('1.0.0(42)');
+        expect(input.platform).toBe('ios');
+        expect(input.channel).toBe('production');
       },
       { timeout: 2000 }
     );
@@ -164,13 +182,10 @@ describe('useTelemetrySender', () => {
     await waitFor(
       () => {
         expect(mockFetch).toHaveBeenCalled();
-        const calls = mockFetch.mock.calls;
-        const logCall = calls.find((call: any[]) => {
-          return call[0] === 'https://example.com/api/log';
-        });
+        const logCall = findGraphQLCall('sendLogEvent');
         expect(logCall).toBeDefined();
         const body = JSON.parse(logCall[1].body);
-        expect(body.log.level).toBe('debug');
+        expect(body.variables.input.level).toBe('debug');
       },
       { timeout: 2000 }
     );
@@ -190,14 +205,11 @@ describe('useTelemetrySender', () => {
     await waitFor(
       () => {
         expect(mockFetch).toHaveBeenCalled();
-        const calls = mockFetch.mock.calls;
-        const logCall = calls.find((call: any[]) => {
-          return call[0] === 'https://example.com/api/log';
-        });
+        const logCall = findGraphQLCall('sendLogEvent');
         expect(logCall).toBeDefined();
-        const body = JSON.parse(logCall[1].body);
-        expect(body.log.message).toContain('token=[REDACTED]');
-        expect(body.log.message).not.toContain('abc123-secret-value');
+        const message = JSON.parse(logCall[1].body).variables.input.message;
+        expect(message).toContain('token=[REDACTED]');
+        expect(message).not.toContain('abc123-secret-value');
       },
       { timeout: 2000 }
     );
@@ -246,10 +258,7 @@ describe('useTelemetrySender', () => {
     await waitFor(
       () => {
         expect(mockFetch).toHaveBeenCalled();
-        const calls = mockFetch.mock.calls;
-        const logCall = calls.find((call: any[]) => {
-          return call[0] === 'https://example.com/api/log';
-        });
+        const logCall = findGraphQLCall('sendLogEvent');
         expect(logCall).toBeDefined();
         expect(logCall[1].headers.Authorization).toMatch(/^Bearer .+$/);
         expect(logCall[1].headers['Content-Type']).toBe('application/json');
@@ -293,7 +302,8 @@ describe('useTelemetrySender', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: () => Promise.resolve({ ok: false, error: 'Server error' }),
+      json: () =>
+        Promise.resolve({ data: null, errors: [{ message: 'Server error' }] }),
     });
 
     const { result } = renderHook(
@@ -334,9 +344,37 @@ describe('useTelemetrySender', () => {
     await waitFor(
       () => {
         const logCalls = mockFetch.mock.calls.filter(
-          (call: any[]) => call[0] === 'https://example.com/api/log'
+          (call: any[]) =>
+            call[0] === 'https://example.com/graphql' &&
+            JSON.parse(call[1].body).query.includes('sendLogEvent')
         );
         expect(logCalls.length).toBe(2);
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  test('should send location via GraphQL sendLocation mutation', async () => {
+    renderHook(
+      () => useTelemetrySender(true, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await waitFor(
+      () => {
+        const locationCall = findGraphQLCall('sendLocation');
+        expect(locationCall).toBeDefined();
+        const body = JSON.parse(locationCall[1].body);
+        const input = body.variables.input;
+        expect(input.sessionId).toBe('test-session-id');
+        expect(input.device).toBe('MockDevice');
+        // useAtomValueのモックが全atomに同じtruthyな値を返すためarrivedになる
+        expect(input.state).toBe('arrived');
+        expect(input.lineId).toBe(11302);
+        expect(input.stationId).toBe(1130224);
+        // expo-locationのm/sからkm/hに変換される
+        expect(input.coords.speed).toBeCloseTo(36);
+        expect(input.batteryState).toBe('charging');
       },
       { timeout: 2000 }
     );
@@ -352,14 +390,43 @@ describe('useTelemetrySender', () => {
 
     await waitFor(
       () => {
-        const locationCall = mockFetch.mock.calls.find((call: any[]) => {
-          return call[0] === 'https://example.com/api/location';
-        });
+        const locationCall = findGraphQLCall('sendLocation');
         expect(locationCall).toBeDefined();
         const body = JSON.parse(locationCall[1].body);
-        expect(body.batteryLevel).toBeNull();
+        expect(body.variables.input.batteryLevel).toBeNull();
       },
       { timeout: 2000 }
     );
+  });
+
+  test('should warn when GraphQL API returns errors', async () => {
+    const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      json: () =>
+        Promise.resolve({
+          data: null,
+          errors: [{ message: 'unauthorized' }],
+        }),
+    });
+
+    renderHook(
+      () => useTelemetrySender(true, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await waitFor(
+      () => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Location API error:',
+          'unauthorized'
+        );
+      },
+      { timeout: 2000 }
+    );
+
+    consoleSpy.mockRestore();
   });
 });
