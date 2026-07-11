@@ -12,8 +12,10 @@ export const portraitModeEnabledAtom = atom(false);
 // 有効化する(isEtaAssistEnabled 参照)。
 export const etaAssistManualEnabledAtom = atom(false);
 
-// 省電力測位モード。継続測位の精度と更新頻度を下げ、停車中の自動休止を許可して、
-// 長時間乗車時の電池消費・発熱を抑える。到着判定への影響を実車で検証するため
+// 省電力測位モード。測位精度をBalancedへ下げ、停車中の測位自動休止(iOSのみ)を
+// 許可して、長時間乗車時の電池消費・発熱をさらに抑える。旧プロファイルのHigh精度・
+// 更新間隔の緩和は実車検証を経て既定値へ昇格済み(constants/location.ts)。
+// 精度低下と自動休止からの復帰遅れが到着判定へ与える影響を実車で検証するため
 // 実験的機能としてトグル化する。
 // 他の設定と異なり Permitted の loadSettings(effect) では復元せず、MMKVの同期APIで
 // 初期値をここで確定する。effect復元だと Main 側の継続測位が一度デフォルト精度で
