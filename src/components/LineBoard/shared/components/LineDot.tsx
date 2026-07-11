@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { useScale } from '~/hooks/useScale';
 import getIsPass from '~/utils/isPass';
@@ -8,6 +8,17 @@ import isTablet from '~/utils/isTablet';
 import PadLineMarks from '../../../PadLineMarks';
 import PassChevronEast from '../../../PassChevronEast';
 import { commonLineBoardStyles as styles } from '../styles/commonStyles';
+import { EstimatedMinutesBadge } from './EstimatedMinutesBadge';
+
+const localStyles = StyleSheet.create({
+  estimatedMinutesOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export type LineDotProps = {
   station: Station;
@@ -16,6 +27,7 @@ export type LineDotProps = {
   arrived: boolean;
   passed: boolean;
   isOdakyu?: boolean;
+  estimatedMinutes?: number | null;
 };
 
 export const LineDot: React.FC<LineDotProps> = ({
@@ -25,6 +37,7 @@ export const LineDot: React.FC<LineDotProps> = ({
   arrived,
   passed,
   isOdakyu = false,
+  estimatedMinutes,
 }) => {
   const { widthScale } = useScale();
 
@@ -52,16 +65,22 @@ export const LineDot: React.FC<LineDotProps> = ({
     );
   }
 
+  const dotSizeStyle = isOdakyu
+    ? {
+        width: isTablet ? 36 : 24,
+        height: isTablet ? 36 : 24,
+        borderRadius: isTablet ? 18 : 12,
+      }
+    : null;
+
   return (
     <View style={styles.stationArea}>
       <View style={styles.chevronArea}>
         <LinearGradient
           style={[
             styles.chevronGradient,
+            dotSizeStyle,
             isOdakyu && {
-              width: isTablet ? 36 : 24,
-              height: isTablet ? 36 : 24,
-              borderRadius: isTablet ? 18 : 12,
               borderWidth: 1,
               borderColor: passed && !arrived ? '#bbb' : '#fff',
             },
@@ -75,6 +94,20 @@ export const LineDot: React.FC<LineDotProps> = ({
           }
           {...(isOdakyu && { start: { x: 0, y: 0 }, end: { x: 1, y: 1 } })}
         />
+        {estimatedMinutes != null ? (
+          // 実際に見えるドット（chevronGradient）と同じサイズ・位置に重ねることで、
+          // chevronArea自体の幅(モバイルではドットより狭い)に引きずられず中央に揃える
+          <View
+            style={[
+              styles.chevronGradient,
+              dotSizeStyle,
+              localStyles.estimatedMinutesOverlay,
+            ]}
+            pointerEvents="none"
+          >
+            <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
+          </View>
+        ) : null}
       </View>
       <View style={styles.marksContainer}>
         <PadLineMarks

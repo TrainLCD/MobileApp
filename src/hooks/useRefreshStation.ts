@@ -3,11 +3,14 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
-import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
+import { ARRIVED_GRACE_PERIOD_MS, BAD_ACCURACY_THRESHOLD } from '~/constants';
 import {
   getMaxPermitAccuracy,
+  isEtaAssistEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
 } from '~/lib/remoteConfig';
+import { store } from '~/store';
+import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
   locationAccuracyOutlierAtom,
   locationAtom,
@@ -16,6 +19,7 @@ import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import { getEtaPhaseNow } from '../utils/etaPhaseNow';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useApproachingStation } from './useApproachingStation';
@@ -30,6 +34,9 @@ type NotifyType = 'ARRIVED' | 'APPROACHING';
 
 // GPS精度に応じた閾値補正の上限(m)
 const MAX_ACCURACY_BONUS = 150;
+// ETA確認による到着圏緩和(R1)の補正上限(m)。GPSとETAの双方が同じ停車駅を
+// 指すときに限り、粗い測位でも到着圏へ届くよう通常の上限(150m)より広げる。
+const ETA_ARRIVED_BONUS_CAP = 500;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -121,13 +128,45 @@ export const useRefreshStation = (): void => {
       return true;
     }
 
+    // R1(到着圏の緩和): 精度劣化(>200m)時に、ETA仮想時計が最寄り停車駅での
+    // 停車(DWELLING)を示す場合に限り、その駅の到着圏を広げる。GPSの最寄り駅と
+    // ETAが同じ駅を指すときのみ効く確認的な緩和で、精度が良い通常時(≤200m)は
+    // この分岐に入らず到着判定は一切変わらない。フェーズは常駐タイマーで公開せず、
+    // この分岐に入った瞬間に getEtaPhaseNow でオンデマンド計算する(毎秒タイマーより
+    // 評価時点が新しく、精度劣化時以外は計算コスト自体が発生しない)。
+    //
+    // 前方駅限定: アンカーが DEPARTED(=発車を観測済み)のときだけ緩和する。
+    // AT_STATION アンカーから出る DWELLING は必ず自駅であり、これを緩和すると
+    // その駅の到着圏が広がって arrived が張り付く→DEPARTED が記録されず→フェーズが
+    // 自駅DWELLINGに固定される、という自己強化ロック(始発駅から進めない)に陥る。
+    // DEPARTED アンカーから出る DWELLING は前方の次駅なので、発車後の次駅到着検出
+    // という本来の目的だけを助け、停車中の駅を過剰に保持しない。
+    let arrivedRadius = effectiveArrivedThreshold;
+    if (
+      isEtaAssistEnabled() &&
+      accuracy != null &&
+      accuracy > BAD_ACCURACY_THRESHOLD
+    ) {
+      const anchor = store.get(etaAnchorAtom);
+      if (anchor?.kind === 'DEPARTED') {
+        const phase = getEtaPhaseNow();
+        if (
+          phase?.kind === 'DWELLING' &&
+          phase.stationId === nearestStation.id
+        ) {
+          arrivedRadius =
+            arrivedThreshold + Math.min(accuracy * 0.5, ETA_ARRIVED_BONUS_CAP);
+        }
+      }
+    }
+
     const arrived = isPointWithinRadius(
       { latitude, longitude },
       {
         latitude: nearestStation.latitude as number,
         longitude: nearestStation.longitude as number,
       },
-      effectiveArrivedThreshold
+      arrivedRadius
     );
 
     if (arrived) {
@@ -139,6 +178,7 @@ export const useRefreshStation = (): void => {
     accuracy,
     isAccuracyOutlier,
     effectiveArrivedThreshold,
+    arrivedThreshold,
     latitude,
     longitude,
     nearestStation,

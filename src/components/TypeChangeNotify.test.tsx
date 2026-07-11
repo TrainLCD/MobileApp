@@ -33,9 +33,30 @@ const mockAtomValues = ({
   });
 };
 
-jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
-}));
+jest.mock('react-native-safe-area-context', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    SafeAreaView: ({
+      children,
+      edges,
+      ...props
+    }: {
+      children: React.ReactNode;
+      edges?: readonly string[];
+      [key: string]: unknown;
+    }) =>
+      React.createElement(
+        View,
+        {
+          ...props,
+          testID: 'safe-area-view',
+          accessibilityLabel: edges?.join(',') ?? 'all',
+        },
+        children
+      ),
+  };
+});
 
 jest.mock('expo-linear-gradient', () => ({
   LinearGradient: ({ children }: { children: React.ReactNode }) => children,
@@ -100,6 +121,12 @@ jest.mock('./Typography', () => {
 describe('TypeChangeNotify', () => {
   beforeEach(() => {
     mockAtomValues();
+    const { useLandscapeWindowDimensions } = require('~/hooks');
+    useLandscapeWindowDimensions.mockReturnValue({
+      width: 812,
+      height: 375,
+      isPortrait: false,
+    });
   });
 
   afterEach(() => {
@@ -110,6 +137,31 @@ describe('TypeChangeNotify', () => {
     expect(() => {
       render(<TypeChangeNotify />);
     }).not.toThrow();
+  });
+
+  it('物理画面が縦向きの場合は上下のセーフエリアを適用しない', () => {
+    const { useLandscapeWindowDimensions } = require('~/hooks');
+    useLandscapeWindowDimensions.mockReturnValue({
+      width: 812,
+      height: 375,
+      isPortrait: true,
+    });
+
+    const { getByTestId } = render(<TypeChangeNotify />);
+
+    expect(getByTestId('safe-area-view')).toHaveProp(
+      'accessibilityLabel',
+      'left,right'
+    );
+  });
+
+  it('物理画面が横向きの場合は全方向のセーフエリアを適用する', () => {
+    const { getByTestId } = render(<TypeChangeNotify />);
+
+    expect(getByTestId('safe-area-view')).toHaveProp(
+      'accessibilityLabel',
+      'all'
+    );
   });
 
   it('trainTypeがnullの場合でもクラッシュしない', () => {

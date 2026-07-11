@@ -5,6 +5,8 @@ import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -16,7 +18,10 @@ import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { ChevronE231 } from './ChevronE231';
-import { StationName } from './LineBoard/shared/components';
+import {
+  EstimatedMinutesBadge,
+  StationName,
+} from './LineBoard/shared/components';
 import {
   useBarStyles,
   useChevronPosition,
@@ -100,6 +105,15 @@ const localStyles = StyleSheet.create({
     backgroundColor: '#ccc',
     borderColor: '#aaa',
   },
+  estimatedMinutesOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: isTablet ? 44 : 36,
+    height: isTablet ? 36 : 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   marksContainer: {
     top: 38,
     position: 'absolute',
@@ -154,6 +168,7 @@ interface StationNameCellProps {
   line: Line | null;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
+  estimatedMinutes?: number | null;
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -163,6 +178,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   line,
   lineColors,
   hasTerminus,
+  estimatedMinutes,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
   const dim = useLandscapeWindowDimensions();
@@ -246,7 +262,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                   localStyles.dotInner,
                   passed && !arrived && localStyles.dotInnerPassed,
                 ]}
-              />
+              >
+                {estimatedMinutes != null && !(passed && !arrived) ? (
+                  <View
+                    style={localStyles.estimatedMinutesOverlay}
+                    pointerEvents="none"
+                  >
+                    <EstimatedMinutesBadge
+                      estimatedMinutes={estimatedMinutes}
+                    />
+                  </View>
+                ) : null}
+              </View>
             )}
             <View style={localStyles.marksContainer}>
               <PadLineMarks
@@ -308,6 +335,9 @@ const LineBoardE231: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
+  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -329,11 +359,14 @@ const LineBoardE231: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
+            estimatedMinutes={
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
+            }
           />
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations]
+    [hasTerminus, line, lineColors, stations, estimatedMinutesByStationId]
   );
 
   const stationsWithEmpty = useMemo(

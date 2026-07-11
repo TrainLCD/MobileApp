@@ -73,8 +73,11 @@ export const useTrainTypeModal = () => {
       const newStations = res.data.lineGroupStations;
 
       if (selectedBound) {
+        // 大江戸線の都庁前(外回り/内回り)のようにgroupIdが同じでもidが異なる駅が
+        // あるため、idで存在チェックする(groupId一致だと無関係な出現を現在駅と
+        // 誤認し、findNearestStationによる位置補正がスキップされてしまう)。
         const currentInNewList = newStations.some(
-          (s) => s.groupId === currentStation?.groupId
+          (s) => s.id === currentStation?.id
         );
 
         setStationState((prev) => {
@@ -85,7 +88,7 @@ export const useTrainTypeModal = () => {
           const nearest = findNearestStation(
             prev.stations,
             newStations,
-            currentStation?.groupId,
+            currentStation?.id,
             selectedDirection
           );
 
@@ -119,7 +122,7 @@ export const useTrainTypeModal = () => {
       setNavigation,
       setResetFirstSpeech,
       selectedBound,
-      currentStation?.groupId,
+      currentStation?.id,
       selectedDirection,
     ]
   );

@@ -6,6 +6,8 @@ import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -107,6 +109,7 @@ interface StationNameCellProps {
   hasTerminus: boolean;
   chevronColors: readonly [ChevronColor, ChevronColor];
   isOdakyu?: boolean;
+  estimatedMinutes?: number | null;
 }
 
 // Helper for bar gradients
@@ -305,6 +308,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   hasTerminus,
   chevronColors,
   isOdakyu,
+  estimatedMinutes,
 }: StationNameCellProps) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
@@ -407,6 +411,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           arrived={arrived}
           passed={passed}
           isOdakyu={isOdakyu}
+          estimatedMinutes={estimatedMinutes}
         />
         {stations.length - 1 === index ? (
           isOdakyu ? (
@@ -484,6 +489,12 @@ const LineBoardEast: React.FC<Props> = ({
   // なったため、バナーの「◯◯のつぎは」側も同じ次駅を参照して整合を保つ
   const nextStation = useDisplayNextStation();
   const afterNextStation = useAfterNextStation();
+  // 小田急テーマはETA表示の対象外のためクエリごと実行しない
+  const { route: estimatedRoute } = useEstimateArrivalTimes({
+    skip: isOdakyu,
+  });
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const dim = useLandscapeWindowDimensions();
 
@@ -553,11 +564,22 @@ const LineBoardEast: React.FC<Props> = ({
             hasTerminus={hasTerminus}
             chevronColors={chevronColors}
             isOdakyu={isOdakyu}
+            estimatedMinutes={
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
+            }
           />
         </React.Fragment>
       );
     },
-    [chevronColors, hasTerminus, line, lineColors, stations, isOdakyu]
+    [
+      chevronColors,
+      hasTerminus,
+      line,
+      lineColors,
+      stations,
+      isOdakyu,
+      estimatedMinutesByStationId,
+    ]
   );
 
   return (

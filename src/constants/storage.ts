@@ -36,6 +36,8 @@ export const STORAGE_KEYS = {
   WRONG_DIRECTION_NOTIFY_ENABLED: '@TrainLCD:wrongDirectionNotifyEnabled',
   PICTURE_IN_PICTURE_ENABLED: '@TrainLCD:pictureInPictureEnabled',
   PORTRAIT_MODE_ENABLED: '@TrainLCD:portraitModeEnabled',
+  ETA_ASSIST_MANUAL_ENABLED: '@TrainLCD:etaAssistManualEnabled',
+  POWER_SAVING_LOCATION_ENABLED: '@TrainLCD:powerSavingLocationEnabled',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

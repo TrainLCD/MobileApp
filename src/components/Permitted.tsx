@@ -43,7 +43,10 @@ import {
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
-import { portraitModeEnabledAtom } from '../store/atoms/experimental';
+import {
+  etaAssistManualEnabledAtom,
+  portraitModeEnabledAtom,
+} from '../store/atoms/experimental';
 import navigationState, {
   autoModeEnabledAtom,
   isAppLatestAtom,
@@ -75,6 +78,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
   const setPortraitModeEnabled = useSetAtom(portraitModeEnabledAtom);
+  const setEtaAssistManualEnabled = useSetAtom(etaAssistManualEnabledAtom);
   const { enabled: pictureInPictureEnabled, active: pictureInPictureActive } =
     useAtomValue(pictureInPictureAtom);
   const isAppActive = useIsAppActive();
@@ -436,6 +440,12 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const portraitModeEnabledStr = storage.getString(
         STORAGE_KEYS.PORTRAIT_MODE_ENABLED
       );
+      const etaAssistManualEnabledStr = storage.getString(
+        STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED
+      );
+      // NOTE: powerSavingLocationEnabledAtom はここでは復元しない。effect復元だと
+      // 継続測位がデフォルト精度で一度起動してから再起動されるため、
+      // atom定義側(store/atoms/experimental.ts)でMMKVから同期的に初期値を確定している。
 
       if (themePreferenceKey) {
         setThemePreference(themePreferenceKey as ThemePreference);
@@ -545,6 +555,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       if (portraitModeEnabledStr) {
         setPortraitModeEnabled(portraitModeEnabledStr === 'true');
       }
+      if (etaAssistManualEnabledStr) {
+        setEtaAssistManualEnabled(etaAssistManualEnabledStr === 'true');
+      }
     };
 
     loadSettings();
@@ -556,6 +569,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setNotify,
     setPictureInPicture,
     setPortraitModeEnabled,
+    setEtaAssistManualEnabled,
   ]);
 
   useEffect(() => {

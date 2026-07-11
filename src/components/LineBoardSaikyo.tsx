@@ -6,6 +6,8 @@ import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -76,6 +78,7 @@ interface StationNameCellProps {
   line: Line | null;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
+  estimatedMinutes?: number | null;
 }
 
 const useStationCellState = (
@@ -213,6 +216,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   line,
   lineColors,
   hasTerminus,
+  estimatedMinutes,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
   const dim = useLandscapeWindowDimensions();
@@ -268,6 +272,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           transferLines={transferLines}
           arrived={arrived}
           passed={passed}
+          estimatedMinutes={estimatedMinutes}
         />
         {stations.length - 1 === index && (
           <BarTerminalSaikyo
@@ -312,6 +317,9 @@ const LineBoardSaikyo: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
+  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -333,11 +341,14 @@ const LineBoardSaikyo: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
+            estimatedMinutes={
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
+            }
           />
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations]
+    [hasTerminus, line, lineColors, stations, estimatedMinutesByStationId]
   );
 
   const stationsWithEmpty = useMemo(

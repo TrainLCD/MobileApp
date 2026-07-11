@@ -41,20 +41,28 @@ export const useBounds = (
     const outboundStation = stations[0];
 
     if (isOedoLine) {
-      const stationIndex = stations.findIndex(
-        (s) => s.groupId === currentStation?.groupId
-      );
-      if (stationIndex < 0) return [[], []];
+      // 都庁前(外回り/内回り)のようにgroupIdが同じでもidが異なる駅があるため、
+      // まずidで位置を特定する(groupId一致だと配列中で先に見つかる方に固定され、
+      // 実際の現在地と異なる位置を基準に行き先・経由駅の区間を切り出してしまう)。
+      // ただし新宿・代々木などでは最寄り駅が他路線(JRなど)のレコードになり
+      // idが大江戸線の駅リストに存在しないため、groupIdで大江戸線側の駅に読み替える。
+      const oedoCurrentStation =
+        stations.find((s) => s.id === currentStation?.id) ??
+        (currentStation?.groupId != null
+          ? stations.find((s) => s.groupId === currentStation.groupId)
+          : undefined);
+      if (!oedoCurrentStation) return [[], []];
+      const stationIndex = stations.indexOf(oedoCurrentStation);
 
       const isTochomaeStation =
-        currentStation?.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER ||
-        currentStation?.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER;
+        oedoCurrentStation.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER ||
+        oedoCurrentStation.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER;
 
       const oedoLineInboundStops = stations
         .slice(stationIndex, stations.length)
         .filter(
           (s) =>
-            s.id !== currentStation?.id &&
+            s.id !== oedoCurrentStation.id &&
             s.id !== undefined &&
             s.id !== null &&
             TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)
@@ -67,14 +75,13 @@ export const useBounds = (
           (s) =>
             s.id !== undefined &&
             s.id !== null &&
-            ((s.id !== currentStation?.id &&
+            ((s.id !== oedoCurrentStation.id &&
               TOEI_OEDO_LINE_MAJOR_STATIONS_ID.includes(s.id)) ||
               s.id === TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER)
         )
         // NOTE: 光が丘~築地市場駅間では「都庁前」案内をしない
         .filter((s) =>
-          currentStation &&
-          (currentStation.id ?? 0) >= TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID
+          (oedoCurrentStation.id ?? 0) >= TOEI_OEDO_LINE_TSUKIJISHIJO_STATION_ID
             ? s.id !== TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER
             : true
         );

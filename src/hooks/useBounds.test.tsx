@@ -182,6 +182,76 @@ describe('useBounds フック', () => {
     expect(bounds).toContain('"id":9930121');
   });
 
+  it('groupIdが同じでもidが異なる駅がある場合、id一致で現在地の位置を特定する', () => {
+    setAtomValues({ selectedDirection: 'INBOUND' });
+
+    // 都庁前(内回り: 9930101)が現在駅。groupId(100)は外回り(9930100)と同一だが、
+    // idは別々に採番されている。groupIdだけでstationIndexを求めると、配列中で
+    // 先に出現する外回り(index 0)に固定され、実際には現在地より手前(outbound側)
+    // にあるはずの飯田橋まで inbound(現在地より前方)に含めてしまう。
+    const currentStation = { id: 9930101, groupId: 100 };
+    (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
+    (useLoopLine as jest.Mock).mockReturnValue({
+      isLoopLine: false,
+      isOedoLine: true,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+    (getIsLocal as jest.Mock).mockReturnValue(true);
+
+    const stations = [
+      { id: 9930100, groupId: 100 }, // 都庁前(外回り) - 現在駅とgroupIdが同じ
+      { id: 9930107, groupId: 9930107 }, // 飯田橋 - 外回りと内回りの間(現在地より手前)
+      { id: 9930101, groupId: 100 }, // 都庁前(内回り) - 現在駅
+      { id: 9930113, groupId: 9930113 }, // 両国 - 現在地より後方
+    ] as unknown as Station[];
+    const { getByTestId } = render(<TestComponent stations={stations} />);
+
+    const bounds = getByTestId('bounds').props.children;
+    const [inboundStops, outboundStops] = JSON.parse(bounds) as {
+      id: number;
+    }[][];
+    // inbound(bounds[0])には現在地(内回り)より後方の両国のみが含まれる
+    expect(inboundStops.map((s) => s.id)).toEqual([9930113]);
+    // 現在地より手前の飯田橋はoutbound(bounds[1])側に含まれるべきで、
+    // inboundに誤って混入してはいけない
+    expect(outboundStops.map((s) => s.id)).toContain(9930107);
+  });
+
+  it('大江戸線で現在駅が他路線レコード(JR新宿など)の場合、groupIdで読み替えて bounds を返す', () => {
+    setAtomValues({ selectedDirection: 'INBOUND' });
+
+    // 新宿の最寄り駅としてJR側のレコードが現在駅になっているケース。
+    // idは大江戸線の駅リストに存在しないが、groupIdは大江戸線新宿と共通。
+    const currentStation = { id: 1130224, groupId: 1130224 }; // JR新宿
+    (useCurrentStation as jest.Mock).mockReturnValue(currentStation);
+    (useLoopLine as jest.Mock).mockReturnValue({
+      isLoopLine: false,
+      isOedoLine: true,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+    (getIsLocal as jest.Mock).mockReturnValue(true);
+
+    const stations = [
+      { id: 9930138, groupId: 9930138 }, // 光が丘（主要駅）
+      { id: 9930100, groupId: 100 }, // 都庁前(外回り)
+      { id: 9930128, groupId: 1130224 }, // 大江戸線新宿 - JR新宿とgroupIdが同じ
+      { id: 9930121, groupId: 9930121 }, // 大門（主要駅）
+      { id: 9930113, groupId: 9930113 }, // 両国（主要駅）
+    ] as unknown as Station[];
+    const { getByTestId } = render(<TestComponent stations={stations} />);
+
+    const bounds = getByTestId('bounds').props.children;
+    const [inboundStops, outboundStops] = JSON.parse(bounds) as {
+      id: number;
+    }[][];
+    // inbound には新宿より後方の主要駅（大門、両国）が含まれる
+    expect(inboundStops.map((s) => s.id)).toEqual([9930121, 9930113]);
+    // outbound には都庁前(外回り)と光が丘が含まれる
+    expect(outboundStops.map((s) => s.id)).toEqual([9930100, 9930138]);
+  });
+
   it('大江戸線で currentStation が見つからない場合、空の bounds を返す', () => {
     setAtomValues({ selectedDirection: 'INBOUND' });
 

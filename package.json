@@ -89,7 +89,6 @@
     "react-native-view-shot": "4.0.3",
     "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "^0.21.1",
-    "rxjs": "^7.3.0",
     "zod": "^3.24.3"
   },
   "devDependencies": {
@@ -149,9 +148,6 @@
       "node",
       "d.ts"
     ],
-    "testPathIgnorePatterns": [
-      "<rootDir>/functions/"
-    ],
     "watchman": false,
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)"
@@ -171,5 +167,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.8.0"
+  "version": "10.9.0"
 }

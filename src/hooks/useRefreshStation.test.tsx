@@ -11,6 +11,9 @@ import { useRefreshStation } from '~/hooks/useRefreshStation';
 import * as useThresholdModule from '~/hooks/useThreshold';
 import * as useWrongDirectionDetectorModule from '~/hooks/useWrongDirectionDetector';
 import * as remoteConfigModule from '~/lib/remoteConfig';
+import { store } from '~/store';
+import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import * as etaPhaseNowModule from '~/utils/etaPhaseNow';
 import sendNotificationAsync from '~/utils/native/ios/sensitiveNotificationMoudle';
 
 jest.mock('jotai', () => {
@@ -87,6 +90,8 @@ describe('useRefreshStation', () => {
   afterEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
+    // R1テストで設定したETAアンカーを既定(null)へ戻し、他テストへ漏れないようにする
+    store.set(etaAnchorAtom, null);
   });
 
   it('runs without crashing with basic mocks', () => {
@@ -461,5 +466,81 @@ describe('useRefreshStation', () => {
     const body = mockSendNotification.mock.calls[0][0].body;
     expect(body).toContain('Approaching Station');
     expect(body).not.toContain('Nearest Station');
+  });
+
+  // R1(到着圏の緩和)は「発車(DEPARTED)を観測済みで、ETAが前方の次駅で停車中」の
+  // ときだけ効く。精度800mでは通常圏は arrivedThreshold(100)+min(400,150)=250m、
+  // R1圏は 100+min(400,500)=500m。駅から約350m(通常圏外・R1圏内)に現在地を置き、
+  // アンカー種別だけを変えて緩和の有無を検証する。
+  const setupR1 = (anchorKind: 'AT_STATION' | 'DEPARTED') => {
+    // mockStation.id は Maybe<number> だが実体は 1。R1は phase.stationId と
+    // nearestStation.id の一致で効くため、同じ値を数値として使い回す。
+    const stationId = mockStation.id as number;
+
+    jest.spyOn(remoteConfigModule, 'isEtaAssistEnabled').mockReturnValue(true);
+
+    // 駅(35.0,135.0)から約350m北。通常圏(250m)外・R1圏(500m)内。
+    mockUseAtomValue
+      .mockReturnValueOnce({
+        coords: {
+          latitude: 35.00315,
+          longitude: 135.0,
+          accuracy: 800,
+        },
+      }) // locationAtom
+      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
+      .mockReturnValue({ targetStationIds: [] }); // notifyState
+
+    const setStation = jest.fn();
+    mockUseSetAtom.mockReturnValueOnce(setStation).mockReturnValue(jest.fn());
+
+    jest
+      .spyOn(useNearestStationModule, 'useNearestStation')
+      .mockReturnValue(mockStation);
+    jest
+      .spyOn(useNextStationModule, 'useNextStation')
+      .mockReturnValue(mockStation);
+    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
+    jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
+      arrivedThreshold: 100,
+      approachingThreshold: 300,
+    });
+    jest
+      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
+      .mockReturnValue({
+        isWrongDirection: false,
+        isLoopLineWrongDirection: false,
+      });
+
+    store.set(etaAnchorAtom, {
+      stationId: anchorKind === 'DEPARTED' ? 99 : stationId,
+      kind: anchorKind,
+      observedAtMs: 0,
+    });
+    // フェーズは常駐atomではなくオンデマンド計算になったため、計算結果をスタブする
+    jest
+      .spyOn(etaPhaseNowModule, 'getEtaPhaseNow')
+      .mockReturnValue({ kind: 'DWELLING', stationId });
+
+    renderHook(() => useRefreshStation(), {
+      wrapper: ({ children }) => <Provider>{children}</Provider>,
+    });
+
+    expect(setStation).toHaveBeenCalled();
+    const updater = setStation.mock.calls[0][0] as (prev: any) => any;
+    return updater({});
+  };
+
+  it('R1: DEPARTED後にETAが前方の次駅で停車中なら到着圏を広げて到着を確定する', () => {
+    const nextState = setupR1('DEPARTED');
+    expect(nextState.arrived).toBe(true);
+  });
+
+  it('R1: AT_STATION(停車中の自駅)には緩和を効かせず始発駅ロックを防ぐ', () => {
+    // AT_STATION アンカーの自駅DWELLINGでは緩和しないため、通常圏(250m)外の
+    // 現在地は到着扱いにならない。これにより arrived が張り付いてDEPARTEDが
+    // 記録されない自己強化ロック(始発駅から進めない)を防ぐ。
+    const nextState = setupR1('AT_STATION');
+    expect(nextState.arrived).toBe(false);
   });
 });

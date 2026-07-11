@@ -6,6 +6,8 @@ import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
@@ -205,6 +207,7 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
+  estimatedMinutes?: number | null;
 }
 
 // Helper: Check if station is at middle position
@@ -339,6 +342,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   line,
   lineColors,
   hasTerminus,
+  estimatedMinutes,
 }: StationNameCellProps) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
@@ -460,6 +464,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           transferLines={transferLines}
           arrived={arrived}
           passed={passed}
+          estimatedMinutes={estimatedMinutes}
         />
         {isLastStation ? (
           <BarTerminalEast
@@ -510,6 +515,9 @@ const LineBoardToei: React.FC<Props> = ({
   const currentLine = useCurrentLine();
 
   const dim = useLandscapeWindowDimensions();
+  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -547,11 +555,14 @@ const LineBoardToei: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
+            estimatedMinutes={
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
+            }
           />
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations]
+    [hasTerminus, line, lineColors, stations, estimatedMinutesByStationId]
   );
 
   const stationsWithEmpty = useMemo(

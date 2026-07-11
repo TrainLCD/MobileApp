@@ -6,6 +6,8 @@ import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
   useDisplayCurrentStation,
+  useEstimateArrivalTimes,
+  useEstimatedMinutesByStationId,
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
@@ -65,6 +67,7 @@ interface StationNameCellProps {
   line: Line;
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
+  estimatedMinutes?: number | null;
 }
 
 // Helper: Determine if the bar should be split at current station
@@ -255,6 +258,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   line,
   lineColors,
   hasTerminus,
+  estimatedMinutes,
 }: StationNameCellProps) => {
   const dim = useLandscapeWindowDimensions();
   const {
@@ -352,6 +356,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           transferLines={transferLines}
           arrived={arrived}
           passed={passed}
+          estimatedMinutes={estimatedMinutes}
         />
 
         {stations.length - 1 === index ? (
@@ -405,6 +410,9 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const dim = useLandscapeWindowDimensions();
   const padCount = Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
+  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -439,11 +447,21 @@ const LineBoardJRKyushu: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
+            estimatedMinutes={
+              s.id != null ? estimatedMinutesByStationId.get(s.id) : null
+            }
           />
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations, totalStations]
+    [
+      hasTerminus,
+      line,
+      lineColors,
+      stations,
+      totalStations,
+      estimatedMinutesByStationId,
+    ]
   );
 
   const stationsWithEmpty = useMemo(

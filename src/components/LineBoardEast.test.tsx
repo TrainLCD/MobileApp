@@ -14,6 +14,8 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useCurrentLine: jest.fn(),
   useDisplayCurrentStation: jest.fn(),
+  useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
+  useEstimatedMinutesByStationId: jest.fn(() => new Map()),
   useInterval: jest.fn(),
   useTransferLinesFromStation: jest.fn(() => []),
 }));
@@ -183,6 +185,48 @@ describe('LineBoardEast', () => {
       />
     );
     expect(LineDot).toHaveBeenCalled();
+  });
+
+  it('stationIdに対応するestimatedMinutesがLineDotへ渡される', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
+    const { LineDot } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ estimatedMinutes: 5 }),
+      undefined
+    );
+  });
+
+  it('isOdakyu時はETAクエリをskipして呼び出す', () => {
+    const { useEstimateArrivalTimes } = require('~/hooks');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+        isOdakyu
+      />
+    );
+    expect(useEstimateArrivalTimes).toHaveBeenCalledWith({ skip: true });
+  });
+
+  it('isOdakyuでない場合はETAクエリをskipしない', () => {
+    const { useEstimateArrivalTimes } = require('~/hooks');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(useEstimateArrivalTimes).toHaveBeenCalledWith({ skip: undefined });
   });
 
   it('lineがnullの場合、何もレンダリングされない', () => {

@@ -154,15 +154,6 @@ const TuningSettings: React.FC = () => {
     storage.set(STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED, String(nextValue));
   };
 
-  const toggleTelemetryEnabled = () => {
-    const nextValue = !settings.telemetryEnabled;
-    setSettings((prev) => ({
-      ...prev,
-      telemetryEnabled: nextValue,
-    }));
-    storage.set(STORAGE_KEYS.TELEMETRY_ENABLED, String(nextValue));
-  };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -289,31 +280,6 @@ const TuningSettings: React.FC = () => {
             accessibilityRole="button"
           >
             {translate('enableUntouchableMode')}
-          </Typography>
-        </View>
-
-        <View style={styles.switchSettingItem}>
-          {isLEDTheme ? (
-            <LEDThemeSwitch
-              value={settings.telemetryEnabled}
-              onValueChange={toggleTelemetryEnabled}
-              accessibilityLabel={translate('optInTelemetryTitle')}
-            />
-          ) : (
-            <Switch
-              value={settings.telemetryEnabled}
-              onValueChange={toggleTelemetryEnabled}
-              ios_backgroundColor={'#fff'}
-              accessibilityLabel={translate('optInTelemetryTitle')}
-            />
-          )}
-
-          <Typography
-            style={styles.switchSettingItemText}
-            onPress={toggleTelemetryEnabled}
-            accessibilityRole="button"
-          >
-            {translate('optInTelemetryTitle')}
           </Typography>
         </View>
       </ScrollView>

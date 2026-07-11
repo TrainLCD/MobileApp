@@ -3,7 +3,7 @@ const IS_DEV = process.env.APP_VARIANT === 'dev';
 export default {
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.8.0',
+  version: '10.9.0',
   plugins: [
     'expo-image',
     'expo-font',
@@ -52,7 +52,7 @@ export default {
     },
   },
   ios: {
-    buildNumber: '2716',
+    buildNumber: '2742',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     supportsTablet: true,
@@ -60,7 +60,7 @@ export default {
   android: {
     package: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000503,
+    versionCode: 100000529,
   },
   owner: 'trainlcd',
   experiments: {

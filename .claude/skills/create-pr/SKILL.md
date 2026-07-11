@@ -101,7 +101,6 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    - `android/**`
    - `ios/**`
    - `assets/**`
-   - `functions/**`
 
    **コード本体変更ありの場合 — コミット件名ベース**
 

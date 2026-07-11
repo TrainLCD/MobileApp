@@ -33,7 +33,8 @@ This handbook defines how automation agents collaborate safely and effectively o
 - `docs/`: human-facing documentation including changelog and incident notes.
 - `utils/`: developer tooling scripts such as GraphQL codegen config.
 - `android/`, `ios/`: native projects.
-- `functions/`: Cloudflare Workers backend (TTS via Azure Speech, feedback triage via Workers AI, review notifiers). Migrated off Firebase Cloud Functions.
+
+> The Cloudflare Workers backend (TTS via Azure Speech, feedback triage via Workers AI, review notifiers) has been moved out of this repository into the [TrainLCD/BFF](https://github.com/TrainLCD/BFF) monorepo. The former `functions/` directory no longer lives here.
 
 ## Tooling & Environment Expectations
 
@@ -87,7 +88,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Jest global setup lives in `jest.setup.js` and `src/setupTests.ts`.
 - Co-locate unit tests as `.test.ts` or `.test.tsx` siblings to the module.
 - Reuse helper utilities from `src/utils/test/` to avoid duplicate setup code.
-- Mock network and Firebase layers with `jest.mock`, and call `jest.clearAllMocks()` in `afterEach`.
+- Mock network and backend API layers with `jest.mock`, and call `jest.clearAllMocks()` in `afterEach`.
 - For integration flows, extend `src/test/e2e.ts` and prefer fixtures from `src/__fixtures__/`.
 - When modifying behavior, update or add tests in the same change set; document skipped tests with TODOs and owner rationale.
 

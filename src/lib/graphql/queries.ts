@@ -473,3 +473,54 @@ export const GET_STATION_TRAIN_TYPES_LIGHT = gql`
     }
   }
 `;
+
+// Query for getting per-station speed/acceleration/distance segments along a route
+// (used by useSimulationMode to drive auto-simulation physics instead of client-side constants)
+export const GET_TRAIN_ROUTE = gql`
+  query GetTrainRoute(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $lineGroupId: Int
+  ) {
+    trainRoute(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      lineGroupId: $lineGroupId
+    ) {
+      segments {
+        distanceFromPrevious
+        maxAcceleration
+        maxDeceleration
+        maxSpeed
+      }
+    }
+  }
+`;
+
+// Query for estimating arrival times between two stations
+export const ESTIMATE_ARRIVAL_TIMES = gql`
+  query EstimateArrivalTimes(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $viaLineIds: [Int!]
+    $directionId: Int
+  ) {
+    estimateArrivalTimes(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      viaLineIds: $viaLineIds
+      directionId: $directionId
+    ) {
+      routes {
+        id
+        stops {
+          stationId
+          stationGroupId
+          cumulativeMinutes
+          departureCumulativeMinutes
+          stopsHere
+        }
+      }
+    }
+  }
+`;
