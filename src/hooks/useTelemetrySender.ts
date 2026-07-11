@@ -68,18 +68,23 @@ const SEND_LOCATION_MUTATION = `
 `;
 
 // 認可エラー等もHTTP 200 + errors配列で返る
-const SendLocationResponse = z.object({
-  data: z
-    .object({
-      sendLocation: z.object({
-        sessionId: z.string(),
-        warning: z.string().nullable().optional(),
-      }),
-    })
-    .nullable()
-    .optional(),
-  errors: z.array(z.object({ message: z.string() })).optional(),
-});
+const SendLocationResponse = z
+  .object({
+    data: z
+      .object({
+        sendLocation: z.object({
+          sessionId: z.string(),
+          warning: z.string().nullable().optional(),
+        }),
+      })
+      .nullable()
+      .optional(),
+    errors: z.array(z.object({ message: z.string() })).optional(),
+  })
+  // {}のような空レスポンスを不正として弾く
+  .refine((res) => res.data != null || (res.errors?.length ?? 0) > 0, {
+    message: 'Either data.sendLocation or non-empty errors is required',
+  });
 
 // テレメトリ基盤のGraphQL enum Platform
 const TelemetryPlatform = z.enum(['ios', 'android', 'macos', 'unknown']);
@@ -117,17 +122,22 @@ const SEND_LOG_EVENT_MUTATION = `
   }
 `;
 
-const SendLogEventResponse = z.object({
-  data: z
-    .object({
-      sendLogEvent: z.object({
-        sessionId: z.string(),
-      }),
-    })
-    .nullable()
-    .optional(),
-  errors: z.array(z.object({ message: z.string() })).optional(),
-});
+const SendLogEventResponse = z
+  .object({
+    data: z
+      .object({
+        sendLogEvent: z.object({
+          sessionId: z.string(),
+        }),
+      })
+      .nullable()
+      .optional(),
+    errors: z.array(z.object({ message: z.string() })).optional(),
+  })
+  // {}のような空レスポンスを不正として弾く
+  .refine((res) => res.data != null || (res.errors?.length ?? 0) > 0, {
+    message: 'Either data.sendLogEvent or non-empty errors is required',
+  });
 
 export const useTelemetrySender = (
   sendTelemetryAutomatically = false,
@@ -226,7 +236,11 @@ export const useTelemetrySender = (
         }
 
         const result = SendLogEventResponse.safeParse(json);
-        if (result.success && result.data.errors?.length) {
+        if (!result.success) {
+          console.error('Invalid log response:', result.error, json);
+          return;
+        }
+        if (result.data.errors?.length) {
           console.warn(
             'Log API error:',
             result.data.errors.map((e) => e.message).join(', ')
@@ -322,18 +336,20 @@ export const useTelemetrySender = (
       }
 
       const result = SendLocationResponse.safeParse(json);
-      if (result.success) {
-        if (result.data.errors?.length) {
-          console.warn(
-            'Location API error:',
-            result.data.errors.map((e) => e.message).join(', ')
-          );
-        } else if (result.data.data?.sendLocation.warning) {
-          console.warn(
-            'Location API warning:',
-            result.data.data.sendLocation.warning
-          );
-        }
+      if (!result.success) {
+        console.error('Invalid location response:', result.error, json);
+        return;
+      }
+      if (result.data.errors?.length) {
+        console.warn(
+          'Location API error:',
+          result.data.errors.map((e) => e.message).join(', ')
+        );
+      } else if (result.data.data?.sendLocation.warning) {
+        console.warn(
+          'Location API warning:',
+          result.data.data.sendLocation.warning
+        );
       }
     } catch (error) {
       console.error('Failed to send location:', error);
