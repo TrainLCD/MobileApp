@@ -75,6 +75,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    - 何もコミットは積まない（master 先端そのまま）。biome 等のフォーマッタは走らせない（新規コミット無し）。
    - push 前に、対象 SHA（`git rev-parse origin/master`）・取り込まれるコミット件数・本文に入れる version をユーザーに提示して承認を取る。
+   - **例外**: この PR が版数ファイルで衝突する場合（`master` から特定 PR だけ cherry-pick したリリースの後に起きる。後述の「版数ファイルのコンフリクト解決」を参照）は、この枝に `origin/dev` をマージして解決コミットを 1 つだけ積む。それ以外は master 先端そのまま。
 
 5. **PR 本文を組み立て（テンプレ厳守・全節を実内容で埋める）**
 
@@ -159,6 +160,56 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    - 変更の種類チェック状態（`その他` のみ ON）
    - テスト欄のチェック状態（全 OFF + 説明文あり）
    - 使用した `release_version`（どこから取ったか）
+
+## 版数ファイルのコンフリクト解決（cherry-pick / hotfix リリース後）
+
+通常の「dev から丸ごと」リリースでは `master` が `dev` の完全な祖先になるため、この同期 PR は衝突しない（手順 4 のとおり master 先端そのままで済む）。しかし **リリースブランチを `master` から切って特定 PR だけ cherry-pick したリリース**（`create-release-pr` に「この変更だけ」と指定したホットフィックス型など）では、`dev` を `master` に取り込んでいないため、`master` のリリース版数と `dev` の canary bump 版数が **ねじれたまま** 残り、この同期 PR が版数ファイルで衝突する。
+
+衝突するのは版数ファイルのみで、アプリコードは衝突しない:
+
+- `android/app/build.gradle`（`versionCode` / `versionName`）
+- `app.config.ts`（`version` / `buildNumber` / `versionCode`）
+- `ios/TrainLCD.xcodeproj/project.pbxproj`（`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`）
+
+### 解決方針: semver はリリース版、ビルド番号は最大値
+
+| 種別 | 採用する側 | 理由 |
+| ---- | ---- | ---- |
+| semver（`version` / `versionName` / `MARKETING_VERSION`） | `master`（リリース版数） | `dev` をリリース済みバージョンへ前進させる。過去 PR #6396 も semver 競合をリリース版で解決している |
+| ビルド番号（`versionCode` / `CURRENT_PROJECT_VERSION` / `buildNumber`） | `max(dev, master)`（通常は `dev` 側が大きい） | ストアはビルド番号の単調増加を要求する。canary で既発行の番号より下げると次回 bump で衝突する |
+
+### 解決手順
+
+1. `chore/dev-from-master`（= master 先端）に居る状態で `origin/dev` をマージする（手順 4 の「コミットを積まない」原則の唯一の例外）:
+
+   ```bash
+   git switch chore/dev-from-master
+   git merge --no-ff --no-commit origin/dev
+   ```
+
+2. 衝突した版数 3 ファイルを master 側（`--ours`）で確定してから、ビルド番号だけ `dev` 側の最大値へ引き上げる（下は master=530/2743・dev=531/2744 の例）:
+
+   ```bash
+   git checkout --ours android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+   sed -i 's/versionCode 100000530/versionCode 100000531/g' android/app/build.gradle
+   sed -i "s/buildNumber: '2743'/buildNumber: '2744'/g; s/versionCode: 100000530/versionCode: 100000531/g" app.config.ts
+   sed -i 's/CURRENT_PROJECT_VERSION = 2743;/CURRENT_PROJECT_VERSION = 2744;/g' ios/TrainLCD.xcodeproj/project.pbxproj
+   ```
+
+   これらの版数ファイルは master↔dev で数値以外の差分が無い（`git diff origin/dev origin/master -- <path>` で確認できる）ため、`--ours` で master を採ってもコンテンツは失われない。
+
+3. **`dev` への正味の変化が semver だけ**（ビルド番号は据え置き）であることを確認してからマージコミットを作成し push する:
+
+   ```bash
+   git add android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+   git diff origin/dev HEAD    # semver（例 10.9.0 -> 10.9.1）のみが出るのが正
+   git commit -m "origin/dev をマージし版数競合を解決（semver=<release>、ビルド番号=<max>）"
+   git push origin chore/dev-from-master
+   ```
+
+4. 以降は通常どおり merge commit でマージする（`finalize-release` が Ruleset 一時緩和つきで実行する）。マージ後は dev HEAD が 2 親の merge commit になり、`git rev-list --count origin/dev..origin/master` が `0`（dev が master を完全包含）になることを検証する。
+
+**semver をリリース版数へ更新する判断とビルド番号の採用値は本番の版数に関わるため、自動で確定せずユーザーに確認する。**
 
 ## 注意事項
 
