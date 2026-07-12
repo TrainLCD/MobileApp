@@ -40,6 +40,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_tts: 'personalize_tts',
   personalize_languages: 'personalize_languages',
   personalize_notifications: 'personalize_notifications',
+  personalize_battery: 'personalize_battery',
   personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
   about_app_licenses: 'about_app_licenses',
@@ -110,6 +111,8 @@ const SettingsItem = ({
         return 'globe';
       case 'personalize_notifications':
         return 'notifications';
+      case 'personalize_battery':
+        return 'battery-half';
       case 'personalize_experimental':
         return 'flask';
       case 'personalize_android':
@@ -311,6 +314,12 @@ const AppSettingsScreen: React.FC = () => {
           title: translate('notificationSettings'),
           color: '#FF3B30',
           onPress: () => navigation.navigate('NotificationSettings' as never),
+        },
+        {
+          id: SETTING_ITEM_ID_MAP.personalize_battery,
+          title: translate('batterySettings'),
+          color: '#30B0C7',
+          onPress: () => navigation.navigate('BatterySettings' as never),
         },
         // 試験的機能はカナリアリリース(devアプリ)限定で表示する
         ...(isDevApp

@@ -188,6 +188,77 @@ describe('fetchSpeechAudio', () => {
     expect(body.data.ssmlEn).toBe('<speak>test</speak>');
   });
 
+  it('英語 SSML の可視テキストからマクロンを除去して送信する', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          id: 'tts-127',
+          jaAudioContent: 'QQ==',
+          enAudioContent: 'QQ==',
+        },
+      }),
+    });
+
+    await fetchSpeechAudio({
+      ...defaultOptions,
+      textEn: 'Kiryū and Ōhirashita',
+    });
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    expect(body.data.ssmlEn).toBe('<speak>Kiryu and Ohirashita</speak>');
+  });
+
+  it('マクロン除去時に SSML タグと IPA 発音記号 (ph 属性) は保持する', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          id: 'tts-128',
+          jaAudioContent: 'QQ==',
+          enAudioContent: 'QQ==',
+        },
+      }),
+    });
+
+    await fetchSpeechAudio({
+      ...defaultOptions,
+      textEn: 'the <phoneme alphabet="ipa" ph="toːkʲoː">Tōkyō</phoneme> Line',
+    });
+
+    const body = JSON.parse(mockFetch.mock.calls[0][1].body);
+    // ph 属性内の IPA (長音 ː) はそのまま、可視テキストの Tōkyō のみ Tokyo になる
+    expect(body.data.ssmlEn).toBe(
+      '<speak>the <phoneme alphabet="ipa" ph="toːkʲoː">Tokyo</phoneme> Line</speak>'
+    );
+  });
+
+  it('マクロン有無で同じキャッシュを共有する', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        result: {
+          id: 'tts-129',
+          jaAudioContent: 'QQ==',
+          enAudioContent: 'QQ==',
+        },
+      }),
+    });
+
+    const first = await fetchSpeechAudio({
+      ...defaultOptions,
+      textEn: 'Tōkyō',
+    });
+    const second = await fetchSpeechAudio({
+      ...defaultOptions,
+      textEn: 'Tokyo',
+    });
+
+    expect(first).toEqual(second);
+    // 2 回目はキャッシュヒットで fetch は 1 回だけ
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
   it('PCM MIME の場合は WAV として保存する', async () => {
     mockFetch.mockResolvedValue({
       ok: true,

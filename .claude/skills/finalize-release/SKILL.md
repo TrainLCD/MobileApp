@@ -126,6 +126,8 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
    sync が **スキップ**（差分 0 件）された場合はこの手順を飛ばす。新規作成・流用いずれかで dev<-master PR が存在する場合のみ実行する。**緩和→マージ→復元は 1 つの bash 呼び出しにまとめ、`set +e` でマージ失敗を握って復元を無条件実行する**（途中で関数が分かれて復元が飛ぶ事故を防ぐ）。
 
+   **マージ前にコンフリクトを確認する。** `gh pr view <n> --json mergeable,mergeStateStatus` が `CONFLICTING` を返す場合、`master` から特定コミットだけを cherry-pick したリリース（`create-release-pr` の「この変更だけ」指定など）の後に起きる **版数ファイルのねじれ** が典型。このときは Ruleset 緩和より先に `sync-dev-from-master` の「版数ファイルのコンフリクト解決」に従って版数を解決し（本番版数の判断はユーザー承認を取る）、PR を `MERGEABLE` にしてから 6-3 以降へ進む。`mergeable` はプッシュ直後に非同期で古い値を返すことがあるため、`git merge-base --is-ancestor origin/dev origin/chore/dev-from-master` で構造的な包含も確認するとよい。
+
    1. マージ対象 PR 番号を確定（手順 5 で新規作成 or 流用した PR）。ローカルが `chore/dev-from-master` に居るとブランチ削除で支障が出るため `git switch dev`（または安全な枝）へ退避する。
    2. `OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)` を解決。プレフライトの「マージ方式制約」記録を使う:
       - dev が `merge` を許可済み → **緩和不要**。そのまま手順 6-5 のマージへ。

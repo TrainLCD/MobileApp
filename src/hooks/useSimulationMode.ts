@@ -11,8 +11,10 @@ import { GET_TRAIN_ROUTE } from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import {
+  selectedBoundAtom,
   selectedDirectionAtom,
   stationAtom,
   stationsAtom,
@@ -22,6 +24,10 @@ import getIsPass from '../utils/isPass';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
+
+// 終点到着後、方面を逆転して折り返すまでの待機時間。
+// step のインターバルが1秒間隔のため、ティック数（≒秒数）としてそのまま扱う。
+const TERMINAL_DWELL_TICKS = 60;
 
 export const useSimulationMode = (): void => {
   const currentStation = useAtomValue(stationAtom);
@@ -40,6 +46,11 @@ export const useSimulationMode = (): void => {
   const speedProfilesRef = useRef<number[][]>([]);
   const segmentProgressDistanceRef = useRef(0);
   const dwellPendingRef = useRef(false);
+  // 終点到着後、方面を逆転して折り返すまで終点で停車し続けたティック数
+  const terminalDwellCountRef = useRef(0);
+  // 方面逆転中フラグ。新しい進行方向の速度プロファイルが再生成されるまで
+  // 終点で停車したまま待機し、旧方向のプロファイル/ジオメトリでの誤stepを防ぐ。
+  const reversingRef = useRef(false);
   // 区間ごとの (waypoints, cumulativeDistances) キャッシュ。
   // step() は毎秒呼ばれる。区間が変わらない限り cumulativeDistances は同じなので、
   // waypoints 毎の getDistance / reduce を毎ティック走らせる必要は無い。
@@ -282,6 +293,9 @@ export const useSimulationMode = (): void => {
     childIndexRef.current = 0;
     segmentProgressDistanceRef.current = 0;
     dwellPendingRef.current = false;
+    terminalDwellCountRef.current = 0;
+    // 新しい方向の速度プロファイルが揃ったので折り返し待機を解除する
+    reversingRef.current = false;
   }, [maybeRevsersedStations, trainRouteData, resolveStartIndex]);
 
   const step = useCallback(
@@ -427,6 +441,23 @@ export const useSimulationMode = (): void => {
 
       const speeds = speedProfilesRef.current[segmentIndexRef.current] ?? [];
 
+      // 方面逆転中は新方向の速度プロファイルが再生成されるまで終点で停車して待つ。
+      // 旧方向のプロファイル/ジオメトリで step すると位置が飛ぶため、ここで待機する。
+      if (reversingRef.current) {
+        const prev = store.get(locationAtom);
+        if (prev) {
+          store.set(locationAtom, {
+            timestamp: Date.now(),
+            coords: {
+              ...prev.coords,
+              speed: 0,
+              heading: null,
+            },
+          });
+        }
+        return;
+      }
+
       if (dwellPendingRef.current) {
         const prev = store.get(locationAtom);
         if (prev) {
@@ -442,27 +473,62 @@ export const useSimulationMode = (): void => {
         const nextSegmentIndex = speedProfilesRef.current.findIndex(
           (seg, idx) => seg.length > 0 && idx > segmentIndexRef.current
         );
+
         if (nextSegmentIndex === -1) {
-          const firstStation = maybeRevsersedStations[0];
-          if (
-            prev &&
-            firstStation?.latitude != null &&
-            firstStation?.longitude != null
-          ) {
-            store.set(locationAtom, {
-              timestamp: Date.now(),
-              coords: {
-                ...prev.coords,
-                latitude: firstStation.latitude,
-                longitude: firstStation.longitude,
-                speed: 0,
-                heading: null,
-              },
-            });
+          if (isLoopLine) {
+            // ループ線には折り返す終点が無いため、従来どおり先頭に戻って
+            // 同一方向のまま周回を続ける。
+            const firstStation = maybeRevsersedStations[0];
+            if (
+              prev &&
+              firstStation?.latitude != null &&
+              firstStation?.longitude != null
+            ) {
+              store.set(locationAtom, {
+                timestamp: Date.now(),
+                coords: {
+                  ...prev.coords,
+                  latitude: firstStation.latitude,
+                  longitude: firstStation.longitude,
+                  speed: 0,
+                  heading: null,
+                },
+              });
+            }
+            segmentIndexRef.current = 0;
+            childIndexRef.current = 0;
+            segmentProgressDistanceRef.current = 0;
+            dwellPendingRef.current = false;
+            return;
           }
+
+          // 終点に到達。すぐには折り返さず、約1分間そのまま停車してから
+          // 方面(selectedDirection / selectedBound)を逆転させて折り返す。
+          if (terminalDwellCountRef.current < TERMINAL_DWELL_TICKS) {
+            terminalDwellCountRef.current += 1;
+            return;
+          }
+
+          // 待機完了 → 方面を逆転する。maybeRevsersedStations と trainRoute は
+          // どちらも selectedDirection に依存して再計算されるため、方向を反転すれば
+          // 終点始発の折り返し運転として自然にシミュレーションが継続する。
+          terminalDwellCountRef.current = 0;
+          dwellPendingRef.current = false;
+          reversingRef.current = true;
+          const reversedDirection =
+            selectedDirection === 'INBOUND' ? 'OUTBOUND' : 'INBOUND';
+          // 反転後の進行方向は現在の maybeRevsersedStations の逆順になるため、
+          // 折り返し後の行き先(selectedBound)は現在の始発駅にあたる先頭要素。
+          store.set(selectedBoundAtom, maybeRevsersedStations[0] ?? null);
+          store.set(selectedDirectionAtom, reversedDirection);
+          // 折り返し後は新しい行き先として初回放送(この電車は〜行きです)を再発火させる。
+          // resetFirstSpeechAtom を進めると useTTS 側で firstSpeech が true に戻り、
+          // 行き先変更 + 発車後(arrived=false)に初回TTSが改めて再生される。
+          store.set(resetFirstSpeechAtom, store.get(resetFirstSpeechAtom) + 1);
+          return;
         }
-        segmentIndexRef.current =
-          nextSegmentIndex === -1 ? 0 : nextSegmentIndex;
+
+        segmentIndexRef.current = nextSegmentIndex;
         childIndexRef.current = 0;
         segmentProgressDistanceRef.current = 0;
         dwellPendingRef.current = false;
@@ -483,5 +549,5 @@ export const useSimulationMode = (): void => {
     return () => {
       clearInterval(intervalId);
     };
-  }, [enabled, maybeRevsersedStations, selectedDirection, step]);
+  }, [enabled, isLoopLine, maybeRevsersedStations, selectedDirection, step]);
 };
