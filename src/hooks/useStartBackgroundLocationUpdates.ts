@@ -3,11 +3,10 @@ import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { store } from '~/store';
-import { powerSavingLocationEnabledAtom } from '~/store/atoms/experimental';
+import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
 import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { handleTrackingLocation } from '~/utils/handleTrackingLocation';
-import { isDevApp } from '~/utils/isDevApp';
 import {
   LOCATION_START_MAX_RETRIES,
   LOCATION_START_RETRY_BASE_DELAY_MS,
@@ -30,16 +29,15 @@ export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
   const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
   const systemLowPowerMode = Battery.useLowPowerMode();
-  // 省電力測位モード(実験的機能)。精度をBalancedへ下げ、停車中の測位自動休止
-  // (iOSのみ)を許可する。旧プロファイルのHigh精度・更新間隔の緩和は実車検証を
-  // 経て既定値へ昇格済み(constants/location.ts)。
+  // 省電力測位モード。精度をBalancedへ下げ、停車中の測位自動休止(iOSのみ)を
+  // 許可する。旧プロファイルのHigh精度・更新間隔の緩和は実車検証を経て既定値へ
+  // 昇格済み(constants/location.ts)。
   const powerSavingSettingEnabled = useAtomValue(
     powerSavingLocationEnabledAtom
   );
-  // 試験用機能のためdevアプリだけで有効化する。手動設定に加えて、
-  // 端末の省電力モード中も自動的に同じプロファイルへ切り替える。
-  const powerSavingEnabled =
-    isDevApp && (powerSavingSettingEnabled || systemLowPowerMode);
+  // 「バッテリー」設定でONにしたときに加え、端末の省電力モード中も自動的に
+  // 同じプロファイルへ切り替える。
+  const powerSavingEnabled = powerSavingSettingEnabled || systemLowPowerMode;
   // 選択するオブジェクトはモジュール定数なので、effect依存でも参照が安定する。
   const watchOptions = powerSavingEnabled
     ? LOCATION_WATCH_OPTIONS_POWER_SAVING

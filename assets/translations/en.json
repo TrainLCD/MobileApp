@@ -331,6 +331,7 @@
   "telemetryDescription": "Your device's geographic coordinates are sent to our analytics server. The information is used only for analytics.",
   "etaAssistTitle": "Improve arrival detection",
   "etaAssistDescription": "When enabled, in sections where GPS accuracy drops such as subways, the app uses the server's estimated arrival times (ETA) to assist arrival detection. GPS remains the source of truth for arrival and current location; ETA is only an aid.",
+  "batterySettings": "Battery",
   "powerSavingLocationTitle": "Power-saving location mode",
   "powerSavingLocationDescription": "When enabled, location accuracy is lowered to a battery-friendly level and iOS pauses tracking automatically while you are stopped, further reducing battery drain and heat on long rides. The lower accuracy may delay or shift station detection and arrival announcements. The relaxed update frequency is already part of the default settings. It also turns on automatically while your device is in low-power mode.",
   "passStationLabel": "Pass"
