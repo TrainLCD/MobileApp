@@ -11,6 +11,7 @@ import {
 import { YAMANOTE_LINE_ID } from '~/constants';
 import * as useCurrentTrainTypeModule from '~/hooks/useCurrentTrainType';
 import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
+import { useLoopLine } from '~/hooks/useLoopLine';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
 import { GET_TRAIN_ROUTE } from '~/lib/graphql/queries';
 import { store } from '~/store';
@@ -28,6 +29,7 @@ jest.mock('~/store/atoms/station', () => ({
   stationAtom: { toString: () => 'stationAtom' },
   stationsAtom: { toString: () => 'stationsAtom' },
   selectedDirectionAtom: { toString: () => 'selectedDirectionAtom' },
+  selectedBoundAtom: { toString: () => 'selectedBoundAtom' },
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({
@@ -198,6 +200,10 @@ describe('useSimulationMode', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(100000));
+
+    // 各テストは非ループ線を前提とする。ループ線テストで上書きした実装が
+    // 後続テストへ漏れないよう毎回明示的にリセットする。
+    (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: false });
 
     jest
       .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
@@ -575,8 +581,8 @@ describe('useSimulationMode', () => {
       );
     });
 
-    it('終端駅到達後、先頭に戻ったときに速度プロファイルを最初から再生する', () => {
-      // 駅が1つだけ → nextStopStationがない → 即座に先頭リセット
+    it('終点到達後は即座に折り返さず終点で停車し続ける', () => {
+      // 駅が1つだけ → nextStopStationがない → 即座に終点扱い
       const stations = [mockStation(1, 1, 35.681, 139.767)];
 
       setupAtomMocks(
@@ -588,37 +594,150 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
-      // step内でstore.getが呼ばれる
+      // dwell処理内でstore.getが呼ばれる
       (store.get as jest.Mock).mockReturnValue(
         mockLocationObject(35.681, 139.767)
       );
 
       // 速度プロファイルは空（駅が1つで次の駅がない）なので
       // interval tick 1: speeds=[], i(0)>=0 → dwellPending=true
-      // interval tick 2: dwell handler → nextSegment=-1 → 先頭に戻る
-      // interval tick 3: speeds=[] again → dwellPending=true
-      // 先頭に戻る際にchildIndexがリセットされていれば、
-      // 毎回i=0から開始される（リセットされていないとiが進み続ける）
+      // interval tick 2以降: dwell handler → nextSegment=-1 → 終点で停車し
+      //   TERMINAL_DWELL_TICKS に達するまで方面逆転せず待機し続ける。
+      // 待機中は始発駅へワープせず、終点座標で speed=0 のまま留まる。
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
       });
 
-      // 6秒分進める（複数回のリセットサイクルを経る）
+      // 6秒分進める（待機継続中）
       jest.advanceTimersByTime(6000);
 
-      // 先頭駅の位置が繰り返しセットされることを確認（リセットが正しく機能している）
+      // 終点座標で speed=0 の位置更新が繰り返しセットされることを確認
       const locationSetCalls = (store.set as jest.Mock).mock.calls
         .filter((call) => call[0] === locationAtom)
         .map((call) => call[1]);
 
-      const resetCalls = locationSetCalls.filter(
+      const dwellCalls = locationSetCalls.filter(
         (loc) =>
           loc?.coords?.latitude === stations[0].latitude &&
           loc?.coords?.longitude === stations[0].longitude &&
           loc?.coords?.speed === 0
       );
-      // 初期化 + dwellハンドラでの複数回リセット
-      expect(resetCalls.length).toBeGreaterThanOrEqual(2);
+      // 終点停車中の複数回の位置更新
+      expect(dwellCalls.length).toBeGreaterThanOrEqual(2);
+
+      // 待機時間(60ティック)未満では方面逆転(selectedDirection書き込み)は起きない
+      const directionSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'selectedDirectionAtom'
+      );
+      expect(directionSetCalls).toHaveLength(0);
+    });
+
+    it('終点で約1分停車したのち方面を逆転して折り返す', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      mockTrainRoute(stations);
+
+      // 1駅1ティックで終点まで到達させる
+      jest
+        .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+        .mockReturnValue([2000]);
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.691, 139.777)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 終点到達 + 30秒程度の停車。まだ待機時間(約60秒)に満たないので折り返さない
+      jest.advanceTimersByTime(30000);
+
+      let directionSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'selectedDirectionAtom'
+      );
+      expect(directionSetCalls).toHaveLength(0);
+
+      // さらに進めて待機時間を超過させると方面(selectedDirection/selectedBound)が逆転する
+      jest.advanceTimersByTime(40000);
+
+      directionSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'selectedDirectionAtom'
+      );
+      expect(directionSetCalls.length).toBeGreaterThanOrEqual(1);
+      // INBOUND → OUTBOUND へ逆転
+      expect(directionSetCalls[0][1]).toBe('OUTBOUND');
+
+      // 折り返し後の行き先(selectedBound)も更新される
+      const boundSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'selectedBoundAtom'
+      );
+      expect(boundSetCalls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('ループ線では終点でも方面を逆転せず先頭に戻って周回を続ける', () => {
+      (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: true });
+
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[1],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      // ループ線 + INBOUND では進行順が reverse される（[s2, s1]）
+      mockTrainRoute([stations[1], stations[0]]);
+
+      jest
+        .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+        .mockReturnValue([2000]);
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.691, 139.777)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 非ループ線なら折り返す待機時間を超過しても、ループ線では方面を逆転しない
+      jest.advanceTimersByTime(70000);
+
+      const directionSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'selectedDirectionAtom'
+      );
+      expect(directionSetCalls).toHaveLength(0);
+
+      // 先頭駅（周回の始点）へ戻る位置更新が行われている
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+      const backToStartCalls = locationSetCalls.filter(
+        (loc) =>
+          loc?.coords?.latitude === stations[1].latitude &&
+          loc?.coords?.longitude === stations[1].longitude &&
+          loc?.coords?.speed === 0
+      );
+      expect(backToStartCalls.length).toBeGreaterThanOrEqual(1);
     });
 
     it('速度プロファイルの終端に達したら次のセグメントに移動する', () => {
