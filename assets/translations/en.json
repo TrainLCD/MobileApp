@@ -247,6 +247,8 @@
   "kyotoCity": "Kyoto Municipal Transportation Bureau",
   "yokohamaCity": "Transportation Bureau, City of Yokohama",
   "seibuBus": "Seibu Bus Co., Ltd.",
+  "keioBus": "Keio Bus Co., Ltd.",
+  "tokyuBus": "Tokyu Bus Corporation",
   "hakodateCity": "Transportation Department, Hakodate City Enterprise Bureau",
   "odptBasicLicense": "Public Transportation Open Data Basic License",
   "odptGtfs": "GTFS (Public Transportation Open Data Center)",
