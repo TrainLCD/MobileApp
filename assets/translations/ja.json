@@ -248,6 +248,8 @@
   "kyotoCity": "京都市交通局",
   "yokohamaCity": "横浜市交通局",
   "seibuBus": "西武バス",
+  "keioBus": "京王バス",
+  "tokyuBus": "東急バス",
   "hakodateCity": "函館市企業局交通部",
   "odptBasicLicense": "公共交通オープンデータ基本ライセンス",
   "odptGtfs": "GTFS (公共交通オープンデータセンター)",

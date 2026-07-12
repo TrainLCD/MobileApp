@@ -31,6 +31,8 @@ type LicenseId =
   | 'kyoto_city'
   | 'yokohama_city'
   | 'seibu_bus'
+  | 'keio_bus'
+  | 'tokyu_bus'
   | 'hakodate_city'
   | 'roboto'
   | 'other_oss';
@@ -207,6 +209,24 @@ const Licenses: React.FC = () => {
             title: translate('seibuBus'),
             icon: '🚌',
             href: 'https://www.seibubus.co.jp/',
+            license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
+            devOnly: false,
+          },
+          {
+            id: 'keio_bus',
+            title: translate('keioBus'),
+            icon: '🚌',
+            href: 'https://www.keio-bus.com/',
+            license: translate('odptBasicLicense'),
+            licenseUrl: ODPT_BASIC_LICENSE_URL,
+            devOnly: false,
+          },
+          {
+            id: 'tokyu_bus',
+            title: translate('tokyuBus'),
+            icon: '🚌',
+            href: 'https://www.tokyubus.co.jp/',
             license: translate('odptBasicLicense'),
             licenseUrl: ODPT_BASIC_LICENSE_URL,
             devOnly: false,
