@@ -11,6 +11,7 @@ import { GET_TRAIN_ROUTE } from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import {
   selectedBoundAtom,
@@ -520,6 +521,10 @@ export const useSimulationMode = (): void => {
           // 折り返し後の行き先(selectedBound)は現在の始発駅にあたる先頭要素。
           store.set(selectedBoundAtom, maybeRevsersedStations[0] ?? null);
           store.set(selectedDirectionAtom, reversedDirection);
+          // 折り返し後は新しい行き先として初回放送(この電車は〜行きです)を再発火させる。
+          // resetFirstSpeechAtom を進めると useTTS 側で firstSpeech が true に戻り、
+          // 行き先変更 + 発車後(arrived=false)に初回TTSが改めて再生される。
+          store.set(resetFirstSpeechAtom, store.get(resetFirstSpeechAtom) + 1);
           return;
         }
 

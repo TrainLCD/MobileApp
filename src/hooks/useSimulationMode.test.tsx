@@ -38,6 +38,12 @@ jest.mock('~/store/atoms/navigation', () => ({
   autoModeEnabledAtom: { toString: () => 'autoModeEnabledAtom' },
 }));
 
+jest.mock('~/store/atoms/speech', () => ({
+  __esModule: true,
+  default: { toString: () => 'speechState' },
+  resetFirstSpeechAtom: { toString: () => 'resetFirstSpeechAtom' },
+}));
+
 jest.mock('~/store', () => ({
   store: {
     get: jest.fn(() => null),
@@ -654,8 +660,11 @@ describe('useSimulationMode', () => {
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue([2000]);
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.691, 139.777)
+      // resetFirstSpeechAtom は数値、それ以外(locationAtom)は位置オブジェクトを返す
+      (store.get as jest.Mock).mockImplementation((atom) =>
+        atom?.toString?.() === 'resetFirstSpeechAtom'
+          ? 0
+          : mockLocationObject(35.691, 139.777)
       );
 
       renderHook(() => useSimulationMode(), {
@@ -669,6 +678,12 @@ describe('useSimulationMode', () => {
         (call) => call[0]?.toString?.() === 'selectedDirectionAtom'
       );
       expect(directionSetCalls).toHaveLength(0);
+      // 折り返す前は初回放送の再発火も起きない
+      expect(
+        (store.set as jest.Mock).mock.calls.filter(
+          (call) => call[0]?.toString?.() === 'resetFirstSpeechAtom'
+        )
+      ).toHaveLength(0);
 
       // さらに進めて待機時間を超過させると方面(selectedDirection/selectedBound)が逆転する
       jest.advanceTimersByTime(40000);
@@ -685,6 +700,13 @@ describe('useSimulationMode', () => {
         (call) => call[0]?.toString?.() === 'selectedBoundAtom'
       );
       expect(boundSetCalls.length).toBeGreaterThanOrEqual(1);
+
+      // 折り返し時に初回放送(firstSpeech)が再発火する(resetFirstSpeechをインクリメント)
+      const resetFirstSpeechCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'resetFirstSpeechAtom'
+      );
+      expect(resetFirstSpeechCalls.length).toBeGreaterThanOrEqual(1);
+      expect(resetFirstSpeechCalls[0][1]).toBe(1);
     });
 
     it('ループ線では終点でも方面を逆転せず先頭に戻って周回を続ける', () => {
