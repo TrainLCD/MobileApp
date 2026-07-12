@@ -318,7 +318,7 @@ const AppSettingsScreen: React.FC = () => {
         {
           id: SETTING_ITEM_ID_MAP.personalize_battery,
           title: translate('batterySettings'),
-          color: '#00C7BE',
+          color: '#30B0C7',
           onPress: () => navigation.navigate('BatterySettings' as never),
         },
         // 試験的機能はカナリアリリース(devアプリ)限定で表示する
