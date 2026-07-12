@@ -445,7 +445,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       );
       // NOTE: powerSavingLocationEnabledAtom はここでは復元しない。effect復元だと
       // 継続測位がデフォルト精度で一度起動してから再起動されるため、
-      // atom定義側(store/atoms/experimental.ts)でMMKVから同期的に初期値を確定している。
+      // atom定義側(store/atoms/battery.ts)でMMKVから同期的に初期値を確定している。
 
       if (themePreferenceKey) {
         setThemePreference(themePreferenceKey as ThemePreference);
