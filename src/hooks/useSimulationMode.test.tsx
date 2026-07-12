@@ -660,10 +660,11 @@ describe('useSimulationMode', () => {
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue([2000]);
 
-      // resetFirstSpeechAtom は数値、それ以外(locationAtom)は位置オブジェクトを返す
+      // resetFirstSpeechAtom は非ゼロの数値、それ以外(locationAtom)は位置オブジェクトを返す。
+      // 非ゼロ(3)にすることで「現在値 + 1」を読んでいることを検証できる（固定値1だと通ってしまう）。
       (store.get as jest.Mock).mockImplementation((atom) =>
         atom?.toString?.() === 'resetFirstSpeechAtom'
-          ? 0
+          ? 3
           : mockLocationObject(35.691, 139.777)
       );
 
@@ -701,12 +702,13 @@ describe('useSimulationMode', () => {
       );
       expect(boundSetCalls.length).toBeGreaterThanOrEqual(1);
 
-      // 折り返し時に初回放送(firstSpeech)が再発火する(resetFirstSpeechをインクリメント)
+      // 折り返し時に初回放送(firstSpeech)が再発火する(resetFirstSpeechをインクリメント)。
+      // 現在値3 + 1 = 4 が設定され、二重発火せず1回だけ呼ばれることを検証する。
       const resetFirstSpeechCalls = (store.set as jest.Mock).mock.calls.filter(
         (call) => call[0]?.toString?.() === 'resetFirstSpeechAtom'
       );
-      expect(resetFirstSpeechCalls.length).toBeGreaterThanOrEqual(1);
-      expect(resetFirstSpeechCalls[0][1]).toBe(1);
+      expect(resetFirstSpeechCalls).toHaveLength(1);
+      expect(resetFirstSpeechCalls[0][1]).toBe(4);
     });
 
     it('ループ線では終点でも方面を逆転せず先頭に戻って周回を続ける', () => {
