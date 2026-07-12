@@ -90,6 +90,22 @@ const SendLocationResponse = z
 const TelemetryPlatform = z.enum(['ios', 'android', 'macos', 'unknown']);
 type TelemetryPlatform = z.infer<typeof TelemetryPlatform>;
 
+// テレメトリ基盤がセッション単位でイベントを紐付けるためのID。
+// フックは複数コンポーネントから使われるため、インスタンス毎ではなく
+// アプリプロセス全体で共有し、位置情報・ログ・インタラクションを突合可能にする
+let telemetrySessionId: string | null = null;
+const getOrCreateSessionId = (): string => {
+  if (telemetrySessionId == null) {
+    telemetrySessionId = Crypto.randomUUID();
+  }
+  return telemetrySessionId;
+};
+
+// アプリプロセスごとに1回だけapp_launchイベントを送るためのフラグ。
+// telemetryEnabledはPermittedがMMKVからatomへ復元するまでfalseのため、
+// マウント時ではなく有効化を検知した時点で送信する
+let hasAppLaunchEventBeenSent = false;
+
 const getTelemetryPlatform = (): TelemetryPlatform => {
   switch (Platform.OS) {
     case 'ios':
@@ -139,14 +155,59 @@ const SendLogEventResponse = z
     message: 'Either data.sendLogEvent or non-empty errors is required',
   });
 
+// テレメトリ基盤のGraphQL Propertiesスカラーに対応。
+// フラットなmapのみ許容され、ネストしたオブジェクトや配列は基盤側で拒否される
+const InteractionEventProperties = z.record(
+  z.string(),
+  z.union([z.string(), z.number(), z.boolean(), z.null()])
+);
+export type InteractionEventProperties = z.infer<
+  typeof InteractionEventProperties
+>;
+
+// テレメトリ基盤のGraphQL InteractionEventInputに対応
+const InteractionEventInput = z.object({
+  sessionId: z.string().min(1),
+  device: z.string().nullable().optional(),
+  appVersion: z.string().min(1),
+  platform: TelemetryPlatform,
+  channel: z.enum(['production', 'canary']),
+  timestamp: z.number(),
+  eventName: z.string().min(1),
+  properties: InteractionEventProperties.nullable().optional(),
+});
+
+const SEND_INTERACTION_EVENT_MUTATION = `
+  mutation SendInteractionEvent($input: InteractionEventInput!) {
+    sendInteractionEvent(input: $input) {
+      sessionId
+    }
+  }
+`;
+
+const SendInteractionEventResponse = z
+  .object({
+    data: z
+      .object({
+        sendInteractionEvent: z.object({
+          sessionId: z.string(),
+        }),
+      })
+      .nullable()
+      .optional(),
+    errors: z.array(z.object({ message: z.string() })).optional(),
+  })
+  // {}のような空レスポンスを不正として弾く
+  .refine((res) => res.data != null || (res.errors?.length ?? 0) > 0, {
+    message: 'Either data.sendInteractionEvent or non-empty errors is required',
+  });
+
 export const useTelemetrySender = (
   sendTelemetryAutomatically = false,
   baseUrl = EXPERIMENTAL_TELEMETRY_ENDPOINT_URL,
   token = EXPERIMENTAL_TELEMETRY_TOKEN
 ) => {
   const lastSentTelemetryRef = useRef<number>(0);
-  // テレメトリ基盤がセッション単位で位置情報を紐付けるためのID。初回送信時に生成する
-  const sessionIdRef = useRef<string | null>(null);
 
   const station = useCurrentStation();
   const line = useCurrentLine();
@@ -172,12 +233,84 @@ export const useTelemetrySender = (
     return 'moving';
   }, [arrivedFromState, approachingFromState, passing]);
 
-  const getSessionId = useCallback(() => {
-    if (sessionIdRef.current == null) {
-      sessionIdRef.current = Crypto.randomUUID();
-    }
-    return sessionIdRef.current;
-  }, []);
+  // 戻り値は送信の成否。呼び出し元が失敗時の再送制御をできるようにする
+  const sendInteractionEvent = useCallback(
+    async (
+      eventName: string,
+      properties?: InteractionEventProperties
+    ): Promise<boolean> => {
+      if (!isTelemetryEnabled || !baseUrl) {
+        return false;
+      }
+
+      const payload = InteractionEventInput.safeParse({
+        sessionId: getOrCreateSessionId(),
+        device: Device.modelName ?? 'unknown',
+        appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
+        platform: getTelemetryPlatform(),
+        channel: isDevApp ? 'canary' : 'production',
+        timestamp: Date.now(),
+        eventName,
+        properties: properties ?? null,
+      });
+
+      if (payload.error) {
+        console.error('Invalid interaction event payload:', payload.error);
+        return false;
+      }
+
+      try {
+        const response = await fetch(`${baseUrl}/graphql`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            query: SEND_INTERACTION_EVENT_MUTATION,
+            variables: { input: payload.data },
+          }),
+        });
+
+        if (!response.ok) {
+          console.error(
+            `HTTP error: ${response.status} ${response.statusText}`
+          );
+          return false;
+        }
+
+        let json: unknown;
+        try {
+          json = await response.json();
+        } catch {
+          console.error('Failed to parse response JSON');
+          return false;
+        }
+
+        const result = SendInteractionEventResponse.safeParse(json);
+        if (!result.success) {
+          console.error(
+            'Invalid interaction event response:',
+            result.error,
+            json
+          );
+          return false;
+        }
+        if (result.data.errors?.length) {
+          console.warn(
+            'Interaction event API error:',
+            result.data.errors.map((e) => e.message).join(', ')
+          );
+        }
+        // サーバ側でデータとして受理されたことをもって送信成功とみなす
+        return result.data.data?.sendInteractionEvent != null;
+      } catch (error) {
+        console.error('Failed to send interaction event:', error);
+        return false;
+      }
+    },
+    [isTelemetryEnabled, baseUrl, token]
+  );
 
   const sendLog = useCallback(
     async (
@@ -191,7 +324,7 @@ export const useTelemetrySender = (
       const now = Date.now();
 
       const payload = LogEventInput.safeParse({
-        sessionId: getSessionId(),
+        sessionId: getOrCreateSessionId(),
         device: Device.modelName ?? 'unknown',
         appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
         platform: getTelemetryPlatform(),
@@ -250,7 +383,7 @@ export const useTelemetrySender = (
         console.error('Failed to send log:', error);
       }
     },
-    [isTelemetryEnabled, baseUrl, token, getSessionId]
+    [isTelemetryEnabled, baseUrl, token]
   );
 
   const sendTelemetry = useCallback(async () => {
@@ -283,7 +416,7 @@ export const useTelemetrySender = (
     }
 
     const payload = LocationEventInput.safeParse({
-      sessionId: getSessionId(),
+      sessionId: getOrCreateSessionId(),
       device: Device.modelName ?? 'unknown',
       state,
       lineId: line.id,
@@ -362,7 +495,6 @@ export const useTelemetrySender = (
     station?.id,
     baseUrl,
     token,
-    getSessionId,
   ]);
 
   useEffect(() => {
@@ -373,5 +505,22 @@ export const useTelemetrySender = (
     sendTelemetry();
   }, [sendTelemetry, sendTelemetryAutomatically, isTelemetryEnabled]);
 
-  return { sendLog };
+  // アプリ起動のインタラクションイベント。設定復元によりtelemetryEnabledが
+  // trueへ変わった時点で、プロセス内のどのインスタンスからでも1回だけ送る
+  useEffect(() => {
+    if (!isTelemetryEnabled || !baseUrl || hasAppLaunchEventBeenSent) {
+      return;
+    }
+
+    hasAppLaunchEventBeenSent = true;
+    sendInteractionEvent('app_launch').then((sent) => {
+      if (!sent) {
+        // 起動直後の通信不調などで失敗した場合はフラグを戻し、
+        // 後続のマウントや設定変更のタイミングで再送できるようにする
+        hasAppLaunchEventBeenSent = false;
+      }
+    });
+  }, [isTelemetryEnabled, baseUrl, sendInteractionEvent]);
+
+  return { sendLog, sendInteractionEvent };
 };
