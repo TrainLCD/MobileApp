@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, LineNested } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
@@ -302,11 +303,14 @@ const SelectLineScreen = () => {
   return (
     <>
       {/*
-        NowHeader / FooterTabBar は絶対配置のオーバーレイで上下のセーフエリアを
-        それぞれ処理する。中央のコンテンツはその間に収まればよいため、コンテナ
-        自体はセーフエリアを持たない View で構成する。
+        上下のセーフエリアは絶対配置オーバーレイの NowHeader / FooterTabBar が
+        それぞれ処理するため上下インセットは無効化する。一方、横向き/タブレットの
+        ノッチでコンテンツが欠けないよう、左右インセットだけは SafeAreaView で確保する。
       */}
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <SafeAreaView
+        edges={['left', 'right']}
+        style={[styles.root, !isLEDTheme && styles.screenBg]}
+      >
         {/*
           プリセットカードは上部に固定表示し、Pull to Refresh の対象外にする。
           paddingTop で固定ヘッダー(NowHeader)の直下に配置する。
@@ -389,7 +393,7 @@ const SelectLineScreen = () => {
           )}
           <EmptyLineSeparator />
         </Animated.ScrollView>
-      </View>
+      </SafeAreaView>
 
       {/* 固定ヘッダー */}
       <NowHeader
