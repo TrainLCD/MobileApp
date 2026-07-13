@@ -282,18 +282,16 @@ describe('SelectLineScreen', () => {
   });
 
   describe('ローディング状態', () => {
-    it('nearbyStationLoading=true のとき路線リストのスケルトンが表示される', () => {
+    it('nearbyStationLoading=true のときスケルトンが表示される', () => {
       setupDefaults({ nearbyStationLoading: true });
 
-      const { getByTestId } = render(<SelectLineScreen />);
+      const { getByTestId, queryByTestId } = render(<SelectLineScreen />);
 
       expect(getByTestId('skeleton-placeholder')).toBeTruthy();
-      // プリセットカードは上部固定表示になり最寄り駅のローディングとは独立したため、
-      // ローディング中でも常に表示される
-      expect(getByTestId('presets')).toBeTruthy();
+      expect(queryByTestId('presets')).toBeNull();
     });
 
-    it('nearbyStationLoading=false のとき路線リストのスケルトンは表示されない', () => {
+    it('nearbyStationLoading=false のときプリセットが表示される', () => {
       setupDefaults({ nearbyStationLoading: false });
 
       const { getByTestId, queryByTestId } = render(<SelectLineScreen />);
