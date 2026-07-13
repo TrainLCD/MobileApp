@@ -1,12 +1,9 @@
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
-import { store } from '~/store';
-import { etaAssistManualEnabledAtom } from '~/store/atoms/experimental';
 import {
   getEtaFallbackArrivalConfirmMarginSec,
   getEtaFallbackMaxDurationMin,
   getMaxPermitAccuracy,
   isEtaAssistEnabled,
-  isEtaAssistRemoteEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
   resetRemoteConfigCache,
   setupRemoteConfig,
@@ -31,8 +28,6 @@ const mockRemoteConfig = (body: unknown, ok = true) => {
 afterEach(() => {
   jest.clearAllMocks();
   resetRemoteConfigCache();
-  // 手動トグルは共有ストアに残るため、テスト間の汚染を防ぐべく毎回戻す。
-  store.set(etaAssistManualEnabledAtom, false);
 });
 
 afterAll(() => {
@@ -84,48 +79,30 @@ describe('isForceNotArrivedOnLowAccuracyEnabled', () => {
   });
 });
 
-describe('isEtaAssistRemoteEnabled（マスタースイッチ）', () => {
+describe('isEtaAssistEnabled（Remoteマスタースイッチのみで判定）', () => {
   it('falls back to false before setup', () => {
-    expect(isEtaAssistRemoteEnabled()).toBe(false);
+    expect(isEtaAssistEnabled()).toBe(false);
   });
 
-  it('returns the remote boolean after setup', async () => {
+  it('RemoteがONなら自動的に有効(手動トグルなし)', async () => {
     mockRemoteConfig({
       max_permit_accuracy: 1500,
       force_not_arrived_on_low_accuracy: true,
       eta_assist_enabled: true,
     });
     await setupRemoteConfig();
-    expect(isEtaAssistRemoteEnabled()).toBe(true);
+    expect(isEtaAssistEnabled()).toBe(true);
+  });
+
+  it('RemoteがOFFなら無効(サーバー側キルスイッチ)', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500, eta_assist_enabled: false });
+    await setupRemoteConfig();
+    expect(isEtaAssistEnabled()).toBe(false);
   });
 
   it('falls back to false when the boolean is missing', async () => {
     mockRemoteConfig({ max_permit_accuracy: 1500 });
     await setupRemoteConfig();
-    expect(isEtaAssistRemoteEnabled()).toBe(false);
-  });
-});
-
-describe('isEtaAssistEnabled（Remote AND 手動トグル）', () => {
-  it('Remoteと手動トグルの両方がONのときだけ有効', async () => {
-    mockRemoteConfig({ eta_assist_enabled: true });
-    await setupRemoteConfig();
-    // Remoteがtrueでも手動トグルOFFなら無効
-    expect(isEtaAssistEnabled()).toBe(false);
-    // 手動トグルONで有効
-    store.set(etaAssistManualEnabledAtom, true);
-    expect(isEtaAssistEnabled()).toBe(true);
-  });
-
-  it('Remoteがfalseなら手動トグルONでも無効(マスターOFF)', async () => {
-    store.set(etaAssistManualEnabledAtom, true);
-    mockRemoteConfig({ eta_assist_enabled: false });
-    await setupRemoteConfig();
-    expect(isEtaAssistEnabled()).toBe(false);
-  });
-
-  it('セットアップ前(Remote未取得=false)は手動トグルONでも無効', () => {
-    store.set(etaAssistManualEnabledAtom, true);
     expect(isEtaAssistEnabled()).toBe(false);
   });
 });
