@@ -45,7 +45,10 @@ import { SelectLineScreenPresets } from './SelectLineScreenPresets';
 
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, flex: 1 },
-  listScroll: { flex: 1 },
+  listContainerStyle: {
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+  },
   heading: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -65,10 +68,6 @@ const styles = StyleSheet.create({
 // RN 0.81 + New Architecture で tintColor がマウント時に無視されるバグの回避用遅延(ms)
 // https://github.com/facebook/react-native/issues/53987
 const REFRESH_TINT_DELAY_MS = 500;
-
-// 路線リストのスクロール領域下端の基本パディング。実際の下端余白はこれに
-// フッタータブバーの高さ(useFooterHeight)を加算して算出する
-const LIST_CONTENT_PADDING_BOTTOM = 24;
 
 const NearbyStationLoader = () => (
   <SkeletonPlaceholder borderRadius={4} speed={1500}>
@@ -153,10 +152,12 @@ const SelectLineScreen = () => {
 
   // --- 派生値 ---
   const footerHeight = useFooterHeight();
-  const listPaddingBottom = useMemo(
-    () => LIST_CONTENT_PADDING_BOTTOM + footerHeight,
-    [footerHeight]
-  );
+  const listPaddingBottom = useMemo(() => {
+    const flattened = StyleSheet.flatten(styles.listContainerStyle) as {
+      paddingBottom?: number;
+    };
+    return (flattened?.paddingBottom ?? 24) + footerHeight;
+  }, [footerHeight]);
 
   const orientation = useDeviceOrientation();
   const isPortraitOrientation = useMemo(
@@ -302,47 +303,36 @@ const SelectLineScreen = () => {
   // --- JSX ---
   return (
     <>
-      {/*
-        上下のセーフエリアは絶対配置オーバーレイの NowHeader / FooterTabBar が
-        それぞれ処理するため上下インセットは無効化する。一方、横向き/タブレットの
-        ノッチでコンテンツが欠けないよう、左右インセットだけは SafeAreaView で確保する。
-      */}
-      <SafeAreaView
-        edges={['left', 'right']}
-        style={[styles.root, !isLEDTheme && styles.screenBg]}
-      >
-        {/*
-          プリセットカードは上部に固定表示し、Pull to Refresh の対象外にする。
-          paddingTop で固定ヘッダー(NowHeader)の直下に配置する。
-        */}
-        <View style={nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null}>
-          <View ref={presetsRef} onLayout={handlePresetsLayout}>
-            <SelectLineScreenPresets
-              carouselData={carouselData}
-              isPresetsLoading={isPresetsLoading}
-              onPress={handlePresetPress}
-            />
-          </View>
-        </View>
-
-        {/* プリセットカードより下の路線リストのみ Pull to Refresh の対象にする */}
+      <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <Animated.ScrollView
-          style={styles.listScroll}
+          style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
+              progressViewOffset={nowHeaderHeight}
               tintColor={refreshTintColor}
             />
           }
-          contentContainerStyle={{ paddingBottom: listPaddingBottom }}
+          contentContainerStyle={[
+            styles.listContainerStyle,
+            nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
+            { paddingBottom: listPaddingBottom },
+          ]}
         >
           {nearbyStationLoading && !refreshing ? (
             <NearbyStationLoader />
           ) : (
             <>
+              <View ref={presetsRef} onLayout={handlePresetsLayout}>
+                <SelectLineScreenPresets
+                  carouselData={carouselData}
+                  isPresetsLoading={isPresetsLoading}
+                  onPress={handlePresetPress}
+                />
+              </View>
               <View ref={lineListRef} onLayout={handleLineListLayout}>
                 {stationLines.length > 0 && (
                   <Heading style={styles.heading} singleLine>

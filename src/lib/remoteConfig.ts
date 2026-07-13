@@ -1,6 +1,4 @@
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
-import { store } from '~/store';
-import { etaAssistManualEnabledAtom } from '~/store/atoms/experimental';
 import { workerUrl } from './workerApi';
 
 // Cloudflare Worker(/config/remote) 配信の設定キー。Worker 側のレスポンスキーと一致させる。
@@ -121,22 +119,17 @@ export const isForceNotArrivedOnLowAccuracyEnabled = (): boolean => {
   return FORCE_NOT_ARRIVED_ON_LOW_ACCURACY_FALLBACK;
 };
 
-// Remote Config が配信する ETA補助の許可(マスタースイッチ)を同期的に取得する。
-// setupRemoteConfig 完了後は取得済みのリモート値を、未設定・取得失敗時はフォールバック
-// (false=既定無効)を返す。これが false のときは機能を提供せず、設定画面の手動トグルも
-// 操作不可にする(ExperimentalSettings 側で disabled)。
-export const isEtaAssistRemoteEnabled = (): boolean => {
+// ETA補助機能の実効的な有効/無効を同期的に取得する。以前は設定画面の手動トグルとの AND で
+// 判定していたが、手動トグルを廃止し自動有効化に変更したため、Remote Config が配信する
+// マスタースイッチ(eta_assist_enabled)のみで判定する。setupRemoteConfig 完了後は取得済みの
+// リモート値を、未設定・取得失敗時はフォールバック(false=既定無効)を返す。これが false の
+// ときは機能を提供しない(サーバー側キルスイッチ)。
+export const isEtaAssistEnabled = (): boolean => {
   if (cachedEtaAssistEnabled != null) {
     return cachedEtaAssistEnabled;
   }
   return ETA_ASSIST_ENABLED_FALLBACK;
 };
-
-// ETA補助機能の実効的な有効/無効を同期的に取得する。Remote Config が許可(マスターON)し、
-// かつ設定画面の手動トグルもONのときだけ有効。Remote が false のときは手動トグルの値に
-// 関わらず無効。
-export const isEtaAssistEnabled = (): boolean =>
-  isEtaAssistRemoteEnabled() && store.get(etaAssistManualEnabledAtom);
 
 // ETAフォールバックの到着確定マージン(秒)を同期的に取得する。setupRemoteConfig 完了後は
 // 取得済みのリモート値を、未完了・未設定・取得失敗時はフォールバックを返す。
