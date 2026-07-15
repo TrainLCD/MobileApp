@@ -3,11 +3,8 @@ import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   Alert,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Pressable,
   Animated as RNAnimated,
-  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
@@ -106,17 +103,16 @@ const BatterySettingsScreen: React.FC = () => {
     }
   }, [powerSavingLocationEnabled, setPowerSavingLocationEnabled]);
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <ScrollView
+        <RNAnimated.ScrollView
           contentContainerStyle={
             headerHeight
               ? { marginTop: headerHeight, paddingBottom: headerHeight }
@@ -140,7 +136,7 @@ const BatterySettingsScreen: React.FC = () => {
           >
             OK
           </Button>
-        </ScrollView>
+        </RNAnimated.ScrollView>
       </View>
       <SettingsHeader
         title={translate('batterySettings')}

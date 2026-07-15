@@ -4,15 +4,12 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -369,17 +366,16 @@ const TTSSettingsScreen: React.FC = () => {
     ]
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <RNAnimated.FlatList
           data={SETTING_ITEMS}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
@@ -389,6 +385,7 @@ const TTSSettingsScreen: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
+          scrollEventThrottle={16}
           ListFooterComponent={
             <ListFooter
               ttsLanguageItems={TTS_LANGUAGE_ITEMS}

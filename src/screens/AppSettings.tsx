@@ -11,8 +11,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Platform,
   Animated as RNAnimated,
   StyleSheet,
@@ -20,7 +18,6 @@ import {
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardChevron } from '~/components/CardChevron';
 import { Heading } from '~/components/Heading';
@@ -376,17 +373,16 @@ const AppSettingsScreen: React.FC = () => {
     [navigation]
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.ScrollView
+        <RNAnimated.ScrollView
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -486,7 +482,7 @@ const AppSettingsScreen: React.FC = () => {
               {!isDevApp && isBetaBuild ? translate('betaNotice') : ''}
             </Typography>
           ) : null}
-        </Animated.ScrollView>
+        </RNAnimated.ScrollView>
       </SafeAreaView>
       <SettingsHeader
         title={translate('settings')}

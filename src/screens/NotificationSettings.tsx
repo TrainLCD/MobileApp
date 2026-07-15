@@ -3,14 +3,11 @@ import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   Alert,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -59,17 +56,16 @@ const NotificationSettingsScreen: React.FC = () => {
     }
   }, [wrongDirectionNotifyEnabled, setNotifyState]);
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.ScrollView
+        <RNAnimated.ScrollView
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
@@ -114,7 +110,7 @@ const NotificationSettingsScreen: React.FC = () => {
           >
             OK
           </Button>
-        </Animated.ScrollView>
+        </RNAnimated.ScrollView>
       </View>
       <SettingsHeader
         title={translate('notificationSettings')}
