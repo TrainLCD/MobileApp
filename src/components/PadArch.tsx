@@ -458,12 +458,12 @@ const PadArch: React.FC<Props> = ({
             toValue: 1,
             duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2,
             easing: Easing.linear,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
           Animated.timing(chevronTimeline, {
             toValue: 0,
             duration: 0,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }),
         ])
       ).start();
