@@ -75,6 +75,39 @@ React 外部 (TaskManager のコールバック等) からの
    write 関数 (フィールド単位の `Object.is` 比較と `set`) に同じフィールド
    を追加する
 
+### 高頻度更新フィールドを含むオブジェクト atom は narrow な派生 atom で購読する
+
+`pictureInPictureAtom` の `activityState` は位置更新のたび (走行中は毎秒)
+新オブジェクトへ差し替わる。`enabled` / `active` だけが必要な購読者が
+atom を丸ごと購読すると毎ティック再レンダーされるため、boolean の派生 atom
+(`pictureInPictureEnabledAtom` / `pictureInPictureActiveAtom`) を購読する。
+派生 atom は算出値が `Object.is` で同一な限り購読者へ通知しない。
+
+```typescript
+// ❌ activityState の毎秒更新に巻き込まれる
+const { active } = useAtomValue(pictureInPictureAtom);
+
+// ✅ active の実際の変化時のみ再レンダー
+const active = useAtomValue(pictureInPictureActiveAtom);
+```
+
+### 高頻度 atom を購読する副作用フックは renderless ホストに隔離する
+
+`locationAtom` (走行中は毎秒更新) などを購読する返り値なしの副作用フックを
+画面コンポーネント本体で呼ぶと、位置更新のたびに画面全体の render 関数が
+再実行される。こうしたフックは `null` を返すだけの renderless コンポーネント
+に隔離し、画面はそれをマウントするだけにする。
+
+- 実例: `src/screens/Main.tsx` の `MainScreenEffects` (`Fx*` コンポーネント群)、
+  `src/components/Permitted.tsx` の `PermittedLayoutEffects`
+- 1 フック = 1 コンポーネント (`FxRefreshStation` など) に分割してあるのは、
+  プロファイル時に React DevTools 上でフック単位の再レンダー回数・コストを
+  計測可能にするため。新しい常駐フックを足すときも同じ形式で追加する
+- 設定・プラットフォームで不要になるフックは条件付きマウントで丸ごと止める。
+  実例: `FxTTS` (TTS 有効時のみ)、`FxUpdateLiveActivities` (iOS のみ)、
+  `Permitted.tsx` のウェアラブル連携 (OS 別)。フックを条件分岐で呼ぶことは
+  できないが、ホストコンポーネントのマウント自体を条件にすれば安全に止められる
+
 ## テストでのモック
 
 `useAtomValue` をモックする場合、フックやコンポーネントはフィールド atom
