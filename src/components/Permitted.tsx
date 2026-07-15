@@ -80,17 +80,27 @@ const FxAndroidWearableInner: React.FC = () => {
   useAndroidWearable();
   return null;
 };
-
-const PermittedLayoutEffects: React.FC = () => {
+const FxCheckStoreVersion: React.FC = () => {
   useCheckStoreVersion();
+  return null;
+};
+const FxWrongDirectionDetector: React.FC = () => {
   // 逆方向検知ロジックの計算を 1 箇所だけで実行し、結果は atom 経由で他のフックに配る。
   // useRefreshStation / useWarningInfo から個別に呼ぶと位置更新ごとに getDistance と
   // state 更新が二重に走ってバッテリーを余計に消費するため、ここに集約している。
   useWrongDirectionDetectorEffect();
+  return null;
+};
+
+const PermittedLayoutEffects: React.FC = () => {
+  // 高頻度購読のフックをホスト自身で呼ぶと、その再レンダーが sibling の
+  // ウェアラブル子コンポーネントへも伝播するため、1 フック = 1 コンポーネントで分離する。
   // ウェアラブル連携は各プラットフォーム専用。対象外の OS では
   // メッセージ組み立て（毎tickの派生計算）ごとマウントしない。
   return (
     <>
+      <FxCheckStoreVersion />
+      <FxWrongDirectionDetector />
       {Platform.OS === 'ios' && <FxAppleWatchInner />}
       {Platform.OS === 'android' && <FxAndroidWearableInner />}
     </>

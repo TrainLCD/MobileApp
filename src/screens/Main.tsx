@@ -206,7 +206,7 @@ const MainScreenEffects: React.FC = () => {
       <FxStartBackgroundLocationUpdates />
       <FxTTS />
       <FxUpdateLiveActivities />
-      <FxAndroidPictureInPicture />
+      {Platform.OS === 'android' && <FxAndroidPictureInPicture />}
     </>
   );
 };
