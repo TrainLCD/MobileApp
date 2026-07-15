@@ -34,15 +34,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     gap: 4,
   },
-  rootMediumContainer: {
-    width: 38 * 1.5,
-    height: 38,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: 'white',
-  },
   lineSymbol: {
     width: '35%',
     fontSize: isTablet ? 18 * 1.5 : 18,

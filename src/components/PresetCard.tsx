@@ -72,11 +72,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flexShrink: 1,
   },
-  routeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   stationName: {
     fontSize: RFValue(17),
     fontWeight: 'bold',

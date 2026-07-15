@@ -74,21 +74,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
     transform: [{ scale: 0.5 }],
   },
-  numberingIconContainer: {
-    flex: 1,
-    alignItems: 'center',
-    transformOrigin: 'top',
-    transform: [
-      {
-        scale: 0.5,
-      },
-    ],
-  },
-  markPlaceholder: {
-    width: isTablet ? 52.5 : 35,
-    height: isTablet ? 52.5 : 35,
-    marginRight: 12,
-  },
   texts: {
     flex: 1,
   },

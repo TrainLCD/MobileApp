@@ -36,10 +36,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'visible',
   },
-  signPathWrapper: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
   outline: {
     position: 'absolute',
     top: 0,
