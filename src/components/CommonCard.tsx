@@ -142,6 +142,8 @@ const styles = StyleSheet.create({
 const PAREN_GROUP_REGEX = /([（(][^）)]*[）)])/;
 const PAREN_WRAPPED_REGEX = /^[（(][^）)]*[）)]$/;
 
+const EMPTY_STATIONS: Station[] = [];
+
 type SubtitleProps = {
   inboundText: string;
   outboundText: string;
@@ -193,7 +195,7 @@ const AnimatedCardChevron = Animated.createAnimatedComponent(View);
 export const CommonCard: React.FC<Props> = ({
   line,
   targetStation,
-  stations = [],
+  stations = EMPTY_STATIONS,
   title,
   hideParens,
   shrinkBoundAffix,
