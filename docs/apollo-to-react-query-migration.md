@@ -140,13 +140,17 @@ Apollo の `InMemoryCache` は、1 回のクエリ結果ごとに**グラフ全�
 fetch() → response.json()（1回の parse）→ 参照を queryKey で保存 → そのまま component へ
 ```
 
-- **正規化なし**: キャッシュ書き込みは参照を 1 個置くだけ = O(1)。グラフ走査が
-  消滅。
+- **正規化なし**: エンティティ分解・キー付与・マージという Apollo 由来の
+  グラフ走査が消滅し、書き込みはクエリキー単位の参照保存になった。ただし
+  React Query 既定の `structuralSharing` により、既存キャッシュを更新する
+  フェッチでは JSON 互換データの再帰比較(不変部分の参照再利用)が 1 周残る
+  (キャッシュが空の初回取得では走らない)。
 - **freeze なし / 差分 broadcast なし**: observer 数に依存した再走査が消滅。
 - **`__typename` 注入なし**: ペイロードが小さくなり `JSON.parse` も軽い。
 - **読み出しは参照を返すだけ**: 再構築の 1 周も消滅。
 
-1 操作あたりの JS 処理が「グラフを数周」から「parse 1 回 + 参照保存」に落ちた。
+1 操作あたりの JS 処理が「グラフを数周」から「parse 1 回 + 参照保存(既存キャッ
+シュの更新時のみ structuralSharing の比較 1 周)」に落ちた。
 このコスト差は**ペイロードが大きいほど開く**ため、いちばん重い駅一覧・検索結果
 でいちばん効く = ユーザーが詰まりを感じていたまさにその場所が解消された。
 
@@ -179,10 +183,8 @@ fetch() → response.json()（1回の parse）→ 参照を queryKey で保存 �
 | 「キャッシュ逃れ」設定 | `keyFields: false` で正規化を無効化 | 不要(正規化機構自体がない) |
 | 既定方針 | cache-first | `staleTime: Infinity` の cache-first(等価) |
 | 強制再取得 | fetchPolicy 等 | `queryClient.removeQueries` で明示破棄 |
-| 1 操作あたりの JS コスト | グラフを数周走査 + freeze + 差分検知 | parse 1 回 + 参照保存 |
+| 1 操作あたりの JS コスト | グラフを数周走査 + freeze + 差分検知 | parse 1 回 + 参照保存(更新時は再帰比較 1 周) |
 
 TrainLCD は元々(`keyFields: false` で)Apollo の正規化の恩恵をほぼ受けておらず、
 **走査コストだけ全額払っている**状態だった。React Query への移行は、その払い損
 だったコストを丸ごと外したことになる。これが体感高速化の本質である。
-</content>
-</invoke>
