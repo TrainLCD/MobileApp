@@ -447,6 +447,8 @@ const RouteSearchScreen = () => {
 
     return (
       <View
+        ref={index === 0 ? searchResultsRef : undefined}
+        onLayout={index === 0 ? measureSearchResults : undefined}
         style={[
           index >= numColumns && styles.rowSpacing,
           // タブレットではセル幅が listWidth / numColumns 固定になるため、
