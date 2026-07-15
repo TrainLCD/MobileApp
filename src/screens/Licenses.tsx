@@ -112,6 +112,32 @@ const LicenseHolder = ({
   );
 };
 
+const ListFooter = ({
+  isLEDTheme,
+  onPressOK,
+}: {
+  isLEDTheme: boolean;
+  onPressOK: () => void;
+}) => (
+  <>
+    <Typography
+      style={[
+        { marginTop: 24, fontSize: 14, lineHeight: 21 },
+        !isLEDTheme && { color: '#666' },
+      ]}
+    >
+      {translate('odptDisclaimer')}
+    </Typography>
+    <Button
+      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+      textStyle={{ fontWeight: 'bold' }}
+      onPress={onPressOK}
+    >
+      OK
+    </Button>
+  </>
+);
+
 const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/';
 const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 const MIT_URL = 'https://opensource.org/licenses/MIT';
@@ -338,25 +364,12 @@ const Licenses: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
-          ListFooterComponent={() => (
-            <>
-              <Typography
-                style={[
-                  { marginTop: 24, fontSize: 14, lineHeight: 21 },
-                  !isLEDTheme && { color: '#666' },
-                ]}
-              >
-                {translate('odptDisclaimer')}
-              </Typography>
-              <Button
-                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-                textStyle={{ fontWeight: 'bold' }}
-                onPress={() => navigation.goBack()}
-              >
-                OK
-              </Button>
-            </>
-          )}
+          ListFooterComponent={
+            <ListFooter
+              isLEDTheme={isLEDTheme}
+              onPressOK={() => navigation.goBack()}
+            />
+          }
         />
       </View>
       <SettingsHeader

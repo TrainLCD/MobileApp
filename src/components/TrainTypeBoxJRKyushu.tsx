@@ -53,14 +53,6 @@ const styles = StyleSheet.create({
     width: isTablet ? 175 : 96.25,
     height: isTablet ? 55 : 30.25,
   },
-  nextTrainType: {
-    fontWeight: 'bold',
-    fontSize: isTablet ? 18 : 12,
-    marginTop: 4,
-    position: 'absolute',
-    top: isTablet ? 55 : 30.25,
-    width: '100%',
-  },
 });
 
 const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {

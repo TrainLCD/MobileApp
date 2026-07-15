@@ -61,9 +61,6 @@ const styles = StyleSheet.create({
     right: 24,
     bottom: 10,
   },
-  nowBar: {
-    marginBottom: 12,
-  },
   nowLabel: {
     fontSize: isTablet ? 32 : 24,
   },

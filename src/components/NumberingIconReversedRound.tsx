@@ -89,15 +89,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FuturaLTPro,
     marginTop: 2,
   },
-  lineSymbolMediumLong: {
-    color: 'white',
-    fontSize: isTablet ? 16 : 11,
-    lineHeight: isTablet ? 16 : 11,
-    textAlign: 'center',
-    fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
-    alignSelf: 'center',
-  },
   stationNumber: {
     color: 'white',
     fontSize: isTablet ? 26 * 1.5 : 26,

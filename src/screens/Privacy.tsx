@@ -51,7 +51,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 32,
   },
-  buttonSpacer: { width: 16 },
   linkText: {
     fontSize: RFValue(14),
     textAlign: 'center',

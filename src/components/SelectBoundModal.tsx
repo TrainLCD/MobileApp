@@ -27,7 +27,6 @@ import { isJapanese, translate } from '~/translation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
-import { RFValue } from '~/utils/rfValue';
 import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -91,12 +90,6 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingHorizontal: 24,
     justifyContent: 'center',
-  },
-  menuNotice: {
-    fontWeight: 'bold',
-    marginTop: 12,
-    fontSize: RFValue(18),
-    textAlign: 'center',
   },
   redOutlinedButton: {
     borderColor: '#ff3b30',

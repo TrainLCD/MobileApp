@@ -50,12 +50,6 @@ const styles = StyleSheet.create({
     right: 24,
     bottom: 10,
   },
-  nowBar: {
-    marginBottom: 12,
-  },
-  nowLabel: {
-    fontSize: 24,
-  },
   nowStation: {
     fontSize: 32,
     fontWeight: 'bold',

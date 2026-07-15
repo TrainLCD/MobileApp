@@ -74,21 +74,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
     transform: [{ scale: 0.5 }],
   },
-  numberingIconContainer: {
-    flex: 1,
-    alignItems: 'center',
-    transformOrigin: 'top',
-    transform: [
-      {
-        scale: 0.5,
-      },
-    ],
-  },
-  markPlaceholder: {
-    width: isTablet ? 52.5 : 35,
-    height: isTablet ? 52.5 : 35,
-    marginRight: 12,
-  },
   texts: {
     flex: 1,
   },
@@ -157,6 +142,8 @@ const styles = StyleSheet.create({
 const PAREN_GROUP_REGEX = /([（(][^）)]*[）)])/;
 const PAREN_WRAPPED_REGEX = /^[（(][^）)]*[）)]$/;
 
+const EMPTY_STATIONS: Station[] = [];
+
 type SubtitleProps = {
   inboundText: string;
   outboundText: string;
@@ -208,7 +195,7 @@ const AnimatedCardChevron = Animated.createAnimatedComponent(View);
 export const CommonCard: React.FC<Props> = ({
   line,
   targetStation,
-  stations = [],
+  stations = EMPTY_STATIONS,
   title,
   hideParens,
   shrinkBoundAffix,
