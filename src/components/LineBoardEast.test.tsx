@@ -204,6 +204,25 @@ describe('LineBoardEast', () => {
     );
   });
 
+  it('最後の駅のLineDotにのみisLast=trueが渡される', () => {
+    const { LineDot } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ station: mockStations[0], isLast: false }),
+      undefined
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ station: mockStations[1], isLast: true }),
+      undefined
+    );
+  });
+
   it('isOdakyu時はETAクエリをskipして呼び出す', () => {
     const { useEstimateArrivalTimes } = require('~/hooks');
     render(

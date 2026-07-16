@@ -465,6 +465,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           arrived={arrived}
           passed={passed}
           estimatedMinutes={estimatedMinutes}
+          isLast={isLastStation}
         />
         {isLastStation ? (
           <BarTerminalEast

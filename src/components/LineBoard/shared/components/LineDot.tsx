@@ -9,6 +9,7 @@ import PadLineMarks from '../../../PadLineMarks';
 import PassChevronEast from '../../../PassChevronEast';
 import { commonLineBoardStyles as styles } from '../styles/commonStyles';
 import { EstimatedMinutesBadge } from './EstimatedMinutesBadge';
+import { EstimatedMinutesUnitLabel } from './EstimatedMinutesUnitLabel';
 
 const localStyles = StyleSheet.create({
   estimatedMinutesOverlay: {
@@ -17,6 +18,14 @@ const localStyles = StyleSheet.create({
     left: 0,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // 見えているドット(chevronGradient)のすぐ右にドットと同じ高さで縦中央揃え
+  estimatedMinutesUnitContainer: {
+    position: 'absolute',
+    top: 0,
+    left: isTablet ? 48 + 6 : 32 + 4,
+    height: isTablet ? 36 : 24,
+    justifyContent: 'center',
   },
 });
 
@@ -28,6 +37,8 @@ export type LineDotProps = {
   passed: boolean;
   isOdakyu?: boolean;
   estimatedMinutes?: number | null;
+  // 最後尾セルのドットのときtrue。ETA表示中は右隣に単位(分/min.)を添える
+  isLast?: boolean;
 };
 
 export const LineDot: React.FC<LineDotProps> = ({
@@ -38,6 +49,7 @@ export const LineDot: React.FC<LineDotProps> = ({
   passed,
   isOdakyu = false,
   estimatedMinutes,
+  isLast = false,
 }) => {
   const { widthScale } = useScale();
 
@@ -106,6 +118,14 @@ export const LineDot: React.FC<LineDotProps> = ({
             pointerEvents="none"
           >
             <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
+          </View>
+        ) : null}
+        {isLast && estimatedMinutes != null ? (
+          <View
+            style={localStyles.estimatedMinutesUnitContainer}
+            pointerEvents="none"
+          >
+            <EstimatedMinutesUnitLabel />
           </View>
         ) : null}
       </View>

@@ -19,6 +19,7 @@ import isTablet from '../utils/isTablet';
 import { ChevronE231 } from './ChevronE231';
 import {
   EstimatedMinutesBadge,
+  EstimatedMinutesUnitLabel,
   StationName,
 } from './LineBoard/shared/components';
 import {
@@ -100,6 +101,14 @@ const localStyles = StyleSheet.create({
     height: isTablet ? 36 : 24,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // ドット矩形(dotInner)のすぐ右にドットと同じ高さで縦中央揃え
+  estimatedMinutesUnitContainer: {
+    position: 'absolute',
+    top: 0,
+    left: isTablet ? 44 + 6 : 36 + 4,
+    height: isTablet ? 36 : 24,
+    justifyContent: 'center',
   },
   marksContainer: {
     top: 38,
@@ -258,6 +267,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                     <EstimatedMinutesBadge
                       estimatedMinutes={estimatedMinutes}
                     />
+                  </View>
+                ) : null}
+                {stations.length - 1 === index &&
+                estimatedMinutes != null &&
+                !(passed && !arrived) ? (
+                  <View
+                    style={localStyles.estimatedMinutesUnitContainer}
+                    pointerEvents="none"
+                  >
+                    <EstimatedMinutesUnitLabel />
                   </View>
                 ) : null}
               </View>
