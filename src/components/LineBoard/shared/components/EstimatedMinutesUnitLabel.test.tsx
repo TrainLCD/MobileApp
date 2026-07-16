@@ -1,11 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import type { AvailableLanguage } from '~/constants';
 import type { HeaderTransitionState } from '~/models/HeaderTransitionState';
-import {
-  enabledLanguagesAtom,
-  headerStateAtom,
-} from '~/store/atoms/navigation';
+import { headerStateAtom } from '~/store/atoms/navigation';
 import { EstimatedMinutesUnitLabel } from './EstimatedMinutesUnitLabel';
 
 jest.mock('~/utils/isTablet', () => ({
@@ -13,13 +9,9 @@ jest.mock('~/utils/isTablet', () => ({
   default: false,
 }));
 
-const renderWithState = (
-  headerState: HeaderTransitionState,
-  enabledLanguages: AvailableLanguage[] = ['JA', 'EN', 'ZH', 'KO']
-) => {
+const renderWithState = (headerState: HeaderTransitionState) => {
   const store = createStore();
   store.set(headerStateAtom, headerState);
-  store.set(enabledLanguagesAtom, enabledLanguages);
   return render(
     <Provider store={store}>
       <EstimatedMinutesUnitLabel />
@@ -46,18 +38,13 @@ describe('EstimatedMinutesUnitLabel', () => {
     expect(getByText('min.')).toBeTruthy();
   });
 
-  it('中国語Stateでは英語有効時は「min.」を表示する(LineBoardの英語表示に追従)', () => {
+  it('中国語Stateでは「分钟」を表示する', () => {
     const { getByText } = renderWithState('CURRENT_ZH');
-    expect(getByText('min.')).toBeTruthy();
+    expect(getByText('分钟')).toBeTruthy();
   });
 
-  it('中国語Stateでも英語無効時は「分」を表示する', () => {
-    const { getByText } = renderWithState('CURRENT_ZH', ['JA', 'ZH']);
-    expect(getByText('分')).toBeTruthy();
-  });
-
-  it('韓国語Stateでは「分」を表示する(LineBoardの日本語表示に追従)', () => {
+  it('韓国語Stateでは「분」を表示する', () => {
     const { getByText } = renderWithState('CURRENT_KO');
-    expect(getByText('分')).toBeTruthy();
+    expect(getByText('분')).toBeTruthy();
   });
 });
