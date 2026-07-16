@@ -124,6 +124,8 @@
   "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
   "bgTtsAlertText": "When the background audio feature is enabled, sound will play even when silent mode is on. Please be especially mindful when on a train.",
   "bgTtsAppClipAlertText": "To use the background audio feature, please download the full version.",
+  "ttsFeatureDisabledText": "The automatic announcement feature is temporarily unavailable. Please check the Service Status page below for the latest availability.",
+  "serviceStatus": "Service Status",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. Please be careful.",
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. Please Be careful.",
   "shareNotice": "Press and hold the screen for easy sharing😊.",
