@@ -21,7 +21,10 @@ import isTablet from '../utils/isTablet';
 import { getNumberingColor } from '../utils/numbering';
 import { ChevronJO } from './ChevronJO';
 import { JOCurrentArrowEdge } from './JOCurrentArrowEdge';
-import { EstimatedMinutesBadge } from './LineBoard/shared/components';
+import {
+  EstimatedMinutesBadge,
+  EstimatedMinutesUnitLabel,
+} from './LineBoard/shared/components';
 import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import {
   BAR_BOTTOM_JO,
@@ -49,6 +52,14 @@ const localStyles = StyleSheet.create({
     height: '100%',
     bottom: isTablet ? '40%' : undefined,
     marginLeft: isTablet ? 48 : 32,
+  },
+  // barDot(未通過時は32px)の右にドットと同じ高さで縦中央揃え
+  estimatedMinutesUnitContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 32 + 24,
+    height: 32,
+    justifyContent: 'center',
   },
 });
 
@@ -395,6 +406,14 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
               >
                 {estimatedMinutes != null ? (
                   <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
+                ) : null}
+                {i === stations.length - 1 && estimatedMinutes != null ? (
+                  <View
+                    style={localStyles.estimatedMinutesUnitContainer}
+                    pointerEvents="none"
+                  >
+                    <EstimatedMinutesUnitLabel />
+                  </View>
                 ) : null}
               </View>
             )}

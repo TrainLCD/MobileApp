@@ -5,8 +5,10 @@ import {
   getMaxPermitAccuracy,
   isEtaAssistEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
+  isTTSFeatureEnabled,
   resetRemoteConfigCache,
   setupRemoteConfig,
+  subscribeRemoteConfig,
 } from './remoteConfig';
 
 jest.mock('./workerApi', () => ({
@@ -161,6 +163,62 @@ describe('getEtaFallbackMaxDurationMin', () => {
     });
     await setupRemoteConfig();
     expect(getEtaFallbackMaxDurationMin()).toBe(30);
+  });
+});
+
+describe('isTTSFeatureEnabled（サーバー側キルスイッチ）', () => {
+  it('falls back to true before setup', () => {
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('returns the remote boolean after setup', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled: false });
+    await setupRemoteConfig();
+    expect(isTTSFeatureEnabled()).toBe(false);
+  });
+
+  it('RemoteがONなら有効', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled: true });
+    await setupRemoteConfig();
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('falls back to true when the boolean is missing', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500 });
+    await setupRemoteConfig();
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('falls back to true when fetching remote config fails', async () => {
+    mockRemoteConfig({}, false);
+    await expect(setupRemoteConfig()).rejects.toThrow(
+      'remote config fetch failed: 503'
+    );
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+});
+
+describe('subscribeRemoteConfig（キャッシュ更新の購読）', () => {
+  it('setupRemoteConfig 完了時にリスナーへ通知される', async () => {
+    const listener = jest.fn();
+    const unsubscribe = subscribeRemoteConfig(listener);
+
+    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled: false });
+    await setupRemoteConfig();
+
+    expect(listener).toHaveBeenCalled();
+    unsubscribe();
+  });
+
+  it('購読解除後は通知されない', async () => {
+    const listener = jest.fn();
+    const unsubscribe = subscribeRemoteConfig(listener);
+    unsubscribe();
+
+    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled: false });
+    await setupRemoteConfig();
+
+    expect(listener).not.toHaveBeenCalled();
   });
 });
 

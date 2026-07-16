@@ -57,6 +57,7 @@ jest.mock('./LineBoard/shared/components', () => {
     EstimatedMinutesBadge: jest.fn(({ estimatedMinutes }) => (
       <Text>{estimatedMinutes}</Text>
     )),
+    EstimatedMinutesUnitLabel: jest.fn(() => <Text>分</Text>),
     StationName: jest.fn(() => null),
   };
 });
@@ -165,5 +166,49 @@ describe('LineBoardE231', () => {
       />
     );
     expect(EstimatedMinutesBadge).not.toHaveBeenCalled();
+  });
+
+  it('最後の駅にETAがある場合、単位ラベルが表示される', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
+    const {
+      EstimatedMinutesUnitLabel,
+    } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardE231
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    expect(EstimatedMinutesUnitLabel).toHaveBeenCalled();
+  });
+
+  it('最後の駅以外のETAには単位ラベルが表示されない', () => {
+    const { useEstimatedMinutesByStationId } = require('~/hooks');
+    useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
+    const {
+      EstimatedMinutesBadge,
+      EstimatedMinutesUnitLabel,
+    } = require('./LineBoard/shared/components');
+    const threeStations = [
+      ...mockStations,
+      {
+        id: 3,
+        groupId: 3,
+        name: '横浜',
+        line: mockLine,
+      } as unknown as Station,
+    ];
+    render(
+      <LineBoardE231
+        stations={threeStations}
+        lineColors={['#9acd32', '#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    // 中間駅(id=2)のETAバッジは表示されるが、単位ラベルは最後尾専用
+    expect(EstimatedMinutesBadge).toHaveBeenCalled();
+    expect(EstimatedMinutesUnitLabel).not.toHaveBeenCalled();
   });
 });
