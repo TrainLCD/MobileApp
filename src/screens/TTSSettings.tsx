@@ -4,15 +4,12 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -98,6 +95,60 @@ const SettingsItem = ({
     </Pressable>
   );
 };
+
+const ListFooter = ({
+  ttsLanguageItems,
+  ttsEnabledLanguages,
+  speechEnabled,
+  onToggleTTSLanguage,
+  onPressOK,
+}: {
+  ttsLanguageItems: TTSLanguageSettingItem[];
+  ttsEnabledLanguages: TTSLanguage[];
+  speechEnabled: boolean;
+  onToggleTTSLanguage: (language: TTSLanguage) => void;
+  onPressOK: () => void;
+}) => (
+  <>
+    <View style={{ marginTop: 16 }}>
+      {ttsLanguageItems.map((item, index) => {
+        const state = ttsEnabledLanguages.includes(item.id);
+        const disabled =
+          !speechEnabled ||
+          (item.id === 'JA' && state && !ttsEnabledLanguages.includes('EN')) ||
+          (item.id === 'EN' && state && !ttsEnabledLanguages.includes('JA'));
+
+        return (
+          <SettingsItem
+            key={item.id}
+            item={item}
+            isFirst={index === 0}
+            isLast={index === ttsLanguageItems.length - 1}
+            onToggle={() => onToggleTTSLanguage(item.id)}
+            state={state}
+            disabled={disabled}
+          />
+        );
+      })}
+    </View>
+    <Typography
+      style={{
+        marginTop: 16,
+        textAlign: 'center',
+        color: '#8B8B8B',
+      }}
+    >
+      {translate('requireJapaneseOrEnglish')}
+    </Typography>
+    <Button
+      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+      textStyle={{ fontWeight: 'bold' }}
+      onPress={onPressOK}
+    >
+      OK
+    </Button>
+  </>
+);
 
 const TTSSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -315,17 +366,16 @@ const TTSSettingsScreen: React.FC = () => {
     ]
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <RNAnimated.FlatList
           data={SETTING_ITEMS}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
@@ -335,51 +385,16 @@ const TTSSettingsScreen: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
-          ListFooterComponent={() => (
-            <>
-              <View style={{ marginTop: 16 }}>
-                {TTS_LANGUAGE_ITEMS.map((item, index) => {
-                  const state = ttsEnabledLanguages.includes(item.id);
-                  const disabled =
-                    !speechEnabled ||
-                    (item.id === 'JA' &&
-                      state &&
-                      !ttsEnabledLanguages.includes('EN')) ||
-                    (item.id === 'EN' &&
-                      state &&
-                      !ttsEnabledLanguages.includes('JA'));
-
-                  return (
-                    <SettingsItem
-                      key={item.id}
-                      item={item}
-                      isFirst={index === 0}
-                      isLast={index === TTS_LANGUAGE_ITEMS.length - 1}
-                      onToggle={() => handleToggleTTSLanguage(item.id)}
-                      state={state}
-                      disabled={disabled}
-                    />
-                  );
-                })}
-              </View>
-              <Typography
-                style={{
-                  marginTop: 16,
-                  textAlign: 'center',
-                  color: '#8B8B8B',
-                }}
-              >
-                {translate('requireJapaneseOrEnglish')}
-              </Typography>
-              <Button
-                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-                textStyle={{ fontWeight: 'bold' }}
-                onPress={() => navigation.goBack()}
-              >
-                OK
-              </Button>
-            </>
-          )}
+          scrollEventThrottle={16}
+          ListFooterComponent={
+            <ListFooter
+              ttsLanguageItems={TTS_LANGUAGE_ITEMS}
+              ttsEnabledLanguages={ttsEnabledLanguages}
+              speechEnabled={speechEnabled}
+              onToggleTTSLanguage={handleToggleTTSLanguage}
+              onPressOK={() => navigation.goBack()}
+            />
+          }
         />
       </View>
       <SettingsHeader

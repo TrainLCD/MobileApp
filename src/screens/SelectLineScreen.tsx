@@ -8,8 +8,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   RefreshControl,
   Animated as RNAnimated,
   StyleSheet,
@@ -208,12 +206,11 @@ const SelectLineScreen = () => {
   );
 
   // --- スクロールハンドラ ---
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -304,7 +301,7 @@ const SelectLineScreen = () => {
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.ScrollView
+        <RNAnimated.ScrollView
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -382,7 +379,7 @@ const SelectLineScreen = () => {
             </>
           )}
           <EmptyLineSeparator />
-        </Animated.ScrollView>
+        </RNAnimated.ScrollView>
       </SafeAreaView>
 
       {/* 固定ヘッダー */}

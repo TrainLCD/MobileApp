@@ -4,15 +4,12 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Platform,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -102,6 +99,43 @@ const SettingsItem = ({
     </Pressable>
   );
 };
+
+const ListFooter = ({ onPressOK }: { onPressOK: () => void }) => (
+  <>
+    <Typography
+      style={{
+        marginTop: 16,
+        textAlign: 'center',
+        color: '#8B8B8B',
+      }}
+    >
+      {translate('requireJapaneseOrEnglish')}
+    </Typography>
+    <Button
+      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+      textStyle={{ fontWeight: 'bold' }}
+      onPress={onPressOK}
+    >
+      OK
+    </Button>
+
+    <View
+      style={{
+        marginTop: 32,
+      }}
+    >
+      <Link
+        style={{
+          textAlign: 'center',
+          fontWeight: 'bold',
+        }}
+        action={CommonActions.navigate('TTSSettings' as never)}
+      >
+        {translate('ttsLanguageSettings')}
+      </Link>
+    </View>
+  </>
+);
 
 const EnabledLanguagesSettings: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -213,17 +247,16 @@ const EnabledLanguagesSettings: React.FC = () => {
     []
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <RNAnimated.FlatList
           data={SETTING_ITEMS}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
@@ -235,42 +268,10 @@ const EnabledLanguagesSettings: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
-          ListFooterComponent={() => (
-            <>
-              <Typography
-                style={{
-                  marginTop: 16,
-                  textAlign: 'center',
-                  color: '#8B8B8B',
-                }}
-              >
-                {translate('requireJapaneseOrEnglish')}
-              </Typography>
-              <Button
-                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-                textStyle={{ fontWeight: 'bold' }}
-                onPress={() => navigation.goBack()}
-              >
-                OK
-              </Button>
-
-              <View
-                style={{
-                  marginTop: 32,
-                }}
-              >
-                <Link
-                  style={{
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                  }}
-                  action={CommonActions.navigate('TTSSettings' as never)}
-                >
-                  {translate('ttsLanguageSettings')}
-                </Link>
-              </View>
-            </>
-          )}
+          scrollEventThrottle={16}
+          ListFooterComponent={
+            <ListFooter onPressOK={() => navigation.goBack()} />
+          }
         />
       </View>
       <SettingsHeader

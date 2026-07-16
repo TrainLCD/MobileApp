@@ -4,15 +4,12 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Linking,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Platform,
   Animated as RNAnimated,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -111,6 +108,32 @@ const LicenseHolder = ({
     </TouchableOpacity>
   );
 };
+
+const ListFooter = ({
+  isLEDTheme,
+  onPressOK,
+}: {
+  isLEDTheme: boolean;
+  onPressOK: () => void;
+}) => (
+  <>
+    <Typography
+      style={[
+        { marginTop: 24, fontSize: 14, lineHeight: 21 },
+        !isLEDTheme && { color: '#666' },
+      ]}
+    >
+      {translate('odptDisclaimer')}
+    </Typography>
+    <Button
+      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+      textStyle={{ fontWeight: 'bold' }}
+      onPress={onPressOK}
+    >
+      OK
+    </Button>
+  </>
+);
 
 const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/';
 const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
@@ -316,17 +339,16 @@ const Licenses: React.FC = () => {
     []
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <RNAnimated.FlatList
           data={LICENSE_ITEMS}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
@@ -338,25 +360,13 @@ const Licenses: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
-          ListFooterComponent={() => (
-            <>
-              <Typography
-                style={[
-                  { marginTop: 24, fontSize: 14, lineHeight: 21 },
-                  !isLEDTheme && { color: '#666' },
-                ]}
-              >
-                {translate('odptDisclaimer')}
-              </Typography>
-              <Button
-                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-                textStyle={{ fontWeight: 'bold' }}
-                onPress={() => navigation.goBack()}
-              >
-                OK
-              </Button>
-            </>
-          )}
+          scrollEventThrottle={16}
+          ListFooterComponent={
+            <ListFooter
+              isLEDTheme={isLEDTheme}
+              onPressOK={() => navigation.goBack()}
+            />
+          }
         />
       </View>
       <SettingsHeader

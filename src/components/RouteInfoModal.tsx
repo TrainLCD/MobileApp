@@ -70,17 +70,10 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 16,
   },
-  title: {
-    width: '100%',
-    marginBottom: 24,
-  },
   flatListContentContainer: {
     paddingHorizontal: 24,
     paddingTop: 0,
     paddingBottom: 72,
-  },
-  noSearchResulText: {
-    fontWeight: 'bold',
   },
   expandableToggle: {
     backgroundColor: 'transparent',

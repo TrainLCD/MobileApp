@@ -1,3 +1,8 @@
+import {
+  FlashList,
+  type FlashListProps,
+  type ListRenderItemInfo,
+} from '@shopify/flash-list';
 import { useQueryClient } from '@tanstack/react-query';
 import { Orientation } from 'expo-screen-orientation';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -8,15 +13,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  Alert,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  Animated as RNAnimated,
-  StyleSheet,
-  View,
-} from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import { Alert, Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Station, TrainType } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
@@ -119,9 +116,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
+  // 従来は行間に EmptyLineSeparator(height: 8) を挟んでいたが、
+  // FlashList の ItemSeparatorComponent は numColumns 使用時に各セル内へ描画されるため
+  // 2行目以降のセルに paddingTop で同じ間隔を再現する
+  rowSpacing: {
+    paddingTop: 8,
+  },
 });
 
 const SEARCH_STATION_RESULT_LIMIT = 100;
+
+// タブレット表示で従来のレイアウト(flexDirection: 'row', gap: 16)と同じカード間隔
+const CARD_COLUMN_GAP = 16;
+
+// onScroll に useNativeDriver: true の Animated.event を直接アタッチするため
+// FlashList を RN Animated 対応コンポーネントにラップする
+// (FlashListRef が getScrollableNode を公開しているため native イベントが接続できる)
+const AnimatedFlashList = RNAnimated.createAnimatedComponent(
+  FlashList as unknown as React.ComponentType<FlashListProps<Station>>
+);
 
 const RouteSearchScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
@@ -429,55 +442,32 @@ const RouteSearchScreen = () => {
     [handleLineSelected, fetchRouteTypesLoading]
   );
 
-  const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
-    if (!isTablet || count <= 0) {
-      return null;
-    }
+  const renderItem = ({ item, index }: ListRenderItemInfo<Station>) => {
+    const columnIndex = index % numColumns;
 
-    return Array.from({ length: count }).map((_, i) => (
-      <Animated.View
-        layout={LinearTransition.springify()}
-        // biome-ignore lint/suspicious/noArrayIndexKey: プレースホルダーは静的で順序が変わらないため問題なし
-        key={`placeholder-${rowIndex}-${i}`}
-        style={{ flex: 1 }}
-      />
-    ));
-  }, []);
+    return (
+      <View
+        ref={index === 0 ? searchResultsRef : undefined}
+        onLayout={index === 0 ? measureSearchResults : undefined}
+        style={[
+          index >= numColumns && styles.rowSpacing,
+          // タブレットではセル幅が listWidth / numColumns 固定になるため、
+          // 各セルの左右 padding を列位置に応じて振り分けることで
+          // 従来の gap: 16 と同一のカード幅・カード間隔を再現する
+          isTablet && {
+            paddingLeft: (CARD_COLUMN_GAP * columnIndex) / numColumns,
+            paddingRight:
+              (CARD_COLUMN_GAP * (numColumns - 1 - columnIndex)) / numColumns,
+          },
+        ]}
+      >
+        {renderCard(item)}
+      </View>
+    );
+  };
 
-  const renderStationRow = useCallback(
-    (rowStations: Station[], rowIndex: number) => {
-      return (
-        <>
-          {rowIndex > 0 && <EmptyLineSeparator />}
-          <Animated.View
-            layout={LinearTransition.springify()}
-            style={
-              isTablet
-                ? {
-                    flexDirection: 'row',
-                    gap: 16,
-                  }
-                : undefined
-            }
-          >
-            {rowStations.map((item, colIndex) => {
-              return (
-                <Animated.View
-                  layout={LinearTransition.springify()}
-                  key={item.id ?? `station-${rowIndex}-${colIndex}`}
-                  style={isTablet ? { flex: 1 } : undefined}
-                >
-                  {renderCard(item)}
-                </Animated.View>
-              );
-            })}
-            {renderPlaceholders(rowIndex, numColumns - rowStations.length)}
-          </Animated.View>
-        </>
-      );
-    },
-    [numColumns, renderCard, renderPlaceholders]
-  );
+  const keyExtractor = (s: Station, index: number) =>
+    `${s.groupId ?? 0}-${s.id ?? index}`;
 
   const handleTrainTypeSelected = useCallback(
     async (trainType: TrainType) => {
@@ -516,11 +506,11 @@ const RouteSearchScreen = () => {
     ]
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
+  // NowHeader のスクロール連動アニメーションを native driver で駆動する
+  // (AnimatedFlashList にアタッチされ、スクロールイベントは UI スレッドで scrollY へ反映される)
+  const handleScroll = RNAnimated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: true }
   );
 
   const currentStationInRoutes = useMemo<Station | null>(
@@ -618,54 +608,42 @@ const RouteSearchScreen = () => {
   return (
     <>
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
-        <Animated.ScrollView
+        <AnimatedFlashList
           style={StyleSheet.absoluteFill}
+          data={searchResults}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          numColumns={numColumns}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           contentContainerStyle={[
             styles.listContainerStyle,
             nowHeaderHeight ? { paddingTop: nowHeaderHeight } : null,
           ]}
-        >
-          <View style={styles.listHeaderContainer}>
-            <View
-              ref={searchBarRef}
-              style={styles.searchBarContainer}
-              onLayout={measureSearchBar}
-            >
-              <SearchBar onSearch={handleSearch} />
+          ListHeaderComponent={
+            <View style={styles.listHeaderContainer}>
+              <View
+                ref={searchBarRef}
+                style={styles.searchBarContainer}
+                onLayout={measureSearchBar}
+              >
+                <SearchBar onSearch={handleSearch} />
+              </View>
+              <Heading style={styles.searchResultHeading}>
+                {translate('searchResult')}
+              </Heading>
             </View>
-            <Heading style={styles.searchResultHeading}>
-              {translate('searchResult')}
-            </Heading>
-          </View>
-
-          <View ref={searchResultsRef} onLayout={measureSearchResults}>
-            {!searchResults.length ? (
+          }
+          ListEmptyComponent={
+            <View ref={searchResultsRef} onLayout={measureSearchResults}>
               <EmptyResult
                 loading={byNameLoading || fetchRouteTypesLoading}
                 hasSearched={hasSearched}
               />
-            ) : (
-              Array.from({
-                length: Math.ceil(searchResults.length / numColumns),
-              }).map((_, rowIndex) => {
-                const rowStations = searchResults.slice(
-                  rowIndex * numColumns,
-                  (rowIndex + 1) * numColumns
-                );
-                const rowKey = rowStations.map((s) => s.id).join('-');
-                return (
-                  <React.Fragment key={rowKey}>
-                    {renderStationRow(rowStations, rowIndex)}
-                  </React.Fragment>
-                );
-              })
-            )}
-          </View>
-
-          <EmptyLineSeparator />
-        </Animated.ScrollView>
+            </View>
+          }
+          ListFooterComponent={EmptyLineSeparator}
+        />
       </SafeAreaView>
 
       <NowHeader
