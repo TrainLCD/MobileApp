@@ -38,9 +38,9 @@ describe('EstimatedMinutesUnitLabel', () => {
     expect(getByText('min.')).toBeTruthy();
   });
 
-  it('中国語Stateでは「分钟」を表示する', () => {
+  it('中国語Stateでは「分」を表示する', () => {
     const { getByText } = renderWithState('CURRENT_ZH');
-    expect(getByText('分钟')).toBeTruthy();
+    expect(getByText('分')).toBeTruthy();
   });
 
   it('韓国語Stateでは「분」を表示する', () => {

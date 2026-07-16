@@ -25,11 +25,9 @@ const estimatedMinutesUnitAtom = atom((get) => {
   switch (langState) {
     case 'EN':
       return 'min.';
-    case 'ZH':
-      return '分钟';
     case 'KO':
       return '분';
-    // JA・KANA
+    // JA・KANA・ZH (中国語も単位は「分」で通じるため共通)
     default:
       return '分';
   }
