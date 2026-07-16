@@ -23,7 +23,7 @@ const localStyles = StyleSheet.create({
   estimatedMinutesUnitContainer: {
     position: 'absolute',
     top: 0,
-    left: isTablet ? 48 + 12 : 32 + 8,
+    left: isTablet ? 48 + 24 : 32 + 16,
     height: isTablet ? 36 : 24,
     justifyContent: 'center',
   },

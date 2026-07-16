@@ -57,7 +57,7 @@ const localStyles = StyleSheet.create({
   estimatedMinutesUnitContainer: {
     position: 'absolute',
     top: 0,
-    left: 32 + 12,
+    left: 32 + 24,
     height: 32,
     justifyContent: 'center',
   },
