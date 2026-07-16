@@ -33,8 +33,8 @@ Optimization Progress:
 
 ### Phase 1: Lint sweep
 
-Run ESLint once at the project root with a comprehensive RN performance ruleset. Dispatch sub-agents to fix results — one per file.
-See [references/lint-rules.md](references/lint-rules.md) for ruleset and procedure.
+Run the repository's Biome lint once at the project root (`npm run lint`, i.e. `biome check ./src`). Dispatch sub-agents to fix results — one per file.
+See [references/lint-rules.md](references/lint-rules.md) for the rule mapping and procedure; checks Biome does not cover are handled in Phase 2.
 
 ### Phase 2: Semantic sweep
 

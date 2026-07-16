@@ -53,9 +53,9 @@ Loop over every variant of every element:
 
 `previewImage` accepts a local screenshot path (served from the OS temp dir / cwd), an `http(s)` URL, or a `data:` URI. A local screenshot of the real running variant is strongly preferred.
 
-### Step 3 — Await the human's decision (once)
+### Step 3 — Await the human's decision (once per round)
 
-After every variant for every element is staged, call `await_user_selection` exactly once. It returns:
+After every variant for every element is staged, call `await_user_selection` as the round's final call — once per round, but re-call it while it returns `pending` until you get a non-pending result. It returns:
 
 - `{ status: "completed", selections: [{ element, chosenVariant, comment? }], unselected, annotations: [{ target, match, comment }], globalComment }` — apply `chosenVariant` for each element; skip elements in `unselected`. Treat each `annotations` entry (inspector comments the human pinned to elements) and `globalComment` as a change request.
 - `{ status: "pending", proposedElements }` — `timeoutSeconds` elapsed, not an error. Proposals are still live; call `await_user_selection` again.
@@ -70,7 +70,7 @@ Implement the chosen variant for every selected element, address every annotatio
 - **At least two variants per element.** A choice needs alternatives — every element you propose must have ≥2 distinct variants (call `propose_variant` at least twice for it). If you only have one look for an element, either produce a real alternative or don't propose that element at all; a lone variant isn't a choice.
 - **Build before you propose.** Every `previewImage` must be a screenshot of that variant actually running on the device. No mockups, no guesses, no proposing un-built ideas.
 - **Distinct screenshot per variant.** Reusing a `previewImage` path across two variants — or capturing two paths whose bytes turn out identical — defeats the whole point of the Argent Lens. If you can't produce visibly different captures (e.g. the app is read-only, accessibility is broken so you can't navigate, the bundle won't hot-reload), STOP and tell the user instead of staging duplicates.
-- **One blocking call.** `propose_variant` never blocks — stage freely. `await_user_selection` is the only call that waits, and you call it once, last.
+- **One blocking call.** `propose_variant` never blocks — stage freely. `await_user_selection` is the only call that waits; call it last, once per round, re-calling it only while it returns `pending`.
 - **Anchor accurately.** Pull matchers from `describe`; a wrong `match` makes the card point at the wrong element or float unanchored.
 - **One variant on screen at a time.** Apply → screenshot → revert before the next variant so screenshots never bleed together.
 - **`pending` is normal.** On `pending`, just await again — proposals persist across timeouts.

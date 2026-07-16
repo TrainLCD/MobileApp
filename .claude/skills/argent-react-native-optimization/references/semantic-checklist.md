@@ -9,6 +9,10 @@ See [fix-reference.md](fix-reference.md) for concrete fix patterns per finding.
 
 Check every exported function component: is it rendered in a list, a frequently-updating parent, or a context consumer? If yes and props are stable, wrap in `React.memo`. Check context providers for unstable `value` props. Skip `React.memo` if React Compiler is active.
 
+### Unstable props & inline styles
+
+Check for object/array/function literals and JSX elements passed directly as JSX props (new reference every render), `.bind()` in JSX, components defined inside render (full remount each render), and inline `style={{}}` / single-element style arrays / color literals where a `StyleSheet` constant should be used. Biome has no equivalent lint rules for these, so verify them here by hand (see the Phase 1 note in [lint-rules.md](lint-rules.md)).
+
 ### List rendering
 
 Check all list-like rendering: ScrollView+map, manually iterated arrays, deeply nested FlatLists. Verify lists use virtualization (`FlatList`/`FlashList`), stable keys, and proper item sizing.

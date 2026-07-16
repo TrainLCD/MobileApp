@@ -84,7 +84,7 @@ Logs are written to a flat log file on disk. Use the **log-registry → grep** p
 ### Workflow
 
 1. **Call `debugger-log-registry`** — returns: `file` (log path), `totalEntries`, `byLevel`, `clusters` (top message groups with counts and source file info)
-2. **Search the file** using `Grep` or `Read` with patterns from the response.
+2. **Search the file** with scoped `Grep` queries built from the response (log IDs, cluster messages, levels). To inspect specific matches, use a range-limited `Read` (offset/limit around the matched line) — never read the file in full.
 
 > **Large log files:** If `totalEntries` exceeds 10 000, delegate the grep exploration to an `Explore` subagent — pass it the file path, the entry format, and the patterns you need.
 
@@ -96,7 +96,7 @@ One entry per line — fields (whitespace-separated, `|` delimiter before messag
 | ------------- | --------------------------- | --------------------------------------------------- |
 | `[L:<id>]`    | `[L:42]`                    | Unique grep anchor                                  |
 | `<timestamp>` | `2026-03-17T14:30:00.000Z`  | ISO 8601                                            |
-| `<LEVEL>`     | `ERROR`, `WARN `, `LOG  `   | Uppercase, padded to 5 chars                        |
+| `<LEVEL>`     | `ERROR`, `WARN`, `LOG`      | Uppercase, padded to 5 chars                        |
 | `<source>`    | `src/api/user.ts:42` or `-` | Relative path from source map; `-` if unavailable   |
 | `<message>`   | `Failed login attempt`      | Full message; embedded newlines replaced with space |
 
@@ -106,7 +106,7 @@ Log files and messages can be large - **Always scope your search**, treat the fi
 
 When reading from the log file:
 
-- Never `Read` the log file directly. Use `grep` or shell commands with limits using the above file format tips.
+- Never read the log file in full (no unbounded `Read`). Use `grep` or shell commands with limits using the above file format tips; a range-limited `Read` around a specific match is fine.
 - Default to `-m 50` unless you need more.
 - Use `tail -N` recent entries.
 - `clusters[].message` gives you the exact text which you may look for

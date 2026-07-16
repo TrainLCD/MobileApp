@@ -92,3 +92,5 @@ Call `profiler-load`. Modes:
 - `load_native` — re-parse native profiler XML by `session_id` and `device_id`. Populates session for `profiler-stack-query`.
 
 Use this to revisit an earlier profiling session without re-profiling. Each `react-profiler-analyze` run saves raw data with a unique timestamp.
+
+Do not list or reload saved sessions unconditionally: sessions may contain sensitive runtime data, so keeping them across sessions is opt-in (see the trace storage & reuse policy in the `argent-native-profiler` skill) — reload only what the user opted to keep or asks to revisit, and delete sessions that are no longer needed.

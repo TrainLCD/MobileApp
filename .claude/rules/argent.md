@@ -70,8 +70,9 @@ Decision order:
 
 <general_rules>
 
-- All simulator/emulator interactions go through argent MCP tools — never use `xcrun simctl`,
-  raw `curl` to simulator ports, or the simulator-server binary directly.
+- All simulator/emulator **UI interactions and gestures** go through argent MCP tools — never drive
+  the UI with `xcrun simctl`, raw `curl` to simulator ports, or the simulator-server binary directly.
+  Non-interactive device/setup commands are the exception; see the fallback rule below.
 - Before calling any gesture tool for the first time, use ToolSearch to load its schema.
 - Interaction tools (`gesture-tap`, `gesture-swipe`, `gesture-pinch`, `gesture-rotate`, `gesture-custom`, `launch-app`, etc.) return a screenshot automatically.
   Call `screenshot` separately only for a baseline before any action or after a delay.
@@ -79,7 +80,7 @@ Decision order:
 - Always use `run-sequence` when performing multiple sequential device actions where you don't need to observe the screen between steps. More in `argent-device-interact` skill.
 - When the session ends or the user says they are done: call `stop-all-simulator-servers`.
   If the user started Metro separately, ask whether to call `stop-metro` (specify the port if not 8081).
-- If tools provided by mcp-server are not sufficient and action can be done using `xcrun`, `adb`, or other commands, use the command. Examples: changing device options, performing a device action such as lock, shake, etc.
+- If tools provided by mcp-server are not sufficient and the action is **non-interactive** (no UI interaction/gesture), use `xcrun`, `adb`, or other commands. Examples: `adb reverse` for Metro port forwarding, `adb emu kill`, changing device options, performing a device action such as lock, shake, etc. Never use them to tap, swipe, type, or otherwise drive the UI.
 - When waiting for an action, do not call `screenshot` repeatedly without a proper wait mechanism. Use the `await-ui-element` tool to block until the UI settles (e.g. wait for an element to become `visible`/`hidden`, or to contain expected `text`) instead of polling.
   </general_rules>
 

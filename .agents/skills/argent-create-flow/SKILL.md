@@ -71,7 +71,7 @@ For tools with no arguments, omit `args` entirely.
 
 - **Every step runs live.** You will see the real tool result (including screenshots). Use this to verify the step worked before continuing.
 - **Only successful steps are recorded.** If a tool call fails, nothing is written to the flow file — fix the issue and try again.
-- **Pass `project_root` only to `flow-start-recording`.** It is stored for the session and automatically used by all subsequent flow tools. An error is returned if the path is not absolute.
+- **During recording, pass `project_root` only to `flow-start-recording`.** It is stored for the session and automatically used by the subsequent recording tools (`flow-add-step`, `flow-add-echo`, `flow-finish-recording`). `flow-execute` is the exception: it takes `project_root` explicitly to locate `.argent/flows/<name>.yaml`. An error is returned if the path is not absolute.
 - **You do NOT need to pass a flow name** to `flow-add-step`, `flow-add-echo`, or `flow-finish-recording`. The active flow is tracked automatically after `flow-start-recording`.
 - **Start before adding.** Calling `flow-add-step`, `flow-add-echo`, or `flow-finish-recording` without an active recording returns an error: _"No active flow. Call flow-start-recording first."_
 - **One flow at a time.** If you call `flow-start-recording` while already recording, the active flow switches to the new one. The response tells you which flow was abandoned and which is now active. The old flow's file remains on disk.
@@ -79,12 +79,14 @@ For tools with no arguments, omit `args` entirely.
 
 ## 6. Example Session
 
-```
+```text
 flow-start-recording  { name: "open-settings", project_root: "/Users/dev/MyApp", executionPrerequisite: "Simulator booted with app installed" }
 flow-add-echo  { message: "Launch Settings app" }
 flow-add-step  { command: "launch-app", args: "{\"udid\": \"ABC\", \"bundleId\": \"com.apple.Preferences\"}" }
+describe  { udid: "ABC" }              # explore the UI first — take tap coordinates from the "General" row, never guess them
 flow-add-echo  { message: "Tap General" }
 flow-add-step  { command: "gesture-tap", args: "{\"udid\": \"ABC\", \"x\": 0.5, \"y\": 0.35}" }
+describe  { udid: "ABC" }              # re-explore after the transition — take coordinates from the "About" row
 flow-add-echo  { message: "Tap About" }
 flow-add-step  { command: "gesture-tap", args: "{\"udid\": \"ABC\", \"x\": 0.5, \"y\": 0.17}" }
 flow-finish-recording  {}
@@ -92,7 +94,7 @@ flow-finish-recording  {}
 
 ## 7. Replay Example
 
-```
+```text
 flow-execute   { name: "open-settings", project_root: "/Users/dev/MyApp" }
 → Returns: notice with executionPrerequisite: "Simulator booted with app installed"
   "Verify the prerequisite is met and call flow-execute again with prerequisiteAcknowledged set to true."

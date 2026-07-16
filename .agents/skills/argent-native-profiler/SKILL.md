@@ -56,6 +56,8 @@ You do not need to derive `app_process` manually — just make sure the app is l
 Call `native-profiler-start` with `device_id` (iOS UDID or Android serial). The tool auto-detects the running app and saves the trace to `/tmp/argent-profiler-cwd/` with a timestamped filename.
 Let the user interact with the app or drive interaction via simulator tools (see `argent-device-interact` skill).
 
+> **Trace storage & reuse policy (applies to all profiler skills):** Traces can capture sensitive runtime data (screen contents, identifiers, timings). Treat saved traces as scoped to the current profiling task by default: keeping them for reuse in a later session is **opt-in** — confirm with the user first. Keep traces in the tool's output directory only (never copy them into the repository or shared locations), and delete them when the profiling task ends or whenever the user asks.
+
 ### Step 2: Stop and export
 
 Call `native-profiler-stop` with `device_id`. iOS sends SIGINT to xctrace, waits for trace packaging, and exports CPU, hangs, and leaks data to XML — check `exportDiagnostics` for any export warnings. Android sends SIGTERM to the on-device perfetto daemon, polls `/proc/<pid>` until it exits, then `adb pull`s the `.pftrace` to the host.

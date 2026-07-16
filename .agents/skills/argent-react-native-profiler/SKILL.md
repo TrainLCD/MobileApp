@@ -128,6 +128,8 @@ Repeat as needed until you identify the root cause function and file, referring 
 
 ### Step 7: Reload a previous session
 
+Saved sessions may contain sensitive runtime data — keeping and reloading them follows the trace storage & reuse policy in the `argent-native-profiler` skill: reload only sessions the user opted to keep (or asks to revisit), and delete sessions that are no longer needed.
+
 If you profiled multiple scenarios and need to revisit earlier data:
 
 1. Call `profiler-load` mode=`list` to see all saved sessions with timestamps (the list now also shows Runtime / Device / Metro bundle columns to help identify the right session).
