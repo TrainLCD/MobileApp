@@ -53,7 +53,7 @@ describe('EstimatedMinutesUnitLabel', () => {
   });
 
   it('中国語Stateでは駅名の英語表示に追従して「min.」を表示する', () => {
-    const { getByText } = renderWithState('CURRENT_ZH');
+    const { getByText } = renderWithState('CURRENT_ZH', ['JA', 'EN', 'ZH']);
     expect(getByText('min.')).toBeTruthy();
   });
 
