@@ -6,6 +6,7 @@ import { RFValue } from '~/utils/rfValue';
 // Shared bar positioning constants
 export const BAR_BOTTOM_WEST = isTablet ? 32 : 48;
 export const BAR_BOTTOM_JO = isTablet ? 32 : 48;
+export const BAR_HEIGHT_JO = isTablet ? 64 : 40;
 export const BAR_TERMINAL_BOTTOM_JO = isTablet ? 48 : 58;
 
 // Androidタブレットでは駅名がヘッダーに食い込むのを防ぐためbottomオフセットを縮小する
@@ -43,7 +44,7 @@ export const commonLineBoardStyles = StyleSheet.create({
   barJO: {
     position: 'absolute',
     bottom: BAR_BOTTOM_JO,
-    height: isTablet ? 64 : 40,
+    height: BAR_HEIGHT_JO,
   },
   barTerminal: {
     position: 'absolute',
