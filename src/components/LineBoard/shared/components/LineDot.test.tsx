@@ -1,6 +1,8 @@
 import { render } from '@testing-library/react-native';
+import { createStore, Provider } from 'jotai';
 import type { Line, Station } from '~/@types/graphql';
-import { LineDot } from './LineDot';
+import { headerStateAtom } from '~/store/atoms/navigation';
+import { LineDot, type LineDotProps } from './LineDot';
 
 // モック設定
 jest.mock('~/hooks/useScale', () => ({
@@ -171,5 +173,58 @@ describe('LineDot', () => {
 
     // PadLineMarksがレンダリングされていることを確認
     expect(getByTestId('pad-line-marks')).toBeTruthy();
+  });
+
+  describe('ETA単位ラベル', () => {
+    const renderWithHeaderState = (
+      props: Partial<LineDotProps>,
+      headerState: 'CURRENT' | 'CURRENT_EN' = 'CURRENT'
+    ) => {
+      const store = createStore();
+      store.set(headerStateAtom, headerState);
+      return render(
+        <Provider store={store}>
+          <LineDot
+            station={mockStation}
+            shouldGrayscale={false}
+            transferLines={mockTransferLines}
+            arrived={false}
+            passed={false}
+            {...props}
+          />
+        </Provider>
+      );
+    };
+
+    beforeEach(() => {
+      const getIsPass = require('~/utils/isPass').default;
+      (getIsPass as jest.Mock).mockReturnValue(false);
+    });
+
+    it('isLastかつestimatedMinutesありの場合、「分」を表示する', () => {
+      const { getByText } = renderWithHeaderState({
+        isLast: true,
+        estimatedMinutes: 5,
+      });
+      expect(getByText('分')).toBeTruthy();
+    });
+
+    it('英語Stateでは「min.」を表示する', () => {
+      const { getByText } = renderWithHeaderState(
+        { isLast: true, estimatedMinutes: 5 },
+        'CURRENT_EN'
+      );
+      expect(getByText('min.')).toBeTruthy();
+    });
+
+    it('isLastでもestimatedMinutesがない場合は表示しない', () => {
+      const { queryByText } = renderWithHeaderState({ isLast: true });
+      expect(queryByText('分')).toBeNull();
+    });
+
+    it('estimatedMinutesがあってもisLastでない場合は表示しない', () => {
+      const { queryByText } = renderWithHeaderState({ estimatedMinutes: 5 });
+      expect(queryByText('分')).toBeNull();
+    });
   });
 });
