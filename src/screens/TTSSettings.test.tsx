@@ -1,6 +1,6 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import { Linking } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { STATUS_URL, STORAGE_KEYS } from '~/constants';
 import { isTTSFeatureEnabled } from '~/lib/remoteConfig';
 import { storage } from '~/lib/storage';
@@ -152,6 +152,23 @@ describe('TTSSettingsScreen', () => {
       fireEvent.press(getByText('serviceStatus'));
 
       expect(openURLSpy).toHaveBeenCalledWith(STATUS_URL);
+    });
+
+    it('サービスステータスリンクを開けなかった場合はエラーAlertを表示する', async () => {
+      jest
+        .spyOn(Linking, 'openURL')
+        .mockRejectedValue(new Error('cannot open'));
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation();
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      const { getByText } = renderWithSpeechState({ enabled: true });
+
+      fireEvent.press(getByText('serviceStatus'));
+
+      await waitFor(() => {
+        expect(alertSpy).toHaveBeenCalledWith('errorTitle', 'failedToOpenLink');
+      });
+      expect(errorSpy).toHaveBeenCalled();
     });
   });
 

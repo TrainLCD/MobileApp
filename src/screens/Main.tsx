@@ -27,6 +27,7 @@ import {
 } from '~/@types/graphql';
 import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureView';
 import DevOverlay from '~/components/DevOverlay';
+import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { STORAGE_KEYS } from '~/constants';
@@ -52,7 +53,6 @@ import {
   useTelemetrySender,
   useTransferLines,
   useTransitionHeaderState,
-  useTTS,
   useTypeWillChange,
   useUpdateBottomState,
   useUpdateLiveActivities,
@@ -62,7 +62,6 @@ import {
   GET_LINE_STATIONS,
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
-import { isTTSFeatureEnabled } from '~/lib/remoteConfig';
 import { storage } from '~/lib/storage';
 import { APP_THEME } from '~/models/Theme';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
@@ -84,7 +83,6 @@ import navigationState, {
   leftStationsAtom,
 } from '../store/atoms/navigation';
 import { pictureInPictureActiveAtom } from '../store/atoms/pictureInPicture';
-import speechState from '../store/atoms/speech';
 import stationState, {
   arrivedAtom,
   selectedDirectionAtom,
@@ -167,18 +165,6 @@ const FxKeepAwake: React.FC = () => {
 const FxStartBackgroundLocationUpdates: React.FC = () => {
   useStartBackgroundLocationUpdates();
   return null;
-};
-const FxTTSInner: React.FC = () => {
-  useTTS();
-  return null;
-};
-// TTS無効時は useTTSText のテキスト構築（毎tick約19ms）ごとスキップする。
-// 有効化時にマウントされ直し、行先選択直後と同じ初回発話抑止から始まる。
-// Remote Config のキルスイッチ(tts_enabled=false)時は、ユーザー設定が有効でも
-// 再生を止める。設定画面のトグル表示(無効化)と実挙動を一致させるため。
-const FxTTS: React.FC = () => {
-  const { enabled } = useAtomValue(speechState);
-  return enabled && isTTSFeatureEnabled() ? <FxTTSInner /> : null;
 };
 const FxUpdateLiveActivitiesInner: React.FC = () => {
   useUpdateLiveActivities();

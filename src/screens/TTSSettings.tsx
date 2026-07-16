@@ -424,6 +424,7 @@ const TTSSettingsScreen: React.FC = () => {
   const handleServiceStatusPress = useCallback(() => {
     Linking.openURL(STATUS_URL).catch((error) => {
       console.error('Failed to open service status page', error);
+      Alert.alert(translate('errorTitle'), translate('failedToOpenLink'));
     });
   }, []);
 

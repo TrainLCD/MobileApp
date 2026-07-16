@@ -187,6 +187,14 @@ describe('isTTSFeatureEnabled（サーバー側キルスイッチ）', () => {
     await setupRemoteConfig();
     expect(isTTSFeatureEnabled()).toBe(true);
   });
+
+  it('falls back to true when fetching remote config fails', async () => {
+    mockRemoteConfig({}, false);
+    await expect(setupRemoteConfig()).rejects.toThrow(
+      'remote config fetch failed: 503'
+    );
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
 });
 
 describe('setupRemoteConfig', () => {

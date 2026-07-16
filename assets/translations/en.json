@@ -126,6 +126,7 @@
   "bgTtsAppClipAlertText": "To use the background audio feature, please download the full version.",
   "ttsFeatureDisabledText": "The automatic announcement feature is temporarily unavailable. Please check the Service Status page below for the latest availability.",
   "serviceStatus": "Service Status",
+  "failedToOpenLink": "Failed to open the link. Please try again later.",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. Please be careful.",
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. Please Be careful.",
   "shareNotice": "Press and hold the screen for easy sharing😊.",
