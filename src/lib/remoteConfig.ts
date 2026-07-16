@@ -16,6 +16,9 @@ export const REMOTE_CONFIG_KEYS = {
   // ETAフォールバックを継続してよい最大時間(分)。GPS喪失がこれを超えて続く場合は
   // フォールバックを打ち切り、不確実な推定に依存し続けないようにする。
   ETA_FALLBACK_MAX_DURATION_MIN: 'eta_fallback_max_duration_min',
+  // TTS(自動アナウンス)機能の有効/無効。false のとき設定画面のTTSトグルを無効化し、
+  // 音声合成バックエンド障害時などにサーバー側から機能を止められるようにする。
+  TTS_ENABLED: 'tts_enabled',
 } as const;
 
 type RemoteConfigResponse = {
@@ -24,6 +27,7 @@ type RemoteConfigResponse = {
   eta_assist_enabled?: boolean;
   eta_fallback_arrival_confirm_margin_sec?: number;
   eta_fallback_max_duration_min?: number;
+  tts_enabled?: boolean;
 };
 
 // 精度超過時に到着判定を未到着へ強制する機能のフォールバック既定値。
@@ -36,6 +40,10 @@ const ETA_ASSIST_ENABLED_FALLBACK = false;
 const ETA_FALLBACK_ARRIVAL_CONFIRM_MARGIN_SEC_FALLBACK = 30;
 // ETAフォールバックを継続してよい最大時間(分)のフォールバック既定値。
 const ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK = 30;
+
+// TTS機能のフォールバック既定値。キルスイッチ用途のため、未配信・取得失敗時は
+// 既存挙動（利用可能）を維持する true をフォールバックとする。
+const TTS_ENABLED_FALLBACK = true;
 
 // リモート設定の数値は「有限かつ正」のみ受理する(0・負値・非数はフォールバックへ倒す)。
 // 真偽値や配列は Number() で 1 や 5 に化けるため、number 型に限定してから検証する。
@@ -54,6 +62,26 @@ let cachedForceNotArrivedEnabled: boolean | null = null;
 let cachedEtaAssistEnabled: boolean | null = null;
 let cachedEtaFallbackArrivalConfirmMarginSec: number | null = null;
 let cachedEtaFallbackMaxDurationMin: number | null = null;
+let cachedTTSEnabled: boolean | null = null;
+
+// setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
+// 更新されても React は再レンダーしない。UI(FxTTS・設定画面)が useSyncExternalStore
+// 経由でキャッシュ更新へ追従できるよう、変更通知のリスナーを提供する。
+const remoteConfigListeners = new Set<() => void>();
+
+// キャッシュ更新をUIへ購読させる。戻り値は購読解除関数(useSyncExternalStore 互換)。
+export const subscribeRemoteConfig = (listener: () => void): (() => void) => {
+  remoteConfigListeners.add(listener);
+  return () => {
+    remoteConfigListeners.delete(listener);
+  };
+};
+
+const notifyRemoteConfigListeners = (): void => {
+  for (const listener of remoteConfigListeners) {
+    listener();
+  }
+};
 
 // テスト用および値の再取得時にキャッシュを破棄する。
 export const resetRemoteConfigCache = (): void => {
@@ -62,6 +90,8 @@ export const resetRemoteConfigCache = (): void => {
   cachedEtaAssistEnabled = null;
   cachedEtaFallbackArrivalConfirmMarginSec = null;
   cachedEtaFallbackMaxDurationMin = null;
+  cachedTTSEnabled = null;
+  notifyRemoteConfigListeners();
 };
 
 // 起動時に一度だけ Worker からリモート設定を取得しキャッシュへ格納する。
@@ -97,6 +127,10 @@ export const setupRemoteConfig = async (): Promise<void> => {
   if (maxDurationMin != null) {
     cachedEtaFallbackMaxDurationMin = maxDurationMin;
   }
+  if (typeof data.tts_enabled === 'boolean') {
+    cachedTTSEnabled = data.tts_enabled;
+  }
+  notifyRemoteConfigListeners();
 };
 
 // 最大許容精度(m)を同期的に取得する。setupRemoteConfig 完了後は取得済みの
@@ -149,4 +183,14 @@ export const getEtaFallbackMaxDurationMin = (): number => {
     return cachedEtaFallbackMaxDurationMin;
   }
   return ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK;
+};
+
+// TTS(自動アナウンス)機能の有効/無効を同期的に取得する。setupRemoteConfig 完了後は
+// 取得済みのリモート値を、未設定・取得失敗時はフォールバック(true=利用可能)を返す。
+// false のとき設定画面のTTSトグルは無効化される(サーバー側キルスイッチ)。
+export const isTTSFeatureEnabled = (): boolean => {
+  if (cachedTTSEnabled != null) {
+    return cachedTTSEnabled;
+  }
+  return TTS_ENABLED_FALLBACK;
 };

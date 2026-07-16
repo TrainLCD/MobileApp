@@ -104,7 +104,9 @@ const active = useAtomValue(pictureInPictureActiveAtom);
   プロファイル時に React DevTools 上でフック単位の再レンダー回数・コストを
   計測可能にするため。新しい常駐フックを足すときも同じ形式で追加する
 - 設定・プラットフォームで不要になるフックは条件付きマウントで丸ごと止める。
-  実例: `FxTTS` (TTS 有効時のみ)、`FxUpdateLiveActivities` (iOS のみ)、
+  実例: `FxTTS` (ユーザー設定と Remote Config キルスイッチの両方が有効なときのみ。
+  単体テストできるよう本体は `src/components/FxTTS.tsx` に定義)、
+  `FxUpdateLiveActivities` (iOS のみ)、
   `Permitted.tsx` のウェアラブル連携 (OS 別)。フックを条件分岐で呼ぶことは
   できないが、ホストコンポーネントのマウント自体を条件にすれば安全に止められる
 
