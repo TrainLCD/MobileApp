@@ -13,9 +13,8 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
+import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
@@ -33,14 +32,6 @@ const styles = StyleSheet.create({
     color: '#8B8B8B',
     lineHeight: 21,
   },
-  toggleSpacer: {
-    marginTop: 16,
-  },
-  notice: {
-    marginTop: 32,
-    textAlign: 'center',
-    color: '#8B8B8B',
-  },
   okButton: {
     width: 128,
     alignSelf: 'center',
@@ -52,12 +43,10 @@ const ToggleItem = ({
   title,
   state,
   onToggle,
-  disabled = false,
 }: {
   title: string;
   state: boolean;
   onToggle: () => void;
-  disabled?: boolean;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -65,8 +54,7 @@ const ToggleItem = ({
     <Pressable
       accessibilityRole="switch"
       accessibilityLabel={title}
-      accessibilityState={{ checked: state, disabled }}
-      disabled={disabled}
+      accessibilityState={{ checked: state }}
       onPress={onToggle}
       style={{
         flexDirection: 'row',
@@ -75,8 +63,6 @@ const ToggleItem = ({
         paddingVertical: 16,
         backgroundColor: isLEDTheme ? '#333' : 'white',
         borderRadius: isLEDTheme ? 0 : 12,
-        // Remote Config で許可されていない等、操作不可のときは淡色にして無効を示す。
-        opacity: disabled ? 0.4 : 1,
       }}
     >
       <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
@@ -88,44 +74,34 @@ const ToggleItem = ({
   );
 };
 
-const ExperimentalSettingsScreen: React.FC = () => {
+const BatterySettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
-    portraitModeEnabledAtom
+  const [powerSavingLocationEnabled, setPowerSavingLocationEnabled] = useAtom(
+    powerSavingLocationEnabledAtom
   );
-  const [tuning, setTuning] = useAtom(tuningState);
 
   const navigation = useNavigation();
 
-  const handleTogglePortraitMode = useCallback(() => {
-    const flag = !portraitModeEnabled;
-    setPortraitModeEnabled(flag);
+  const handleTogglePowerSavingLocation = useCallback(() => {
+    const flag = !powerSavingLocationEnabled;
+    setPowerSavingLocationEnabled(flag);
     try {
-      storage.set(STORAGE_KEYS.PORTRAIT_MODE_ENABLED, flag ? 'true' : 'false');
+      storage.set(
+        STORAGE_KEYS.POWER_SAVING_LOCATION_ENABLED,
+        flag ? 'true' : 'false'
+      );
     } catch (error) {
       // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
       // UIと永続値の不整合を防ぐべくatom状態をロールバックする
-      setPortraitModeEnabled(!flag);
-      console.error('Failed to save portrait mode setting', error);
+      setPowerSavingLocationEnabled(!flag);
+      console.error('Failed to save power saving location setting', error);
       Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
     }
-  }, [portraitModeEnabled, setPortraitModeEnabled]);
-
-  const handleToggleTelemetry = useCallback(() => {
-    const flag = !tuning.telemetryEnabled;
-    setTuning((prev) => ({ ...prev, telemetryEnabled: flag }));
-    try {
-      storage.set(STORAGE_KEYS.TELEMETRY_ENABLED, flag ? 'true' : 'false');
-    } catch (error) {
-      setTuning((prev) => ({ ...prev, telemetryEnabled: !flag }));
-      console.error('Failed to save telemetry setting', error);
-      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
-    }
-  }, [tuning.telemetryEnabled, setTuning]);
+  }, [powerSavingLocationEnabled, setPowerSavingLocationEnabled]);
 
   const handleScroll = useRef(
     RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
@@ -146,25 +122,12 @@ const ExperimentalSettingsScreen: React.FC = () => {
           scrollEventThrottle={16}
         >
           <ToggleItem
-            title={translate('portraitModeTitle')}
-            state={portraitModeEnabled}
-            onToggle={handleTogglePortraitMode}
+            title={translate('powerSavingLocationTitle')}
+            state={powerSavingLocationEnabled}
+            onToggle={handleTogglePowerSavingLocation}
           />
           <Typography style={styles.description}>
-            {translate('portraitModeDescription')}
-          </Typography>
-          <View style={styles.toggleSpacer}>
-            <ToggleItem
-              title={translate('optInTelemetryTitle')}
-              state={tuning.telemetryEnabled}
-              onToggle={handleToggleTelemetry}
-            />
-          </View>
-          <Typography style={styles.description}>
-            {translate('telemetryDescription')}
-          </Typography>
-          <Typography style={styles.notice}>
-            {translate('experimentalSettingsNotice')}
+            {translate('powerSavingLocationDescription')}
           </Typography>
           <Button
             style={styles.okButton}
@@ -176,7 +139,7 @@ const ExperimentalSettingsScreen: React.FC = () => {
         </RNAnimated.ScrollView>
       </View>
       <SettingsHeader
-        title={translate('experimentalSettings')}
+        title={translate('batterySettings')}
         onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height + 32)}
         scrollY={scrollY}
       />
@@ -185,4 +148,4 @@ const ExperimentalSettingsScreen: React.FC = () => {
   );
 };
 
-export default React.memo(ExperimentalSettingsScreen);
+export default React.memo(BatterySettingsScreen);

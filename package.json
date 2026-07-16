@@ -6,9 +6,9 @@
     "web": "expo start --web",
     "lint": "biome check ./src",
     "format": "biome format ./src --write",
-    "test": "TZ=UTC jest",
+    "test": "cross-env TZ=UTC jest",
     "typecheck": "tsc --noEmit",
-    "watch:test": "TZ=UTC jest --watch",
+    "watch:test": "cross-env TZ=UTC jest --watch",
     "gql:codegen": "graphql-codegen --config utils/codegen.ts",
     "version:bump": "node scripts/bump-version.js",
     "postinstall": "patch-package"
@@ -167,5 +167,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.9.1"
+  "version": "10.10.0"
 }

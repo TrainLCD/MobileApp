@@ -119,10 +119,20 @@ export const useLineSelection = (): UseLineSelectionResult => {
         pendingTrainType: null,
       }));
 
-      const result = await fetchStationsByLineId({
-        variables: { lineId, stationId: lineStationId },
-      });
-      const fetchedStations = result.data?.lineStations ?? [];
+      // 駅一覧と種別一覧は互いに独立したクエリなので並列で取得する
+      const [{ data }, fetchedTrainTypesData] = await Promise.all([
+        fetchStationsByLineId({
+          variables: { lineId, stationId: lineStationId },
+        }),
+        line.station?.hasTrainTypes
+          ? fetchTrainTypes({
+              variables: {
+                stationId: lineStationId,
+              },
+            })
+          : null,
+      ]);
+      const fetchedStations = data?.lineStations ?? [];
 
       const pendingStation =
         fetchedStations.find((s) => s.id === lineStationId) ?? null;
@@ -133,13 +143,9 @@ export const useLineSelection = (): UseLineSelectionResult => {
         pendingStations: fetchedStations,
       }));
 
-      if (line.station?.hasTrainTypes) {
-        const result = await fetchTrainTypes({
-          variables: {
-            stationId: lineStationId,
-          },
-        });
-        const fetchedTrainTypes = result.data?.stationTrainTypes ?? [];
+      if (fetchedTrainTypesData) {
+        const fetchedTrainTypes =
+          fetchedTrainTypesData.data?.stationTrainTypes ?? [];
         const designatedTrainTypeId =
           fetchedStations.find((s) => s.id === lineStationId)?.trainType?.id ??
           null;

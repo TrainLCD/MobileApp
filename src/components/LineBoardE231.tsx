@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -13,13 +13,13 @@ import {
 import { useScale } from '~/hooks/useScale';
 import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
-import { RFValue } from '~/utils/rfValue';
 import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { ChevronE231 } from './ChevronE231';
 import {
   EstimatedMinutesBadge,
+  EstimatedMinutesUnitLabel,
   StationName,
 } from './LineBoard/shared/components';
 import {
@@ -69,18 +69,6 @@ const localStyles = StyleSheet.create({
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
   },
-  stationNameMapContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    marginBottom: 8,
-  },
-  stationName: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    color: '#3a3a3a',
-    marginLeft: 5,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
-  },
   chevron: {
     position: 'absolute',
     zIndex: 9999,
@@ -113,6 +101,14 @@ const localStyles = StyleSheet.create({
     height: isTablet ? 36 : 24,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // ドット矩形(dotInner)の右にドットと同じ高さで縦中央揃え
+  estimatedMinutesUnitContainer: {
+    position: 'absolute',
+    top: 0,
+    left: isTablet ? 44 + 24 : 36 + 16,
+    height: isTablet ? 36 : 24,
+    justifyContent: 'center',
   },
   marksContainer: {
     top: 38,
@@ -271,6 +267,16 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
                     <EstimatedMinutesBadge
                       estimatedMinutes={estimatedMinutes}
                     />
+                  </View>
+                ) : null}
+                {stations.length - 1 === index &&
+                estimatedMinutes != null &&
+                !(passed && !arrived) ? (
+                  <View
+                    style={localStyles.estimatedMinutesUnitContainer}
+                    pointerEvents="none"
+                  >
+                    <EstimatedMinutesUnitLabel />
                   </View>
                 ) : null}
               </View>

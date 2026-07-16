@@ -179,6 +179,25 @@ describe('LineBoardJRKyushu', () => {
     );
   });
 
+  it('最後の駅のLineDotにのみisLast=trueが渡される', () => {
+    const { LineDot } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardJRKyushu
+        stations={mockStations}
+        lineColors={['#f60', '#f60']}
+        hasTerminus={false}
+      />
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ station: mockStations[0], isLast: false }),
+      undefined
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ station: mockStations[1], isLast: true }),
+      undefined
+    );
+  });
+
   it('NumberingIconコンポーネントが駅番号付きの駅に対してレンダリングされる', () => {
     const NumberingIcon = require('./NumberingIcon').default;
     render(

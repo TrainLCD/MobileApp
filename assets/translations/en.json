@@ -124,6 +124,9 @@
   "ttsAlertText": "The automatic announcement feature does not work in silent mode or when the Internet is not connected. Please be careful.",
   "bgTtsAlertText": "When the background audio feature is enabled, sound will play even when silent mode is on. Please be especially mindful when on a train.",
   "bgTtsAppClipAlertText": "To use the background audio feature, please download the full version.",
+  "ttsFeatureDisabledText": "The automatic announcement feature is temporarily unavailable. Please check the Service Status page below for the latest availability.",
+  "serviceStatus": "Service Status",
+  "failedToOpenLink": "Failed to open the link. Please try again later.",
   "weekdayNotice": "Weekday transit stations are included. The corresponding station will be displayed as a passage. Please be careful.",
   "holidayNotice": "Includes holiday transit stations. The corresponding station will be displayed as a passage. Please Be careful.",
   "shareNotice": "Press and hold the screen for easy sharing😊.",
@@ -329,9 +332,8 @@
   "portraitModeTitle": "Portrait Mode",
   "portraitModeDescription": "When enabled, the running screen switches to a layout optimized for portrait orientation while you hold your device upright.",
   "telemetryDescription": "Your device's geographic coordinates are sent to our analytics server. The information is used only for analytics.",
-  "etaAssistTitle": "Improve arrival detection",
-  "etaAssistDescription": "When enabled, in sections where GPS accuracy drops such as subways, the app uses the server's estimated arrival times (ETA) to assist arrival detection. GPS remains the source of truth for arrival and current location; ETA is only an aid.",
+  "batterySettings": "Battery",
   "powerSavingLocationTitle": "Power-saving location mode",
-  "powerSavingLocationDescription": "When enabled, the app requests location updates less often and allows tracking to pause while stopped while retaining the high accuracy needed for station detection, reducing battery drain and heat on long rides. On Android, removing the app from the Recents screen stops the foreground location service and its persistent notification, but does not guarantee that the location task itself is unregistered. This works on both Android and iOS and turns on automatically while your device is in low-power mode. If arrival notices become delayed, also turn off the device's low-power mode.",
+  "powerSavingLocationDescription": "When enabled, location accuracy is lowered to a battery-friendly level and iOS pauses tracking automatically while you are stopped, further reducing battery drain and heat on long rides. The lower accuracy may delay or shift station detection and arrival announcements. The relaxed update frequency is already part of the default settings. It also turns on automatically while your device is in low-power mode.",
   "passStationLabel": "Pass"
 }

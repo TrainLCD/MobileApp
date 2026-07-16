@@ -30,3 +30,14 @@ export const pictureInPictureAtom = atom<PictureInPictureState>({
   active: false,
   activityState: null,
 });
+
+// activityState は位置更新のたびに書き換わる（progress を含む）ため、
+// enabled / active だけが必要な購読者が pictureInPictureAtom を丸ごと購読すると
+// 毎ティック再レンダーされてしまう。boolean の派生 atom は値が変わらない限り
+// 通知されないので、こちらを購読する。
+export const pictureInPictureEnabledAtom = atom(
+  (get) => get(pictureInPictureAtom).enabled
+);
+export const pictureInPictureActiveAtom = atom(
+  (get) => get(pictureInPictureAtom).active
+);

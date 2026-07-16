@@ -27,6 +27,7 @@ import {
 } from '~/@types/graphql';
 import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureView';
 import DevOverlay from '~/components/DevOverlay';
+import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { STORAGE_KEYS } from '~/constants';
@@ -52,7 +53,6 @@ import {
   useTelemetrySender,
   useTransferLines,
   useTransitionHeaderState,
-  useTTS,
   useTypeWillChange,
   useUpdateBottomState,
   useUpdateLiveActivities,
@@ -82,7 +82,7 @@ import navigationState, {
   bottomStateAtom,
   leftStationsAtom,
 } from '../store/atoms/navigation';
-import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
+import { pictureInPictureActiveAtom } from '../store/atoms/pictureInPicture';
 import stationState, {
   arrivedAtom,
   selectedDirectionAtom,
@@ -117,12 +117,95 @@ type GetStationTrainTypesVariables = {
   stationId: number;
 };
 
+// MainScreen 本体から切り離したレンダーレスの副作用ホスト。
+// ここに集約したフックは locationAtom や headerState など高頻度更新の atom を
+// 購読するため、MainScreen 本体に置くと位置更新（毎秒）のたびに約40フックの
+// 巨大コンポーネント全体が再実行されてしまう。返り値を持たない副作用専用
+// フックだけをここへ隔離する。
+const FxSimulationMode: React.FC = () => {
+  useSimulationMode();
+  return null;
+};
+const FxFirstStop: React.FC = () => {
+  useFirstStop(true);
+  return null;
+};
+const FxTelemetrySender: React.FC = () => {
+  useTelemetrySender(true);
+  return null;
+};
+const FxConsoleTelemetry: React.FC = () => {
+  useConsoleTelemetry();
+  return null;
+};
+const FxTransitionHeaderState: React.FC = () => {
+  useTransitionHeaderState();
+  return null;
+};
+const FxRefreshLeftStations: React.FC = () => {
+  useRefreshLeftStations();
+  return null;
+};
+const FxRefreshStation: React.FC = () => {
+  useRefreshStation();
+  return null;
+};
+const FxEtaAnchor: React.FC = () => {
+  useEtaAnchor();
+  return null;
+};
+const FxEtaFallback: React.FC = () => {
+  useEtaFallback();
+  return null;
+};
+const FxKeepAwake: React.FC = () => {
+  useKeepAwake();
+  return null;
+};
+const FxStartBackgroundLocationUpdates: React.FC = () => {
+  useStartBackgroundLocationUpdates();
+  return null;
+};
+const FxUpdateLiveActivitiesInner: React.FC = () => {
+  useUpdateLiveActivities();
+  return null;
+};
+// LiveActivities は iOS 専用。Android では activityState の派生計算自体を止める。
+const FxUpdateLiveActivities: React.FC = () => {
+  return Platform.OS === 'ios' ? <FxUpdateLiveActivitiesInner /> : null;
+};
+const FxAndroidPictureInPicture: React.FC = () => {
+  useAndroidPictureInPicture();
+  return null;
+};
+
+const MainScreenEffects: React.FC = () => {
+  return (
+    <>
+      <FxSimulationMode />
+      <FxFirstStop />
+      <FxTelemetrySender />
+      <FxConsoleTelemetry />
+      <FxTransitionHeaderState />
+      <FxRefreshLeftStations />
+      <FxRefreshStation />
+      <FxEtaAnchor />
+      <FxEtaFallback />
+      <FxKeepAwake />
+      <FxStartBackgroundLocationUpdates />
+      <FxTTS />
+      <FxUpdateLiveActivities />
+      {Platform.OS === 'android' && <FxAndroidPictureInPicture />}
+    </>
+  );
+};
+
 const MainScreen: React.FC = () => {
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
 
   const theme = useAtomValue(themeAtom);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const { active: pictureInPictureActive } = useAtomValue(pictureInPictureAtom);
+  const pictureInPictureActive = useAtomValue(pictureInPictureActiveAtom);
 
   const stations = useAtomValue(stationsAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
@@ -132,8 +215,8 @@ const MainScreen: React.FC = () => {
   const bottomState = useAtomValue(bottomStateAtom);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
-  const { devOverlayEnabled } = useAtomValue(tuningState);
-  const { untouchableModeEnabled } = useAtomValue(tuningState);
+  const { devOverlayEnabled, untouchableModeEnabled } =
+    useAtomValue(tuningState);
   const portraitModeEnabled = useAtomValue(portraitModeEnabledAtom);
 
   const currentLine = useCurrentLine();
@@ -158,12 +241,6 @@ const MainScreen: React.FC = () => {
       transform: [{ rotate: '90deg' }],
     };
   }, [windowWidth, windowHeight]);
-
-  useSimulationMode();
-  useFirstStop(true);
-
-  useTelemetrySender(true);
-  useConsoleTelemetry();
 
   const { isYamanoteLine, isOsakaLoopLine, isMeijoLine } = useLoopLine();
 
@@ -260,17 +337,7 @@ const MainScreen: React.FC = () => {
     trainType,
   ]);
 
-  useTransitionHeaderState();
-  useRefreshLeftStations();
-  useRefreshStation();
-  useEtaAnchor();
-  useEtaFallback();
-  useKeepAwake();
-  useStartBackgroundLocationUpdates();
   const resetMainState = useResetMainState();
-  useTTS();
-  useUpdateLiveActivities();
-  useAndroidPictureInPicture();
 
   const { pause: pauseBottomTimer } = useUpdateBottomState();
 
@@ -675,7 +742,12 @@ const MainScreen: React.FC = () => {
   }, [bottomState, handleTransferPress, hasTerminus, theme, transferStation]);
 
   if (pictureInPictureActive) {
-    return <AndroidPictureInPictureView />;
+    return (
+      <>
+        <MainScreenEffects />
+        <AndroidPictureInPictureView />
+      </>
+    );
   }
 
   // ポートレートモード有効時、端末が縦向きの間はテーマ非依存の
@@ -683,6 +755,7 @@ const MainScreen: React.FC = () => {
   if (portraitModeEnabled && windowHeight > windowWidth) {
     return (
       <>
+        <MainScreenEffects />
         <PortraitMain />
         {isDevApp && devOverlayEnabled && <DevOverlay />}
       </>
@@ -691,15 +764,19 @@ const MainScreen: React.FC = () => {
 
   if (isLEDTheme) {
     return (
-      <View style={landscapeKeepStyle}>
-        <Header />
-        <LineBoard hasTerminus={hasTerminus} />
-      </View>
+      <>
+        <MainScreenEffects />
+        <View style={landscapeKeepStyle}>
+          <Header />
+          <LineBoard hasTerminus={hasTerminus} />
+        </View>
+      </>
     );
   }
 
   return (
     <>
+      <MainScreenEffects />
       <View style={landscapeKeepStyle}>
         <Pressable
           style={[

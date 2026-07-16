@@ -106,6 +106,22 @@ const normalizeOptional = (val: string | undefined): string => {
   return trimmed.length > 0 ? trimmed : '';
 };
 
+// ヘボン式ローマ字の長音符（マクロン: Ā ā Ē ē Ī ī Ō ō Ū ū）を素の母音へ落とす。
+// NFD で母音と結合マクロン（U+0304）へ分解し、マクロンだけ取り除いて NFC に戻す。
+// 既存の useIsDifferentStationName と同じ手法。
+const COMBINING_MACRON = String.fromCharCode(0x0304);
+const stripMacrons = (text: string): string =>
+  text.normalize('NFD').replaceAll(COMBINING_MACRON, '').normalize('NFC');
+
+// TTS API（Azure Speech）はマクロン付き母音を正しく読めず、英語駅名を誤読・無音化
+// することがあるため、SSML の可視テキストからマクロンを除去する。
+// タグ（<...>）は属性ごと保護し、タグ外のテキストだけを対象にすることで、
+// <phoneme ph="..."> の IPA 発音記号など読みの正確さに関わる値は温存する。
+const stripMacronsFromSsmlText = (ssml: string): string =>
+  ssml.replace(/<[^>]*>|[^<]+/g, (token) =>
+    token.startsWith('<') ? token : stripMacrons(token)
+  );
+
 const buildCacheKey = (opts: FetchSpeechOptions): string =>
   `${opts.textJa}\0${opts.textEn}\0${normalizeOptional(opts.jaVoiceName)}\0${normalizeOptional(opts.enVoiceName)}`;
 
@@ -136,7 +152,11 @@ export const fetchSpeechAudio = async (
     return null;
   }
 
-  const cacheKey = buildCacheKey(options);
+  // TTS API はマクロン付き英語駅名を誤読・無音化することがあるため、送信前に
+  // 英語 SSML の可視テキストからマクロンを除去する（日本語側は元々マクロンを含まない）。
+  const sanitizedTextEn = stripMacronsFromSsmlText(textEn);
+
+  const cacheKey = buildCacheKey({ ...options, textEn: sanitizedTextEn });
   const cached = fetchCache.get(cacheKey);
   if (cached) {
     return cached;
@@ -148,7 +168,7 @@ export const fetchSpeechAudio = async (
   const reqBody = {
     data: {
       ssmlJa: `<speak>${textJa.trim()}</speak>`,
-      ssmlEn: `<speak>${textEn.trim()}</speak>`,
+      ssmlEn: `<speak>${sanitizedTextEn.trim()}</speak>`,
       ...(normalizedJaVoiceName ? { jaVoiceName: normalizedJaVoiceName } : {}),
       ...(normalizedEnVoiceName ? { enVoiceName: normalizedEnVoiceName } : {}),
     },

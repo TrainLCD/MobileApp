@@ -4,24 +4,23 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
+  Linking,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
 import { isClip } from 'react-native-app-clip';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { useTTSFeatureEnabled } from '~/hooks/useTTSFeatureEnabled';
 import speechState from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
-import { STORAGE_KEYS } from '../constants';
+import { STATUS_URL, STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 
 type SettingItem = {
@@ -99,6 +98,89 @@ const SettingsItem = ({
   );
 };
 
+const ListFooter = ({
+  ttsLanguageItems,
+  ttsEnabledLanguages,
+  speechEnabled,
+  ttsFeatureEnabled,
+  onToggleTTSLanguage,
+  onPressServiceStatus,
+  onPressOK,
+}: {
+  ttsLanguageItems: TTSLanguageSettingItem[];
+  ttsEnabledLanguages: TTSLanguage[];
+  speechEnabled: boolean;
+  ttsFeatureEnabled: boolean;
+  onToggleTTSLanguage: (language: TTSLanguage) => void;
+  onPressServiceStatus: () => void;
+  onPressOK: () => void;
+}) => (
+  <>
+    <View style={{ marginTop: 16 }}>
+      {ttsLanguageItems.map((item, index) => {
+        const state = ttsEnabledLanguages.includes(item.id);
+        const disabled =
+          !speechEnabled ||
+          (item.id === 'JA' && state && !ttsEnabledLanguages.includes('EN')) ||
+          (item.id === 'EN' && state && !ttsEnabledLanguages.includes('JA'));
+
+        return (
+          <SettingsItem
+            key={item.id}
+            item={item}
+            isFirst={index === 0}
+            isLast={index === ttsLanguageItems.length - 1}
+            onToggle={() => onToggleTTSLanguage(item.id)}
+            state={state}
+            disabled={disabled}
+          />
+        );
+      })}
+    </View>
+    <Typography
+      style={{
+        marginTop: 16,
+        textAlign: 'center',
+        color: '#8B8B8B',
+      }}
+    >
+      {translate('requireJapaneseOrEnglish')}
+    </Typography>
+    {!ttsFeatureEnabled ? (
+      <>
+        <Typography
+          style={{
+            marginTop: 16,
+            textAlign: 'center',
+            color: '#8B8B8B',
+          }}
+        >
+          {translate('ttsFeatureDisabledText')}
+        </Typography>
+        <Typography
+          accessibilityRole="link"
+          onPress={onPressServiceStatus}
+          style={{
+            marginTop: 8,
+            textAlign: 'center',
+            color: '#008ffe',
+            textDecorationLine: 'underline',
+          }}
+        >
+          {translate('serviceStatus')}
+        </Typography>
+      </>
+    ) : null}
+    <Button
+      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+      textStyle={{ fontWeight: 'bold' }}
+      onPress={onPressOK}
+    >
+      OK
+    </Button>
+  </>
+);
+
 const TTSSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -111,6 +193,10 @@ const TTSSettingsScreen: React.FC = () => {
   ] = useAtom(speechState);
 
   const navigation = useNavigation();
+
+  // Remote Config のキルスイッチ。起動時の非同期取得完了後に値が届いた場合も
+  // 購読経由で再レンダーされ、トグルの無効化が確実に反映される。
+  const ttsFeatureEnabled = useTTSFeatureEnabled();
 
   const SETTING_ITEMS: SettingItem[] = [
     {
@@ -141,6 +227,10 @@ const TTSSettingsScreen: React.FC = () => {
 
   const handleToggleTTS = useCallback(
     (flag: boolean) => {
+      if (!ttsFeatureEnabled) {
+        return;
+      }
+
       try {
         if (flag && !storage.contains(STORAGE_KEYS.TTS_NOTICE)) {
           Alert.alert(translate('notice'), translate('ttsAlertText'), [
@@ -178,7 +268,7 @@ const TTSSettingsScreen: React.FC = () => {
         );
       }
     },
-    [setSpeechState]
+    [setSpeechState, ttsFeatureEnabled]
   );
 
   const handleToggleBgTTS = useCallback(
@@ -271,14 +361,28 @@ const TTSSettingsScreen: React.FC = () => {
     [setSpeechState, ttsEnabledLanguages]
   );
 
+  // キルスイッチOFF時は保存済みのユーザー設定を保持したまま、表示上はOFF・操作不可にする。
+  const effectiveSpeechEnabled = speechEnabled && ttsFeatureEnabled;
+
   const renderItem = useCallback(
     ({ item, index }: { item: SettingItem; index: number }) => {
       const state = (() => {
         switch (item.id) {
           case 'enable_tts':
-            return speechEnabled;
+            return effectiveSpeechEnabled;
           case 'enable_bg_tts':
-            return backgroundEnabled;
+            return effectiveSpeechEnabled ? backgroundEnabled : false;
+          default:
+            return false;
+        }
+      })();
+
+      const disabled = (() => {
+        switch (item.id) {
+          case 'enable_tts':
+            return !ttsFeatureEnabled;
+          case 'enable_bg_tts':
+            return !effectiveSpeechEnabled;
           default:
             return false;
         }
@@ -301,8 +405,8 @@ const TTSSettingsScreen: React.FC = () => {
           isFirst={index === 0}
           isLast={index === SETTING_ITEMS.length - 1}
           onToggle={onToggle}
-          state={item.id === 'enable_bg_tts' && !speechEnabled ? false : state}
-          disabled={item.id === 'enable_bg_tts' && !speechEnabled}
+          state={state}
+          disabled={disabled}
         />
       );
     },
@@ -310,22 +414,30 @@ const TTSSettingsScreen: React.FC = () => {
       handleToggleTTS,
       handleToggleBgTTS,
       speechEnabled,
+      effectiveSpeechEnabled,
       backgroundEnabled,
+      ttsFeatureEnabled,
       SETTING_ITEMS.length,
     ]
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleServiceStatusPress = useCallback(() => {
+    Linking.openURL(STATUS_URL).catch((error) => {
+      console.error('Failed to open service status page', error);
+      Alert.alert(translate('errorTitle'), translate('failedToOpenLink'));
+    });
+  }, []);
+
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <RNAnimated.FlatList
           data={SETTING_ITEMS}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
@@ -335,51 +447,18 @@ const TTSSettingsScreen: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
-          ListFooterComponent={() => (
-            <>
-              <View style={{ marginTop: 16 }}>
-                {TTS_LANGUAGE_ITEMS.map((item, index) => {
-                  const state = ttsEnabledLanguages.includes(item.id);
-                  const disabled =
-                    !speechEnabled ||
-                    (item.id === 'JA' &&
-                      state &&
-                      !ttsEnabledLanguages.includes('EN')) ||
-                    (item.id === 'EN' &&
-                      state &&
-                      !ttsEnabledLanguages.includes('JA'));
-
-                  return (
-                    <SettingsItem
-                      key={item.id}
-                      item={item}
-                      isFirst={index === 0}
-                      isLast={index === TTS_LANGUAGE_ITEMS.length - 1}
-                      onToggle={() => handleToggleTTSLanguage(item.id)}
-                      state={state}
-                      disabled={disabled}
-                    />
-                  );
-                })}
-              </View>
-              <Typography
-                style={{
-                  marginTop: 16,
-                  textAlign: 'center',
-                  color: '#8B8B8B',
-                }}
-              >
-                {translate('requireJapaneseOrEnglish')}
-              </Typography>
-              <Button
-                style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-                textStyle={{ fontWeight: 'bold' }}
-                onPress={() => navigation.goBack()}
-              >
-                OK
-              </Button>
-            </>
-          )}
+          scrollEventThrottle={16}
+          ListFooterComponent={
+            <ListFooter
+              ttsLanguageItems={TTS_LANGUAGE_ITEMS}
+              ttsEnabledLanguages={ttsEnabledLanguages}
+              speechEnabled={effectiveSpeechEnabled}
+              ttsFeatureEnabled={ttsFeatureEnabled}
+              onToggleTTSLanguage={handleToggleTTSLanguage}
+              onPressServiceStatus={handleServiceStatusPress}
+              onPressOK={() => navigation.goBack()}
+            />
+          }
         />
       </View>
       <SettingsHeader

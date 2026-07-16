@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 21,
   },
-  subtitle: { width: '100%', fontSize: 16 },
   title: {
     width: '100%',
     marginBottom: 24,
@@ -109,9 +108,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 150,
     paddingBottom: 72,
-  },
-  noSearchResulText: {
-    fontWeight: 'bold',
   },
 });
 

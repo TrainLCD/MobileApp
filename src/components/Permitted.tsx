@@ -43,16 +43,17 @@ import {
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
-import {
-  etaAssistManualEnabledAtom,
-  portraitModeEnabledAtom,
-} from '../store/atoms/experimental';
+import { portraitModeEnabledAtom } from '../store/atoms/experimental';
 import navigationState, {
   autoModeEnabledAtom,
   isAppLatestAtom,
 } from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
-import { pictureInPictureAtom } from '../store/atoms/pictureInPicture';
+import {
+  pictureInPictureActiveAtom,
+  pictureInPictureAtom,
+  pictureInPictureEnabledAtom,
+} from '../store/atoms/pictureInPicture';
 import speechState from '../store/atoms/speech';
 import { selectedBoundAtom } from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
@@ -67,6 +68,45 @@ type Props = {
   children: React.ReactNode;
 };
 
+// PermittedLayout 本体から切り離したレンダーレスの副作用ホスト。
+// useWrongDirectionDetectorEffect は locationAtom を、useAppleWatch /
+// useAndroidWearable は駅状態を購読するため、本体に置くと位置更新のたびに
+// レイアウト全体が再レンダーされてしまう。
+const FxAppleWatchInner: React.FC = () => {
+  useAppleWatch();
+  return null;
+};
+const FxAndroidWearableInner: React.FC = () => {
+  useAndroidWearable();
+  return null;
+};
+const FxCheckStoreVersion: React.FC = () => {
+  useCheckStoreVersion();
+  return null;
+};
+const FxWrongDirectionDetector: React.FC = () => {
+  // 逆方向検知ロジックの計算を 1 箇所だけで実行し、結果は atom 経由で他のフックに配る。
+  // useRefreshStation / useWarningInfo から個別に呼ぶと位置更新ごとに getDistance と
+  // state 更新が二重に走ってバッテリーを余計に消費するため、ここに集約している。
+  useWrongDirectionDetectorEffect();
+  return null;
+};
+
+const PermittedLayoutEffects: React.FC = () => {
+  // 高頻度購読のフックをホスト自身で呼ぶと、その再レンダーが sibling の
+  // ウェアラブル子コンポーネントへも伝播するため、1 フック = 1 コンポーネントで分離する。
+  // ウェアラブル連携は各プラットフォーム専用。対象外の OS では
+  // メッセージ組み立て（毎tickの派生計算）ごとマウントしない。
+  return (
+    <>
+      <FxCheckStoreVersion />
+      <FxWrongDirectionDetector />
+      {Platform.OS === 'ios' && <FxAppleWatchInner />}
+      {Platform.OS === 'android' && <FxAndroidWearableInner />}
+    </>
+  );
+};
+
 const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const selectedBound = useAtomValue(selectedBoundAtom);
   const { untouchableModeEnabled, devOverlayEnabled } =
@@ -78,9 +118,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const setNotify = useSetAtom(notifyState);
   const setPictureInPicture = useSetAtom(pictureInPictureAtom);
   const setPortraitModeEnabled = useSetAtom(portraitModeEnabledAtom);
-  const setEtaAssistManualEnabled = useSetAtom(etaAssistManualEnabledAtom);
-  const { enabled: pictureInPictureEnabled, active: pictureInPictureActive } =
-    useAtomValue(pictureInPictureAtom);
+  const pictureInPictureEnabled = useAtomValue(pictureInPictureEnabledAtom);
+  const pictureInPictureActive = useAtomValue(pictureInPictureActiveAtom);
   const isAppActive = useIsAppActive();
   const setTuning = useSetAtom(tuningState);
   const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
@@ -89,14 +128,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const [screenShotBase64, setScreenShotBase64] = useState('');
   const [isThemeListModalVisible, setIsThemeListModalVisible] = useState(false);
   const pendingThemeListModalRef = useRef(false);
-
-  useCheckStoreVersion();
-  useAppleWatch();
-  useAndroidWearable();
-  // 逆方向検知ロジックの計算を 1 箇所だけで実行し、結果は atom 経由で他のフックに配る。
-  // useRefreshStation / useWarningInfo から個別に呼ぶと位置更新ごとに getDistance と
-  // state 更新が二重に走ってバッテリーを余計に消費するため、ここに集約している。
-  useWrongDirectionDetectorEffect();
 
   const user = useCachedInitAnonymousUser();
   const currentLine = useCurrentLine();
@@ -440,12 +471,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const portraitModeEnabledStr = storage.getString(
         STORAGE_KEYS.PORTRAIT_MODE_ENABLED
       );
-      const etaAssistManualEnabledStr = storage.getString(
-        STORAGE_KEYS.ETA_ASSIST_MANUAL_ENABLED
-      );
       // NOTE: powerSavingLocationEnabledAtom はここでは復元しない。effect復元だと
       // 継続測位がデフォルト精度で一度起動してから再起動されるため、
-      // atom定義側(store/atoms/experimental.ts)でMMKVから同期的に初期値を確定している。
+      // atom定義側(store/atoms/battery.ts)でMMKVから同期的に初期値を確定している。
 
       if (themePreferenceKey) {
         setThemePreference(themePreferenceKey as ThemePreference);
@@ -555,9 +583,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       if (portraitModeEnabledStr) {
         setPortraitModeEnabled(portraitModeEnabledStr === 'true');
       }
-      if (etaAssistManualEnabledStr) {
-        setEtaAssistManualEnabled(etaAssistManualEnabledStr === 'true');
-      }
     };
 
     loadSettings();
@@ -569,7 +594,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     setNotify,
     setPictureInPicture,
     setPortraitModeEnabled,
-    setEtaAssistManualEnabled,
   ]);
 
   useEffect(() => {
@@ -668,6 +692,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   return (
     <ViewShot ref={viewShotRef} options={{ format: 'png' }}>
+      <PermittedLayoutEffects />
       <LongPressGestureHandler
         onHandlerStateChange={onLongPress}
         minDurationMs={LONG_PRESS_DURATION}

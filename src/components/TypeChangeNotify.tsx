@@ -87,10 +87,6 @@ const styles = StyleSheet.create({
     bottom: -barHeight,
     position: 'absolute',
   },
-  joBar: {
-    position: 'absolute',
-    height: 32,
-  },
   centerCircle: {
     position: 'absolute',
     width: isTablet ? 50 : 24,

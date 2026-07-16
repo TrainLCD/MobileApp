@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -14,7 +14,6 @@ import {
 import { useScale } from '~/hooks/useScale';
 import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
-import { RFValue } from '~/utils/rfValue';
 import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -42,24 +41,6 @@ interface Props {
 
 // Local style overrides specific to Saikyo
 const localStyles = StyleSheet.create({
-  stationNameMapContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    marginBottom: 8,
-  },
-  stationName: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    color: '#3a3a3a',
-    marginLeft: 5,
-    marginBottom: Platform.select({ android: -6, ios: 0 }),
-  },
-  stationNameHorizontal: {
-    fontSize: RFValue(18),
-    fontWeight: 'bold',
-    transform: [{ rotate: '-55deg' }],
-    color: '#3a3a3a',
-  },
   chevron: {
     position: 'absolute',
     zIndex: 9999,
@@ -273,6 +254,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           arrived={arrived}
           passed={passed}
           estimatedMinutes={estimatedMinutes}
+          isLast={stations.length - 1 === index}
         />
         {stations.length - 1 === index && (
           <BarTerminalSaikyo

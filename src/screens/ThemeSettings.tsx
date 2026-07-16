@@ -6,15 +6,12 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   type GestureResponderEvent,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Platform,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -127,6 +124,16 @@ const SettingsItem = ({
   );
 };
 
+const ListFooter = ({ onPressOK }: { onPressOK: () => void }) => (
+  <Button
+    style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+    textStyle={{ fontWeight: 'bold' }}
+    onPress={onPressOK}
+  >
+    OK
+  </Button>
+);
+
 const ThemeSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
   const [pendingTheme, setPendingTheme] = useState<SettingItem | null>(null);
@@ -221,17 +228,16 @@ const ThemeSettingsScreen: React.FC = () => {
     []
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <RNAnimated.FlatList
           data={visibleItems}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
@@ -243,15 +249,10 @@ const ThemeSettingsScreen: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
-          ListFooterComponent={() => (
-            <Button
-              style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-              textStyle={{ fontWeight: 'bold' }}
-              onPress={() => navigation.goBack()}
-            >
-              OK
-            </Button>
-          )}
+          scrollEventThrottle={16}
+          ListFooterComponent={
+            <ListFooter onPressOK={() => navigation.goBack()} />
+          }
         />
       </View>
       <SettingsHeader

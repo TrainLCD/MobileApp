@@ -8,7 +8,6 @@ import { leftStationsAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
-import { RFValue } from '../utils/rfValue';
 import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
 import LineBoardJO from './LineBoardJO';
@@ -25,12 +24,6 @@ export interface Props {
 
 const styles = StyleSheet.create({
   flexOne: { flex: 1 },
-  bottomNotice: {
-    position: 'absolute',
-    bottom: isTablet ? 96 : 12,
-    fontWeight: 'bold',
-    fontSize: RFValue(12),
-  },
 });
 
 const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
