@@ -4,15 +4,12 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Linking,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   Platform,
   Animated as RNAnimated,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -342,17 +339,16 @@ const Licenses: React.FC = () => {
     []
   );
 
-  const handleScroll = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      scrollY.setValue(e.nativeEvent.contentOffset.y);
-    },
-    [scrollY]
-  );
+  const handleScroll = useRef(
+    RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      useNativeDriver: true,
+    })
+  ).current;
 
   return (
     <>
       <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
-        <Animated.FlatList
+        <RNAnimated.FlatList
           data={LICENSE_ITEMS}
           keyExtractor={keyExtractor}
           getItemLayout={getItemLayout}
@@ -364,6 +360,7 @@ const Licenses: React.FC = () => {
           ]}
           renderItem={renderItem}
           onScroll={handleScroll}
+          scrollEventThrottle={16}
           ListFooterComponent={
             <ListFooter
               isLEDTheme={isLEDTheme}
