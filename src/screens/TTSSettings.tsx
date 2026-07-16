@@ -16,11 +16,11 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { useTTSFeatureEnabled } from '~/hooks/useTTSFeatureEnabled';
 import speechState from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { STATUS_URL, STORAGE_KEYS } from '../constants';
-import { isTTSFeatureEnabled } from '../lib/remoteConfig';
 import { storage } from '../lib/storage';
 
 type SettingItem = {
@@ -194,9 +194,9 @@ const TTSSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  // Remote Config のキルスイッチ。起動時取得後はモジュール内キャッシュから
-  // 同期的に返るため、画面表示中に値が変わることはない。
-  const ttsFeatureEnabled = isTTSFeatureEnabled();
+  // Remote Config のキルスイッチ。起動時の非同期取得完了後に値が届いた場合も
+  // 購読経由で再レンダーされ、トグルの無効化が確実に反映される。
+  const ttsFeatureEnabled = useTTSFeatureEnabled();
 
   const SETTING_ITEMS: SettingItem[] = [
     {

@@ -64,6 +64,25 @@ let cachedEtaFallbackArrivalConfirmMarginSec: number | null = null;
 let cachedEtaFallbackMaxDurationMin: number | null = null;
 let cachedTTSEnabled: boolean | null = null;
 
+// setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
+// 更新されても React は再レンダーしない。UI(FxTTS・設定画面)が useSyncExternalStore
+// 経由でキャッシュ更新へ追従できるよう、変更通知のリスナーを提供する。
+const remoteConfigListeners = new Set<() => void>();
+
+// キャッシュ更新をUIへ購読させる。戻り値は購読解除関数(useSyncExternalStore 互換)。
+export const subscribeRemoteConfig = (listener: () => void): (() => void) => {
+  remoteConfigListeners.add(listener);
+  return () => {
+    remoteConfigListeners.delete(listener);
+  };
+};
+
+const notifyRemoteConfigListeners = (): void => {
+  for (const listener of remoteConfigListeners) {
+    listener();
+  }
+};
+
 // テスト用および値の再取得時にキャッシュを破棄する。
 export const resetRemoteConfigCache = (): void => {
   cachedMaxPermitAccuracy = null;
@@ -72,6 +91,7 @@ export const resetRemoteConfigCache = (): void => {
   cachedEtaFallbackArrivalConfirmMarginSec = null;
   cachedEtaFallbackMaxDurationMin = null;
   cachedTTSEnabled = null;
+  notifyRemoteConfigListeners();
 };
 
 // 起動時に一度だけ Worker からリモート設定を取得しキャッシュへ格納する。
@@ -110,6 +130,7 @@ export const setupRemoteConfig = async (): Promise<void> => {
   if (typeof data.tts_enabled === 'boolean') {
     cachedTTSEnabled = data.tts_enabled;
   }
+  notifyRemoteConfigListeners();
 };
 
 // 最大許容精度(m)を同期的に取得する。setupRemoteConfig 完了後は取得済みの

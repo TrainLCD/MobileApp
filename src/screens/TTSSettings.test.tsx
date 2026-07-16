@@ -13,6 +13,7 @@ jest.mock('~/utils/isDevApp', () => ({
 
 jest.mock('~/lib/remoteConfig', () => ({
   isTTSFeatureEnabled: jest.fn(() => true),
+  subscribeRemoteConfig: jest.fn(() => () => {}),
 }));
 
 const mockedIsTTSFeatureEnabled = jest.mocked(isTTSFeatureEnabled);
