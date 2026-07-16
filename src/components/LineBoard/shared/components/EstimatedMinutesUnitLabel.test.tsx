@@ -20,6 +20,10 @@ const renderWithState = (headerState: HeaderTransitionState) => {
 };
 
 describe('EstimatedMinutesUnitLabel', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it.each<HeaderTransitionState>(['CURRENT', 'NEXT', 'ARRIVING'])(
     '日本語State(%s)では「分」を表示する',
     (state) => {
