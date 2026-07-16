@@ -102,11 +102,11 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // ドット矩形(dotInner)のすぐ右にドットと同じ高さで縦中央揃え
+  // ドット矩形(dotInner)の右にドットと同じ高さで縦中央揃え
   estimatedMinutesUnitContainer: {
     position: 'absolute',
     top: 0,
-    left: isTablet ? 44 + 6 : 36 + 4,
+    left: isTablet ? 44 + 12 : 36 + 8,
     height: isTablet ? 36 : 24,
     justifyContent: 'center',
   },

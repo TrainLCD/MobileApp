@@ -19,11 +19,11 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // 見えているドット(chevronGradient)のすぐ右にドットと同じ高さで縦中央揃え
+  // 見えているドット(chevronGradient)の右にドットと同じ高さで縦中央揃え
   estimatedMinutesUnitContainer: {
     position: 'absolute',
     top: 0,
-    left: isTablet ? 48 + 6 : 32 + 4,
+    left: isTablet ? 48 + 12 : 32 + 8,
     height: isTablet ? 36 : 24,
     justifyContent: 'center',
   },

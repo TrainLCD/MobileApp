@@ -53,11 +53,11 @@ const localStyles = StyleSheet.create({
     bottom: isTablet ? '40%' : undefined,
     marginLeft: isTablet ? 48 : 32,
   },
-  // barDot(未通過時は32px)のすぐ右にドットと同じ高さで縦中央揃え
+  // barDot(未通過時は32px)の右にドットと同じ高さで縦中央揃え
   estimatedMinutesUnitContainer: {
     position: 'absolute',
     top: 0,
-    left: 32 + 6,
+    left: 32 + 12,
     height: 32,
     justifyContent: 'center',
   },
