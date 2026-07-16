@@ -1,6 +1,14 @@
 import { render } from '@testing-library/react-native';
+import { StyleSheet, type ViewStyle } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import LineBoardJO from './LineBoardJO';
+
+// react-test-rendererの型定義が未導入のため、toJSON()の構造を最小限に表す
+type RenderedJSONNode = {
+  type: string;
+  props: Record<string, unknown>;
+  children: (RenderedJSONNode | string)[] | null;
+};
 
 // モック設定
 jest.mock('jotai', () => ({
@@ -292,6 +300,89 @@ describe('LineBoardJO', () => {
     // 中間駅(id=2)のETAバッジは表示されるが、単位ラベルは最後尾専用
     expect(EstimatedMinutesBadge).toHaveBeenCalled();
     expect(EstimatedMinutesUnitLabel).not.toHaveBeenCalled();
+  });
+
+  describe('レイアウト計算(スマホ)', () => {
+    // useLandscapeWindowDimensionsモックのwidth=812に対応するバー1セグメント幅
+    const BAR_WIDTH = (812 - 96) / 7.835;
+
+    const collectNodes = (
+      node: RenderedJSONNode | string | (RenderedJSONNode | string)[] | null
+    ): RenderedJSONNode[] => {
+      if (!node || typeof node === 'string') {
+        return [];
+      }
+      if (Array.isArray(node)) {
+        return node.flatMap((n) => collectNodes(n));
+      }
+      return [node, ...collectNodes(node.children)];
+    };
+
+    const renderAndFlattenStyles = () => {
+      const result = render(
+        <LineBoardJO
+          stations={mockStations}
+          lineColors={['#9acd32', '#9acd32']}
+        />
+      );
+      return collectNodes(
+        result.toJSON() as RenderedJSONNode | RenderedJSONNode[] | null
+      ).map((node) => StyleSheet.flatten(node.props.style as ViewStyle) ?? {});
+    };
+
+    it('未通過駅のドットはバー高さ-8pxの正方形としてバー内の縦中央に配置される', () => {
+      const styles = renderAndFlattenStyles();
+      const dots = styles.filter((s) => s.borderRadius === 32);
+      // バー高さ40 - 8 = 32px。現在駅(index 0)以外の7個が未通過ドット
+      const futureDots = dots.filter((s) => s.width === 32);
+      expect(futureDots).toHaveLength(7);
+      for (const dot of futureDots) {
+        expect(dot.height).toBe(32);
+        expect(dot.bottom).toBe(48 + 4); // BAR_BOTTOM_JO + 上下4pxインセット
+      }
+      // 現在駅の16pxドットは従来どおりバーの縦中央
+      const currentDots = dots.filter((s) => s.width === 16);
+      expect(currentDots).toHaveLength(1);
+      expect(currentDots[0].bottom).toBe(48 + 12);
+    });
+
+    it('最終バーセグメントと終端矢印が延長分(+14px)だけ右へ伸びる', () => {
+      const styles = renderAndFlattenStyles();
+      const segmentWidths = styles
+        .filter(
+          (s) =>
+            s.height === 40 && s.bottom === 48 && typeof s.width === 'number'
+        )
+        .map((s) => s.width as number)
+        .sort((a, b) => a - b);
+      expect(segmentWidths).toHaveLength(8);
+      expect(segmentWidths[6]).toBeCloseTo(BAR_WIDTH + 1); // 通常セグメント
+      expect(segmentWidths[7]).toBeCloseTo(BAR_WIDTH + 1 + 14); // 最終のみ延長
+      const terminal = styles.find(
+        (s) => s.borderLeftWidth === 20 && s.borderBottomWidth === 20
+      );
+      expect(terminal?.left).toBeCloseTo(BAR_WIDTH * 8 - 10 + 14);
+    });
+
+    it('単位ラベルコンテナが最終ドットの右端に隣接して縦中央配置される', () => {
+      const { useEstimatedMinutesByStationId } = require('~/hooks');
+      useEstimatedMinutesByStationId.mockReturnValueOnce(new Map([[2, 5]]));
+      const result = render(
+        <LineBoardJO
+          stations={mockStations}
+          lineColors={['#9acd32', '#9acd32']}
+        />
+      );
+      const unitContainer = collectNodes(
+        result.toJSON() as RenderedJSONNode | RenderedJSONNode[] | null
+      ).find((node) => node.props.pointerEvents === 'none');
+      expect(unitContainer).toBeTruthy();
+      const style = StyleSheet.flatten(unitContainer?.props.style as ViewStyle);
+      expect(style.position).toBe('absolute');
+      expect(style.left).toBe(36); // ドット幅32px + 間隔4px
+      expect(style.top).toBe(0);
+      expect(style.height).toBe(32); // ドットと同じ高さで縦中央揃え
+    });
   });
 
   it('通過駅の場合、PassChevronEastが表示される', () => {

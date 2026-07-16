@@ -28,6 +28,7 @@ import {
 import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import {
   BAR_BOTTOM_JO,
+  BAR_HEIGHT_JO,
   commonLineBoardStyles,
 } from './LineBoard/shared/styles/commonStyles';
 import NumberingIcon from './NumberingIcon';
@@ -45,6 +46,14 @@ const useBarWidth = () => {
   return isTablet ? (dim.width - 120) / 8 : (dim.width - 96) / 7.835;
 };
 
+// 旧来のドットサイズ。getLeftはこのサイズのドットの左端位置を前提としている
+// ため、拡大後の中心合わせ補正の基準として残している
+const LEGACY_DOT_SIZE = 32;
+// 未通過駅のドットはバーの高さから上下4pxずつ控えたサイズ(高さ100%-8px)の正方形
+const DOT_SIZE_JO = BAR_HEIGHT_JO - 8;
+// 終端矢印が画面右端から離れすぎないよう、最終セグメントを右へ延長する
+const BAR_TAIL_EXTENSION_JO = isTablet ? 24 : 14;
+
 // Local style overrides specific to JO
 const localStyles = StyleSheet.create({
   root: {
@@ -53,12 +62,13 @@ const localStyles = StyleSheet.create({
     bottom: isTablet ? '40%' : undefined,
     marginLeft: isTablet ? 48 : 32,
   },
-  // barDot(未通過時は32px)の右にドットと同じ高さで縦中央揃え
+  // 最終ドットの右にドットと同じ高さで縦中央揃え。
+  // ラベル自体が固有幅を持つため、ドット幅によるYogaの切り詰めは受けない
   estimatedMinutesUnitContainer: {
     position: 'absolute',
     top: 0,
-    left: 32 + 24,
-    height: 32,
+    left: DOT_SIZE_JO + (isTablet ? 8 : 4),
+    height: DOT_SIZE_JO,
     justifyContent: 'center',
   },
 });
@@ -299,14 +309,12 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
 
   const getBottom = useCallback(
     (index: number) => {
-      if (isTablet) {
-        return index <= currentStationIndex
-          ? BAR_BOTTOM_JO + 24
-          : BAR_BOTTOM_JO + 16;
+      // 通過済み・現在駅の16pxドットはバーの縦中央に揃える
+      if (index <= currentStationIndex) {
+        return isTablet ? BAR_BOTTOM_JO + 24 : BAR_BOTTOM_JO + 12;
       }
-      return index <= currentStationIndex
-        ? BAR_BOTTOM_JO + 12
-        : BAR_BOTTOM_JO + 5;
+      // 未通過駅のドット(バー高さ-8px)は上下4pxずつ控えてバー内に収める
+      return BAR_BOTTOM_JO + (BAR_HEIGHT_JO - DOT_SIZE_JO) / 2;
     },
     [currentStationIndex]
   );
@@ -317,12 +325,20 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
 
   return (
     <View style={styles.root}>
-      {[...lineColors, ...emptyArray].map((lc, i) => {
+      {[...lineColors, ...emptyArray].map((lc, i, segments) => {
         const stationId = stations[i]?.id;
         const estimatedMinutes =
           stationId != null && i > currentStationIndex
             ? estimatedMinutesByStationId.get(stationId)
             : null;
+        const isLastSegment = i === segments.length - 1;
+        const dotSize = i <= currentStationIndex ? 16 : DOT_SIZE_JO;
+        // getLeftは従来の32pxドットの左端位置を返すため、拡大分を左右へ
+        // 均等に配分して従来と中心位置を揃える(16pxドットは従来位置のまま)
+        const dotLeft =
+          i <= currentStationIndex
+            ? getLeft(i)
+            : getLeft(i) - (DOT_SIZE_JO - LEGACY_DOT_SIZE) / 2;
 
         return (
           <React.Fragment key={`${lc}${i.toString()}`}>
@@ -335,7 +351,8 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
                   // 揃わず、丸めの具合で白い継ぎ目が出ることがある。右へ1px
                   // 食み出させて隣接セグメントを重ね、継ぎ目が出ないようにする
                   // (後続セグメントが上に描画されるため境界位置は変わらない)。
-                  width: barWidth + 1,
+                  width:
+                    barWidth + 1 + (isLastSegment ? BAR_TAIL_EXTENSION_JO : 0),
                   left: barWidth * i,
                   backgroundColor: (() => {
                     if (i <= currentStationIndex) {
@@ -379,10 +396,10 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
                 style={[
                   styles.barDotJO,
                   {
-                    left: getLeft(i),
+                    left: dotLeft,
                     bottom: getBottom(i),
-                    width: i <= currentStationIndex ? 16 : 32,
-                    height: i <= currentStationIndex ? 16 : 32,
+                    width: dotSize,
+                    height: dotSize,
                   },
                 ]}
               >
@@ -395,10 +412,10 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
                   {
                     backgroundColor:
                       stations.length <= i ? 'transparent' : 'white',
-                    left: getLeft(i),
+                    left: dotLeft,
                     bottom: getBottom(i),
-                    width: i <= currentStationIndex ? 16 : 32,
-                    height: i <= currentStationIndex ? 16 : 32,
+                    width: dotSize,
+                    height: dotSize,
                     justifyContent: 'center',
                     alignItems: 'center',
                   },
@@ -451,7 +468,9 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
             borderBottomColor: line.color
               ? lineColors.at(-1) || line.color
               : '#000',
-            left: isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10,
+            left:
+              (isTablet ? barWidth * 8 - 16 : barWidth * 8 - 10) +
+              BAR_TAIL_EXTENSION_JO,
           },
         ]}
       />
