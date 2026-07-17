@@ -53,6 +53,11 @@ const LEGACY_DOT_SIZE = 32;
 const DOT_SIZE_JO = BAR_HEIGHT_JO - 8;
 // 終端矢印が画面右端から離れすぎないよう、最終セグメントを右へ延長する
 const BAR_TAIL_EXTENSION_JO = isTablet ? 24 : 14;
+// ETA数字はドット幅を超えるサイズで表示するため、ドット中心に重ねる
+// 絶対配置コンテナの寸法。width未指定の絶対配置子は親(ドット)幅上限で
+// 測られて数字が折り返されるため、明示widthが必須
+const ESTIMATED_MINUTES_BADGE_WIDTH = isTablet ? 96 : 64;
+const ESTIMATED_MINUTES_BADGE_HEIGHT = isTablet ? 40 : 30;
 
 // Local style overrides specific to JO
 const localStyles = StyleSheet.create({
@@ -70,6 +75,19 @@ const localStyles = StyleSheet.create({
     left: DOT_SIZE_JO + (isTablet ? 8 : 4),
     height: DOT_SIZE_JO,
     justifyContent: 'center',
+  },
+  estimatedMinutesBadgeContainer: {
+    position: 'absolute',
+    left: (DOT_SIZE_JO - ESTIMATED_MINUTES_BADGE_WIDTH) / 2,
+    top: (DOT_SIZE_JO - ESTIMATED_MINUTES_BADGE_HEIGHT) / 2,
+    width: ESTIMATED_MINUTES_BADGE_WIDTH,
+    height: ESTIMATED_MINUTES_BADGE_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  estimatedMinutesText: {
+    fontSize: isTablet ? 38 : 28,
+    lineHeight: isTablet ? 40 : 30,
   },
 });
 
@@ -416,13 +434,16 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
                     bottom: getBottom(i),
                     width: dotSize,
                     height: dotSize,
-                    justifyContent: 'center',
-                    alignItems: 'center',
                   },
                 ]}
               >
                 {estimatedMinutes != null ? (
-                  <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
+                  <View style={localStyles.estimatedMinutesBadgeContainer}>
+                    <EstimatedMinutesBadge
+                      estimatedMinutes={estimatedMinutes}
+                      style={localStyles.estimatedMinutesText}
+                    />
+                  </View>
                 ) : null}
                 {i === stations.length - 1 && estimatedMinutes != null ? (
                   <View

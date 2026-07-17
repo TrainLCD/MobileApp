@@ -68,6 +68,14 @@ const styles = StyleSheet.create({
     lineHeight: isTablet
       ? Math.round(24 * 1.5 * TLC_SCALE)
       : Math.round(24 * TLC_SCALE),
+    // Androidはグリフが行ボックス下寄りに描画されTLCが下がって見えるため
+    // 上方向に補正して上下中央に揃える(iOSは補正不要)。
+    // 負マージンだと下のアイコンごと動いてバッジ全体が縮むため、
+    // レイアウトに影響しないtransformで文字だけを持ち上げる
+    transform:
+      Platform.OS === 'android'
+        ? [{ translateY: Math.round(-6 * TLC_SCALE) }]
+        : [],
   },
   tlcIconRoot: {
     width: isTablet

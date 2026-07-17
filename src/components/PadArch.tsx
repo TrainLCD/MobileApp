@@ -1,4 +1,4 @@
-import { darken } from 'polished';
+import { darken, readableColor } from 'polished';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
@@ -224,8 +224,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   estimatedMinutesText: {
-    fontSize: 28,
-    lineHeight: 30,
+    fontSize: 42,
+    lineHeight: 45,
+  },
+  // ETA数字はドット内に単位なしで表示されるため、最上段ドットの右下に
+  // カッコ付きの単位「(分)/(min)」を添えて数字の意味を示す(PadArch固有表記)。
+  // Yogaはwidth未指定の絶対配置子を親幅上限で測るため明示widthが必須
+  estimatedMinutesUnitOverlay: {
+    position: 'absolute',
+    width: 68,
+    height: 18,
+    justifyContent: 'center',
+  },
+  estimatedMinutesUnitText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    lineHeight: 18,
   },
   clipViewStyle: {
     overflow: 'hidden',
@@ -539,6 +553,14 @@ const PadArch: React.FC<Props> = ({
     [stations, trainTypeLines, hexLineColor, windowHeight]
   );
 
+  // 単位ラベルは最上段のバンド色の上に重なるため、黒字の視認性が悪い
+  // 暗色バンドの場合のみ白へ切り替える(デフォルトは駅名と同じ#333)
+  const estimatedMinutesUnitColor = useMemo(
+    () =>
+      readableColor(colorSegments[0]?.color ?? hexLineColor, '#333', '#fff'),
+    [colorSegments, hexLineColor]
+  );
+
   const dynamicStyles = useMemo(() => {
     const chevronY = (4 * windowHeight) / 7 + 84;
     const chevronArrivedY = (4 * windowHeight) / 7;
@@ -796,6 +818,29 @@ const PadArch: React.FC<Props> = ({
                     estimatedMinutes={estimatedMinutes}
                     style={styles.estimatedMinutesText}
                   />
+                </View>
+              ) : null}
+              {i === 0 && estimatedMinutes != null ? (
+                <View
+                  style={[
+                    styles.estimatedMinutesUnitOverlay,
+                    {
+                      // ドット(68px)の右側、縦はドット中央より少し下寄り
+                      left: dotStyle.left + 68 + 4,
+                      top: dotStyle.top + (68 - 18) / 2 + 6,
+                    },
+                  ]}
+                  pointerEvents="none"
+                >
+                  <Typography
+                    style={[
+                      styles.estimatedMinutesUnitText,
+                      { color: estimatedMinutesUnitColor },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {isEn ? '(min)' : '(分)'}
+                  </Typography>
                 </View>
               ) : null}
               <View
