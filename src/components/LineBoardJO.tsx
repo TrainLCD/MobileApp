@@ -86,8 +86,8 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
   },
   estimatedMinutesText: {
-    fontSize: isTablet ? 38 : 28,
-    lineHeight: isTablet ? 40 : 30,
+    fontSize: isTablet ? 38 : 24,
+    lineHeight: isTablet ? 40 : 26,
   },
 });
 
