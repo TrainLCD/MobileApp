@@ -1,0 +1,115 @@
+name: Build Android
+
+on:
+  push:
+    branches:
+      - canary
+      - master
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Build variant"
+        required: true
+        default: devRelease
+        type: choice
+        options:
+          - devRelease
+          - prodRelease
+
+concurrency:
+  group: build-android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - name: Determine build variant
+        id: build_vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            variant="${{ github.event.inputs.variant }}"
+          elif [ "${{ github.ref_name }}" = "master" ]; then
+            variant="prodRelease"
+          else
+            variant="devRelease"
+          fi
+
+          if [ "$variant" = "prodRelease" ]; then
+            echo "gradle_task=:app:bundleProdRelease" >> "$GITHUB_OUTPUT"
+            echo "output_dir=prodRelease" >> "$GITHUB_OUTPUT"
+          else
+            echo "gradle_task=:app:bundleDevRelease" >> "$GITHUB_OUTPUT"
+            echo "output_dir=devRelease" >> "$GITHUB_OUTPUT"
+          fi
+          echo "variant=$variant" >> "$GITHUB_OUTPUT"
+
+      - name: Setup SSH for submodules
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.FONTS_SSH_KEY }}
+
+      - name: Use SSH for GitHub submodules
+        run: git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Write .env.local (prod)
+        if: steps.build_vars.outputs.variant == 'prodRelease'
+        run: printf '%s' "${{ secrets.DOTENV_LOCAL_PRODUCTION }}" > .env.local
+
+      - name: Write .env.local (dev)
+        if: steps.build_vars.outputs.variant != 'prodRelease'
+        run: printf '%s' "${{ secrets.DOTENV_LOCAL }}" > .env.local
+
+      - name: Decode Sentry properties
+        run: printf '%s' "${{ secrets.SENTRY_PROPERTIES_BASE64 }}" | base64 --decode > android/sentry.properties
+
+      - name: Decode release keystore
+        run: |
+          mkdir -p android/app
+          printf '%s' "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > android/app/release.jks
+
+      - name: Configure signing properties
+        run: |
+          mkdir -p "$HOME/.gradle"
+          cat >> "$HOME/.gradle/gradle.properties" <<'EOF'
+          TRAINLCD_UPLOAD_STORE_FILE=release.jks
+          TRAINLCD_UPLOAD_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
+          TRAINLCD_UPLOAD_KEY_ALIAS=${{ secrets.KEYSTORE_KEY_ALIAS }}
+          TRAINLCD_UPLOAD_KEY_PASSWORD=${{ secrets.KEYSTORE_KEY_PASSWORD }}
+          EOF
+
+      - name: Build ${{ steps.build_vars.outputs.variant }}
+        working-directory: android
+        run: ./gradlew ${{ steps.build_vars.outputs.gradle_task }} --no-daemon
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ steps.build_vars.outputs.variant }}
+          path: android/app/build/outputs/bundle/${{ steps.build_vars.outputs.output_dir }}/*.aab
+          if-no-files-found: error
