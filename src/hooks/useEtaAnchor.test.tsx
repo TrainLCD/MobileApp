@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
+import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import { etaAnchorAtom } from '../store/atoms/etaFallback';
 import {
@@ -15,6 +16,7 @@ import { useEtaAnchor } from './useEtaAnchor';
 const AT_STATION_REFRESH_INTERVAL_MS = 5_000;
 
 const stationA = createStation(1);
+const passStation = createStation(2, { stopCondition: StopCondition.Not });
 const boundStation = createStation(99);
 
 const renderWithStore = (
@@ -99,6 +101,35 @@ describe('useEtaAnchor', () => {
       kind: 'DEPARTED',
       observedAtMs: 2_001_000,
     });
+  });
+
+  it('通過駅への到着ではアンカーが記録されない', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(3_000_000);
+    const store = createStore();
+
+    renderWithStore(store, { arrived: true, station: passStation });
+
+    expect(store.get(etaAnchorAtom)).toBeNull();
+
+    // 定期更新でも記録されないままであることを確認する
+    act(() => {
+      jest.advanceTimersByTime(AT_STATION_REFRESH_INTERVAL_MS);
+    });
+    expect(store.get(etaAnchorAtom)).toBeNull();
+  });
+
+  it('通過駅からの発車では DEPARTED が記録されない', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(3_100_000);
+    const store = createStore();
+
+    renderWithStore(store, { arrived: true, station: passStation });
+    expect(store.get(etaAnchorAtom)).toBeNull();
+
+    act(() => {
+      store.set(arrivedAtom, false);
+    });
+
+    expect(store.get(etaAnchorAtom)).toBeNull();
   });
 
   it('selectedBound が null になると anchor が null にクリアされる', () => {

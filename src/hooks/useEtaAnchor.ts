@@ -6,6 +6,7 @@ import {
   selectedBoundAtom,
   stationAtom,
 } from '../store/atoms/station';
+import getIsPass from '../utils/isPass';
 import { useInterval } from './useInterval';
 
 // AT_STATION の observedAtMs 更新周期。arrived/station が変化しない間も
@@ -16,6 +17,11 @@ const AT_STATION_REFRESH_INTERVAL_MS = 5_000;
  * GPSで最後に確定した駅イベント(到着中/発車)を etaAnchorAtom へ記録するフック。
  * このアンカーは ETA 推定フェーズ(getEtaPhaseNow)の仮想時計の起点として使われ、
  * 精度劣化時の到着しきい値緩和(R1)の対象駅判定に用いられる。
+ *
+ * 通過駅(getIsPass)は記録対象外とする。ETAのstops(useEtaFallback)は
+ * stopsHere === true の停車駅のみを持つため、通過駅IDでアンカーを記録しても
+ * estimateEtaPhase側でi0が見つからずnullになるだけで、無駄にアンカーを
+ * 上書きして直前の有効な停車駅アンカーを消してしまう。
  */
 export const useEtaAnchor = (): void => {
   const arrived = useAtomValue(arrivedAtom);
@@ -43,13 +49,18 @@ export const useEtaAnchor = (): void => {
       return;
     }
 
-    if (arrived && station?.id != null) {
+    if (arrived && station?.id != null && !getIsPass(station)) {
       setAnchor({
         stationId: station.id,
         kind: 'AT_STATION',
         observedAtMs: Date.now(),
       });
-    } else if (prevArrived && !arrived && prevStation?.id != null) {
+    } else if (
+      prevArrived &&
+      !arrived &&
+      prevStation?.id != null &&
+      !getIsPass(prevStation)
+    ) {
       // 到着中→非到着への遷移(=発車)を検出した瞬間にだけ一発記録する。ETAは位置を
       // 駆動せず到着しきい値の緩和(R1)にしか使わないため、仮に静止中の強制未到着で
       // 記録されても、R1は最寄り駅とETA停車駅が一致するときだけ効き、GPS復帰で自己修復する。
@@ -67,7 +78,12 @@ export const useEtaAnchor = (): void => {
   // arrived/station が変化しない間も経過時間だけは進むため、数秒おきに
   // observedAtMsを更新し続ける(仮想時計の基準時刻を最新に保つ)
   useInterval(() => {
-    if (selectedBound != null && arrived && station?.id != null) {
+    if (
+      selectedBound != null &&
+      arrived &&
+      station?.id != null &&
+      !getIsPass(station)
+    ) {
       setAnchor({
         stationId: station.id,
         kind: 'AT_STATION',
