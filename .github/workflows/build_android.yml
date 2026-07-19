@@ -71,7 +71,7 @@ jobs:
           ssh-private-key: ${{ secrets.FONTS_SSH_KEY }}
 
       - name: Use SSH for GitHub submodules
-        run: git config --global url."git@github.com:".insteadOf "https://github.com/"
+        run: git config --global url."git@github.com:TrainLCD/MobileAppFonts.git".insteadOf "https://github.com/TrainLCD/MobileAppFonts.git"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,7 +81,7 @@ jobs:
 
       - name: Revoke submodule SSH access
         run: |
-          git config --global --unset-all url."git@github.com:".insteadOf || true
+          git config --global --unset-all url."git@github.com:TrainLCD/MobileAppFonts.git".insteadOf || true
           if [ -n "${SSH_AGENT_PID:-}" ]; then
             kill "$SSH_AGENT_PID" || true
           fi
