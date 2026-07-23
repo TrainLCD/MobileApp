@@ -1,21 +1,25 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import React from 'react';
-import { Platform } from 'react-native';
 import speechState, { resetFirstSpeechAtom } from '~/store/atoms/speech';
-import { mockFetch } from '~/utils/test/ttsMocks';
-import { clearFetchCache } from '~/utils/ttsSpeechFetcher';
 import { useTTS } from './useTTS';
 
 jest.mock('~/utils/isDevApp', () => ({
   isDevApp: false,
 }));
 
-const mockCreateAudioPlayer = jest.fn();
+const mockSpeak = jest.fn();
+const mockSpeechStop = jest.fn();
+
+jest.mock('expo-speech', () => ({
+  speak: (...args: unknown[]) => mockSpeak(...args),
+  stop: (...args: unknown[]) => mockSpeechStop(...args),
+  maxSpeechInputLength: 4000,
+}));
+
 const mockSetAudioModeAsync = jest.fn();
 
 jest.mock('expo-audio', () => ({
-  createAudioPlayer: (...args: unknown[]) => mockCreateAudioPlayer(...args),
   setAudioModeAsync: (...args: unknown[]) => mockSetAudioModeAsync(...args),
 }));
 
@@ -26,7 +30,6 @@ jest.mock('./useCurrentLine', () => ({
 jest.mock('./useTTSText', () => ({
   useTTSText: jest.fn(() => ({
     text: ['ja text', 'en text'],
-    nextText: ['ja next', 'en next'],
   })),
 }));
 
@@ -34,51 +37,15 @@ jest.mock('./usePrevious', () => ({
   usePrevious: jest.fn(() => ['', '']),
 }));
 
-jest.mock('../lib/session', () => ({
-  getSessionToken: jest.fn(async () => 'token'),
-}));
-
-jest.mock('./useCachedAnonymousUser', () => ({
-  useCachedInitAnonymousUser: jest.fn(() => ({ uid: 'test-user' })),
-}));
-
 jest.mock('./useStoppingState', () => ({
   useStoppingState: jest.fn(() => 'CURRENT'),
 }));
 
-type StatusCallback = (status: {
-  didJustFinish?: boolean;
-  error?: string;
-}) => void;
-
-const createMockPlayer = (opts?: {
-  autoFinish?: boolean;
-  playing?: boolean;
-}) => {
-  let playbackStatusListener: StatusCallback | null = null;
-  const autoFinish = opts?.autoFinish ?? true;
-
-  return {
-    playing: opts?.playing ?? false,
-    currentTime: 0,
-    addListener: jest.fn((_event: string, callback: StatusCallback) => {
-      playbackStatusListener = callback;
-      return { remove: jest.fn() };
-    }),
-    play: jest.fn(() => {
-      if (autoFinish) {
-        setTimeout(() => {
-          playbackStatusListener?.({ didJustFinish: true });
-        }, 0);
-      }
-    }),
-    pause: jest.fn(),
-    remove: jest.fn(),
-    replace: jest.fn(),
-    emitStatus: (status: { didJustFinish?: boolean; error?: string }) => {
-      playbackStatusListener?.(status);
-    },
-  };
+type SpeechOptions = {
+  language: string;
+  onDone?: () => void;
+  onStopped?: () => void;
+  onError?: (error: unknown) => void;
 };
 
 const defaultSpeechState = {
@@ -93,43 +60,27 @@ const createWrapper =
   ({ children }: { children: React.ReactNode }) =>
     React.createElement(Provider, { store }, children);
 
-const mockSuccessfulFetch = () => {
-  mockFetch.mockResolvedValue({
-    ok: true,
-    json: async () => ({
-      result: {
-        id: 'tts-id',
-        jaAudioContent: 'QQ==',
-        enAudioContent: 'QQ==',
-        jaAudioMimeType: 'audio/mpeg',
-        enAudioMimeType: 'audio/mpeg',
-      },
-    }),
-  });
-};
-
-// プレイヤー再利用は Android 限定（iOS は背景再生のため発話ごとに生成・破棄する）。
-// jest-expo の既定 Platform.OS は 'ios' のため、再利用挙動を検証するテストでは
-// 明示的に 'android' へ切り替え、afterEach で必ず元へ戻す。
-const originalPlatformOS = Platform.OS;
-const setPlatformOS = (os: typeof Platform.OS) => {
-  Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+// キュー済みの発話を全て完了扱いにする（onDone を発火する）
+let settledSpeakCallCount = 0;
+const finishAllUtterances = () => {
+  const calls = mockSpeak.mock.calls.slice(settledSpeakCallCount);
+  settledSpeakCallCount = mockSpeak.mock.calls.length;
+  for (const call of calls) {
+    (call[1] as SpeechOptions).onDone?.();
+  }
 };
 
 describe('useTTS', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.clearAllMocks();
-    clearFetchCache();
-    mockSuccessfulFetch();
-    mockCreateAudioPlayer.mockImplementation(() => createMockPlayer());
+    settledSpeakCallCount = 0;
     // テスト間で useTTSText の mock を復元
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
     useTTSText.mockReturnValue({
       text: ['ja text', 'en text'],
-      nextText: ['ja next', 'en next'],
     });
   });
 
@@ -137,10 +88,9 @@ describe('useTTS', () => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
     jest.clearAllMocks();
-    setPlatformOS(originalPlatformOS);
   });
 
-  it('英語のみ有効時は英語音声のみ再生プレイヤーを生成する', async () => {
+  it('英語のみ有効時は英語のみ読み上げる', () => {
     const store = createStore();
     store.set(speechState, {
       ...defaultSpeechState,
@@ -149,57 +99,33 @@ describe('useTTS', () => {
 
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    jest.runAllTimers();
-
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
-    });
-
-    expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
-      uri: '/tmp/tts-id_en.mp3',
-    });
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledWith(
+      'en text',
+      expect.objectContaining({ language: 'en-US' })
+    );
   });
 
-  it('JA+EN有効時はJA→ENの順に再生する', async () => {
+  it('JA+EN有効時はJA→ENの順で読み上げキューへ積む', () => {
     const store = createStore();
     store.set(speechState, defaultSpeechState);
 
-    const calls: string[] = [];
-    mockCreateAudioPlayer.mockImplementation((source: { uri: string }) => {
-      calls.push(source.uri);
-      return createMockPlayer();
-    });
-
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    // JA プレイヤーが先に生成される
-    jest.runAllTimers();
-
-    await waitFor(() => {
-      expect(calls.length).toBeGreaterThanOrEqual(1);
-    });
-
-    expect(calls[0]).toBe('/tmp/tts-id_ja.mp3');
-
-    // JA 完了後に続けて EN プレイヤーが生成される
-    jest.runAllTimers();
-
-    await waitFor(() => {
-      expect(calls.length).toBeGreaterThanOrEqual(2);
-    });
-
-    expect(calls[1]).toBe('/tmp/tts-id_en.mp3');
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      1,
+      'ja text',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'en text',
+      expect.objectContaining({ language: 'en-US' })
+    );
   });
 
-  it('JAのみ有効時はJAプレイヤーのみ生成する', async () => {
+  it('JAのみ有効時は日本語のみ読み上げる', () => {
     const store = createStore();
     store.set(speechState, {
       ...defaultSpeechState,
@@ -208,22 +134,14 @@ describe('useTTS', () => {
 
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    jest.runAllTimers();
-
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
-    });
-
-    expect(mockCreateAudioPlayer).toHaveBeenCalledWith({
-      uri: '/tmp/tts-id_ja.mp3',
-    });
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledWith(
+      'ja text',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
   });
 
-  it('無効時はfetch/playしない', async () => {
+  it('無効時は読み上げない', () => {
     const store = createStore();
     store.set(speechState, {
       ...defaultSpeechState,
@@ -232,15 +150,38 @@ describe('useTTS', () => {
 
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
 
-    jest.runAllTimers();
-
-    await waitFor(() => {
-      expect(mockFetch).not.toHaveBeenCalled();
-      expect(mockCreateAudioPlayer).not.toHaveBeenCalled();
-    });
+    expect(mockSpeak).not.toHaveBeenCalled();
   });
 
-  it('テキスト空時にpendingをクリアする', async () => {
+  it('SSML断片をプレーンテキストへ変換してから読み上げる', () => {
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+    useTTSText.mockReturnValue({
+      text: [
+        'つぎは<break time="250ms"/>おおさき',
+        'The next station is <phoneme alphabet="ipa" ph="oːsaki">Osaki</phoneme>,<break time="200ms"/> J Y <say-as interpret-as="cardinal">24</say-as>.',
+      ],
+    });
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      1,
+      'つぎは、おおさき',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'The next station is Osaki, J Y 24.',
+      expect.objectContaining({ language: 'en-US' })
+    );
+  });
+
+  it('再生中のテキスト変化はpendingに積み、全発話完了後に読み上げる', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
@@ -248,341 +189,141 @@ describe('useTTS', () => {
     const store = createStore();
     store.set(speechState, defaultSpeechState);
 
-    // 最初は有効なテキストで再生開始
-    useTTSText.mockReturnValue({
-      text: ['ja text', 'en text'],
-      nextText: ['ja next', 'en next'],
+    const { rerender } = renderHook(() => useTTS(), {
+      wrapper: createWrapper(store),
     });
+
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
+
+    // 再生完了前に次の駅のテキストへ変化させる
+    useTTSText.mockReturnValue({
+      text: ['ja text 2', 'en text 2'],
+    });
+    rerender({});
+
+    // 再生中はpendingに積まれるだけで新たな発話は始まらない
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
+
+    // 現在の発話（JA+EN）を完了させるとpendingが読み上げられる
+    act(() => {
+      finishAllUtterances();
+    });
+
+    await waitFor(() => {
+      expect(mockSpeak).toHaveBeenCalledTimes(4);
+    });
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      3,
+      'ja text 2',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      4,
+      'en text 2',
+      expect.objectContaining({ language: 'en-US' })
+    );
+  });
+
+  it('テキスト空時にpendingをクリアする', () => {
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
 
     const { rerender } = renderHook(() => useTTS(), {
       wrapper: createWrapper(store),
     });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
     // テキストを空にして再描画
-    useTTSText.mockReturnValue({ text: ['', ''], nextText: [] });
+    useTTSText.mockReturnValue({ text: ['', ''] });
     rerender({});
 
-    jest.runAllTimers();
+    // 現在の発話を完了させてもpendingが無いため追加の発話は起きない
+    act(() => {
+      finishAllUtterances();
+    });
 
-    // 空テキストではfetchが追加で呼ばれない（本来のfetch + prefetch = 2回）
-    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
   });
 
-  it('APIエラー時にfinishPlayingが呼ばれる', async () => {
-    mockFetch.mockResolvedValue({
-      ok: false,
-      status: 500,
-      statusText: 'Internal Server Error',
-    });
-
-    const store = createStore();
-    store.set(speechState, defaultSpeechState);
-
-    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    jest.runAllTimers();
-
-    // APIエラー後、プレイヤーは生成されない
-    expect(mockCreateAudioPlayer).not.toHaveBeenCalled();
-  });
-
-  it('再生が始まった後は時間が経過しても打ち切られない', async () => {
-    const store = createStore();
-    store.set(speechState, {
-      ...defaultSpeechState,
-      ttsEnabledLanguages: ['EN'],
-    });
-
-    // didJustFinish を発火しないが再生中(playing=true)であり続ける長尺プレイヤー。
-    // 準備段階の安全タイムアウトは再生開始時に解除されるため、何分経過しても
-    // 強制リセットされず、進行停止検知はttsAudioPlayerのストール監視に委ねられる。
-    mockCreateAudioPlayer.mockImplementation(() =>
-      createMockPlayer({ autoFinish: false, playing: true })
-    );
-
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    // プレイヤーが生成されるまで待つ
-    jest.advanceTimersByTime(100);
-
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
-    });
-
-    // 再生開始後に長時間（300秒）経過させても強制リセットは起きない
-    jest.advanceTimersByTime(300_000);
-
-    expect(warnSpy).not.toHaveBeenCalledWith(
-      '[useTTS] Playback safety timeout reached, force resetting'
-    );
-
-    warnSpy.mockRestore();
-  });
-
-  it('フェッチがハングしても安全タイムアウトで再生パイプラインが解放される', async () => {
-    const store = createStore();
-    store.set(speechState, defaultSpeechState);
-
-    // 応答もエラーも返さないリクエストを再現（Androidでネットワーク切替や
-    // ドーズ状態に入ると発生し、これまではplayingRefが解放されず
-    // 以降のTTSが一切再生されなくなっていた）
-    mockFetch.mockReturnValue(new Promise(() => {}));
-
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    // フェッチ段階でも安全タイムアウトが張られており、ハングしても復帰する
-    jest.advanceTimersByTime(300_000);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      '[useTTS] Playback safety timeout reached, force resetting'
-    );
-
-    warnSpy.mockRestore();
-  });
-
-  it('[Android] didJustFinishが届かず再生位置も進まない場合はストール検知で復帰する', async () => {
-    setPlatformOS('android');
-    const store = createStore();
-    store.set(speechState, {
-      ...defaultSpeechState,
-      ttsEnabledLanguages: ['EN'],
-    });
-
-    // Androidでネイティブエラーや音声フォーカス喪失により
-    // イベントが一切届かなくなった状態を再現する
-    const mockPlayer = createMockPlayer({ autoFinish: false, playing: false });
-    mockCreateAudioPlayer.mockReturnValue(mockPlayer);
-
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    jest.advanceTimersByTime(100);
-
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
-    });
-
-    // ストール検知タイムアウト（約10秒）経過で打ち切られる
-    jest.advanceTimersByTime(11_000);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      '[ttsAudioPlayer] playback stalled, aborting:',
-      '/tmp/tts-id_en.mp3'
-    );
-    // Androidはストール時も一時停止して再生パイプラインを解放するが、
-    // プレイヤー自体は次の発話で使い回すため破棄しない
-    expect(mockPlayer.pause).toHaveBeenCalled();
-    expect(mockPlayer.remove).not.toHaveBeenCalled();
-
-    warnSpy.mockRestore();
-  });
-
-  it('[iOS] ストール検知時はプレイヤーを破棄して再生パイプラインを解放する', async () => {
-    setPlatformOS('ios');
-    const store = createStore();
-    store.set(speechState, {
-      ...defaultSpeechState,
-      ttsEnabledLanguages: ['EN'],
-    });
-
-    const mockPlayer = createMockPlayer({ autoFinish: false, playing: false });
-    mockCreateAudioPlayer.mockReturnValue(mockPlayer);
-
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    jest.advanceTimersByTime(100);
-
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
-    });
-
-    jest.advanceTimersByTime(11_000);
-
-    expect(warnSpy).toHaveBeenCalledWith(
-      '[ttsAudioPlayer] playback stalled, aborting:',
-      '/tmp/tts-id_en.mp3'
-    );
-    // iOSは発話ごとに生成・破棄するため、ストール時もプレイヤーをネイティブごと解放する
-    expect(mockPlayer.remove).toHaveBeenCalled();
-
-    warnSpy.mockRestore();
-  });
-
-  it('[Android] 2回目以降の発話ではプレイヤーを使い回しreplaceで音源を差し替える', async () => {
-    setPlatformOS('android');
+  it('完了コールバックが届かなくても安全タイムアウトで再生パイプラインが解放される', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
 
     const store = createStore();
-    store.set(speechState, {
-      ...defaultSpeechState,
-      ttsEnabledLanguages: ['EN'],
-    });
+    store.set(speechState, defaultSpeechState);
 
-    // 初回 render で prefetch を走らせないことで、2回目発話の fetch を確実に分離する
-    useTTSText.mockReturnValue({
-      text: ['ja text', 'en text'],
-      nextText: [],
-    });
-
-    const mockPlayer = createMockPlayer({ autoFinish: true });
-    mockCreateAudioPlayer.mockReturnValue(mockPlayer);
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const { rerender } = renderHook(() => useTTS(), {
       wrapper: createWrapper(store),
     });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-    jest.runAllTimers();
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
-    });
-    const fetchCountAfterFirstSpeak = mockFetch.mock.calls.length;
-
-    // 次の駅のテキストへ変化させて2回目の発話を発火する
+    // 再生完了前に次のテキストをpendingへ積む
     useTTSText.mockReturnValue({
       text: ['ja text 2', 'en text 2'],
-      nextText: [],
-    });
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        result: {
-          id: 'tts-id-2',
-          jaAudioContent: 'QQ==',
-          enAudioContent: 'QQ==',
-          jaAudioMimeType: 'audio/mpeg',
-          enAudioMimeType: 'audio/mpeg',
-        },
-      }),
     });
     rerender({});
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(fetchCountAfterFirstSpeak + 1);
+    // onDone/onError/onStoppedが一切届かないままタイムアウトさせる
+    act(() => {
+      jest.advanceTimersByTime(300_000);
     });
-    jest.runAllTimers();
 
-    // 2回目はcreateAudioPlayerを呼ばず、既存プレイヤーのreplaceで差し替える
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[useTTS] Playback safety timeout reached, force resetting'
+    );
+    // ハングした読み上げを停止し、pendingの発話が開始される
+    expect(mockSpeechStop).toHaveBeenCalled();
     await waitFor(() => {
-      expect(mockPlayer.replace).toHaveBeenCalledWith({
-        uri: '/tmp/tts-id-2_en.mp3',
-      });
+      expect(mockSpeak).toHaveBeenCalledTimes(4);
     });
-    expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
+
+    warnSpy.mockRestore();
   });
 
-  it('[iOS] 2回目以降の発話でもプレイヤーを使い回さず毎回新規生成する', async () => {
-    setPlatformOS('ios');
+  it('発話エラー時も全発話の完了を待って解放される', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
 
     const store = createStore();
-    store.set(speechState, {
-      ...defaultSpeechState,
-      ttsEnabledLanguages: ['EN'],
-    });
+    store.set(speechState, defaultSpeechState);
 
-    // 初回 render で prefetch を走らせないことで、2回目発話の fetch を確実に分離する
-    useTTSText.mockReturnValue({
-      text: ['ja text', 'en text'],
-      nextText: [],
-    });
-
-    // 1回目/2回目で別インスタンスを返し、使い回しではなく新規生成であることを保証する
-    const firstPlayer = createMockPlayer({ autoFinish: true });
-    const secondPlayer = createMockPlayer({ autoFinish: true });
-    mockCreateAudioPlayer
-      .mockImplementationOnce(() => firstPlayer)
-      .mockImplementationOnce(() => secondPlayer);
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
     const { rerender } = renderHook(() => useTTS(), {
       wrapper: createWrapper(store),
     });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-    jest.runAllTimers();
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1);
-    });
-    const fetchCountAfterFirstSpeak = mockFetch.mock.calls.length;
-
-    // 次の駅のテキストへ変化させて2回目の発話を発火する
     useTTSText.mockReturnValue({
       text: ['ja text 2', 'en text 2'],
-      nextText: [],
-    });
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        result: {
-          id: 'tts-id-2',
-          jaAudioContent: 'QQ==',
-          enAudioContent: 'QQ==',
-          jaAudioMimeType: 'audio/mpeg',
-          enAudioMimeType: 'audio/mpeg',
-        },
-      }),
     });
     rerender({});
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(fetchCountAfterFirstSpeak + 1);
+    // JAがエラー、ENが正常完了してもpendingへ進む
+    act(() => {
+      (mockSpeak.mock.calls[0][1] as SpeechOptions).onError?.(
+        new Error('speech failed')
+      );
+      (mockSpeak.mock.calls[1][1] as SpeechOptions).onDone?.();
     });
-    jest.runAllTimers();
 
-    // iOSはreplaceで使い回さず、2回目もcreateAudioPlayerで新規生成する
     await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(2);
+      expect(mockSpeak).toHaveBeenCalledTimes(4);
     });
-    expect(mockCreateAudioPlayer).toHaveBeenLastCalledWith({
-      uri: '/tmp/tts-id-2_en.mp3',
-    });
-    // 別インスタンスが生成され、どちらも replace で使い回されていないこと
-    expect(firstPlayer).not.toBe(secondPlayer);
-    expect(firstPlayer.replace).not.toHaveBeenCalled();
-    expect(secondPlayer.replace).not.toHaveBeenCalled();
-    // 1回目のプレイヤーは発話完了時にネイティブごと破棄される
-    expect(firstPlayer.remove).toHaveBeenCalled();
+
+    warnSpy.mockRestore();
   });
 
   it('resetFirstSpeechAtom変更時にuseTTSTextへfirstSpeech=trueが同期的に渡される', async () => {
@@ -595,11 +336,7 @@ describe('useTTS', () => {
 
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    jest.runAllTimers();
+    expect(mockSpeak).toHaveBeenCalled();
     useTTSText.mockClear();
 
     // resetFirstSpeechAtomをインクリメントする
@@ -617,33 +354,18 @@ describe('useTTS', () => {
     expect(firstCallAfterReset[0]).toBe(true);
   });
 
-  it('アンマウント時にクリーンアップされる', async () => {
+  it('アンマウント時に読み上げを停止する', () => {
     const store = createStore();
-    store.set(speechState, {
-      ...defaultSpeechState,
-      ttsEnabledLanguages: ['EN'],
-    });
-
-    const mockPlayer = createMockPlayer({ autoFinish: false });
-    mockCreateAudioPlayer.mockReturnValue(mockPlayer);
+    store.set(speechState, defaultSpeechState);
 
     const { unmount } = renderHook(() => useTTS(), {
       wrapper: createWrapper(store),
     });
 
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalled();
-    });
-
-    jest.advanceTimersByTime(100);
-
-    await waitFor(() => {
-      expect(mockCreateAudioPlayer).toHaveBeenCalled();
-    });
+    expect(mockSpeak).toHaveBeenCalled();
 
     unmount();
 
-    expect(mockPlayer.pause).toHaveBeenCalled();
-    expect(mockPlayer.remove).toHaveBeenCalled();
+    expect(mockSpeechStop).toHaveBeenCalled();
   });
 });

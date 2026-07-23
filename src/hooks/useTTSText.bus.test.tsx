@@ -112,7 +112,7 @@ describe('useTTSText (bus mode)', () => {
           wrapper: wrapper,
         }
       );
-      expect(result.current).toEqual({ text: [], nextText: [] });
+      expect(result.current).toEqual({ text: [] });
     });
   });
 
