@@ -213,6 +213,38 @@ describe('useTTS', () => {
     );
   });
 
+  it('英語文に日本語が混入している場合は除去してから読み上げる', async () => {
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+    // nameRoman 欠落データ等で wrapPhoneme のローマ字フォールバックが効かない
+    // ケース。日本語が混じった英語文は TTS エンジンが言語を誤判定して全文を
+    // 日本語音声で合成してしまうため、除去して英語音声を維持する
+    useTTSText.mockReturnValue({
+      text: ['つぎはあかさかです', 'Arriving at あかさか K 7.'],
+    });
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'Arriving at K 7.',
+      expect.objectContaining({ language: 'en-US' })
+    );
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[useTTS] English text contains Japanese characters, stripping:',
+      'Arriving at あかさか K 7.'
+    );
+
+    warnSpy.mockRestore();
+  });
+
   it('音声一覧の取得完了を待ってから初回発話を開始する', async () => {
     let resolveVoices: (voices: unknown[]) => void = () => {};
     mockGetAvailableVoicesAsync.mockReturnValue(
