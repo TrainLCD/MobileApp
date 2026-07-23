@@ -315,13 +315,6 @@ export const useTTS = (): void => {
             finishPlaying();
             return;
           }
-          // 実機で言語・音声の適用不整合を追跡するための診断ログ。
-          // native 側の TrainLCDSpeechPatch ログと突き合わせて使う
-          console.log(
-            `[useTTS] speak lang=${utterance.language} voice=${
-              utterance.voice ?? '(default)'
-            } text="${utterance.text.slice(0, 40)}"`
-          );
           Speech.speak(utterance.text, {
             language: utterance.language,
             ...(utterance.voice ? { voice: utterance.voice } : {}),

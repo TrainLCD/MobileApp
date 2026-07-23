@@ -1,26 +1,8 @@
 diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-index 9ca869c..96d0e1b 100644
+index 9ca869c..3033b31 100644
 --- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
 +++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-@@ -2,6 +2,7 @@ package expo.modules.speech
- 
- import android.os.Bundle
- import android.speech.tts.TextToSpeech
-+import android.util.Log
- import android.speech.tts.UtteranceProgressListener
- import android.speech.tts.Voice
- import expo.modules.kotlin.Promise
-@@ -11,6 +12,9 @@ import java.util.ArrayDeque
- import java.util.Locale
- import java.util.Queue
- 
-+// TrainLCD patch: 発話時に実際へ適用された voice / language を追跡するための診断タグ
-+const val PATCH_LOG_TAG = "TrainLCDSpeechPatch"
-+
- const val speakingStartedEvent = "Exponent.speakingStarted"
- const val speakingWillSayNextStringEvent = "Exponent.speakingWillSayNextString"
- const val speakingDoneEvent = "Exponent.speakingDone"
-@@ -103,24 +107,52 @@ class SpeechModule : Module() {
+@@ -103,24 +103,48 @@ class SpeechModule : Module() {
      options.pitch?.let(textToSpeech::setPitch)
      options.rate?.let(textToSpeech::setSpeechRate)
  
@@ -48,17 +30,9 @@ index 9ca869c..96d0e1b 100644
        }
 -    } ?: Locale.getDefault()
 +    }
- 
--    options.voice?.let { voiceName ->
--      textToSpeech.voices
--        .firstOrNull { it.name == voiceName }
--        ?.let(textToSpeech::setVoice)
++
 +    if (matchedVoice != null) {
-+      val voiceResult = textToSpeech.setVoice(matchedVoice)
-+      Log.d(
-+        PATCH_LOG_TAG,
-+        "speak id=$id engine=${textToSpeech.defaultEngine} setVoice=${matchedVoice.name} result=$voiceResult"
-+      )
++      textToSpeech.setVoice(matchedVoice)
 +    } else {
 +      // TrainLCD patch: Locale(String) は 'en-US' のような BCP 47 タグ全体を
 +      // language として扱う不正な Locale を生成し、isLanguageAvailable が常に
@@ -74,7 +48,11 @@ index 9ca869c..96d0e1b 100644
 +          availability != TextToSpeech.LANG_MISSING_DATA &&
 +            availability != TextToSpeech.LANG_NOT_SUPPORTED
 +        }
-+
+ 
+-    options.voice?.let { voiceName ->
+-      textToSpeech.voices
+-        .firstOrNull { it.name == voiceName }
+-        ?.let(textToSpeech::setVoice)
 +        when {
 +          isUsable(exactLocale) -> exactLocale
 +          isUsable(languageOnlyLocale) -> languageOnlyLocale
@@ -89,17 +67,3 @@ index 9ca869c..96d0e1b 100644
      }
  
      val params = Bundle().apply {
-@@ -152,6 +184,13 @@ class SpeechModule : Module() {
-           _textToSpeech!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
- 
-             override fun onStart(utteranceId: String) {
-+              // TrainLCD patch: 発話開始時点でエンジンに実際へ適用されている音声を記録する
-+              try {
-+                Log.d(
-+                  PATCH_LOG_TAG,
-+                  "onStart id=$utteranceId activeVoice=${_textToSpeech?.voice?.name} activeLanguage=${_textToSpeech?.voice?.locale}"
-+                )
-+              } catch (_: Exception) {}
-               sendEvent(speakingStartedEvent, idToMap(utteranceId))
-             }
- 

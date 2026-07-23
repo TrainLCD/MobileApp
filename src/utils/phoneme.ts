@@ -55,13 +55,41 @@ const groupSegments = (segments: TtsSegment[]): SegmentGroup[] => {
   return groups;
 };
 
-/** TtsSegment 配列を SSML 文字列に変換する。連続する IPA セグメントは単一の phoneme タグに結合する。segments が空の場合は fallback を返す */
+// ひらがな・カタカナ・CJK漢字・半角カナ。英語向けテキストへの日本語混入検出に使う
+const JAPANESE_CHAR_REGEXP = /[぀-ヿ㐀-䶿一-鿿豈-﫿ｦ-ﾟ]/;
+
+// タグを除いた可視テキストを取り出す（phoneme の ph 属性など、読み上げ対象に
+// ならない属性値を日本語混入判定へ含めないため）
+const stripTagsForInspection = (ssml: string): string =>
+  ssml.replace(/<[^>]+>/g, '');
+
+/** 英語向けテキストへの日本語混入検知（診断・フォールバック判定用） */
+export const containsJapaneseCharacters = (text: string): boolean =>
+  JAPANESE_CHAR_REGEXP.test(text);
+
+/**
+ * TtsSegment 配列を SSML 文字列に変換する。連続する IPA セグメントは単一の phoneme タグに結合する。segments が空の場合は fallback を返す。
+ *
+ * OS ネイティブ TTS は IPA（ph 属性）を解釈できず phoneme タグの中身の表記が
+ * そのまま読まれるため、表記に日本語文字が含まれる場合（例: surface が
+ * 「あかさか」で fallbackText 未設定の駅）は英語文へ日本語が混入し、エンジンが
+ * 言語を誤判定して日本語音声で合成されてしまう。その場合はセグメントを使わず
+ * ローマ字名（fallback）全体へフォールバックする。
+ */
 export const wrapPhoneme = (
   segments: TtsSegment[] | null | undefined,
   fallback?: string | null
 ): string => {
   if (!segments?.length) return fallback ? escapeXml(fallback) : '';
 
+  const built = buildFromSegments(segments);
+  if (fallback && JAPANESE_CHAR_REGEXP.test(stripTagsForInspection(built))) {
+    return escapeXml(fallback);
+  }
+  return built;
+};
+
+const buildFromSegments = (segments: TtsSegment[]): string => {
   return groupSegments(segments)
     .map((group) => {
       if (group.kind === 'ipa') {
