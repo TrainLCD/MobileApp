@@ -271,7 +271,7 @@ describe('useTTSText (bus mode)', () => {
       expect(jaText).toContain('今日も');
       expect(jaText).toContain('このバスは');
       expect(jaText).toContain('次は');
-      expect(jaText).toContain('の順に停まります');
+      expect(jaText).toContain('の順にとまります');
       expect(enText).toContain('Thank you for using');
       expect(enText).toContain('This bus is bound for');
     });

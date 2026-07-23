@@ -190,7 +190,7 @@ describe('useTTS', () => {
     };
     useTTSText.mockReturnValue({
       text: [
-        'つぎは<break time="250ms"/>おおさき',
+        '次は<break time="250ms"/><sub alias="オオサキ">大崎</sub>です',
         'The next station is <phoneme alphabet="ipa" ph="oːsaki">Osaki</phoneme>,<break time="200ms"/> J Y <say-as interpret-as="cardinal">24</say-as>.',
       ],
     });
@@ -203,7 +203,7 @@ describe('useTTS', () => {
 
     expect(mockSpeak).toHaveBeenNthCalledWith(
       1,
-      'つぎは、おおさき',
+      '次は、オオサキです',
       expect.objectContaining({ language: 'ja-JP' })
     );
     expect(mockSpeak).toHaveBeenNthCalledWith(
