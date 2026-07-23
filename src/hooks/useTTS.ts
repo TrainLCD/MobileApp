@@ -158,17 +158,21 @@ export const useTTS = (): void => {
 
   // OS ネイティブ TTS は expo-audio のプレイヤーを使わないが、iOS の
   // AVSpeechSynthesizer はアプリの音声セッションを共有するため、
-  // サイレントスイッチ中の読み上げ・バックグラウンド再生・他アプリ音声の
-  // ダッキングはここで設定した audio mode に従う。
+  // サイレントスイッチ中の読み上げ・バックグラウンド再生はここで設定した
+  // audio mode に従う。他アプリ音声のダッキングは発話開始直前にのみ有効化し
+  // （setDuckingActiveAsync 参照）、ここでは非ダッキング状態を既定にする。
+  const backgroundEnabledRef = useRef(backgroundEnabled);
+  backgroundEnabledRef.current = backgroundEnabled;
+
   useEffect(() => {
     (async () => {
       try {
         await setAudioModeAsync({
           allowsRecording: false,
           shouldPlayInBackground: backgroundEnabled,
-          interruptionMode: 'duckOthers',
+          interruptionMode: 'mixWithOthers',
           playsInSilentMode: true,
-          interruptionModeAndroid: 'duckOthers',
+          interruptionModeAndroid: 'mixWithOthers',
           shouldRouteThroughEarpiece: false,
         });
       } catch (e) {
@@ -176,6 +180,25 @@ export const useTTS = (): void => {
       }
     })();
   }, [backgroundEnabled]);
+
+  // 発話中だけ他アプリ音声をダッキングし、完了後は mixWithOthers へ戻す。
+  // duckOthers を張ったままにすると、AVAudioSession は再生停止後も
+  // 他アプリの音量を復元しないことがあり、ダッキングが残存し続けるため、
+  // interruptionMode 自体を切り替えて明示的に解除する。
+  const setDuckingActiveAsync = useCallback(async (duck: boolean) => {
+    try {
+      await setAudioModeAsync({
+        allowsRecording: false,
+        shouldPlayInBackground: backgroundEnabledRef.current,
+        interruptionMode: duck ? 'duckOthers' : 'mixWithOthers',
+        playsInSilentMode: true,
+        interruptionModeAndroid: duck ? 'duckOthers' : 'mixWithOthers',
+        shouldRouteThroughEarpiece: false,
+      });
+    } catch (e) {
+      console.warn('[useTTS] setAudioModeAsync (ducking) failed:', e);
+    }
+  }, []);
 
   // playingRefのリセットとpending処理を一元化してデッドロックを防止
   const finishPlaying = useCallback(() => {
@@ -188,8 +211,12 @@ export const useTTS = (): void => {
     if (pending) {
       pendingRef.current = null;
       speechWithTextRef.current?.(pending.textJa, pending.textEn);
+    } else {
+      // 後続の発話が控えていない場合のみ解除する。pending がある場合は
+      // 直後に再度発話が始まりダッキングを再度張るため、解除は不要。
+      void setDuckingActiveAsync(false);
     }
-  }, []);
+  }, [setDuckingActiveAsync]);
 
   // 発話開始時に安全タイムアウトを張る。OS の TTS エンジンから完了・エラー・
   // 停止のいずれのコールバックも届かないままハングした場合でも、playingRef を
@@ -311,6 +338,15 @@ export const useTTS = (): void => {
           return;
         }
 
+        // 実際に読み上げる直前にのみ他アプリ音声のダッキングを有効化する
+        await setDuckingActiveAsync(true);
+        if (isStaleRun()) {
+          // このrunは既に無効化されている（タイムアウトやアンマウントで
+          // 別経路がクリーンアップ済み）。直前で張ったダッキングだけ解除する
+          void setDuckingActiveAsync(false);
+          return;
+        }
+
         if (firstSpeechRef.current) {
           firstSpeechRef.current = false;
           suppressPostFirstSpeechRef.current = true;
@@ -352,6 +388,7 @@ export const useTTS = (): void => {
     [
       armPlaybackWatchdog,
       finishPlaying,
+      setDuckingActiveAsync,
       shouldSpeakEnglish,
       shouldSpeakJapanese,
       waitForVoicesReady,
@@ -431,6 +468,8 @@ export const useTTS = (): void => {
         Speech.stop();
       } catch {}
       playingRef.current = false;
+      // 発話中にアンマウントされた場合、ダッキングが張られたまま残るのを防ぐ
+      void setDuckingActiveAsync(false);
     };
-  }, []);
+  }, [setDuckingActiveAsync]);
 };
