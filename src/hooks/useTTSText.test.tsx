@@ -396,7 +396,7 @@ describe('JR_WEST batch cycling', () => {
     );
 
     const [jaText] = result.current.text;
-    expect(jaText).toContain('の順に停まります');
+    expect(jaText).toContain('の順にとまります');
     expect(jaText).toContain('後ほどご案内いたします');
   });
 
@@ -409,7 +409,7 @@ describe('JR_WEST batch cycling', () => {
     );
 
     const [jaText] = result.current.text;
-    expect(jaText).not.toContain('の順に停まります');
+    expect(jaText).not.toContain('の順にとまります');
   });
 
   test('should re-announce stop list after passing batch boundary', () => {
@@ -424,12 +424,12 @@ describe('JR_WEST batch cycling', () => {
       { wrapper }
     );
 
-    expect(result.current.text[0]).toContain('の順に停まります');
+    expect(result.current.text[0]).toContain('の順にとまります');
 
     // Phase 2: firstSpeech=false, still at station 0 → batch boundary set, station still within batch
     firstSpeech = false;
     rerender({});
-    expect(result.current.text[0]).not.toContain('の順に停まります');
+    expect(result.current.text[0]).not.toContain('の順にとまります');
 
     // Phase 3: move to station 5 (神保町) → past batch boundary → re-announce
     // Station index 5 = 神保町, nextStation = 小川町 (index 6)
@@ -437,7 +437,7 @@ describe('JR_WEST batch cycling', () => {
     stationIndex = 5;
     rerender({});
 
-    expect(result.current.text[0]).toContain('の順に停まります');
+    expect(result.current.text[0]).toContain('の順にとまります');
     expect(result.current.text[1]).toContain('We will be stopping at');
   });
 });

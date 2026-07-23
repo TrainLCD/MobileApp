@@ -67,6 +67,23 @@ const stripTagsForInspection = (ssml: string): string =>
 export const containsJapaneseCharacters = (text: string): boolean =>
   JAPANESE_CHAR_REGEXP.test(text);
 
+// 日本語文字と全角記号（CJK記号・全角英数を含む）の連続。英語テキストからの
+// 除去に使うため、検知用より広く全角圏の文字を対象にする
+const JAPANESE_RUN_REGEXP = /[　-ヿ㐀-䶿一-鿿豈-﫿＀-￯]+/g;
+
+/**
+ * 英語向けテキストから日本語文字の連続を除去する。
+ * nameRoman が欠落した駅データ等ではローマ字へのフォールバックが効かず、
+ * 英語文に日本語が残ることがある。日本語が混じった英語文は TTS エンジンが
+ * 言語を誤判定して全文を日本語音声で合成してしまうため、固有名詞が欠けても
+ * 正しい英語音声で読み上げる方を優先する（最終防衛線）。
+ */
+export const stripJapaneseCharacters = (text: string): string =>
+  text
+    .replace(JAPANESE_RUN_REGEXP, ' ')
+    .replace(/[\t ]+/g, ' ')
+    .trim();
+
 /**
  * TtsSegment 配列を SSML 文字列に変換する。連続する IPA セグメントは単一の phoneme タグに結合する。segments が空の場合は fallback を返す。
  *
