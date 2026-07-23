@@ -1,0 +1,55 @@
+diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
+index 9ca869c..7cf881e 100644
+--- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
++++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
+@@ -103,24 +103,37 @@ class SpeechModule : Module() {
+     options.pitch?.let(textToSpeech::setPitch)
+     options.rate?.let(textToSpeech::setSpeechRate)
+ 
++    // TrainLCD patch: Locale(String) は 'en-US' のような BCP 47 タグ全体を
++    // language として扱う不正な Locale を生成し、isLanguageAvailable が常に
++    // 失敗して Locale.getDefault()（端末既定言語）で合成されてしまう。
++    // forLanguageTag で正しく解釈し、地域付きタグの音声データが無い端末では
++    // 言語のみの Locale へ段階的にフォールバックする。
+     textToSpeech.language = options.language?.let {
+-      val locale = Locale(it)
+-      val languageAvailable = textToSpeech.isLanguageAvailable(locale)
+-
+-      return@let if (
+-        languageAvailable != TextToSpeech.LANG_MISSING_DATA &&
+-        languageAvailable != TextToSpeech.LANG_NOT_SUPPORTED
+-      ) {
+-        locale
+-      } else {
+-        Locale.getDefault()
++      val exactLocale = Locale.forLanguageTag(it.replace('_', '-'))
++      val languageOnlyLocale = Locale(exactLocale.language)
++
++      val isUsable = { locale: Locale ->
++        val availability = textToSpeech.isLanguageAvailable(locale)
++        availability != TextToSpeech.LANG_MISSING_DATA &&
++          availability != TextToSpeech.LANG_NOT_SUPPORTED
++      }
++
++      return@let when {
++        isUsable(exactLocale) -> exactLocale
++        isUsable(languageOnlyLocale) -> languageOnlyLocale
++        else -> Locale.getDefault()
+       }
+     } ?: Locale.getDefault()
+ 
+     options.voice?.let { voiceName ->
+-      textToSpeech.voices
+-        .firstOrNull { it.name == voiceName }
+-        ?.let(textToSpeech::setVoice)
++      // TrainLCD patch: 一部エンジンで getVoices が発話中に例外を投げることが
++      // あるため防御する。voice 適用失敗時は上で設定済みの language に委ねる
++      val matchedVoice = try {
++        textToSpeech.voices?.firstOrNull { it.name == voiceName }
++      } catch (_: Exception) {
++        null
++      }
++      matchedVoice?.let(textToSpeech::setVoice)
+     }
+ 
+     val params = Bundle().apply {
