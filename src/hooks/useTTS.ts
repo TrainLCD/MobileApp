@@ -2,6 +2,7 @@ import { setAudioModeAsync } from 'expo-audio';
 import * as Speech from 'expo-speech';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import { TransportType } from '~/@types/graphql';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
@@ -21,6 +22,14 @@ const PLAYBACK_TIMEOUT_MS = 300_000;
 
 const JA_SPEECH_LANGUAGE = 'ja-JP';
 const EN_SPEECH_LANGUAGE = 'en-US';
+
+// expo-speech の Android 実装は language を `Locale(tag)` にそのまま渡すため、
+// 'en-US' のような地域付きタグは不正な Locale となり isLanguageAvailable が
+// 失敗して端末既定言語へフォールバックする（日本語端末では英語文まで日本語
+// 音声で合成される）。Android には言語サブタグのみを渡して正しい Locale を
+// 生成させる。iOS は BCP 47 タグをそのまま解釈できる。
+const toPlatformSpeechLanguage = (bcp47Tag: string): string =>
+  Platform.OS === 'android' ? (bcp47Tag.split('-')[0] ?? bcp47Tag) : bcp47Tag;
 
 // Android の TextToSpeech は入力長上限 (通常 4000 文字) を超えると発話自体が
 // 失敗する。通常のアナウンス文はこの上限に達しないが、超過時は静かに失敗する
@@ -88,13 +97,18 @@ export const useTTS = (): void => {
         if (cancelled) {
           return;
         }
+        // Android は voice 未指定だと言語フォールバック不備の影響を受けるため、
+        // 高品質音声が無くても既定品質のローカル音声を明示指定する
+        const options = { allowDefaultQuality: Platform.OS === 'android' };
         jaVoiceIdRef.current = selectBestVoiceIdentifier(
           voices,
-          JA_SPEECH_LANGUAGE
+          JA_SPEECH_LANGUAGE,
+          options
         );
         enVoiceIdRef.current = selectBestVoiceIdentifier(
           voices,
-          EN_SPEECH_LANGUAGE
+          EN_SPEECH_LANGUAGE,
+          options
         );
       } catch (e) {
         console.warn('[useTTS] getAvailableVoicesAsync failed:', e);
@@ -220,32 +234,39 @@ export const useTTS = (): void => {
       playingRef.current = true;
       armPlaybackWatchdog(runId);
 
-      // 全発話が完了（またはエラー・停止）した時点で再生パイプラインを解放する。
+      // JA→EN を逐次読み上げる。Android の TextToSpeech は言語・音声設定が
+      // エンジン単位の状態のため、複数言語を一括でキューへ積むと後から設定した
+      // 言語・音声で先の発話まで合成されてしまう。前の発話の完了（またはエラー）
+      // を待ってから次を speak することで、発話ごとの設定を確実に適用する。
       // タイムアウトや新規発話で世代が進んでいたら、古いコールバックは無視する
-      let remaining = utterances.length;
-      const settle = () => {
+      const speakNext = (index: number) => {
         if (speechRunIdRef.current !== runId || !playingRef.current) {
           return;
         }
-        remaining -= 1;
-        if (remaining <= 0) {
+        const utterance = utterances[index];
+        if (!utterance) {
           finishPlaying();
+          return;
         }
-      };
-
-      // expo-speech は追加順に逐次読み上げるため、JA→EN の順でキューへ積む
-      for (const utterance of utterances) {
         Speech.speak(utterance.text, {
-          language: utterance.language,
+          language: toPlatformSpeechLanguage(utterance.language),
           ...(utterance.voice ? { voice: utterance.voice } : {}),
-          onDone: settle,
-          onStopped: settle,
+          onDone: () => speakNext(index + 1),
+          onStopped: () => {
+            // Speech.stop() による停止。ウォッチドッグ・アンマウント経由なら
+            // 世代が進んでいて冒頭のガードで無視される。それ以外の外部要因の
+            // 停止では次の発話へ進めず、パイプラインの解放だけ行う
+            if (speechRunIdRef.current === runId && playingRef.current) {
+              finishPlaying();
+            }
+          },
           onError: (error) => {
             console.warn('[useTTS] speech error:', error);
-            settle();
+            speakNext(index + 1);
           },
         });
-      }
+      };
+      speakNext(0);
     },
     [
       armPlaybackWatchdog,

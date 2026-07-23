@@ -38,10 +38,10 @@ describe('scoreVoiceQuality', () => {
     ).toBe(2);
   });
 
-  it('コンパクト版はスコア0にする', () => {
+  it('コンパクト版はスコア1にする', () => {
     expect(
       scoreVoiceQuality(voice('com.apple.voice.compact.ja-JP.Kyoko', 'ja-JP'))
-    ).toBe(0);
+    ).toBe(1);
   });
 });
 
@@ -81,6 +81,30 @@ describe('selectBestVoiceIdentifier', () => {
       voice('com.apple.eloquence.ja-JP.Eddy', 'ja-JP'),
     ];
     expect(selectBestVoiceIdentifier(voices, 'ja-JP')).toBeUndefined();
+  });
+
+  it('allowDefaultQuality指定時は既定品質の音声も返す(Android向け)', () => {
+    const voices = [voice('ja-jp-x-htm-local', 'ja-JP')];
+    expect(
+      selectBestVoiceIdentifier(voices, 'ja-JP', { allowDefaultQuality: true })
+    ).toBe('ja-jp-x-htm-local');
+  });
+
+  it('allowDefaultQuality指定時も高品質音声を優先する', () => {
+    const voices = [
+      voice('ja-jp-x-htm-local', 'ja-JP'),
+      voice('ja-jp-x-htm-enhanced', 'ja-JP', VoiceQuality.Enhanced),
+    ];
+    expect(
+      selectBestVoiceIdentifier(voices, 'ja-JP', { allowDefaultQuality: true })
+    ).toBe('ja-jp-x-htm-enhanced');
+  });
+
+  it('allowDefaultQuality指定時もネットワーク必須音声は除外する', () => {
+    const voices = [voice('ja-jp-x-jab-network', 'ja-JP')];
+    expect(
+      selectBestVoiceIdentifier(voices, 'ja-JP', { allowDefaultQuality: true })
+    ).toBeUndefined();
   });
 
   it('別言語の音声は選ばない', () => {

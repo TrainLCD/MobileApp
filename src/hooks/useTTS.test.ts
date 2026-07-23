@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import React from 'react';
+import { Platform } from 'react-native';
 import speechState, { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import { useTTS } from './useTTS';
 
@@ -46,6 +47,7 @@ jest.mock('./useStoppingState', () => ({
 
 type SpeechOptions = {
   language: string;
+  voice?: string;
   onDone?: () => void;
   onStopped?: () => void;
   onError?: (error: unknown) => void;
@@ -63,14 +65,22 @@ const createWrapper =
   ({ children }: { children: React.ReactNode }) =>
     React.createElement(Provider, { store }, children);
 
-// キュー済みの発話を全て完了扱いにする（onDone を発火する）
+// 発話は逐次実行（前の発話の onDone で次を speak）のため、onDone を呼ぶと
+// 新しい speak が同期的に積まれる。未完了の発話が無くなるまで完了させる。
 let settledSpeakCallCount = 0;
 const finishAllUtterances = () => {
-  const calls = mockSpeak.mock.calls.slice(settledSpeakCallCount);
-  settledSpeakCallCount = mockSpeak.mock.calls.length;
-  for (const call of calls) {
+  while (settledSpeakCallCount < mockSpeak.mock.calls.length) {
+    const call = mockSpeak.mock.calls[settledSpeakCallCount];
+    settledSpeakCallCount += 1;
     (call[1] as SpeechOptions).onDone?.();
   }
+};
+
+// jest-expo の既定 Platform.OS は 'ios'。Android 固有挙動のテストでは明示的に
+// 切り替え、afterEach で必ず元へ戻す。
+const originalPlatformOS = Platform.OS;
+const setPlatformOS = (os: typeof Platform.OS) => {
+  Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
 };
 
 describe('useTTS', () => {
@@ -92,6 +102,7 @@ describe('useTTS', () => {
     jest.runOnlyPendingTimers();
     jest.useRealTimers();
     jest.clearAllMocks();
+    setPlatformOS(originalPlatformOS);
   });
 
   it('英語のみ有効時は英語のみ読み上げる', () => {
@@ -110,18 +121,26 @@ describe('useTTS', () => {
     );
   });
 
-  it('JA+EN有効時はJA→ENの順で読み上げキューへ積む', () => {
+  it('JA+EN有効時はJAの完了を待ってからENを読み上げる', () => {
     const store = createStore();
     store.set(speechState, defaultSpeechState);
 
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
 
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    // Android の TextToSpeech は言語・音声設定がエンジン単位のため、
+    // 一括キューではなく前の発話完了後に次を speak する
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
     expect(mockSpeak).toHaveBeenNthCalledWith(
       1,
       'ja text',
       expect.objectContaining({ language: 'ja-JP' })
     );
+
+    act(() => {
+      (mockSpeak.mock.calls[0][1] as SpeechOptions).onDone?.();
+    });
+
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
     expect(mockSpeak).toHaveBeenNthCalledWith(
       2,
       'en text',
@@ -178,6 +197,11 @@ describe('useTTS', () => {
       'つぎは、おおさき',
       expect.objectContaining({ language: 'ja-JP' })
     );
+
+    act(() => {
+      finishAllUtterances();
+    });
+
     expect(mockSpeak).toHaveBeenNthCalledWith(
       2,
       'The next station is Osaki, J Y 24.',
@@ -197,7 +221,7 @@ describe('useTTS', () => {
       wrapper: createWrapper(store),
     });
 
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
 
     // 再生完了前に次の駅のテキストへ変化させる
     useTTSText.mockReturnValue({
@@ -206,9 +230,9 @@ describe('useTTS', () => {
     rerender({});
 
     // 再生中はpendingに積まれるだけで新たな発話は始まらない
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
 
-    // 現在の発話（JA+EN）を完了させるとpendingが読み上げられる
+    // 現在の発話（JA→EN）を完了させるとpendingが読み上げられる
     act(() => {
       finishAllUtterances();
     });
@@ -216,6 +240,11 @@ describe('useTTS', () => {
     await waitFor(() => {
       expect(mockSpeak).toHaveBeenCalledTimes(4);
     });
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'en text',
+      expect.objectContaining({ language: 'en-US' })
+    );
     expect(mockSpeak).toHaveBeenNthCalledWith(
       3,
       'ja text 2',
@@ -240,13 +269,13 @@ describe('useTTS', () => {
       wrapper: createWrapper(store),
     });
 
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
 
     // テキストを空にして再描画
     useTTSText.mockReturnValue({ text: ['', ''] });
     rerender({});
 
-    // 現在の発話を完了させてもpendingが無いため追加の発話は起きない
+    // 現在の発話（JA→EN）を完了させてもpendingが無いため追加の発話は起きない
     act(() => {
       finishAllUtterances();
     });
@@ -268,14 +297,14 @@ describe('useTTS', () => {
       wrapper: createWrapper(store),
     });
 
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
 
     // 再生完了前に次のテキストをpendingへ積む
     useTTSText.mockReturnValue({
       text: ['ja text 2', 'en text 2'],
     });
     rerender({});
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
 
     // onDone/onError/onStoppedが一切届かないままタイムアウトさせる
     act(() => {
@@ -288,13 +317,18 @@ describe('useTTS', () => {
     // ハングした読み上げを停止し、pendingの発話が開始される
     expect(mockSpeechStop).toHaveBeenCalled();
     await waitFor(() => {
-      expect(mockSpeak).toHaveBeenCalledTimes(4);
+      expect(mockSpeak).toHaveBeenCalledTimes(2);
     });
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'ja text 2',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
 
     warnSpy.mockRestore();
   });
 
-  it('発話エラー時も全発話の完了を待って解放される', async () => {
+  it('発話エラー時は次の発話へ進み、最後まで到達したら解放される', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
@@ -308,23 +342,36 @@ describe('useTTS', () => {
       wrapper: createWrapper(store),
     });
 
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
 
     useTTSText.mockReturnValue({
       text: ['ja text 2', 'en text 2'],
     });
     rerender({});
 
-    // JAがエラー、ENが正常完了してもpendingへ進む
+    // JAがエラーになってもENへ進む
     act(() => {
       (mockSpeak.mock.calls[0][1] as SpeechOptions).onError?.(
         new Error('speech failed')
       );
+    });
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'en text',
+      expect.objectContaining({ language: 'en-US' })
+    );
+
+    // ENが完了するとpendingへ進む
+    act(() => {
       (mockSpeak.mock.calls[1][1] as SpeechOptions).onDone?.();
     });
 
     await waitFor(() => {
-      expect(mockSpeak).toHaveBeenCalledTimes(4);
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        3,
+        'ja text 2',
+        expect.objectContaining({ language: 'ja-JP' })
+      );
     });
 
     warnSpy.mockRestore();
@@ -391,11 +438,11 @@ describe('useTTS', () => {
     });
 
     // 現在の発話を完了させ、次のテキストで音声指定付きの発話を確認する
-    useTTSText.mockReturnValue({
-      text: ['ja text 2', 'en text 2'],
-    });
     act(() => {
       finishAllUtterances();
+    });
+    useTTSText.mockReturnValue({
+      text: ['ja text 2', 'en text 2'],
     });
     rerender({});
 
@@ -408,6 +455,11 @@ describe('useTTS', () => {
         })
       );
     });
+
+    act(() => {
+      finishAllUtterances();
+    });
+
     expect(mockSpeak).toHaveBeenCalledWith(
       'en text 2',
       expect.objectContaining({
@@ -417,16 +469,89 @@ describe('useTTS', () => {
     );
   });
 
-  it('高品質音声が無い場合はvoice未指定でシステム既定に任せる', () => {
+  it('[iOS] 高品質音声が無い場合はvoice未指定でシステム既定に任せる', () => {
     const store = createStore();
     store.set(speechState, defaultSpeechState);
 
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
 
+    act(() => {
+      finishAllUtterances();
+    });
+
     expect(mockSpeak).toHaveBeenCalledTimes(2);
     for (const call of mockSpeak.mock.calls) {
       expect(call[1]).not.toHaveProperty('voice');
     }
+  });
+
+  it('[Android] 言語サブタグのみを渡し、既定品質でもローカル音声を明示指定する', async () => {
+    setPlatformOS('android');
+
+    // Android の音声は識別子に品質を含まず quality=Default が大半。
+    // 言語フォールバック不備を避けるため既定品質でも明示指定する
+    mockGetAvailableVoicesAsync.mockResolvedValue([
+      {
+        identifier: 'ja-jp-x-htm-local',
+        name: 'ja-jp-x-htm-local',
+        quality: 'Default',
+        language: 'ja-JP',
+      },
+      {
+        identifier: 'en-us-x-iob-local',
+        name: 'en-us-x-iob-local',
+        quality: 'Default',
+        language: 'en-US',
+      },
+    ]);
+
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    const { rerender } = renderHook(() => useTTS(), {
+      wrapper: createWrapper(store),
+    });
+
+    // 音声一覧の取得完了を待つ
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    act(() => {
+      finishAllUtterances();
+    });
+    useTTSText.mockReturnValue({
+      text: ['ja text 2', 'en text 2'],
+    });
+    rerender({});
+
+    // 'ja-JP' をそのまま渡すと expo-speech の Locale 生成不備で端末既定言語に
+    // フォールバックするため、言語サブタグ 'ja' へ変換して渡す
+    await waitFor(() => {
+      expect(mockSpeak).toHaveBeenCalledWith(
+        'ja text 2',
+        expect.objectContaining({
+          language: 'ja',
+          voice: 'ja-jp-x-htm-local',
+        })
+      );
+    });
+
+    act(() => {
+      finishAllUtterances();
+    });
+
+    expect(mockSpeak).toHaveBeenCalledWith(
+      'en text 2',
+      expect.objectContaining({
+        language: 'en',
+        voice: 'en-us-x-iob-local',
+      })
+    );
   });
 
   it('アンマウント時に読み上げを停止する', () => {
