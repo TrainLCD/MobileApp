@@ -163,42 +163,45 @@ export const useTTS = (): void => {
   // （setDuckingActiveAsync 参照）、ここでは非ダッキング状態を既定にする。
   const backgroundEnabledRef = useRef(backgroundEnabled);
   backgroundEnabledRef.current = backgroundEnabled;
+  // 直近に要求したダッキング状態。backgroundEnabled 変更時の再設定で
+  // 発話中のダッキングを誤って mixWithOthers に巻き戻さないよう保持する
+  const duckingActiveRef = useRef(false);
 
-  useEffect(() => {
-    (async () => {
+  const applyAudioModeAsync = useCallback(
+    async (duck: boolean, shouldPlayInBackground: boolean) => {
       try {
         await setAudioModeAsync({
           allowsRecording: false,
-          shouldPlayInBackground: backgroundEnabled,
-          interruptionMode: 'mixWithOthers',
+          shouldPlayInBackground,
+          interruptionMode: duck ? 'duckOthers' : 'mixWithOthers',
           playsInSilentMode: true,
-          interruptionModeAndroid: 'mixWithOthers',
+          interruptionModeAndroid: duck ? 'duckOthers' : 'mixWithOthers',
           shouldRouteThroughEarpiece: false,
         });
       } catch (e) {
         console.warn('[useTTS] setAudioModeAsync failed:', e);
       }
-    })();
-  }, [backgroundEnabled]);
+    },
+    []
+  );
+
+  useEffect(() => {
+    // backgroundEnabled の変更を反映する際も、発話中なら現在のダッキング
+    // 状態（duckingActiveRef）を維持したまま再設定する
+    void applyAudioModeAsync(duckingActiveRef.current, backgroundEnabled);
+  }, [backgroundEnabled, applyAudioModeAsync]);
 
   // 発話中だけ他アプリ音声をダッキングし、完了後は mixWithOthers へ戻す。
   // duckOthers を張ったままにすると、AVAudioSession は再生停止後も
   // 他アプリの音量を復元しないことがあり、ダッキングが残存し続けるため、
   // interruptionMode 自体を切り替えて明示的に解除する。
-  const setDuckingActiveAsync = useCallback(async (duck: boolean) => {
-    try {
-      await setAudioModeAsync({
-        allowsRecording: false,
-        shouldPlayInBackground: backgroundEnabledRef.current,
-        interruptionMode: duck ? 'duckOthers' : 'mixWithOthers',
-        playsInSilentMode: true,
-        interruptionModeAndroid: duck ? 'duckOthers' : 'mixWithOthers',
-        shouldRouteThroughEarpiece: false,
-      });
-    } catch (e) {
-      console.warn('[useTTS] setAudioModeAsync (ducking) failed:', e);
-    }
-  }, []);
+  const setDuckingActiveAsync = useCallback(
+    async (duck: boolean) => {
+      duckingActiveRef.current = duck;
+      await applyAudioModeAsync(duck, backgroundEnabledRef.current);
+    },
+    [applyAudioModeAsync]
+  );
 
   // playingRefのリセットとpending処理を一元化してデッドロックを防止
   const finishPlaying = useCallback(() => {

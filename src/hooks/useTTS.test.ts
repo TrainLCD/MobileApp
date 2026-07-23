@@ -664,6 +664,19 @@ describe('useTTS', () => {
       expect.objectContaining({ interruptionMode: 'duckOthers' })
     );
 
+    // duckOthers の呼び出し有無だけでなく、Speech.speak より前に呼ばれる
+    // ことも検証する（speak の後にダッキングする退行を検知するため）
+    const duckCallOrder = mockSetAudioModeAsync.mock.calls
+      .map((call, index) =>
+        (call[0] as { interruptionMode: string }).interruptionMode ===
+        'duckOthers'
+          ? mockSetAudioModeAsync.mock.invocationCallOrder[index]
+          : null
+      )
+      .filter((order): order is number => order !== null)[0];
+    const firstSpeakCallOrder = mockSpeak.mock.invocationCallOrder[0];
+    expect(duckCallOrder).toBeLessThan(firstSpeakCallOrder);
+
     mockSetAudioModeAsync.mockClear();
 
     // 保留中の発話が無い状態で全発話を完了させると、ダッキングが解除される
@@ -708,6 +721,39 @@ describe('useTTS', () => {
     );
     expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
       expect.objectContaining({ interruptionMode: 'duckOthers' })
+    );
+  });
+
+  it('発話中にbackgroundEnabledが変化してもダッキングを維持する', async () => {
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    // 発話開始直後（ダッキング有効中）に設定変更でbackgroundEnabledが変わる
+    expect(mockSetAudioModeAsync).toHaveBeenLastCalledWith(
+      expect.objectContaining({ interruptionMode: 'duckOthers' })
+    );
+
+    mockSetAudioModeAsync.mockClear();
+    act(() => {
+      store.set(speechState, {
+        ...defaultSpeechState,
+        backgroundEnabled: true,
+      });
+    });
+    await flushAsync();
+
+    // backgroundEnabled変更の再設定でダッキングがmixWithOthersへ巻き戻らない
+    expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interruptionMode: 'duckOthers',
+        shouldPlayInBackground: true,
+      })
+    );
+    expect(mockSetAudioModeAsync).not.toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'mixWithOthers' })
     );
   });
 
