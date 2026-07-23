@@ -85,7 +85,6 @@ export { useTransferLines } from './useTransferLines';
 export { useTransferLinesFromStation } from './useTransferLinesFromStation';
 export { useTransitionHeaderState } from './useTransitionHeaderState';
 export { useTTS } from './useTTS';
-export { useTTSCache } from './useTTSCache';
 export { useTTSFeatureEnabled } from './useTTSFeatureEnabled';
 export { useTTSText } from './useTTSText';
 export { useTypeWillChange } from './useTypeWillChange';

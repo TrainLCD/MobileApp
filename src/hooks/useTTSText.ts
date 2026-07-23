@@ -41,7 +41,6 @@ import { useTransferLines } from './useTransferLines';
 
 export interface TTSTextResult {
   text: [string, string] | [];
-  nextText: [string, string] | [];
 }
 
 const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
@@ -551,28 +550,14 @@ export const useTTSText = (
     return EN_TEMPLATES[resolved][stoppingState](context);
   }, [context, resolved, stoppingState]);
 
-  const nextJaText = useMemo(
-    () => (context ? JA_TEMPLATES[resolved].NEXT(context) : ''),
-    [context, resolved]
-  );
-
-  const nextEnText = useMemo(
-    () => (context ? EN_TEMPLATES[resolved].NEXT(context) : ''),
-    [context, resolved]
-  );
-
   if (!enabled) {
-    return { text: [], nextText: [] };
+    return { text: [] };
   }
 
   return {
     text: [
       jaText.trim().replace(parenthesisRegexp, ''),
       enText.trim().replace(parenthesisRegexp, ''),
-    ],
-    nextText: [
-      nextJaText.trim().replace(parenthesisRegexp, ''),
-      nextEnText.trim().replace(parenthesisRegexp, ''),
     ],
   };
 };

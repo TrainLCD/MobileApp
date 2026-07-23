@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -68,16 +68,6 @@ const TuningSettings: React.FC = () => {
 
   const navigation = useNavigation();
   const { left: safeAreaLeft, right: safeAreaRight } = useSafeAreaInsets();
-
-  useEffect(() => {
-    const enVoice = storage.getString(STORAGE_KEYS.TTS_EN_VOICE_NAME);
-    const jaVoice = storage.getString(STORAGE_KEYS.TTS_JA_VOICE_NAME);
-    setSettings((prev) => ({
-      ...prev,
-      ttsEnVoiceName: enVoice || prev.ttsEnVoiceName,
-      ttsJaVoiceName: jaVoice || prev.ttsJaVoiceName,
-    }));
-  }, [setSettings]);
 
   const hasInvalidNumber =
     settings.bottomTransitionInterval < 0 ||
