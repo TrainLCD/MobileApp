@@ -169,7 +169,7 @@ npm run watch:test
 
 ### Backend (Cloudflare Workers)
 
-The backend (TTS, feedback triage, review notifiers) now lives in the dedicated [TrainLCD/BFF](https://github.com/TrainLCD/BFF) monorepo and is no longer part of this repository.
+The backend (feedback triage, review notifiers) now lives in the dedicated [TrainLCD/BFF](https://github.com/TrainLCD/BFF) monorepo and is no longer part of this repository. Voice announcements (TTS) are generated on-device with the OS-native speech synthesizer via `expo-speech`.
 
 ## Contributing
 
@@ -226,7 +226,7 @@ TrainLCD is built with:
 - **TypeScript** - Type safety and better developer experience
 - **React Navigation** - Navigation library
 - **Tanstack Query** - Data fetching and caching
-- **Cloudflare Workers** - Backend API (auth, TTS, feedback, remote config) with R2/KV storage
+- **Cloudflare Workers** - Backend API (auth, feedback, remote config) with R2/KV storage
 - **Sentry** - Error tracking and performance monitoring
 - **GraphQL** with Code Generator - Typed queries and operations
 
