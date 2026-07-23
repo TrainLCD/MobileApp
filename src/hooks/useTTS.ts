@@ -8,6 +8,10 @@ import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
 import { selectBestVoiceIdentifier } from '../utils/nativeTtsVoice';
+import {
+  containsJapaneseCharacters,
+  stripJapaneseCharacters,
+} from '../utils/phoneme';
 import { ssmlToPlainText } from '../utils/ssmlToPlainText';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
@@ -259,12 +263,23 @@ export const useTTS = (): void => {
                 ssmlToPlainText(ja, { breakReplacement: '、' })
               )
             : '';
-        const plainEn =
+        let plainEn =
           shouldSpeakEnglish && canSpeakEn
             ? truncateToSpeechLimit(
                 ssmlToPlainText(en, { breakReplacement: ' ' })
               )
             : '';
+        // nameRoman が欠落した駅データ等では wrapPhoneme のローマ字フォール
+        // バックが効かず、英語文に日本語が残ることがある。日本語が混じった
+        // 英語文は voice を明示指定していても TTS エンジンが言語を誤判定して
+        // 全文を日本語音声で合成してしまうため、最終防衛線として除去する
+        if (containsJapaneseCharacters(plainEn)) {
+          console.warn(
+            '[useTTS] English text contains Japanese characters, stripping:',
+            plainEn
+          );
+          plainEn = stripJapaneseCharacters(plainEn);
+        }
 
         const utterances = [
           plainJa

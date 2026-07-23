@@ -1,5 +1,9 @@
 import { TtsAlphabet, type TtsSegment } from '~/@types/graphql';
-import { containsJapaneseCharacters, wrapPhoneme } from './phoneme';
+import {
+  containsJapaneseCharacters,
+  stripJapaneseCharacters,
+  wrapPhoneme,
+} from './phoneme';
 
 const ipaSegment = (
   surface: string | null,
@@ -63,6 +67,26 @@ describe('wrapPhoneme', () => {
     );
     expect(result).toBe(
       '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ">Shinjuku</phoneme>'
+    );
+  });
+});
+
+describe('stripJapaneseCharacters', () => {
+  it('英語文に混入した日本語の連続を除去する', () => {
+    expect(stripJapaneseCharacters('Arriving at あかさか K 7.')).toBe(
+      'Arriving at K 7.'
+    );
+  });
+
+  it('全角記号・句読点も含めて除去する', () => {
+    expect(
+      stripJapaneseCharacters('The next stop is 大崎・品川方面、 Osaki.')
+    ).toBe('The next stop is Osaki.');
+  });
+
+  it('日本語を含まないテキストはそのまま返す', () => {
+    expect(stripJapaneseCharacters('Arriving at Akasaka K 7.')).toBe(
+      'Arriving at Akasaka K 7.'
     );
   });
 });
