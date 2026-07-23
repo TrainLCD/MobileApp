@@ -75,8 +75,8 @@ const flushAsync = async () => {
   });
 };
 
-// 発話は逐次実行（前の発話の onDone で次を speak）のため、onDone を呼ぶと
-// 新しい speak が同期的に積まれる。未完了の発話が無くなるまで完了させる。
+// 全発話の完了で pending の発話が新たにキューへ積まれることがあるため、
+// 未完了の発話が無くなるまで onDone を呼び続ける。
 let settledSpeakCallCount = 0;
 const finishAllUtterances = () => {
   while (settledSpeakCallCount < mockSpeak.mock.calls.length) {
@@ -132,27 +132,21 @@ describe('useTTS', () => {
     );
   });
 
-  it('JA+EN有効時はJAの完了を待ってからENを読み上げる', async () => {
+  it('JA+EN有効時はJA→ENの順で一括キューへ積む', async () => {
     const store = createStore();
     store.set(speechState, defaultSpeechState);
 
     renderHook(() => useTTS(), { wrapper: createWrapper(store) });
     await flushAsync();
 
-    // Android の TextToSpeech は言語・音声設定がエンジン単位のため、
-    // 一括キューではなく前の発話完了後に次を speak する
-    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    // 一括で積むことでエンジンが JA 再生中に EN の合成を先行でき、
+    // 発話間の無音（合成待ちのラグ）が最小化される
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
     expect(mockSpeak).toHaveBeenNthCalledWith(
       1,
       'ja text',
       expect.objectContaining({ language: 'ja-JP' })
     );
-
-    act(() => {
-      (mockSpeak.mock.calls[0][1] as SpeechOptions).onDone?.();
-    });
-
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
     expect(mockSpeak).toHaveBeenNthCalledWith(
       2,
       'en text',
@@ -212,11 +206,6 @@ describe('useTTS', () => {
       'つぎは、おおさき',
       expect.objectContaining({ language: 'ja-JP' })
     );
-
-    act(() => {
-      finishAllUtterances();
-    });
-
     expect(mockSpeak).toHaveBeenNthCalledWith(
       2,
       'The next station is Osaki, J Y 24.',
@@ -276,7 +265,7 @@ describe('useTTS', () => {
     });
     await flushAsync();
 
-    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
     // 再生完了前に次の駅のテキストへ変化させる
     useTTSText.mockReturnValue({
@@ -285,20 +274,13 @@ describe('useTTS', () => {
     rerender({});
 
     // 再生中はpendingに積まれるだけで新たな発話は始まらない
-    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
     // 現在の発話（JA→EN）を完了させるとpendingが読み上げられる
     act(() => {
       finishAllUtterances();
     });
     await flushAsync();
-    act(() => {
-      finishAllUtterances();
-    });
-    await flushAsync();
-    act(() => {
-      finishAllUtterances();
-    });
 
     await waitFor(() => {
       expect(mockSpeak).toHaveBeenCalledTimes(4);
@@ -333,7 +315,7 @@ describe('useTTS', () => {
     });
     await flushAsync();
 
-    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
     // テキストを空にして再描画
     useTTSText.mockReturnValue({ text: ['', ''] });
@@ -344,9 +326,6 @@ describe('useTTS', () => {
       finishAllUtterances();
     });
     await flushAsync();
-    act(() => {
-      finishAllUtterances();
-    });
 
     expect(mockSpeak).toHaveBeenCalledTimes(2);
   });
@@ -366,14 +345,14 @@ describe('useTTS', () => {
     });
     await flushAsync();
 
-    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
     // 再生完了前に次のテキストをpendingへ積む
     useTTSText.mockReturnValue({
       text: ['ja text 2', 'en text 2'],
     });
     rerender({});
-    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
     // onDone/onError/onStoppedが一切届かないままタイムアウトさせる
     act(() => {
@@ -387,18 +366,23 @@ describe('useTTS', () => {
     expect(mockSpeechStop).toHaveBeenCalled();
     await flushAsync();
     await waitFor(() => {
-      expect(mockSpeak).toHaveBeenCalledTimes(2);
+      expect(mockSpeak).toHaveBeenCalledTimes(4);
     });
     expect(mockSpeak).toHaveBeenNthCalledWith(
-      2,
+      3,
       'ja text 2',
       expect.objectContaining({ language: 'ja-JP' })
+    );
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      4,
+      'en text 2',
+      expect.objectContaining({ language: 'en-US' })
     );
 
     warnSpy.mockRestore();
   });
 
-  it('発話エラー時は次の発話へ進み、最後まで到達したら解放される', async () => {
+  it('発話エラーも完了として扱い、全発話が終わったらpendingへ進む', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
     };
@@ -413,27 +397,18 @@ describe('useTTS', () => {
     });
     await flushAsync();
 
-    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
 
     useTTSText.mockReturnValue({
       text: ['ja text 2', 'en text 2'],
     });
     rerender({});
 
-    // JAがエラーになってもENへ進む
+    // JAがエラー、ENが正常完了してもpendingへ進む
     act(() => {
       (mockSpeak.mock.calls[0][1] as SpeechOptions).onError?.(
         new Error('speech failed')
       );
-    });
-    expect(mockSpeak).toHaveBeenNthCalledWith(
-      2,
-      'en text',
-      expect.objectContaining({ language: 'en-US' })
-    );
-
-    // ENが完了するとpendingへ進む
-    act(() => {
       (mockSpeak.mock.calls[1][1] as SpeechOptions).onDone?.();
     });
     await flushAsync();

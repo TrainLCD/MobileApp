@@ -301,39 +301,37 @@ export const useTTS = (): void => {
           suppressPostFirstSpeechRef.current = true;
         }
 
-        // JA→EN を逐次読み上げる。Android の TextToSpeech は言語・音声設定が
-        // エンジン単位の状態のため、複数言語を一括でキューへ積むと後から設定した
-        // 言語・音声で先の発話まで合成されてしまう。前の発話の完了（またはエラー）
-        // を待ってから次を speak することで、発話ごとの設定を確実に適用する。
-        // タイムアウトや新規発話で世代が進んでいたら、古いコールバックは無視する
-        const speakNext = (index: number) => {
+        // JA→EN を一括で OS の読み上げキューへ積む。Android の TextToSpeech は
+        // speak() 呼び出し時点の言語・音声設定を発話リクエストごとにスナップ
+        // ショットする（setVoice / setLanguage は mParams に保存され speak() が
+        // 要求ごとに複製する）ため、発話ごとに異なる音声を安全に指定できる。
+        // iOS の AVSpeechUtterance も発話単位で音声を保持する。一括で積むことで
+        // エンジンが前の発話の再生中に次の合成を先行でき、発話間の無音
+        // （合成待ちのラグ）を最小化する。完了・エラー・停止のいずれかが全発話
+        // 分そろった時点でパイプラインを解放する。タイムアウトや新規発話で
+        // 世代が進んでいたら、古いコールバックは無視する
+        let remaining = utterances.length;
+        const settle = () => {
           if (isStaleRun()) {
             return;
           }
-          const utterance = utterances[index];
-          if (!utterance) {
+          remaining -= 1;
+          if (remaining <= 0) {
             finishPlaying();
-            return;
           }
+        };
+        for (const utterance of utterances) {
           Speech.speak(utterance.text, {
             language: utterance.language,
             ...(utterance.voice ? { voice: utterance.voice } : {}),
-            onDone: () => speakNext(index + 1),
-            onStopped: () => {
-              // Speech.stop() による停止。ウォッチドッグ・アンマウント経由なら
-              // 世代が進んでいて冒頭のガードで無視される。それ以外の外部要因の
-              // 停止では次の発話へ進めず、パイプラインの解放だけ行う
-              if (!isStaleRun()) {
-                finishPlaying();
-              }
-            },
+            onDone: settle,
+            onStopped: settle,
             onError: (error) => {
               console.warn('[useTTS] speech error:', error);
-              speakNext(index + 1);
+              settle();
             },
           });
-        };
-        speakNext(0);
+        }
       })();
     },
     [
