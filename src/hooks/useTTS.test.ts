@@ -733,7 +733,10 @@ describe('useTTS', () => {
 
     // 発話開始直後（ダッキング有効中）に設定変更でbackgroundEnabledが変わる
     expect(mockSetAudioModeAsync).toHaveBeenLastCalledWith(
-      expect.objectContaining({ interruptionMode: 'duckOthers' })
+      expect.objectContaining({
+        interruptionMode: 'duckOthers',
+        interruptionModeAndroid: 'duckOthers',
+      })
     );
 
     mockSetAudioModeAsync.mockClear();
@@ -746,9 +749,12 @@ describe('useTTS', () => {
     await flushAsync();
 
     // backgroundEnabled変更の再設定でダッキングがmixWithOthersへ巻き戻らない
+    // （Android側のinterruptionModeAndroidのみ戻る退行も検知できるよう
+    // 両方のプロパティを検証する）
     expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         interruptionMode: 'duckOthers',
+        interruptionModeAndroid: 'duckOthers',
         shouldPlayInBackground: true,
       })
     );
