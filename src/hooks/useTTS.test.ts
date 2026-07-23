@@ -10,11 +10,14 @@ jest.mock('~/utils/isDevApp', () => ({
 
 const mockSpeak = jest.fn();
 const mockSpeechStop = jest.fn();
+const mockGetAvailableVoicesAsync = jest.fn(async (): Promise<unknown[]> => []);
 
 jest.mock('expo-speech', () => ({
   speak: (...args: unknown[]) => mockSpeak(...args),
   stop: (...args: unknown[]) => mockSpeechStop(...args),
+  getAvailableVoicesAsync: () => mockGetAvailableVoicesAsync(),
   maxSpeechInputLength: 4000,
+  VoiceQuality: { Default: 'Default', Enhanced: 'Enhanced' },
 }));
 
 const mockSetAudioModeAsync = jest.fn();
@@ -75,6 +78,7 @@ describe('useTTS', () => {
     jest.useFakeTimers();
     jest.clearAllMocks();
     settledSpeakCallCount = 0;
+    mockGetAvailableVoicesAsync.mockResolvedValue([]);
     // テスト間で useTTSText の mock を復元
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
@@ -352,6 +356,77 @@ describe('useTTS', () => {
     // （useEffectだと遅延してfalseが先に渡され通常TTSが再生されるデグレが起きる）
     const firstCallAfterReset = useTTSText.mock.calls[0];
     expect(firstCallAfterReset[0]).toBe(true);
+  });
+
+  it('端末に高品質音声があれば読み上げ時に明示指定する', async () => {
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+
+    mockGetAvailableVoicesAsync.mockResolvedValue([
+      {
+        identifier: 'com.apple.voice.premium.ja-JP.Kyoko',
+        name: 'Kyoko',
+        quality: 'Default',
+        language: 'ja-JP',
+      },
+      {
+        identifier: 'com.apple.voice.enhanced.en-US.Ava',
+        name: 'Ava',
+        quality: 'Enhanced',
+        language: 'en-US',
+      },
+    ]);
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    const { rerender } = renderHook(() => useTTS(), {
+      wrapper: createWrapper(store),
+    });
+
+    // 音声一覧の取得完了を待つ
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    // 現在の発話を完了させ、次のテキストで音声指定付きの発話を確認する
+    useTTSText.mockReturnValue({
+      text: ['ja text 2', 'en text 2'],
+    });
+    act(() => {
+      finishAllUtterances();
+    });
+    rerender({});
+
+    await waitFor(() => {
+      expect(mockSpeak).toHaveBeenCalledWith(
+        'ja text 2',
+        expect.objectContaining({
+          language: 'ja-JP',
+          voice: 'com.apple.voice.premium.ja-JP.Kyoko',
+        })
+      );
+    });
+    expect(mockSpeak).toHaveBeenCalledWith(
+      'en text 2',
+      expect.objectContaining({
+        language: 'en-US',
+        voice: 'com.apple.voice.enhanced.en-US.Ava',
+      })
+    );
+  });
+
+  it('高品質音声が無い場合はvoice未指定でシステム既定に任せる', () => {
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    for (const call of mockSpeak.mock.calls) {
+      expect(call[1]).not.toHaveProperty('voice');
+    }
   });
 
   it('アンマウント時に読み上げを停止する', () => {

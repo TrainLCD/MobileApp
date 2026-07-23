@@ -6,6 +6,7 @@ import { TransportType } from '~/@types/graphql';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
+import { selectBestVoiceIdentifier } from '../utils/nativeTtsVoice';
 import { ssmlToPlainText } from '../utils/ssmlToPlainText';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
@@ -73,6 +74,36 @@ export const useTTS = (): void => {
   const shouldSpeakEnglish = ttsEnabledLanguages.includes('EN');
 
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 言語ごとに端末の最高品質音声（premium / enhanced）を明示指定するための識別子。
+  // 見つからない場合は undefined のままシステム既定音声に任せる。
+  const jaVoiceIdRef = useRef<string | undefined>(undefined);
+  const enVoiceIdRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const voices = await Speech.getAvailableVoicesAsync();
+        if (cancelled) {
+          return;
+        }
+        jaVoiceIdRef.current = selectBestVoiceIdentifier(
+          voices,
+          JA_SPEECH_LANGUAGE
+        );
+        enVoiceIdRef.current = selectBestVoiceIdentifier(
+          voices,
+          EN_SPEECH_LANGUAGE
+        );
+      } catch (e) {
+        console.warn('[useTTS] getAvailableVoicesAsync failed:', e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // OS ネイティブ TTS は expo-audio のプレイヤーを使わないが、iOS の
   // AVSpeechSynthesizer はアプリの音声セッションを共有するため、
@@ -153,9 +184,26 @@ export const useTTS = (): void => {
         : '';
 
       const utterances = [
-        plainJa ? { text: plainJa, language: JA_SPEECH_LANGUAGE } : null,
-        plainEn ? { text: plainEn, language: EN_SPEECH_LANGUAGE } : null,
-      ].filter((u): u is { text: string; language: string } => u !== null);
+        plainJa
+          ? {
+              text: plainJa,
+              language: JA_SPEECH_LANGUAGE,
+              voice: jaVoiceIdRef.current,
+            }
+          : null,
+        plainEn
+          ? {
+              text: plainEn,
+              language: EN_SPEECH_LANGUAGE,
+              voice: enVoiceIdRef.current,
+            }
+          : null,
+      ].filter(
+        (
+          u
+        ): u is { text: string; language: string; voice: string | undefined } =>
+          u !== null
+      );
 
       if (!utterances.length) {
         finishPlaying();
@@ -189,6 +237,7 @@ export const useTTS = (): void => {
       for (const utterance of utterances) {
         Speech.speak(utterance.text, {
           language: utterance.language,
+          ...(utterance.voice ? { voice: utterance.voice } : {}),
           onDone: settle,
           onStopped: settle,
           onError: (error) => {

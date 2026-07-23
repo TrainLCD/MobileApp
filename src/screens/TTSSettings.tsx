@@ -5,6 +5,7 @@ import {
   Alert,
   type GestureResponderEvent,
   Linking,
+  Platform,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -145,6 +146,19 @@ const ListFooter = ({
       }}
     >
       {translate('requireJapaneseOrEnglish')}
+    </Typography>
+    <Typography
+      style={{
+        marginTop: 8,
+        textAlign: 'center',
+        color: '#8B8B8B',
+      }}
+    >
+      {translate(
+        Platform.OS === 'ios'
+          ? 'ttsVoiceQualityNoticeIOS'
+          : 'ttsVoiceQualityNoticeAndroid'
+      )}
     </Typography>
     {!ttsFeatureEnabled ? (
       <>
