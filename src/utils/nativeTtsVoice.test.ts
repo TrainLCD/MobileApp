@@ -100,11 +100,13 @@ describe('selectBestVoiceIdentifier', () => {
     ).toBe('ja-jp-x-htm-enhanced');
   });
 
-  it('allowDefaultQuality指定時もネットワーク必須音声は除外する', () => {
+  it('ネットワーク必須音声しか無い場合は最後の手段として選ぶ', () => {
+    // 音声未指定のまま進めると Android では言語フォールバック不備で端末既定
+    // 言語の合成になるため、ネットワーク音声でも明示指定する方がマシ
     const voices = [voice('ja-jp-x-jab-network', 'ja-JP')];
     expect(
       selectBestVoiceIdentifier(voices, 'ja-JP', { allowDefaultQuality: true })
-    ).toBeUndefined();
+    ).toBe('ja-jp-x-jab-network');
   });
 
   it('別言語の音声は選ばない', () => {
@@ -128,13 +130,40 @@ describe('selectBestVoiceIdentifier', () => {
     );
   });
 
-  it('ネットワーク必須音声(Android)は除外する', () => {
+  it('ローカル音声をネットワーク必須音声より優先する(Android)', () => {
     const voices = [
       voice('ja-jp-x-jab-network', 'ja-JP', VoiceQuality.Enhanced),
       voice('ja-jp-x-htm-local', 'ja-JP', VoiceQuality.Enhanced),
     ];
     expect(selectBestVoiceIdentifier(voices, 'ja-JP')).toBe(
       'ja-jp-x-htm-local'
+    );
+  });
+
+  it('地域一致が無い場合は同一言語の別地域へフォールバックする', () => {
+    // en-US の音声データが無い端末でも en-GB 等があれば英語で読み上げる。
+    // 音声未指定のまま進めると Android では端末既定言語(日本語)で合成されてしまう
+    const voices = [
+      voice('en-gb-x-gba-local', 'en-GB', VoiceQuality.Enhanced),
+      voice('ja-jp-x-htm-local', 'ja-JP', VoiceQuality.Enhanced),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'en-US')).toBe(
+      'en-gb-x-gba-local'
+    );
+  });
+
+  it('品質より地域一致を優先する', () => {
+    const voices = [
+      voice('en-gb-x-gba-local', 'en-GB', VoiceQuality.Enhanced),
+      voice(
+        'en-us-x-iob-local',
+        'en-US',
+        VoiceQuality.Enhanced,
+        'en-us-enhanced'
+      ),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'en-US')).toBe(
+      'en-us-x-iob-local'
     );
   });
 

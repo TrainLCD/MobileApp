@@ -554,6 +554,65 @@ describe('useTTS', () => {
     );
   });
 
+  it('[Android] 対象言語の音声が端末に無い場合はその言語の発話をスキップする', async () => {
+    setPlatformOS('android');
+
+    // 日本語音声しか無い端末を再現。英語を voice 未指定で speak すると
+    // expo-speech の言語フォールバック不備で日本語音声により合成されるため、
+    // 英語の発話自体をスキップする
+    mockGetAvailableVoicesAsync.mockResolvedValue([
+      {
+        identifier: 'ja-jp-x-htm-local',
+        name: 'ja-jp-x-htm-local',
+        quality: 'Default',
+        language: 'ja-JP',
+      },
+    ]);
+
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    const { rerender } = renderHook(() => useTTS(), {
+      wrapper: createWrapper(store),
+    });
+
+    // 音声一覧の取得完了を待つ
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    act(() => {
+      finishAllUtterances();
+    });
+    useTTSText.mockReturnValue({
+      text: ['ja text 2', 'en text 2'],
+    });
+    rerender({});
+
+    await waitFor(() => {
+      expect(mockSpeak).toHaveBeenCalledWith(
+        'ja text 2',
+        expect.objectContaining({ language: 'ja', voice: 'ja-jp-x-htm-local' })
+      );
+    });
+
+    // 日本語の発話を完了させても英語の発話は始まらない
+    act(() => {
+      finishAllUtterances();
+    });
+    expect(mockSpeak.mock.calls.some(([text]) => text === 'en text 2')).toBe(
+      false
+    );
+
+    warnSpy.mockRestore();
+  });
+
   it('アンマウント時に読み上げを停止する', () => {
     const store = createStore();
     store.set(speechState, defaultSpeechState);

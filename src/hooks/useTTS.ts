@@ -88,6 +88,11 @@ export const useTTS = (): void => {
   // 見つからない場合は undefined のままシステム既定音声に任せる。
   const jaVoiceIdRef = useRef<string | undefined>(undefined);
   const enVoiceIdRef = useRef<string | undefined>(undefined);
+  // Android で音声一覧の取得に成功した（=言語ごとの音声有無を判定できる）か。
+  // expo-speech の Android 実装は対象言語の音声データが端末に無いと setLanguage
+  // が LANG_MISSING_DATA となり端末既定言語にフォールバックするため、音声が
+  // 見つからなかった言語の発話はスキップする判断に使う。
+  const androidVoicesLoadedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,6 +115,19 @@ export const useTTS = (): void => {
           EN_SPEECH_LANGUAGE,
           options
         );
+        if (Platform.OS === 'android' && voices.length > 0) {
+          androidVoicesLoadedRef.current = true;
+          if (!jaVoiceIdRef.current) {
+            console.warn(
+              '[useTTS] No Japanese voice found on this device; Japanese announcements will be skipped'
+            );
+          }
+          if (!enVoiceIdRef.current) {
+            console.warn(
+              '[useTTS] No English voice found on this device; English announcements will be skipped'
+            );
+          }
+        }
       } catch (e) {
         console.warn('[useTTS] getAvailableVoicesAsync failed:', e);
       }
@@ -187,15 +205,29 @@ export const useTTS = (): void => {
         return;
       }
 
+      // Android で端末に対象言語の音声が1つも無い場合、expo-speech の setLanguage
+      // が LANG_MISSING_DATA で端末既定言語にフォールバックし、英語文が日本語
+      // 音声で合成されてしまう。誤った言語の音声で読み上げるより、その言語の
+      // 発話をスキップする方がマシなため発話対象から外す。
+      const voicesKnown = androidVoicesLoadedRef.current;
+      const canSpeakJa = !voicesKnown || Boolean(jaVoiceIdRef.current);
+      const canSpeakEn = !voicesKnown || Boolean(enVoiceIdRef.current);
+
       // テンプレートが生成する SSML 断片を OS ネイティブ TTS 用の
       // プレーンテキストへ変換する。英語はテンプレ側に区切りのカンマが
       // 既に含まれるため <break/> は空白へ置き換える。
-      const plainJa = shouldSpeakJapanese
-        ? truncateToSpeechLimit(ssmlToPlainText(ja, { breakReplacement: '、' }))
-        : '';
-      const plainEn = shouldSpeakEnglish
-        ? truncateToSpeechLimit(ssmlToPlainText(en, { breakReplacement: ' ' }))
-        : '';
+      const plainJa =
+        shouldSpeakJapanese && canSpeakJa
+          ? truncateToSpeechLimit(
+              ssmlToPlainText(ja, { breakReplacement: '、' })
+            )
+          : '';
+      const plainEn =
+        shouldSpeakEnglish && canSpeakEn
+          ? truncateToSpeechLimit(
+              ssmlToPlainText(en, { breakReplacement: ' ' })
+            )
+          : '';
 
       const utterances = [
         plainJa
