@@ -27,6 +27,10 @@ const PLAYBACK_TIMEOUT_MS = 300_000;
 const JA_SPEECH_LANGUAGE = 'ja-JP';
 const EN_SPEECH_LANGUAGE = 'en-US';
 
+// expo-speech は volume 未指定時の既定値が機種・OSバージョンにより最大音量
+// より低くなることがあるため、常に最大値を明示指定して音量が下がる余地を無くす。
+const MAX_SPEECH_VOLUME = 1.0;
+
 // 発話開始前に音声選択（getAvailableVoicesAsync）の完了を待つ上限（ミリ秒）。
 // Android の TTS エンジン初期化がハングした場合でも、この時間を超えたら
 // 音声未指定のまま発話へ進み、アナウンス全体が止まらないようにする。
@@ -377,6 +381,7 @@ export const useTTS = (): void => {
         for (const utterance of utterances) {
           Speech.speak(utterance.text, {
             language: utterance.language,
+            volume: MAX_SPEECH_VOLUME,
             ...(utterance.voice ? { voice: utterance.voice } : {}),
             onDone: settle,
             onStopped: settle,
