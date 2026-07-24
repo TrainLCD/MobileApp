@@ -646,4 +646,138 @@ describe('useTTS', () => {
 
     expect(mockSpeechStop).toHaveBeenCalled();
   });
+
+  it('発話開始直前にダッキングを有効化し、全発話完了後に解除する', async () => {
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    // マウント時点では非ダッキング（mixWithOthers）が既定
+    expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'mixWithOthers' })
+    );
+
+    // 発話開始直前にダッキングが有効化される
+    expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'duckOthers' })
+    );
+
+    // duckOthers の呼び出し有無だけでなく、Speech.speak より前に呼ばれる
+    // ことも検証する（speak の後にダッキングする退行を検知するため）
+    const duckCallOrder = mockSetAudioModeAsync.mock.calls
+      .map((call, index) =>
+        (call[0] as { interruptionMode: string }).interruptionMode ===
+        'duckOthers'
+          ? mockSetAudioModeAsync.mock.invocationCallOrder[index]
+          : null
+      )
+      .filter((order): order is number => order !== null)[0];
+    const firstSpeakCallOrder = mockSpeak.mock.invocationCallOrder[0];
+    expect(duckCallOrder).toBeLessThan(firstSpeakCallOrder);
+
+    mockSetAudioModeAsync.mockClear();
+
+    // 保留中の発話が無い状態で全発話を完了させると、ダッキングが解除される
+    act(() => {
+      finishAllUtterances();
+    });
+    await flushAsync();
+
+    expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'mixWithOthers' })
+    );
+  });
+
+  it('保留中の発話がある場合はダッキングを解除せず継続する', async () => {
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    const { rerender } = renderHook(() => useTTS(), {
+      wrapper: createWrapper(store),
+    });
+    await flushAsync();
+
+    useTTSText.mockReturnValue({
+      text: ['ja text 2', 'en text 2'],
+    });
+    rerender({});
+
+    mockSetAudioModeAsync.mockClear();
+
+    // 保留中の次の発話があるため、完了直後はダッキングを解除しない
+    act(() => {
+      finishAllUtterances();
+    });
+    await flushAsync();
+
+    expect(mockSetAudioModeAsync).not.toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'mixWithOthers' })
+    );
+    expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'duckOthers' })
+    );
+  });
+
+  it('発話中にbackgroundEnabledが変化してもダッキングを維持する', async () => {
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    // 発話開始直後（ダッキング有効中）に設定変更でbackgroundEnabledが変わる
+    expect(mockSetAudioModeAsync).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        interruptionMode: 'duckOthers',
+        interruptionModeAndroid: 'duckOthers',
+      })
+    );
+
+    mockSetAudioModeAsync.mockClear();
+    act(() => {
+      store.set(speechState, {
+        ...defaultSpeechState,
+        backgroundEnabled: true,
+      });
+    });
+    await flushAsync();
+
+    // backgroundEnabled変更の再設定でダッキングがmixWithOthersへ巻き戻らない
+    // （Android側のinterruptionModeAndroidのみ戻る退行も検知できるよう
+    // 両方のプロパティを検証する）
+    expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interruptionMode: 'duckOthers',
+        interruptionModeAndroid: 'duckOthers',
+        shouldPlayInBackground: true,
+      })
+    );
+    expect(mockSetAudioModeAsync).not.toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'mixWithOthers' })
+    );
+  });
+
+  it('発話中にアンマウントされた場合もダッキングを解除する', async () => {
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    const { unmount } = renderHook(() => useTTS(), {
+      wrapper: createWrapper(store),
+    });
+    await flushAsync();
+
+    mockSetAudioModeAsync.mockClear();
+
+    unmount();
+
+    expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ interruptionMode: 'mixWithOthers' })
+    );
+  });
 });
