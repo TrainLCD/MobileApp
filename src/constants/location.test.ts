@@ -40,20 +40,32 @@ describe('測位オプション', () => {
     });
   });
 
-  it('省電力プロファイルは精度だけを下げ更新間隔は既定値と共通にする', () => {
-    const constants = loadConstants('ios');
+  // 省電力プロファイルは既定プロファイルをspreadしているため、OS分岐の値も
+  // そのまま継承する。iOSだけを検証すると変位ゲートのOS分岐の回帰を取りこぼす。
+  it.each([
+    ['iOS', 'ios', 10],
+    ['Android', 'android', 0],
+  ] as const)(
+    '%s の省電力プロファイルは精度だけを下げ更新間隔は既定値と共通にする',
+    (_label, os, expectedDistanceInterval) => {
+      const constants = loadConstants(os);
 
-    expect(constants.LOCATION_WATCH_OPTIONS_POWER_SAVING).toMatchObject({
-      accuracy: Location.Accuracy.Balanced,
-      distanceInterval: constants.LOCATION_DISTANCE_INTERVAL,
-      timeInterval: constants.LOCATION_TIME_INTERVAL,
-    });
-    expect(constants.LOCATION_TASK_OPTIONS_POWER_SAVING).toMatchObject({
-      accuracy: Location.Accuracy.Balanced,
-      distanceInterval: constants.LOCATION_DISTANCE_INTERVAL,
-      pausesUpdatesAutomatically: true,
-    });
-  });
+      expect(constants.LOCATION_DISTANCE_INTERVAL).toBe(
+        expectedDistanceInterval
+      );
+      expect(constants.LOCATION_WATCH_OPTIONS_POWER_SAVING).toMatchObject({
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: expectedDistanceInterval,
+        timeInterval: constants.LOCATION_TIME_INTERVAL,
+      });
+      expect(constants.LOCATION_TASK_OPTIONS_POWER_SAVING).toMatchObject({
+        accuracy: Location.Accuracy.Balanced,
+        distanceInterval: expectedDistanceInterval,
+        timeInterval: constants.LOCATION_TIME_INTERVAL,
+        pausesUpdatesAutomatically: true,
+      });
+    }
+  );
 
   it('バックグラウンドのバッチ配信は変位ではなく時間だけで区切る', () => {
     const constants = loadConstants('android');
