@@ -8,8 +8,8 @@ import { stationAtom, stationsAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useNextStation } from './useNextStation';
 
-// GPS更新(約5秒間隔)ごとに走る計算のため、複数のフックインスタンス間で
-// 結果(と距離計算)を共有できるようモジュールレベルでメモ化する。
+// GPS更新(Androidは約10秒間隔、iOSは移動距離基準)ごとに走る計算のため、
+// 複数のフックインスタンス間で結果(と距離計算)を共有できるようモジュールレベルでメモ化する。
 
 // 通過駅を除いた停車駅のうち座標が有効なものだけを接近判定の対象にする。
 // さらに直近で発車した(=到着済みの現在)駅を除外する。これを残すと、発車直後で
