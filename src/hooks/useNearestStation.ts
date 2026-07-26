@@ -7,8 +7,8 @@ import { stationsAtom } from '../store/atoms/station';
 import { useCurrentStation } from './useCurrentStation';
 import { useNextStation } from './useNextStation';
 
-// GPS更新(約5秒間隔)ごとに走る計算のため、複数のフックインスタンス間で
-// 結果を共有できるようモジュールレベルでメモ化する。
+// GPS更新(Androidは約10秒間隔、iOSは移動距離基準)ごとに走る計算のため、
+// 複数のフックインスタンス間で結果を共有できるようモジュールレベルでメモ化する。
 
 // 座標が有効な駅リスト(駅リスト変更時にだけ作り直す)
 const getValidStations = memoizeWeak((stations: Station[]): Station[] =>
