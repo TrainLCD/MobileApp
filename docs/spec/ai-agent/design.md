@@ -493,7 +493,7 @@ LangChain をエージェント実行基盤として使わない理由:
 | --- | --- | --- | --- |
 | チャット UI | 不採用 | react-native-gifted-chat 等 | 既存部品と適合しない |
 | サーバ通信 | 既存 | fetch（`workerApi` / `session` 流用） | 新規依存なし |
-| 状態管理 | 既存 | React `useReducer` | 新規ライブラリ・atom 不要 |
+| 状態管理 | 既存 | Jotai（共有）+ `useState`（画面内） | 新規 atom 不要 |
 | 多言語 | 既存 | i18n-js（既存機構） | 新規依存なし |
 
 チャット UI は `FlashList` + `CommonCard` + 既存モーダル・トーストの
@@ -540,10 +540,19 @@ LangChain をエージェント実行基盤として使わない理由:
 
 ### 状態管理
 
-会話履歴・入力中テキスト・ローディング状態はすべて画面ローカル
-（`useReducer`）で持つ。高頻度更新の共有状態ではないため Jotai atom は
-追加しない（`docs/state-management.md` の方針に適合）。画面を離れたら
-履歴は破棄してよい（PoC）。
+既存コードベースの使い分け（アプリ横断の共有状態は Jotai atom、
+画面内で完結する一時状態は `useState`）に従う。
+
+- 会話履歴・入力中テキスト・ローディング状態は、`RouteSearchScreen`
+  が検索結果 `searchResults` を `useState` で持つのと同じく画面ローカル
+  の `useState` で持つ。画面を離れたら履歴は破棄してよい（PoC）。
+- テーマ（`isLEDThemeAtom`）・現在駅（`stationAtom`）などの共有状態は
+  既存 atom を購読する。提案駅の確定時は共有フック経由で既存の
+  station / line / navigation 系 atom に書き込む
+  （「提案駅選択 → 既存フローへの接続」参照）。
+- 新規 atom は追加しない。会話履歴は他画面から参照されない一時状態
+  のため（`docs/state-management.md` の方針に適合）。将来、履歴の
+  永続化や画面間共有が必要になった時点で atom 化を検討する。
 
 ### API 呼び出し
 
