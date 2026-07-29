@@ -53,6 +53,7 @@ const Chip: React.FC<Props> = ({
   return (
     <TouchableOpacity
       activeOpacity={1}
+      accessibilityRole="button"
       onPress={onPress}
       style={[
         styles.chip,
