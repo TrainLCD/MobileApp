@@ -351,6 +351,7 @@
   "destinationAgentDisclaimer": "AIの提案は誤りを含む場合があります",
   "destinationAgentRateLimited": "本日の利用上限に達しました。また明日お試しください",
   "destinationAgentReset": "会話をリセット",
+  "destinationAgentResetShort": "リセット",
   "destinationAgentResetConfirm": "会話履歴を消去しますか？",
   "destinationAgentSuggestionsError": "候補の取得に失敗しました",
   "destinationAgentRetry": "再試行"

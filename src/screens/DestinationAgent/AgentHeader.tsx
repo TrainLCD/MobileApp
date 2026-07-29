@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     height: 56,
   },
-  // 左右を同じ flex にしてタイトルを画面中央に保つ(戻る44ptとリセット約100ptの幅差を吸収)
+  // 左右を同じ flex にしてタイトルを画面中央に保つ(戻る44ptとリセットボタンの幅差を吸収)
   side: {
     flex: 1,
     flexDirection: 'row',
@@ -82,8 +82,9 @@ export const AgentHeader = ({ showReset, onBack, onReset }: Props) => {
             accessibilityLabel={translate('destinationAgentReset')}
             onPress={onReset}
           >
+            {/* 表示は Figma に合わせて主語を省略した短縮ラベル。読み上げは省略前の文言を使う */}
             <Typography style={styles.resetText}>
-              {translate('destinationAgentReset')}
+              {translate('destinationAgentResetShort')}
             </Typography>
           </TouchableOpacity>
         ) : null}
