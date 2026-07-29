@@ -101,10 +101,13 @@ const styles = StyleSheet.create({
   sameSpeakerSpacing: {
     marginTop: -8,
   },
+  // バブル直下の提案カード群。バブルとの間隔・カード同士の間隔とも Figma 指定の 12
   suggestions: {
-    gap: 8,
+    marginTop: 12,
+    gap: 12,
   },
   suggestionsError: {
+    marginTop: 12,
     gap: 8,
     alignItems: 'flex-start',
   },
