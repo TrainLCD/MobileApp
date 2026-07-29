@@ -286,7 +286,7 @@ GPT 側の料金は改定が頻繁なため本書には記載せず、吟味時�
 
 ### ツール定義
 
-ツールは 1 本のみ。論理契約（名前・入力・出力）はプロバイダ非依存の
+ツールは 1 本のみ。プロトコル（名前・入力・出力）はプロバイダ非依存の
 JSON Schema として定義し、プロバイダ別アダプターで各形式に変換する。
 Anthropic では `input_schema` + `strict: true`、OpenAI では function
 calling の `parameters` + `strict: true` に同一スキーマを割り当てる
