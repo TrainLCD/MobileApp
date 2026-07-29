@@ -337,5 +337,20 @@
   "batterySettings": "Battery",
   "powerSavingLocationTitle": "Power-saving location mode",
   "powerSavingLocationDescription": "When enabled, location accuracy is lowered to a battery-friendly level and iOS pauses tracking automatically while you are stopped, further reducing battery drain and heat on long rides. The lower accuracy may delay or shift station detection and arrival announcements. The relaxed update frequency is already part of the default settings. It also turns on automatically while your device is in low-power mode.",
-  "passStationLabel": "Pass"
+  "passStationLabel": "Pass",
+  "destinationAgentEntryTitle": "Don't know the station name?",
+  "destinationAgentEntrySubtitle": "Ask AI where to go",
+  "destinationAgentTitle": "Ask AI for destinations",
+  "destinationAgentPlaceholder": "Type a message",
+  "destinationAgentSend": "Send",
+  "destinationAgentEmptyTitle": "Tell me what kind of place you want to visit",
+  "destinationAgentExample1": "I want a station with an ocean view",
+  "destinationAgentExample2": "Take me to a hot spring town",
+  "destinationAgentExample3": "How do I use this app?",
+  "destinationAgentDisclaimer": "AI suggestions may contain mistakes",
+  "destinationAgentRateLimited": "You've reached today's limit. Please try again tomorrow",
+  "destinationAgentReset": "Reset conversation",
+  "destinationAgentResetConfirm": "Clear this conversation?",
+  "destinationAgentSuggestionsError": "Failed to load suggestions",
+  "destinationAgentRetry": "Retry"
 }

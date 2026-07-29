@@ -19,6 +19,9 @@ export const REMOTE_CONFIG_KEYS = {
   // TTS(自動アナウンス)機能の有効/無効。false のとき設定画面のTTSトグルを無効化し、
   // 音声合成バックエンド障害時などにサーバー側から機能を止められるようにする。
   TTS_ENABLED: 'tts_enabled',
+  // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
+  // エントリポイントごと機能を止められるようにするキルスイッチ。
+  AI_AGENT_ENABLED: 'ai_agent_enabled',
 } as const;
 
 type RemoteConfigResponse = {
@@ -28,6 +31,7 @@ type RemoteConfigResponse = {
   eta_fallback_arrival_confirm_margin_sec?: number;
   eta_fallback_max_duration_min?: number;
   tts_enabled?: boolean;
+  ai_agent_enabled?: boolean;
 };
 
 // 精度超過時に到着判定を未到着へ強制する機能のフォールバック既定値。
@@ -44,6 +48,10 @@ const ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK = 30;
 // TTS機能のフォールバック既定値。キルスイッチ用途のため、未配信・取得失敗時は
 // 既存挙動（利用可能）を維持する true をフォールバックとする。
 const TTS_ENABLED_FALLBACK = true;
+
+// AIエージェント機能のフォールバック既定値。LLM 利用料が発生する機能のため、
+// 未配信・取得失敗時は安全側に倒して無効とする。
+const AI_AGENT_ENABLED_FALLBACK = false;
 
 // リモート設定の数値は「有限かつ正」のみ受理する(0・負値・非数はフォールバックへ倒す)。
 // 真偽値や配列は Number() で 1 や 5 に化けるため、number 型に限定してから検証する。
@@ -63,6 +71,7 @@ let cachedEtaAssistEnabled: boolean | null = null;
 let cachedEtaFallbackArrivalConfirmMarginSec: number | null = null;
 let cachedEtaFallbackMaxDurationMin: number | null = null;
 let cachedTTSEnabled: boolean | null = null;
+let cachedAIAgentEnabled: boolean | null = null;
 
 // setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
 // 更新されても React は再レンダーしない。UI(FxTTS・設定画面)が useSyncExternalStore
@@ -91,6 +100,7 @@ export const resetRemoteConfigCache = (): void => {
   cachedEtaFallbackArrivalConfirmMarginSec = null;
   cachedEtaFallbackMaxDurationMin = null;
   cachedTTSEnabled = null;
+  cachedAIAgentEnabled = null;
   notifyRemoteConfigListeners();
 };
 
@@ -129,6 +139,9 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   if (typeof data.tts_enabled === 'boolean') {
     cachedTTSEnabled = data.tts_enabled;
+  }
+  if (typeof data.ai_agent_enabled === 'boolean') {
+    cachedAIAgentEnabled = data.ai_agent_enabled;
   }
   notifyRemoteConfigListeners();
 };
@@ -193,4 +206,14 @@ export const isTTSFeatureEnabled = (): boolean => {
     return cachedTTSEnabled;
   }
   return TTS_ENABLED_FALLBACK;
+};
+
+// AIエージェント(行き先相談)機能の有効/無効を同期的に取得する。setupRemoteConfig 完了後は
+// 取得済みのリモート値を、未設定・取得失敗時はフォールバック(false=無効)を返す。
+// false のときはエントリポイント自体を描画しない(サーバー側キルスイッチ)。
+export const isAIAgentFeatureEnabled = (): boolean => {
+  if (cachedAIAgentEnabled != null) {
+    return cachedAIAgentEnabled;
+  }
+  return AI_AGENT_ENABLED_FALLBACK;
 };
