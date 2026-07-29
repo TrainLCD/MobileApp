@@ -546,10 +546,18 @@ LangChain をエージェント実行基盤として使わない理由:
 - 会話履歴・入力中テキスト・ローディング状態は、`RouteSearchScreen`
   が検索結果 `searchResults` を `useState` で持つのと同じく画面ローカル
   の `useState` で持つ。画面を離れたら履歴は破棄してよい（PoC）。
-- テーマ（`isLEDThemeAtom`）・現在駅（`stationAtom`）などの共有状態は
-  既存 atom を購読する。提案駅の確定時は共有フック経由で既存の
-  station / line / navigation 系 atom に書き込む
-  （「提案駅選択 → 既存フローへの接続」参照）。
+- 共有状態は既存 atom を使う。読み書きの内訳は次のとおり
+  （すべて `RouteSearchScreen` の行き先決定フローが現に使用している
+  atom で、詳細は「提案駅選択 → 既存フローへの接続」参照）。
+  - 購読: `isLEDThemeAtom`（テーマ分岐）、`stationAtom`（現在駅。
+    リクエストの `currentStationGroupId` に使用）
+  - 提案駅確定時に共有フック経由で書き込み: `pendingLineAtom`、
+    `pendingStationsAtom` / `pendingStationAtom`、
+    `fetchedTrainTypesAtom` / `pendingTrainTypeAtom`、
+    `wantedDestinationAtom`
+  - 方向確定時（`SelectBoundModal`）: `selectedLineAtom`・
+    `stationAtom`・`stationsAtom`・`selectedBoundAtom`・
+    `selectedDirectionAtom`・`trainTypeAtom` を一括確定（既存挙動）
 - 新規 atom は追加しない。会話履歴は他画面から参照されない一時状態
   のため（`docs/state-management.md` の方針に適合）。将来、履歴の
   永続化や画面間共有が必要になった時点で atom 化を検討する。
