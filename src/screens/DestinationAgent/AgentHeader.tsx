@@ -12,6 +12,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     height: 56,
   },
+  // 左右を同じ flex にしてタイトルを画面中央に保つ(戻る44ptとリセット約100ptの幅差を吸収)
+  side: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sideRight: {
+    justifyContent: 'flex-end',
+  },
   backButton: {
     width: 44,
     height: 44,
@@ -19,7 +28,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    flex: 1,
+    flexShrink: 1,
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -35,11 +44,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#008ffe',
   },
-  // リセット非表示時もタイトルが中央に留まるよう戻るボタンと同じ幅を確保する
-  resetPlaceholder: {
-    width: 44,
-    height: 44,
-  },
 });
 
 type Props = {
@@ -53,35 +57,37 @@ export const AgentHeader = ({ showReset, onBack, onReset }: Props) => {
 
   return (
     <View style={styles.root}>
-      <TouchableOpacity
-        style={styles.backButton}
-        accessibilityRole="button"
-        accessibilityLabel={translate('back')}
-        onPress={onBack}
-      >
-        <Ionicons
-          name="chevron-back"
-          size={28}
-          color={isLEDTheme ? '#fff' : '#333'}
-        />
-      </TouchableOpacity>
+      <View style={styles.side}>
+        <TouchableOpacity
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel={translate('back')}
+          onPress={onBack}
+        >
+          <Ionicons
+            name="chevron-back"
+            size={28}
+            color={isLEDTheme ? '#fff' : '#333'}
+          />
+        </TouchableOpacity>
+      </View>
       <Typography style={styles.title}>
         {translate('destinationAgentTitle')}
       </Typography>
-      {showReset ? (
-        <TouchableOpacity
-          style={styles.resetButton}
-          accessibilityRole="button"
-          accessibilityLabel={translate('destinationAgentReset')}
-          onPress={onReset}
-        >
-          <Typography style={styles.resetText}>
-            {translate('destinationAgentReset')}
-          </Typography>
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.resetPlaceholder} />
-      )}
+      <View style={[styles.side, styles.sideRight]}>
+        {showReset ? (
+          <TouchableOpacity
+            style={styles.resetButton}
+            accessibilityRole="button"
+            accessibilityLabel={translate('destinationAgentReset')}
+            onPress={onReset}
+          >
+            <Typography style={styles.resetText}>
+              {translate('destinationAgentReset')}
+            </Typography>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 };

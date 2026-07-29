@@ -1,21 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
 import { type RefObject, useMemo } from 'react';
-import {
-  Platform,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Typography from '~/components/Typography';
 import { FONTS } from '~/constants';
 import { AGENT_MAX_MESSAGE_LENGTH } from '~/hooks/useDestinationAgent';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
-// 入力が伸びても 4 行までに抑え、それ以上は内部スクロールさせる(fontSize 16 の 4 行分 + 上下padding)
-const MAX_INPUT_HEIGHT = 4 * 24 + 16;
+// 行高を明示しないと日本語フォールバックフォントの行高(約32pt)で1行時の高さが
+// 送信ボタン(48pt)を超え、ボタン上に白い隙間が出る。1行 = 24 + 12*2 = 48pt に固定する
+const INPUT_LINE_HEIGHT = 24;
+const INPUT_VERTICAL_PADDING = 12;
+// 入力が伸びても 4 行までに抑え、それ以上は内部スクロールさせる
+const MAX_INPUT_HEIGHT = 4 * INPUT_LINE_HEIGHT + INPUT_VERTICAL_PADDING * 2;
 // 残量が見えないと困る領域に入ってから出す(500 - 50)
 const COUNTER_VISIBLE_THRESHOLD = 450;
 
@@ -41,11 +39,12 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 16,
+    lineHeight: INPUT_LINE_HEIGHT,
     minHeight: 48,
     maxHeight: MAX_INPUT_HEIGHT,
     paddingLeft: 16,
     paddingRight: 8,
-    paddingVertical: Platform.OS === 'android' ? 8 : 14,
+    paddingVertical: INPUT_VERTICAL_PADDING,
     includeFontPadding: false,
   },
   button: {
