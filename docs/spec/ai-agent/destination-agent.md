@@ -1,4 +1,4 @@
-# AIエージェント（行き先相談）設計書
+# AIエージェント設計書
 
 - 対応 Issue: [#6474 [AI PoC] 設計](https://github.com/TrainLCD/MobileApp/issues/6474)
 - 親 Issue（要件定義）:
