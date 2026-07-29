@@ -8,6 +8,19 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 // 既存アクセント #008ffe は約 3.5:1 で AA を満たさないためバブル背景には使わない。
 const USER_BUBBLE_COLOR = '#0071CE';
 
+// AI 応答は Markdown の強調(**text**)を含むことがある。フル Markdown は
+// 解釈せず、太字だけをインライン装飾として描画する(閉じない ** は文字どおり残す)
+const BOLD_SEGMENT_REGEX = /\*\*([^*][\s\S]*?)\*\*/;
+
+export type BubbleSegment = { text: string; bold: boolean };
+
+export const parseBoldSegments = (content: string): BubbleSegment[] =>
+  content
+    .split(BOLD_SEGMENT_REGEX)
+    // split の捕捉グループにより奇数インデックスが太字部分になる
+    .map((text, index) => ({ text, bold: index % 2 === 1 }))
+    .filter((segment) => segment.text.length > 0);
+
 const styles = StyleSheet.create({
   root: {
     maxWidth: '80%',
@@ -46,6 +59,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
+  boldText: {
+    fontWeight: 'bold',
+  },
   userText: {
     color: '#fff',
   },
@@ -74,7 +90,23 @@ export const AgentMessageBubble = ({ role, content }: Props) => {
       <Typography
         style={[styles.text, (isUser || isLEDTheme) && styles.userText]}
       >
-        {content}
+        {parseBoldSegments(content).map((segment, index) =>
+          segment.bold ? (
+            <Typography
+              // 並び順以外に安定な識別子がない静的リスト
+              key={`bold-${index}-${segment.text}`}
+              style={[
+                styles.text,
+                styles.boldText,
+                (isUser || isLEDTheme) && styles.userText,
+              ]}
+            >
+              {segment.text}
+            </Typography>
+          ) : (
+            segment.text
+          )
+        )}
       </Typography>
     </View>
   );
