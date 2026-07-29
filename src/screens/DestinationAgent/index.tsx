@@ -257,14 +257,19 @@ const DestinationAgentScreen = () => {
       const nextEntries = [...entries, userEntry];
       setEntries(nextEntries);
 
-      const res = await sendMessages(
-        nextEntries
-          .filter((entry) => entry.includeInHistory)
-          .map((entry) => ({ role: entry.role, content: entry.content }))
-      );
-
-      sendingRef.current = false;
-      setSending(false);
+      // sendMessages は reject しない設計だが、万一の例外でも送信フラグが
+      // 立ったままにならないよう finally で解除する
+      let res: Awaited<ReturnType<typeof sendMessages>>;
+      try {
+        res = await sendMessages(
+          nextEntries
+            .filter((entry) => entry.includeInHistory)
+            .map((entry) => ({ role: entry.role, content: entry.content }))
+        );
+      } finally {
+        sendingRef.current = false;
+        setSending(false);
+      }
 
       // 応答待ちの間に会話がリセットされていたら結果を破棄する
       if (conversationGenRef.current !== conversationGen) {
