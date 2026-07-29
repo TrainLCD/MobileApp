@@ -56,6 +56,8 @@ BFF ルートワーカー（sapi-bff）の GraphQL `stationsByName` を呼んで
   返答の精度で吟味する（#6473 非機能要件。吟味方法は「モデル選定」参照）。
 - AI エージェントフレームワークは使用する価値があれば適宜使用する
   （#6473 非機能要件。検討は「エージェントフレームワーク」参照）。
+- LangChain / LangSmith を使用して作成したエージェントの妥当性を検証
+  する（#6473 非機能要件。方法は「テスト戦略」の妥当性検証の項参照）。
 - コスト管理: 会話履歴の上限、入出力トークン上限、事前ゲートによる謝絶、
   レート制限。
 - 不正利用対策: セッション JWT 必須、installId 単位のレート制限、
@@ -275,12 +277,15 @@ GPT 側の料金は改定が頻繁なため本書には記載せず、吟味時�
 
 吟味方法（PoC 内で実施）:
 
-1. 評価セットを用意する（曖昧な要望 20 件・存在しない駅 5 件・
-   使い方質問 5 件・無関係な話題 10 件程度）。
+1. 評価セットを用意し、LangSmith の Dataset として管理する
+   （曖昧な要望 20 件・存在しない駅 5 件・使い方質問 5 件・
+   無関係な話題 10 件程度）。
 2. プロンプトとツール定義をプロバイダ非依存に保ち、同一評価セットを
    Claude 候補 2 モデルと GPT 候補 2 モデル（上表）に流す。
 3. 提案の妥当性（人手評価）・実在性検証の通過率・謝絶精度・
    1 ターンあたり実測コスト・レイテンシで比較し、採用モデルを決める。
+   実行結果は LangSmith の Experiment として記録して比較する
+   （「テスト戦略」の妥当性検証の項参照）。
 4. モデル名は Worker の vars で切り替え可能にしておき、採用後も
    再評価・差し替えを容易にする。
 
@@ -435,7 +440,8 @@ few-shot（`CONFIG_KV` の `config:fewshot`）と同じパターンで、`CONFIG
 | LLM 抽象化 | 採用 | `ai`（Vercel AI SDK） | 前節のとおり |
 | プロバイダ | 採用 | `@ai-sdk/anthropic` / `@ai-sdk/openai` | 吟味に両対応 |
 | スキーマ検証 | 採用 | `zod` | ツール定義・構造化出力・入力検証を一元化 |
-| エージェント基盤 | 不採用 | LangChain / Mastra / LlamaIndex | 構成に対し過剰 |
+| エージェント基盤 | 不採用 | LangChain / Mastra / LlamaIndex | 実行基盤には過剰 |
+| 妥当性検証 | 採用 | LangSmith（`langsmith`） | トレース収集と評価実験の管理 |
 | 公式 LLM SDK | 保留 | `@anthropic-ai/sdk` / `openai` | AI SDK 不適時の代替 |
 | ルーティング | 不採用 | Hono / itty-router | 既存の素の fetch 分岐を踏襲 |
 | GraphQL | 不採用 | graphql-request 等 | Service Binding + fetch で十分 |
@@ -577,8 +583,10 @@ few-shot（`CONFIG_KV` の `config:fewshot`）と同じパターンで、`CONFIG
     契約オプションの適用可否を決定する。
   - 確認結果に基づき、プライバシーポリシーへの明記と追加のユーザ同意
     の要否を判断する。確認・適用の完了はオーナーが承認する。
-- シークレット: LLM API キーを wrangler secret として追加
-  （`.secrets.env.example` にも追記）。
+- 妥当性検証のトレース: LangSmith へのトレース送信（会話本文を含む）
+  は dev 環境のみで行い、本番では無効にする（「テスト戦略」参照）。
+- シークレット: LLM API キーと LangSmith API キーを wrangler secret
+  として追加（`.secrets.env.example` にも追記）。
 
 ## WANT: 自然言語経路検索（将来スケッチ）
 
@@ -614,6 +622,25 @@ sapi-bff には既に `routes` / `connectedRoutes` クエリ
 - アプリ側は既存の `src/utils/test/` ヘルパーを流用し、提案タップ →
   `SelectBoundModal` → Main 遷移までを QA する。
 
+### LangSmith によるエージェント妥当性検証
+
+親 Issue #6473 の非機能要件に従い、エージェントの応答品質は
+LangChain 社の LangSmith で検証する。エージェントの実行基盤には
+LangChain を使わず、検証プラットフォームとして LangSmith を使う
+役割分担とする（「技術選定」参照）。
+
+- トレーシング: Vercel AI SDK の呼び出しを LangSmith のトレース連携で
+  記録し、ツール呼び出し・トークン使用量・レイテンシをターン単位で
+  可視化する。トレース送信は dev 環境のみ有効化し、本番では無効にする
+  （会話本文が LangSmith へ送信されるため。
+  「セキュリティ・プライバシー」参照）。
+- 評価: モデル吟味の評価セットを LangSmith の Dataset として登録し、
+  モデル・プロンプトの組み合わせごとに Experiment を実行して
+  提案妥当性・謝絶精度・実在性検証の通過率を比較する。
+- 回帰検証: プロンプトやモデルを変更する際は同じ Dataset で
+  Experiment を再実行し、指標が劣化していないことを確認してから
+  反映する。
+
 ## 段階的リリース計画
 
 | フェーズ | 対象 | 内容 |
@@ -644,8 +671,8 @@ sapi-bff には既に `routes` / `connectedRoutes` クエリ
 | `functions/src/agent/tools.ts`（新規） | 駅検索ツール（sapi-bff 呼び出し） |
 | `functions/src/agent/validate.ts`（新規） | 提案駅突合・切り詰め（純関数） |
 | `functions/wrangler.jsonc` | ルート・Service Binding・vars 追加 |
-| `functions/package.json` | `ai`・`@ai-sdk/*`・`zod` 追加 |
-| `functions/.secrets.env.example` | LLM API キー追記 |
+| `functions/package.json` | `ai`・`@ai-sdk/*`・`zod`・`langsmith` 追加 |
+| `functions/.secrets.env.example` | LLM・LangSmith の API キー追記 |
 
 設定 KV には `config:remote` への `ai_agent_enabled` 追加と、
 `config:agent-faq` の新設を行う。
