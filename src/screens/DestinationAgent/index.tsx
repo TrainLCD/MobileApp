@@ -312,7 +312,8 @@ const DestinationAgentScreen = () => {
 
       // ネットワーク / 5xx / タイムアウト: 未応答のユーザ発話を履歴に残さない
       setEntries((prev) => prev.filter((entry) => entry.id !== userEntry.id));
-      setInputText(text);
+      // 送信待ちの間にユーザが入力し直していた場合はその内容を優先する
+      setInputText((prev) => (prev.length ? prev : text));
       showToast({
         type: 'error',
         text1: translate('errorTitle'),
