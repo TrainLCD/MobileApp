@@ -496,8 +496,9 @@ LangChain をエージェント実行基盤として使わない理由:
 | 状態管理 | 既存 | Jotai（共有）+ `useState`（画面内） | 新規 atom 不要 |
 | 多言語 | 既存 | i18n-js（既存機構） | 新規依存なし |
 
-チャット UI は `FlashList` + `CommonCard` + 既存モーダル・トーストの
-組み合わせで自前実装する（LED テーマ対応と見た目の統一のため）。
+チャット UI は既存コンポーネントを流用した自前実装とする（LED テーマ
+対応と見た目の統一のため）。具体的な画面構成・使用コンポーネントは
+UI 設計タスク #6477 で決定する。
 
 ## コスト試算
 
@@ -536,14 +537,12 @@ LangChain をエージェント実行基盤として使わない理由:
 - 新規画面 `src/screens/DestinationAgentScreen.tsx` を追加し、
   `src/stacks/MainStack.tsx` に `<Stack.Screen name="DestinationAgent" />`
   として登録する（既存画面の登録手順に従う）。
-- エントリポイントは `RouteSearchScreen` に置く「AI に相談」ボタン
-  （フィーチャーフラグで表示制御）。行き先を探す文脈に自然に接続する
-  ため。
-- UI 構成: メッセージリスト（`FlashList`、`RouteSearchScreen` と同様）+
-  入力バー + 送信ボタン。提案駅は既存 `CommonCard` を流用したタップ可能な
-  カードとしてアシスタントメッセージ内に描画する。ローディングは既存の
-  インジケータ、エラーは `GlobalToast` を使う。LED テーマ配色は
-  `NewReportModal` の実装に倣う。
+- エントリポイントの配置や画面レイアウト・コンポーネント構成などの
+  UI 設計は本書のスコープ外とし、別タスク
+  [#6477](https://github.com/TrainLCD/MobileApp/issues/6477) で行う。
+  本書はデータフロー・状態管理・API 接続のみを規定する。
+- エントリポイントがどこになる場合でも、表示はフィーチャーフラグで
+  制御する（「フィーチャーフラグとキルスイッチ」参照）。
 
 ### 状態管理
 
@@ -622,7 +621,7 @@ LangChain をエージェント実行基盤として使わない理由:
 | 429（レート制限） | 「本日の利用上限に達しました」を表示 |
 | `refused: true` | サーバの定型謝絶文をそのまま表示 |
 | ネットワーク/5xx | `GlobalToast` 表示 + 入力を復元し再送可能に |
-| フラグ off | エントリボタン自体を非表示 |
+| フラグ off | エントリポイント自体を非表示 |
 
 ## セキュリティ・プライバシー
 
@@ -748,7 +747,7 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 | `src/hooks/useDestinationAgent.ts`（新規） | `/agent/chat` 呼び出し |
 | `src/hooks/useDestinationSelection.ts`（新規） | 共有選択ロジック |
 | `src/hooks/useAIAgentFeatureEnabled.ts`（新規） | フラグフック |
-| `src/screens/RouteSearchScreen.tsx` | 共有フック化 + エントリボタン |
+| `src/screens/RouteSearchScreen.tsx` | 選択ロジックの共有フック化 |
 | `src/stacks/MainStack.tsx` | 画面登録 |
 | `src/lib/remoteConfig.ts` | `ai_agent_enabled` キー追加 |
 | `assets/translations/ja.json` / `en.json` | UI 文言追加 |
@@ -761,7 +760,5 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 2. **会話ログの保存方針**: 品質改善のためのサンプリング保存を行うか。
    行う場合はプライバシーポリシーへの明記が必要。
 3. **レート制限の初期値**: 30 ターン/日/人 で妥当か。
-4. **エントリポイントの位置**: `RouteSearchScreen` 内ボタン案で良いか
-   （`SelectLineScreen` 起点の案もあり得る）。
-5. **ストリーミング**: PoC 非対応の方針で良いか。体感が悪ければ
+4. **ストリーミング**: PoC 非対応の方針で良いか。体感が悪ければ
    `expo/fetch` + SSE を Phase 1 で検討。
