@@ -12,8 +12,8 @@ import { translate } from '~/translation';
 // 送信ボタン(48pt)を超え、ボタン上に白い隙間が出る。1行 = 24 + 12*2 = 48pt に固定する
 const INPUT_LINE_HEIGHT = 24;
 const INPUT_VERTICAL_PADDING = 12;
-// 入力が伸びても 4 行までに抑え、それ以上は内部スクロールさせる
-const MAX_INPUT_HEIGHT = 4 * INPUT_LINE_HEIGHT + INPUT_VERTICAL_PADDING * 2;
+// 入力バーは常に1行分(48pt)の固定高。溢れた分は内部スクロールさせる
+const INPUT_HEIGHT = INPUT_LINE_HEIGHT + INPUT_VERTICAL_PADDING * 2;
 // 残量が見えないと困る領域に入ってから出す(500 - 50)
 const COUNTER_VISIBLE_THRESHOLD = 450;
 
@@ -40,8 +40,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     lineHeight: INPUT_LINE_HEIGHT,
-    minHeight: 48,
-    maxHeight: MAX_INPUT_HEIGHT,
+    height: INPUT_HEIGHT,
     paddingLeft: 16,
     paddingRight: 8,
     paddingVertical: INPUT_VERTICAL_PADDING,
