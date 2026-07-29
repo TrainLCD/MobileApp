@@ -350,6 +350,7 @@
   "destinationAgentDisclaimer": "AI suggestions may contain mistakes",
   "destinationAgentRateLimited": "You've reached today's limit. Please try again tomorrow",
   "destinationAgentReset": "Reset conversation",
+  "destinationAgentResetShort": "Reset",
   "destinationAgentResetConfirm": "Clear this conversation?",
   "destinationAgentSuggestionsError": "Failed to load suggestions",
   "destinationAgentRetry": "Retry"
