@@ -90,7 +90,8 @@ flowchart TB
   end
 
   wai["Workers AI（既存バインディング）"]
-  llm["LLM API（対話本体）"]
+  gw["Cloudflare AI Gateway"]
+  llm["LLM API（対話本体: GPT / Claude）"]
 
   subgraph bff["sapi-bff（BFFルートワーカー）"]
     gql["GraphQL stationsByName"]
@@ -102,7 +103,8 @@ flowchart TB
   auth --> gate
   gate -. "軽量分類" .-> wai
   gate --> agent
-  agent -. "対話・tool use" .-> llm
+  agent -. "対話・tool use" .-> gw
+  gw -.-> llm
   agent -- "search_stations_by_name" --> gql
   gql --> sapi
   agent --> validate
@@ -115,6 +117,7 @@ flowchart TB
 | --- | --- | --- |
 | チャット画面 | MobileApp（新規） | 対話 UI・提案カード・既存フロー接続 |
 | エージェント API | trainlcd-worker | 認証・ゲート・LLM 呼び出し・検証 |
+| LLM 経路 | AI Gateway | ログ・コスト集計・レート制限・キャッシュ |
 | 駅名検索ツール | sapi-bff `/graphql` | `stationsByName` で実在性確認 |
 | フラグ配信 | `/config/remote` | `ai_agent_enabled` キルスイッチ |
 
@@ -205,7 +208,7 @@ sequenceDiagram
   participant App as MobileApp
   participant W as trainlcd-worker
   participant WAI as Workers AI
-  participant LLM as LLM API
+  participant LLM as LLM API（AI Gateway経由）
   participant S as sapi-bff
 
   App->>W: POST /agent/chat（messages, locale）
@@ -455,6 +458,7 @@ LangChain をエージェント実行基盤として使わない理由:
 | --- | --- | --- | --- |
 | LLM 抽象化 | 採用 | `ai`（Vercel AI SDK） | 前節のとおり |
 | プロバイダ | 採用 | `@ai-sdk/anthropic` / `@ai-sdk/openai` | 吟味に両対応 |
+| LLM 経路 | 採用 | Cloudflare AI Gateway | ログ・コスト・制限を CF に集約 |
 | スキーマ検証 | 採用 | `zod` | ツール定義・構造化出力・入力検証を一元化 |
 | エージェント基盤 | 不採用 | LangChain / Mastra / LlamaIndex | 実行基盤には過剰 |
 | 妥当性検証 | 採用 | LangSmith（`langsmith`） | トレース収集と評価実験の管理 |
@@ -464,6 +468,22 @@ LangChain をエージェント実行基盤として使わない理由:
 | レート制限 | 自前 | （KV カウンタ） | ライブラリ不要 |
 | 再試行・期限 | 自前 | p-retry 等は不使用 | `AbortController` + 1 回再試行のみ |
 | トピックゲート | 既存 | Workers AI（`env.AI`） | 追加依存なし・使用実績あり |
+
+補足:
+
+- Vercel AI SDK は Worker 内で動くライブラリであり、Vercel の
+  ホスティングには依存しない（名前は開発元に由来するだけで、
+  Cloudflare Workers 上で問題なく動作する）。
+- LLM API の呼び出しは Cloudflare AI Gateway を経由させる。
+  リクエストログ・コスト集計・キャッシュ・レート制限・プロバイダ
+  フォールバックを Cloudflare 側に集約でき、AI SDK からは接続先
+  URL を Gateway に向けるだけで済む。
+- Workers AI を対話本体に使わない理由: GPT / Claude は Workers AI
+  上では動かず、#6473 の非機能要件（GPT もしくは Claude）と両立
+  しない。また対話本体は「日本語対話 + ツール呼び出し + スキーマ
+  厳守」の複合タスクで、オープンウェイト小型モデルでは安定性が
+  要件に届かないリスクが高い。単純な 1 回分類であるトピックゲート
+  には引き続き Workers AI を使う（トリアージと同じ適材適所）。
 
 ### ライブラリ候補（アプリ: MobileApp）
 
@@ -601,6 +621,9 @@ LangChain をエージェント実行基盤として使わない理由:
     の要否を判断する。確認・適用の完了はオーナーが承認する。
 - 妥当性検証のトレース: LangSmith へのトレース送信（会話本文を含む）
   は dev 環境のみで行い、本番では無効にする（「テスト戦略」参照）。
+- AI Gateway のログ: 既定ではメタデータのみを記録し、プロンプト・
+  応答本文のログ保存は無効化する（有効化する場合は dev 環境に限定し、
+  会話ログの保存方針の判断に従う）。
 - シークレット: LLM API キーと LangSmith API キーを wrangler secret
   として追加（`.secrets.env.example` にも追記）。
 
@@ -686,7 +709,7 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 | `functions/src/agent/gate.ts`（新規） | Workers AI トピックゲート |
 | `functions/src/agent/tools.ts`（新規） | 駅検索ツール（sapi-bff 呼び出し） |
 | `functions/src/agent/validate.ts`（新規） | 提案駅突合・切り詰め（純関数） |
-| `functions/wrangler.jsonc` | ルート・Service Binding・vars 追加 |
+| `functions/wrangler.jsonc` | ルート・Service Binding・AI Gateway・vars |
 | `functions/package.json` | `ai`・`@ai-sdk/*`・`zod`・`langsmith` 追加 |
 | `functions/.secrets.env.example` | LLM・LangSmith の API キー追記 |
 
