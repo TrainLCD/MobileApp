@@ -66,10 +66,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
-    shadowOpacity: 0.25,
-    shadowColor: '#333',
-    shadowRadius: 1,
-    elevation: 5,
+    // 旧 shadow* の iOS 描画(グリフ影・既定オフセット (0, -3))を textShadow で踏襲
+    textShadowColor: 'rgba(51, 51, 51, 0.25)',
+    textShadowOffset: { width: 0, height: -3 },
+    textShadowRadius: 1,
     fontSize: isTablet ? 18 * 1.5 : 18,
   },
   textWrapper: {

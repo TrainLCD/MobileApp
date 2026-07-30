@@ -212,11 +212,7 @@ const styles = StyleSheet.create({
     maxHeight: '75%',
     overflow: 'hidden',
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
+    boxShadow: '0px 6px 24px rgba(0, 0, 0, 0.18)',
   },
 });
 

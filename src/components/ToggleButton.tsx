@@ -33,14 +33,7 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    elevation: 1,
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowRadius: 4,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
     borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 8,
@@ -51,14 +44,7 @@ const styles = StyleSheet.create({
   buttonLED: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    elevation: 1,
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowRadius: 4,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
     borderWidth: 1,
     borderColor: '#fff',
     justifyContent: 'space-between',
