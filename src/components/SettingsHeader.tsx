@@ -31,11 +31,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     overflow: 'hidden',
-    // iOS shadow
-    shadowColor: '#333',
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 8 },
   },
   nowHeaderContent: {
     paddingHorizontal: 24,

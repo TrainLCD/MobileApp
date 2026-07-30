@@ -16,13 +16,7 @@ const styles = StyleSheet.create({
   root: {
     flexDirection: 'row',
     height: 48,
-    // iOS shadow
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
-    // Android shadow fallback
-    elevation: 4,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
   textInput: {
     flex: 1,

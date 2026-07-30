@@ -29,13 +29,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 14,
     justifyContent: 'center',
-    // iOS shadow
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
-    // Android
-    elevation: 2,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
   title: {
     fontSize: RFValue(16),

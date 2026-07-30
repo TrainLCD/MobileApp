@@ -826,8 +826,8 @@ export const SelectBoundModal: React.FC<Props> = ({
           isTablet && {
             width: '80%',
             maxHeight: '90%',
-            shadowOpacity: 0.25,
-            shadowColor: '#333',
+            // CustomModal 既定の影のオフセット・ぼかしはそのまま、色だけ変える
+            boxShadow: '0px 6px 24px rgba(51, 51, 51, 0.25)',
             borderRadius: isLEDTheme ? 0 : 16,
           },
         ]}
