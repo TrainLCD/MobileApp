@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-native';
 import { fetch } from 'expo/fetch';
+import { getSessionToken } from '~/lib/session';
 import {
   AGENT_MAX_MESSAGES,
   AGENT_REQUEST_TIMEOUT_MS,
@@ -21,6 +22,7 @@ jest.mock('~/lib/session', () => ({
 }));
 
 const fetchMock = fetch as unknown as jest.Mock;
+const getSessionTokenMock = getSessionToken as jest.Mock;
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -106,6 +108,23 @@ describe('trimAgentMessages', () => {
 });
 
 describe('useDestinationAgent', () => {
+  it('マウント時にセッショントークンを先読みする', () => {
+    renderHook(() => useDestinationAgent());
+
+    // 送信の直列経路から /auth/token の往復を外すための先読み。
+    // この時点ではチャット API は呼ばない
+    expect(getSessionTokenMock).toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('先読みが失敗しても例外を投げない', async () => {
+    getSessionTokenMock.mockRejectedValueOnce(new Error('network'));
+
+    expect(() => renderHook(() => useDestinationAgent())).not.toThrow();
+    // 未処理の rejection にならないことを確認するためマイクロタスクを流す
+    await Promise.resolve();
+  });
+
   it('done イベントを reply / suggestions / refused に詰めて返す', async () => {
     mockStreamResponse([
       doneEvent({
