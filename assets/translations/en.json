@@ -348,6 +348,7 @@
   "destinationAgentExample2": "Take me to a hot spring town",
   "destinationAgentExample3": "How do I use this app?",
   "destinationAgentDisclaimer": "AI suggestions may contain mistakes",
+  "destinationAgentSearching": "Searching for stations…",
   "destinationAgentRateLimited": "You've reached today's limit. Please try again tomorrow",
   "destinationAgentReset": "Reset conversation",
   "destinationAgentResetShort": "Reset",

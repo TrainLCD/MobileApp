@@ -1,6 +1,6 @@
 import { fetch } from 'expo/fetch';
 import { useAtomValue } from 'jotai';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { getSessionToken } from '~/lib/session';
 import { workerUrl } from '~/lib/workerApi';
 import { stationAtom } from '~/store/atoms/station';
@@ -148,6 +148,16 @@ export const useDestinationAgent = (): {
 } => {
   const station = useAtomValue(stationAtom);
   const currentStationGroupId = station?.groupId ?? undefined;
+
+  // セッショントークンを画面マウント時に先読みしておく。アプリ起動後の初回送信では
+  // /auth/token の往復が送信の直列経路に入り、ストリーミング開始までの体感遅延に
+  // 直結するため、ユーザが入力している間に取得を済ませてキャッシュに載せる。
+  // getSessionToken はメモリキャッシュ付きで冪等・アラート等の可視副作用も無いため、
+  // StrictMode による effect の再実行があっても安全(CLAUDE.md の StrictMode 規約)。
+  // 失敗しても握りつぶす(送信時に再度取得され、そこでエラー処理される)。
+  useEffect(() => {
+    void getSessionToken().catch(() => undefined);
+  }, []);
 
   const sendMessages = useCallback(
     async (

@@ -349,6 +349,7 @@
   "destinationAgentExample2": "温泉のある観光地に行きたい",
   "destinationAgentExample3": "このアプリの使い方を知りたい",
   "destinationAgentDisclaimer": "AIの提案は誤りを含む場合があります",
+  "destinationAgentSearching": "駅を検索しています…",
   "destinationAgentRateLimited": "本日の利用上限に達しました。また明日お試しください",
   "destinationAgentReset": "会話をリセット",
   "destinationAgentResetShort": "リセット",

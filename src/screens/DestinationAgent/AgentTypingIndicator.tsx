@@ -10,6 +10,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import Typography from '~/components/Typography';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 // 3 点ドットの位相ずらし(ms)。件数固定なのでキーにも使う
@@ -42,6 +43,17 @@ const styles = StyleSheet.create({
   dot: {
     width: 8,
     height: 8,
+  },
+  label: {
+    fontSize: 14,
+    // ドット群と文言が詰まって見えないよう、root の gap 6 に少し足す
+    marginLeft: 2,
+  },
+  labelColor: {
+    color: '#737373',
+  },
+  labelLEDColor: {
+    color: '#ccc',
   },
 });
 
@@ -94,7 +106,8 @@ const Dot = ({ delay, isLEDTheme }: { delay: number; isLEDTheme: boolean }) => {
 };
 
 // 送信中に表示するタイピングインジケータ。アシスタントバブルと同じ器に 3 点ドットを出す。
-export const AgentTypingIndicator = () => {
+// label を渡すとドットの右に補助文言(ツール実行中の「駅を検索しています…」等)を並べる。
+export const AgentTypingIndicator = ({ label }: { label?: string }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
@@ -106,6 +119,16 @@ export const AgentTypingIndicator = () => {
           isLEDTheme={isLEDTheme}
         />
       ))}
+      {label ? (
+        <Typography
+          style={[
+            styles.label,
+            isLEDTheme ? styles.labelLEDColor : styles.labelColor,
+          ]}
+        >
+          {label}
+        </Typography>
+      ) : null}
     </View>
   );
 };

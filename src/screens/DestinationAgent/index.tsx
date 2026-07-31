@@ -153,6 +153,9 @@ const DestinationAgentScreen = () => {
   const [entries, setEntries] = useState<ChatEntry[]>([]);
   const [inputText, setInputText] = useState('');
   const [sending, setSending] = useState(false);
+  // tool イベント受信中(駅検索の tool use ループ中)であることを示すフラグ。
+  // 最初の delta が届くか応答が確定した時点で降ろす
+  const [searching, setSearching] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
   const [suggestionStates, setSuggestionStates] = useState<
     Record<string, SuggestionState>
@@ -258,8 +261,11 @@ const DestinationAgentScreen = () => {
 
       sendingRef.current = true;
       setSending(true);
+      setSearching(false);
       setInputText('');
       const conversationGen = conversationGenRef.current;
+      // 検索中文言の読み上げは 1 送信につき 1 回だけ(tool イベントは複数回届きうる)
+      let searchingAnnounced = false;
 
       const userEntry: ChatEntry = {
         id: createEntryId(),
@@ -295,6 +301,8 @@ const DestinationAgentScreen = () => {
               if (isStale()) {
                 return;
               }
+              // 本文が流れ始めたら検索中表示を畳む(以降はバブルが伸びていく)
+              setSearching(false);
               setEntries((prev) =>
                 prev.map((entry) =>
                   entry.id === streamingEntry.id
@@ -303,13 +311,26 @@ const DestinationAgentScreen = () => {
                 )
               );
             },
-            // ツール実行中もタイピングインジケータのまま待たせる(専用文言は設けない)
-            onToolStart: () => undefined,
+            // 駅検索の tool use ループは数秒かかるため、その間は
+            // タイピングインジケータに検索中である旨を添える
+            onToolStart: () => {
+              if (isStale()) {
+                return;
+              }
+              setSearching(true);
+              if (!searchingAnnounced) {
+                searchingAnnounced = true;
+                AccessibilityInfo.announceForAccessibility(
+                  translate('destinationAgentSearching')
+                );
+              }
+            },
           }
         );
       } finally {
         sendingRef.current = false;
         setSending(false);
+        setSearching(false);
       }
 
       // 応答待ちの間に会話がリセットされていたら結果を破棄する
@@ -540,7 +561,13 @@ const DestinationAgentScreen = () => {
               )
             )
           )}
-          {sending && !streamingContent && <AgentTypingIndicator />}
+          {sending && !streamingContent && (
+            <AgentTypingIndicator
+              label={
+                searching ? translate('destinationAgentSearching') : undefined
+              }
+            />
+          )}
         </ScrollView>
 
         {isEmpty && (
