@@ -645,6 +645,8 @@ describe('useDestinationAgent (iOS / XHR ストリーミング)', () => {
 
   afterEach(() => {
     globalThis.XMLHttpRequest = originalXhr;
+    // アサーション失敗時もフェイクタイマーを後続テストへ漏らさない
+    jest.useRealTimers();
   });
 
   it('expo/fetch ではなく XHR でストリーミング用エンドポイントへ送る', async () => {
@@ -823,8 +825,6 @@ describe('useDestinationAgent (iOS / XHR ストリーミング)', () => {
     await expect(promise).resolves.toEqual({ ok: false, error: 'timeout' });
     expect(xhr.aborted).toBe(true);
     expect(fallbackFetchMock).not.toHaveBeenCalled();
-
-    jest.useRealTimers();
   });
 
   it('セッショントークンを取得できない場合は network を返す', async () => {

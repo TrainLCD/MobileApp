@@ -469,8 +469,8 @@ export const useDestinationAgent = (): {
       // ネットワーク系の失敗に限り、非ストリーミングへ 1 回だけフォールバックする。
       // 同一ターンを再送するのでサーバーのレート制限カウンタを 2 消費し得るが、
       // 応答をまったく返せないより望ましいと判断して許容する。
-      // フォールバック中は onDelta / onToolStart を呼ばない(画面は送信時の
-      // プレースホルダ表示のまま確定応答を待つ)。
+      // フォールバック中は onDelta / onToolStart を呼ばない(受信済み delta の
+      // 部分テキストは表示されたまま残り、確定応答で置き換わる)。
       return sendViaJson(body);
     },
     [currentStationGroupId]
