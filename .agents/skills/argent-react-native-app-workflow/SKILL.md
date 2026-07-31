@@ -52,14 +52,14 @@ npx react-native run-ios --simulator="<name>"        # iOS (or --udid <UDID>)
 npx react-native run-android --deviceId=<adb-serial> # Android
 ```
 
-**Android only**: after install, run `adb -s <serial> reverse tcp:<metro-port> tcp:<metro-port>` with the Metro port you detected in §2.1 (default 8081) so the emulator/device can reach Metro on your host. Repeat if the device restarts or adb drops.
+**Android only**: after install, run `adb -s <serial> reverse tcp:8081 tcp:8081` so the emulator/device can reach Metro on your host. Repeat if the device restarts or adb drops.
 
 **Agent checklist:**
 
 - [ ] Metro is already running and shows "ready"
 - [ ] Command run from project root
 - [ ] If the device isn't booted yet: use `boot-device` with the iOS `udid` or Android `avdName`. Refer to the `argent-ios-simulator-setup` / `argent-android-emulator-setup` skill.
-- [ ] Android: `adb -s <serial> reverse tcp:<metro-port> tcp:<metro-port>` done (same port Metro runs on).
+- [ ] Android: `adb -s <serial> reverse tcp:8081 tcp:8081` done.
 
 ---
 
@@ -111,7 +111,7 @@ After code or config changes, the app must load the new bundle:
 **Order of operations (simplest first):**
 
 1. Clean build folder, then retry the build command
-2. Clear caches and reinstall dependencies **without deleting lockfiles**: reset Metro cache, `watchman watch-del-all`, remove `node_modules`, reinstall from the lockfile (`npm ci`, or the package manager's frozen/immutable install), then `cd ios && rm -rf build Pods && pod install` — keep `Podfile.lock`. Deleting lockfiles re-resolves dependency versions and changes the build; do it only as a last resort with explicit user approval.
+2. Clear caches and reinstall dependencies: reset Metro cache, `watchman watch-del-all`, remove `node_modules` + lockfile, `npm install`, then `cd ios && rm -rf build Pods Podfile.lock && pod install --repo-update`
 3. CocoaPods issues: `pod deintegrate` then `pod install --repo-update`
 4. Open `ios/*.xcworkspace` in Xcode for detailed errors in the Report navigator
 
@@ -159,7 +159,7 @@ For full simulator setup workflow, refer to the `argent-ios-simulator-setup` ski
 
 | Problem type                      | Tool / Where to look                                                                                                                                                                                                                                              |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **JavaScript errors / logs**      | Use `debugger-log-registry` to get a summary and log file path, then search it with scoped `Grep` queries (range-limited `Read` only for specific matches — never read the file in full; see the `argent-metro-debugger` skill §5).                               |
+| **JavaScript errors / logs**      | Use `debugger-log-registry` to get a summary and log file path, then `Grep`/`Read` to search.                                                                                                                                                                     |
 | **React component hierarchy**     | Use `debugger-component-tree` tool for a text tree, or `debugger-inspect-element` at specific logical pixel coordinates (not normalized 0-1).                                                                                                                     |
 | **Visual state of the app**       | Use `screenshot` tool to capture the current screen, but prefer `describe` or `debugger-component-tree` for actual navigation and target discovery. If a permission prompt or system-owned modal overlay is not exposed reliably, then fall back to `screenshot`. |
 | **Evaluate JS in the app**        | Use `debugger-evaluate` tool to run JavaScript in the app's runtime.                                                                                                                                                                                              |

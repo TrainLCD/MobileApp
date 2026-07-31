@@ -27,6 +27,7 @@ After `native-profiler-analyze` surfaces findings, use `profiler-stack-query` to
 - **Hang detected** → `profiler-stack-query` mode=`hang_stacks` for full native call chains → mode=`function_callers` for the suspected function → read native source.
 - **CPU hotspot** → `profiler-stack-query` mode=`thread_breakdown` for per-thread distribution → mode=`function_callers` for the dominant function.
 - **Memory leak** → `profiler-stack-query` mode=`leak_stacks` filtered by `object_type` for responsible frames and libraries.
+  - iOS: if leaks come back unattributed (responsible frame `<Call stack limit reached>`), re-run `native-profiler-start` with `malloc_stack_logging: true`. This cold-launches the app with Malloc Stack Logging so leaks carry a real allocation backtrace (responsible frame + library). It restarts the app and adds overhead, so use it only when you need leak attribution — not for CPU/hang passes.
 
 After presenting findings, ask the user whether to investigate further, implement fixes, or stop. After applying fixes, always re-profile the same scenario and compare with `profiler-load`. Report honestly whether the target metric improved, regressed, or stayed flat. If the fix showed no net benefit or introduced regressions elsewhere, say so and reconsider.
 
@@ -55,8 +56,6 @@ You do not need to derive `app_process` manually — just make sure the app is l
 
 Call `native-profiler-start` with `device_id` (iOS UDID or Android serial). The tool auto-detects the running app and saves the trace to `/tmp/argent-profiler-cwd/` with a timestamped filename.
 Let the user interact with the app or drive interaction via simulator tools (see `argent-device-interact` skill).
-
-> **Trace storage & reuse policy (applies to all profiler skills):** Traces can capture sensitive runtime data (screen contents, identifiers, timings). Treat saved traces as scoped to the current profiling task by default: keeping them for reuse in a later session is **opt-in** — confirm with the user first. Keep traces in the tool's output directory only (never copy them into the repository or shared locations), and delete them when the profiling task ends or whenever the user asks.
 
 ### Step 2: Stop and export
 

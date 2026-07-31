@@ -1,26 +1,24 @@
 ## Quality control checklist
 
-The `quality_control` field in the output JSON must follow this structure. Report the linter/formatter actually configured in the project via `tool` — in this repository that is **Biome** for both (`npm run lint` / `npm run format`, config `biome.json`):
+The `quality_control` field in the output JSON must follow this structure:
 
 ```json
 {
-  "linting": { "tool": "biome", "config": "biome.json", "run_command": "npm run lint", "fix_command": "npx biome check --write ./src" },
-  "formatting": { "tool": "biome", "config": "biome.json", "run_command": "npm run format" },
-  "type_checking": { "typescript": true, "strict_mode": true, "run_command": "npm run typecheck" },
-  "unit_tests": { "jest": true, "jest_config": "path", "run_command": "npm test", "watch_command": "npm test -- --watch", "coverage_command": "npm test -- --coverage" },
-  "e2e_tests": { "detox": false, "maestro": false, "xctest": false, "flutter_integration_test": false },
-  "feedback_loop_tools": { "metro_hot_reload": true, "flutter_hot_reload": false, "react_devtools": true, "flipper": false, "storybook": false, "notes": "string" }
+  "linting": { "eslint": bool, "eslint_config": "path", "run_command": "cmd", "fix_command": "cmd" },
+  "formatting": { "prettier": bool, "prettier_config": "path", "run_command": "cmd" },
+  "type_checking": { "typescript": bool, "strict_mode": bool, "run_command": "cmd" },
+  "unit_tests": { "jest": bool, "jest_config": "path", "run_command": "cmd", "watch_command": "cmd", "coverage_command": "cmd" },
+  "e2e_tests": { "detox": bool, "maestro": bool, "xctest": bool, "flutter_integration_test": bool },
+  "feedback_loop_tools": { "metro_hot_reload": bool, "flutter_hot_reload": bool, "react_devtools": bool, "flipper": bool, "storybook": bool, "notes": "string" }
 }
 ```
-
-The values above are examples — fill in what the inspected project actually uses (`tool` may be `"eslint"`, `"swiftlint"`, `"none"`, etc. on other projects).
 
 Look for these beyond the obvious lint/test configs, regardless of project type:
 
 **Immediate feedback tools (agent can trigger during a task):**
 
 - `tsc --noEmit` — instant type error feedback after edits (TypeScript projects)
-- `biome check --write` / `eslint --fix` / `swiftlint` / `ktlint` — auto-fixable lint errors
+- `eslint --fix` / `swiftlint` / `ktlint` — auto-fixable lint errors
 - `jest --testPathPattern <file>` — single test file (JS/TS projects)
 - `dart analyze` — static analysis (Flutter projects)
 - `flutter test <file>` — single test file (Flutter projects)
