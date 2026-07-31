@@ -261,7 +261,8 @@ sequenceDiagram
   participant S as sapi-bff
 
   App->>W: POST /agent/chat（messages, locale）
-  W->>W: JWT検証・入力バリデーション・レート制限
+  W->>W: JWT検証・入力バリデーション
+  Note over W: キルスイッチ・日次上限チェック・<br>トピックゲート・FAQ / 現在駅解決を並列実行
   W->>WAI: トピックゲート（3値分類）
   alt off_topic（対象外）
     Note over W: 本体LLMを呼ばない
@@ -441,6 +442,12 @@ few-shot（`CONFIG_KV` の `config:fewshot`）と同じパターンで、`CONFIG
 - 日次上限は KV に `agent-rl:<installId>:<yyyymmdd>` のカウンタ
   （TTL 25 時間）で実装する。KV の結果整合で厳密さは劣るが PoC には
   十分。厳密なレート制限が必要になったら Durable Objects へ移行する。
+- カウンタは「チェック（KV get）」と「消費（KV put）」を分離する。
+  チェックは前段の並列処理で行い、消費は本体ターンの開始が確定した
+  時点で `ctx.waitUntil` に逃がす（KV put は 100〜300ms 級のため、
+  最初の delta までの直列経路に置かない）。謝絶（off_topic）は消費前に
+  確定するためターンを消費しない。エラー・タイムアウトで応答を返せ
+  なかったターンは消費済みカウンタを払い戻す。
 - 上限到達時は 429 と定型メッセージを返し、クライアントはそれを
   表示する。
 
