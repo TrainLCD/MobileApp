@@ -197,8 +197,9 @@ tool use ループを挟むと確定応答まで 10〜20 秒かかり、体感�
 ローディング表示だけで吸収しきれないため）。既存の `POST /agent/chat`
 （非ストリーミング）は旧クライアント互換のためそのまま残し、
 ストリーミング用に `POST /agent/chat/stream` を新設する。
-新クライアントはストリーミング側のみを使う（失敗時に非ストリーミングへ
-自動フォールバックはしない。エラー処理を単純に保つため）。
+新クライアントは通常ストリーミング側を使い、ストリーミングが
+ネットワーク系の失敗（`network`）に終わった場合のみ非ストリーミングへ
+1 回フォールバックする（詳細は「クライアント設計 > API 呼び出し」）。
 
 #### エンドポイント（/agent/chat/stream）
 
@@ -640,9 +641,18 @@ LLM 4 回（3 イテレーション + 最終応答。ツール結果の蓄積と
 
 ストリーミング受信は次の方針で実装する:
 
-- fetch は React Native 標準ではなく `expo/fetch`（Expo SDK 52+ の
-  ストリーミング対応 fetch。本体は WinterCG 準拠）を使い、
+- Android / web では fetch に React Native 標準ではなく `expo/fetch`
+  （Expo SDK 52+ のストリーミング対応 fetch。本体は WinterCG 準拠）を使い、
   `res.body`（`ReadableStream`）を逐次読む。
+- iOS では `expo/fetch` を使わず `XMLHttpRequest` の逐次テキスト受信で
+  SSE を読む（`sendViaXhrStream`）。`expo/fetch` の iOS ネイティブ実装に
+  チャンク欠落・順序逆転の競合（[expo/expo#42161][expo-42161]）があり、
+  `done` が JS へ届かないままストリームが閉じて毎回失敗するため。
+  `send()` の前に `onreadystatechange` と `onprogress` の両方を登録すると
+  React Native の XHR が逐次配送を有効にするので、`responseText` の未処理分
+  （処理済み文字数との差分）を毎回切り出して `parseSSEChunk` に渡す。
+  HTTP ステータスは `readyState >= 2` の時点で判定し、429 は `rateLimited`、
+  その他の非 2xx は `network` として確定して `abort()` する。
 - SSE のパースは自前の最小実装 `src/utils/sse.ts`（新規・依存ゼロ）で
   行う。`event:` / `data:` 行とイベント区切り（空行）のみ解釈し、
   複数行 `data` の連結・コメント行（`:` 開始）の無視・チャンク境界を
@@ -660,6 +670,37 @@ LLM 4 回（3 イテレーション + 最終応答。ツール結果の蓄積と
   イベント受信中は検索中である旨の表示に切り替えてよい（文言・見た目は
   ui.md で規定）。エラー時は仮置きエントリを取り除き、現行どおり
   未応答のユーザ発話も履歴から戻す。
+
+#### 非ストリーミングへのフォールバック
+
+全プラットフォーム共通で、ストリーミングの結果が `network` だった場合に
+限り非ストリーミングの `POST /agent/chat`（React Native 標準の `fetch` +
+JSON）を 1 回だけ試す（`sendViaJson`）。リクエストボディはストリーミングと
+同一で、応答 `{ "result": AgentChatResult }` をストリーミングの `done` と
+同じ基準で検証して確定応答に変換する。
+
+- `rateLimited` は確定情報、`timeout` は既に 30 秒待たせているため、
+  どちらもフォールバックしない。
+- フォールバック中は `onDelta` / `onToolStart` を呼ばない。ストリーミング中に
+  `delta` を受信していた場合、その部分テキストはフォールバック完了まで
+  表示されたままとなり、確定応答で置き換わる。
+- 同一ターンを再送するためレート制限カウンタを 2 消費し得るが、応答を
+  まったく返せないより望ましいと判断して許容する。
+- フォールバックのタイムアウトもストリーミングと同じ 30 秒。
+
+#### expo/fetch のパッチ
+
+`expo/fetch` の `FetchResponse` は `didComplete` / `didFailWithError` で
+`ReadableStream` のコントローラを無条件に閉じるため、JS 側が
+`reader.cancel()` した直後に二重クローズの `TypeError`
+（"The stream is not in a state that permits close"）が発生し得る
+（[expo/expo#44909][expo-44909]。リリースビルドでは致命的になり得る）。`patch-package` で
+`patches/expo+55.0.26.patch` を当て、`isControllerClosed` フラグを
+`close()` / `error()` の前に立てる二重クローズガードを追加している。
+Expo SDK 更新時はこのパッチの要否を再確認する。
+
+[expo-42161]: https://github.com/expo/expo/issues/42161
+[expo-44909]: https://github.com/expo/expo/issues/44909
 
 ### 提案駅選択 → 既存フローへの接続
 
@@ -765,7 +806,7 @@ sapi-bff には既に `routes` / `connectedRoutes` クエリ
 | BFF: SSE エンコード・`reply` 差分抽出 | 純関数に切り出して Jest |
 | BFF: 結合 | `wrangler dev` + 手動シナリオ |
 | アプリ: SSE パーサ | 純関数（`src/utils/sse.ts`）を Jest（チャンク分割・複数行 data 含む） |
-| アプリ: フック | `jest.mock` で fetch をモック（SSE ストリームを ReadableStream で再現） |
+| アプリ: フック | fetch を `jest.mock`（iOS 経路は XHR フェイク・フォールバックも検証） |
 | アプリ: UI | dev ビルドで手動 QA + スクリーンショット |
 
 - エージェントループのテストでは、ツール結果突合・件数切り詰め・
@@ -855,7 +896,8 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 | BFF | `agent/handler.ts` | `streamText` 化・stream ハンドラ |
 | BFF | `index.ts` | `/agent/chat/stream` ルート追加 |
 | MobileApp | `src/utils/sse.ts`（新規） | 最小 SSE パーサ（純関数） |
-| MobileApp | `src/hooks/useDestinationAgent.ts` | `expo/fetch` + SSE 受信 |
+| MobileApp | `patches/expo+55.0.26.patch`（新規） | expo/fetch の close 競合ガード |
+| MobileApp | `src/hooks/useDestinationAgent.ts` | SSE 受信 + フォールバック |
 | MobileApp | `src/screens/DestinationAgent/index.tsx` | `delta` 逐次表示 |
 
 ## 未決事項（オーナー判断が必要）

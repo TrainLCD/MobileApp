@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-native';
 import { fetch } from 'expo/fetch';
+import { Platform } from 'react-native';
 import { getSessionToken } from '~/lib/session';
 import {
   AGENT_MAX_MESSAGES,
@@ -24,7 +25,38 @@ jest.mock('~/lib/session', () => ({
 const fetchMock = fetch as unknown as jest.Mock;
 const getSessionTokenMock = getSessionToken as jest.Mock;
 
+// jest-expo の既定 Platform.OS は 'ios'。ストリーミング経路は iOS だけ XHR に
+// 分岐するため、テストごとに明示的に切り替えて afterEach で元へ戻す。
+const originalPlatformOS = Platform.OS;
+const setPlatformOS = (os: typeof Platform.OS) => {
+  Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+};
+
+// 非ストリーミングのフォールバックは expo/fetch ではなく標準 fetch を使う。
+// 既定では失敗させ、ストリーミング経路だけを見るテストの期待値を保つ。
+const originalGlobalFetch = globalThis.fetch;
+let fallbackFetchMock: jest.Mock;
+
+const mockFallbackResponse = (body: unknown, status = 200) => {
+  fallbackFetchMock = jest.fn(async () => ({
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => body,
+  }));
+  globalThis.fetch = fallbackFetchMock as unknown as typeof globalThis.fetch;
+  return fallbackFetchMock;
+};
+
+beforeEach(() => {
+  fallbackFetchMock = jest.fn(async () => {
+    throw new TypeError('Network request failed');
+  });
+  globalThis.fetch = fallbackFetchMock as unknown as typeof globalThis.fetch;
+});
+
 afterEach(() => {
+  globalThis.fetch = originalGlobalFetch;
+  setPlatformOS(originalPlatformOS);
   jest.clearAllMocks();
 });
 
@@ -108,6 +140,11 @@ describe('trimAgentMessages', () => {
 });
 
 describe('useDestinationAgent', () => {
+  // expo/fetch の ReadableStream 経路(iOS 以外)
+  beforeEach(() => {
+    setPlatformOS('android');
+  });
+
   it('マウント時にセッショントークンを先読みする', () => {
     renderHook(() => useDestinationAgent());
 
@@ -456,5 +493,348 @@ describe('useDestinationAgent', () => {
     const res = await sendMessages([{ role: 'user', content: 'テスト' }]);
 
     expect(res).toEqual({ ok: false, error: 'network' });
+  });
+
+  it('ストリーミングが network で失敗したら非ストリーミングへフォールバックする', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('Network request failed'));
+    const fallback = mockFallbackResponse({
+      result: {
+        reply: 'フォールバック応答',
+        suggestions: [{ stationId: 1, stationGroupId: 1 }],
+        refused: false,
+      },
+    });
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    expect(res).toEqual({
+      ok: true,
+      data: {
+        reply: 'フォールバック応答',
+        suggestions: [{ stationId: 1, stationGroupId: 1 }],
+        refused: false,
+      },
+    });
+    const [url, init] = fallback.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://worker.test/agent/chat');
+    expect(init.method).toBe('POST');
+    // ボディはストリーミングと同一(同一ターンの再送)
+    expect(JSON.parse(String(init.body))).toEqual({
+      data: {
+        messages: [{ role: 'user', content: 'テスト' }],
+        locale: expect.stringMatching(/^(ja|en)$/),
+      },
+    });
+  });
+
+  it('rateLimited はフォールバックしない', async () => {
+    mockErrorResponse(429);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    expect(res).toEqual({ ok: false, error: 'rateLimited' });
+    expect(fallbackFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('フォールバックも失敗した場合はフォールバック側の結果を返す', async () => {
+    mockErrorResponse(503);
+    mockFallbackResponse({}, 500);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    expect(res).toEqual({ ok: false, error: 'network' });
+    expect(fallbackFetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * XHR の逐次テキスト受信を再現するフェイク。生成されたインスタンスを捕捉し、
+ * テストから readyState / status / responseText を進めてハンドラを発火させる。
+ */
+class FakeXhr {
+  static instances: FakeXhr[] = [];
+
+  readyState = 0;
+  status = 0;
+  responseText = '';
+  aborted = false;
+  method: string | null = null;
+  url: string | null = null;
+  requestHeaders: Record<string, string> = {};
+  body: string | null = null;
+  // send() 時点でリスナが登録されていたか(逐次配送の有効化条件)
+  listenersAtSend = { readystatechange: false, progress: false };
+
+  onreadystatechange: (() => void) | null = null;
+  onprogress: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+
+  constructor() {
+    FakeXhr.instances.push(this);
+  }
+
+  open(method: string, url: string): void {
+    this.method = method;
+    this.url = url;
+    this.readyState = 1;
+  }
+
+  setRequestHeader(name: string, value: string): void {
+    this.requestHeaders[name] = value;
+  }
+
+  send(body: string): void {
+    this.body = body;
+    this.listenersAtSend = {
+      readystatechange: this.onreadystatechange != null,
+      progress: this.onprogress != null,
+    };
+  }
+
+  abort(): void {
+    this.aborted = true;
+  }
+
+  /** ヘッダ受信(readyState 2)を通知する */
+  emitHeaders(status: number): void {
+    this.status = status;
+    this.readyState = 2;
+    this.onreadystatechange?.();
+  }
+
+  /** 本文の増分(readyState 3)を通知する */
+  emitChunk(chunk: string, status = 200): void {
+    this.status = status;
+    this.responseText += chunk;
+    this.readyState = 3;
+    this.onreadystatechange?.();
+    this.onprogress?.();
+  }
+
+  /** ストリーム終了(readyState 4)を通知する */
+  emitEnd(status = 200): void {
+    this.status = status;
+    this.readyState = 4;
+    this.onreadystatechange?.();
+  }
+}
+
+const originalXhr = globalThis.XMLHttpRequest;
+
+/** セッショントークン取得の await を消化してから XHR インスタンスを取り出す */
+const takeXhr = async (): Promise<FakeXhr> => {
+  for (let i = 0; i < 10 && FakeXhr.instances.length === 0; i++) {
+    await Promise.resolve();
+  }
+  const xhr = FakeXhr.instances[FakeXhr.instances.length - 1];
+  if (!xhr) {
+    throw new Error('XMLHttpRequest が生成されていない');
+  }
+  return xhr;
+};
+
+describe('useDestinationAgent (iOS / XHR ストリーミング)', () => {
+  beforeEach(() => {
+    setPlatformOS('ios');
+    FakeXhr.instances = [];
+    globalThis.XMLHttpRequest = FakeXhr as unknown as typeof XMLHttpRequest;
+  });
+
+  afterEach(() => {
+    globalThis.XMLHttpRequest = originalXhr;
+    // アサーション失敗時もフェイクタイマーを後続テストへ漏らさない
+    jest.useRealTimers();
+  });
+
+  it('expo/fetch ではなく XHR でストリーミング用エンドポイントへ送る', async () => {
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+    const xhr = await takeXhr();
+    xhr.emitChunk(doneEvent({ reply: 'ok', suggestions: [], refused: false }));
+
+    await expect(promise).resolves.toEqual({
+      ok: true,
+      data: { reply: 'ok', suggestions: [], refused: false },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(xhr.method).toBe('POST');
+    expect(xhr.url).toBe('https://worker.test/agent/chat/stream');
+    expect(xhr.requestHeaders.Authorization).toBe('Bearer test-session-token');
+    expect(xhr.requestHeaders.accept).toBe('text/event-stream');
+    expect(JSON.parse(String(xhr.body))).toEqual({
+      data: {
+        messages: [{ role: 'user', content: 'テスト' }],
+        locale: expect.stringMatching(/^(ja|en)$/),
+      },
+    });
+    // 逐次配送は send() 前のリスナ登録が条件
+    expect(xhr.listenersAtSend).toEqual({
+      readystatechange: true,
+      progress: true,
+    });
+  });
+
+  it('分割された delta を受信順に onDelta へ渡し、done の確定値を返す', async () => {
+    const onDelta = jest.fn();
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: '海が見たい' }], {
+      onDelta,
+    });
+
+    const xhr = await takeXhr();
+    xhr.emitHeaders(200);
+    xhr.emitChunk('event: delta\ndata: {"text":"海の"}\n\n');
+    xhr.emitChunk('event: delta\ndata: {"text":"見える駅"}\n\n');
+    xhr.emitChunk(
+      doneEvent({
+        reply: '海の見える駅はこちらです。',
+        suggestions: [],
+        refused: false,
+      })
+    );
+
+    expect(onDelta.mock.calls.map(([text]) => text)).toEqual([
+      '海の',
+      '見える駅',
+    ]);
+    await expect(promise).resolves.toEqual({
+      ok: true,
+      data: {
+        reply: '海の見える駅はこちらです。',
+        suggestions: [],
+        refused: false,
+      },
+    });
+    // 確定応答が出たら残りは読まない
+    expect(xhr.aborted).toBe(true);
+  });
+
+  it('チャンク境界を跨いだイベントも取りこぼさない', async () => {
+    const payload = `event: delta\ndata: {"text":"あい"}\n\n${doneEvent({
+      reply: 'あいうえお',
+      suggestions: [],
+      refused: false,
+    })}`;
+
+    const onDelta = jest.fn();
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }], {
+      onDelta,
+    });
+
+    const xhr = await takeXhr();
+    xhr.emitChunk(payload.slice(0, 12));
+    xhr.emitChunk(payload.slice(12, 40));
+    xhr.emitChunk(payload.slice(40));
+
+    expect(onDelta).toHaveBeenCalledWith('あい');
+    await expect(promise).resolves.toEqual({
+      ok: true,
+      data: { reply: 'あいうえお', suggestions: [], refused: false },
+    });
+  });
+
+  it('tool イベントで onToolStart を呼ぶ', async () => {
+    const onToolStart = jest.fn();
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }], {
+      onToolStart,
+    });
+
+    const xhr = await takeXhr();
+    xhr.emitChunk('event: tool\ndata: {}\n\n');
+    xhr.emitChunk(doneEvent({ reply: 'ok', suggestions: [], refused: false }));
+
+    expect(onToolStart).toHaveBeenCalledTimes(1);
+    await expect(promise).resolves.toEqual({
+      ok: true,
+      data: { reply: 'ok', suggestions: [], refused: false },
+    });
+  });
+
+  it('429 は rateLimited を返し、フォールバックしない', async () => {
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    const xhr = await takeXhr();
+    xhr.emitHeaders(429);
+
+    await expect(promise).resolves.toEqual({
+      ok: false,
+      error: 'rateLimited',
+    });
+    expect(xhr.aborted).toBe(true);
+    expect(fallbackFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('done が来ないまま終了したら非ストリーミングへフォールバックする', async () => {
+    const fallback = mockFallbackResponse({
+      result: { reply: 'フォールバック応答', suggestions: [], refused: false },
+    });
+
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    const xhr = await takeXhr();
+    xhr.emitChunk('event: delta\ndata: {"text":"途中まで"}\n\n');
+    xhr.emitEnd();
+
+    await expect(promise).resolves.toEqual({
+      ok: true,
+      data: { reply: 'フォールバック応答', suggestions: [], refused: false },
+    });
+    expect(fallback).toHaveBeenCalledTimes(1);
+    expect(fallback.mock.calls[0][0]).toBe('https://worker.test/agent/chat');
+  });
+
+  it('フォールバックも失敗したら network を返す', async () => {
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    const xhr = await takeXhr();
+    xhr.emitEnd(200);
+
+    await expect(promise).resolves.toEqual({ ok: false, error: 'network' });
+    expect(fallbackFetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('通信エラー(onerror)は network を返す', async () => {
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    const xhr = await takeXhr();
+    xhr.onerror?.();
+
+    await expect(promise).resolves.toEqual({ ok: false, error: 'network' });
+  });
+
+  it('30 秒経過で timeout を返し、フォールバックしない', async () => {
+    jest.useFakeTimers();
+
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    const xhr = await takeXhr();
+    await jest.advanceTimersByTimeAsync(AGENT_REQUEST_TIMEOUT_MS);
+    // abort 由来の readyState 遷移で network に上書きされないこと
+    xhr.emitEnd(0);
+
+    await expect(promise).resolves.toEqual({ ok: false, error: 'timeout' });
+    expect(xhr.aborted).toBe(true);
+    expect(fallbackFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('セッショントークンを取得できない場合は network を返す', async () => {
+    getSessionTokenMock.mockResolvedValueOnce(null);
+    getSessionTokenMock.mockResolvedValueOnce(null);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    expect(res).toEqual({ ok: false, error: 'network' });
+    expect(FakeXhr.instances).toHaveLength(0);
   });
 });
