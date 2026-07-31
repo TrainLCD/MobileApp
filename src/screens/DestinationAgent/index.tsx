@@ -60,6 +60,11 @@ type ChatEntry = {
    * 疑似発話なので会話履歴を汚さないよう false にする。
    */
   includeInHistory: boolean;
+  /**
+   * ストリーミング受信中の仮置きエントリか。delta を追記している間 true で、
+   * done の確定値に置き換えた時点で false になる。
+   */
+  streaming?: boolean;
 };
 
 type SuggestionState = {
@@ -189,13 +194,18 @@ const DestinationAgentScreen = () => {
     return `agent-entry-${entryIdRef.current}`;
   }, []);
 
-  // 新規メッセージが積まれたら最下部へスクロールする
+  // 追従スクロールの発火キー。新規メッセージの追加だけでなく、
+  // ストリーミング中に末尾エントリの本文が伸びたときも変化させる
+  const scrollAnchor = `${entries.length}:${
+    entries[entries.length - 1]?.content.length ?? 0
+  }`;
+
   useEffect(() => {
-    if (!entries.length) {
+    if (scrollAnchor.startsWith('0:')) {
       return;
     }
     scrollRef.current?.scrollToEnd({ animated: true });
-  }, [entries.length]);
+  }, [scrollAnchor]);
 
   // 提案は軽量情報(stationId 等)しか持たないため、CommonCard が必要とする
   // Line オブジェクトを得るために Station 完全体を一括再取得する。
@@ -257,8 +267,20 @@ const DestinationAgentScreen = () => {
         content: text,
         includeInHistory: true,
       };
+      // 送信開始時点で空の assistant エントリを仮置きし、delta で本文を伸ばす。
+      // サーバへ送る履歴には含めないため nextEntries とは分けて持つ。
+      const streamingEntry: ChatEntry = {
+        id: createEntryId(),
+        role: 'assistant',
+        content: '',
+        includeInHistory: true,
+        streaming: true,
+      };
       const nextEntries = [...entries, userEntry];
-      setEntries(nextEntries);
+      setEntries([...nextEntries, streamingEntry]);
+
+      // 会話リセット後に届いた delta / done は捨てる
+      const isStale = () => conversationGenRef.current !== conversationGen;
 
       // sendMessages は reject しない設計だが、万一の例外でも送信フラグが
       // 立ったままにならないよう finally で解除する
@@ -267,7 +289,23 @@ const DestinationAgentScreen = () => {
         res = await sendMessages(
           nextEntries
             .filter((entry) => entry.includeInHistory)
-            .map((entry) => ({ role: entry.role, content: entry.content }))
+            .map((entry) => ({ role: entry.role, content: entry.content })),
+          {
+            onDelta: (delta) => {
+              if (isStale()) {
+                return;
+              }
+              setEntries((prev) =>
+                prev.map((entry) =>
+                  entry.id === streamingEntry.id
+                    ? { ...entry, content: entry.content + delta }
+                    : entry
+                )
+              );
+            },
+            // ツール実行中もタイピングインジケータのまま待たせる(専用文言は設けない)
+            onToolStart: () => undefined,
+          }
         );
       } finally {
         sendingRef.current = false;
@@ -275,23 +313,29 @@ const DestinationAgentScreen = () => {
       }
 
       // 応答待ちの間に会話がリセットされていたら結果を破棄する
-      if (conversationGenRef.current !== conversationGen) {
+      if (isStale()) {
         return;
       }
 
       if (res.ok) {
-        const assistantEntry: ChatEntry = {
-          id: createEntryId(),
-          role: 'assistant',
-          content: res.data.reply,
-          suggestions: res.data.suggestions,
-          includeInHistory: true,
-        };
-        setEntries((prev) => [...prev, assistantEntry]);
-        AccessibilityInfo.announceForAccessibility(res.data.reply);
+        // done が正。蓄積した delta を確定値で置き換える
+        const { reply, suggestions } = res.data;
+        setEntries((prev) =>
+          prev.map((entry) =>
+            entry.id === streamingEntry.id
+              ? {
+                  ...entry,
+                  content: reply,
+                  suggestions,
+                  streaming: false,
+                }
+              : entry
+          )
+        );
+        AccessibilityInfo.announceForAccessibility(reply);
 
-        if (res.data.suggestions.length) {
-          void resolveSuggestions(assistantEntry.id, res.data.suggestions);
+        if (suggestions.length) {
+          void resolveSuggestions(streamingEntry.id, suggestions);
         }
         return;
       }
@@ -299,7 +343,7 @@ const DestinationAgentScreen = () => {
       if (res.error === 'rateLimited') {
         setRateLimited(true);
         setEntries((prev) => [
-          ...prev,
+          ...prev.filter((entry) => entry.id !== streamingEntry.id),
           {
             id: createEntryId(),
             role: 'assistant',
@@ -310,8 +354,13 @@ const DestinationAgentScreen = () => {
         return;
       }
 
-      // ネットワーク / 5xx / タイムアウト: 未応答のユーザ発話を履歴に残さない
-      setEntries((prev) => prev.filter((entry) => entry.id !== userEntry.id));
+      // ネットワーク / 5xx / タイムアウト / ストリーム中断: 仮置きエントリと
+      // 未応答のユーザ発話を履歴に残さない(受信途中の delta も破棄される)
+      setEntries((prev) =>
+        prev.filter(
+          (entry) => entry.id !== userEntry.id && entry.id !== streamingEntry.id
+        )
+      );
       // 送信待ちの間にユーザが入力し直していた場合はその内容を優先する
       setInputText((prev) => (prev.length ? prev : text));
       showToast({
@@ -436,6 +485,9 @@ const DestinationAgentScreen = () => {
   );
 
   const isEmpty = entries.length === 0;
+  // 最初の delta が届くまではタイピングインジケータで待たせる
+  const streamingContent =
+    entries.find((entry) => entry.streaming)?.content ?? '';
 
   return (
     <SafeAreaView
@@ -466,23 +518,29 @@ const DestinationAgentScreen = () => {
           {isEmpty ? (
             <AgentEmptyState onSelectExample={handleSend} />
           ) : (
-            entries.map((entry, index) => (
-              // 出現アニメーションは SelectLineScreen の路線リストと同じ既存イディオム(ui.md)
-              <Animated.View
-                key={entry.id}
-                layout={LinearTransition.springify()}
-                style={
-                  entries[index - 1]?.role === entry.role
-                    ? styles.sameSpeakerSpacing
-                    : undefined
-                }
-              >
-                <AgentMessageBubble role={entry.role} content={entry.content} />
-                {renderSuggestions(entry)}
-              </Animated.View>
-            ))
+            entries.map((entry, index) =>
+              // 本文が空の仮置きエントリはバブルを出さない(タイピングインジケータが代わり)
+              entry.streaming && !entry.content ? null : (
+                // 出現アニメーションは SelectLineScreen の路線リストと同じ既存イディオム(ui.md)
+                <Animated.View
+                  key={entry.id}
+                  layout={LinearTransition.springify()}
+                  style={
+                    entries[index - 1]?.role === entry.role
+                      ? styles.sameSpeakerSpacing
+                      : undefined
+                  }
+                >
+                  <AgentMessageBubble
+                    role={entry.role}
+                    content={entry.content}
+                  />
+                  {renderSuggestions(entry)}
+                </Animated.View>
+              )
+            )
           )}
-          {sending && <AgentTypingIndicator />}
+          {sending && !streamingContent && <AgentTypingIndicator />}
         </ScrollView>
 
         {isEmpty && (
