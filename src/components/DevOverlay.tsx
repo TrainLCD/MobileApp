@@ -76,11 +76,7 @@ const styles = StyleSheet.create({
     top: 0,
     zIndex: 9999,
     overflow: 'hidden',
-    shadowColor: '#020617',
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 20,
+    boxShadow: '0px 12px 40px rgba(2, 6, 23, 0.35)',
   },
   panelFrame: {
     borderRadius: 24,

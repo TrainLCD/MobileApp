@@ -23,11 +23,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     minHeight: 48,
     // SearchBar と同じ影値
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
   bg: {
     backgroundColor: '#fcfcfc',

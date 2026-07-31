@@ -234,6 +234,11 @@ Figma デザインは人力ではなく Figma MCP で本書を入力として起
   フェードループアニメーションを表示。応答受信で本文に置換する。
 - LED テーマ時はアニメーションを点滅（opacity 2 段階）に落とし、
   ドット絵的な質感と揃える。
+- `tool` イベント受信中（駅検索の tool use ループ中）は、3 点ドットの
+  右に `destinationAgentSearching` の文言を副次テキストの配色
+  （`#737373` / LED 時 `#ccc`）で並べる。最初の `delta` 受信または応答
+  確定で文言を消す。表示開始時に
+  `AccessibilityInfo.announceForAccessibility` で 1 回だけ読み上げる。
 - サーバ側タイムアウトは最大 25 秒 + クライアント 30 秒
   （architecture.md）。10 秒経過で補助文言を追加表示する案は不採用
   （判断チェックリストで確定）。タイムアウトまでインジケータのみを
@@ -400,6 +405,9 @@ flowchart LR
 - `destinationAgentDisclaimer`
   - ja: AIの提案は誤りを含む場合があります
   - en: AI suggestions may contain mistakes
+- `destinationAgentSearching`
+  - ja: 駅を検索しています…
+  - en: Searching for stations…
 - `destinationAgentRateLimited`
   - ja: 本日の利用上限に達しました。また明日お試しください
   - en: You've reached today's limit. Please try again tomorrow

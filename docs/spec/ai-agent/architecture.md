@@ -191,11 +191,61 @@ Firebase callable 互換（`{ data: {...} }` → `{ result: {...} }`）とし、
 
 ### ストリーミング
 
-PoC では非ストリーミングとする。アプリに SSE の前例がなく、想定する応答は
-短い（後述の `max_tokens` 制限）ため、体感遅延はローディング表示で許容範囲
-に収まる見込み。将来ストリーミングが必要になった場合は、Expo SDK 52+ の
-`expo/fetch`（ストリーミング対応 fetch）+ SSE で設計し直す
-（未決事項に記載）。
+対話応答は SSE によるストリーミング配信に対応する（当初 PoC は
+非ストリーミングだったが、2026-07-31 のオーナー指示でスコープ内に昇格。
+tool use ループを挟むと確定応答まで 10〜20 秒かかり、体感遅延を
+ローディング表示だけで吸収しきれないため）。既存の `POST /agent/chat`
+（非ストリーミング）は旧クライアント互換のためそのまま残し、
+ストリーミング用に `POST /agent/chat/stream` を新設する。
+新クライアントは通常ストリーミング側を使い、ストリーミングが
+ネットワーク系の失敗（`network`）に終わった場合のみ非ストリーミングへ
+1 回フォールバックする（詳細は「クライアント設計 > API 呼び出し」）。
+
+#### エンドポイント（/agent/chat/stream）
+
+- リクエスト: `/agent/chat` と完全に同一（callable 互換の
+  `{ data: { messages, locale, currentStationGroupId } }` +
+  セッション JWT）。入力制約・認証・キルスイッチ・レート制限・
+  トピックゲート・タイムアウト予算もすべて同一。
+- レスポンス: ステータス 200 + `Content-Type: text/event-stream`。
+- ストリーム開始前に判定できるエラー（401 / 400 / 429 / 503 など）は
+  従来どおり callable 互換の JSON エラーで返す（SSE にしない）。
+  ストリーム開始後（200 送出後）のエラーは `error` イベントで通知する。
+
+#### SSE イベント仕様
+
+| イベント | data（JSON） | 意味 |
+| --- | --- | --- |
+| `delta` | `{ "text": "..." }` | `reply` 本文の増分テキスト |
+| `tool` | `{}` | ツール実行中の合図（UI は「駅を検索しています」等を表示してよい） |
+| `done` | `AgentChatResult`（非ストリーミングの `result` と同一形） | 最終確定応答 |
+| `error` | `{ "code": "..." }` | ストリーム開始後のエラー |
+
+- **`done` が正**: クライアントは `delta` の蓄積表示を `done` の `reply`
+  で置き換える（partial JSON 由来の取りこぼしを確定値で補正する）。
+- `suggestions` は途中では流さない。サーバ側検証（ツール結果との突合）を
+  経た確定値のみ `done` に載せる（実在性保証の二段構えを変えない）。
+- 謝絶（`refused: true`）は `delta` なしで即 `done` を送る。
+- クライアントは未知のイベント名を無視する（前方互換）。
+- `done` または `error` の後、サーバはストリームを閉じる。どちらも来ずに
+  ストリームが切れた場合、クライアントはネットワークエラーとして扱う。
+
+#### サーバ実装方針（trainlcd-worker）
+
+- `runAgentTurn` の `generateText` を `streamText` に置き換える
+  （ツール定義・構造化出力・`stopWhen` / `prepareStep`・
+  `maxRetries: 0`・`maxOutputTokens` は同一設定）。非ストリーミングの
+  `/agent/chat` も同じ `streamText` 実装を共有し、イベントを流さず
+  最終結果だけ await する（エージェントループの実装を二重化しない）。
+- `delta` は `partialOutputStream`（構造化出力の partial JSON）から
+  `reply` フィールドの前回比差分を取り出して送出する。
+- `fullStream` の tool-call イベントを `tool` イベントに変換する。
+  ツール入力（検索語）は会話本文相当のため、本文ログと同様に送らない。
+- レート制限の払い戻し: ストリーム開始後にエラーで終わったターンも
+  非ストリーミングと同じ基準で払い戻す。
+- LangSmith トレース（dev のみ）は wrapAISDK が `streamText` も
+  ラップするため既存機構のまま機能する。AI Gateway は SSE を
+  パススルーする（本文ログ無効化ヘッダも同一に付与）。
 
 ## エージェント本体設計（BFF 側）
 
@@ -212,7 +262,8 @@ sequenceDiagram
   participant S as sapi-bff
 
   App->>W: POST /agent/chat（messages, locale）
-  W->>W: JWT検証・入力バリデーション・レート制限
+  W->>W: JWT検証・入力バリデーション
+  Note over W: キルスイッチ・日次上限チェック・<br>トピックゲート・FAQ / 現在駅解決を並列実行
   W->>WAI: トピックゲート（3値分類）
   alt off_topic（対象外）
     Note over W: 本体LLMを呼ばない
@@ -392,6 +443,12 @@ few-shot（`CONFIG_KV` の `config:fewshot`）と同じパターンで、`CONFIG
 - 日次上限は KV に `agent-rl:<installId>:<yyyymmdd>` のカウンタ
   （TTL 25 時間）で実装する。KV の結果整合で厳密さは劣るが PoC には
   十分。厳密なレート制限が必要になったら Durable Objects へ移行する。
+- カウンタは「チェック（KV get）」と「消費（KV put）」を分離する。
+  チェックは前段の並列処理で行い、消費は本体ターンの開始が確定した
+  時点で `ctx.waitUntil` に逃がす（KV put は 100〜300ms 級のため、
+  最初の delta までの直列経路に置かない）。謝絶（off_topic）は消費前に
+  確定するためターンを消費しない。エラー・タイムアウトで応答を返せ
+  なかったターンは消費済みカウンタを払い戻す。
 - 上限到達時は 429 と定型メッセージを返し、クライアントはそれを
   表示する。
 
@@ -410,6 +467,10 @@ few-shot（`CONFIG_KV` の `config:fewshot`）と同じパターンで、`CONFIG
 - クライアントのタイムアウト（30 秒）はサーバ全体期限より長く取り、
   「サーバが先に諦めて確定応答を返す」関係を保つ。タイムアウト後の再送
   は新規ターンとして扱い、以前の処理結果を引き継がない。
+- ストリーミングでも期限体系は同一とする。クライアントの 30 秒は
+  ストリーム受信中でもリクエスト開始からの全体期限として適用し、
+  期限到達で受信途中でも中断する（`delta` 受信でタイマーは延長しない。
+  サーバ側 25 秒が先に尽きて `error` イベントが届くのが正常系）。
 
 ## 技術選定
 
@@ -573,10 +634,73 @@ LLM 4 回（3 イテレーション + 最終応答。ツール結果の蓄積と
 
 ### API 呼び出し
 
-`src/lib/workerApi.ts` の `workerUrl('/agent/chat')` と
-`src/lib/session.ts` の `getSessionToken()` を流用し、`useFeedback` と
-同じ fetch パターンで実装する（新規フック
-`src/hooks/useDestinationAgent.ts`）。タイムアウトは 30 秒。
+`src/lib/workerApi.ts` の `workerUrl('/agent/chat/stream')` と
+`src/lib/session.ts` の `getSessionToken()` を流用する
+（フックは `src/hooks/useDestinationAgent.ts`）。タイムアウトは 30 秒
+（リクエスト開始からの全体期限。「タイムアウト・キャンセル・再試行」参照）。
+
+ストリーミング受信は次の方針で実装する:
+
+- Android / web では fetch に React Native 標準ではなく `expo/fetch`
+  （Expo SDK 52+ のストリーミング対応 fetch。本体は WinterCG 準拠）を使い、
+  `res.body`（`ReadableStream`）を逐次読む。
+- iOS では `expo/fetch` を使わず `XMLHttpRequest` の逐次テキスト受信で
+  SSE を読む（`sendViaXhrStream`）。`expo/fetch` の iOS ネイティブ実装に
+  チャンク欠落・順序逆転の競合（[expo/expo#42161][expo-42161]）があり、
+  `done` が JS へ届かないままストリームが閉じて毎回失敗するため。
+  `send()` の前に `onreadystatechange` と `onprogress` の両方を登録すると
+  React Native の XHR が逐次配送を有効にするので、`responseText` の未処理分
+  （処理済み文字数との差分）を毎回切り出して `parseSSEChunk` に渡す。
+  HTTP ステータスは `readyState >= 2` の時点で判定し、429 は `rateLimited`、
+  その他の非 2xx は `network` として確定して `abort()` する。
+- SSE のパースは自前の最小実装 `src/utils/sse.ts`（新規・依存ゼロ）で
+  行う。`event:` / `data:` 行とイベント区切り（空行）のみ解釈し、
+  複数行 `data` の連結・コメント行（`:` 開始）の無視・チャンク境界を
+  跨ぐイベントのバッファリングに対応する純関数パーサとして切り出し、
+  Jest でテストする。SSE クライアントライブラリは追加しない
+  （「ライブラリ候補（アプリ）」の新規依存ゼロ方針を維持）。
+- `useDestinationAgent` の `sendMessages` はシグネチャを
+  `sendMessages(messages, { onDelta, onToolStart })` に拡張する。
+  戻り値の `Promise<AgentChatResponse>`（`done` の確定結果 or エラー）は
+  現行と同じ形を保ち、画面側のエラーハンドリング分岐を変えない。
+- 画面側は送信開始時に空の assistant エントリを仮置きし、`onDelta` で
+  本文を追記、`done` で確定値に置き換えてから提案解決
+  （`resolveSuggestions`）と `announceForAccessibility` を行う。
+  `AgentTypingIndicator` は最初の `delta` が届くまで表示し、`tool`
+  イベント受信中は検索中である旨の表示に切り替えてよい（文言・見た目は
+  ui.md で規定）。エラー時は仮置きエントリを取り除き、現行どおり
+  未応答のユーザ発話も履歴から戻す。
+
+#### 非ストリーミングへのフォールバック
+
+全プラットフォーム共通で、ストリーミングの結果が `network` だった場合に
+限り非ストリーミングの `POST /agent/chat`（React Native 標準の `fetch` +
+JSON）を 1 回だけ試す（`sendViaJson`）。リクエストボディはストリーミングと
+同一で、応答 `{ "result": AgentChatResult }` をストリーミングの `done` と
+同じ基準で検証して確定応答に変換する。
+
+- `rateLimited` は確定情報、`timeout` は既に 30 秒待たせているため、
+  どちらもフォールバックしない。
+- フォールバック中は `onDelta` / `onToolStart` を呼ばない。ストリーミング中に
+  `delta` を受信していた場合、その部分テキストはフォールバック完了まで
+  表示されたままとなり、確定応答で置き換わる。
+- 同一ターンを再送するためレート制限カウンタを 2 消費し得るが、応答を
+  まったく返せないより望ましいと判断して許容する。
+- フォールバックのタイムアウトもストリーミングと同じ 30 秒。
+
+#### expo/fetch のパッチ
+
+`expo/fetch` の `FetchResponse` は `didComplete` / `didFailWithError` で
+`ReadableStream` のコントローラを無条件に閉じるため、JS 側が
+`reader.cancel()` した直後に二重クローズの `TypeError`
+（"The stream is not in a state that permits close"）が発生し得る
+（[expo/expo#44909][expo-44909]。リリースビルドでは致命的になり得る）。`patch-package` で
+`patches/expo+55.0.26.patch` を当て、`isControllerClosed` フラグを
+`close()` / `error()` の前に立てる二重クローズガードを追加している。
+Expo SDK 更新時はこのパッチの要否を再確認する。
+
+[expo-42161]: https://github.com/expo/expo/issues/42161
+[expo-44909]: https://github.com/expo/expo/issues/44909
 
 ### 提案駅選択 → 既存フローへの接続
 
@@ -624,6 +748,7 @@ LLM 4 回（3 イテレーション + 最終応答。ツール結果の蓄積と
 | 429（レート制限） | 「本日の利用上限に達しました」を表示 |
 | `refused: true` | サーバの定型謝絶文をそのまま表示 |
 | ネットワーク/5xx | `GlobalToast` 表示 + 入力を復元し再送可能に |
+| ストリーム中断（`error` イベント / `done` 前の切断） | ネットワークエラーと同じ扱い（受信途中の `delta` は破棄） |
 | フラグ off | エントリポイント自体を非表示 |
 
 ## セキュリティ・プライバシー
@@ -678,8 +803,10 @@ sapi-bff には既に `routes` / `connectedRoutes` クエリ
 | --- | --- |
 | BFF: バリデーション・提案検証 | 純関数に切り出して Jest |
 | BFF: エージェントループ | LLM クライアントをモックして Jest |
+| BFF: SSE エンコード・`reply` 差分抽出 | 純関数に切り出して Jest |
 | BFF: 結合 | `wrangler dev` + 手動シナリオ |
-| アプリ: フック | `jest.mock` で fetch をモック |
+| アプリ: SSE パーサ | 純関数（`src/utils/sse.ts`）を Jest（チャンク分割・複数行 data 含む） |
+| アプリ: フック | fetch を `jest.mock`（iOS 経路は XHR フェイク・フォールバックも検証） |
 | アプリ: UI | dev ビルドで手動 QA + スクリーンショット |
 
 - エージェントループのテストでは、ツール結果突合・件数切り詰め・
@@ -759,6 +886,20 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 | `src/lib/remoteConfig.ts` | `ai_agent_enabled` キー追加 |
 | `assets/translations/ja.json` / `en.json` | UI 文言追加 |
 
+### ストリーミング対応の追加変更分
+
+初期実装（上表）の完了後にストリーミング対応で追加・変更するファイル。
+
+| リポジトリ | ファイル | 内容 |
+| --- | --- | --- |
+| BFF | `agent/stream.ts`（新規） | SSE エンコード・差分抽出（純関数） |
+| BFF | `agent/handler.ts` | `streamText` 化・stream ハンドラ |
+| BFF | `index.ts` | `/agent/chat/stream` ルート追加 |
+| MobileApp | `src/utils/sse.ts`（新規） | 最小 SSE パーサ（純関数） |
+| MobileApp | `patches/expo+55.0.26.patch`（新規） | expo/fetch の close 競合ガード |
+| MobileApp | `src/hooks/useDestinationAgent.ts` | SSE 受信 + フォールバック |
+| MobileApp | `src/screens/DestinationAgent/index.tsx` | `delta` 逐次表示 |
+
 ## 未決事項（オーナー判断が必要）
 
 1. **対話本体のモデル**: 比較検証の初期対象として
@@ -767,5 +908,5 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 2. **会話ログの保存方針**: 品質改善のためのサンプリング保存を行うか。
    行う場合はプライバシーポリシーへの明記が必要。
 3. **レート制限の初期値**: 30 ターン/日/人 で妥当か。
-4. **ストリーミング**: PoC 非対応の方針で良いか。体感が悪ければ
-   `expo/fetch` + SSE を Phase 1 で検討。
+4. **ストリーミング**: 決定済み（2026-07-31、オーナー指示で対応する）。
+   設計は「ストリーミング」の節を参照。

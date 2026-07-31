@@ -49,10 +49,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   previewContainer: {
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 4,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
   previewImageWrap: {
     width: '100%',

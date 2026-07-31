@@ -27,11 +27,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     // CommonCard と同じ影値
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 2,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
   ledBg: {
     backgroundColor: '#212121',
