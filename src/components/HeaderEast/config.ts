@@ -37,7 +37,6 @@ export const tokyoMetroConfig: HeaderEastThemeConfig = {
   gradientColors: ['#fcfcfc', '#fcfcfc', '#eee', '#fcfcfc', '#fcfcfc'] as const,
   gradientLocations: [0, 0.45, 0.5, 0.6, 0.6] as const,
   rootStyle: {
-    boxShadow: '0px 2px 2px rgba(51, 51, 51, 0.25)',
     paddingBottom: 4,
   },
   textColor: '#555',
@@ -46,6 +45,12 @@ export const tokyoMetroConfig: HeaderEastThemeConfig = {
   divider: {
     height: isTablet ? 6 : 4,
     color: 'dynamic',
+    extraStyle: {
+      // boxShadow はルートのボーダーボックス基準で描画されるため、
+      // ルート(paddingBottom: 4 の透明領域を持つ)に付けると影が divider から
+      // 数px下に離れてしまう。divider 自身に付けて境界線に密着させる。
+      boxShadow: '0px 2px 2px rgba(51, 51, 51, 0.25)',
+    },
   },
   numberingIcon: {
     wrapped: true,
