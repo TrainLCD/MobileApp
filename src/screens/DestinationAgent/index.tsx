@@ -599,7 +599,10 @@ const DestinationAgentScreen = () => {
         </ScrollView>
 
         {isEmpty && (
-          <Animated.View exiting={FadeOut.duration(150)}>
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(150)}
+          >
             <Typography
               style={[
                 styles.disclaimer,
