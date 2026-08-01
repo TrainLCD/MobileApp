@@ -762,7 +762,7 @@ Expo SDK 更新時はこのパッチの要否を再確認する。
 
 | 状況 | クライアント挙動 |
 | --- | --- |
-| 429（レート制限） | `translate('destinationAgentRateLimited')` を表示（端末の言語設定に従う。例: 「本日の利用上限に達しました。また明日お試しください」） |
+| 429（レート制限） | `translate('destinationAgentRateLimited')` を表示（端末の言語設定に従う） |
 | `refused: true` | サーバの定型謝絶文をそのまま表示 |
 | ネットワーク/5xx | `GlobalToast` 表示 + 入力を復元し再送可能に |
 | ストリーム中断（`error` イベント / `done` 前の切断） | ネットワークエラーと同じ扱い（受信途中の `delta` は破棄） |
