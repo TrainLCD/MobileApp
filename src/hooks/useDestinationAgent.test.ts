@@ -221,33 +221,6 @@ describe('useDestinationAgent', () => {
     });
   });
 
-  // 端末の言語設定はテスト環境では英語(react-native-localize のモックが
-  // languageTag を返さないため isJapanese が false)。以下 2 件は端末設定では
-  // なくプロンプトの言語で locale が決まることを確認する。
-  it('日本語のプロンプトには locale=ja を送る', async () => {
-    mockStreamResponse([
-      doneEvent({ reply: 'ok', suggestions: [], refused: false }),
-    ]);
-
-    const sendMessages = renderSendMessages();
-    await sendMessages([{ role: 'user', content: '海が見える駅に行きたい' }]);
-
-    expect(getRequestBody().data.locale).toBe('ja');
-  });
-
-  it('英語のプロンプトには locale=en を送る', async () => {
-    mockStreamResponse([
-      doneEvent({ reply: 'ok', suggestions: [], refused: false }),
-    ]);
-
-    const sendMessages = renderSendMessages();
-    await sendMessages([
-      { role: 'user', content: 'I want to go to a station near the sea' },
-    ]);
-
-    expect(getRequestBody().data.locale).toBe('en');
-  });
-
   it('12件を超える履歴は切り詰めてから送信する', async () => {
     mockStreamResponse([
       doneEvent({ reply: 'ok', suggestions: [], refused: false }),

@@ -6,7 +6,6 @@ import { getSessionToken } from '~/lib/session';
 import { workerUrl } from '~/lib/workerApi';
 import { stationAtom } from '~/store/atoms/station';
 import { isJapanese } from '~/translation';
-import { resolveAgentLocale } from '~/utils/agentLocale';
 import { createSSEParser, parseSSEChunk, type SSEEvent } from '~/utils/sse';
 
 export type AgentMessageRole = 'user' | 'assistant';
@@ -152,20 +151,14 @@ const handleStreamEvent = (
 const buildRequestBody = (
   messages: AgentMessage[],
   currentStationGroupId: number | undefined
-): string => {
-  const trimmed = trimAgentMessages(messages);
-  return JSON.stringify({
+): string =>
+  JSON.stringify({
     data: {
-      messages: trimmed,
-      // locale はサーバが応答言語の指示に使う。端末の言語設定ではなく
-      // ユーザが実際に書いた言語に合わせ、判定できないときだけ端末設定に倒す
-      // (英語端末で日本語を打っても日本語で返るようにするため)。
-      // サーバへ送る本文と同じ(切り詰め後の)履歴から判定する。
-      locale: resolveAgentLocale(trimmed, isJapanese ? 'ja' : 'en'),
+      messages: trimAgentMessages(messages),
+      locale: isJapanese ? 'ja' : 'en',
       ...(currentStationGroupId != null ? { currentStationGroupId } : {}),
     },
   });
-};
 
 const streamRequestHeaders = (idToken: string): Record<string, string> => ({
   'content-type': 'application/json; charset=UTF-8',
