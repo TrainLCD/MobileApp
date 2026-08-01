@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import Typography from '~/components/Typography';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -76,17 +77,23 @@ export const AgentHeader = ({ showReset, onBack, onReset }: Props) => {
       </Typography>
       <View style={[styles.side, styles.sideRight]}>
         {showReset ? (
-          <TouchableOpacity
-            style={styles.resetButton}
-            accessibilityRole="button"
-            accessibilityLabel={translate('destinationAgentReset')}
-            onPress={onReset}
+          // 会話開始・リセットに連動して出入りするため、フェードで切り替えを和らげる
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(150)}
           >
-            {/* 表示は Figma に合わせて主語を省略した短縮ラベル。読み上げは省略前の文言を使う */}
-            <Typography style={styles.resetText}>
-              {translate('destinationAgentResetShort')}
-            </Typography>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.resetButton}
+              accessibilityRole="button"
+              accessibilityLabel={translate('destinationAgentReset')}
+              onPress={onReset}
+            >
+              {/* 表示は Figma に合わせて主語を省略した短縮ラベル。読み上げは省略前の文言を使う */}
+              <Typography style={styles.resetText}>
+                {translate('destinationAgentResetShort')}
+              </Typography>
+            </TouchableOpacity>
+          </Animated.View>
         ) : null}
       </View>
     </View>
