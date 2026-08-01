@@ -30,6 +30,13 @@ const defaultProps = {
   rateLimited: false,
 };
 
+// 送信を抑止すべき状態。Enter 経路・送信ボタン経路の双方で同じ条件を検証する
+const suppressedCases: [string, Partial<typeof defaultProps>][] = [
+  ['空白のみの入力', { value: '   ' }],
+  ['送信中', { sending: true }],
+  ['日次上限に達している場合', { rateLimited: true }],
+];
+
 const renderBar = (props: Partial<typeof defaultProps> = {}) => {
   const view = render(<AgentInputBar {...defaultProps} {...props} />);
   return {
@@ -58,6 +65,8 @@ describe('AgentInputBar', () => {
     // multiline は維持したまま Enter だけを送信に割り当てる
     expect(input.props.multiline).toBe(true);
     expect(input.props.submitBehavior).toBe('submit');
+    // Enter が改行ではなく送信であることをキーラベルでも示す
+    expect(input.props.returnKeyType).toBe('send');
   });
 
   it('空白のみの入力ではEnterで送信しない', () => {
@@ -100,4 +109,22 @@ describe('AgentInputBar', () => {
 
     expect(onSend).toHaveBeenCalledTimes(1);
   });
+
+  // Enter と送信ボタンが同じ canSend 判定を共有していることを、抑止側からも固定する
+  it.each(suppressedCases)(
+    '%sでは送信ボタンも無効化される',
+    (_label, props) => {
+      const onSend = jest.fn();
+      const { getByLabelText } = render(
+        <AgentInputBar {...defaultProps} onSend={onSend} {...props} />
+      );
+      const button = getByLabelText('destinationAgentSend');
+
+      expect(button).toBeDisabled();
+
+      fireEvent.press(button);
+
+      expect(onSend).not.toHaveBeenCalled();
+    }
+  );
 });
