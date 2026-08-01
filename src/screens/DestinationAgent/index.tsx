@@ -12,7 +12,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  LinearTransition,
+} from 'react-native-reanimated';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -428,7 +433,10 @@ const DestinationAgentScreen = () => {
 
       if (!state || state.status === 'loading') {
         return (
-          <View style={styles.suggestions}>
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            style={styles.suggestions}
+          >
             {entry.suggestions.map((suggestion) => (
               <SkeletonPlaceholder
                 key={`${entry.id}-${suggestion.stationId}`}
@@ -441,13 +449,16 @@ const DestinationAgentScreen = () => {
                 />
               </SkeletonPlaceholder>
             ))}
-          </View>
+          </Animated.View>
         );
       }
 
       if (state.status === 'error') {
         return (
-          <View style={styles.suggestionsError}>
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            style={styles.suggestionsError}
+          >
             <Typography style={styles.errorText}>
               {translate('destinationAgentSuggestionsError')}
             </Typography>
@@ -464,34 +475,39 @@ const DestinationAgentScreen = () => {
                 {translate('destinationAgentRetry')}
               </Typography>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         );
       }
 
       return (
         <View style={styles.suggestions}>
-          {state.stations.map((suggestedStation) => {
+          {state.stations.map((suggestedStation, index) => {
             const line = suggestedStation.line;
             if (!line) {
               return null;
             }
             return (
-              <CommonCard
+              // 提案順(モデルの優先順)が視線誘導として伝わるよう上から順に時差フェード
+              <Animated.View
                 key={`${entry.id}-${suggestedStation.id}`}
-                targetStation={suggestedStation}
-                line={line}
-                title={
-                  isJapanese
-                    ? suggestedStation.name || undefined
-                    : suggestedStation.nameRoman || undefined
-                }
-                subtitle={
-                  isJapanese
-                    ? line.nameShort || undefined
-                    : line.nameRoman || undefined
-                }
-                onPress={() => handleDestinationSelected(suggestedStation)}
-              />
+                entering={FadeInDown.delay(index * 60).duration(250)}
+              >
+                <CommonCard
+                  targetStation={suggestedStation}
+                  line={line}
+                  title={
+                    isJapanese
+                      ? suggestedStation.name || undefined
+                      : suggestedStation.nameRoman || undefined
+                  }
+                  subtitle={
+                    isJapanese
+                      ? line.nameShort || undefined
+                      : line.nameRoman || undefined
+                  }
+                  onPress={() => handleDestinationSelected(suggestedStation)}
+                />
+              </Animated.View>
             );
           })}
         </View>
@@ -537,14 +553,20 @@ const DestinationAgentScreen = () => {
           keyboardShouldPersistTaps="handled"
         >
           {isEmpty ? (
-            <AgentEmptyState onSelectExample={handleSend} />
+            // 出現側の段階フェードは AgentEmptyState 内で行い、初回送信時はふっと消す
+            <Animated.View exiting={FadeOut.duration(150)}>
+              <AgentEmptyState onSelectExample={handleSend} />
+            </Animated.View>
           ) : (
             entries.map((entry, index) =>
               // 本文が空の仮置きエントリはバブルを出さない(タイピングインジケータが代わり)
               entry.streaming && !entry.content ? null : (
-                // 出現アニメーションは SelectLineScreen の路線リストと同じ既存イディオム(ui.md)
+                // 並び替えは SelectLineScreen の路線リストと同じ既存イディオム(ui.md)。
+                // 出現は下からのフェード、エラー時の巻き戻し・リセットはフェードアウトで消す
                 <Animated.View
                   key={entry.id}
+                  entering={FadeInDown.duration(250)}
+                  exiting={FadeOut.duration(150)}
                   layout={LinearTransition.springify()}
                   style={
                     entries[index - 1]?.role === entry.role
@@ -562,23 +584,31 @@ const DestinationAgentScreen = () => {
             )
           )}
           {sending && !streamingContent && (
-            <AgentTypingIndicator
-              label={
-                searching ? translate('destinationAgentSearching') : undefined
-              }
-            />
+            // 応答待ちの合図なので唐突に出さず、バブルと同じ下からのフェードで馴染ませる
+            <Animated.View
+              entering={FadeInDown.duration(200)}
+              exiting={FadeOut.duration(150)}
+            >
+              <AgentTypingIndicator
+                label={
+                  searching ? translate('destinationAgentSearching') : undefined
+                }
+              />
+            </Animated.View>
           )}
         </ScrollView>
 
         {isEmpty && (
-          <Typography
-            style={[
-              styles.disclaimer,
-              isLEDTheme ? styles.disclaimerLEDColor : styles.disclaimerColor,
-            ]}
-          >
-            {translate('destinationAgentDisclaimer')}
-          </Typography>
+          <Animated.View exiting={FadeOut.duration(150)}>
+            <Typography
+              style={[
+                styles.disclaimer,
+                isLEDTheme ? styles.disclaimerLEDColor : styles.disclaimerColor,
+              ]}
+            >
+              {translate('destinationAgentDisclaimer')}
+            </Typography>
+          </Animated.View>
         )}
 
         <View
