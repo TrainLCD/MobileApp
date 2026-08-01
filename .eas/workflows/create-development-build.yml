@@ -10,7 +10,7 @@ jobs:
     environment: development
     params:
       platform: ios
-      profile: production
+      profile: development
     steps:
       - uses: eas/checkout
       - name: Checkout submodules
@@ -34,4 +34,4 @@ jobs:
     environment: development
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
-      profile: production
+      profile: development
