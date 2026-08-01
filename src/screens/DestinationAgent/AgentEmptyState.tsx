@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
 import { StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import Chip from '~/components/Chip';
 import Typography from '~/components/Typography';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -11,6 +12,11 @@ const EXAMPLE_KEYS = [
   'destinationAgentExample2',
   'destinationAgentExample3',
 ] as const;
+
+// アイコン → タイトル → 例文チップの順に上から視線が流れるよう段階的にフェードインする。
+// 画面初回マウントだけでなく会話リセット時の再マウントでも再生される
+const ENTER_DURATION = 250;
+const ENTER_STAGGER = 60;
 
 const styles = StyleSheet.create({
   root: {
@@ -48,22 +54,34 @@ export const AgentEmptyState = ({ onSelectExample }: Props) => {
 
   return (
     <View style={styles.root}>
-      <Ionicons name="sparkles" size={48} color="#008ffe" />
-      <Typography style={styles.title}>
-        {translate('destinationAgentEmptyTitle')}
-      </Typography>
+      <Animated.View entering={FadeInDown.duration(ENTER_DURATION)}>
+        <Ionicons name="sparkles" size={48} color="#008ffe" />
+      </Animated.View>
+      <Animated.View
+        entering={FadeInDown.delay(ENTER_STAGGER).duration(ENTER_DURATION)}
+      >
+        <Typography style={styles.title}>
+          {translate('destinationAgentEmptyTitle')}
+        </Typography>
+      </Animated.View>
       <View style={styles.examples}>
-        {EXAMPLE_KEYS.map((key) => {
+        {EXAMPLE_KEYS.map((key, index) => {
           const text = translate(key);
           return (
-            <Chip
+            <Animated.View
               key={key}
-              color="#008ffe"
-              style={[styles.chip, isLEDTheme && styles.ledChip]}
-              onPress={() => onSelectExample(text)}
+              entering={FadeInDown.delay(ENTER_STAGGER * (index + 2)).duration(
+                ENTER_DURATION
+              )}
             >
-              {text}
-            </Chip>
+              <Chip
+                color="#008ffe"
+                style={[styles.chip, isLEDTheme && styles.ledChip]}
+                onPress={() => onSelectExample(text)}
+              >
+                {text}
+              </Chip>
+            </Animated.View>
           );
         })}
       </View>

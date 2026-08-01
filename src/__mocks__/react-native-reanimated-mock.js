@@ -7,6 +7,20 @@ const linearTransition = {
   duration: () => linearTransition,
 };
 
+// FadeIn 等の entering/exiting アニメーションビルダー共通のチェーン可能スタブ
+const animationBuilder = {
+  springify: () => animationBuilder,
+  damping: () => animationBuilder,
+  stiffness: () => animationBuilder,
+  mass: () => animationBuilder,
+  duration: () => animationBuilder,
+  delay: () => animationBuilder,
+  easing: () => animationBuilder,
+  reduceMotion: () => animationBuilder,
+  withCallback: () => animationBuilder,
+  build: () => () => ({ initialValues: {}, animations: {} }),
+};
+
 const ReanimatedMock = {
   View: ReactNative.View,
   Text: ReactNative.Text,
@@ -23,6 +37,12 @@ const ReanimatedMock = {
   useAnimatedScrollHandler: () => jest.fn(),
   useAnimatedGestureHandler: () => jest.fn(),
   LinearTransition: linearTransition,
+  FadeIn: animationBuilder,
+  FadeInDown: animationBuilder,
+  FadeInUp: animationBuilder,
+  FadeOut: animationBuilder,
+  FadeOutDown: animationBuilder,
+  FadeOutUp: animationBuilder,
   withTiming: (value) => value,
   withSpring: (value) => value,
   withDecay: (value) => value,

@@ -1,8 +1,10 @@
 import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   cancelAnimation,
+  FadeIn,
+  LinearTransition,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -111,7 +113,11 @@ export const AgentTypingIndicator = ({ label }: { label?: string }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
   return (
-    <View style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}>
+    // 検索中ラベルの出し入れでバブル幅が変わるため、幅の変化をスプリングで馴染ませる
+    <Animated.View
+      layout={LinearTransition.springify()}
+      style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}
+    >
       {DOT_DELAYS.map((delay) => (
         <Dot
           key={`agent-typing-dot-${delay}`}
@@ -120,15 +126,17 @@ export const AgentTypingIndicator = ({ label }: { label?: string }) => {
         />
       ))}
       {label ? (
-        <Typography
-          style={[
-            styles.label,
-            isLEDTheme ? styles.labelLEDColor : styles.labelColor,
-          ]}
-        >
-          {label}
-        </Typography>
+        <Animated.View entering={FadeIn.duration(200)}>
+          <Typography
+            style={[
+              styles.label,
+              isLEDTheme ? styles.labelLEDColor : styles.labelColor,
+            ]}
+          >
+            {label}
+          </Typography>
+        </Animated.View>
       ) : null}
-    </View>
+    </Animated.View>
   );
 };

@@ -175,8 +175,16 @@ Figma デザインは人力ではなく Figma MCP で本書を入力として起
   追加時に `scrollToEnd({ animated: true })`。
 - 上下パディング 16、横パディング 24（既存画面と同一）。
   バブル間隔 12、同一話者の連続バブル間は 4。
-- 出現アニメーション: Reanimated `LinearTransition.springify()`
+- 並び替えアニメーション: Reanimated `LinearTransition.springify()`
   （SelectLineScreen の路線リストと同じ既存イディオム）。
+- 出現・消滅アニメーション: バブルは `FadeInDown`（250ms）で下から
+  フェードイン、エラー時の巻き戻しと会話リセットは `FadeOut`（150ms）。
+  タイピングインジケータ・空状態（アイコン → タイトル → 例文チップの
+  段階フェード）・提案カード（提案順の時差フェード）・ヘッダーの
+  リセットボタン・送信ボタンの有効/無効切り替えにも同系統の短い
+  フェードを適用する。いずれも Reanimated 既定の
+  `ReduceMotion.System` に従い、OS の視差効果を減らす設定では
+  自動的に無効化される。
 
 #### メッセージバブル
 

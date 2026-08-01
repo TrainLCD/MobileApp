@@ -1,7 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
-import { type RefObject, useMemo } from 'react';
+import { type RefObject, useCallback, useMemo } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
 import Typography from '~/components/Typography';
 import { FONTS } from '~/constants';
 import { AGENT_MAX_MESSAGE_LENGTH } from '~/hooks/useDestinationAgent';
@@ -48,9 +54,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
   counter: {
     fontSize: 12,
     textAlign: 'right',
@@ -86,6 +89,24 @@ export const AgentInputBar = ({
 
   const canSend = !sending && !rateLimited && value.trim().length > 0;
 
+  // Enter による送信。送信ボタンと同じ可否判定を通し、空文字や送信中の
+  // 二重送信を弾く(親側にも防衛はあるが、入力バー単体で完結させる)
+  const handleSubmitEditing = useCallback(() => {
+    if (!canSend) {
+      return;
+    }
+    onSend();
+  }, [canSend, onSend]);
+
+  // 送信可否の切り替えを瞬時の明滅にせず、短いフェードで馴染ませる。
+  // TouchableOpacity 自身の押下フィードバックと干渉しないようラッパー側で持つ
+  const sendButtonAnimatedStyle = useAnimatedStyle(
+    () => ({
+      opacity: withTiming(canSend ? 1 : 0.5, { duration: 150 }),
+    }),
+    [canSend]
+  );
+
   return (
     <View>
       <View style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}>
@@ -99,6 +120,16 @@ export const AgentInputBar = ({
           onChangeText={onChangeText}
           editable={!rateLimited}
           multiline
+          // multiline のままだと Enter が改行として消費されるため、送信イベントへ
+          // 振り替える。'blurAndSubmit' ではなく 'submit' にしてキーボードを開いた
+          // まま保ち、続けて質問できるようにする。
+          // 日本語入力の確定に使う Enter は IME 側が消費する(iOS は未確定文字列が
+          // あると shouldChangeTextInRange に "\n" が来ず、Android も変換中は
+          // onEditorAction が発火しない)ため、変換確定で送信されることはない。
+          submitBehavior="submit"
+          // Enter が改行ではなく送信であることをキーラベルでも示す
+          returnKeyType="send"
+          onSubmitEditing={handleSubmitEditing}
           maxLength={AGENT_MAX_MESSAGE_LENGTH}
           placeholder={translate(
             rateLimited
@@ -107,29 +138,35 @@ export const AgentInputBar = ({
           )}
           placeholderTextColor={isLEDTheme ? '#ababab' : '#8c8c8c'}
         />
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={translate('destinationAgentSend')}
-          accessibilityState={{ disabled: !canSend }}
-          disabled={!canSend}
-          onPress={onSend}
-          style={[
-            styles.button,
-            !canSend && styles.buttonDisabled,
-            {
-              backgroundColor: isLEDTheme ? '#000' : '#212121',
-              borderTopRightRadius: isLEDTheme ? 0 : 8,
-              borderBottomRightRadius: isLEDTheme ? 0 : 8,
-            },
-          ]}
-        >
-          <Ionicons name="arrow-up" size={21} color="#fff" />
-        </TouchableOpacity>
+        <Animated.View style={sendButtonAnimatedStyle}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={translate('destinationAgentSend')}
+            accessibilityState={{ disabled: !canSend }}
+            disabled={!canSend}
+            onPress={onSend}
+            style={[
+              styles.button,
+              {
+                backgroundColor: isLEDTheme ? '#000' : '#212121',
+                borderTopRightRadius: isLEDTheme ? 0 : 8,
+                borderBottomRightRadius: isLEDTheme ? 0 : 8,
+              },
+            ]}
+          >
+            <Ionicons name="arrow-up" size={21} color="#fff" />
+          </TouchableOpacity>
+        </Animated.View>
       </View>
       {value.length > COUNTER_VISIBLE_THRESHOLD && (
-        <Typography style={styles.counter}>
-          {`${value.length}/${AGENT_MAX_MESSAGE_LENGTH}`}
-        </Typography>
+        <Animated.View
+          entering={FadeIn.duration(150)}
+          exiting={FadeOut.duration(100)}
+        >
+          <Typography style={styles.counter}>
+            {`${value.length}/${AGENT_MAX_MESSAGE_LENGTH}`}
+          </Typography>
+        </Animated.View>
       )}
     </View>
   );

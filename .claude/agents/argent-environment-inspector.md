@@ -40,8 +40,8 @@ but required by the main agent, fill it in by manual inspection of the project.
    file existence.
 
 2. **Determine the project type.** From the snapshot, classify the project:
+   - `react-native` in `package.json` dependencies → React Native project
    - `expo` in dependencies or `app.json` with `expo` key → Expo project
-   - `react-native` in `package.json` dependencies and no Expo markers → React Native project
    - `pubspec.yaml` present → Flutter project
    - `ios/*.xcodeproj` or `ios/*.xcworkspace` without `react-native` → native iOS
    - `android/build.gradle` or `android/build.gradle.kts` without `react-native` → native Android
