@@ -61,11 +61,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: isTablet ? 64 : 56,
     paddingHorizontal: 24,
-    elevation: 1,
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 4,
+    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
     borderWidth: 1,
     borderColor: '#008ffe',
   },
@@ -186,8 +182,8 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
         isTablet && {
           width: '80%',
           maxHeight: '90%',
-          shadowOpacity: 0.25,
-          shadowColor: '#333',
+          // CustomModal 既定の影のオフセット・ぼかしはそのまま、色だけ変える
+          boxShadow: '0px 6px 24px rgba(51, 51, 51, 0.25)',
           borderRadius: 16,
         },
       ]}

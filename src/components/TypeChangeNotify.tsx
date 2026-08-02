@@ -146,10 +146,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
-    shadowOpacity: 0.25,
-    shadowColor: '#333',
-    shadowRadius: 1,
-    elevation: 5,
+    // 旧 shadow* の iOS 描画(グリフ影・既定オフセット (0, -3))を textShadow で踏襲
+    textShadowColor: 'rgba(51, 51, 51, 0.25)',
+    textShadowOffset: { width: 0, height: -3 },
+    textShadowRadius: 1,
     fontSize: RFValue(18),
     lineHeight: Platform.OS === 'android' ? RFValue(18) : undefined,
   },
@@ -157,10 +157,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: 'bold',
-    shadowOpacity: 0.25,
-    shadowColor: '#333',
-    shadowRadius: 1,
-    elevation: 5,
+    // 旧 shadow* の iOS 描画(グリフ影・既定オフセット (0, -3))を textShadow で踏襲
+    textShadowColor: 'rgba(51, 51, 51, 0.25)',
+    textShadowOffset: { width: 0, height: -3 },
+    textShadowRadius: 1,
     fontSize: RFValue(12),
     includeFontPadding: false,
   },
@@ -1079,7 +1079,7 @@ const JOBars = React.memo(function JOBars({
             <Typography
               adjustsFontSizeToFit
               numberOfLines={1}
-              style={[styles.text, { shadowOpacity: 0 }]}
+              style={[styles.text, { textShadowColor: 'transparent' }]}
             >
               {(trainType.name ?? '')
                 .replace('\n', '')
@@ -1091,7 +1091,7 @@ const JOBars = React.memo(function JOBars({
               adjustsFontSizeToFit
               style={[
                 isJaEnabled ? styles.textEn : styles.text,
-                { shadowOpacity: 0 },
+                { textShadowColor: 'transparent' },
               ]}
               numberOfLines={1}
             >
@@ -1139,7 +1139,7 @@ const JOBars = React.memo(function JOBars({
             <Typography
               numberOfLines={1}
               adjustsFontSizeToFit
-              style={[styles.text, { shadowOpacity: 0 }]}
+              style={[styles.text, { textShadowColor: 'transparent' }]}
             >
               {(nextTrainType.name ?? '')
                 .replace('\n', '')
@@ -1151,7 +1151,7 @@ const JOBars = React.memo(function JOBars({
               adjustsFontSizeToFit
               style={[
                 isJaEnabled ? styles.textEn : styles.text,
-                { shadowOpacity: 0 },
+                { textShadowColor: 'transparent' },
               ]}
               numberOfLines={1}
             >

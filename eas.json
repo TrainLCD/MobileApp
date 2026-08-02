@@ -23,18 +23,6 @@
         "buildConfiguration": "Release"
       }
     },
-    "preview": {
-      "distribution": "store",
-      "env": {
-        "EAS_USE_CACHE": "1"
-      },
-      "cache": {
-        "paths": [
-          "./ios/Pods",
-          "./ios/Podfile.lock"
-        ]
-      }
-    },
     "production": {
       "distribution": "store",
       "env": {
@@ -72,7 +60,7 @@
         "applicationId": "me.tinykitten.trainlcd"
       },
       "ios": {
-        "ascAppId": "6450133462",
+        "ascAppId": "1486355943",
         "bundleIdentifier": "me.tinykitten.trainlcd"
       }
     }

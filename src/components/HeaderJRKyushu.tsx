@@ -13,13 +13,6 @@ import Typography from './Typography';
 
 const styles = StyleSheet.create({
   root: {
-    shadowColor: '#333',
-    shadowOpacity: 0.25,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowRadius: 1,
     paddingBottom: 4,
     zIndex: 9999,
   },
@@ -103,8 +96,11 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'stretch',
     height: isTablet ? 6 : 4,
-    elevation: 2,
     backgroundColor: '#E50012',
+    // boxShadow はルートのボーダーボックス基準で描画されるため、
+    // ルート(paddingBottom: 4 の透明領域を持つ)に付けると影が divider から
+    // 数px下に離れてしまう。divider 自身に付けて境界線に密着させる。
+    boxShadow: '0px 2px 2px rgba(51, 51, 51, 0.25)',
   },
   headerTexts: {
     flexDirection: 'row',

@@ -37,6 +37,7 @@ import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useEnsureSelectLineInHistory,
   useEtaAnchor,
   useEtaFallback,
   useFirstStop,
@@ -276,6 +277,10 @@ const MainScreen: React.FC = () => {
   const currentStationRef = useRef(currentStation);
   const stationsRef = useRef(stations);
   const navigation = useNavigation();
+
+  // Activity再生成からの復帰などでスタックがMain単独になった場合に
+  // SelectLineを履歴へ復元し、戻る操作でアプリが落ちないようにする
+  useEnsureSelectLineInHistory();
 
   const handleCloseSelectBoundModal = useCallback(() => {
     setIsSelectBoundModalOpen(false);

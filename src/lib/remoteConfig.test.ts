@@ -3,6 +3,7 @@ import {
   getEtaFallbackArrivalConfirmMarginSec,
   getEtaFallbackMaxDurationMin,
   getMaxPermitAccuracy,
+  isAIAgentFeatureEnabled,
   isEtaAssistEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
   isTTSFeatureEnabled,
@@ -195,6 +196,38 @@ describe('isTTSFeatureEnabled（サーバー側キルスイッチ）', () => {
       'remote config fetch failed: 503'
     );
     expect(isTTSFeatureEnabled()).toBe(true);
+  });
+});
+
+describe('isAIAgentFeatureEnabled（サーバー側キルスイッチ）', () => {
+  it('falls back to false before setup', () => {
+    expect(isAIAgentFeatureEnabled()).toBe(false);
+  });
+
+  it('RemoteがONなら有効', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500, ai_agent_enabled: true });
+    await setupRemoteConfig();
+    expect(isAIAgentFeatureEnabled()).toBe(true);
+  });
+
+  it('RemoteがOFFなら無効', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500, ai_agent_enabled: false });
+    await setupRemoteConfig();
+    expect(isAIAgentFeatureEnabled()).toBe(false);
+  });
+
+  it('falls back to false when the boolean is missing', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500 });
+    await setupRemoteConfig();
+    expect(isAIAgentFeatureEnabled()).toBe(false);
+  });
+
+  it('falls back to false when fetching remote config fails', async () => {
+    mockRemoteConfig({}, false);
+    await expect(setupRemoteConfig()).rejects.toThrow(
+      'remote config fetch failed: 503'
+    );
+    expect(isAIAgentFeatureEnabled()).toBe(false);
   });
 });
 

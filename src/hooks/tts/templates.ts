@@ -21,7 +21,7 @@ const TOKYO_METRO: ThemeTemplate = {
     '次は{nextStationJa}{#if isNextStopTerminus}、終点{/if}です。',
     '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}',
     '{#if shouldAnnounceAfterNextStop}',
-    '{nextStationJa}の次は{#if isAfterNextStopTerminus}、終点{/if}、{afterNextStationJa}に停まります。',
+    '{nextStationJa}の次は{#if isAfterNextStopTerminus}、終点{/if}、{afterNextStationJa}にとまります。',
     '{/if}',
     '{#if hasBetweenStations}{betweenStationsListJa}へおいでのお客様はお乗り換えです。{/if}',
     '{#if isNextStopThroughBoundary}',
@@ -107,11 +107,11 @@ const JR_WEST: ThemeTemplate = {
     '{boundForJa}ゆきです。',
     '{/if}',
     '{#if shouldAnnounceJrWestStopList}',
-    '{jrWestStopsListJa}の順に停まります。',
+    '{jrWestStopsListJa}の順にとまります。',
     '{#if lastAnnouncedStopIsBound}{:else}{lastAnnouncedStopJa}から先は、後ほどご案内いたします。{/if}',
     '{/if}',
     '次は{#if nextStationIsBound}終点・{/if}{nextStationJa}、{nextStationJa}です。',
-    '{#if shouldAnnounceAfterNextStop}{nextStationJa}を出ますと、次は{afterNextStationJa}に停まります。{/if}'
+    '{#if shouldAnnounceAfterNextStop}{nextStationJa}を出ますと、次は{afterNextStationJa}にとまります。{/if}'
   ),
   ARRIVING: t(
     '{#if nextStationIsBound}',
@@ -122,7 +122,7 @@ const JR_WEST: ThemeTemplate = {
     '{:else}',
     'まもなく{nextStationJa}、{nextStationJa}です。',
     '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}',
-    '{#if shouldAnnounceAfterNextStop}{nextStationJa}を出ますと、次は{afterNextStationJa}に停まります。{/if}',
+    '{#if shouldAnnounceAfterNextStop}{nextStationJa}を出ますと、次は{afterNextStationJa}にとまります。{/if}',
     '{/if}'
   ),
 };

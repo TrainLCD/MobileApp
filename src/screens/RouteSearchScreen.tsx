@@ -3,9 +3,8 @@ import {
   type FlashListProps,
   type ListRenderItemInfo,
 } from '@shopify/flash-list';
-import { useQueryClient } from '@tanstack/react-query';
 import { Orientation } from 'expo-screen-orientation';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -15,7 +14,7 @@ import React, {
 } from 'react';
 import { Alert, Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { Station, TrainType } from '~/@types/graphql';
+import type { Station } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { EmptyResult } from '~/components/EmptyResult';
@@ -26,45 +25,17 @@ import { SearchBar } from '~/components/SearchBar';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import { TrainTypeListModal } from '~/components/TrainTypeListModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
+import { useAIAgentFeatureEnabled } from '~/hooks/useAIAgentFeatureEnabled';
+import { useDestinationSelection } from '~/hooks/useDestinationSelection';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
-import { graphqlQueryKey } from '~/lib/gql';
-import {
-  GET_LINE_GROUP_STATIONS,
-  GET_LINE_STATIONS,
-  GET_ROUTE_TYPES_LIGHT,
-  GET_STATIONS_BY_NAME,
-} from '~/lib/graphql/queries';
-import navigationState from '~/store/atoms/navigation';
+import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
+import { AgentEntryBanner } from '~/screens/DestinationAgent/AgentEntryBanner';
 import isTablet from '~/utils/isTablet';
-import {
-  computeCurrentStationInRoutes,
-  getStationWithMatchingLine,
-} from '~/utils/routeSearch';
-import { findLocalType } from '~/utils/trainTypeString';
-import lineState, { pendingLineAtom } from '../store/atoms/line';
-import stationState, {
-  stationAtom,
-  wantedDestinationAtom,
-} from '../store/atoms/station';
+import { stationAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
-
-type GetRouteTypesData = {
-  routeTypes: {
-    nextPageToken: string | null;
-    trainTypes: TrainType[];
-  };
-};
-
-type GetRouteTypesVariables = {
-  fromStationGroupId: number;
-  toStationGroupId: number;
-  pageSize?: number;
-  pageToken?: string;
-  viaLineId?: number;
-};
 
 type GetStationsByNameData = {
   stationsByName: Station[];
@@ -74,23 +45,6 @@ type GetStationsByNameVariables = {
   name: string;
   limit?: number;
   fromStationGroupId?: number;
-};
-
-type GetLineStationsData = {
-  lineStations: Station[];
-};
-
-type GetLineStationsVariables = {
-  lineId: number;
-  stationId?: number;
-};
-
-type GetLineGroupStationsData = {
-  lineGroupStations: Station[];
-};
-
-type GetLineGroupStationsVariables = {
-  lineGroupId: number;
 };
 
 const styles = StyleSheet.create({
@@ -104,17 +58,24 @@ const styles = StyleSheet.create({
   listHeaderContainer: {
     marginTop: 16,
   },
-  searchBarContainer: {
-    marginBottom: 48,
-  },
   listContainerStyle: {
     paddingHorizontal: 24,
     paddingBottom: 128,
   },
+  // AI相談バナーは検索バーと検索結果見出しの間の余白(従来 marginBottom: 48)に置く。
+  // バナー非表示時に従来と同じ余白を保つため、間隔は見出し側の marginTop で確保する。
+  agentEntryBanner: {
+    marginTop: 16,
+  },
   searchResultHeading: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginTop: 48,
     marginBottom: 16,
+  },
+  // バナー表示時はバナーとの間隔を Figma 指定の 24 に詰める
+  searchResultHeadingWithBanner: {
+    marginTop: 24,
   },
   // 従来は行間に EmptyLineSeparator(height: 8) を挟んでいたが、
   // FlashList の ItemSeparatorComponent は numColumns 使用時に各セル内へ描画されるため
@@ -138,13 +99,8 @@ const AnimatedFlashList = RNAnimated.createAnimatedComponent(
 
 const RouteSearchScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
-  const [selectBoundModalVisible, setSelectBoundModalVisible] = useState(false);
-  const [trainTypeListModalVisible, setTrainTypeListModalVisible] =
-    useState(false);
   const [searchResults, setSearchResults] = useState<Station[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const [selectedDestination, setSelectedDestination] =
-    useState<Station | null>(null);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const orientation = useDeviceOrientation();
@@ -160,11 +116,25 @@ const RouteSearchScreen = () => {
   );
 
   const station = useAtomValue(stationAtom);
-  const wantedDestination = useAtomValue(wantedDestinationAtom);
-  const setStationState = useSetAtom(stationState);
-  const setNavigationState = useSetAtom(navigationState);
-  const pendingLine = useAtomValue(pendingLineAtom);
-  const setLineState = useSetAtom(lineState);
+  // AgentEntryBanner と同じフラグを購読し、バナー表示時の見出し余白を Figma 指定へ切り替える
+  const aiAgentEnabled = useAIAgentFeatureEnabled();
+
+  const {
+    handleDestinationSelected,
+    handleTrainTypeSelected,
+    selectBoundModalVisible,
+    trainTypeListModalVisible,
+    selectedDestination,
+    wantedDestination,
+    trainTypeModalLine,
+    fetchRouteTypesLoading,
+    modalLoading,
+    modalError,
+    handleCloseSelectBoundModal,
+    handleSelectBoundModalCloseAnimationEnd,
+    handleBoundSelected,
+    handleCloseTrainTypeListModal,
+  } = useDestinationSelection();
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
@@ -203,44 +173,10 @@ const RouteSearchScreen = () => {
     setHasSearched(false);
   }, [station?.groupId]);
 
-  const [
-    fetchRouteTypes,
-    {
-      data: routeTypesData,
-      loading: fetchRouteTypesLoading,
-      error: fetchRouteTypesError,
-    },
-  ] = useLazyGraphQLQuery<GetRouteTypesData, GetRouteTypesVariables>(
-    GET_ROUTE_TYPES_LIGHT
-  );
-
   const [fetchByName, { loading: byNameLoading, error: byNameError }] =
     useLazyGraphQLQuery<GetStationsByNameData, GetStationsByNameVariables>(
       GET_STATIONS_BY_NAME
     );
-
-  const [
-    fetchStationsByLineId,
-    {
-      loading: fetchStationsByLineIdLoading,
-      error: fetchStationsByLineIdError,
-    },
-  ] = useLazyGraphQLQuery<GetLineStationsData, GetLineStationsVariables>(
-    GET_LINE_STATIONS
-  );
-
-  const [
-    fetchStationsByLineGroupId,
-    {
-      loading: fetchStationsByLineGroupIdLoading,
-      error: fetchStationsByLineGroupIdError,
-    },
-  ] = useLazyGraphQLQuery<
-    GetLineGroupStationsData,
-    GetLineGroupStationsVariables
-  >(GET_LINE_GROUP_STATIONS);
-
-  const queryClient = useQueryClient();
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -273,149 +209,6 @@ const RouteSearchScreen = () => {
     }
   }, [byNameError]);
 
-  const handleLineSelected = useCallback(
-    async (selectedStation: Station) => {
-      setSelectBoundModalVisible(true);
-      setSelectedDestination(selectedStation);
-
-      const newPendingLine = selectedStation.line ?? null;
-
-      setNavigationState((prev) => ({
-        ...prev,
-        trainType: null,
-        pendingTrainType: null,
-      }));
-      setStationState((prev) => ({
-        ...prev,
-        pendingStations: [],
-        wantedDestination: null,
-      }));
-      setLineState((prev) => ({
-        ...prev,
-        pendingLine: newPendingLine,
-      }));
-
-      // Guard: ensure both lineId and stationId are present before calling the query
-      if (
-        !selectedStation.groupId ||
-        !selectedStation.line?.id ||
-        !station?.groupId
-      ) {
-        return;
-      }
-
-      const result = await fetchRouteTypes({
-        variables: {
-          fromStationGroupId: station.groupId,
-          toStationGroupId: selectedStation.groupId,
-          pageSize: SEARCH_STATION_RESULT_LIMIT,
-          viaLineId: selectedStation.line.id,
-        },
-      });
-
-      const fetchedTrainTypes = result.data?.routeTypes.trainTypes ?? [];
-
-      if (!fetchedTrainTypes?.length) {
-        if (!selectedStation.line?.id) {
-          return;
-        }
-        // 列車種別が存在しない場合は選択した行き先駅の路線を使用
-        setLineState((prev) => ({
-          ...prev,
-          pendingLine: selectedStation.line ?? null,
-        }));
-        // 現在の駅の路線情報を選択した路線に合わせて更新
-        const updatedStation = getStationWithMatchingLine(
-          station,
-          selectedStation.line ?? null
-        );
-        setStationState((prev) => ({
-          ...prev,
-          pendingStation: updatedStation,
-          station: updatedStation,
-        }));
-        const stationsByLineIdRes = await fetchStationsByLineId({
-          variables: {
-            lineId: selectedStation.line.id,
-          },
-        });
-        const stations = stationsByLineIdRes.data?.lineStations ?? [];
-        setStationState((prev) => ({
-          ...prev,
-          pendingStations: stations,
-        }));
-        return;
-      }
-
-      // 先に選択される列車種別を決定
-      const localTrainType =
-        findLocalType(fetchedTrainTypes) ?? fetchedTrainTypes[0];
-
-      if (!localTrainType?.groupId) {
-        return;
-      }
-
-      // 選択された列車種別のみを使って路線を決定
-      const newCurrentStation = computeCurrentStationInRoutes(
-        station,
-        newPendingLine,
-        [localTrainType]
-      );
-      if (newCurrentStation) {
-        setStationState((prev) => {
-          const isSamePendingStation =
-            prev.pendingStation?.groupId === newCurrentStation.groupId;
-          const isSameStationLine =
-            prev.station?.line?.id === newCurrentStation.line?.id;
-
-          if (isSamePendingStation && isSameStationLine) {
-            return prev;
-          }
-          return {
-            ...prev,
-            pendingStation: isSamePendingStation
-              ? prev.pendingStation
-              : newCurrentStation,
-            // stationのlineも列車種別とマッチする路線に更新
-            station: prev.station
-              ? { ...prev.station, line: newCurrentStation.line }
-              : prev.station,
-          };
-        });
-        // pendingLineを現在の駅にマッチする路線に更新
-        if (newCurrentStation.line) {
-          setLineState((prev) => ({
-            ...prev,
-            pendingLine: newCurrentStation.line ?? null,
-          }));
-        }
-      }
-
-      const stationsByLineGroupIdRes = await fetchStationsByLineGroupId({
-        variables: { lineGroupId: localTrainType.groupId },
-      });
-      const stations = stationsByLineGroupIdRes.data?.lineGroupStations ?? [];
-      setStationState((prev) => ({
-        ...prev,
-        pendingStations: stations,
-      }));
-      setNavigationState((prev) => ({
-        ...prev,
-        fetchedTrainTypes,
-        pendingTrainType: localTrainType,
-      }));
-    },
-    [
-      station,
-      fetchStationsByLineId,
-      fetchStationsByLineGroupId,
-      fetchRouteTypes,
-      setNavigationState,
-      setStationState,
-      setLineState,
-    ]
-  );
-
   const renderCard = useCallback(
     (item: Station) => {
       const line = item.line;
@@ -435,11 +228,11 @@ const RouteSearchScreen = () => {
               : line.nameRoman || undefined
           }
           loading={fetchRouteTypesLoading}
-          onPress={() => handleLineSelected(item)}
+          onPress={() => handleDestinationSelected(item)}
         />
       );
     },
-    [handleLineSelected, fetchRouteTypesLoading]
+    [handleDestinationSelected, fetchRouteTypesLoading]
   );
 
   const renderItem = ({ item, index }: ListRenderItemInfo<Station>) => {
@@ -469,75 +262,12 @@ const RouteSearchScreen = () => {
   const keyExtractor = (s: Station, index: number) =>
     `${s.groupId ?? 0}-${s.id ?? index}`;
 
-  const handleTrainTypeSelected = useCallback(
-    async (trainType: TrainType) => {
-      if (!trainType.groupId) return;
-
-      setSelectBoundModalVisible(true);
-
-      setNavigationState((prev) => ({
-        ...prev,
-        pendingTrainType: trainType,
-      }));
-
-      // キャッシュ済みでも常に最新の駅一覧を取得したいので該当キーを破棄する
-      queryClient.removeQueries({
-        queryKey: graphqlQueryKey(GET_LINE_GROUP_STATIONS, {
-          lineGroupId: trainType.groupId,
-        }),
-      });
-
-      const pendingStationsData = await fetchStationsByLineGroupId({
-        variables: {
-          lineGroupId: trainType.groupId,
-        },
-      });
-      const pendingStations = pendingStationsData.data?.lineGroupStations ?? [];
-      setStationState((prev) => ({
-        ...prev,
-        pendingStations,
-      }));
-    },
-    [
-      fetchStationsByLineGroupId,
-      setStationState,
-      setNavigationState,
-      queryClient,
-    ]
-  );
-
   // NowHeader のスクロール連動アニメーションを native driver で駆動する
   // (AnimatedFlashList にアタッチされ、スクロールイベントは UI スレッドで scrollY へ反映される)
   const handleScroll = RNAnimated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     { useNativeDriver: true }
   );
-
-  const currentStationInRoutes = useMemo<Station | null>(
-    () =>
-      computeCurrentStationInRoutes(
-        station,
-        pendingLine,
-        routeTypesData?.routeTypes?.trainTypes ?? []
-      ),
-    [station, pendingLine, routeTypesData?.routeTypes]
-  );
-
-  const currentStationLineForTrainTypeModal = useMemo(() => {
-    const currentLine = currentStationInRoutes?.line;
-    const currentStationLines = station?.lines ?? [];
-
-    if (
-      currentLine &&
-      currentStationLines.some(
-        (stationLine) => stationLine.id === currentLine.id
-      )
-    ) {
-      return currentLine;
-    }
-
-    return station?.line ?? currentStationLines[0] ?? null;
-  }, [currentStationInRoutes?.line, station?.line, station?.lines]);
 
   // ウォークスルーのレイアウト計測
   const measureSearchBar = useCallback(() => {
@@ -622,14 +352,16 @@ const RouteSearchScreen = () => {
           ]}
           ListHeaderComponent={
             <View style={styles.listHeaderContainer}>
-              <View
-                ref={searchBarRef}
-                style={styles.searchBarContainer}
-                onLayout={measureSearchBar}
-              >
+              <View ref={searchBarRef} onLayout={measureSearchBar}>
                 <SearchBar onSearch={handleSearch} />
               </View>
-              <Heading style={styles.searchResultHeading}>
+              <AgentEntryBanner style={styles.agentEntryBanner} />
+              <Heading
+                style={[
+                  styles.searchResultHeading,
+                  aiAgentEnabled && styles.searchResultHeadingWithBanner,
+                ]}
+              >
                 {translate('searchResult')}
               </Heading>
             </View>
@@ -656,44 +388,22 @@ const RouteSearchScreen = () => {
 
       <SelectBoundModal
         visible={selectBoundModalVisible}
-        onClose={() => {
-          setSelectBoundModalVisible(false);
-        }}
-        onCloseAnimationEnd={() => {
-          setSelectedDestination(null);
-        }}
-        onBoundSelect={() => {
-          setSelectBoundModalVisible(false);
-          setTrainTypeListModalVisible(false);
-        }}
-        loading={
-          fetchRouteTypesLoading ||
-          fetchStationsByLineIdLoading ||
-          fetchStationsByLineGroupIdLoading
-        }
-        error={
-          fetchRouteTypesError ??
-          fetchStationsByLineIdError ??
-          fetchStationsByLineGroupIdError ??
-          null
-        }
+        onClose={handleCloseSelectBoundModal}
+        onCloseAnimationEnd={handleSelectBoundModalCloseAnimationEnd}
+        onBoundSelect={handleBoundSelected}
+        loading={modalLoading}
+        error={modalError}
         onTrainTypeSelect={handleTrainTypeSelected}
         targetDestination={selectedDestination}
       />
       <TrainTypeListModal
         visible={trainTypeListModalVisible}
-        line={currentStationLineForTrainTypeModal}
+        line={trainTypeModalLine}
         destination={wantedDestination}
         boardingStation={station}
-        onClose={() => {
-          setTrainTypeListModalVisible(false);
-        }}
+        onClose={handleCloseTrainTypeListModal}
         onSelect={handleTrainTypeSelected}
-        loading={
-          fetchStationsByLineIdLoading ||
-          fetchStationsByLineGroupIdLoading ||
-          fetchRouteTypesLoading
-        }
+        loading={modalLoading}
       />
 
       {currentStep && (

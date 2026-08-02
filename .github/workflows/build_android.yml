@@ -1,0 +1,190 @@
+name: Build Android
+
+on:
+  push:
+    branches:
+      - canary
+      - master
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Build variant"
+        required: true
+        default: devRelease
+        type: choice
+        options:
+          - devRelease
+          - prodRelease
+      upload_to_play:
+        description: "Upload the AAB to Google Play (internal track)"
+        required: false
+        default: true
+        type: boolean
+
+concurrency:
+  group: build-android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - name: Determine build variant
+        id: build_vars
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VARIANT: ${{ github.event.inputs.variant }}
+          UPLOAD_TO_PLAY: ${{ github.event.inputs.upload_to_play }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            variant="$INPUT_VARIANT"
+          elif [ "$REF_NAME" = "master" ]; then
+            variant="prodRelease"
+          else
+            variant="devRelease"
+          fi
+
+          case "$variant" in
+            devRelease|prodRelease) ;;
+            *)
+              echo "::error::Unsupported variant: $variant"
+              exit 1
+              ;;
+          esac
+
+          if [ "$variant" = "prodRelease" ] && [ "$REF_NAME" != "master" ]; then
+            echo "::error::prodRelease can only be built from the master branch (got ref: $REF_NAME)"
+            exit 1
+          fi
+
+          if [ "$variant" = "prodRelease" ]; then
+            echo "gradle_task=:app:bundleProdRelease" >> "$GITHUB_OUTPUT"
+            echo "output_dir=prodRelease" >> "$GITHUB_OUTPUT"
+            echo "package_name=me.tinykitten.trainlcd" >> "$GITHUB_OUTPUT"
+          else
+            echo "gradle_task=:app:bundleDevRelease" >> "$GITHUB_OUTPUT"
+            echo "output_dir=devRelease" >> "$GITHUB_OUTPUT"
+            echo "package_name=me.tinykitten.trainlcd.dev" >> "$GITHUB_OUTPUT"
+          fi
+          echo "variant=$variant" >> "$GITHUB_OUTPUT"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$UPLOAD_TO_PLAY" = "false" ]; then
+            echo "upload_to_play=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "upload_to_play=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup SSH for submodules
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.FONTS_SSH_KEY }}
+
+      - name: Use SSH for GitHub submodules
+        run: git config --global url."git@github.com:TrainLCD/MobileAppFonts.git".insteadOf "https://github.com/TrainLCD/MobileAppFonts.git"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Revoke submodule SSH access
+        run: |
+          git config --global --unset-all url."git@github.com:TrainLCD/MobileAppFonts.git".insteadOf || true
+          if [ -n "${SSH_AGENT_PID:-}" ]; then
+            kill "$SSH_AGENT_PID" || true
+          fi
+          echo "SSH_AUTH_SOCK=" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Write .env.local (prod)
+        if: steps.build_vars.outputs.variant == 'prodRelease'
+        env:
+          DOTENV_CONTENT: ${{ secrets.DOTENV_LOCAL_PRODUCTION }}
+        run: printf '%s' "$DOTENV_CONTENT" > .env.local
+
+      - name: Write .env.local (dev)
+        if: steps.build_vars.outputs.variant != 'prodRelease'
+        env:
+          DOTENV_CONTENT: ${{ secrets.DOTENV_LOCAL }}
+        run: printf '%s' "$DOTENV_CONTENT" > .env.local
+
+      - name: Decode Sentry properties
+        env:
+          SENTRY_PROPERTIES_CONTENT: ${{ secrets.SENTRY_PROPERTIES_BASE64 }}
+        run: printf '%s' "$SENTRY_PROPERTIES_CONTENT" | base64 --decode > android/sentry.properties
+
+      - name: Decode release keystore
+        env:
+          RELEASE_KEYSTORE_CONTENT: ${{ secrets.RELEASE_KEYSTORE }}
+        run: |
+          mkdir -p android/app
+          printf '%s' "$RELEASE_KEYSTORE_CONTENT" | base64 --decode > android/app/release.jks
+
+      - name: Configure signing properties
+        env:
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEYSTORE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEYSTORE_KEY_PASSWORD }}
+        run: |
+          mkdir -p "$HOME/.gradle"
+          python3 - <<'PY'
+          import os
+
+          def escape(value):
+              return value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+
+          entries = {
+              "TRAINLCD_UPLOAD_STORE_FILE": "release.jks",
+              "TRAINLCD_UPLOAD_STORE_PASSWORD": os.environ["STORE_PASSWORD"],
+              "TRAINLCD_UPLOAD_KEY_ALIAS": os.environ["KEY_ALIAS"],
+              "TRAINLCD_UPLOAD_KEY_PASSWORD": os.environ["KEY_PASSWORD"],
+          }
+
+          path = os.path.expanduser("~/.gradle/gradle.properties")
+          with open(path, "a") as f:
+              for key, value in entries.items():
+                  f.write(f"{key}={escape(value)}\n")
+          PY
+
+      - name: Build ${{ steps.build_vars.outputs.variant }}
+        working-directory: android
+        run: ./gradlew ${{ steps.build_vars.outputs.gradle_task }} --no-daemon
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ steps.build_vars.outputs.variant }}
+          path: android/app/build/outputs/bundle/${{ steps.build_vars.outputs.output_dir }}/*.aab
+          if-no-files-found: error
+
+      - name: Upload to Google Play (internal track)
+        if: steps.build_vars.outputs.upload_to_play == 'true'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ steps.build_vars.outputs.package_name }}
+          releaseFiles: android/app/build/outputs/bundle/${{ steps.build_vars.outputs.output_dir }}/*.aab
+          track: internal
+          status: completed
+          mappingFile: android/app/build/outputs/mapping/${{ steps.build_vars.outputs.output_dir }}/mapping.txt

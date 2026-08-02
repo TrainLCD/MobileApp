@@ -54,6 +54,7 @@
     "expo-screen-capture": "~55.0.14",
     "expo-screen-orientation": "~55.0.16",
     "expo-secure-store": "~55.0.14",
+    "expo-speech": "~55.0.16",
     "expo-splash-screen": "~55.0.21",
     "expo-sqlite": "~55.0.16",
     "expo-task-manager": "~55.0.16",
@@ -167,5 +168,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.10.1"
+  "version": "10.11.0"
 }

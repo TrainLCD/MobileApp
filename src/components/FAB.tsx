@@ -27,13 +27,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 50,
-    shadowOpacity: 0.25,
-    shadowOffset: {
-      width: 1,
-      height: 1,
-    },
-    shadowRadius: 2,
-    elevation: 4,
   },
 });
 
@@ -64,12 +57,12 @@ const FAB: React.FC<Props> = ({
 
     return '#fff';
   }, [isLEDTheme, secondary]);
-  const shadowColor = useMemo(() => {
+  const boxShadow = useMemo(() => {
     if (isLEDTheme) {
-      return 'transparent';
+      return undefined;
     }
 
-    return '#000';
+    return '1px 1px 4px rgba(0, 0, 0, 0.25)';
   }, [isLEDTheme]);
   const borderColor = useMemo(() => {
     if (secondary) {
@@ -85,7 +78,7 @@ const FAB: React.FC<Props> = ({
       style={[
         styles.fab,
         {
-          shadowColor,
+          boxShadow,
           borderColor,
           backgroundColor: bgColor,
           borderWidth: isLEDTheme ? 2 : 1,

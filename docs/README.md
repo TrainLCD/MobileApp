@@ -8,3 +8,4 @@
 - [Apollo Client → TanStack Query 移行メモ](./apollo-to-react-query-migration.md)
 - [canary リリース PR でのバージョン更新](./bump-version-on-canary-pr.md)
 - [本番リリース PR でのバージョン更新](./bump-version-on-release-pr.md)
+- [AIエージェント設計書](./spec/ai-agent/architecture.md)

@@ -78,8 +78,8 @@ const styles = StyleSheet.create({
   expandableToggle: {
     backgroundColor: 'transparent',
     borderWidth: 0,
-    elevation: 0,
-    shadowOpacity: 0,
+    // Button 既定の boxShadow を打ち消す
+    boxShadow: [],
     paddingHorizontal: 12,
   },
   expandableToggleTextLight: {

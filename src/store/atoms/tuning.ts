@@ -1,10 +1,8 @@
 import { atom } from 'jotai';
 import {
   DEFAULT_BOTTOM_TRANSITION_INTERVAL,
-  DEFAULT_EN_TTS_VOICE_NAME,
   DEFAULT_HEADER_TRANSITION_DELAY,
   DEFAULT_HEADER_TRANSITION_INTERVAL,
-  DEFAULT_JA_TTS_VOICE_NAME,
 } from '../../constants';
 
 export type TuningState = {
@@ -14,8 +12,6 @@ export type TuningState = {
   devOverlayEnabled: boolean;
   untouchableModeEnabled: boolean;
   telemetryEnabled: boolean;
-  ttsJaVoiceName: string;
-  ttsEnVoiceName: string;
 };
 
 const tuningState = atom<TuningState>({
@@ -25,8 +21,6 @@ const tuningState = atom<TuningState>({
   devOverlayEnabled: true,
   untouchableModeEnabled: false,
   telemetryEnabled: false,
-  ttsJaVoiceName: DEFAULT_JA_TTS_VOICE_NAME,
-  ttsEnVoiceName: DEFAULT_EN_TTS_VOICE_NAME,
 });
 
 export default tuningState;
