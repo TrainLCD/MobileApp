@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { graphqlQueryKey } from '~/lib/gql';
 import {
+  GET_CONNECTED_LINE_GROUP_STATIONS,
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
   GET_ROUTE_TYPES_LIGHT,
@@ -53,12 +54,23 @@ type GetLineGroupStationsVariables = {
   lineGroupId: number;
 };
 
+type GetConnectedLineGroupStationsData = {
+  connectedLineGroupStations: Station[];
+};
+
+type GetConnectedLineGroupStationsVariables = {
+  lineGroupIds: number[];
+};
+
 // GET_ROUTE_TYPES_LIGHT の pageSize。RouteSearchScreen の検索結果上限と同値。
 const ROUTE_TYPES_PAGE_SIZE = 100;
 
 export type UseDestinationSelectionResult = {
   /** 行き先駅カードのタップハンドラ(SelectBoundModal を開いて pendingStations を構築する) */
-  handleDestinationSelected: (selectedStation: Station) => Promise<void>;
+  handleDestinationSelected: (
+    selectedStation: Station,
+    routeLineGroupIds?: number[]
+  ) => Promise<void>;
   /** TrainTypeListModal / SelectBoundModal からの種別選択ハンドラ */
   handleTrainTypeSelected: (trainType: TrainType) => Promise<void>;
   selectBoundModalVisible: boolean;
@@ -77,6 +89,24 @@ export type UseDestinationSelectionResult = {
   handleSelectBoundModalCloseAnimationEnd: () => void;
   handleBoundSelected: () => void;
   handleCloseTrainTypeListModal: () => void;
+};
+
+export const getConnectedRouteSegment = (
+  stations: Station[],
+  currentStationGroupId: number,
+  destinationStationGroupId: number
+): Station[] => {
+  const currentIndex = stations.findIndex(
+    (station) => station.groupId === currentStationGroupId
+  );
+  const destinationIndex = stations.findIndex(
+    (station) => station.groupId === destinationStationGroupId
+  );
+  if (currentIndex === -1 || destinationIndex === -1) return [];
+
+  return currentIndex <= destinationIndex
+    ? stations.slice(currentIndex, destinationIndex + 1)
+    : stations.slice(destinationIndex, currentIndex + 1).reverse();
 };
 
 // RouteSearchScreen の検索結果タップと DestinationAgentScreen の提案カードタップで
@@ -130,8 +160,13 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     GetLineGroupStationsVariables
   >(GET_LINE_GROUP_STATIONS);
 
+  const [fetchConnectedLineGroupStations] = useLazyGraphQLQuery<
+    GetConnectedLineGroupStationsData,
+    GetConnectedLineGroupStationsVariables
+  >(GET_CONNECTED_LINE_GROUP_STATIONS);
+
   const handleDestinationSelected = useCallback(
-    async (selectedStation: Station) => {
+    async (selectedStation: Station, routeLineGroupIds?: number[]) => {
       setSelectBoundModalVisible(true);
       setSelectedDestination(selectedStation);
 
@@ -141,6 +176,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         ...prev,
         trainType: null,
         pendingTrainType: null,
+        fetchedTrainTypes: [],
       }));
       setStationState((prev) => ({
         ...prev,
@@ -151,6 +187,36 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         ...prev,
         pendingLine: newPendingLine,
       }));
+
+      if (
+        routeLineGroupIds?.length &&
+        station?.groupId != null &&
+        selectedStation.groupId != null
+      ) {
+        const result = await fetchConnectedLineGroupStations({
+          variables: { lineGroupIds: routeLineGroupIds },
+        });
+        const pendingStations = getConnectedRouteSegment(
+          result.data?.connectedLineGroupStations ?? [],
+          station.groupId,
+          selectedStation.groupId
+        );
+        const pendingStation = pendingStations[0];
+        const wantedDestination = pendingStations.at(-1);
+        if (!pendingStation || !wantedDestination) return;
+
+        setStationState((prev) => ({
+          ...prev,
+          pendingStation,
+          pendingStations,
+          wantedDestination,
+        }));
+        setLineState((prev) => ({
+          ...prev,
+          pendingLine: pendingStation.line ?? newPendingLine,
+        }));
+        return;
+      }
 
       // Guard: ensure both lineId and stationId are present before calling the query
       if (
@@ -266,6 +332,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
       station,
       fetchStationsByLineId,
       fetchStationsByLineGroupId,
+      fetchConnectedLineGroupStations,
       fetchRouteTypes,
       setNavigationState,
       setStationState,

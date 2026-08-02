@@ -370,6 +370,15 @@ export const GET_LINE_GROUP_STATIONS = gql`
   }
 `;
 
+export const GET_CONNECTED_LINE_GROUP_STATIONS = gql`
+  ${STATION_FRAGMENT}
+  query GetConnectedLineGroupStations($lineGroupIds: [Int!]!) {
+    connectedLineGroupStations(lineGroupIds: $lineGroupIds) {
+      ...StationFields
+    }
+  }
+`;
+
 // Query for getting multiple stations by their IDs (per-operator unique row IDs)
 export const GET_STATIONS_BY_IDS = gql`
   ${STATION_FRAGMENT}

@@ -353,6 +353,12 @@ describe('useDestinationAgent', () => {
             name: 'A',
             nameRoman: 'A',
             lineNames: [],
+            routeLineGroupIds: [10, 20, 30],
+          },
+          {
+            stationId: 2,
+            stationGroupId: 2,
+            routeLineGroupIds: [20, 'invalid'],
           },
           { name: 'B' },
           null,
@@ -368,6 +374,7 @@ describe('useDestinationAgent', () => {
     if (res.ok) {
       expect(res.data.suggestions).toHaveLength(1);
       expect(res.data.suggestions[0].stationId).toBe(1);
+      expect(res.data.suggestions[0].routeLineGroupIds).toEqual([10, 20, 30]);
     }
   });
 

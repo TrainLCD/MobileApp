@@ -21,6 +21,7 @@ export type AgentSuggestion = {
   name: string;
   nameRoman: string;
   lineNames: string[];
+  routeLineGroupIds?: number[];
 };
 
 export type AgentChatResult = {
@@ -68,9 +69,13 @@ const isAgentSuggestion = (value: unknown): value is AgentSuggestion => {
     return false;
   }
   const suggestion = value as Partial<AgentSuggestion>;
+  const routeLineGroupIds = suggestion.routeLineGroupIds;
   return (
     typeof suggestion.stationId === 'number' &&
-    typeof suggestion.stationGroupId === 'number'
+    typeof suggestion.stationGroupId === 'number' &&
+    (routeLineGroupIds === undefined ||
+      (Array.isArray(routeLineGroupIds) &&
+        routeLineGroupIds.every((id) => Number.isFinite(id))))
   );
 };
 

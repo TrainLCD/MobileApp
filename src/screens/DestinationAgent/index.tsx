@@ -505,7 +505,15 @@ const DestinationAgentScreen = () => {
                       ? line.nameShort || undefined
                       : line.nameRoman || undefined
                   }
-                  onPress={() => handleDestinationSelected(suggestedStation)}
+                  onPress={() =>
+                    handleDestinationSelected(
+                      suggestedStation,
+                      entry.suggestions?.find(
+                        (suggestion) =>
+                          suggestion.stationId === suggestedStation.id
+                      )?.routeLineGroupIds
+                    )
+                  }
                 />
               </Animated.View>
             );
