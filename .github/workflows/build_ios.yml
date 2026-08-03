@@ -1,0 +1,248 @@
+name: Build iOS
+
+env:
+  STAGING_API_URL: "${{ secrets.STAGING_API_URL }}"
+  PRODUCTION_API_URL: "${{ secrets.PRODUCTION_API_URL }}"
+  DEV_ROUTE_RESOLVER_API_URL: "${{ secrets.DEV_ROUTE_RESOLVER_API_URL }}"
+  PRODUCTION_ROUTE_RESOLVER_API_URL: "${{ secrets.PRODUCTION_ROUTE_RESOLVER_API_URL }}"
+  DEV_WORKER_API_URL: "${{ secrets.DEV_WORKER_API_URL }}"
+  PRODUCTION_WORKER_API_URL: "${{ secrets.PRODUCTION_WORKER_API_URL }}"
+  ENABLE_EXPERIMENTAL_TELEMETRY: "${{ secrets.ENABLE_EXPERIMENTAL_TELEMETRY }}"
+  EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}"
+
+on:
+  push:
+    branches:
+      - canary
+      - master
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Build variant"
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - production
+
+concurrency:
+  group: build-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Determine build variant
+        id: build_vars
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_VARIANT: ${{ github.event.inputs.variant }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            variant="$INPUT_VARIANT"
+          elif [ "$REF_NAME" = "master" ]; then
+            variant="production"
+          else
+            variant="development"
+          fi
+
+          case "$variant" in
+            development)
+              echo "scheme=CanaryTrainLCD" >> "$GITHUB_OUTPUT"
+              echo "app_variant=dev" >> "$GITHUB_OUTPUT"
+              ;;
+            production)
+              if [ "$REF_NAME" != "master" ]; then
+                echo "::error::production can only be built from the master branch (got ref: $REF_NAME)"
+                exit 1
+              fi
+              echo "scheme=ProdTrainLCD" >> "$GITHUB_OUTPUT"
+              echo "app_variant=prod" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unsupported variant: $variant"
+              exit 1
+              ;;
+          esac
+
+          echo "variant=$variant" >> "$GITHUB_OUTPUT"
+
+      - name: Setup SSH for submodules
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.FONTS_SSH_KEY }}
+
+      - name: Use SSH for GitHub submodules
+        run: git config --global url."git@github.com:TrainLCD/MobileAppFonts.git".insteadOf "https://github.com/TrainLCD/MobileAppFonts.git"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Revoke submodule SSH access
+        run: |
+          git config --global --unset-all url."git@github.com:TrainLCD/MobileAppFonts.git".insteadOf || true
+          if [ -n "${SSH_AGENT_PID:-}" ]; then
+            kill "$SSH_AGENT_PID" || true
+          fi
+          echo "SSH_AUTH_SOCK=" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios
+        run: pod install --repo-update
+
+      - name: Decode Sentry properties
+        env:
+          SENTRY_PROPERTIES_CONTENT: ${{ secrets.SENTRY_PROPERTIES_BASE64 }}
+        run: printf '%s' "$SENTRY_PROPERTIES_CONTENT" | base64 --decode > ios/sentry.properties
+
+      - name: Validate build environment
+        env:
+          BUILD_VARIANT: "${{ steps.build_vars.outputs.variant }}"
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+          IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ "$BUILD_VARIANT" = "production" ]; then
+            required_variables=(
+              PRODUCTION_API_URL
+              PRODUCTION_ROUTE_RESOLVER_API_URL
+              PRODUCTION_WORKER_API_URL
+            )
+          else
+            required_variables=(
+              STAGING_API_URL
+              DEV_ROUTE_RESOLVER_API_URL
+              DEV_WORKER_API_URL
+            )
+          fi
+
+          required_variables+=(
+            APP_STORE_CONNECT_API_ISSUER_ID
+            APP_STORE_CONNECT_API_KEY_ID
+            APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64
+            IOS_DISTRIBUTION_CERTIFICATE_BASE64
+            IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
+          )
+
+          for variable_name in "${required_variables[@]}"; do
+            if [ -z "${!variable_name:-}" ]; then
+              echo "::error::Required environment variable is not configured: $variable_name"
+              exit 1
+            fi
+          done
+
+      - name: Configure App Store Connect authentication
+        env:
+          API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          api_key_path="$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8"
+          printf '%s' "$API_KEY_CONTENT" | base64 --decode > "$api_key_path"
+          chmod 600 "$api_key_path"
+          echo "API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
+
+      - name: Install Apple distribution certificate
+        env:
+          CERTIFICATE_CONTENT: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+        run: |
+          certificate_path="$RUNNER_TEMP/distribution.p12"
+          keychain_path="$RUNNER_TEMP/build.keychain-db"
+          keychain_password="$(uuidgen)"
+
+          printf '%s' "$CERTIFICATE_CONTENT" | base64 --decode > "$certificate_path"
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$keychain_path"
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s \
+            -k "$keychain_password" \
+            "$keychain_path"
+          security list-keychains -d user -s "$keychain_path"
+
+      - name: Archive ${{ steps.build_vars.outputs.variant }}
+        env:
+          APP_VARIANT: "${{ steps.build_vars.outputs.app_variant }}"
+          EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          xcodebuild \
+            -workspace ios/TrainLCD.xcworkspace \
+            -scheme "${{ steps.build_vars.outputs.scheme }}" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/TrainLCD.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            archive
+
+      - name: Upload to TestFlight
+        env:
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          export_options_path="$RUNNER_TEMP/ExportOptions.plist"
+          plutil -create xml1 "$export_options_path"
+          plutil -insert method -string app-store-connect "$export_options_path"
+          plutil -insert destination -string upload "$export_options_path"
+          plutil -insert signingStyle -string automatic "$export_options_path"
+          plutil -insert teamID -string E6R2G33Z36 "$export_options_path"
+          plutil -insert manageAppVersionAndBuildNumber -bool false "$export_options_path"
+          plutil -insert uploadSymbols -bool true "$export_options_path"
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$RUNNER_TEMP/TrainLCD.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$export_options_path" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
+
+      - name: Upload dSYM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ steps.build_vars.outputs.variant }}-dsyms
+          path: ${{ runner.temp }}/TrainLCD.xcarchive/dSYMs
+          if-no-files-found: error
+
+      - name: Remove signing credentials
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/build.keychain-db" || true
+          rm -f "$RUNNER_TEMP/distribution.p12"
+          if [ -n "${API_KEY_PATH:-}" ]; then
+            rm -f "$API_KEY_PATH"
+          fi
