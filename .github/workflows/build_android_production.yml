@@ -1,3 +1,4 @@
+# Prerequisites and dry-run procedure: docs/android-build-workflows.md
 name: Build Android Production
 
 env:
@@ -16,7 +17,7 @@ on:
       upload_to_play:
         description: "Upload the AAB to Google Play (internal track)"
         required: false
-        default: true
+        default: false
         type: boolean
 
 concurrency:
@@ -56,7 +57,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
@@ -68,7 +69,8 @@ jobs:
           java-version: "17"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.3.0
+        # v6.3.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb
 
       - name: Decode Sentry properties
         env:
@@ -140,11 +142,12 @@ jobs:
 
       - name: Upload to Google Play (internal track)
         if: github.event_name == 'push' || inputs.upload_to_play
-        uses: r0adkll/upload-google-play@v1.1.5
+        # v1.1.5
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: me.tinykitten.trainlcd
           releaseFiles: android/app/build/outputs/bundle/prodRelease/*.aab
-          track: internal
+          tracks: internal
           status: completed
           mappingFile: android/app/build/outputs/mapping/prodRelease/mapping.txt

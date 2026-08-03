@@ -57,7 +57,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
@@ -107,9 +107,9 @@ jobs:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         run: |
           api_key_path="$RUNNER_TEMP/AuthKey_${API_KEY_ID}.p8"
+          echo "API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
           printf '%s' "$API_KEY_CONTENT" | base64 --decode > "$api_key_path"
           chmod 600 "$api_key_path"
-          echo "API_KEY_PATH=$api_key_path" >> "$GITHUB_ENV"
 
       - name: Install Apple distribution certificate
         env:
@@ -127,7 +127,7 @@ jobs:
           security unlock-keychain -p "$keychain_password" "$keychain_path"
           security import "$certificate_path" \
             -P "$CERTIFICATE_PASSWORD" \
-            -A \
+            -T /usr/bin/codesign \
             -t cert \
             -f pkcs12 \
             -k "$keychain_path"
@@ -144,6 +144,7 @@ jobs:
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          PROJECT_VERSION: "${{ github.run_number }}.${{ github.run_attempt }}"
         run: |
           xcodebuild \
             -workspace ios/TrainLCD.xcworkspace \
@@ -155,7 +156,7 @@ jobs:
             -authenticationKeyPath "$API_KEY_PATH" \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            CURRENT_PROJECT_VERSION="$PROJECT_VERSION" \
             archive
 
       - name: Upload to TestFlight
@@ -183,13 +184,6 @@ jobs:
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID"
 
-      - name: Upload dSYM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-canary-dsyms
-          path: ${{ runner.temp }}/TrainLCD.xcarchive/dSYMs
-          if-no-files-found: error
-
       - name: Remove signing credentials
         if: always()
         run: |
@@ -198,3 +192,10 @@ jobs:
           if [ -n "${API_KEY_PATH:-}" ]; then
             rm -f "$API_KEY_PATH"
           fi
+
+      - name: Upload dSYM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-canary-dsyms
+          path: ${{ runner.temp }}/TrainLCD.xcarchive/dSYMs
+          if-no-files-found: error
