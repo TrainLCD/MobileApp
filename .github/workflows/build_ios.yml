@@ -16,15 +16,6 @@ on:
       - canary
       - master
   workflow_dispatch:
-    inputs:
-      variant:
-        description: "Build variant"
-        required: true
-        default: development
-        type: choice
-        options:
-          - development
-          - production
 
 concurrency:
   group: build-ios-${{ github.ref }}
@@ -41,38 +32,21 @@ jobs:
       - name: Determine build variant
         id: build_vars
         env:
-          EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
-          INPUT_VARIANT: ${{ github.event.inputs.variant }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            variant="$INPUT_VARIANT"
-          elif [ "$REF_NAME" = "master" ]; then
+          if [ "$REF_NAME" = "master" ]; then
             variant="production"
+            scheme="ProdTrainLCD"
+            app_variant="prod"
           else
             variant="development"
+            scheme="CanaryTrainLCD"
+            app_variant="dev"
           fi
 
-          case "$variant" in
-            development)
-              echo "scheme=CanaryTrainLCD" >> "$GITHUB_OUTPUT"
-              echo "app_variant=dev" >> "$GITHUB_OUTPUT"
-              ;;
-            production)
-              if [ "$REF_NAME" != "master" ]; then
-                echo "::error::production can only be built from the master branch (got ref: $REF_NAME)"
-                exit 1
-              fi
-              echo "scheme=ProdTrainLCD" >> "$GITHUB_OUTPUT"
-              echo "app_variant=prod" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "::error::Unsupported variant: $variant"
-              exit 1
-              ;;
-          esac
-
           echo "variant=$variant" >> "$GITHUB_OUTPUT"
+          echo "scheme=$scheme" >> "$GITHUB_OUTPUT"
+          echo "app_variant=$app_variant" >> "$GITHUB_OUTPUT"
 
       - name: Setup SSH for submodules
         uses: webfactory/ssh-agent@v0.9.1
@@ -115,14 +89,14 @@ jobs:
 
       - name: Validate build environment
         env:
-          BUILD_VARIANT: "${{ steps.build_vars.outputs.variant }}"
+          REF_NAME: ${{ github.ref_name }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
           IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
           IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
         run: |
-          if [ "$BUILD_VARIANT" = "production" ]; then
+          if [ "$REF_NAME" = "master" ]; then
             required_variables=(
               PRODUCTION_API_URL
               PRODUCTION_ROUTE_RESOLVER_API_URL
