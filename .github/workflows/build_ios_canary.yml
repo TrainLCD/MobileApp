@@ -77,6 +77,8 @@ jobs:
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+          IOS_DEVELOPMENT_CERTIFICATE_BASE64: ${{ secrets.IOS_DEVELOPMENT_CERTIFICATE_BASE64 }}
+          IOS_DEVELOPMENT_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DEVELOPMENT_CERTIFICATE_PASSWORD }}
           IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
           IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
         run: |
@@ -90,6 +92,8 @@ jobs:
             APP_STORE_CONNECT_API_ISSUER_ID
             APP_STORE_CONNECT_API_KEY_ID
             APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64
+            IOS_DEVELOPMENT_CERTIFICATE_BASE64
+            IOS_DEVELOPMENT_CERTIFICATE_PASSWORD
             IOS_DISTRIBUTION_CERTIFICATE_BASE64
             IOS_DISTRIBUTION_CERTIFICATE_PASSWORD
           )
@@ -111,22 +115,32 @@ jobs:
           printf '%s' "$API_KEY_CONTENT" | base64 --decode > "$api_key_path"
           chmod 600 "$api_key_path"
 
-      - name: Install Apple distribution certificate
+      - name: Install Apple signing certificates
         env:
-          CERTIFICATE_CONTENT: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          DEVELOPMENT_CERTIFICATE_CONTENT: ${{ secrets.IOS_DEVELOPMENT_CERTIFICATE_BASE64 }}
+          DEVELOPMENT_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DEVELOPMENT_CERTIFICATE_PASSWORD }}
+          DISTRIBUTION_CERTIFICATE_CONTENT: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
         run: |
-          certificate_path="$RUNNER_TEMP/distribution.p12"
+          development_certificate_path="$RUNNER_TEMP/development.p12"
+          distribution_certificate_path="$RUNNER_TEMP/distribution.p12"
           keychain_path="$RUNNER_TEMP/build.keychain-db"
           keychain_password="$(uuidgen)"
 
-          printf '%s' "$CERTIFICATE_CONTENT" | base64 --decode > "$certificate_path"
-          chmod 600 "$certificate_path"
+          printf '%s' "$DEVELOPMENT_CERTIFICATE_CONTENT" | base64 --decode > "$development_certificate_path"
+          printf '%s' "$DISTRIBUTION_CERTIFICATE_CONTENT" | base64 --decode > "$distribution_certificate_path"
+          chmod 600 "$development_certificate_path" "$distribution_certificate_path"
           security create-keychain -p "$keychain_password" "$keychain_path"
           security set-keychain-settings -lut 21600 "$keychain_path"
           security unlock-keychain -p "$keychain_password" "$keychain_path"
-          security import "$certificate_path" \
-            -P "$CERTIFICATE_PASSWORD" \
+          security import "$development_certificate_path" \
+            -P "$DEVELOPMENT_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign \
+            -t cert \
+            -f pkcs12 \
+            -k "$keychain_path"
+          security import "$distribution_certificate_path" \
+            -P "$DISTRIBUTION_CERTIFICATE_PASSWORD" \
             -T /usr/bin/codesign \
             -t cert \
             -f pkcs12 \
@@ -137,6 +151,16 @@ jobs:
             -k "$keychain_password" \
             "$keychain_path"
           security list-keychains -d user -s "$keychain_path"
+
+          signing_identities="$(security find-identity -v -p codesigning "$keychain_path")"
+          if ! grep -q '"Apple Development:' <<< "$signing_identities"; then
+            echo "::error::The imported development certificate has no usable Apple Development identity"
+            exit 1
+          fi
+          if ! grep -q '"Apple Distribution:' <<< "$signing_identities"; then
+            echo "::error::The imported distribution certificate has no usable Apple Distribution identity"
+            exit 1
+          fi
 
       - name: Archive canary
         env:
@@ -188,6 +212,7 @@ jobs:
         if: always()
         run: |
           security delete-keychain "$RUNNER_TEMP/build.keychain-db" || true
+          rm -f "$RUNNER_TEMP/development.p12"
           rm -f "$RUNNER_TEMP/distribution.p12"
           if [ -n "${API_KEY_PATH:-}" ]; then
             rm -f "$API_KEY_PATH"
