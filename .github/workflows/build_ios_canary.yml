@@ -113,6 +113,7 @@ jobs:
           keychain_password="$(uuidgen)"
 
           printf '%s' "$CERTIFICATE_CONTENT" | base64 --decode > "$certificate_path"
+          chmod 600 "$certificate_path"
           security create-keychain -p "$keychain_password" "$keychain_path"
           security set-keychain-settings -lut 21600 "$keychain_path"
           security unlock-keychain -p "$keychain_password" "$keychain_path"
