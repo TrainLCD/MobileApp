@@ -32,7 +32,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Setup SSH for submodules
-        uses: webfactory/ssh-agent@v0.9.1
+        # v0.9.1
+        uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd
         with:
           ssh-private-key: ${{ secrets.FONTS_SSH_KEY }}
 
@@ -67,7 +68,7 @@ jobs:
           java-version: "17"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: Decode Sentry properties
         env:
@@ -80,6 +81,7 @@ jobs:
         run: |
           mkdir -p android/app
           printf '%s' "$RELEASE_KEYSTORE_CONTENT" | base64 --decode > android/app/release.jks
+          chmod 600 android/app/release.jks
 
       - name: Configure signing properties
         env:
@@ -105,6 +107,7 @@ jobs:
           with open(path, "a") as f:
               for key, value in entries.items():
                   f.write(f"{key}={escape(value)}\n")
+          os.chmod(path, 0o600)
           PY
 
       - name: Validate build environment
@@ -137,7 +140,7 @@ jobs:
 
       - name: Upload to Google Play (internal track)
         if: github.event_name == 'push' || inputs.upload_to_play
-        uses: r0adkll/upload-google-play@v1.1.3
+        uses: r0adkll/upload-google-play@v1.1.5
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: me.tinykitten.trainlcd
