@@ -1,14 +1,14 @@
 name: Build Android
 
 env:
-  STAGING_API_URL: ${{ secrets.STAGING_API_URL }}
-  DEV_ROUTE_RESOLVER_API_URL: ${{ secrets.DEV_ROUTE_RESOLVER_API_URL }}
-  PRODUCTION_ROUTE_RESOLVER_API_URL: ${{ secrets.PRODUCTION_ROUTE_RESOLVER_API_URL }}
-  DEV_WORKER_API_URL: ${{ secrets.DEV_WORKER_API_URL }}
-  PRODUCTION_WORKER_API_URL: ${{ secrets.PRODUCTION_WORKER_API_URL }}
-  ENABLE_EXPERIMENTAL_TELEMETRY: ${{ secrets.ENABLE_EXPERIMENTAL_TELEMETRY }}
-  EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: ${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}
-  EXPERIMENTAL_TELEMETRY_TOKEN: ${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}
+  STAGING_API_URL: "${{ secrets.STAGING_API_URL }}"
+  PRODUCTION_API_URL: "${{ secrets.PRODUCTION_API_URL }}"
+  DEV_ROUTE_RESOLVER_API_URL: "${{ secrets.DEV_ROUTE_RESOLVER_API_URL }}"
+  PRODUCTION_ROUTE_RESOLVER_API_URL: "${{ secrets.PRODUCTION_ROUTE_RESOLVER_API_URL }}"
+  DEV_WORKER_API_URL: "${{ secrets.DEV_WORKER_API_URL }}"
+  PRODUCTION_WORKER_API_URL: "${{ secrets.PRODUCTION_WORKER_API_URL }}"
+  ENABLE_EXPERIMENTAL_TELEMETRY: "${{ secrets.ENABLE_EXPERIMENTAL_TELEMETRY }}"
+  EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}"
 
 on:
   push:
@@ -165,8 +165,35 @@ jobs:
                   f.write(f"{key}={escape(value)}\n")
           PY
 
+      - name: Validate build environment
+        env:
+          BUILD_VARIANT: "${{ steps.build_vars.outputs.variant }}"
+        run: |
+          if [ "$BUILD_VARIANT" = "prodRelease" ]; then
+            required_variables=(
+              PRODUCTION_API_URL
+              PRODUCTION_ROUTE_RESOLVER_API_URL
+              PRODUCTION_WORKER_API_URL
+            )
+          else
+            required_variables=(
+              STAGING_API_URL
+              DEV_ROUTE_RESOLVER_API_URL
+              DEV_WORKER_API_URL
+            )
+          fi
+
+          for variable_name in "${required_variables[@]}"; do
+            if [ -z "${!variable_name:-}" ]; then
+              echo "::error::Required environment variable is not configured: $variable_name"
+              exit 1
+            fi
+          done
+
       - name: Build ${{ steps.build_vars.outputs.variant }}
         working-directory: android
+        env:
+          EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
         run: ./gradlew ${{ steps.build_vars.outputs.gradle_task }} --no-daemon
 
       - name: Upload AAB artifact
