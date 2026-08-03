@@ -8,6 +8,9 @@ env:
   EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}"
 
 on:
+  push:
+    branches:
+      - canary
   workflow_dispatch:
 
 concurrency:
