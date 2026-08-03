@@ -1,20 +1,13 @@
-name: Build Android
+name: Build Android Production
 
 env:
-  STAGING_API_URL: "${{ secrets.STAGING_API_URL }}"
   PRODUCTION_API_URL: "${{ secrets.PRODUCTION_API_URL }}"
-  DEV_ROUTE_RESOLVER_API_URL: "${{ secrets.DEV_ROUTE_RESOLVER_API_URL }}"
   PRODUCTION_ROUTE_RESOLVER_API_URL: "${{ secrets.PRODUCTION_ROUTE_RESOLVER_API_URL }}"
-  DEV_WORKER_API_URL: "${{ secrets.DEV_WORKER_API_URL }}"
   PRODUCTION_WORKER_API_URL: "${{ secrets.PRODUCTION_WORKER_API_URL }}"
   ENABLE_EXPERIMENTAL_TELEMETRY: "${{ secrets.ENABLE_EXPERIMENTAL_TELEMETRY }}"
   EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}"
 
 on:
-  push:
-    branches:
-      - canary
-      - master
   workflow_dispatch:
     inputs:
       upload_to_play:
@@ -24,7 +17,7 @@ on:
         type: boolean
 
 concurrency:
-  group: build-android-${{ github.ref }}
+  group: build-android-production-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -35,36 +28,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
-      - name: Determine build variant
-        id: build_vars
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          REF_NAME: ${{ github.ref_name }}
-          UPLOAD_TO_PLAY: ${{ github.event.inputs.upload_to_play }}
-        run: |
-          if [ "$REF_NAME" = "master" ]; then
-            variant="prodRelease"
-            gradle_task=":app:bundleProdRelease"
-            output_dir="prodRelease"
-            package_name="me.tinykitten.trainlcd"
-          else
-            variant="devRelease"
-            gradle_task=":app:bundleDevRelease"
-            output_dir="devRelease"
-            package_name="me.tinykitten.trainlcd.dev"
-          fi
-
-          echo "variant=$variant" >> "$GITHUB_OUTPUT"
-          echo "gradle_task=$gradle_task" >> "$GITHUB_OUTPUT"
-          echo "output_dir=$output_dir" >> "$GITHUB_OUTPUT"
-          echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
-
-          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$UPLOAD_TO_PLAY" = "false" ]; then
-            echo "upload_to_play=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "upload_to_play=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Setup SSH for submodules
         uses: webfactory/ssh-agent@v0.9.1
         with:
@@ -89,7 +52,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: "npm"
 
       - name: Install dependencies
@@ -142,22 +105,12 @@ jobs:
           PY
 
       - name: Validate build environment
-        env:
-          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "$REF_NAME" = "master" ]; then
-            required_variables=(
-              PRODUCTION_API_URL
-              PRODUCTION_ROUTE_RESOLVER_API_URL
-              PRODUCTION_WORKER_API_URL
-            )
-          else
-            required_variables=(
-              STAGING_API_URL
-              DEV_ROUTE_RESOLVER_API_URL
-              DEV_WORKER_API_URL
-            )
-          fi
+          required_variables=(
+            PRODUCTION_API_URL
+            PRODUCTION_ROUTE_RESOLVER_API_URL
+            PRODUCTION_WORKER_API_URL
+          )
 
           for variable_name in "${required_variables[@]}"; do
             if [ -z "${!variable_name:-}" ]; then
@@ -166,26 +119,26 @@ jobs:
             fi
           done
 
-      - name: Build ${{ steps.build_vars.outputs.variant }}
+      - name: Build prodRelease
         working-directory: android
         env:
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
-        run: ./gradlew ${{ steps.build_vars.outputs.gradle_task }} --no-daemon
+        run: ./gradlew :app:bundleProdRelease --no-daemon
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-${{ steps.build_vars.outputs.variant }}
-          path: android/app/build/outputs/bundle/${{ steps.build_vars.outputs.output_dir }}/*.aab
+          name: app-prodRelease
+          path: android/app/build/outputs/bundle/prodRelease/*.aab
           if-no-files-found: error
 
       - name: Upload to Google Play (internal track)
-        if: steps.build_vars.outputs.upload_to_play == 'true'
+        if: inputs.upload_to_play
         uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: ${{ steps.build_vars.outputs.package_name }}
-          releaseFiles: android/app/build/outputs/bundle/${{ steps.build_vars.outputs.output_dir }}/*.aab
+          packageName: me.tinykitten.trainlcd
+          releaseFiles: android/app/build/outputs/bundle/prodRelease/*.aab
           track: internal
           status: completed
-          mappingFile: android/app/build/outputs/mapping/${{ steps.build_vars.outputs.output_dir }}/mapping.txt
+          mappingFile: android/app/build/outputs/mapping/prodRelease/mapping.txt

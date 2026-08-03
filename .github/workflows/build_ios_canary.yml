@@ -1,24 +1,17 @@
-name: Build iOS
+name: Build iOS Canary
 
 env:
   STAGING_API_URL: "${{ secrets.STAGING_API_URL }}"
-  PRODUCTION_API_URL: "${{ secrets.PRODUCTION_API_URL }}"
   DEV_ROUTE_RESOLVER_API_URL: "${{ secrets.DEV_ROUTE_RESOLVER_API_URL }}"
-  PRODUCTION_ROUTE_RESOLVER_API_URL: "${{ secrets.PRODUCTION_ROUTE_RESOLVER_API_URL }}"
   DEV_WORKER_API_URL: "${{ secrets.DEV_WORKER_API_URL }}"
-  PRODUCTION_WORKER_API_URL: "${{ secrets.PRODUCTION_WORKER_API_URL }}"
   ENABLE_EXPERIMENTAL_TELEMETRY: "${{ secrets.ENABLE_EXPERIMENTAL_TELEMETRY }}"
   EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}"
 
 on:
-  push:
-    branches:
-      - canary
-      - master
   workflow_dispatch:
 
 concurrency:
-  group: build-ios-${{ github.ref }}
+  group: build-ios-canary-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -29,25 +22,6 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 60
     steps:
-      - name: Determine build variant
-        id: build_vars
-        env:
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          if [ "$REF_NAME" = "master" ]; then
-            variant="production"
-            scheme="ProdTrainLCD"
-            app_variant="prod"
-          else
-            variant="development"
-            scheme="CanaryTrainLCD"
-            app_variant="dev"
-          fi
-
-          echo "variant=$variant" >> "$GITHUB_OUTPUT"
-          echo "scheme=$scheme" >> "$GITHUB_OUTPUT"
-          echo "app_variant=$app_variant" >> "$GITHUB_OUTPUT"
-
       - name: Setup SSH for submodules
         uses: webfactory/ssh-agent@v0.9.1
         with:
@@ -89,26 +63,17 @@ jobs:
 
       - name: Validate build environment
         env:
-          REF_NAME: ${{ github.ref_name }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
           IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
           IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
         run: |
-          if [ "$REF_NAME" = "master" ]; then
-            required_variables=(
-              PRODUCTION_API_URL
-              PRODUCTION_ROUTE_RESOLVER_API_URL
-              PRODUCTION_WORKER_API_URL
-            )
-          else
-            required_variables=(
-              STAGING_API_URL
-              DEV_ROUTE_RESOLVER_API_URL
-              DEV_WORKER_API_URL
-            )
-          fi
+          required_variables=(
+            STAGING_API_URL
+            DEV_ROUTE_RESOLVER_API_URL
+            DEV_WORKER_API_URL
+          )
 
           required_variables+=(
             APP_STORE_CONNECT_API_ISSUER_ID
@@ -161,16 +126,16 @@ jobs:
             "$keychain_path"
           security list-keychains -d user -s "$keychain_path"
 
-      - name: Archive ${{ steps.build_vars.outputs.variant }}
+      - name: Archive canary
         env:
-          APP_VARIANT: "${{ steps.build_vars.outputs.app_variant }}"
+          APP_VARIANT: "dev"
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
         run: |
           xcodebuild \
             -workspace ios/TrainLCD.xcworkspace \
-            -scheme "${{ steps.build_vars.outputs.scheme }}" \
+            -scheme "CanaryTrainLCD" \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/TrainLCD.xcarchive" \
@@ -208,7 +173,7 @@ jobs:
       - name: Upload dSYM artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-${{ steps.build_vars.outputs.variant }}-dsyms
+          name: app-canary-dsyms
           path: ${{ runner.temp }}/TrainLCD.xcarchive/dSYMs
           if-no-files-found: error
 
