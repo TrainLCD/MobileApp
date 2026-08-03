@@ -17,14 +17,6 @@ on:
       - master
   workflow_dispatch:
     inputs:
-      variant:
-        description: "Build variant"
-        required: true
-        default: devRelease
-        type: choice
-        options:
-          - devRelease
-          - prodRelease
       upload_to_play:
         description: "Upload the AAB to Google Play (internal track)"
         required: false
@@ -48,40 +40,24 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           REF_NAME: ${{ github.ref_name }}
-          INPUT_VARIANT: ${{ github.event.inputs.variant }}
           UPLOAD_TO_PLAY: ${{ github.event.inputs.upload_to_play }}
         run: |
-          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
-            variant="$INPUT_VARIANT"
-          elif [ "$REF_NAME" = "master" ]; then
+          if [ "$REF_NAME" = "master" ]; then
             variant="prodRelease"
+            gradle_task=":app:bundleProdRelease"
+            output_dir="prodRelease"
+            package_name="me.tinykitten.trainlcd"
           else
             variant="devRelease"
+            gradle_task=":app:bundleDevRelease"
+            output_dir="devRelease"
+            package_name="me.tinykitten.trainlcd.dev"
           fi
 
-          case "$variant" in
-            devRelease|prodRelease) ;;
-            *)
-              echo "::error::Unsupported variant: $variant"
-              exit 1
-              ;;
-          esac
-
-          if [ "$variant" = "prodRelease" ] && [ "$REF_NAME" != "master" ]; then
-            echo "::error::prodRelease can only be built from the master branch (got ref: $REF_NAME)"
-            exit 1
-          fi
-
-          if [ "$variant" = "prodRelease" ]; then
-            echo "gradle_task=:app:bundleProdRelease" >> "$GITHUB_OUTPUT"
-            echo "output_dir=prodRelease" >> "$GITHUB_OUTPUT"
-            echo "package_name=me.tinykitten.trainlcd" >> "$GITHUB_OUTPUT"
-          else
-            echo "gradle_task=:app:bundleDevRelease" >> "$GITHUB_OUTPUT"
-            echo "output_dir=devRelease" >> "$GITHUB_OUTPUT"
-            echo "package_name=me.tinykitten.trainlcd.dev" >> "$GITHUB_OUTPUT"
-          fi
           echo "variant=$variant" >> "$GITHUB_OUTPUT"
+          echo "gradle_task=$gradle_task" >> "$GITHUB_OUTPUT"
+          echo "output_dir=$output_dir" >> "$GITHUB_OUTPUT"
+          echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
 
           if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$UPLOAD_TO_PLAY" = "false" ]; then
             echo "upload_to_play=false" >> "$GITHUB_OUTPUT"
@@ -167,9 +143,9 @@ jobs:
 
       - name: Validate build environment
         env:
-          BUILD_VARIANT: "${{ steps.build_vars.outputs.variant }}"
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "$BUILD_VARIANT" = "prodRelease" ]; then
+          if [ "$REF_NAME" = "master" ]; then
             required_variables=(
               PRODUCTION_API_URL
               PRODUCTION_ROUTE_RESOLVER_API_URL
