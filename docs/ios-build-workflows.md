@@ -10,8 +10,9 @@ dry-run.
 - A GitHub-hosted `macos-26` runner with Node.js 22 and CocoaPods available.
 - An App Store Connect API key whose role permits build upload and provisioning
   management for both app identifiers.
-- An Apple distribution certificate exported as a password-protected PKCS #12
-  file.
+- Apple development and distribution certificates, each exported with its
+  private key as a password-protected PKCS #12 file. Automatic signing uses the
+  development identity while archiving; export uses the distribution identity.
 - An SSH deploy key with read access to the private Fonts submodule.
 
 Configure these GitHub Actions secrets:
@@ -32,12 +33,15 @@ Configure these GitHub Actions secrets:
 | `APP_STORE_CONNECT_API_ISSUER_ID` | App Store Connect API issuer ID |
 | `APP_STORE_CONNECT_API_KEY_ID` | App Store Connect API key ID |
 | `APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64` | Base64-encoded API private key |
-| `IOS_DISTRIBUTION_CERTIFICATE_BASE64` | Base64-encoded PKCS #12 certificate |
-| `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD` | PKCS #12 certificate password |
+| `IOS_DEVELOPMENT_CERTIFICATE_BASE64` | Base64-encoded development PKCS #12 certificate and private key |
+| `IOS_DEVELOPMENT_CERTIFICATE_PASSWORD` | Development PKCS #12 certificate password |
+| `IOS_DISTRIBUTION_CERTIFICATE_BASE64` | Base64-encoded distribution PKCS #12 certificate and private key |
+| `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD` | Distribution PKCS #12 certificate password |
 
 The workflow exposes application endpoint and telemetry values as environment
 variables. App Store Connect credentials, certificate data, and the Fonts SSH
-key remain step-scoped secrets.
+key remain step-scoped secrets. Both certificate imports are validated before
+the archive starts so a missing private key fails with a targeted error.
 
 ## Safe dry-run
 
