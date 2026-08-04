@@ -212,7 +212,9 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
 
         connectedRouteStationsRef.current = new Map(
           connectedRoutes.flatMap((route) =>
-            route.id && route.stops ? [[route.id, route.stops]] : []
+            route.id && route.stops
+              ? ([[route.id, route.stops]] as [number, Station[]][])
+              : []
           )
         );
 
