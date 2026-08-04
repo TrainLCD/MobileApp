@@ -68,3 +68,45 @@ export const getStationWithMatchingLine = (
 
   return station;
 };
+
+export type ConnectedRoute = {
+  id: number | null;
+  stops: Station[] | null;
+};
+
+/**
+ * ConnectedRoutes の各経路を既存の列車種別選択UIで扱える形へ変換する。
+ * 経路IDは StationAPI が経路全体へ付与した仮想 lineGroupId であり、
+ * 各区間の路線・種別は stops から復元する。
+ */
+export const buildConnectedRouteTrainType = (
+  route: ConnectedRoute
+): TrainType | null => {
+  if (!route.id) return null;
+
+  const stops = route.stops ?? [];
+  const baseTrainType = stops.find((stop) => stop.trainType)?.trainType;
+  if (!baseTrainType) return null;
+
+  const seenLineIds = new Set<number>();
+  const lines = stops.flatMap((stop) => {
+    const line = stop.line;
+    if (!line?.id || seenLineIds.has(line.id)) return [];
+
+    seenLineIds.add(line.id);
+    return [
+      {
+        ...line,
+        trainType: stop.trainType ?? line.trainType,
+      } as Line,
+    ];
+  });
+
+  return {
+    ...baseTrainType,
+    id: route.id,
+    groupId: route.id,
+    line: lines[0] ?? baseTrainType.line,
+    lines,
+  } as unknown as TrainType;
+};
