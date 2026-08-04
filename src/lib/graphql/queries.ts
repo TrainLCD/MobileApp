@@ -479,7 +479,7 @@ export const CONNECTED_ROUTE_STATION_FRAGMENT = gql`
 // Query for routes that require multiple connected train types
 export const GET_CONNECTED_ROUTES = gql`
   ${CONNECTED_ROUTE_STATION_FRAGMENT}
-  query GetConnectedRoutes(
+  query GetConnectedRoutesQuery(
     $fromStationGroupId: Int!
     $toStationGroupId: Int!
   ) {
