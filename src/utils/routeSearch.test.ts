@@ -1,5 +1,6 @@
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
+  buildConnectedRouteTrainType,
   computeCurrentStationInRoutes,
   getStationWithMatchingLine,
 } from './routeSearch';
@@ -364,5 +365,49 @@ describe('getStationWithMatchingLine', () => {
 
       expect(result).toBeNull();
     });
+  });
+});
+
+describe('buildConnectedRouteTrainType', () => {
+  it('複数種別の経路を仮想lineGroupIdを持つ一つの選択肢へ変換する', () => {
+    const firstLine = createMockLine(1, '1路線目');
+    const secondLine = createMockLine(2, '2路線目');
+    const firstType = createMockTrainType(10, '普通', firstLine, [firstLine]);
+    const secondType = createMockTrainType(20, '快速', secondLine, [
+      secondLine,
+    ]);
+    const firstStop = {
+      ...createMockStation(100, '出発駅', firstLine, [firstLine]),
+      trainType: firstType,
+    } as Station;
+    const secondStop = {
+      ...createMockStation(200, '到着駅', secondLine, [secondLine]),
+      trainType: secondType,
+    } as Station;
+
+    const result = buildConnectedRouteTrainType({
+      id: 9000,
+      stops: [firstStop, secondStop],
+    });
+
+    expect(result?.id).toBe(9000);
+    expect(result?.groupId).toBe(9000);
+    expect(result?.lines?.map((line) => line.id)).toEqual([1, 2]);
+    expect(result?.lines?.map((line) => line.trainType?.name)).toEqual([
+      '普通',
+      '快速',
+    ]);
+  });
+
+  it('経路IDまたは種別情報がない経路は選択肢にしない', () => {
+    const line = createMockLine(1, 'テスト路線');
+    const station = createMockStation(100, 'テスト駅', line, [line]);
+
+    expect(
+      buildConnectedRouteTrainType({ id: null, stops: [station] })
+    ).toBeNull();
+    expect(
+      buildConnectedRouteTrainType({ id: 9000, stops: [station] })
+    ).toBeNull();
   });
 });
