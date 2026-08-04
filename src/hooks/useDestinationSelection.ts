@@ -1,9 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { graphqlQueryKey } from '~/lib/gql';
 import {
+  GET_CONNECTED_ROUTES,
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
   GET_ROUTE_TYPES_LIGHT,
@@ -15,6 +16,8 @@ import stationState, {
   wantedDestinationAtom,
 } from '~/store/atoms/station';
 import {
+  buildConnectedRouteTrainType,
+  type ConnectedRoute,
   computeCurrentStationInRoutes,
   getStationWithMatchingLine,
 } from '~/utils/routeSearch';
@@ -34,6 +37,15 @@ type GetRouteTypesVariables = {
   pageSize?: number;
   pageToken?: string;
   viaLineId?: number;
+};
+
+type GetConnectedRoutesData = {
+  connectedRoutes: ConnectedRoute[];
+};
+
+type GetConnectedRoutesVariables = {
+  fromStationGroupId: number;
+  toStationGroupId: number;
 };
 
 type GetLineStationsData = {
@@ -97,6 +109,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
   const setLineState = useSetAtom(lineState);
 
   const queryClient = useQueryClient();
+  const connectedRouteStationsRef = useRef(new Map<number, Station[]>());
 
   const [
     fetchRouteTypes,
@@ -107,6 +120,13 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     },
   ] = useLazyGraphQLQuery<GetRouteTypesData, GetRouteTypesVariables>(
     GET_ROUTE_TYPES_LIGHT
+  );
+
+  const [
+    fetchConnectedRoutes,
+    { loading: fetchConnectedRoutesLoading, error: fetchConnectedRoutesError },
+  ] = useLazyGraphQLQuery<GetConnectedRoutesData, GetConnectedRoutesVariables>(
+    GET_CONNECTED_ROUTES
   );
 
   const [
@@ -134,6 +154,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     async (selectedStation: Station) => {
       setSelectBoundModalVisible(true);
       setSelectedDestination(selectedStation);
+      connectedRouteStationsRef.current.clear();
 
       const newPendingLine = selectedStation.line ?? null;
 
@@ -172,11 +193,66 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
 
       const fetchedTrainTypes = result.data?.routeTypes.trainTypes ?? [];
 
-      if (!fetchedTrainTypes?.length) {
+      if (!fetchedTrainTypes.length) {
+        const connectedRoutesResult = await fetchConnectedRoutes({
+          variables: {
+            fromStationGroupId: station.groupId,
+            toStationGroupId: selectedStation.groupId,
+          },
+        });
+        const connectedRoutes =
+          connectedRoutesResult.data?.connectedRoutes ?? [];
+        const connectedTrainTypes = connectedRoutes
+          .map(buildConnectedRouteTrainType)
+          .filter((trainType): trainType is TrainType => !!trainType);
+
+        connectedRouteStationsRef.current = new Map(
+          connectedRoutes.flatMap((route) =>
+            route.id && route.stops
+              ? ([[route.id, route.stops]] as [number, Station[]][])
+              : []
+          )
+        );
+
+        const connectedTrainType =
+          findLocalType(connectedTrainTypes) ?? connectedTrainTypes[0];
+        if (connectedTrainType?.groupId) {
+          const connectedStations =
+            connectedRouteStationsRef.current.get(connectedTrainType.groupId) ??
+            [];
+          const newCurrentStation = computeCurrentStationInRoutes(
+            station,
+            newPendingLine,
+            [connectedTrainType]
+          );
+
+          setStationState((prev) => ({
+            ...prev,
+            pendingStation: newCurrentStation,
+            station:
+              prev.station && newCurrentStation?.line
+                ? { ...prev.station, line: newCurrentStation.line }
+                : prev.station,
+            pendingStations: connectedStations,
+          }));
+          if (newCurrentStation?.line) {
+            setLineState((prev) => ({
+              ...prev,
+              pendingLine: newCurrentStation.line,
+            }));
+          }
+          setNavigationState((prev) => ({
+            ...prev,
+            fetchedTrainTypes: connectedTrainTypes,
+            pendingTrainType: connectedTrainType,
+          }));
+          return;
+        }
+
         if (!selectedStation.line?.id) {
           return;
         }
-        // 列車種別が存在しない場合は選択した行き先駅の路線を使用
+        // 単一種別・接続経路のどちらも存在しない場合は選択した行き先駅の路線を使用
         setLineState((prev) => ({
           ...prev,
           pendingLine: selectedStation.line ?? null,
@@ -267,6 +343,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
       fetchStationsByLineId,
       fetchStationsByLineGroupId,
       fetchRouteTypes,
+      fetchConnectedRoutes,
       setNavigationState,
       setStationState,
       setLineState,
@@ -283,6 +360,33 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         ...prev,
         pendingTrainType: trainType,
       }));
+
+      const connectedStations = connectedRouteStationsRef.current.get(
+        trainType.groupId
+      );
+      if (connectedStations) {
+        const newCurrentStation = computeCurrentStationInRoutes(
+          station,
+          pendingLine,
+          [trainType]
+        );
+        setStationState((prev) => ({
+          ...prev,
+          pendingStation: newCurrentStation,
+          station:
+            prev.station && newCurrentStation?.line
+              ? { ...prev.station, line: newCurrentStation.line }
+              : prev.station,
+          pendingStations: connectedStations,
+        }));
+        if (newCurrentStation?.line) {
+          setLineState((prev) => ({
+            ...prev,
+            pendingLine: newCurrentStation.line,
+          }));
+        }
+        return;
+      }
 
       // キャッシュ済みでも常に最新の駅一覧を取得したいので該当キーを破棄する
       queryClient.removeQueries({
@@ -304,8 +408,11 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     },
     [
       fetchStationsByLineGroupId,
+      station,
+      pendingLine,
       setStationState,
       setNavigationState,
+      setLineState,
       queryClient,
     ]
   );
@@ -355,11 +462,13 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
 
   const modalLoading =
     fetchRouteTypesLoading ||
+    fetchConnectedRoutesLoading ||
     fetchStationsByLineIdLoading ||
     fetchStationsByLineGroupIdLoading;
 
   const modalError =
     fetchRouteTypesError ??
+    fetchConnectedRoutesError ??
     fetchStationsByLineIdError ??
     fetchStationsByLineGroupIdError ??
     null;
