@@ -191,6 +191,10 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         },
       });
 
+      if (result.error) {
+        return;
+      }
+
       const fetchedTrainTypes = result.data?.routeTypes.trainTypes ?? [];
 
       if (!fetchedTrainTypes.length) {
@@ -200,6 +204,10 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
             toStationGroupId: selectedStation.groupId,
           },
         });
+        if (connectedRoutesResult.error) {
+          return;
+        }
+
         const connectedRoutes =
           connectedRoutesResult.data?.connectedRoutes ?? [];
         const connectedTrainTypes = connectedRoutes
@@ -238,7 +246,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
           if (newCurrentStation?.line) {
             setLineState((prev) => ({
               ...prev,
-              pendingLine: newCurrentStation.line,
+              pendingLine: newCurrentStation.line as Line,
             }));
           }
           setNavigationState((prev) => ({
@@ -382,7 +390,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         if (newCurrentStation?.line) {
           setLineState((prev) => ({
             ...prev,
-            pendingLine: newCurrentStation.line,
+            pendingLine: newCurrentStation.line as Line,
           }));
         }
         return;
