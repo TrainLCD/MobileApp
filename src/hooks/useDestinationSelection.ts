@@ -17,8 +17,8 @@ import stationState, {
 } from '~/store/atoms/station';
 import {
   buildConnectedRouteTrainType,
-  computeCurrentStationInRoutes,
   type ConnectedRoute,
+  computeCurrentStationInRoutes,
   getStationWithMatchingLine,
 } from '~/utils/routeSearch';
 import { findLocalType } from '~/utils/trainTypeString';
