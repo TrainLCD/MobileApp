@@ -27,6 +27,13 @@ jest.mock('./useLazyGraphQLQuery', () => ({
   useLazyGraphQLQuery: jest.fn(),
 }));
 
+jest.mock('~/lib/gql', () => ({
+  graphqlQueryKey: jest.fn((document: unknown, variables?: object) => [
+    document,
+    variables ?? null,
+  ]),
+}));
+
 type HookResult = ReturnType<typeof useDestinationSelection> | null;
 
 const HookBridge: React.FC<{ onReady: (value: HookResult) => void }> = ({
