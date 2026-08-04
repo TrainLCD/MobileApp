@@ -734,8 +734,7 @@ Expo SDK 更新時はこのパッチの要否を再確認する。
    追加。
 2. アプリ側は `REMOTE_CONFIG_KEYS` にキー追加 → フォールバック定数
    （`false`）→ ゲッター → `useAIAgentFeatureEnabled` フック。
-3. PoC 期間中はさらに `isDevApp`（dev/canary ビルド）でもゲートし、
-   本番ビルドには一切露出しない。
+3. 本番を含む全ビルドで Remote Config の値だけを表示条件とする。
 4. 障害・コスト超過時は KV の値を `false` にするだけで全クライアントから
    機能が消える（`FxTTS` と同じキルスイッチ構造）。
 
@@ -860,10 +859,11 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 | --- | --- | --- |
 | Phase 0（PoC） | dev ビルド | 本設計の実装 + モデル比較検証 + 実測 |
 | Phase 1 | canary | プロンプト調整後に開放し指標評価 |
-| Phase 2 | production | フラグ本番化・`isDevApp` ゲート除去 |
+| Phase 2 | production | フラグ本番化（完了） |
 
 - Phase 0 では `ai_agent_enabled` を dev 環境 KV のみ `true` にする。
 - Phase 1 の評価指標はコスト・謝絶率・提案採択率。
+- Phase 2 では `isDevApp` ゲートを除去し、本番環境 KV で公開を制御する。
 - Phase 2 で WANT 要件（経路検索）の着手可否を判断する。
 
 ## 開発プロセス（#6473 実装備考より）
