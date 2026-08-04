@@ -439,6 +439,62 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
   }
 `;
 
+// Fragment for routes that connect multiple train-type groups
+export const CONNECTED_ROUTE_STATION_FRAGMENT = gql`
+  ${LINE_IN_STATION_FRAGMENT}
+  ${STATION_NUMBER_FRAGMENT}
+  ${TRAIN_TYPE_NESTED_FRAGMENT}
+  fragment ConnectedRouteStationFields on StationNested {
+    id
+    groupId
+    name
+    nameKatakana
+    nameRoman
+    nameChinese
+    nameKorean
+    nameTtsSegments {
+      ...TtsSegmentFields
+    }
+    threeLetterCode
+    latitude
+    longitude
+    prefectureId
+    hasTrainTypes
+    stopCondition
+    stationNumbers {
+      ...StationNumberFields
+    }
+    line {
+      ...LineInStationFields
+    }
+    lines {
+      ...LineInStationFields
+    }
+    trainType {
+      ...TrainTypeNestedFields
+    }
+  }
+`;
+
+// Query for routes that require multiple connected train types
+export const GET_CONNECTED_ROUTES = gql`
+  ${CONNECTED_ROUTE_STATION_FRAGMENT}
+  query GetConnectedRoutes(
+    $fromStationGroupId: Int!
+    $toStationGroupId: Int!
+  ) {
+    connectedRoutes(
+      fromStationGroupId: $fromStationGroupId
+      toStationGroupId: $toStationGroupId
+    ) {
+      id
+      stops {
+        ...ConnectedRouteStationFields
+      }
+    }
+  }
+`;
+
 // Query for getting route types (lightweight)
 export const GET_ROUTE_TYPES_LIGHT = gql`
   ${TRAIN_TYPE_ROUTE_FRAGMENT}
