@@ -44,9 +44,7 @@ const idleQueryState = {
 };
 
 describe('useDestinationSelection', () => {
-  const mockUseLazyGraphQLQuery = useLazyGraphQLQuery as jest.MockedFunction<
-    typeof useLazyGraphQLQuery
-  >;
+  const mockUseLazyGraphQLQuery = useLazyGraphQLQuery as unknown as jest.Mock;
   const fetchRouteTypes = jest.fn();
   const fetchConnectedRoutes = jest.fn();
   const fetchStationsByLineId = jest.fn();
@@ -54,15 +52,23 @@ describe('useDestinationSelection', () => {
 
   const firstLine = createLine(10);
   const secondLine = createLine(20);
+  const firstNestedLine = {
+    ...firstLine,
+    __typename: 'LineNested' as const,
+  } as NonNullable<Station['line']>;
+  const secondNestedLine = {
+    ...secondLine,
+    __typename: 'LineNested' as const,
+  } as NonNullable<Station['line']>;
   const currentStation = createStation(100, {
     groupId: 100,
-    line: firstLine,
-    lines: [firstLine, secondLine],
+    line: firstNestedLine,
+    lines: [firstNestedLine, secondNestedLine],
   });
   const destination = createStation(200, {
     groupId: 200,
-    line: secondLine,
-    lines: [secondLine],
+    line: secondNestedLine,
+    lines: [secondNestedLine],
   });
 
   const createTrainType = (
@@ -79,7 +85,7 @@ describe('useDestinationSelection', () => {
       nameRoman: 'Local',
       line,
       lines: [line],
-    }) as TrainType;
+    }) as unknown as TrainType;
 
   const createConnectedStops = (
     routeId: number,
@@ -91,16 +97,16 @@ describe('useDestinationSelection', () => {
       {
         ...createStation(100 + offset, {
           groupId: 100,
-          line,
-          lines: [line],
+          line: { ...line, __typename: 'LineNested' },
+          lines: [{ ...line, __typename: 'LineNested' }],
         }),
         trainType,
       } as Station,
       {
         ...createStation(200 + offset, {
           groupId: 200,
-          line: secondLine,
-          lines: [secondLine],
+          line: secondNestedLine,
+          lines: [secondNestedLine],
         }),
         trainType: createTrainType(routeId + 1, routeId, secondLine, '快速'),
       } as Station,
@@ -108,7 +114,7 @@ describe('useDestinationSelection', () => {
   };
 
   const setupLazyQueries = () => {
-    mockUseLazyGraphQLQuery.mockImplementation((document) => {
+    mockUseLazyGraphQLQuery.mockImplementation((document: unknown) => {
       if (document === GET_ROUTE_TYPES_LIGHT) {
         return [fetchRouteTypes, idleQueryState];
       }
