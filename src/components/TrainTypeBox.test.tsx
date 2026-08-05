@@ -1,5 +1,8 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { FONTS } from '../constants';
+import { APP_THEME } from '../models/Theme';
+import { resolveTrainTypeFontFamily } from './TrainTypeBox';
 
 // Create a minimal component that tests the specific crash fix
 const TestSplitFunction = ({
@@ -120,5 +123,19 @@ describe('TrainTypeBox crash fix', () => {
       // Render again with same value
       render(<TestInfiniteLoopFix trainTypeName="Test" />);
     }).not.toThrow();
+  });
+});
+
+describe('TrainTypeBox font family', () => {
+  it('韓国語ではハングル対応のOSフォントへフォールバックする', () => {
+    expect(resolveTrainTypeFontFamily(APP_THEME.TOKYO_METRO, 'KO')).toBe(
+      undefined
+    );
+  });
+
+  it('韓国語以外では通常テーマ用フォントを維持する', () => {
+    expect(resolveTrainTypeFontFamily(APP_THEME.TOKYO_METRO, 'JA')).toBe(
+      FONTS.RobotoBold
+    );
   });
 });

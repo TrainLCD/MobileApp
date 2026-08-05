@@ -24,7 +24,7 @@ import {
   usePrevious,
 } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
-import { APP_THEME } from '../models/Theme';
+import { APP_THEME, type AppTheme } from '../models/Theme';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
@@ -41,6 +41,18 @@ type Props = {
   nextTrainTypeColor?: string;
   darkenColor?: boolean;
   fontSizeScale?: number;
+};
+
+export const resolveTrainTypeFontFamily = (
+  theme: AppTheme,
+  headerLangState: HeaderLangState
+): string | undefined => {
+  // バンドル済みのRoboto/JF Dotはいずれもハングルを収録していないため、
+  // 韓国語ではOSのフォールバックフォントを使用する。
+  if (headerLangState === 'KO') {
+    return undefined;
+  }
+  return theme === APP_THEME.LED ? FONTS.JFDotJiskan24h : FONTS.RobotoBold;
 };
 
 const styles = StyleSheet.create({
@@ -189,10 +201,9 @@ const TrainTypeBox: React.FC<Props> = ({
   const prevLetterSpacing = usePrevious(letterSpacing);
   const animatedTextBaseStyle = useMemo(
     () => ({
-      fontFamily:
-        theme === APP_THEME.LED ? FONTS.JFDotJiskan24h : FONTS.RobotoBold,
+      fontFamily: resolveTrainTypeFontFamily(theme, headerLangState),
     }),
-    [theme]
+    [headerLangState, theme]
   );
 
   const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
@@ -333,7 +344,10 @@ const TrainTypeBox: React.FC<Props> = ({
               [
                 styles.text,
                 animatedTextBaseStyle,
-                theme === APP_THEME.LED && { fontWeight: 'normal' as const },
+                theme === APP_THEME.LED &&
+                  headerLangState !== 'KO' && {
+                    fontWeight: 'normal' as const,
+                  },
                 {
                   letterSpacing,
                   marginLeft,
@@ -353,7 +367,8 @@ const TrainTypeBox: React.FC<Props> = ({
           style={[
             styles.text,
             animatedTextBaseStyle,
-            theme === APP_THEME.LED && { fontWeight: 'normal' as const },
+            theme === APP_THEME.LED &&
+              headerLangState !== 'KO' && { fontWeight: 'normal' as const },
             textBottomAnimatedStyles,
             {
               letterSpacing: prevLetterSpacing,
