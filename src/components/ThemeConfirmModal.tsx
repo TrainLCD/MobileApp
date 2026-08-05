@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: RFValue(12),
     lineHeight: RFValue(16),
-    marginBottom: 16,
+    marginBottom: 24,
   },
   previewImageWrap: {
     width: '100%',

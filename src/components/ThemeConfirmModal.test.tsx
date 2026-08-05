@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { Image } from 'expo-image';
 import type React from 'react';
+import { StyleSheet } from 'react-native';
 import { THEME_PREFERENCE } from '~/models/Theme';
 import { ThemeConfirmModal } from './ThemeConfirmModal';
 
@@ -44,5 +45,6 @@ describe('ThemeConfirmModal', () => {
     expect(renderedNodes.indexOf(previewImage)).toBeLessThan(
       renderedNodes.indexOf(description)
     );
+    expect(StyleSheet.flatten(description.props.style)?.marginBottom).toBe(24);
   });
 });
