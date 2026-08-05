@@ -301,6 +301,8 @@
   "routeSearchWalkthroughDescription1": "On this screen, you can search for a destination station and find a route.",
   "routeSearchWalkthroughTitle2": "Enter Station Name",
   "routeSearchWalkthroughDescription2": "Enter the name of your destination station here and tap the search button to see the available options.",
+  "routeSearchWalkthroughAgentTitle": "Ask AI Where to Go",
+  "routeSearchWalkthroughAgentDescription": "If you do not know the station name, open the AI chat from this banner. Share what you want to do or how you feel to get destination ideas.",
   "routeSearchWalkthroughTitle3": "Select a Route",
   "routeSearchWalkthroughDescription3": "Tap a destination from the search results to see the route to that station. Routes are color-coded by line, so you can choose the line you want to take.",
   "settingsWalkthroughTitle1": "Welcome to Settings",
