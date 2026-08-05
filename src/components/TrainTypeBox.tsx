@@ -202,11 +202,27 @@ const TrainTypeBox: React.FC<Props> = ({
   const animatedTextBaseStyle = useMemo(
     () => ({
       fontFamily: resolveTrainTypeFontFamily(theme, headerLangState),
+      fontWeight:
+        theme === APP_THEME.LED && headerLangState !== 'KO'
+          ? ('normal' as const)
+          : ('bold' as const),
     }),
     [headerLangState, theme]
   );
 
-  const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
+  const trainTypeDisplayState = useMemo(
+    () => ({
+      name: trainTypeName,
+      headerLangState,
+      textStyle: animatedTextBaseStyle,
+    }),
+    [animatedTextBaseStyle, headerLangState, trainTypeName]
+  );
+  const prevTrainTypeDisplayState = useLazyPrevious(
+    trainTypeDisplayState,
+    fadeOutFinished
+  );
+  const prevTrainTypeName = prevTrainTypeDisplayState.name;
 
   const handleFinish = useCallback((finished: boolean | undefined) => {
     if (finished) {
@@ -229,19 +245,24 @@ const TrainTypeBox: React.FC<Props> = ({
     });
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
-  // 電車種別が変更されたときのみfadeOutFinishedをリセット
-  // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある
+  // 表示内容または表示設定が変更されたときのみfadeOutFinishedをリセット
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 前回表示状態の変更時にもアニメーション状態をリセットする必要がある
   useEffect(() => {
     setFadeOutFinished(false);
-  }, [trainTypeName, prevTrainTypeName]);
+  }, [trainTypeDisplayState, prevTrainTypeDisplayState]);
 
   useEffect(() => {
-    if (prevTrainTypeName !== trainTypeName) {
+    if (prevTrainTypeDisplayState !== trainTypeDisplayState) {
       updateOpacity();
     } else {
       resetValue();
     }
-  }, [prevTrainTypeName, resetValue, trainTypeName, updateOpacity]);
+  }, [
+    prevTrainTypeDisplayState,
+    resetValue,
+    trainTypeDisplayState,
+    updateOpacity,
+  ]);
 
   const textTopAnimatedStyles = useMemo(
     () => ({
@@ -344,10 +365,6 @@ const TrainTypeBox: React.FC<Props> = ({
               [
                 styles.text,
                 animatedTextBaseStyle,
-                theme === APP_THEME.LED &&
-                  headerLangState !== 'KO' && {
-                    fontWeight: 'normal' as const,
-                  },
                 {
                   letterSpacing,
                   marginLeft,
@@ -366,9 +383,7 @@ const TrainTypeBox: React.FC<Props> = ({
         <RNAnimated.Text
           style={[
             styles.text,
-            animatedTextBaseStyle,
-            theme === APP_THEME.LED &&
-              headerLangState !== 'KO' && { fontWeight: 'normal' as const },
+            prevTrainTypeDisplayState.textStyle,
             textBottomAnimatedStyles,
             {
               letterSpacing: prevLetterSpacing,

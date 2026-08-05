@@ -1,8 +1,32 @@
 import { render } from '@testing-library/react-native';
+import { useAtomValue } from 'jotai';
 import React from 'react';
+import { Animated, StyleSheet } from 'react-native';
+import type { TrainType } from '~/@types/graphql';
 import { FONTS } from '../constants';
 import { APP_THEME } from '../models/Theme';
-import { resolveTrainTypeFontFamily } from './TrainTypeBox';
+import { headerStateAtom } from '../store/atoms/navigation';
+import { themeAtom } from '../store/atoms/theme';
+import tuningState from '../store/atoms/tuning';
+import TrainTypeBox, { resolveTrainTypeFontFamily } from './TrainTypeBox';
+
+jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
+  useAtomValue: jest.fn(),
+}));
+
+jest.mock('../hooks', () => ({
+  useCurrentLine: jest.fn(() => null),
+  useLandscapeWindowDimensions: jest.fn(() => ({ width: 800, height: 400 })),
+  useLazyPrevious: jest.requireActual('../hooks/useLazyPrevious')
+    .useLazyPrevious,
+  useNextTrainType: jest.fn(() => null),
+  usePrevious: jest.requireActual('../hooks/usePrevious').usePrevious,
+}));
+
+jest.mock('../translation', () => ({
+  translate: jest.fn((key) => key),
+}));
 
 // Create a minimal component that tests the specific crash fix
 const TestSplitFunction = ({
@@ -137,5 +161,71 @@ describe('TrainTypeBox font family', () => {
     expect(resolveTrainTypeFontFamily(APP_THEME.TOKYO_METRO, 'JA')).toBe(
       FONTS.RobotoBold
     );
+  });
+
+  it('LEDテーマでは韓国語以外にドットフォントを使用する', () => {
+    expect(resolveTrainTypeFontFamily(APP_THEME.LED, 'JA')).toBe(
+      FONTS.JFDotJiskan24h
+    );
+  });
+
+  it('LEDテーマでも韓国語はOSフォントへフォールバックする', () => {
+    expect(resolveTrainTypeFontFamily(APP_THEME.LED, 'KO')).toBeUndefined();
+  });
+});
+
+describe('TrainTypeBox language transition', () => {
+  const trainType: TrainType = {
+    __typename: 'TrainType',
+    id: 1,
+    typeId: 1,
+    groupId: 1,
+    name: '快速',
+    nameKatakana: 'カイソク',
+    nameRoman: 'Rapid',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
+    nameChinese: '快速',
+    nameKorean: '쾌속',
+    color: '#f00',
+    direction: null,
+    kind: null,
+    line: null,
+    lines: null,
+  };
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('KOからJAへのフェード中は旧ハングルにOSフォント設定を維持する', () => {
+    let headerState = 'CURRENT_KO';
+    (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+      if (atom === headerStateAtom) return headerState;
+      if (atom === themeAtom) return APP_THEME.TOKYO_METRO;
+      if (atom === tuningState) return { headerTransitionDelay: 1000 };
+      return undefined;
+    });
+    jest
+      .spyOn(Animated, 'timing')
+      .mockImplementation(() => ({ start: jest.fn() }) as never);
+
+    const { getByText, rerender } = render(
+      <TrainTypeBox trainType={trainType} />
+    );
+    headerState = 'CURRENT_JA';
+    rerender(<TrainTypeBox trainType={{ ...trainType }} />);
+
+    const previousKoreanStyle = StyleSheet.flatten(
+      getByText('쾌속').props.style
+    );
+    const currentJapaneseStyle = StyleSheet.flatten(
+      getByText('快速').props.style
+    );
+
+    expect(previousKoreanStyle.fontFamily).toBeUndefined();
+    expect(previousKoreanStyle.fontWeight).toBe('bold');
+    expect(currentJapaneseStyle.fontFamily).toBe(FONTS.RobotoBold);
   });
 });
