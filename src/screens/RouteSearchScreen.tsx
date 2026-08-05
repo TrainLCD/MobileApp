@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   // AI相談バナーは検索バーと検索結果見出しの間の余白(従来 marginBottom: 48)に置く。
   // バナー非表示時に従来と同じ余白を保つため、間隔は見出し側の marginTop で確保する。
-  agentEntryBanner: {
+  agentEntryBannerContainer: {
     marginTop: 16,
   },
   searchResultHeading: {
@@ -149,11 +149,18 @@ const RouteSearchScreen = () => {
     goToStep,
     skipWalkthrough,
     setSpotlightArea,
-  } = useRouteSearchWalkthrough();
+  } = useRouteSearchWalkthrough(aiAgentEnabled);
 
   const searchBarRef = useRef<View>(null);
+  const agentEntryBannerRef = useRef<View>(null);
   const searchResultsRef = useRef<View>(null);
   const [searchBarLayout, setSearchBarLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [agentEntryBannerLayout, setAgentEntryBannerLayout] = useState<{
     x: number;
     y: number;
     width: number;
@@ -290,6 +297,16 @@ const RouteSearchScreen = () => {
     }
   }, []);
 
+  const measureAgentEntryBanner = useCallback(() => {
+    if (agentEntryBannerRef.current) {
+      agentEntryBannerRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setAgentEntryBannerLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
   // ステップが変わった時にレイアウトを再計測
   useEffect(() => {
     if (currentStepId === 'routeSearchBar') {
@@ -300,6 +317,15 @@ const RouteSearchScreen = () => {
       return () => clearTimeout(timer);
     }
   }, [currentStepId, measureSearchBar]);
+
+  useEffect(() => {
+    if (currentStepId === 'routeSearchAgentBanner') {
+      const timer = setTimeout(() => {
+        measureAgentEntryBanner();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepId, measureAgentEntryBanner]);
 
   useEffect(() => {
     if (currentStepId === 'routeSearchResults') {
@@ -322,6 +348,18 @@ const RouteSearchScreen = () => {
       });
     }
   }, [currentStepId, searchBarLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'routeSearchAgentBanner' && agentEntryBannerLayout) {
+      setSpotlightArea({
+        x: agentEntryBannerLayout.x,
+        y: agentEntryBannerLayout.y,
+        width: agentEntryBannerLayout.width,
+        height: agentEntryBannerLayout.height,
+        borderRadius: 8,
+      });
+    }
+  }, [currentStepId, agentEntryBannerLayout, setSpotlightArea]);
 
   useEffect(() => {
     if (currentStepId === 'routeSearchResults' && searchResultsLayout) {
@@ -355,7 +393,15 @@ const RouteSearchScreen = () => {
               <View ref={searchBarRef} onLayout={measureSearchBar}>
                 <SearchBar onSearch={handleSearch} />
               </View>
-              <AgentEntryBanner style={styles.agentEntryBanner} />
+              {aiAgentEnabled && (
+                <View
+                  ref={agentEntryBannerRef}
+                  onLayout={measureAgentEntryBanner}
+                  style={styles.agentEntryBannerContainer}
+                >
+                  <AgentEntryBanner />
+                </View>
+              )}
               <Heading
                 style={[
                   styles.searchResultHeading,
