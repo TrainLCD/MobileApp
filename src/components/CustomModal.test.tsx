@@ -1,6 +1,6 @@
 import { render, waitFor } from '@testing-library/react-native';
 import type React from 'react';
-import { Animated, Text } from 'react-native';
+import { Animated, StyleSheet, Text } from 'react-native';
 import { CustomModal } from './CustomModal';
 
 // jotaiのモック
@@ -49,6 +49,22 @@ describe('CustomModal', () => {
 
     // CustomModal はレンダリングされる
     expect(getByTestId('modal')).toBeTruthy();
+  });
+
+  it('スマートフォンでは最大高さを75%に保つ', () => {
+    const { UNSAFE_root } = render(
+      <CustomModal visible={true}>
+        <Text>Test Content</Text>
+      </CustomModal>
+    );
+
+    const modalContent = UNSAFE_root.findAll((node: typeof UNSAFE_root) => {
+      const style = StyleSheet.flatten(node.props.style);
+      return style?.maxWidth === 400;
+    })[0];
+
+    expect(modalContent).toBeDefined();
+    expect(StyleSheet.flatten(modalContent.props.style)?.maxHeight).toBe('75%');
   });
 });
 
