@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
-  Alert,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -18,6 +17,7 @@ import { storage } from '~/lib/storage';
 import { pictureInPictureAtom } from '~/store/atoms/pictureInPicture';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 
 const styles = StyleSheet.create({
   root: {
@@ -51,7 +51,7 @@ const AndroidSettingsScreen: React.FC = () => {
       }));
     } catch (error) {
       console.error('Failed to toggle Picture in Picture setting', error);
-      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, [pictureInPictureEnabled, setPictureInPicture]);
 

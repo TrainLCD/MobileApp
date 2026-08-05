@@ -3,7 +3,6 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -39,6 +38,7 @@ import { GET_STATIONS_BY_IDS } from '~/lib/graphql/queries';
 import { stationAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
 import { showToast } from '~/utils/toast';
 import { AgentEmptyState } from './AgentEmptyState';
@@ -399,8 +399,7 @@ const DestinationAgentScreen = () => {
   );
 
   const handleReset = useCallback(() => {
-    // ユーザ起点の onPress なので Alert.alert を直接呼んでよい(CLAUDE.md の StrictMode 規約)
-    Alert.alert(
+    showDialog(
       translate('destinationAgentReset'),
       translate('destinationAgentResetConfirm'),
       [

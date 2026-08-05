@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   type GestureResponderEvent,
   Linking,
   Platform,
@@ -21,6 +20,7 @@ import { useTTSFeatureEnabled } from '~/hooks/useTTSFeatureEnabled';
 import speechState from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import { STATUS_URL, STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 
@@ -247,7 +247,7 @@ const TTSSettingsScreen: React.FC = () => {
 
       try {
         if (flag && !storage.contains(STORAGE_KEYS.TTS_NOTICE)) {
-          Alert.alert(translate('notice'), translate('ttsAlertText'), [
+          showDialog(translate('notice'), translate('ttsAlertText'), [
             {
               text: translate('doNotShowAgain'),
               style: 'cancel',
@@ -256,7 +256,7 @@ const TTSSettingsScreen: React.FC = () => {
                   storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
                 } catch (error) {
                   console.error('Failed to persist TTS notice flag', error);
-                  Alert.alert(
+                  showDialog(
                     translate('errorTitle'),
                     translate('failedToSavePreference')
                   );
@@ -276,7 +276,7 @@ const TTSSettingsScreen: React.FC = () => {
         }));
       } catch (error) {
         console.error('Failed to toggle TTS setting', error);
-        Alert.alert(
+        showDialog(
           translate('errorTitle'),
           translate('failedToSavePreference')
         );
@@ -288,13 +288,13 @@ const TTSSettingsScreen: React.FC = () => {
   const handleToggleBgTTS = useCallback(
     (flag: boolean) => {
       if (isClip()) {
-        Alert.alert(translate('notice'), translate('bgTtsAppClipAlertText'));
+        showDialog(translate('notice'), translate('bgTtsAppClipAlertText'));
         return;
       }
 
       try {
         if (flag && !storage.contains(STORAGE_KEYS.BG_TTS_NOTICE)) {
-          Alert.alert(translate('notice'), translate('bgTtsAlertText'), [
+          showDialog(translate('notice'), translate('bgTtsAlertText'), [
             {
               text: translate('doNotShowAgain'),
               style: 'cancel',
@@ -303,7 +303,7 @@ const TTSSettingsScreen: React.FC = () => {
                   storage.set(STORAGE_KEYS.BG_TTS_NOTICE, 'true');
                 } catch (error) {
                   console.error('Failed to persist BG TTS notice flag', error);
-                  Alert.alert(
+                  showDialog(
                     translate('errorTitle'),
                     translate('failedToSavePreference')
                   );
@@ -323,7 +323,7 @@ const TTSSettingsScreen: React.FC = () => {
         }));
       } catch (error) {
         console.error('Failed to toggle background TTS setting', error);
-        Alert.alert(
+        showDialog(
           translate('errorTitle'),
           translate('failedToSavePreference')
         );
@@ -366,7 +366,7 @@ const TTSSettingsScreen: React.FC = () => {
         );
       } catch (error) {
         console.error('Failed to save TTS enabled languages:', error);
-        Alert.alert(
+        showDialog(
           translate('errorTitle'),
           translate('failedToSavePreference')
         );
@@ -438,7 +438,7 @@ const TTSSettingsScreen: React.FC = () => {
   const handleServiceStatusPress = useCallback(() => {
     Linking.openURL(STATUS_URL).catch((error) => {
       console.error('Failed to open service status page', error);
-      Alert.alert(translate('errorTitle'), translate('failedToOpenLink'));
+      showDialog(translate('errorTitle'), translate('failedToOpenLink'));
     });
   }, []);
 

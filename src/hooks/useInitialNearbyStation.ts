@@ -8,7 +8,7 @@ import { locationAtom, setLocation } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState, { stationAtom } from '../store/atoms/station';
 import { translate } from '../translation';
-import { showAlertWhilePresenting } from '../utils/alertPresentation';
+import { showDialogWhilePresenting } from '../utils/dialogPresentation';
 import { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
 import { useFetchNearbyStation } from './useFetchNearbyStation';
 
@@ -121,10 +121,10 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
     };
   }, [fetchNearbyAndUpdate, latitude, longitude, station]);
 
-  // 初回起動アラート
+  // 初回起動ダイアログ
   useEffect(() => {
     if (!storage.contains(STORAGE_KEYS.FIRST_LAUNCH_PASSED)) {
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         STORAGE_KEYS.FIRST_LAUNCH_PASSED,
         translate('notice'),
         translate('firstAlertText'),
@@ -140,11 +140,11 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
     }
   }, []);
 
-  // 最寄り駅取得エラーのアラート
+  // 最寄り駅取得エラーのダイアログ
   useEffect(() => {
     if (nearbyStationFetchError) {
       console.error(nearbyStationFetchError);
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         'initialNearbyStationFetchError',
         translate('errorTitle'),
         translate('apiErrorText')

@@ -11,12 +11,13 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot from 'react-native-view-shot';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
+import { showDialog } from '~/utils/dialogPresentation';
 import { isDevApp } from '~/utils/isDevApp';
 import { getSettingsThemes } from '~/utils/theme';
 import {
@@ -200,7 +201,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         setThemePreference(preference);
       } catch (err) {
         console.error(err);
-        Alert.alert(
+        showDialog(
           translate('errorTitle'),
           translate('failedToSavePreference')
         );
@@ -212,7 +213,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const handleReport = useCallback(async () => {
     const captureError = (err: unknown) => {
       console.error(err);
-      Alert.alert(translate('errorTitle'), String(err));
+      showDialog(translate('errorTitle'), String(err));
     };
 
     if (!isAppLatest) {
@@ -225,7 +226,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      Alert.alert(
+      showDialog(
         translate('announcementTitle'),
         translate('updateRequiredForReport'),
         [
@@ -271,7 +272,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       if (err instanceof Error && err.message === 'User did not share') {
         return;
       }
-      Alert.alert(`${translate('couldntShare')} ${err}`);
+      showDialog(`${translate('couldntShare')} ${err}`);
     };
 
     const viewShotCapture = viewShotRef.current?.capture;
@@ -326,7 +327,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } catch (err) {
         console.error(err);
-        Alert.alert(translate('errorTitle'), String(err));
+        showDialog(translate('errorTitle'), String(err));
         return;
       }
 
@@ -389,7 +390,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                 ...prev,
                 devOverlayEnabled: prevValue,
               }));
-              Alert.alert(
+              showDialog(
                 translate('errorTitle'),
                 translate('failedToSavePreference')
               );
@@ -621,7 +622,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const handleReportSend = useCallback(
     (description: string) => {
       if (description.trim().length < descriptionLowerLimit) {
-        Alert.alert(
+        showDialog(
           translate('errorTitle'),
           translate('feedbackCharactersCountNotReached', {
             lowerLimit: descriptionLowerLimit,
@@ -630,7 +631,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         return;
       }
 
-      Alert.alert(
+      showDialog(
         translate('announcementTitle'),
         translate('reportConfirmText'),
         [
@@ -646,7 +647,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
                   screenShotBase64,
                 });
                 setSendingReport(false);
-                Alert.alert(
+                showDialog(
                   translate('announcementTitle'),
                   translate('reportSuccessText')
                 );
@@ -654,7 +655,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
               } catch (err) {
                 console.error(err);
                 setSendingReport(false);
-                Alert.alert(translate('errorTitle'), translate('reportError'));
+                showDialog(translate('errorTitle'), translate('reportError'));
               }
             },
           },

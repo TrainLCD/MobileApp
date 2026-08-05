@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -17,6 +16,7 @@ import { storage } from '~/lib/storage';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import { RFValue } from '~/utils/rfValue';
 import FAB from './FAB';
 import { Heading } from './Heading';
@@ -76,11 +76,11 @@ const TuningSettings: React.FC = () => {
 
   const onPressBack = useCallback(async () => {
     if (hasInvalidNumber) {
-      Alert.alert(translate('errorTitle'), translate('nanErrorText'));
+      showDialog(translate('errorTitle'), translate('nanErrorText'));
       return;
     }
     if (settings.headerTransitionDelay > settings.headerTransitionInterval) {
-      Alert.alert(
+      showDialog(
         translate('errorTitle'),
         translate('headerDelayTooShortErrorText')
       );

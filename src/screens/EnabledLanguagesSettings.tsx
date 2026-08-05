@@ -2,7 +2,6 @@ import { CommonActions, Link, useNavigation } from '@react-navigation/native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   type GestureResponderEvent,
   Platform,
   Pressable,
@@ -20,6 +19,7 @@ import navigationState, {
 } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import { type AvailableLanguage, STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 import {
@@ -194,7 +194,7 @@ const EnabledLanguagesSettings: React.FC = () => {
         );
       } catch (error) {
         console.error('Failed to save enabled languages:', error);
-        Alert.alert(
+        showDialog(
           translate('errorTitle'),
           translate('failedToSavePreference')
         );
