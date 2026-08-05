@@ -4,6 +4,14 @@ import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
 import { storage } from '~/lib/storage';
 
 describe('useRouteSearchWalkthrough', () => {
+  beforeEach(() => {
+    storage.remove(STORAGE_KEYS.ROUTE_SEARCH_WALKTHROUGH_COMPLETED);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('AIエージェント有効時はバナー紹介を検索バーと検索結果の間に表示する', () => {
     const { result } = renderHook(() => useRouteSearchWalkthrough(true));
 
