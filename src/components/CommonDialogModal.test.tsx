@@ -12,6 +12,10 @@ jest.mock('@gorhom/portal', () => ({
 }));
 
 describe('CommonDialogModal', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('絵文字、タイトル、本文、アクションを表示する', () => {
     const onClose = jest.fn();
     const onConfirm = jest.fn();

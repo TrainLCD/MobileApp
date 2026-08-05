@@ -171,9 +171,12 @@ describe('TTSSettingsScreen', () => {
       fireEvent.press(getByText('serviceStatus'));
 
       await waitFor(() => {
-        expect(getDialogPresentationSnapshot().request).toMatchObject({
-          title: 'errorTitle',
-          message: 'failedToOpenLink',
+        expect(getDialogPresentationSnapshot()).toMatchObject({
+          visible: true,
+          request: {
+            title: 'errorTitle',
+            message: 'failedToOpenLink',
+          },
         });
       });
       expect(errorSpy).toHaveBeenCalled();

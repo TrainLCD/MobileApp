@@ -41,13 +41,11 @@ export const CommonDialogPresenter: React.FC = () => {
 
   // 従来のダイアログ呼び出しと同じボタン配列を、共通UIの最大2ボタンへ割り当てる。
   // cancel 指定のボタンを左側、それ以外を右側の確定ボタンとして扱う。
-  const styledCancelButtonIndex = request.buttons.findIndex(
+  const cancelButtonIndex = request.buttons.findIndex(
     (button) => button.style === 'cancel'
   );
-  const cancelButtonIndex =
-    request.buttons.length > 1 ? styledCancelButtonIndex : -1;
   const confirmButtonIndex = request.buttons.findIndex(
-    (_, index) => index !== cancelButtonIndex
+    (button) => button.style !== 'cancel'
   );
   const confirmButton = request.buttons[confirmButtonIndex];
   const cancelButton = request.buttons[cancelButtonIndex];

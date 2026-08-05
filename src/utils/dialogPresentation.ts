@@ -1,3 +1,7 @@
+/**
+ * ダイアログのボタン定義。
+ * ボタン配列には確定操作を1個、必要な場合だけキャンセル操作を1個指定する。
+ */
 export type DialogButton = {
   text: string;
   style?: 'default' | 'cancel' | 'destructive';
@@ -58,6 +62,22 @@ const isKeyPresenting = (key: string) =>
   snapshot.request?.presentationKey === key ||
   queuedRequests.some((request) => request.presentationKey === key);
 
+const normalizeButtons = (buttons?: DialogButton[]): DialogButton[] => {
+  const normalizedButtons = buttons?.length ? buttons : [{ text: 'OK' }];
+  const cancelButtonCount = normalizedButtons.filter(
+    (button) => button.style === 'cancel'
+  ).length;
+  const confirmButtonCount = normalizedButtons.length - cancelButtonCount;
+
+  if (cancelButtonCount > 1 || confirmButtonCount !== 1) {
+    throw new Error(
+      'Dialog buttons must contain exactly one confirm button and at most one cancel button.'
+    );
+  }
+
+  return normalizedButtons;
+};
+
 const enqueueDialog = (
   presentationKey: string | undefined,
   title: string,
@@ -65,6 +85,9 @@ const enqueueDialog = (
   buttons?: DialogButton[],
   options?: DialogOptions
 ): boolean => {
+  // 2ボタン固定のUIで操作が黙って欠落しないよう、要求を受け取った時点で検証する。
+  const normalizedButtons = normalizeButtons(buttons);
+
   // StrictMode で effect が再実行されても、同じ論理ダイアログは一つだけ表示する。
   if (presentationKey && isKeyPresenting(presentationKey)) {
     return false;
@@ -75,7 +98,7 @@ const enqueueDialog = (
     presentationKey,
     title,
     message,
-    buttons: buttons?.length ? buttons : [{ text: 'OK' }],
+    buttons: normalizedButtons,
     options: options ?? {},
   };
   nextRequestId += 1;
@@ -151,21 +174,22 @@ export const completePresentedDialogDismissal = () => {
   const shouldCallOnDismiss = dismissedByBackdrop;
   pendingButtonIndex = undefined;
   dismissedByBackdrop = false;
-  snapshot = { request: null, visible: false };
-  emit();
 
-  // モーダルのアンマウントを先に通知してから、画面遷移などを含む処理を実行する。
+  // 待機済みの要求を先に有効化し、コールバック内で追加された要求をその後ろへ並べる。
+  // これにより A の完了処理が C を追加しても、表示順は A → B → C のままになる。
+  const nextRequest = queuedRequests.shift();
+  if (nextRequest) {
+    activateRequest(nextRequest);
+  } else {
+    snapshot = { request: null, visible: false };
+    emit();
+  }
+
+  // 表示状態の更新を先に通知してから、画面遷移などを含む処理を実行する。
   if (buttonIndex !== undefined) {
     void completedRequest.buttons[buttonIndex]?.onPress?.();
   } else if (shouldCallOnDismiss) {
     completedRequest.options.onDismiss?.();
-  }
-
-  if (!snapshot.request) {
-    const nextRequest = queuedRequests.shift();
-    if (nextRequest) {
-      activateRequest(nextRequest);
-    }
   }
 };
 

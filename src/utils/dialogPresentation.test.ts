@@ -9,7 +9,9 @@ import {
 
 describe('dialogPresentation', () => {
   afterEach(() => {
+    jest.clearAllMocks();
     resetDialogPresentationForTests();
+    jest.clearAllMocks();
   });
 
   it('同じキーのダイアログが表示中なら二重表示しない', () => {
@@ -51,5 +53,34 @@ describe('dialogPresentation', () => {
       visible: true,
       request: { title: 'second' },
     });
+  });
+
+  it('確定ボタンが複数指定された場合は要求を受け付けない', () => {
+    expect(() =>
+      showDialog('invalid', undefined, [{ text: 'first' }, { text: 'second' }])
+    ).toThrow(
+      'Dialog buttons must contain exactly one confirm button and at most one cancel button.'
+    );
+    expect(getDialogPresentationSnapshot().request).toBeNull();
+  });
+
+  it('コールバックから追加されたダイアログを既存キューの後に表示する', () => {
+    showDialog('first', undefined, [
+      {
+        text: 'OK',
+        onPress: () => {
+          showDialog('third');
+        },
+      },
+    ]);
+    showDialog('second');
+
+    dismissPresentedDialog(0);
+    completePresentedDialogDismissal();
+    expect(getDialogPresentationSnapshot().request?.title).toBe('second');
+
+    dismissPresentedDialog(0);
+    completePresentedDialogDismissal();
+    expect(getDialogPresentationSnapshot().request?.title).toBe('third');
   });
 });

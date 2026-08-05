@@ -138,10 +138,13 @@ describe('useInitialNearbyStation', () => {
     render(<HookBridge onReady={() => {}} />);
 
     await new Promise((r) => setTimeout(r, 0));
-    expect(getDialogPresentationSnapshot().request).toMatchObject({
-      title: 'notice',
-      message: 'firstAlertText',
-      buttons: expect.any(Array),
+    expect(getDialogPresentationSnapshot()).toMatchObject({
+      visible: true,
+      request: {
+        title: 'notice',
+        message: 'firstAlertText',
+        buttons: expect.any(Array),
+      },
     });
   });
 });

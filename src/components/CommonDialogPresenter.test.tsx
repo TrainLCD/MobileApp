@@ -27,6 +27,7 @@ describe('CommonDialogPresenter', () => {
       resetDialogPresentationForTests();
     });
     jest.useRealTimers();
+    jest.clearAllMocks();
   });
 
   it('破壊的操作の確認ダイアログを表示してボタン処理を実行する', () => {

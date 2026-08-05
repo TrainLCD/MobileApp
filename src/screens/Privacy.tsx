@@ -95,7 +95,8 @@ const PrivacyScreen: React.FC = () => {
             text: 'OK',
             onPress: handleStartWithoutPermissionPress,
           },
-        ]
+        ],
+        { cancelable: false }
       );
     },
     [handleStartWithoutPermissionPress]

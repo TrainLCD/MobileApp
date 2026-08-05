@@ -85,9 +85,12 @@ describe('ExperimentalSettingsScreen', () => {
       'Failed to save portrait mode setting',
       expect.any(Error)
     );
-    expect(getDialogPresentationSnapshot().request).toMatchObject({
-      title: 'errorTitle',
-      message: 'failedToSavePreference',
+    expect(getDialogPresentationSnapshot()).toMatchObject({
+      visible: true,
+      request: {
+        title: 'errorTitle',
+        message: 'failedToSavePreference',
+      },
     });
 
     setSpy.mockRestore();
@@ -135,9 +138,12 @@ describe('ExperimentalSettingsScreen', () => {
       'Failed to save telemetry setting',
       expect.any(Error)
     );
-    expect(getDialogPresentationSnapshot().request).toMatchObject({
-      title: 'errorTitle',
-      message: 'failedToSavePreference',
+    expect(getDialogPresentationSnapshot()).toMatchObject({
+      visible: true,
+      request: {
+        title: 'errorTitle',
+        message: 'failedToSavePreference',
+      },
     });
 
     setSpy.mockRestore();
