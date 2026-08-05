@@ -48,9 +48,6 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(16),
     marginBottom: 16,
   },
-  previewContainer: {
-    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
-  },
   previewImageWrap: {
     width: '100%',
     aspectRatio: 16 / 9,
@@ -144,12 +141,7 @@ export const ThemeConfirmModal: React.FC<Props> = ({
             ? translate('themeDescriptionAuto')
             : (themeInfo?.description ?? '')}
         </Typography>
-        <View
-          style={[
-            styles.previewContainer,
-            { borderRadius: isLEDTheme ? 0 : 16 },
-          ]}
-        >
+        <View style={{ borderRadius: isLEDTheme ? 0 : 16 }}>
           <View
             style={[
               styles.previewImageWrap,
