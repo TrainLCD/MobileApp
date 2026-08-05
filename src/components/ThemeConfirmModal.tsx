@@ -4,50 +4,18 @@ import { useAtomValue } from 'jotai';
 import { lighten } from 'polished';
 import type React from 'react';
 import { useMemo } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getThemeInfo } from '~/utils/themeInfo';
-import {
-  AUTO_THEME_GRADIENT_COLORS,
-  IN_USE_COLOR_MAP,
-  LED_THEME_BG_COLOR,
-} from '../constants';
-import Button from './Button';
-import { CustomModal } from './CustomModal';
+import { AUTO_THEME_GRADIENT_COLORS, IN_USE_COLOR_MAP } from '../constants';
+import { DialogModalLayout } from './DialogModalLayout';
 import Typography from './Typography';
 
 const styles = StyleSheet.create({
-  contentView: {
-    width: '100%',
-  },
-  container: {
-    padding: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  colorSwatch: {
-    width: 48,
-    height: 48,
-    overflow: 'hidden',
-    marginRight: 12,
-  },
-  title: {
-    fontSize: RFValue(16),
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  description: {
-    fontSize: RFValue(12),
-    lineHeight: RFValue(16),
-    marginBottom: 24,
-  },
   previewImageWrap: {
     width: '100%',
     aspectRatio: 16 / 9,
@@ -61,17 +29,6 @@ const styles = StyleSheet.create({
   previewImage: {
     width: '100%',
     height: '100%',
-  },
-  buttonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 16,
-  },
-  button: {
-    minWidth: 100,
-  },
-  buttonText: {
-    fontWeight: 'bold',
   },
   autoPreviewEmoji: {
     fontSize: RFValue(64),
@@ -111,77 +68,55 @@ export const ThemeConfirmModal: React.FC<Props> = ({
   const borderRadius = isLEDTheme ? 0 : 8;
 
   return (
-    <CustomModal
+    <DialogModalLayout
       visible={visible}
+      isLEDTheme={isLEDTheme}
       onClose={onClose}
+      onConfirm={onConfirm}
       onCloseAnimationEnd={onCloseAnimationEnd}
-      contentContainerStyle={[
-        styles.contentView,
-        {
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-        },
-      ]}
+      leadingStyle={{ borderRadius }}
+      leading={
+        <LinearGradient
+          colors={
+            themeColor
+              ? [themeColor, lighten(0.1, themeColor)]
+              : AUTO_THEME_GRADIENT_COLORS
+          }
+          style={{ flex: 1, width: '100%' }}
+        />
+      }
+      title={themeTitle}
+      description={
+        isAuto
+          ? translate('themeDescriptionAuto')
+          : (themeInfo?.description ?? '')
+      }
+      cancelButtonText={translate('cancel')}
+      confirmButtonText={translate('themeConfirmApply')}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <View style={[styles.colorSwatch, { borderRadius }]}>
-            <LinearGradient
-              colors={
-                themeColor
-                  ? [themeColor, lighten(0.1, themeColor)]
-                  : AUTO_THEME_GRADIENT_COLORS
-              }
-              style={{ flex: 1 }}
+      <View style={{ borderRadius: isLEDTheme ? 0 : 16 }}>
+        <View
+          style={[
+            styles.previewImageWrap,
+            {
+              backgroundColor: isLEDTheme ? '#444' : '#e0e0e0',
+              borderRadius: isLEDTheme ? 0 : 16,
+            },
+          ]}
+        >
+          {isAuto ? (
+            <Typography style={styles.autoPreviewEmoji}>❓</Typography>
+          ) : (
+            <Image
+              key={`theme-preview-${themeId ?? 'unknown'}`}
+              recyclingKey={themeId}
+              source={previewImage}
+              style={styles.previewImage}
+              contentFit="contain"
             />
-          </View>
-          <Typography style={styles.title}>{themeTitle}</Typography>
+          )}
         </View>
-        <View style={{ borderRadius: isLEDTheme ? 0 : 16 }}>
-          <View
-            style={[
-              styles.previewImageWrap,
-              {
-                backgroundColor: isLEDTheme ? '#444' : '#e0e0e0',
-                borderRadius: isLEDTheme ? 0 : 16,
-              },
-            ]}
-          >
-            {isAuto ? (
-              <Typography style={styles.autoPreviewEmoji}>❓</Typography>
-            ) : (
-              <Image
-                key={`theme-preview-${themeId ?? 'unknown'}`}
-                recyclingKey={themeId}
-                source={previewImage}
-                style={styles.previewImage}
-                contentFit="contain"
-              />
-            )}
-          </View>
-        </View>
-        <Typography style={styles.description}>
-          {isAuto
-            ? translate('themeDescriptionAuto')
-            : (themeInfo?.description ?? '')}
-        </Typography>
-        <View style={styles.buttonsRow}>
-          <Button
-            style={styles.button}
-            textStyle={styles.buttonText}
-            onPress={onClose}
-            outline
-          >
-            {translate('cancel')}
-          </Button>
-          <Button
-            style={styles.button}
-            textStyle={styles.buttonText}
-            onPress={onConfirm}
-          >
-            {translate('themeConfirmApply')}
-          </Button>
-        </View>
-      </ScrollView>
-    </CustomModal>
+      </View>
+    </DialogModalLayout>
   );
 };
