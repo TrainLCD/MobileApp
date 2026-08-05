@@ -30,6 +30,7 @@ export type WalkthroughStepId =
   | 'customize'
   | 'routeSearchIntro'
   | 'routeSearchBar'
+  | 'routeSearchAgentBanner'
   | 'routeSearchResults'
   | 'settingsWelcome'
   | 'settingsTheme'
