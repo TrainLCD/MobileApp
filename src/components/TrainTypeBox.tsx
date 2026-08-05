@@ -24,7 +24,7 @@ import {
   usePrevious,
 } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
-import { APP_THEME } from '../models/Theme';
+import { APP_THEME, type AppTheme } from '../models/Theme';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
@@ -41,6 +41,18 @@ type Props = {
   nextTrainTypeColor?: string;
   darkenColor?: boolean;
   fontSizeScale?: number;
+};
+
+export const resolveTrainTypeFontFamily = (
+  theme: AppTheme,
+  headerLangState: HeaderLangState
+): string | undefined => {
+  // バンドル済みのRoboto/JF Dotはいずれもハングルを収録していないため、
+  // 韓国語ではOSのフォールバックフォントを使用する。
+  if (headerLangState === 'KO') {
+    return undefined;
+  }
+  return theme === APP_THEME.LED ? FONTS.JFDotJiskan24h : FONTS.RobotoBold;
 };
 
 const styles = StyleSheet.create({
@@ -189,13 +201,28 @@ const TrainTypeBox: React.FC<Props> = ({
   const prevLetterSpacing = usePrevious(letterSpacing);
   const animatedTextBaseStyle = useMemo(
     () => ({
-      fontFamily:
-        theme === APP_THEME.LED ? FONTS.JFDotJiskan24h : FONTS.RobotoBold,
+      fontFamily: resolveTrainTypeFontFamily(theme, headerLangState),
+      fontWeight:
+        theme === APP_THEME.LED && headerLangState !== 'KO'
+          ? ('normal' as const)
+          : ('bold' as const),
     }),
-    [theme]
+    [headerLangState, theme]
   );
 
-  const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
+  const trainTypeDisplayState = useMemo(
+    () => ({
+      name: trainTypeName,
+      headerLangState,
+      textStyle: animatedTextBaseStyle,
+    }),
+    [animatedTextBaseStyle, headerLangState, trainTypeName]
+  );
+  const prevTrainTypeDisplayState = useLazyPrevious(
+    trainTypeDisplayState,
+    fadeOutFinished
+  );
+  const prevTrainTypeName = prevTrainTypeDisplayState.name;
 
   const handleFinish = useCallback((finished: boolean | undefined) => {
     if (finished) {
@@ -218,19 +245,24 @@ const TrainTypeBox: React.FC<Props> = ({
     });
   }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
 
-  // 電車種別が変更されたときのみfadeOutFinishedをリセット
-  // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある
+  // 表示内容または表示設定が変更されたときのみfadeOutFinishedをリセット
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 前回表示状態の変更時にもアニメーション状態をリセットする必要がある
   useEffect(() => {
     setFadeOutFinished(false);
-  }, [trainTypeName, prevTrainTypeName]);
+  }, [trainTypeDisplayState, prevTrainTypeDisplayState]);
 
   useEffect(() => {
-    if (prevTrainTypeName !== trainTypeName) {
+    if (prevTrainTypeDisplayState !== trainTypeDisplayState) {
       updateOpacity();
     } else {
       resetValue();
     }
-  }, [prevTrainTypeName, resetValue, trainTypeName, updateOpacity]);
+  }, [
+    prevTrainTypeDisplayState,
+    resetValue,
+    trainTypeDisplayState,
+    updateOpacity,
+  ]);
 
   const textTopAnimatedStyles = useMemo(
     () => ({
@@ -333,7 +365,6 @@ const TrainTypeBox: React.FC<Props> = ({
               [
                 styles.text,
                 animatedTextBaseStyle,
-                theme === APP_THEME.LED && { fontWeight: 'normal' as const },
                 {
                   letterSpacing,
                   marginLeft,
@@ -352,8 +383,7 @@ const TrainTypeBox: React.FC<Props> = ({
         <RNAnimated.Text
           style={[
             styles.text,
-            animatedTextBaseStyle,
-            theme === APP_THEME.LED && { fontWeight: 'normal' as const },
+            prevTrainTypeDisplayState.textStyle,
             textBottomAnimatedStyles,
             {
               letterSpacing: prevLetterSpacing,
