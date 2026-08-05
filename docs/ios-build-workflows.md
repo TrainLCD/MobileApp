@@ -5,6 +5,11 @@ optionally upload them to TestFlight. A push to `canary` or `master` uploads the
 corresponding build automatically. A manual run defaults to an archive-only
 dry-run.
 
+Both workflows preserve the iOS build number committed to
+`ios/TrainLCD.xcodeproj/project.pbxproj`. The version bump workflow updates that
+value together with `app.config.ts`; build workflows must not replace it with a
+GitHub Actions run number.
+
 ## Prerequisites
 
 - A GitHub-hosted `macos-26` runner with Node.js 22 and CocoaPods available.
@@ -33,10 +38,10 @@ Configure these GitHub Actions secrets:
 | `APP_STORE_CONNECT_API_ISSUER_ID` | App Store Connect API issuer ID |
 | `APP_STORE_CONNECT_API_KEY_ID` | App Store Connect API key ID |
 | `APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64` | Base64-encoded API private key |
-| `IOS_DEVELOPMENT_CERTIFICATE_BASE64` | Base64-encoded development PKCS #12 certificate and private key |
-| `IOS_DEVELOPMENT_CERTIFICATE_PASSWORD` | Development PKCS #12 certificate password |
-| `IOS_DISTRIBUTION_CERTIFICATE_BASE64` | Base64-encoded distribution PKCS #12 certificate and private key |
-| `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD` | Distribution PKCS #12 certificate password |
+| `IOS_DEVELOPMENT_CERTIFICATE_BASE64` | Base64 development PKCS #12 |
+| `IOS_DEVELOPMENT_CERTIFICATE_PASSWORD` | Development PKCS #12 password |
+| `IOS_DISTRIBUTION_CERTIFICATE_BASE64` | Base64 distribution PKCS #12 |
+| `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD` | Distribution PKCS #12 password |
 
 The workflow exposes application endpoint and telemetry values as environment
 variables. App Store Connect credentials, certificate data, and the Fonts SSH

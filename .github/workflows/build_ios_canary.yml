@@ -168,7 +168,6 @@ jobs:
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          PROJECT_VERSION: "${{ github.run_number }}.${{ github.run_attempt }}"
         run: |
           xcodebuild \
             -workspace ios/TrainLCD.xcworkspace \
@@ -180,7 +179,6 @@ jobs:
             -authenticationKeyPath "$API_KEY_PATH" \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            CURRENT_PROJECT_VERSION="$PROJECT_VERSION" \
             archive
 
       - name: Upload to TestFlight
