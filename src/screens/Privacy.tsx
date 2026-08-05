@@ -3,13 +3,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useCallback } from 'react';
-import {
-  Alert,
-  PermissionsAndroid,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { PermissionsAndroid, Platform, StyleSheet, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../components/Button';
@@ -17,6 +11,7 @@ import Typography from '../components/Typography';
 import { useFetchCurrentLocationOnce } from '../hooks';
 import { setLocation } from '../store/atoms/location';
 import { isJapanese, translate } from '../translation';
+import { showDialog } from '../utils/dialogPresentation';
 import { RFValue } from '../utils/rfValue';
 
 const styles = StyleSheet.create({
@@ -90,7 +85,7 @@ const PrivacyScreen: React.FC = () => {
 
   const handleLocationDenied = useCallback(
     (devicePermissionDenied?: boolean) => {
-      Alert.alert(
+      showDialog(
         translate('announcementTitle'),
         translate(
           devicePermissionDenied ? 'privacyDeniedByDevice' : 'privacyDenied'
@@ -135,7 +130,7 @@ const PrivacyScreen: React.FC = () => {
           break;
       }
     } catch (_err) {
-      Alert.alert(translate('errorTitle'), translate('fetchLocationFailed'), [
+      showDialog(translate('errorTitle'), translate('fetchLocationFailed'), [
         { text: 'OK' },
       ]);
     }

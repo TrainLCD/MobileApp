@@ -53,8 +53,15 @@ const styles = StyleSheet.create({
   buttonText: {
     fontWeight: 'bold',
   },
+  destructiveButton: {
+    backgroundColor: '#d32f2f',
+  },
 });
 
+/**
+ * ThemeConfirmModal と CommonDialogModal が共有する見た目と操作だけを定義する。
+ * 用途固有の状態や表示条件は、それぞれの公開コンポーネント側に残す。
+ */
 export type DialogModalLayoutProps = {
   visible: boolean;
   isLEDTheme: boolean;
@@ -62,12 +69,15 @@ export type DialogModalLayoutProps = {
   leadingStyle?: StyleProp<ViewStyle>;
   title: React.ReactNode;
   description: React.ReactNode;
-  cancelButtonText: React.ReactNode;
+  cancelButtonText?: React.ReactNode;
   confirmButtonText: React.ReactNode;
   children?: React.ReactNode;
   onClose: () => void;
+  onCancel?: () => void;
   onConfirm: () => void;
   onCloseAnimationEnd?: () => void;
+  dismissOnBackdropPress?: boolean;
+  confirmButtonDestructive?: boolean;
   testID?: string;
 };
 
@@ -82,14 +92,18 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   confirmButtonText,
   children,
   onClose,
+  onCancel,
   onConfirm,
   onCloseAnimationEnd,
+  dismissOnBackdropPress,
+  confirmButtonDestructive,
   testID,
 }) => (
   <CustomModal
     visible={visible}
     onClose={onClose}
     onCloseAnimationEnd={onCloseAnimationEnd}
+    dismissOnBackdropPress={dismissOnBackdropPress}
     testID={testID}
     contentContainerStyle={[
       styles.contentView,
@@ -106,16 +120,21 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
       {children}
       <Typography style={styles.description}>{description}</Typography>
       <View style={styles.buttonsRow}>
+        {cancelButtonText ? (
+          <Button
+            style={styles.button}
+            textStyle={styles.buttonText}
+            onPress={onCancel ?? onClose}
+            outline
+          >
+            {cancelButtonText}
+          </Button>
+        ) : null}
         <Button
-          style={styles.button}
-          textStyle={styles.buttonText}
-          onPress={onClose}
-          outline
-        >
-          {cancelButtonText}
-        </Button>
-        <Button
-          style={styles.button}
+          style={[
+            styles.button,
+            confirmButtonDestructive && styles.destructiveButton,
+          ]}
           textStyle={styles.buttonText}
           onPress={onConfirm}
         >

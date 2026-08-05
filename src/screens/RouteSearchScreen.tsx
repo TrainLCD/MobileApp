@@ -12,7 +12,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Alert, Animated as RNAnimated, StyleSheet, View } from 'react-native';
+import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Station } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
@@ -32,6 +32,7 @@ import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
 import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { AgentEntryBanner } from '~/screens/DestinationAgent/AgentEntryBanner';
+import { showDialogWhilePresenting } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
 import { stationAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -212,7 +213,11 @@ const RouteSearchScreen = () => {
 
   useEffect(() => {
     if (byNameError) {
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+      showDialogWhilePresenting(
+        'routeSearchFetchError',
+        translate('errorTitle'),
+        translate('apiErrorText')
+      );
     }
   }, [byNameError]);
 

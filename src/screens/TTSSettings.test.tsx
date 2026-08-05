@@ -1,10 +1,14 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import { Alert, Linking } from 'react-native';
+import { Linking } from 'react-native';
 import { STATUS_URL, STORAGE_KEYS } from '~/constants';
 import { isTTSFeatureEnabled } from '~/lib/remoteConfig';
 import { storage } from '~/lib/storage';
 import speechState, { type StationState } from '~/store/atoms/speech';
+import {
+  getDialogPresentationSnapshot,
+  resetDialogPresentationForTests,
+} from '~/utils/dialogPresentation';
 import TTSSettingsScreen from './TTSSettings';
 
 jest.mock('~/utils/isDevApp', () => ({
@@ -63,6 +67,7 @@ describe('TTSSettingsScreen', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    resetDialogPresentationForTests();
   });
 
   it('日本語をOFFにしても英語はONのままになる', () => {
@@ -155,11 +160,10 @@ describe('TTSSettingsScreen', () => {
       expect(openURLSpy).toHaveBeenCalledWith(STATUS_URL);
     });
 
-    it('サービスステータスリンクを開けなかった場合はエラーAlertを表示する', async () => {
+    it('サービスステータスリンクを開けなかった場合はエラーダイアログを表示する', async () => {
       jest
         .spyOn(Linking, 'openURL')
         .mockRejectedValue(new Error('cannot open'));
-      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation();
       const errorSpy = jest.spyOn(console, 'error').mockImplementation();
 
       const { getByText } = renderWithSpeechState({ enabled: true });
@@ -167,7 +171,10 @@ describe('TTSSettingsScreen', () => {
       fireEvent.press(getByText('serviceStatus'));
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith('errorTitle', 'failedToOpenLink');
+        expect(getDialogPresentationSnapshot().request).toMatchObject({
+          title: 'errorTitle',
+          message: 'failedToOpenLink',
+        });
       });
       expect(errorSpy).toHaveBeenCalled();
     });
