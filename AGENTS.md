@@ -21,6 +21,17 @@ This handbook defines how automation agents collaborate safely and effectively o
 5. **Validate:** run only the necessary commands (`npm run lint`, `npm test`, `npm run typecheck`, etc.) and capture summarized output.
 6. **Document & Handoff:** update READMEs or docs when behavior changes, summarize modifications, list executed commands, and attach artifacts (logs, screenshots) before opening PRs.
 
+### Commit and push gate
+
+- **Do not commit or push unvalidated code on your own initiative.** Before
+  every commit or push that contains code changes, run both `npm run lint` and
+  the relevant unit tests, and confirm that both commands succeed. Run
+  `npm test` when the relevant test scope cannot be narrowed with confidence.
+- If either lint or unit tests fail, do not commit or push. Fix the failure and
+  rerun the checks, or stop and report the blocker to the repository owner.
+- Do not treat CI after a push as a substitute for local validation before the
+  commit or push.
+
 ## Repository Map
 
 - `src/`: Expo React Native app code.
