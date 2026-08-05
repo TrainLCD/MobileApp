@@ -9,7 +9,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  Alert,
   Linking,
   Platform,
   Pressable,
@@ -89,8 +88,11 @@ import stationState, {
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
-import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
+import {
+  showDialog,
+  showDialogWhilePresenting,
+} from '../utils/dialogPresentation';
 import getIsPass from '../utils/isPass';
 
 type GetLineGroupStationsData = {
@@ -378,7 +380,7 @@ const MainScreen: React.FC = () => {
       );
 
       if (subwayAlertDismissed !== 'true') {
-        showAlertWhilePresenting(
+        showDialogWhilePresenting(
           STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
           translate('subwayAlertTitle'),
           translate('subwayAlertText'),
@@ -411,7 +413,7 @@ const MainScreen: React.FC = () => {
       isHoliday &&
       holidayNoticeDismissed !== 'true'
     ) {
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
         translate('notice'),
         translate('holidayNotice'),
@@ -440,7 +442,7 @@ const MainScreen: React.FC = () => {
       !isHoliday &&
       weekdayNoticeDismissed !== 'true'
     ) {
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
         translate('notice'),
         translate('weekdayNotice'),
@@ -467,7 +469,7 @@ const MainScreen: React.FC = () => {
       ) !== -1 &&
       partiallyPassNoticeDismissed !== 'true'
     ) {
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
         translate('notice'),
         translate('partiallyPassNotice'),
@@ -551,7 +553,7 @@ const MainScreen: React.FC = () => {
 
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
-        showAlertWhilePresenting(
+        showDialogWhilePresenting(
           STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
           translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
@@ -576,7 +578,7 @@ const MainScreen: React.FC = () => {
                     await requestIgnoreBatteryOptimizationsAndroid();
                   }
                 } catch (_error) {
-                  Alert.alert(
+                  showDialog(
                     translate('errorTitle'),
                     translate('failedToRequestPermission'),
                     [{ text: 'OK' }]
@@ -595,7 +597,7 @@ const MainScreen: React.FC = () => {
           STORAGE_KEYS.DOZE_CONFIRMED
         );
         if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
-          showAlertWhilePresenting(
+          showDialogWhilePresenting(
             STORAGE_KEYS.DOZE_CONFIRMED,
             translate('announcementTitle'),
             translate('dozeAlertText'),
@@ -613,7 +615,7 @@ const MainScreen: React.FC = () => {
                   try {
                     await Linking.openSettings();
                   } catch (_error) {
-                    Alert.alert(
+                    showDialog(
                       translate('announcementTitle'),
                       translate('failedToOpenSettings'),
                       [{ text: 'OK' }]
@@ -683,7 +685,7 @@ const MainScreen: React.FC = () => {
         return;
       }
 
-      Alert.alert(
+      showDialog(
         translate('confirmChangeLineTitle', {
           lineName:
             (isJapanese

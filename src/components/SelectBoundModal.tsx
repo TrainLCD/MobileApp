@@ -3,7 +3,7 @@ import { BlurView } from 'expo-blur';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { Heading } from '~/components/Heading';
@@ -24,6 +24,10 @@ import type {
 import notifyState from '~/store/atoms/notify';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
+import {
+  showDialog,
+  showDialogWhilePresenting,
+} from '~/utils/dialogPresentation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
@@ -608,7 +612,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     if (!line) return;
 
     if (savedRoute) {
-      Alert.alert(
+      showDialog(
         translate('removeFromSavedRoutes'),
         translate('confirmDeleteRouteText', { routeName: savedRoute.name }),
         [
@@ -768,7 +772,11 @@ export const SelectBoundModal: React.FC<Props> = ({
   useEffect(() => {
     if (error) {
       console.error(error);
-      Alert.alert(translate('errorTitle'), translate('apiErrorText'));
+      showDialogWhilePresenting(
+        'selectBoundFetchError',
+        translate('errorTitle'),
+        translate('apiErrorText')
+      );
     }
   }, [error]);
 

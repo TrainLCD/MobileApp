@@ -3,8 +3,9 @@ import * as Linking from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
 import type React from 'react';
 import { useCallback, useEffect } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { showDialog } from '~/utils/dialogPresentation';
 import { isDevApp } from '~/utils/isDevApp';
 import { STATUS_URL } from '../constants';
 import { translate } from '../translation';
@@ -79,7 +80,7 @@ const FatalErrorScreen: React.FC<Props> = ({
       return;
     }
 
-    Alert.alert(translate('stacktrace'), stacktrace, [
+    showDialog(translate('stacktrace'), stacktrace, [
       { text: 'OK', style: 'cancel' },
     ]);
   }, [stacktrace]);
