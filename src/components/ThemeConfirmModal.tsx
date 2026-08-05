@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: RFValue(12),
     lineHeight: RFValue(16),
-    marginBottom: 16,
+    marginBottom: 24,
   },
   previewImageWrap: {
     width: '100%',
@@ -136,11 +136,6 @@ export const ThemeConfirmModal: React.FC<Props> = ({
           </View>
           <Typography style={styles.title}>{themeTitle}</Typography>
         </View>
-        <Typography style={styles.description}>
-          {isAuto
-            ? translate('themeDescriptionAuto')
-            : (themeInfo?.description ?? '')}
-        </Typography>
         <View style={{ borderRadius: isLEDTheme ? 0 : 16 }}>
           <View
             style={[
@@ -164,6 +159,11 @@ export const ThemeConfirmModal: React.FC<Props> = ({
             )}
           </View>
         </View>
+        <Typography style={styles.description}>
+          {isAuto
+            ? translate('themeDescriptionAuto')
+            : (themeInfo?.description ?? '')}
+        </Typography>
         <View style={styles.buttonsRow}>
           <Button
             style={styles.button}
