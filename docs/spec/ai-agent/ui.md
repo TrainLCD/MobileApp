@@ -53,8 +53,8 @@ Figma デザインは人力ではなく Figma MCP で本書を入力として起
 ## エントリポイント
 
 表示条件はすべて共通: `useAIAgentFeatureEnabled()`（Remote Config
-`ai_agent_enabled`）かつ PoC 期間中は `isDevApp`。フラグ off 時は
-エントリポイント自体を描画しない（architecture.md のエラー表参照）。
+`ai_agent_enabled`）。フラグ off 時はエントリポイント自体を描画しない
+（architecture.md のエラー表参照）。
 
 ### 案 A: RouteSearchScreen の検索バー直下バナー（推奨）
 
