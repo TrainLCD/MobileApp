@@ -6,7 +6,6 @@
 //  Copyright © 2026 Facebook. All rights reserved.
 //
 
-import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -61,21 +60,7 @@ struct LockScreenControlProvider: ControlValueProvider {
   }
 }
 
-// コントロールのタップでTrainLCD本体を開く。openAppWhenRunにより
-// Canary/Prodそれぞれの親アプリが起動するのでURLスキームの出し分けは不要
-@available(iOS 18.0, *)
-struct OpenTrainLCDIntent: AppIntent {
-  // 文字列リソースが引けない場合でもキー名が露出しないようdefaultValueを添える
-  static var title: LocalizedStringResource {
-    LocalizedStringResource("openApp", defaultValue: "Open TrainLCD")
-  }
-  static let openAppWhenRun = true
-
-  func perform() async throws -> some IntentResult {
-    .result()
-  }
-}
-
+// タップ時に実行するOpenTrainLCDIntentはアプリ本体とも共有するためOpenTrainLCDIntent.swiftに置く
 @available(iOS 18.0, *)
 struct LockScreenControl: ControlWidget {
   // LiveActivityModule側のreloadControls(ofKind:)と一致させること
