@@ -105,7 +105,8 @@ class RideWidgetProvider : AppWidgetProvider() {
                     circularViews(context, lineSymbol, lineColor)
                 minHeightDp in 1..INLINE_MAX_HEIGHT_DP ->
                     inlineViews(context, lineName, lineColor)
-                minHeightDp >= SMALL_MIN_HEIGHT_DP ->
+                // 4x2のような横長は高さが足りていても横長レイアウトを使う
+                minHeightDp >= SMALL_MIN_HEIGHT_DP && minWidthDp <= minHeightDp ->
                     smallViews(context, lineName, boundFor, lineSymbol, lineColor)
                 else -> rectangularViews(context, lineName, boundFor, lineSymbol, lineColor)
             }

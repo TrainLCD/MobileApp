@@ -97,6 +97,20 @@ describe('useUpdateWidget フック', () => {
     expect(updateWidget).not.toHaveBeenCalled();
   });
 
+  it('行先が解除されたらマウントされたままでもウィジェットを消去する', () => {
+    setAtomValues({ selectedBound: makeStation('大崎') });
+
+    const { rerender } = render(<TestComponent />);
+    const callsBeforeReset = (clearWidget as jest.Mock).mock.calls.length;
+
+    setAtomValues({ selectedBound: null });
+    rerender(<TestComponent />);
+
+    expect((clearWidget as jest.Mock).mock.calls.length).toBeGreaterThan(
+      callsBeforeReset
+    );
+  });
+
   it('アンマウント(降車)でウィジェットを未乗車表示へ戻す', () => {
     setAtomValues({ selectedBound: makeStation('大崎') });
 

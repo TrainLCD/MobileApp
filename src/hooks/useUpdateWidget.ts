@@ -46,7 +46,9 @@ export const useUpdateWidget = (): void => {
   );
 
   useEffect(() => {
+    // 行先が解除されたらマウントされたままでも未乗車表示へ戻す
     if (!selectedBound) {
+      clearWidget();
       return;
     }
 
