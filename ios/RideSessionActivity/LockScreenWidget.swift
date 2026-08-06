@@ -9,12 +9,17 @@
 import SwiftUI
 import WidgetKit
 
-// ライブアクティビティとロック画面ウィジェットを同一Extensionで配信するためのバンドル
+// ライブアクティビティ・ロック画面ウィジェット・ロック画面コントロールを
+// 同一Extensionで配信するためのバンドル
 @main
 struct RideSessionWidgetBundle: WidgetBundle {
   var body: some Widget {
     RideSessionWidget()
     LockScreenWidget()
+    // ControlWidgetはiOS 18以降のみ。Extensionのデプロイターゲットは16.1のため条件付きで追加する
+    if #available(iOS 18.0, *) {
+      LockScreenControl()
+    }
   }
 }
 
@@ -36,28 +41,9 @@ struct LockScreenEntry: TimelineEntry {
       boundFor: String(localized: "destinationNotSet")
     )
   }
-}
 
-struct LockScreenProvider: TimelineProvider {
-  func placeholder(in context: Context) -> LockScreenEntry {
-    .notLoaded
-  }
-
-  func getSnapshot(
-    in context: Context, completion: @escaping (LockScreenEntry) -> Void
-  ) {
-    completion(loadEntry())
-  }
-
-  func getTimeline(
-    in context: Context, completion: @escaping (Timeline<LockScreenEntry>) -> Void
-  ) {
-    // 表示内容はアプリ側がApp Groupへ書き込んだ時点のWidgetCenter経由リロードでのみ変わるため、
-    // 時刻ベースの再生成は行わない
-    completion(Timeline(entries: [loadEntry()], policy: .never))
-  }
-
-  private func loadEntry() -> LockScreenEntry {
+  // ロック画面ウィジェットとロック画面コントロールで共通のApp Group読み出し
+  static func current() -> LockScreenEntry {
     let appGroupID =
       Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String
       ?? "group.me.tinykitten.trainlcd"
@@ -79,6 +65,26 @@ struct LockScreenProvider: TimelineProvider {
       lineSymbol: lineSymbol.isEmpty ? String(lineName.prefix(1)) : lineSymbol,
       boundFor: defaults.string(forKey: "boundStationName") ?? ""
     )
+  }
+}
+
+struct LockScreenProvider: TimelineProvider {
+  func placeholder(in context: Context) -> LockScreenEntry {
+    .notLoaded
+  }
+
+  func getSnapshot(
+    in context: Context, completion: @escaping (LockScreenEntry) -> Void
+  ) {
+    completion(.current())
+  }
+
+  func getTimeline(
+    in context: Context, completion: @escaping (Timeline<LockScreenEntry>) -> Void
+  ) {
+    // 表示内容はアプリ側がApp Groupへ書き込んだ時点のWidgetCenter経由リロードでのみ変わるため、
+    // 時刻ベースの再生成は行わない
+    completion(Timeline(entries: [.current()], policy: .never))
   }
 }
 
