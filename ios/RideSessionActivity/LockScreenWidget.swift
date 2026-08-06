@@ -9,13 +9,14 @@
 import SwiftUI
 import WidgetKit
 
-// ライブアクティビティ・ロック画面ウィジェット・ロック画面コントロールを
-// 同一Extensionで配信するためのバンドル
+// ライブアクティビティ・ロック画面ウィジェット・ホーム画面ウィジェット・
+// ロック画面コントロールを同一Extensionで配信するためのバンドル
 @main
 struct RideSessionWidgetBundle: WidgetBundle {
   var body: some Widget {
     RideSessionWidget()
     LockScreenWidget()
+    HomeScreenWidget()
     // ControlWidgetはiOS 18以降のみ。Extensionのデプロイターゲットは16.1のため条件付きで追加する
     if #available(iOS 18.0, *) {
       LockScreenControl()
@@ -42,7 +43,7 @@ struct LockScreenEntry: TimelineEntry {
     )
   }
 
-  // ロック画面ウィジェットとロック画面コントロールで共通のApp Group読み出し
+  // ロック画面ウィジェット・ホーム画面ウィジェット・ロック画面コントロールで共通のApp Group読み出し
   static func current() -> LockScreenEntry {
     let appGroupID =
       Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String
@@ -83,7 +84,7 @@ struct LockScreenProvider: TimelineProvider {
     in context: Context, completion: @escaping (Timeline<LockScreenEntry>) -> Void
   ) {
     // 表示内容はアプリ側がApp Groupへ書き込んだ時点のWidgetCenter経由リロードでのみ変わるため、
-    // 時刻ベースの再生成は行わない
+    // 時刻ベースの再生成は行わない。ホーム画面ウィジェットもこのProviderを共有する
     completion(Timeline(entries: [.current()], policy: .never))
   }
 }
