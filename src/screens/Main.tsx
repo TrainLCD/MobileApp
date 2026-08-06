@@ -29,7 +29,7 @@ import DevOverlay from '~/components/DevOverlay';
 import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import { STORAGE_KEYS } from '~/constants';
+import { IS_LIVE_UPDATE_ELIGIBLE_PLATFORM, STORAGE_KEYS } from '~/constants';
 import {
   useAndroidPictureInPicture,
   useConsoleTelemetry,
@@ -174,9 +174,12 @@ const FxUpdateLiveActivitiesInner: React.FC = () => {
   useUpdateLiveActivities();
   return null;
 };
-// LiveActivities は iOS 専用。Android では activityState の派生計算自体を止める。
+// LiveActivities は iOS 専用、Android のライブアップデートは Android 16(API 36) 以降専用。
+// どちらの通知先も持たない端末では activityState の派生計算自体を止める。
 const FxUpdateLiveActivities: React.FC = () => {
-  return Platform.OS === 'ios' ? <FxUpdateLiveActivitiesInner /> : null;
+  return Platform.OS === 'ios' || IS_LIVE_UPDATE_ELIGIBLE_PLATFORM ? (
+    <FxUpdateLiveActivitiesInner />
+  ) : null;
 };
 const FxAndroidPictureInPicture: React.FC = () => {
   useAndroidPictureInPicture();
