@@ -52,7 +52,9 @@ struct HomeScreenLineBar: View {
   let width: CGFloat
 
   var body: some View {
-    RoundedRectangle(cornerRadius: 2)
+    // 角丸は幅の半分。太くする前(幅4pt・角丸2pt)と同じく端が半円になる丸みを保つため、
+    // 固定値ではなく幅から導出する
+    RoundedRectangle(cornerRadius: width / 2)
       .fill(Color(hex: lineColor))
       .frame(width: width)
   }
