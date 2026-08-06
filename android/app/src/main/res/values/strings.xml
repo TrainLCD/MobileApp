@@ -6,6 +6,10 @@
   <string name="live_update_passing">%1$sを通過中</string>
   <string name="live_update_approaching">まもなく%1$s</string>
   <string name="live_update_next">次は%1$s</string>
+  <string name="widget_description">乗車中の路線と方面を表示します</string>
+  <string name="widget_line_not_set">路線が未設定です</string>
+  <string name="widget_destination_not_set">方面が未設定です</string>
+  <string name="widget_riding_on">%1$sに乗車中</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
 </resources>

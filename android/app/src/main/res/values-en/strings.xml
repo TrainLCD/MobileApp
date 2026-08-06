@@ -5,4 +5,8 @@
   <string name="live_update_passing">Passing through %1$s</string>
   <string name="live_update_approaching">Now approaching: %1$s</string>
   <string name="live_update_next">Next: %1$s</string>
+  <string name="widget_description">Shows the line and destination you are riding</string>
+  <string name="widget_line_not_set">No route selected</string>
+  <string name="widget_destination_not_set">Destination not set</string>
+  <string name="widget_riding_on">Riding on %1$s</string>
 </resources>

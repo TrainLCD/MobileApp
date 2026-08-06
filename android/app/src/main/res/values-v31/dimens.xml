@@ -1,0 +1,4 @@
+<resources>
+  <!-- Android 12以降はランチャーのウィジェット角丸に合わせる -->
+  <dimen name="widget_corner_radius">@android:dimen/system_app_widget_background_radius</dimen>
+</resources>
