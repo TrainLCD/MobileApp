@@ -14,6 +14,10 @@ export type DialogButton = {
  */
 export type DialogOptions = {
   emoji?: string;
+  lineSymbol?: {
+    image?: number;
+    color?: string;
+  };
   cancelable?: boolean;
   onDismiss?: () => void;
 };
