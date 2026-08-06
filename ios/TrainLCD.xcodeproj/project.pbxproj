@@ -53,8 +53,12 @@
 		94D3F4612E40A00100000002 /* LockScreenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F45F2E40A00100000000 /* LockScreenWidget.swift */; };
 		94D3F4632E40A00200000001 /* LockScreenControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4622E40A00200000000 /* LockScreenControl.swift */; };
 		94D3F4642E40A00200000002 /* LockScreenControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4622E40A00200000000 /* LockScreenControl.swift */; };
-		94D3F4662E40A00300000001 /* HomeScreenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4652E40A00300000000 /* HomeScreenWidget.swift */; };
-		94D3F4672E40A00300000002 /* HomeScreenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4652E40A00300000000 /* HomeScreenWidget.swift */; };
+		94D3F4662E40A00300000001 /* OpenTrainLCDIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4652E40A00300000000 /* OpenTrainLCDIntent.swift */; };
+		94D3F4672E40A00300000002 /* OpenTrainLCDIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4652E40A00300000000 /* OpenTrainLCDIntent.swift */; };
+		94D3F4682E40A00300000003 /* OpenTrainLCDIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4652E40A00300000000 /* OpenTrainLCDIntent.swift */; };
+		94D3F4692E40A00300000004 /* OpenTrainLCDIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F4652E40A00300000000 /* OpenTrainLCDIntent.swift */; };
+		94D3F46B2E40A00400000001 /* HomeScreenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F46A2E40A00400000000 /* HomeScreenWidget.swift */; };
+		94D3F46C2E40A00400000002 /* HomeScreenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94D3F46A2E40A00400000000 /* HomeScreenWidget.swift */; };
 		942CB6092A32AAB4008339D2 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9407EAA025890E8500E02655 /* ColorExtension.swift */; };
 		942CB60B2A32AAB4008339D2 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDE128D3025900D68287 /* SwiftUI.framework */; };
 		942CB60C2A32AAB4008339D2 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 94B9CDDF28D3025900D68287 /* WidgetKit.framework */; };
@@ -411,7 +415,8 @@
 		94B9CDE428D3025900D68287 /* RideSessionActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionActivity.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		94D3F45F2E40A00100000000 /* LockScreenWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenWidget.swift; sourceTree = "<group>"; };
 		94D3F4622E40A00200000000 /* LockScreenControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenControl.swift; sourceTree = "<group>"; };
-		94D3F4652E40A00300000000 /* HomeScreenWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreenWidget.swift; sourceTree = "<group>"; };
+		94D3F4652E40A00300000000 /* OpenTrainLCDIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenTrainLCDIntent.swift; sourceTree = "<group>"; };
+		94D3F46A2E40A00400000000 /* HomeScreenWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreenWidget.swift; sourceTree = "<group>"; };
 		94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = RideSessionActivity.intentdefinition; sourceTree = "<group>"; };
 		94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RideSessionAttributes.swift; sourceTree = "<group>"; };
 		94BFA3B7258F0FF3001D95E4 /* StationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StationListView.swift; sourceTree = "<group>"; };
@@ -833,8 +838,9 @@
 				942CB64A2A32BA12008339D2 /* Info.plist */,
 				94B9CDE428D3025900D68287 /* RideSessionActivity.swift */,
 				94D3F45F2E40A00100000000 /* LockScreenWidget.swift */,
-				94D3F4652E40A00300000000 /* HomeScreenWidget.swift */,
+				94D3F46A2E40A00400000000 /* HomeScreenWidget.swift */,
 				94D3F4622E40A00200000000 /* LockScreenControl.swift */,
+				94D3F4652E40A00300000000 /* OpenTrainLCDIntent.swift */,
 				94B9CDE628D3025900D68287 /* RideSessionActivity.intentdefinition */,
 				94B9CDF328D3027100D68287 /* RideSessionAttributes.swift */,
 				94000A592AD73E8900B5A11C /* Assets.xcassets */,
@@ -2190,6 +2196,7 @@
 				94C1658529B99E0A007329A6 /* SensitiveNotificationModule.swift in Sources */,
 				94C1658F29B9A349007329A6 /* LiveActivityModule.swift in Sources */,
 				944C2C3628DAC55A0004DA72 /* RideSessionAttributes.swift in Sources */,
+				94D3F4662E40A00300000001 /* OpenTrainLCDIntent.swift in Sources */,
 				94C1658629B99E0A007329A6 /* SensitiveNotificationModuleBridge.m in Sources */,
 				94C1658029B99DEB007329A6 /* LiveActivityModuleBridge.m in Sources */,
 				9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */,
@@ -2204,6 +2211,7 @@
 				942CB5B92A32AA96008339D2 /* SensitiveNotificationModule.swift in Sources */,
 				942CB5BC2A32AA96008339D2 /* LiveActivityModule.swift in Sources */,
 				942CB5BD2A32AA96008339D2 /* RideSessionAttributes.swift in Sources */,
+				94D3F4672E40A00300000002 /* OpenTrainLCDIntent.swift in Sources */,
 				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
 				942CB5C02A32AA96008339D2 /* LiveActivityModuleBridge.m in Sources */,
 				F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */,
@@ -2242,8 +2250,9 @@
 				942CB6072A32AAB4008339D2 /* RideSessionActivity.intentdefinition in Sources */,
 				942CB6082A32AAB4008339D2 /* RideSessionActivity.swift in Sources */,
 				94D3F4612E40A00100000002 /* LockScreenWidget.swift in Sources */,
-				94D3F4672E40A00300000002 /* HomeScreenWidget.swift in Sources */,
+				94D3F46C2E40A00400000002 /* HomeScreenWidget.swift in Sources */,
 				94D3F4642E40A00200000002 /* LockScreenControl.swift in Sources */,
+				94D3F4692E40A00300000004 /* OpenTrainLCDIntent.swift in Sources */,
 				942CB6092A32AAB4008339D2 /* ColorExtension.swift in Sources */,
 				94E6881C2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */,
 			);
@@ -2277,8 +2286,9 @@
 				94B9CDEA28D3025A00D68287 /* RideSessionActivity.intentdefinition in Sources */,
 				94B9CDE528D3025900D68287 /* RideSessionActivity.swift in Sources */,
 				94D3F4602E40A00100000001 /* LockScreenWidget.swift in Sources */,
-				94D3F4662E40A00300000001 /* HomeScreenWidget.swift in Sources */,
+				94D3F46B2E40A00400000001 /* HomeScreenWidget.swift in Sources */,
 				94D3F4632E40A00200000001 /* LockScreenControl.swift in Sources */,
+				94D3F4682E40A00300000003 /* OpenTrainLCDIntent.swift in Sources */,
 				944C2C4F28DADC380004DA72 /* ColorExtension.swift in Sources */,
 				94E6881B2C99B27200FAF1F2 /* WidgetConfigurationExtension.swift in Sources */,
 			);
