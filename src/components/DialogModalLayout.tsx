@@ -1,8 +1,10 @@
 import type React from 'react';
 import {
+  Pressable,
   ScrollView,
   type StyleProp,
   StyleSheet,
+  Text,
   View,
   type ViewStyle,
 } from 'react-native';
@@ -42,6 +44,33 @@ const styles = StyleSheet.create({
     lineHeight: RFValue(16),
     marginBottom: 24,
   },
+  descriptionWithCheckbox: {
+    marginBottom: 16,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 24,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderRadius: 4,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxMark: {
+    color: '#fff',
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: 'bold',
+  },
+  checkboxText: {
+    fontSize: RFValue(12),
+  },
   buttonsRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -69,6 +98,9 @@ export type DialogModalLayoutProps = {
   leadingStyle?: StyleProp<ViewStyle>;
   title: React.ReactNode;
   description: React.ReactNode;
+  checkboxText?: React.ReactNode;
+  checkboxChecked?: boolean;
+  onCheckboxChange?: (checked: boolean) => void;
   cancelButtonText?: React.ReactNode;
   confirmButtonText: React.ReactNode;
   children?: React.ReactNode;
@@ -88,6 +120,9 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   leadingStyle,
   title,
   description,
+  checkboxText,
+  checkboxChecked = false,
+  onCheckboxChange,
   cancelButtonText,
   confirmButtonText,
   children,
@@ -118,7 +153,41 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
         <Typography style={styles.title}>{title}</Typography>
       </View>
       {children}
-      <Typography style={styles.description}>{description}</Typography>
+      <Typography
+        style={[
+          styles.description,
+          checkboxText ? styles.descriptionWithCheckbox : undefined,
+        ]}
+      >
+        {description}
+      </Typography>
+      {checkboxText ? (
+        <Pressable
+          style={styles.checkboxRow}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: checkboxChecked }}
+          onPress={() => onCheckboxChange?.(!checkboxChecked)}
+        >
+          <View
+            style={[
+              styles.checkbox,
+              {
+                borderColor: isLEDTheme ? '#fff' : '#008ffe',
+                backgroundColor: checkboxChecked
+                  ? '#008ffe'
+                  : isLEDTheme
+                    ? LED_THEME_BG_COLOR
+                    : '#fff',
+              },
+            ]}
+          >
+            {checkboxChecked ? (
+              <Text style={styles.checkboxMark}>✓</Text>
+            ) : null}
+          </View>
+          <Typography style={styles.checkboxText}>{checkboxText}</Typography>
+        </Pressable>
+      ) : null}
       <View style={styles.buttonsRow}>
         {cancelButtonText ? (
           <Button

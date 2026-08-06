@@ -42,4 +42,29 @@ describe('CommonDialogModal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it('今後表示しない設定をアクションではなくチェックボックスで表示する', () => {
+    const onCheckboxChange = jest.fn();
+    const { getByRole, getByText } = render(
+      <CommonDialogModal
+        visible
+        emoji="ℹ️"
+        title="動作保証外"
+        description="地下鉄線内は電波が入りづらいため、動作保証外となります。"
+        checkboxText="次回以降表示しない"
+        checkboxChecked={false}
+        onCheckboxChange={onCheckboxChange}
+        confirmButtonText="OK"
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+      />
+    );
+
+    expect(getByRole('checkbox').props.accessibilityState).toEqual({
+      checked: false,
+    });
+
+    fireEvent.press(getByText('次回以降表示しない'));
+    expect(onCheckboxChange).toHaveBeenCalledWith(true);
+  });
 });

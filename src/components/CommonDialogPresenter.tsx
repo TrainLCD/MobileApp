@@ -1,4 +1,4 @@
-import React, { useEffect, useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { BackHandler } from 'react-native';
 import {
   completePresentedDialogDismissal,
@@ -16,6 +16,7 @@ export const CommonDialogPresenter: React.FC = () => {
     getDialogPresentationSnapshot,
     getDialogPresentationSnapshot
   );
+  const [checkedRequestId, setCheckedRequestId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!request) {
@@ -39,16 +40,20 @@ export const CommonDialogPresenter: React.FC = () => {
     return null;
   }
 
-  // 従来のダイアログ呼び出しと同じボタン配列を、共通UIの最大2ボタンへ割り当てる。
-  // cancel 指定のボタンを左側、それ以外を右側の確定ボタンとして扱う。
+  // cancel は左側のボタン、checkbox は本文下、それ以外を右側の確定ボタンとして扱う。
   const cancelButtonIndex = request.buttons.findIndex(
     (button) => button.style === 'cancel'
   );
+  const checkboxButtonIndex = request.buttons.findIndex(
+    (button) => button.style === 'checkbox'
+  );
   const confirmButtonIndex = request.buttons.findIndex(
-    (button) => button.style !== 'cancel'
+    (button) => button.style !== 'cancel' && button.style !== 'checkbox'
   );
   const confirmButton = request.buttons[confirmButtonIndex];
   const cancelButton = request.buttons[cancelButtonIndex];
+  const checkboxButton = request.buttons[checkboxButtonIndex];
+  const checkboxChecked = checkedRequestId === request.id;
 
   return (
     <CommonDialogModal
@@ -59,13 +64,24 @@ export const CommonDialogPresenter: React.FC = () => {
       }
       title={request.title}
       description={request.message ?? ''}
+      checkboxText={checkboxButton?.text}
+      checkboxChecked={checkboxChecked}
+      onCheckboxChange={(checked) =>
+        setCheckedRequestId(checked ? request.id : null)
+      }
       cancelButtonText={cancelButton?.text}
       confirmButtonText={confirmButton?.text ?? 'OK'}
       confirmButtonDestructive={confirmButton?.style === 'destructive'}
       dismissOnBackdropPress={request.options.cancelable ?? true}
       onClose={() => dismissPresentedDialog(undefined, true)}
       onCancel={() => dismissPresentedDialog(cancelButtonIndex)}
-      onConfirm={() => dismissPresentedDialog(confirmButtonIndex)}
+      onConfirm={() =>
+        dismissPresentedDialog(
+          confirmButtonIndex,
+          false,
+          checkboxChecked ? checkboxButtonIndex : undefined
+        )
+      }
       // ボタン処理は閉じるアニメーションとの競合を避けるため、完了後に実行する。
       onCloseAnimationEnd={completePresentedDialogDismissal}
       testID="common-dialog-presenter"
