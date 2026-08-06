@@ -24,3 +24,5 @@
 "destinationNotSet" = "Destination not set";
 "lineNotSet" = "No route selected";
 "lastUpdated" = "Last updated";
+"openApp" = "Open TrainLCD";
+"controlDescription" = "Opens TrainLCD from the Lock Screen or Control Center.";
