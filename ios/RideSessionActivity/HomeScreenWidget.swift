@@ -90,7 +90,7 @@ struct HomeScreenWidgetEntryView: View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(spacing: 0) {
         HomeScreenNumberingCircle(
-          lineColor: entry.lineColor,
+          lineColor: entry.displayLineColor,
           lineSymbol: entry.lineSymbol,
           diameter: 44
         )
@@ -109,7 +109,7 @@ struct HomeScreenWidgetEntryView: View {
   // アプリ名とナンバリングサークルを足した構成
   var mediumView: some View {
     HStack(spacing: 12) {
-      HomeScreenLineBar(lineColor: entry.lineColor)
+      HomeScreenLineBar(lineColor: entry.displayLineColor)
       VStack(alignment: .leading, spacing: 4) {
         brandLabel
         lineNameText
@@ -120,7 +120,7 @@ struct HomeScreenWidgetEntryView: View {
       }
       Spacer(minLength: 0)
       HomeScreenNumberingCircle(
-        lineColor: entry.lineColor,
+        lineColor: entry.displayLineColor,
         lineSymbol: entry.lineSymbol,
         diameter: 56
       )

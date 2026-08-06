@@ -25,6 +25,9 @@ struct RideSessionWidgetBundle: WidgetBundle {
 }
 
 struct LockScreenEntry: TimelineEntry {
+  // 未乗車時やApp GroupのlineColorが空のときに使うTrainLCDのブランドカラー
+  static let fallbackLineColor = "277BC0"
+
   let date: Date
   let loaded: Bool
   let lineColor: String
@@ -32,11 +35,16 @@ struct LockScreenEntry: TimelineEntry {
   let lineSymbol: String
   let boundFor: String
 
+  // Color(hex:)は空文字を渡すとほぼ透明になるため、描画に使う路線色は必ずここを経由する
+  var displayLineColor: String {
+    lineColor.isEmpty ? Self.fallbackLineColor : lineColor
+  }
+
   static var notLoaded: LockScreenEntry {
     LockScreenEntry(
       date: Date(),
       loaded: false,
-      lineColor: "277BC0",
+      lineColor: fallbackLineColor,
       lineName: String(localized: "lineNotSet"),
       lineSymbol: "?",
       boundFor: String(localized: "destinationNotSet")
@@ -128,7 +136,7 @@ struct LockScreenWidgetEntryView: View {
 
   var circularView: some View {
     LockScreenNumberingCircle(
-      lineColor: entry.lineColor,
+      lineColor: entry.displayLineColor,
       lineSymbol: entry.lineSymbol
     )
   }
@@ -136,7 +144,7 @@ struct LockScreenWidgetEntryView: View {
   var rectangularView: some View {
     HStack(spacing: 8) {
       RoundedRectangle(cornerRadius: 2)
-        .fill(Color(hex: entry.lineColor))
+        .fill(Color(hex: entry.displayLineColor))
         .frame(width: 4)
         .widgetAccentable()
       VStack(alignment: .leading, spacing: 2) {
