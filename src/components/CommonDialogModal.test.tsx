@@ -91,6 +91,9 @@ describe('CommonDialogModal', () => {
     );
 
     expect(getByTestId('common-dialog-line-symbol-image')).toBeTruthy();
+    expect(getByTestId('dialog-modal-leading')).toHaveStyle({
+      marginRight: 12,
+    });
     expect(queryByText('ℹ️')).toBeNull();
   });
 

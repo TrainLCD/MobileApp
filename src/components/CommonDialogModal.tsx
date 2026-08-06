@@ -29,6 +29,13 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
+  lineSymbolLeading: {
+    marginRight: 12,
+    borderRadius: 8,
+  },
+  lineSymbolLeadingLED: {
+    borderRadius: 0,
+  },
 });
 
 export type CommonDialogModalProps = Omit<
@@ -47,7 +54,6 @@ export const CommonDialogModal: React.FC<CommonDialogModalProps> = ({
   ...props
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const lineSymbolBorderRadius = isLEDTheme ? 0 : 8;
   const hasLineSymbolLeading =
     lineSymbol?.image !== undefined || lineSymbol?.color !== undefined;
 
@@ -75,7 +81,12 @@ export const CommonDialogModal: React.FC<CommonDialogModalProps> = ({
       isLEDTheme={isLEDTheme}
       leading={leading}
       leadingStyle={
-        hasLineSymbolLeading ? { borderRadius: lineSymbolBorderRadius } : null
+        hasLineSymbolLeading
+          ? [
+              styles.lineSymbolLeading,
+              isLEDTheme ? styles.lineSymbolLeadingLED : null,
+            ]
+          : null
       }
     />
   );
