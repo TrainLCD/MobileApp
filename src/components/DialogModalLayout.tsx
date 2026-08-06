@@ -149,7 +149,12 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   >
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <View style={[styles.leading, leadingStyle]}>{leading}</View>
+        <View
+          testID="dialog-modal-leading"
+          style={[styles.leading, leadingStyle]}
+        >
+          {leading}
+        </View>
         <Typography style={styles.title}>{title}</Typography>
       </View>
       {children}

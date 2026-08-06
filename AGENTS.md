@@ -112,6 +112,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Pull requests must follow `.github/pull_request_template.md`; do not add or remove sections from the template without maintainer approval.
 - Open pull requests as ready for review by default; use Draft only when the user explicitly requests it.
 - Pull requests must be assigned to `@TinyKitten`.
+- Canary promotion PRs from `dev` to `canary` contain changes that have already passed review before reaching `dev`. Do not request or wait for an additional human or CodeRabbit review on the Canary PR itself. Once required CI succeeds and the PR is mergeable, the Canary PR may be merged without review approval.
 - Pull requests must include:
   - Purpose and summary of key changes.
   - Regression risk assessment and mitigation.
