@@ -62,6 +62,7 @@ export const CommonDialogPresenter: React.FC = () => {
         request.options.emoji ??
         (confirmButton?.style === 'destructive' ? '⚠️' : 'ℹ️')
       }
+      lineSymbol={request.options.lineSymbol}
       title={request.title}
       description={request.message ?? ''}
       checkboxText={checkboxButton?.text}

@@ -1,7 +1,11 @@
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
+import { lighten } from 'polished';
 import type React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import type { DialogOptions } from '~/utils/dialogPresentation';
 import { RFValue } from '~/utils/rfValue';
 import {
   DialogModalLayout,
@@ -17,6 +21,14 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     includeFontPadding: false,
   },
+  lineSymbol: {
+    width: '100%',
+    height: '100%',
+  },
+  lineSymbolFallback: {
+    flex: 1,
+    width: '100%',
+  },
 });
 
 export type CommonDialogModalProps = Omit<
@@ -24,22 +36,47 @@ export type CommonDialogModalProps = Omit<
   'isLEDTheme' | 'leading' | 'leadingStyle'
 > & {
   emoji: string;
+  lineSymbol?: DialogOptions['lineSymbol'];
 };
 
 // 汎用ダイアログ用の公開コンポーネント。
-// 共通レイアウトの左上要素だけを絵文字にし、現在のテーマを自動的に反映する。
+// 共通レイアウトの左上要素と現在のテーマだけを用途別に差し替える。
 export const CommonDialogModal: React.FC<CommonDialogModalProps> = ({
   emoji,
+  lineSymbol,
   ...props
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const lineSymbolBorderRadius = isLEDTheme ? 0 : 8;
+  const hasLineSymbolLeading =
+    lineSymbol?.image !== undefined || lineSymbol?.color !== undefined;
 
-  // アプリ用フォントではなくOSの絵文字フォントを使い、字形の欠けを防ぐ。
+  const leading =
+    lineSymbol?.image !== undefined ? (
+      <Image
+        source={lineSymbol.image}
+        style={styles.lineSymbol}
+        contentFit="contain"
+        testID="common-dialog-line-symbol-image"
+      />
+    ) : lineSymbol?.color ? (
+      <LinearGradient
+        colors={[lineSymbol.color, lighten(0.1, lineSymbol.color)]}
+        style={styles.lineSymbolFallback}
+        testID="common-dialog-line-symbol-fallback"
+      />
+    ) : (
+      <Text style={styles.emoji}>{emoji}</Text>
+    );
+
   return (
     <DialogModalLayout
       {...props}
       isLEDTheme={isLEDTheme}
-      leading={<Text style={styles.emoji}>{emoji}</Text>}
+      leading={leading}
+      leadingStyle={
+        hasLineSymbolLeading ? { borderRadius: lineSymbolBorderRadius } : null
+      }
     />
   );
 };
