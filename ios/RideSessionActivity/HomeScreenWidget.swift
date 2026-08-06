@@ -22,13 +22,16 @@ struct HomeScreenNumberingCircle: View {
 
   var body: some View {
     ZStack {
+      // strokeBorderは線を内側に描くのでdiameterがそのまま外径になる。
+      // 中央揃えのstrokeだと線幅の半分がframeの外にはみ出し、線を太くしたぶんだけ
+      // レイアウトと実際の見た目がずれるため使わない
       Circle()
-        .stroke(Color(hex: lineColor), lineWidth: diameter / 10)
+        .strokeBorder(Color(hex: lineColor), lineWidth: diameter / 7)
       Text(lineSymbol)
-        .font(.system(size: diameter * 0.4, weight: .bold, design: .rounded))
+        .font(.system(size: diameter * 0.4, weight: .heavy, design: .rounded))
         .minimumScaleFactor(0.5)
         .lineLimit(1)
-        .padding(diameter * 0.18)
+        .padding(diameter * 0.2)
     }
     .frame(width: diameter, height: diameter)
   }
@@ -92,7 +95,7 @@ struct HomeScreenWidgetEntryView: View {
         HomeScreenNumberingCircle(
           lineColor: entry.displayLineColor,
           lineSymbol: entry.lineSymbol,
-          diameter: 44
+          diameter: 48
         )
         Spacer(minLength: 0)
       }
@@ -122,7 +125,7 @@ struct HomeScreenWidgetEntryView: View {
       HomeScreenNumberingCircle(
         lineColor: entry.displayLineColor,
         lineSymbol: entry.lineSymbol,
-        diameter: 56
+        diameter: 60
       )
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
