@@ -92,6 +92,7 @@ export { useTypeWillChange } from './useTypeWillChange';
 export { useUnderMaintenance } from './useUnderMaintenance';
 export { useUpdateBottomState } from './useUpdateBottomState';
 export { useUpdateLiveActivities } from './useUpdateLiveActivities';
+export { useUpdateWidget } from './useUpdateWidget';
 export { useValueRef } from './useValueRef';
 export { useWalkthroughCompleted } from './useWalkthroughCompleted';
 export { useWarningInfo } from './useWarningInfo';
