@@ -387,7 +387,7 @@ const MainScreen: React.FC = () => {
           [
             {
               text: translate('doNotShowAgain'),
-              style: 'cancel',
+              style: 'checkbox',
               onPress: (): void => {
                 storage.set(STORAGE_KEYS.SUBWAY_ALERT_DISMISSED, 'true');
               },
@@ -420,7 +420,7 @@ const MainScreen: React.FC = () => {
         [
           {
             text: translate('doNotShowAgain'),
-            style: 'cancel',
+            style: 'checkbox',
             onPress: (): void => {
               storage.set(STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED, 'true');
             },
@@ -449,7 +449,7 @@ const MainScreen: React.FC = () => {
         [
           {
             text: translate('doNotShowAgain'),
-            style: 'cancel',
+            style: 'checkbox',
             onPress: (): void => {
               storage.set(STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED, 'true');
             },
@@ -476,7 +476,7 @@ const MainScreen: React.FC = () => {
         [
           {
             text: translate('doNotShowAgain'),
-            style: 'cancel',
+            style: 'checkbox',
             onPress: (): void => {
               storage.set(STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED, 'true');
             },
@@ -560,7 +560,7 @@ const MainScreen: React.FC = () => {
           [
             {
               text: translate('doNotShowAgain'),
-              style: 'cancel',
+              style: 'checkbox',
               onPress: (): void => {
                 storage.set(
                   STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
@@ -604,7 +604,7 @@ const MainScreen: React.FC = () => {
             [
               {
                 text: translate('doNotShowAgain'),
-                style: 'cancel',
+                style: 'checkbox',
                 onPress: (): void => {
                   storage.set(STORAGE_KEYS.DOZE_CONFIRMED, 'true');
                 },

@@ -250,7 +250,7 @@ const TTSSettingsScreen: React.FC = () => {
           showDialog(translate('notice'), translate('ttsAlertText'), [
             {
               text: translate('doNotShowAgain'),
-              style: 'cancel',
+              style: 'checkbox',
               onPress: (): void => {
                 try {
                   storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
@@ -297,7 +297,7 @@ const TTSSettingsScreen: React.FC = () => {
           showDialog(translate('notice'), translate('bgTtsAlertText'), [
             {
               text: translate('doNotShowAgain'),
-              style: 'cancel',
+              style: 'checkbox',
               onPress: (): void => {
                 try {
                   storage.set(STORAGE_KEYS.BG_TTS_NOTICE, 'true');
