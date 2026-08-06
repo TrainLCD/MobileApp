@@ -12,6 +12,7 @@ type LiveActivityWidgetState = {
   stopped: boolean;
   lineName: string;
   lineColor: string;
+  lineSymbol: string;
   passingStationName: string;
   passingStationNumber: string;
   progress: number;
