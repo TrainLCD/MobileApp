@@ -1,6 +1,5 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
-import { StyleSheet } from 'react-native';
 import { CommonDialogModal } from './CommonDialogModal';
 
 jest.mock('jotai', () => ({
@@ -91,18 +90,10 @@ describe('CommonDialogModal', () => {
       />
     );
 
-    const lineSymbolImage = getByTestId('common-dialog-line-symbol-image');
-    let leading = lineSymbolImage.parent;
-
-    while (
-      leading &&
-      StyleSheet.flatten(leading.props.style)?.marginRight !== 12
-    ) {
-      leading = leading.parent;
-    }
-
-    expect(lineSymbolImage).toBeTruthy();
-    expect(leading).not.toBeNull();
+    expect(getByTestId('common-dialog-line-symbol-image')).toBeTruthy();
+    expect(getByTestId('dialog-modal-leading')).toHaveStyle({
+      marginRight: 12,
+    });
     expect(queryByText('ℹ️')).toBeNull();
   });
 
