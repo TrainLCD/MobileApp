@@ -8,6 +8,8 @@ class LiveActivityModule: NSObject {
   var sessionActivity: Activity<RideSessionAttributes>?
 
   private let lockScreenWidgetKind = "LockScreenWidget"
+  // RideSessionActivity側のLockScreenControl.kindと一致させること
+  private let lockScreenControlKind = "me.tinykitten.trainlcd.LockScreenControl"
 
   private var appGroupID: String {
     Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String
@@ -40,7 +42,15 @@ class LiveActivityModule: NSObject {
       defaults.set(value, forKey: key)
     }
     defaults.set(true, forKey: "loaded")
+    reloadLockScreenSurfaces()
+  }
+
+  // ロック画面ウィジェットとロック画面コントロールは同じApp Groupを参照するため常に同時に更新する
+  private func reloadLockScreenSurfaces() {
     WidgetCenter.shared.reloadTimelines(ofKind: lockScreenWidgetKind)
+    if #available(iOS 18.0, *) {
+      ControlCenter.shared.reloadControls(ofKind: lockScreenControlKind)
+    }
   }
 
   private func clearLockScreenWidgetState() {
@@ -49,7 +59,7 @@ class LiveActivityModule: NSObject {
       return
     }
     defaults.set(false, forKey: "loaded")
-    WidgetCenter.shared.reloadTimelines(ofKind: lockScreenWidgetKind)
+    reloadLockScreenSurfaces()
   }
 
   func getStatus(_ dic: NSDictionary?) -> RideSessionAttributes.RideSessionStatus? {
