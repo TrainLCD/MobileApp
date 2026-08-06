@@ -63,6 +63,7 @@ import {
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import { storage } from '~/lib/storage';
+import { getLineSymbolImage } from '~/lineSymbolImage';
 import { APP_THEME } from '~/models/Theme';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import lineState from '~/store/atoms/line';
@@ -685,21 +686,19 @@ const MainScreen: React.FC = () => {
         return;
       }
 
+      const targetLine = selectedStation.line;
+
       showDialog(
         translate('confirmChangeLineTitle', {
           lineName:
-            (isJapanese
-              ? selectedStation.line?.nameShort
-              : selectedStation.line?.nameRoman) ?? '',
+            (isJapanese ? targetLine?.nameShort : targetLine?.nameRoman) ?? '',
         }),
         translate('confirmChangeLineText', {
           currentLineName:
             (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ??
             '',
           lineName:
-            (isJapanese
-              ? selectedStation.line?.nameShort
-              : selectedStation.line?.nameRoman) ?? '',
+            (isJapanese ? targetLine?.nameShort : targetLine?.nameRoman) ?? '',
         }),
         [
           {
@@ -712,7 +711,15 @@ const MainScreen: React.FC = () => {
               changeOperatingLine(selectedStation);
             },
           },
-        ]
+        ],
+        {
+          lineSymbol: targetLine
+            ? {
+                image: getLineSymbolImage(targetLine, false)?.signPath,
+                color: targetLine.color ?? undefined,
+              }
+            : undefined,
+        }
       );
     },
     [

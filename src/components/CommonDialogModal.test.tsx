@@ -11,6 +11,14 @@ jest.mock('@gorhom/portal', () => ({
   Portal: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+jest.mock('expo-linear-gradient', () => ({
+  LinearGradient: ({ children, ...props }: { children?: React.ReactNode }) => {
+    const React = require('react');
+    const { View } = require('react-native');
+    return React.createElement(View, props, children);
+  },
+}));
+
 describe('CommonDialogModal', () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -66,5 +74,43 @@ describe('CommonDialogModal', () => {
 
     fireEvent.press(getByText('次回以降表示しない'));
     expect(onCheckboxChange).toHaveBeenCalledWith(true);
+  });
+
+  it('路線記号画像がある場合は絵文字の代わりに表示する', () => {
+    const { getByTestId, queryByText } = render(
+      <CommonDialogModal
+        visible
+        emoji="ℹ️"
+        lineSymbol={{ image: 101, color: '#c1a470' }}
+        title="路線を切り替えますか？"
+        description="確認してください"
+        confirmButtonText="OK"
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+      />
+    );
+
+    expect(getByTestId('common-dialog-line-symbol-image')).toBeTruthy();
+    expect(queryByText('ℹ️')).toBeNull();
+  });
+
+  it('路線記号画像がない場合はラインカラーのグラデーションを表示する', () => {
+    const { getByTestId, queryByText } = render(
+      <CommonDialogModal
+        visible
+        emoji="ℹ️"
+        lineSymbol={{ color: '#c1a470' }}
+        title="路線を切り替えますか？"
+        description="確認してください"
+        confirmButtonText="OK"
+        onClose={jest.fn()}
+        onConfirm={jest.fn()}
+      />
+    );
+
+    expect(
+      getByTestId('common-dialog-line-symbol-fallback').props.colors
+    ).toEqual(['#c1a470', '#d0bb94']);
+    expect(queryByText('ℹ️')).toBeNull();
   });
 });
