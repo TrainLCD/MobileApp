@@ -14,11 +14,19 @@ import WidgetKit
 // watchOSのaccessoryRectangular・iOSのロック画面ウィジェット・Androidのホーム画面ウィジェットと
 // 同じ体裁(路線色のナンバリングサークルとバー + 路線名 + 方面)を踏襲する。
 
+// systemMediumのナンバリングサークルの直径。左のバーの太さもこの値から導出する
+private let mediumCircleDiameter: CGFloat = 60
+
 // watchOS/ロック画面のNumberingCircle相当。ホーム画面はサイズが可変なので直径を受け取る
 struct HomeScreenNumberingCircle: View {
   let lineColor: String
   let lineSymbol: String
   let diameter: CGFloat
+
+  // 円の線幅は直径の約1/7。同じ画面に並ぶ路線色バーの太さもこれに揃える
+  static func strokeWidth(for diameter: CGFloat) -> CGFloat {
+    diameter / 7
+  }
 
   var body: some View {
     ZStack {
@@ -26,7 +34,7 @@ struct HomeScreenNumberingCircle: View {
       // 中央揃えのstrokeだと線幅の半分がframeの外にはみ出し、線を太くしたぶんだけ
       // レイアウトと実際の見た目がずれるため使わない
       Circle()
-        .strokeBorder(Color(hex: lineColor), lineWidth: diameter / 7)
+        .strokeBorder(Color(hex: lineColor), lineWidth: Self.strokeWidth(for: diameter))
       Text(lineSymbol)
         .font(.system(size: diameter * 0.4, weight: .heavy, design: .rounded))
         .minimumScaleFactor(0.5)
@@ -37,14 +45,16 @@ struct HomeScreenNumberingCircle: View {
   }
 }
 
-// accessoryRectangular / Androidのwidget_line_barと同じ路線色のバー
+// accessoryRectangular / Androidのwidget_line_barと同じ路線色のバー。
+// 太さは並んで表示されるナンバリングサークルの線幅と揃える
 struct HomeScreenLineBar: View {
   let lineColor: String
+  let width: CGFloat
 
   var body: some View {
     RoundedRectangle(cornerRadius: 2)
       .fill(Color(hex: lineColor))
-      .frame(width: 4)
+      .frame(width: width)
   }
 }
 
@@ -112,7 +122,10 @@ struct HomeScreenWidgetEntryView: View {
   // アプリ名とナンバリングサークルを足した構成
   var mediumView: some View {
     HStack(spacing: 12) {
-      HomeScreenLineBar(lineColor: entry.displayLineColor)
+      HomeScreenLineBar(
+        lineColor: entry.displayLineColor,
+        width: HomeScreenNumberingCircle.strokeWidth(for: mediumCircleDiameter)
+      )
       VStack(alignment: .leading, spacing: 4) {
         brandLabel
         lineNameText
@@ -125,7 +138,7 @@ struct HomeScreenWidgetEntryView: View {
       HomeScreenNumberingCircle(
         lineColor: entry.displayLineColor,
         lineSymbol: entry.lineSymbol,
-        diameter: 60
+        diameter: mediumCircleDiameter
       )
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)

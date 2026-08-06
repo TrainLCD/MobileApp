@@ -1,4 +1,10 @@
 <resources>
   <!-- ホーム画面ウィジェットの角丸。Android 12以降はvalues-v31でシステム既定値へ差し替える -->
   <dimen name="widget_corner_radius">16dp</dimen>
+  <!--
+    ナンバリングサークルの線幅と、路線色バーの太さの共通値。
+    iOS版に合わせてサークルの直径(48dp)の約1/7としており、
+    同じレイアウトに並ぶバーの太さもこの値に揃える
+  -->
+  <dimen name="widget_line_stroke_width">7dp</dimen>
 </resources>
