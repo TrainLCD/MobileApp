@@ -55,4 +55,37 @@ describe('CommonDialogPresenter', () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(queryByText('確認')).toBeNull();
   });
+
+  it('チェックした今後表示しない設定をOK押下後に反映する', () => {
+    const onSuppress = jest.fn();
+    const onConfirm = jest.fn();
+    const { getByRole, getByText } = render(<CommonDialogPresenter />);
+
+    act(() => {
+      showDialog('動作保証外', '確認してください', [
+        {
+          text: '次回以降表示しない',
+          style: 'checkbox',
+          onPress: onSuppress,
+        },
+        { text: 'OK', onPress: onConfirm },
+      ]);
+    });
+
+    fireEvent.press(getByText('次回以降表示しない'));
+    expect(getByRole('checkbox').props.accessibilityState).toEqual({
+      checked: true,
+    });
+
+    fireEvent.press(getByText('OK'));
+    expect(onSuppress).not.toHaveBeenCalled();
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(onSuppress).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
 });

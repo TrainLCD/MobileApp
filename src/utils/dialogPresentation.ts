@@ -1,10 +1,10 @@
 /**
- * ダイアログのボタン定義。
- * ボタン配列には確定操作を1個、必要な場合だけキャンセル操作を1個指定する。
+ * ダイアログの操作定義。
+ * 確定操作を1個、必要に応じてキャンセル操作とチェックボックスを1個ずつ指定する。
  */
 export type DialogButton = {
   text: string;
-  style?: 'default' | 'cancel' | 'destructive';
+  style?: 'default' | 'cancel' | 'destructive' | 'checkbox';
   onPress?: () => void | Promise<void>;
 };
 
@@ -47,6 +47,7 @@ let snapshot: DialogPresentationSnapshot = {
 // ボタンの処理はモーダルが画面から消えてから実行する。
 // 先に画面遷移などが走り、閉じるアニメーションと競合することを防ぐための一時保存。
 let pendingButtonIndex: number | undefined;
+let pendingCheckedButtonIndex: number | undefined;
 let dismissedByBackdrop = false;
 
 const emit = () => {
@@ -67,11 +68,20 @@ const normalizeButtons = (buttons?: DialogButton[]): DialogButton[] => {
   const cancelButtonCount = normalizedButtons.filter(
     (button) => button.style === 'cancel'
   ).length;
-  const confirmButtonCount = normalizedButtons.length - cancelButtonCount;
+  const checkboxButtonCount = normalizedButtons.filter(
+    (button) => button.style === 'checkbox'
+  ).length;
+  const confirmButtonCount = normalizedButtons.filter(
+    (button) => button.style !== 'cancel' && button.style !== 'checkbox'
+  ).length;
 
-  if (cancelButtonCount > 1 || confirmButtonCount !== 1) {
+  if (
+    cancelButtonCount > 1 ||
+    checkboxButtonCount > 1 ||
+    confirmButtonCount !== 1
+  ) {
     throw new Error(
-      'Dialog buttons must contain exactly one confirm button and at most one cancel button.'
+      'Dialog buttons must contain exactly one confirm button and at most one cancel button and checkbox.'
     );
   }
 
@@ -85,7 +95,7 @@ const enqueueDialog = (
   buttons?: DialogButton[],
   options?: DialogOptions
 ): boolean => {
-  // 2ボタン固定のUIで操作が黙って欠落しないよう、要求を受け取った時点で検証する。
+  // 共通UIで扱える操作だけになるよう、要求を受け取った時点で検証する。
   const normalizedButtons = normalizeButtons(buttons);
 
   // StrictMode で effect が再実行されても、同じ論理ダイアログは一つだけ表示する。
@@ -149,13 +159,15 @@ export const getDialogPresentationSnapshot = () => snapshot;
  */
 export const dismissPresentedDialog = (
   buttonIndex?: number,
-  byBackdrop = false
+  byBackdrop = false,
+  checkedButtonIndex?: number
 ) => {
   if (!snapshot.request || !snapshot.visible) {
     return;
   }
 
   pendingButtonIndex = buttonIndex;
+  pendingCheckedButtonIndex = checkedButtonIndex;
   dismissedByBackdrop = byBackdrop;
   snapshot = { ...snapshot, visible: false };
   emit();
@@ -171,8 +183,10 @@ export const completePresentedDialogDismissal = () => {
   }
 
   const buttonIndex = pendingButtonIndex;
+  const checkedButtonIndex = pendingCheckedButtonIndex;
   const shouldCallOnDismiss = dismissedByBackdrop;
   pendingButtonIndex = undefined;
+  pendingCheckedButtonIndex = undefined;
   dismissedByBackdrop = false;
 
   // 待機済みの要求を先に有効化し、コールバック内で追加された要求をその後ろへ並べる。
@@ -186,6 +200,9 @@ export const completePresentedDialogDismissal = () => {
   }
 
   // 表示状態の更新を先に通知してから、画面遷移などを含む処理を実行する。
+  if (checkedButtonIndex !== undefined) {
+    void completedRequest.buttons[checkedButtonIndex]?.onPress?.();
+  }
   if (buttonIndex !== undefined) {
     void completedRequest.buttons[buttonIndex]?.onPress?.();
   } else if (shouldCallOnDismiss) {
@@ -198,6 +215,7 @@ export const resetDialogPresentationForTests = () => {
   queuedRequests.splice(0);
   nextRequestId = 1;
   pendingButtonIndex = undefined;
+  pendingCheckedButtonIndex = undefined;
   dismissedByBackdrop = false;
   snapshot = { request: null, visible: false };
   emit();

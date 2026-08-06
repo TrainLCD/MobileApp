@@ -59,9 +59,26 @@ describe('dialogPresentation', () => {
     expect(() =>
       showDialog('invalid', undefined, [{ text: 'first' }, { text: 'second' }])
     ).toThrow(
-      'Dialog buttons must contain exactly one confirm button and at most one cancel button.'
+      'Dialog buttons must contain exactly one confirm button and at most one cancel button and checkbox.'
     );
     expect(getDialogPresentationSnapshot().request).toBeNull();
+  });
+
+  it('チェック済み操作と確定操作を閉じるアニメーション完了後に実行する', () => {
+    const onChecked = jest.fn();
+    const onConfirm = jest.fn();
+    showDialog('title', undefined, [
+      { text: '今後表示しない', style: 'checkbox', onPress: onChecked },
+      { text: 'OK', onPress: onConfirm },
+    ]);
+
+    dismissPresentedDialog(1, false, 0);
+    expect(onChecked).not.toHaveBeenCalled();
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    completePresentedDialogDismissal();
+    expect(onChecked).toHaveBeenCalledTimes(1);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
   it('コールバックから追加されたダイアログを既存キューの後に表示する', () => {
