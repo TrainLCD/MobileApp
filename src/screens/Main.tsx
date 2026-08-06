@@ -56,6 +56,7 @@ import {
   useTypeWillChange,
   useUpdateBottomState,
   useUpdateLiveActivities,
+  useUpdateWidget,
 } from '~/hooks';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -178,6 +179,12 @@ const FxUpdateLiveActivitiesInner: React.FC = () => {
 const FxUpdateLiveActivities: React.FC = () => {
   return Platform.OS === 'ios' ? <FxUpdateLiveActivitiesInner /> : null;
 };
+// Androidのホーム画面ウィジェット。LiveActivitiesがiOS専用でマウントされないため、
+// ウィジェットに必要な低頻度の項目だけを見る専用フックを別ホストで動かす
+const FxUpdateWidget: React.FC = () => {
+  useUpdateWidget();
+  return null;
+};
 const FxAndroidPictureInPicture: React.FC = () => {
   useAndroidPictureInPicture();
   return null;
@@ -199,6 +206,7 @@ const MainScreenEffects: React.FC = () => {
       <FxStartBackgroundLocationUpdates />
       <FxTTS />
       <FxUpdateLiveActivities />
+      {Platform.OS === 'android' && <FxUpdateWidget />}
       {Platform.OS === 'android' && <FxAndroidPictureInPicture />}
     </>
   );

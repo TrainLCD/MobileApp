@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- iOS/watchOSのaccessoryInline(1行表示)に相当するレイアウト -->
+<!-- 1行しか入らない高さ向け。watchOS/ロック画面のaccessoryInline相当 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -28,6 +28,7 @@
         android:layout_weight="1"
         android:ellipsize="end"
         android:maxLines="1"
+        android:text="@string/widget_line_not_set"
         android:textColor="@color/widget_text_primary"
         android:textSize="13sp"
         android:textStyle="bold" />
