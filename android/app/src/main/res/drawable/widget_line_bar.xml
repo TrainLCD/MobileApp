@@ -2,6 +2,6 @@
 <!-- 路線色はRemoteViews#setInt("setColorFilter")で着色するため、ここでは白で描く -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <corners android:radius="2dp" />
+    <corners android:radius="@dimen/widget_line_bar_corner_radius" />
     <solid android:color="#FFFFFFFF" />
 </shape>

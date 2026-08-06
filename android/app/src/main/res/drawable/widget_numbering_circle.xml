@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   iOS版のナンバリングサークル(Circle().strokeBorder)相当。路線色はsetColorFilterで着色する。
-  線幅はiOS側(直径の約1/7)に合わせている
+  線幅はiOS側(直径の約1/7)に合わせており、路線色バーとも共通のdimenを使う
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
     <solid android:color="@android:color/transparent" />
     <stroke
-        android:width="7dp"
+        android:width="@dimen/widget_line_stroke_width"
         android:color="#FFFFFFFF" />
 </shape>

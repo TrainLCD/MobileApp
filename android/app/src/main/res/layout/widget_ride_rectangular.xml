@@ -9,9 +9,10 @@
     android:orientation="horizontal"
     android:padding="12dp">
 
+    <!-- 太さは右端のナンバリングサークルの線幅と揃える -->
     <ImageView
         android:id="@+id/widget_line_bar"
-        android:layout_width="4dp"
+        android:layout_width="@dimen/widget_line_stroke_width"
         android:layout_height="match_parent"
         android:layout_marginEnd="10dp"
         android:contentDescription="@null"
