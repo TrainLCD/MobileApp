@@ -26,3 +26,4 @@
 "lastUpdated" = "Last updated";
 "openApp" = "Open TrainLCD";
 "controlDescription" = "Opens TrainLCD from the Lock Screen or Control Center.";
+"widgetDescription" = "Shows the line and destination for your current ride";

@@ -26,3 +26,4 @@
 "lastUpdated" = "最終更新";
 "openApp" = "TrainLCDを開く";
 "controlDescription" = "ロック画面やコントロールセンターからTrainLCDを開きます。";
+"widgetDescription" = "乗車中の路線と方面を表示します";
