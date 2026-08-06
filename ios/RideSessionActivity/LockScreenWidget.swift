@@ -9,13 +9,14 @@
 import SwiftUI
 import WidgetKit
 
-// ライブアクティビティ・ロック画面ウィジェット・ロック画面コントロールを
-// 同一Extensionで配信するためのバンドル
+// ライブアクティビティ・ロック画面ウィジェット・ホーム画面ウィジェット・
+// ロック画面コントロールを同一Extensionで配信するためのバンドル
 @main
 struct RideSessionWidgetBundle: WidgetBundle {
   var body: some Widget {
     RideSessionWidget()
     LockScreenWidget()
+    HomeScreenWidget()
     // ControlWidgetはiOS 18以降のみ。Extensionのデプロイターゲットは16.1のため条件付きで追加する
     if #available(iOS 18.0, *) {
       LockScreenControl()
@@ -24,6 +25,9 @@ struct RideSessionWidgetBundle: WidgetBundle {
 }
 
 struct LockScreenEntry: TimelineEntry {
+  // 未乗車時やApp GroupのlineColorが空のときに使うTrainLCDのブランドカラー
+  static let fallbackLineColor = "277BC0"
+
   let date: Date
   let loaded: Bool
   let lineColor: String
@@ -31,18 +35,23 @@ struct LockScreenEntry: TimelineEntry {
   let lineSymbol: String
   let boundFor: String
 
+  // Color(hex:)は空文字を渡すとほぼ透明になるため、描画に使う路線色は必ずここを経由する
+  var displayLineColor: String {
+    lineColor.isEmpty ? Self.fallbackLineColor : lineColor
+  }
+
   static var notLoaded: LockScreenEntry {
     LockScreenEntry(
       date: Date(),
       loaded: false,
-      lineColor: "277BC0",
+      lineColor: fallbackLineColor,
       lineName: String(localized: "lineNotSet"),
       lineSymbol: "?",
       boundFor: String(localized: "destinationNotSet")
     )
   }
 
-  // ロック画面ウィジェットとロック画面コントロールで共通のApp Group読み出し
+  // ロック画面ウィジェット・ホーム画面ウィジェット・ロック画面コントロールで共通のApp Group読み出し
   static func current() -> LockScreenEntry {
     let appGroupID =
       Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String
@@ -83,7 +92,7 @@ struct LockScreenProvider: TimelineProvider {
     in context: Context, completion: @escaping (Timeline<LockScreenEntry>) -> Void
   ) {
     // 表示内容はアプリ側がApp Groupへ書き込んだ時点のWidgetCenter経由リロードでのみ変わるため、
-    // 時刻ベースの再生成は行わない
+    // 時刻ベースの再生成は行わない。ホーム画面ウィジェットもこのProviderを共有する
     completion(Timeline(entries: [.current()], policy: .never))
   }
 }
@@ -127,7 +136,7 @@ struct LockScreenWidgetEntryView: View {
 
   var circularView: some View {
     LockScreenNumberingCircle(
-      lineColor: entry.lineColor,
+      lineColor: entry.displayLineColor,
       lineSymbol: entry.lineSymbol
     )
   }
@@ -135,7 +144,7 @@ struct LockScreenWidgetEntryView: View {
   var rectangularView: some View {
     HStack(spacing: 8) {
       RoundedRectangle(cornerRadius: 2)
-        .fill(Color(hex: entry.lineColor))
+        .fill(Color(hex: entry.displayLineColor))
         .frame(width: 4)
         .widgetAccentable()
       VStack(alignment: .leading, spacing: 2) {

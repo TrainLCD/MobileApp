@@ -15,9 +15,6 @@ import WidgetKit
 // ロック画面ウィジェットと同じApp Groupの値をコントロール表示用に整形する
 @available(iOS 18.0, *)
 struct LockScreenControlValue: Sendable {
-  // 未乗車時やApp Groupが空のときに使うTrainLCDのブランドカラー
-  private static let fallbackLineColor = "277BC0"
-
   let loaded: Bool
   let lineName: String
   let lineColor: String
@@ -45,7 +42,7 @@ struct LockScreenControlValue: Sendable {
 
   // Color(hex:)は空文字を渡すとほぼ透明になるため、必ず既定色へフォールバックする
   var tint: Color {
-    Color(hex: lineColor.isEmpty ? Self.fallbackLineColor : lineColor)
+    Color(hex: lineColor.isEmpty ? LockScreenEntry.fallbackLineColor : lineColor)
   }
 }
 
