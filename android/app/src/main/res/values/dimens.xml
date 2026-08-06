@@ -1,0 +1,4 @@
+<resources>
+  <!-- ホーム画面ウィジェットの角丸。Android 12以降はvalues-v31でシステム既定値へ差し替える -->
+  <dimen name="widget_corner_radius">16dp</dimen>
+</resources>

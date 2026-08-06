@@ -19,6 +19,10 @@ import {
   updateLiveUpdate,
 } from '../utils/native/android/liveUpdateModule';
 import {
+  clearWidget,
+  updateWidget,
+} from '../utils/native/android/widgetModule';
+import {
   startLiveActivity,
   stopLiveActivity,
   updateLiveActivity,
@@ -289,6 +293,8 @@ export const useUpdateLiveActivities = (): void => {
     if (selectedBound && !started) {
       startLiveActivity(activityState);
       startLiveUpdate(activityState);
+      // Androidのホーム画面ウィジェット。ライブアップデートはAndroid 16以降専用のため別経路で更新する
+      updateWidget(activityState);
       setStarted(true);
     }
   }, [activityState, selectedBound, started]);
@@ -297,6 +303,7 @@ export const useUpdateLiveActivities = (): void => {
     return () => {
       stopLiveActivity();
       stopLiveUpdate();
+      clearWidget();
       setStarted(false);
     };
   }, []);
@@ -305,6 +312,7 @@ export const useUpdateLiveActivities = (): void => {
     if (started) {
       updateLiveActivity(activityState);
       updateLiveUpdate(activityState);
+      updateWidget(activityState);
     }
   }, [activityState, started]);
 };

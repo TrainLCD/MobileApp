@@ -3,4 +3,8 @@
   <color name="iconBackground">#EEEEEE</color>
   <color name="colorPrimary">#023c69</color>
   <color name="colorPrimaryDark">#fff</color>
+  <!-- ホーム画面ウィジェット(ライトテーマ) -->
+  <color name="widget_background">#F2FFFFFF</color>
+  <color name="widget_text_primary">#FF1F1F1F</color>
+  <color name="widget_text_secondary">#B31F1F1F</color>
 </resources>
