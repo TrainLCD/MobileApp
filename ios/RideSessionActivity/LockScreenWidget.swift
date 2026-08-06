@@ -1,0 +1,205 @@
+//
+//  LockScreenWidget.swift
+//  RideSessionActivity
+//
+//  Created by Tsubasa SEKIGUCHI on 2026/08/06.
+//  Copyright © 2026 Facebook. All rights reserved.
+//
+
+import SwiftUI
+import WidgetKit
+
+// ライブアクティビティとロック画面ウィジェットを同一Extensionで配信するためのバンドル
+@main
+struct RideSessionWidgetBundle: WidgetBundle {
+  var body: some Widget {
+    RideSessionWidget()
+    LockScreenWidget()
+  }
+}
+
+struct LockScreenEntry: TimelineEntry {
+  let date: Date
+  let loaded: Bool
+  let lineColor: String
+  let lineName: String
+  let lineSymbol: String
+  let boundFor: String
+
+  static var notLoaded: LockScreenEntry {
+    LockScreenEntry(
+      date: Date(),
+      loaded: false,
+      lineColor: "277BC0",
+      lineName: String(localized: "lineNotSet"),
+      lineSymbol: "?",
+      boundFor: String(localized: "destinationNotSet")
+    )
+  }
+}
+
+struct LockScreenProvider: TimelineProvider {
+  func placeholder(in context: Context) -> LockScreenEntry {
+    .notLoaded
+  }
+
+  func getSnapshot(
+    in context: Context, completion: @escaping (LockScreenEntry) -> Void
+  ) {
+    completion(loadEntry())
+  }
+
+  func getTimeline(
+    in context: Context, completion: @escaping (Timeline<LockScreenEntry>) -> Void
+  ) {
+    // 表示内容はアプリ側がApp Groupへ書き込んだ時点のWidgetCenter経由リロードでのみ変わるため、
+    // 時刻ベースの再生成は行わない
+    completion(Timeline(entries: [loadEntry()], policy: .never))
+  }
+
+  private func loadEntry() -> LockScreenEntry {
+    let appGroupID =
+      Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String
+      ?? "group.me.tinykitten.trainlcd"
+
+    guard let defaults = UserDefaults(suiteName: appGroupID),
+      defaults.bool(forKey: "loaded")
+    else {
+      return .notLoaded
+    }
+
+    let lineName = defaults.string(forKey: "lineName") ?? ""
+    let lineSymbol = defaults.string(forKey: "lineSymbol") ?? ""
+
+    return LockScreenEntry(
+      date: Date(),
+      loaded: true,
+      lineColor: defaults.string(forKey: "lineColor") ?? "",
+      lineName: lineName,
+      lineSymbol: lineSymbol.isEmpty ? String(lineName.prefix(1)) : lineSymbol,
+      boundFor: defaults.string(forKey: "boundStationName") ?? ""
+    )
+  }
+}
+
+struct LockScreenNumberingCircle: View {
+  let lineColor: String
+  let lineSymbol: String
+
+  var body: some View {
+    ZStack {
+      AccessoryWidgetBackground()
+      Circle()
+        .stroke(Color(hex: lineColor), lineWidth: 6)
+        .widgetAccentable()
+      Text(lineSymbol)
+        .font(.system(.body, design: .rounded))
+        .fontWeight(.bold)
+        .minimumScaleFactor(0.5)
+        .padding(12)
+    }
+  }
+}
+
+struct LockScreenWidgetEntryView: View {
+  let entry: LockScreenEntry
+
+  @Environment(\.widgetFamily) var family
+
+  var body: some View {
+    switch family {
+    case .accessoryCircular:
+      circularView
+    case .accessoryRectangular:
+      rectangularView
+    case .accessoryInline:
+      inlineView
+    default:
+      EmptyView()
+    }
+  }
+
+  var circularView: some View {
+    LockScreenNumberingCircle(
+      lineColor: entry.lineColor,
+      lineSymbol: entry.lineSymbol
+    )
+  }
+
+  var rectangularView: some View {
+    HStack(spacing: 8) {
+      RoundedRectangle(cornerRadius: 2)
+        .fill(Color(hex: entry.lineColor))
+        .frame(width: 4)
+        .widgetAccentable()
+      VStack(alignment: .leading, spacing: 2) {
+        Text(entry.lineName)
+          .font(.headline)
+          .fontWeight(.bold)
+          .widgetAccentable()
+        Text(entry.boundFor)
+          .font(.caption)
+      }
+      Spacer(minLength: 0)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+  }
+
+  var inlineView: some View {
+    Text(
+      entry.loaded
+        ? String(format: String(localized: "ridingOn"), entry.lineName)
+        : "TrainLCD"
+    )
+  }
+}
+
+extension View {
+  // containerBackgroundはiOS 17以降必須だが、Extensionのデプロイターゲットが16.1のため互換ラップする
+  @ViewBuilder
+  fileprivate func lockScreenContainerBackground() -> some View {
+    if #available(iOSApplicationExtension 17.0, *) {
+      containerBackground(.fill.tertiary, for: .widget)
+    } else {
+      self
+    }
+  }
+}
+
+struct LockScreenWidget: Widget {
+  let kind: String = "LockScreenWidget"
+
+  var body: some WidgetConfiguration {
+    StaticConfiguration(kind: kind, provider: LockScreenProvider()) { entry in
+      LockScreenWidgetEntryView(entry: entry)
+        .lockScreenContainerBackground()
+    }
+    .configurationDisplayName("TrainLCD")
+    .description("TrainLCD")
+    .supportedFamilies(
+      [
+        .accessoryCircular,
+        .accessoryRectangular,
+        .accessoryInline,
+      ]
+    )
+  }
+}
+
+struct LockScreenWidget_Previews: PreviewProvider {
+  static var previews: some View {
+    Group {
+      LockScreenWidgetEntryView(
+        entry: LockScreenEntry(
+          date: .now,
+          loaded: true,
+          lineColor: "80C241",
+          lineName: "山手線",
+          lineSymbol: "JY",
+          boundFor: "新宿・渋谷方面"
+        )
+      )
+      .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
+    }
+  }
+}

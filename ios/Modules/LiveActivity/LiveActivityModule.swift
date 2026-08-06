@@ -1,11 +1,57 @@
 import Foundation
 import ActivityKit
+import WidgetKit
 
 @available(iOS 16.1, *)
 @objc(LiveActivityModule)
 class LiveActivityModule: NSObject {
   var sessionActivity: Activity<RideSessionAttributes>?
-  
+
+  private let lockScreenWidgetKind = "LockScreenWidget"
+
+  private var appGroupID: String {
+    Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String
+      ?? "group.me.tinykitten.trainlcd"
+  }
+
+  // 直近にウィジェットへ書き込んだ内容。差分がない更新でのUserDefaults書き込みと
+  // reloadTimelines呼び出し(WidgetKitのリロードバジェット消費)を避ける
+  private var lastWidgetState: [String: String]?
+
+  // ロック画面ウィジェットが参照するApp Groupへ乗車中の路線情報を書き込む
+  private func syncLockScreenWidgetState(_ dic: NSDictionary?) {
+    guard let dic = dic else {
+      return
+    }
+    let state = [
+      "lineColor": dic["lineColor"] as? String ?? "",
+      "lineName": dic["lineName"] as? String ?? "",
+      "lineSymbol": dic["lineSymbol"] as? String ?? "",
+      "boundStationName": dic["boundStationName"] as? String ?? "",
+    ]
+    if state == lastWidgetState {
+      return
+    }
+    lastWidgetState = state
+    guard let defaults = UserDefaults(suiteName: appGroupID) else {
+      return
+    }
+    for (key, value) in state {
+      defaults.set(value, forKey: key)
+    }
+    defaults.set(true, forKey: "loaded")
+    WidgetCenter.shared.reloadTimelines(ofKind: lockScreenWidgetKind)
+  }
+
+  private func clearLockScreenWidgetState() {
+    lastWidgetState = nil
+    guard let defaults = UserDefaults(suiteName: appGroupID) else {
+      return
+    }
+    defaults.set(false, forKey: "loaded")
+    WidgetCenter.shared.reloadTimelines(ofKind: lockScreenWidgetKind)
+  }
+
   func getStatus(_ dic: NSDictionary?) -> RideSessionAttributes.RideSessionStatus? {
     guard let state = dic else {
       return nil
@@ -37,10 +83,12 @@ class LiveActivityModule: NSObject {
     }
     
     let activityAttributes = RideSessionAttributes()
-    
+
     guard let initialContentState = getStatus(dic) else {
       return
     }
+
+    syncLockScreenWidgetState(dic)
     
     do {
       let finalContentState = getStatus(dic)
@@ -79,6 +127,9 @@ class LiveActivityModule: NSObject {
     guard let nextContentState = getStatus(dic) else {
       return
     }
+
+    syncLockScreenWidgetState(dic)
+
     Task {
       await sessionActivity?.update(using: nextContentState)
     }
@@ -90,6 +141,8 @@ class LiveActivityModule: NSObject {
       return
     }
     
+    clearLockScreenWidgetState()
+
     let finalContentState = getStatus(dic)
     Task {
       for activity in Activity<RideSessionAttributes>.activities {
