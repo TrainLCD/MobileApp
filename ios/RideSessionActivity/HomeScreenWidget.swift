@@ -57,6 +57,11 @@ private let lightLineLuminanceThreshold = 0.7
 ///
 /// 路線色は紺色から黄色まで幅があり白固定では読めない路線が出るため、輝度で白黒を切り替える。
 /// Android版(`WidgetTheme.onLineColor`)と同じ式・同じ閾値にしている。
+///
+/// ライブアクティビティ譲りの白文字を基本に保ったまま極端に明るい路線色だけを救うための
+/// ヒューリスティックであり、全路線色でWCAGのコントラスト比を満たすことは保証しない。
+/// 基準を満たす必要が出たら、相対輝度から白黒のコントラスト比が高い方を選ぶ実装へ差し替える
+/// (中間色の路線が黒文字へ倒れるため、見た目は現行から大きく変わる)。
 func lineForegroundColor(for lineColor: String) -> Color {
   lineColorLuminance(lineColor) > lightLineLuminanceThreshold ? .black : .white
 }
@@ -103,7 +108,7 @@ struct LineColorBackground: View {
 ///
 /// 背景が路線色で塗られている以上、従来の「路線色で縁取った円」では面に埋もれる。
 /// 前景色(白か黒)で塗り潰して記号側を路線色へ反転させることで、
-/// どの路線色でも駅ナンバリングの標識と同じコントラストになる。
+/// 駅ナンバリングの標識と同じ見え方にしつつ視認性を上げる。
 struct LineNumberingBadge: View {
   let lineColor: String
   let lineSymbol: String
@@ -203,7 +208,7 @@ struct HomeScreenWidgetEntryView: View {
       HStack(alignment: .top, spacing: 0) {
         LineNumberingBadge(
           lineColor: entry.displayLineColor,
-          lineSymbol: entry.lineSymbol,
+          lineSymbol: entry.displayLineSymbol,
           diameter: smallBadgeDiameter
         )
         Spacer(minLength: 0)
@@ -236,7 +241,7 @@ struct HomeScreenWidgetEntryView: View {
       Spacer(minLength: 0)
       LineNumberingBadge(
         lineColor: entry.displayLineColor,
-        lineSymbol: entry.lineSymbol,
+        lineSymbol: entry.displayLineSymbol,
         diameter: mediumBadgeDiameter
       )
     }

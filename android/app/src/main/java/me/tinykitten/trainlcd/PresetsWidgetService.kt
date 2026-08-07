@@ -65,7 +65,7 @@ private class PresetsRemoteViewsFactory(
 
         return RemoteViews(context.packageName, R.layout.widget_presets_row).apply {
             // 乗車中ウィジェットのナンバリングバッジと同じく、バッジを前景色で塗り潰して
-            // 記号を路線色へ反転させる。どの路線色でもコントラストが確保される
+            // 記号を路線色へ反転させ、路線色が明るくても記号が読めるようにする
             setInt(
                 R.id.widget_preset_badge,
                 "setColorFilter",
