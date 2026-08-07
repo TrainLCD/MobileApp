@@ -26,10 +26,16 @@ import lineState from '../store/atoms/line';
 import navigationState from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
+import { navigateToSelectLine } from '../utils/navigateToSelectLine';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
 const MAX_NAV_RETRIES = 5;
 const INITIAL_RETRY_DELAY_MS = 100;
+
+// `?preset=` に渡される SavedRoute.id は expo-crypto の randomUUID 由来。
+// ホーム画面ウィジェットが発行する値のみを受け付けるため書式を厳格に検証する
+const PRESET_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type GetLineStationsData = {
   lineStations: Station[];
@@ -386,6 +392,7 @@ export const useDeepLink = () => {
         sids,
         skips,
         id,
+        preset,
         auto,
         theme,
         ttname,
@@ -405,6 +412,32 @@ export const useDeepLink = () => {
           (Object.values(APP_THEME) as string[]).includes(theme))
           ? (theme as ThemePreference)
           : undefined;
+
+      // `preset` はホーム画面ウィジェットのタップで渡される端末ローカルのプリセットID。
+      // 経路そのものはURLに含まれず端末内のDBから解決するため、他の経路パラメータより優先する。
+      // 適用はクイックアクションと同じく pendingQuickActionRouteId 経由で路線選択画面に委ねる。
+      if (preset != null) {
+        if (typeof preset !== 'string' || !PRESET_ID_PATTERN.test(preset)) {
+          return;
+        }
+        setNavigationState((prev) => ({
+          ...prev,
+          pendingQuickActionRouteId: preset,
+        }));
+        if (!navigateToSelectLine()) {
+          const ready = await waitForNavReady();
+          if (!ready || !navigateToSelectLine()) {
+            console.warn(
+              'useDeepLink: navigationRef not ready after retries, preset navigation skipped'
+            );
+            setNavigationState((prev) => ({
+              ...prev,
+              pendingQuickActionRouteId: null,
+            }));
+          }
+        }
+        return;
+      }
 
       // `id` (resolver short code) supersedes every other route param. When it
       // is present we must not silently fall through to sids/sgid: doing so
@@ -558,7 +591,7 @@ export const useDeepLink = () => {
         theme: parsedTheme,
       });
     },
-    [openLink, openRouteByStationIds]
+    [openLink, openRouteByStationIds, setNavigationState]
   );
 
   const [initialUrlProcessed, setInitialUrlProcessed] = useState(false);
