@@ -80,9 +80,9 @@ This handbook defines how automation agents collaborate safely and effectively o
 ### React Native side effects under StrictMode
 
 - React StrictMode intentionally re-runs effect setup/cleanup in development. Treat mount-time effects as repeatable, and never rely on an empty dependency array to mean "runs exactly once" for visible side effects.
-- Do not call `Alert.alert` directly from `useEffect` or from async functions launched by `useEffect`. StrictMode can evaluate the same persisted condition twice before the first alert is dismissed, which may stack duplicate native alerts.
-- For automatic alerts, use the shared alert presentation guard in `src/utils/alertPresentation.ts` or an equivalent keyed presentation layer. The guard should prevent duplicate alerts only while the same logical alert is already being presented, and should release the key when the user presses a button or dismisses the alert.
-- User-initiated alerts from event handlers such as `onPress` may call `Alert.alert` directly when they are not triggered by mount-time or subscription effects.
+- Do not call the unkeyed `showDialog` from `useEffect` or from async functions launched by `useEffect`. StrictMode can evaluate the same persisted condition twice before the first dialog is dismissed.
+- For automatic dialogs, use `showDialogWhilePresenting` from `src/utils/dialogPresentation.ts`. The keyed presentation layer prevents duplicate dialogs only while the same logical dialog is active or queued, and releases the key after its closing animation completes.
+- User-initiated dialogs from event handlers such as `onPress` may call `showDialog` directly when they are not triggered by mount-time or subscription effects.
 - If an effect writes shared app state during cleanup, confirm that the cleanup represents a real lifecycle event such as a navigation `beforeRemove`, not only StrictMode's development-only unmount check.
 
 ### Markdown documentation (docs/, README, .claude/skills/\*\*/SKILL.md)
@@ -112,6 +112,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Pull requests must follow `.github/pull_request_template.md`; do not add or remove sections from the template without maintainer approval.
 - Open pull requests as ready for review by default; use Draft only when the user explicitly requests it.
 - Pull requests must be assigned to `@TinyKitten`.
+- Canary promotion PRs from `dev` to `canary` contain changes that have already passed review before reaching `dev`. Do not request or wait for an additional human or CodeRabbit review on the Canary PR itself. Once required CI succeeds and the PR is mergeable, the Canary PR may be merged without review approval.
 - Pull requests must include:
   - Purpose and summary of key changes.
   - Regression risk assessment and mitigation.

@@ -201,6 +201,11 @@ jest.mock('~/utils/line', () => ({
   ),
 }));
 
+// ウィジェット同期は画面の描画結果に影響しない副作用のため切り離す
+jest.mock('~/hooks/usePresetsWidgetSync', () => ({
+  usePresetsWidgetSync: jest.fn(),
+}));
+
 // --- ヘルパー ---
 
 const mockHandleLineSelected = jest.fn();

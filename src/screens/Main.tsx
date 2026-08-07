@@ -9,7 +9,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  Alert,
   Linking,
   Platform,
   Pressable,
@@ -30,7 +29,7 @@ import DevOverlay from '~/components/DevOverlay';
 import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import { STORAGE_KEYS } from '~/constants';
+import { IS_LIVE_UPDATE_ELIGIBLE_PLATFORM, STORAGE_KEYS } from '~/constants';
 import {
   useAndroidPictureInPicture,
   useConsoleTelemetry,
@@ -57,6 +56,7 @@ import {
   useTypeWillChange,
   useUpdateBottomState,
   useUpdateLiveActivities,
+  useUpdateWidget,
 } from '~/hooks';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -64,6 +64,7 @@ import {
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import { storage } from '~/lib/storage';
+import { getLineSymbolImage } from '~/lineSymbolImage';
 import { APP_THEME } from '~/models/Theme';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import lineState from '~/store/atoms/line';
@@ -89,8 +90,11 @@ import stationState, {
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
-import { showAlertWhilePresenting } from '../utils/alertPresentation';
 import getCurrentStationIndex from '../utils/currentStationIndex';
+import {
+  showDialog,
+  showDialogWhilePresenting,
+} from '../utils/dialogPresentation';
 import getIsPass from '../utils/isPass';
 
 type GetLineGroupStationsData = {
@@ -171,9 +175,18 @@ const FxUpdateLiveActivitiesInner: React.FC = () => {
   useUpdateLiveActivities();
   return null;
 };
-// LiveActivities は iOS 専用。Android では activityState の派生計算自体を止める。
+// LiveActivities は iOS 専用、Android のライブアップデートは Android 16(API 36) 以降専用。
+// どちらの通知先も持たない端末では activityState の派生計算自体を止める。
 const FxUpdateLiveActivities: React.FC = () => {
-  return Platform.OS === 'ios' ? <FxUpdateLiveActivitiesInner /> : null;
+  return Platform.OS === 'ios' || IS_LIVE_UPDATE_ELIGIBLE_PLATFORM ? (
+    <FxUpdateLiveActivitiesInner />
+  ) : null;
+};
+// Androidのホーム画面ウィジェット。LiveActivitiesがiOS専用でマウントされないため、
+// ウィジェットに必要な低頻度の項目だけを見る専用フックを別ホストで動かす
+const FxUpdateWidget: React.FC = () => {
+  useUpdateWidget();
+  return null;
 };
 const FxAndroidPictureInPicture: React.FC = () => {
   useAndroidPictureInPicture();
@@ -196,6 +209,7 @@ const MainScreenEffects: React.FC = () => {
       <FxStartBackgroundLocationUpdates />
       <FxTTS />
       <FxUpdateLiveActivities />
+      {Platform.OS === 'android' && <FxUpdateWidget />}
       {Platform.OS === 'android' && <FxAndroidPictureInPicture />}
     </>
   );
@@ -378,14 +392,14 @@ const MainScreen: React.FC = () => {
       );
 
       if (subwayAlertDismissed !== 'true') {
-        showAlertWhilePresenting(
+        showDialogWhilePresenting(
           STORAGE_KEYS.SUBWAY_ALERT_DISMISSED,
           translate('subwayAlertTitle'),
           translate('subwayAlertText'),
           [
             {
               text: translate('doNotShowAgain'),
-              style: 'cancel',
+              style: 'checkbox',
               onPress: (): void => {
                 storage.set(STORAGE_KEYS.SUBWAY_ALERT_DISMISSED, 'true');
               },
@@ -411,14 +425,14 @@ const MainScreen: React.FC = () => {
       isHoliday &&
       holidayNoticeDismissed !== 'true'
     ) {
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED,
         translate('notice'),
         translate('holidayNotice'),
         [
           {
             text: translate('doNotShowAgain'),
-            style: 'cancel',
+            style: 'checkbox',
             onPress: (): void => {
               storage.set(STORAGE_KEYS.HOLIDAY_ALERT_DISMISSED, 'true');
             },
@@ -440,14 +454,14 @@ const MainScreen: React.FC = () => {
       !isHoliday &&
       weekdayNoticeDismissed !== 'true'
     ) {
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED,
         translate('notice'),
         translate('weekdayNotice'),
         [
           {
             text: translate('doNotShowAgain'),
-            style: 'cancel',
+            style: 'checkbox',
             onPress: (): void => {
               storage.set(STORAGE_KEYS.WEEKDAY_ALERT_DISMISSED, 'true');
             },
@@ -467,14 +481,14 @@ const MainScreen: React.FC = () => {
       ) !== -1 &&
       partiallyPassNoticeDismissed !== 'true'
     ) {
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED,
         translate('notice'),
         translate('partiallyPassNotice'),
         [
           {
             text: translate('doNotShowAgain'),
-            style: 'cancel',
+            style: 'checkbox',
             onPress: (): void => {
               storage.set(STORAGE_KEYS.PARTIALLY_PASS_ALERT_DISMISSED, 'true');
             },
@@ -551,14 +565,14 @@ const MainScreen: React.FC = () => {
 
       const bgPermStatus = await Location.getBackgroundPermissionsAsync();
       if (warningDismissed !== 'true' && !bgPermStatus?.granted && !isClip()) {
-        showAlertWhilePresenting(
+        showDialogWhilePresenting(
           STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
           translate('announcementTitle'),
           translate('alwaysPermissionNotGrantedAlertText'),
           [
             {
               text: translate('doNotShowAgain'),
-              style: 'cancel',
+              style: 'checkbox',
               onPress: (): void => {
                 storage.set(
                   STORAGE_KEYS.ALWAYS_PERMISSION_NOT_GRANTED_WARNING_DISMISSED,
@@ -576,7 +590,7 @@ const MainScreen: React.FC = () => {
                     await requestIgnoreBatteryOptimizationsAndroid();
                   }
                 } catch (_error) {
-                  Alert.alert(
+                  showDialog(
                     translate('errorTitle'),
                     translate('failedToRequestPermission'),
                     [{ text: 'OK' }]
@@ -595,14 +609,14 @@ const MainScreen: React.FC = () => {
           STORAGE_KEYS.DOZE_CONFIRMED
         );
         if (bgStatus === 'granted' && dozeAlertDismissed !== 'true') {
-          showAlertWhilePresenting(
+          showDialogWhilePresenting(
             STORAGE_KEYS.DOZE_CONFIRMED,
             translate('announcementTitle'),
             translate('dozeAlertText'),
             [
               {
                 text: translate('doNotShowAgain'),
-                style: 'cancel',
+                style: 'checkbox',
                 onPress: (): void => {
                   storage.set(STORAGE_KEYS.DOZE_CONFIRMED, 'true');
                 },
@@ -613,7 +627,7 @@ const MainScreen: React.FC = () => {
                   try {
                     await Linking.openSettings();
                   } catch (_error) {
-                    Alert.alert(
+                    showDialog(
                       translate('announcementTitle'),
                       translate('failedToOpenSettings'),
                       [{ text: 'OK' }]
@@ -683,21 +697,19 @@ const MainScreen: React.FC = () => {
         return;
       }
 
-      Alert.alert(
+      const targetLine = selectedStation.line;
+
+      showDialog(
         translate('confirmChangeLineTitle', {
           lineName:
-            (isJapanese
-              ? selectedStation.line?.nameShort
-              : selectedStation.line?.nameRoman) ?? '',
+            (isJapanese ? targetLine?.nameShort : targetLine?.nameRoman) ?? '',
         }),
         translate('confirmChangeLineText', {
           currentLineName:
             (isJapanese ? currentLine?.nameShort : currentLine?.nameRoman) ??
             '',
           lineName:
-            (isJapanese
-              ? selectedStation.line?.nameShort
-              : selectedStation.line?.nameRoman) ?? '',
+            (isJapanese ? targetLine?.nameShort : targetLine?.nameRoman) ?? '',
         }),
         [
           {
@@ -710,7 +722,15 @@ const MainScreen: React.FC = () => {
               changeOperatingLine(selectedStation);
             },
           },
-        ]
+        ],
+        {
+          lineSymbol: targetLine
+            ? {
+                image: getLineSymbolImage(targetLine, false)?.signPath,
+                color: targetLine.color ?? undefined,
+              }
+            : undefined,
+        }
       );
     },
     [

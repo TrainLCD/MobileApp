@@ -4,7 +4,6 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { lighten } from 'polished';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   type GestureResponderEvent,
   Platform,
   Pressable,
@@ -21,6 +20,7 @@ import Typography from '~/components/Typography';
 import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
 import { isLEDThemeAtom, themePreferenceAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -168,7 +168,7 @@ const ThemeSettingsScreen: React.FC = () => {
         setThemePreference(preference);
       } catch (error) {
         console.error('Failed to toggle theme setting', error);
-        Alert.alert(
+        showDialog(
           translate('errorTitle'),
           translate('failedToSavePreference')
         );

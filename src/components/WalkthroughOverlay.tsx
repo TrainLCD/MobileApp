@@ -144,7 +144,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
 
   const { spotlightArea, tooltipPosition = 'bottom' } = step;
   // spotlightArea は measureInWindow() 由来の画面全体を基準にした座標。
-  // WalkthroughOverlay は Alert より手前に出ないよう Portal ではなく通常ツリー内に描画しているため、
+  // WalkthroughOverlay は共通ダイアログより手前に出ないよう Portal ではなく通常ツリー内に描画しているため、
   // SVG とツールチップの座標基準はオーバーレイ自身の左上になる。
   // そのまま使うとスポットライトがずれるので、オーバーレイの画面上の原点を差し引いてローカル座標へ変換する。
   const adjustedSpotlightArea = useMemo(() => {

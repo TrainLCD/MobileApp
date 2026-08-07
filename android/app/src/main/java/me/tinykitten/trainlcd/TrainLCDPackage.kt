@@ -21,6 +21,7 @@ class TrainLCDPackage : ReactPackage {
     IgnoreBatteryOptimizationsModule(reactContext),
     GnssModule(reactContext),
     LiveUpdateModule(reactContext),
-    PictureInPictureModule(reactContext)
+    PictureInPictureModule(reactContext),
+    WidgetModule(reactContext)
   ).toMutableList()
 }

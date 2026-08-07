@@ -1,9 +1,12 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import { Alert } from 'react-native';
 import { STORAGE_KEYS } from '~/constants';
 import { storage } from '~/lib/storage';
 import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
+import {
+  getDialogPresentationSnapshot,
+  resetDialogPresentationForTests,
+} from '~/utils/dialogPresentation';
 import BatterySettingsScreen from './BatterySettings';
 
 jest.mock('@react-navigation/native', () => ({
@@ -37,6 +40,7 @@ const renderWithStore = (powerSavingLocationEnabled = false) => {
 describe('BatterySettingsScreen', () => {
   afterEach(() => {
     jest.clearAllMocks();
+    resetDialogPresentationForTests();
   });
 
   it('省電力測位モードをONにするとatomとストレージへ保存される', () => {
@@ -68,8 +72,6 @@ describe('BatterySettingsScreen', () => {
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
-
     const { getByLabelText, store } = renderWithStore(false);
 
     fireEvent.press(getByLabelText('powerSavingLocationTitle'));
@@ -77,18 +79,17 @@ describe('BatterySettingsScreen', () => {
     // 保存失敗後にロールバックされる（MMKVは同期APIのため即時）
     expect(store.get(powerSavingLocationEnabledAtom)).toBe(false);
 
-    // エラーログとユーザーへのアラート表示を検証
+    // エラーログとユーザーへのダイアログ表示を検証
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to save power saving location setting',
       expect.any(Error)
     );
-    expect(alertSpy).toHaveBeenCalledWith(
-      'errorTitle',
-      'failedToSavePreference'
-    );
+    expect(getDialogPresentationSnapshot().request).toMatchObject({
+      title: 'errorTitle',
+      message: 'failedToSavePreference',
+    });
 
     setSpy.mockRestore();
     consoleErrorSpy.mockRestore();
-    alertSpy.mockRestore();
   });
 });

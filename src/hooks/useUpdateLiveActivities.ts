@@ -32,6 +32,7 @@ import { useIsNextLastStop } from './useIsNextLastStop';
 import { useIsPassing } from './useIsPassing';
 import { useLoopLine } from './useLoopLine';
 import { useNextStation } from './useNextStation';
+import { useNumbering } from './useNumbering';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 /**
@@ -73,6 +74,8 @@ export const useUpdateLiveActivities = (): void => {
   const { directionalStops } = useBounds(stations);
   const isNextLastStop = useIsNextLastStop();
   const getStationNumberIndex = useStationNumberIndexFunc();
+  // iOSロック画面ウィジェットのナンバリングサークル表示用
+  const [currentNumbering] = useNumbering();
   const trainType = useCurrentTrainType();
   const {
     isLoopLine: isFullLoopLine,
@@ -256,6 +259,7 @@ export const useUpdateLiveActivities = (): void => {
       isNextLastStop,
       lineColor,
       lineName,
+      lineSymbol: currentNumbering?.lineSymbol ?? '',
       passingStationName,
       passingStationNumber,
       progress,
@@ -264,6 +268,7 @@ export const useUpdateLiveActivities = (): void => {
       approaching,
       boundStationName,
       boundStationNumber,
+      currentNumbering?.lineSymbol,
       isLoopLine,
       isNextLastStop,
       lineColor,

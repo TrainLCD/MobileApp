@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
-  Alert,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -16,6 +15,7 @@ import Typography from '~/components/Typography';
 import notifyState from '~/store/atoms/notify';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 
@@ -52,7 +52,7 @@ const NotificationSettingsScreen: React.FC = () => {
       }));
     } catch (error) {
       console.error('Failed to toggle wrong direction notify setting', error);
-      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, [wrongDirectionNotifyEnabled, setNotifyState]);
 

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  iOSのホーム画面ウィジェット(systemSmall)に相当するレイアウト。
+  正方形にブランド行を入れる余裕は無いので、乗車中かどうかはアイコンだけで示す
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/widget_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_background"
+        android:tint="@color/widget_brand" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_background_shade" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <ImageView
+                    android:id="@+id/widget_numbering_badge"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:src="@drawable/widget_numbering_badge" />
+
+                <TextView
+                    android:id="@+id/widget_line_symbol"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingStart="9dp"
+                    android:paddingEnd="9dp"
+                    android:text="@string/widget_line_symbol_placeholder"
+                    android:textColor="@color/widget_brand"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/widget_brand_icon"
+                android:layout_width="0dp"
+                android:layout_height="14dp"
+                android:layout_weight="1"
+                android:contentDescription="@null"
+                android:scaleType="fitEnd"
+                android:src="@drawable/ic_notification_live_update"
+                android:tint="@color/widget_on_line_secondary" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_line_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="@string/widget_line_not_set"
+            android:textColor="@color/widget_on_line_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_bound_for"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="@string/widget_destination_not_set"
+            android:textColor="@color/widget_on_line_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+</FrameLayout>

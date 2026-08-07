@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
-  Alert,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -17,6 +16,7 @@ import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 
@@ -111,7 +111,7 @@ const ExperimentalSettingsScreen: React.FC = () => {
       // UIと永続値の不整合を防ぐべくatom状態をロールバックする
       setPortraitModeEnabled(!flag);
       console.error('Failed to save portrait mode setting', error);
-      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, [portraitModeEnabled, setPortraitModeEnabled]);
 
@@ -123,7 +123,7 @@ const ExperimentalSettingsScreen: React.FC = () => {
     } catch (error) {
       setTuning((prev) => ({ ...prev, telemetryEnabled: !flag }));
       console.error('Failed to save telemetry setting', error);
-      Alert.alert(translate('errorTitle'), translate('failedToSavePreference'));
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
     }
   }, [tuning.telemetryEnabled, setTuning]);
 

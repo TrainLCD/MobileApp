@@ -1,0 +1,10 @@
+<resources>
+  <!-- ホーム画面ウィジェットの角丸。Android 12以降はvalues-v31でシステム既定値へ差し替える -->
+  <dimen name="widget_corner_radius">16dp</dimen>
+  <!--
+    プリセットウィジェットの行に置くナンバリングバッジの直径と、行を持ち上げる下敷きの角丸。
+    2セル分の高さのウィジェットにも2行収まるよう、乗車中ウィジェット(48dp)より小さくしている
+  -->
+  <dimen name="widget_preset_circle_size">30dp</dimen>
+  <dimen name="widget_preset_row_corner_radius">10dp</dimen>
+</resources>

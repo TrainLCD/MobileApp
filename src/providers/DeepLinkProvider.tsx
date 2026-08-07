@@ -1,7 +1,7 @@
 import { memo, type ReactNode, useEffect } from 'react';
 import { useDeepLink } from '../hooks/useDeepLink';
 import { translate } from '../translation';
-import { showAlertWhilePresenting } from '../utils/alertPresentation';
+import { showDialogWhilePresenting } from '../utils/dialogPresentation';
 
 type Props = {
   children: ReactNode;
@@ -12,7 +12,7 @@ const DeepLinkProvider = ({ children }: Props) => {
   useEffect(() => {
     if (error) {
       console.error(error);
-      showAlertWhilePresenting(
+      showDialogWhilePresenting(
         'deepLinkFetchStationError',
         translate('errorTitle'),
         translate('failedToFetchStation')

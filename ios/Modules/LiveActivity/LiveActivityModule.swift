@@ -1,11 +1,70 @@
 import Foundation
 import ActivityKit
+import WidgetKit
 
 @available(iOS 16.1, *)
 @objc(LiveActivityModule)
 class LiveActivityModule: NSObject {
   var sessionActivity: Activity<RideSessionAttributes>?
-  
+
+  private let lockScreenWidgetKind = "LockScreenWidget"
+  // RideSessionActivity側のHomeScreenWidget.kindと一致させること
+  private let homeScreenWidgetKind = "HomeScreenWidget"
+  // RideSessionActivity側のLockScreenControl.kindと一致させること
+  private let lockScreenControlKind = "me.tinykitten.trainlcd.LockScreenControl"
+
+  private var appGroupID: String {
+    Bundle.main.object(forInfoDictionaryKey: "APP_GROUP_ID") as? String
+      ?? "group.me.tinykitten.trainlcd"
+  }
+
+  // 直近にウィジェットへ書き込んだ内容。差分がない更新でのUserDefaults書き込みと
+  // reloadTimelines呼び出し(WidgetKitのリロードバジェット消費)を避ける
+  private var lastWidgetState: [String: String]?
+
+  // ロック画面/ホーム画面ウィジェットが参照するApp Groupへ乗車中の路線情報を書き込む
+  private func syncWidgetState(_ dic: NSDictionary?) {
+    guard let dic = dic else {
+      return
+    }
+    let state = [
+      "lineColor": dic["lineColor"] as? String ?? "",
+      "lineName": dic["lineName"] as? String ?? "",
+      "lineSymbol": dic["lineSymbol"] as? String ?? "",
+      "boundStationName": dic["boundStationName"] as? String ?? "",
+    ]
+    if state == lastWidgetState {
+      return
+    }
+    lastWidgetState = state
+    guard let defaults = UserDefaults(suiteName: appGroupID) else {
+      return
+    }
+    for (key, value) in state {
+      defaults.set(value, forKey: key)
+    }
+    defaults.set(true, forKey: "loaded")
+    reloadWidgetSurfaces()
+  }
+
+  // ロック画面/ホーム画面ウィジェットとロック画面コントロールは同じApp Groupを参照するため常に同時に更新する
+  private func reloadWidgetSurfaces() {
+    WidgetCenter.shared.reloadTimelines(ofKind: lockScreenWidgetKind)
+    WidgetCenter.shared.reloadTimelines(ofKind: homeScreenWidgetKind)
+    if #available(iOS 18.0, *) {
+      ControlCenter.shared.reloadControls(ofKind: lockScreenControlKind)
+    }
+  }
+
+  private func clearWidgetState() {
+    lastWidgetState = nil
+    guard let defaults = UserDefaults(suiteName: appGroupID) else {
+      return
+    }
+    defaults.set(false, forKey: "loaded")
+    reloadWidgetSurfaces()
+  }
+
   func getStatus(_ dic: NSDictionary?) -> RideSessionAttributes.RideSessionStatus? {
     guard let state = dic else {
       return nil
@@ -37,10 +96,12 @@ class LiveActivityModule: NSObject {
     }
     
     let activityAttributes = RideSessionAttributes()
-    
+
     guard let initialContentState = getStatus(dic) else {
       return
     }
+
+    syncWidgetState(dic)
     
     do {
       let finalContentState = getStatus(dic)
@@ -79,6 +140,9 @@ class LiveActivityModule: NSObject {
     guard let nextContentState = getStatus(dic) else {
       return
     }
+
+    syncWidgetState(dic)
+
     Task {
       await sessionActivity?.update(using: nextContentState)
     }
@@ -90,6 +154,8 @@ class LiveActivityModule: NSObject {
       return
     }
     
+    clearWidgetState()
+
     let finalContentState = getStatus(dic)
     Task {
       for activity in Activity<RideSessionAttributes>.activities {

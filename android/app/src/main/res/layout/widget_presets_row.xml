@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  プリセットウィジェットの1行。iOS版(PresetsWidget.swift)のPresetsWidgetRowに対応する。
+
+  AbsListView.LayoutParamsはマージンを持たないため、行間は外側のFrameLayoutのパディングで作る。
+  カードの下敷き(widget_preset_row_background)は内側に敷き、余白まで塗らないようにする
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="6dp">
+
+    <LinearLayout
+        android:id="@+id/widget_preset_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/widget_preset_row_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="5dp">
+
+        <FrameLayout
+            android:layout_width="@dimen/widget_preset_circle_size"
+            android:layout_height="@dimen/widget_preset_circle_size">
+
+            <ImageView
+                android:id="@+id/widget_preset_badge"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:src="@drawable/widget_numbering_badge" />
+
+            <TextView
+                android:id="@+id/widget_preset_symbol"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:text="@string/widget_line_symbol_placeholder"
+                android:textColor="@color/widget_brand"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_preset_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/widget_preset_route"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/widget_on_line_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

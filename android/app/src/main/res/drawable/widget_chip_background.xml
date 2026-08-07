@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  iOS版のLineColorChip(HomeScreenWidget.swift)相当のカプセル。
+  路線色の面にそのまま小さな文字を置くと沈むため、前景色を薄く敷いて一段持ち上げる。
+  色と不透明度はsetColorFilter / setImageAlphaで与えるため、ここでは白で描く。
+  角丸は十分大きな値にして、高さに関わらず端が半円になるようにしている
+  (GradientDrawableは角丸を短辺の半分までに丸める)
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="999dp" />
+    <solid android:color="#FFFFFFFF" />
+</shape>

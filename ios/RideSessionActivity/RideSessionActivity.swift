@@ -101,7 +101,7 @@ func getRunningStateText(
   return ""
 }
 
-@main
+// エントリポイントはLockScreenWidget.swiftのRideSessionWidgetBundle
 struct RideSessionWidget: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RideSessionAttributes.self) { context in

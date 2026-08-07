@@ -4,6 +4,10 @@
   <dict>
     <key>aps-environment</key>
     <string>development</string>
+    <key>com.apple.security.application-groups</key>
+    <array>
+      <string>group.me.tinykitten.trainlcd</string>
+    </array>
     <key>com.apple.developer.associated-appclip-app-identifiers</key>
     <array>
       <string>$(AppIdentifierPrefix)me.tinykitten.trainlcd.Clip</string>
