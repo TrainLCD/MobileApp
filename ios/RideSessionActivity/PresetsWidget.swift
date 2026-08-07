@@ -15,16 +15,29 @@ import WidgetKit
 // 表示データはPresetsWidgetModuleがApp Groupへ書き込んだJSONを読む。
 // 体裁はアプリ内のプリセットカード(PresetCard.tsx)を踏襲し、
 // 路線色のナンバリングサークル + プリセット名 + 始発駅→終着駅 で構成する。
+//
+// systemMedium / systemLargeは高さに収まるだけ行を並べる(PresetsWidgetRow)。
+// systemSmallはウィジェット全体が単一のタップ領域で1件しか開けないため、
+// 行を並べず1件を縦に積んで見せる(PresetsWidgetFeatured)。
 
 // 乗車中ウィジェット(HomeScreenWidget)と同じsystemSmall / systemMediumに加え、
 // 一覧をまとめて見たい向けにsystemLargeも選べるようにしている。
-// systemSmallとsystemMediumは高さが同じなので収まる行数も同じ
-private let compactRowCount = 2
-private let largeRowCount = 5
 
-// 行の左に置くナンバリングサークルの直径。
-// systemSmallの幅でも駅名に十分な余地が残るよう、乗車中ウィジェット(48pt)より小さくしている
+// 一覧の1行あたりの高さと行間。表示件数はこの値と実際のウィジェット高から導出するため、
+// 行の見た目を変えたらこちらも合わせること
+private let rowHeight: CGFloat = 40
+private let rowSpacing: CGFloat = 6
+
+// ヘッダー(caption2 + アイコン)の高さと、ヘッダーと一覧の間隔
+private let headerHeight: CGFloat = 18
+private let headerSpacing: CGFloat = 6
+
+// 一覧の行に置くナンバリングサークルの直径
 private let rowCircleDiameter: CGFloat = 30
+
+// systemSmallは1件だけを縦に積んで見せる。下に駅名2行と矢印が入るぶん、
+// 乗車中ウィジェットのsystemSmall(48pt)よりは小さくする
+private let featuredCircleDiameter: CGFloat = 36
 
 struct PresetsWidgetItem: Codable, Identifiable {
   let id: String
@@ -48,12 +61,13 @@ struct PresetsWidgetItem: Codable, Identifiable {
     return lineName.isEmpty ? "?" : String(lineName.prefix(1))
   }
 
+  var hasStations: Bool {
+    !fromStationName.isEmpty && !toStationName.isEmpty
+  }
+
   // 駅名が未取得のプリセットでは路線名だけでも出す
   var routeDescription: String {
-    if fromStationName.isEmpty || toStationName.isEmpty {
-      return lineName
-    }
-    return "\(fromStationName) → \(toStationName)"
+    hasStations ? "\(fromStationName) → \(toStationName)" : lineName
   }
 }
 
@@ -89,6 +103,43 @@ struct PresetsEntry: TimelineEntry {
           lineName: "中央線快速",
           lineColor: "F15A22",
           lineSymbol: "JC"
+        ),
+        // systemLargeのギャラリープレビューが空きだらけにならないよう行数分用意する
+        PresetsWidgetItem(
+          id: "placeholder-3",
+          name: "休日おでかけ",
+          fromStationName: "渋谷",
+          toStationName: "横浜",
+          lineName: "東急東横線",
+          lineColor: "DA0442",
+          lineSymbol: "TY"
+        ),
+        PresetsWidgetItem(
+          id: "placeholder-4",
+          name: "空港へ",
+          fromStationName: "品川",
+          toStationName: "羽田空港第1・第2ターミナル",
+          lineName: "京急本線",
+          lineColor: "00BFFF",
+          lineSymbol: "KK"
+        ),
+        PresetsWidgetItem(
+          id: "placeholder-5",
+          name: "実家",
+          fromStationName: "上野",
+          toStationName: "大宮",
+          lineName: "宇都宮線",
+          lineColor: "F68B1E",
+          lineSymbol: "JU"
+        ),
+        PresetsWidgetItem(
+          id: "placeholder-6",
+          name: "ハイキング",
+          fromStationName: "新宿",
+          toStationName: "高尾山口",
+          lineName: "京王線",
+          lineColor: "DD0077",
+          lineSymbol: "KO"
         ),
       ]
     )
@@ -151,9 +202,59 @@ struct PresetsWidgetRow: View {
       }
       Spacer(minLength: 0)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
+    .frame(maxWidth: .infinity, height: rowHeight, alignment: .leading)
     // 行全体をタップ領域にする。Spacerだけでは透明部分がヒットしない
     .contentShape(Rectangle())
+  }
+}
+
+/// systemSmall専用の1件表示。
+///
+/// 行を並べても1件しかタップできないため件数を増やす意味が無い。
+/// 正方形の領域に対して「始発駅 → 終着駅」を横一列に置くと横幅で先に頭打ちになり、
+/// 駅名がすぐ省略されるので、縦に積んで1駅あたりの幅をフルに使う。
+/// 空いた領域はSpacerで均し、上下に寄った余白が残らないようにする。
+struct PresetsWidgetFeatured: View {
+  let preset: PresetsWidgetItem
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      HomeScreenNumberingCircle(
+        lineColor: preset.displayLineColor,
+        lineSymbol: preset.displayLineSymbol,
+        diameter: featuredCircleDiameter
+      )
+      Spacer(minLength: 6)
+      Text(preset.name)
+        .font(.caption)
+        .fontWeight(.bold)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+      Spacer(minLength: 2)
+      if preset.hasStations {
+        Text(preset.fromStationName)
+          .font(.title3)
+          .fontWeight(.bold)
+          .lineLimit(1)
+          .minimumScaleFactor(0.6)
+        Image(systemName: "arrow.down")
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+        Text(preset.toStationName)
+          .font(.title3)
+          .fontWeight(.bold)
+          .lineLimit(1)
+          .minimumScaleFactor(0.6)
+      } else {
+        // 駅名が未取得のときは路線名だけ出す
+        Text(preset.lineName)
+          .font(.headline)
+          .lineLimit(2)
+          .minimumScaleFactor(0.7)
+      }
+      Spacer(minLength: 0)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
   }
 }
 
@@ -171,20 +272,20 @@ struct PresetsWidgetEntryView: View {
   }
 
   // systemSmallはウィジェット全体が単一のタップ領域で、行ごとのLinkが効かない。
-  // 行を並べるとタップ先と見た目が食い違うため、1件だけ出してwidgetURLで開く
+  // 行を並べても1件しかタップできず件数を増やす意味が無いため、1件を大きく見せる
   private var isSingleTapTarget: Bool {
     family == .systemSmall
   }
 
-  private var rowCount: Int {
-    if isSingleTapTarget {
+  /// 与えられた高さに収まる行数。
+  /// ファミリーごとに件数を決め打ちすると端末サイズ差で余白が出たり見切れたりするため、
+  /// 実際に描画される高さから求める。行の高さはrowHeightで固定しているので計算は一致する。
+  private func rowCount(for height: CGFloat) -> Int {
+    let available = height - headerHeight - headerSpacing
+    guard available > 0 else {
       return 1
     }
-    return family == .systemLarge ? largeRowCount : compactRowCount
-  }
-
-  private var visiblePresets: [PresetsWidgetItem] {
-    Array(entry.presets.prefix(rowCount))
+    return max(1, Int((available + rowSpacing) / (rowHeight + rowSpacing)))
   }
 
   private func presetURL(_ preset: PresetsWidgetItem) -> URL? {
@@ -224,35 +325,37 @@ struct PresetsWidgetEntryView: View {
     .widgetURL(URL(string: "\(urlScheme)://"))
   }
 
+  // systemMedium / systemLarge。高さに収まるだけ行を詰めて余白を残さない
   private var listView: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      header
-      ForEach(visiblePresets) { preset in
-        // systemSmallではLinkが個別のタップ領域にならないので包まない。
-        // 代わりにウィジェット全体へwidgetURLを張る
-        if !isSingleTapTarget, let url = presetURL(preset) {
-          Link(destination: url) {
-            PresetsWidgetRow(preset: preset)
+    GeometryReader { proxy in
+      VStack(alignment: .leading, spacing: headerSpacing) {
+        header
+        VStack(alignment: .leading, spacing: rowSpacing) {
+          ForEach(entry.presets.prefix(rowCount(for: proxy.size.height))) { preset in
+            if let url = presetURL(preset) {
+              Link(destination: url) {
+                PresetsWidgetRow(preset: preset)
+              }
+            } else {
+              PresetsWidgetRow(preset: preset)
+            }
           }
-        } else {
-          PresetsWidgetRow(preset: preset)
         }
+        // 登録件数が収まる行数に満たないときだけ効く。通常は0
+        Spacer(minLength: 0)
       }
-      Spacer(minLength: 0)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }
 
   var body: some View {
     if entry.presets.isEmpty {
       emptyView
-    } else if isSingleTapTarget {
+    } else if isSingleTapTarget, let preset = entry.presets.first {
       // 表示している唯一のプリセットをウィジェット全体のタップ先にする。
       // URLを組めなかった場合はアプリ起動へ倒す
-      listView
-        .widgetURL(
-          visiblePresets.first.flatMap(presetURL) ?? URL(string: "\(urlScheme)://")
-        )
+      PresetsWidgetFeatured(preset: preset)
+        .widgetURL(presetURL(preset) ?? URL(string: "\(urlScheme)://"))
     } else {
       listView
     }
