@@ -3,7 +3,7 @@ const IS_DEV = process.env.APP_VARIANT === 'dev';
 export default {
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.11.4',
+  version: '10.11.5',
   plugins: [
     'expo-image',
     'expo-font',
