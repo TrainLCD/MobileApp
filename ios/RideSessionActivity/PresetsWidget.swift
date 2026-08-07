@@ -202,7 +202,11 @@ struct PresetsWidgetRow: View {
       }
       Spacer(minLength: 0)
     }
-    .frame(maxWidth: .infinity, height: rowHeight, alignment: .leading)
+    // SwiftUIのframeはwidth/heightとmin/ideal/maxを混在できないため、
+    // 横は可変・縦はrowHeight固定をmin/maxの指定で表す
+    .frame(
+      maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight,
+      alignment: .leading)
     // 行全体をタップ領域にする。Spacerだけでは透明部分がヒットしない
     .contentShape(Rectangle())
   }
