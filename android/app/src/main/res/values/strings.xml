@@ -12,6 +12,11 @@
   <string name="widget_line_not_set">路線が未設定です</string>
   <string name="widget_destination_not_set">方面が未設定です</string>
   <string name="widget_riding_on">%1$sに乗車中</string>
+  <string name="widget_presets_title">プリセット</string>
+  <string name="widget_presets_description">登録したプリセットを表示し、タップですぐに乗車を開始します</string>
+  <string name="widget_presets_empty">アプリでプリセットを登録すると、ここから直接乗車を開始できます。</string>
+  <!-- 駅名が未取得のプリセットでは路線名だけを出すため、区切りは書式側で持たせる -->
+  <string name="widget_presets_route">%1$s → %2$s</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
 </resources>
