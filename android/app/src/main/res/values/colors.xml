@@ -3,8 +3,14 @@
   <color name="iconBackground">#EEEEEE</color>
   <color name="colorPrimary">#023c69</color>
   <color name="colorPrimaryDark">#fff</color>
-  <!-- ホーム画面ウィジェット(ライトテーマ) -->
-  <color name="widget_background">#F2FFFFFF</color>
-  <color name="widget_text_primary">#FF1F1F1F</color>
-  <color name="widget_text_secondary">#B31F1F1F</color>
+  <!--
+    ホーム画面ウィジェット。
+    背景は常に路線色(またはブランドカラー)で塗るため、文字色は端末のテーマではなく
+    背景の明るさで決まる。乗車中ウィジェットはWidgetTheme.onLineColorが実行時に上書きするので、
+    ここの値はレイアウト上の既定値(暗い面に載る前提)として置いている
+  -->
+  <color name="widget_on_line_primary">#FFFFFFFF</color>
+  <color name="widget_on_line_secondary">#D9FFFFFF</color>
+  <!-- プリセットウィジェットの面に使うブランドカラー。iOS版のLockScreenEntry.fallbackLineColorと揃える -->
+  <color name="widget_brand">#FF277BC0</color>
 </resources>

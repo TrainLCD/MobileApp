@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  路線色の下地(widget_background)に重ねるグラデーション。
+  iOS版のLineColorBackground・watchOS向けライブアクティビティと同じく、
+  始点側を黒で沈めて奥行きを出し、対角側に白を残して抜けを作る。
+
+  角丸は下地と同じ値にする。ImageViewのsrcとして描くGradientDrawableは
+  ビューの実寸に合わせて描き直されるため、ウィジェットのサイズが変わっても角が歪まない。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="@dimen/widget_corner_radius" />
+    <gradient
+        android:angle="315"
+        android:centerColor="#00000000"
+        android:endColor="#38FFFFFF"
+        android:startColor="#40000000"
+        android:type="linear" />
+</shape>

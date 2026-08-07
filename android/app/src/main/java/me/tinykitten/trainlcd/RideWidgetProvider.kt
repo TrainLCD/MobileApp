@@ -15,6 +15,11 @@ import android.widget.RemoteViews
  * 踏襲し、ウィジェットのサイズに応じて4つのレイアウトを出し分ける。
  * 正方形はiOSのsystemSmall、横長はsystemMedium、置ける情報が減る極小サイズは
  * accessoryCircular / accessoryInlineに相当する。
+ *
+ * 背景はwatchOS向けライブアクティビティ(SmartStackLiveActivityContentView)と同じく
+ * 路線色のベタ塗り + グラデーションで、下地(widget_background)を路線色に着色し、
+ * その上にグラデーション(widget_background_shade)を重ねて作る。
+ * 文字・アイコンの色は路線色の明るさで変わるため、レイアウトのXMLではなくWidgetThemeが実行時に決める。
  */
 class RideWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
@@ -119,9 +124,25 @@ class RideWidgetProvider : AppWidgetProvider() {
             return views
         }
 
-        private fun RemoteViews.applyNumberingCircle(lineSymbol: String, lineColor: Int) {
-            setInt(R.id.widget_numbering_circle, "setColorFilter", lineColor)
+        /** 背景の下地を路線色へ着色する。上に重なるグラデーションは静的なので触らない */
+        private fun RemoteViews.applyBackground(lineColor: Int) {
+            setInt(R.id.widget_background, "setColorFilter", lineColor)
+        }
+
+        /**
+         * ナンバリングバッジ。
+         * 面が路線色で塗られているため、バッジ側を前景色で塗り潰して記号を路線色へ反転させる
+         */
+        private fun RemoteViews.applyNumberingBadge(lineSymbol: String, lineColor: Int) {
+            setInt(R.id.widget_numbering_badge, "setColorFilter", WidgetTheme.onLineColor(lineColor))
             setTextViewText(R.id.widget_line_symbol, lineSymbol)
+            setTextColor(R.id.widget_line_symbol, lineColor)
+        }
+
+        /** 路線名・方面の文字色。路線色の明るさで白黒が入れ替わる */
+        private fun RemoteViews.applyTextColors(lineColor: Int) {
+            setTextColor(R.id.widget_line_name, WidgetTheme.onLineColor(lineColor))
+            setTextColor(R.id.widget_bound_for, WidgetTheme.onLineColorSecondary(lineColor))
         }
 
         private fun circularViews(
@@ -130,7 +151,10 @@ class RideWidgetProvider : AppWidgetProvider() {
             lineColor: Int
         ): RemoteViews =
             RemoteViews(context.packageName, R.layout.widget_ride_circular).apply {
-                applyNumberingCircle(lineSymbol, lineColor)
+                applyBackground(lineColor)
+                // 面そのものがバッジなので、記号は反転させず前景色のまま載せる
+                setTextViewText(R.id.widget_line_symbol, lineSymbol)
+                setTextColor(R.id.widget_line_symbol, WidgetTheme.onLineColor(lineColor))
             }
 
         private fun inlineViews(
@@ -139,8 +163,10 @@ class RideWidgetProvider : AppWidgetProvider() {
             lineColor: Int
         ): RemoteViews =
             RemoteViews(context.packageName, R.layout.widget_ride_inline).apply {
-                setInt(R.id.widget_line_bar, "setColorFilter", lineColor)
+                applyBackground(lineColor)
+                setInt(R.id.widget_brand_icon, "setColorFilter", WidgetTheme.onLineColor(lineColor))
                 setTextViewText(R.id.widget_inline_text, lineName)
+                setTextColor(R.id.widget_inline_text, WidgetTheme.onLineColor(lineColor))
             }
 
         private fun smallViews(
@@ -151,7 +177,14 @@ class RideWidgetProvider : AppWidgetProvider() {
             lineColor: Int
         ): RemoteViews =
             RemoteViews(context.packageName, R.layout.widget_ride_small).apply {
-                applyNumberingCircle(lineSymbol, lineColor)
+                applyBackground(lineColor)
+                applyNumberingBadge(lineSymbol, lineColor)
+                applyTextColors(lineColor)
+                setInt(
+                    R.id.widget_brand_icon,
+                    "setColorFilter",
+                    WidgetTheme.onLineColorSecondary(lineColor)
+                )
                 setTextViewText(R.id.widget_line_name, lineName)
                 setTextViewText(R.id.widget_bound_for, boundFor)
             }
@@ -164,8 +197,18 @@ class RideWidgetProvider : AppWidgetProvider() {
             lineColor: Int
         ): RemoteViews =
             RemoteViews(context.packageName, R.layout.widget_ride_rectangular).apply {
-                applyNumberingCircle(lineSymbol, lineColor)
-                setInt(R.id.widget_line_bar, "setColorFilter", lineColor)
+                applyBackground(lineColor)
+                applyNumberingBadge(lineSymbol, lineColor)
+                applyTextColors(lineColor)
+                // ブランド行のカプセルは前景色を薄く敷いたもの。色と不透明度は分けて与える
+                setInt(R.id.widget_brand_chip, "setColorFilter", WidgetTheme.onLineColor(lineColor))
+                setInt(
+                    R.id.widget_brand_chip,
+                    "setImageAlpha",
+                    (WidgetTheme.CHIP_ALPHA * 255).toInt()
+                )
+                setInt(R.id.widget_brand_icon, "setColorFilter", WidgetTheme.onLineColor(lineColor))
+                setTextColor(R.id.widget_brand_label, WidgetTheme.onLineColor(lineColor))
                 setTextViewText(R.id.widget_line_name, lineName)
                 setTextViewText(R.id.widget_bound_for, boundFor)
             }

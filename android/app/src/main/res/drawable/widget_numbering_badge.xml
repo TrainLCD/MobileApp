@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  iOS版のLineNumberingBadge(HomeScreenWidget.swift)相当。
+  背景が路線色で塗られている以上、路線色で縁取っただけの円では面に埋もれる。
+  前景色(白か黒)で塗り潰し、記号側を路線色へ反転させて視認性を上げる。
+  塗り色はsetColorFilterで着色するため、ここでは白で描く
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#FFFFFFFF" />
+</shape>
