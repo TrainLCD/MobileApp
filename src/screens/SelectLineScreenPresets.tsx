@@ -10,10 +10,10 @@ import {
   View,
 } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Station } from '~/@types/graphql';
 import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { PresetCard } from '~/components/PresetCard';
 import isTablet from '~/utils/isTablet';
+import { getPresetRouteEndpoints } from '~/utils/presetRouteEndpoints';
 import type { LoopItem } from '../store/atoms/navigation';
 
 type Props = {
@@ -116,24 +116,8 @@ export const SelectLineScreenPresets = ({
 
   const renderItem: ListRenderItem<LoopItem> = useCallback(
     ({ item }) => {
-      // wantedDestinationId と direction がある場合、始発駅と終着駅を差し替える
-      // 保存時の direction options と対応:
-      //   INBOUND:  fromStation = stations[0],             toStation = wantedDestination
-      //   OUTBOUND: fromStation = stations[stations.length-1], toStation = wantedDestination
-      let from: Station | undefined = item.stations[0];
-      let to: Station | undefined = item.stations.at(-1);
-      if (item.wantedDestinationId != null && item.direction) {
-        const destStation = item.stations.find(
-          (s) => s.groupId === item.wantedDestinationId
-        );
-        if (destStation) {
-          from =
-            item.direction === 'INBOUND'
-              ? item.stations[0]
-              : item.stations.at(-1);
-          to = destStation;
-        }
-      }
+      // ホーム画面ウィジェットと同じ端点を表示するため解決ロジックは共通化している
+      const { from, to } = getPresetRouteEndpoints(item);
 
       return isTablet ? (
         <View style={{ width: cardWidth }}>
