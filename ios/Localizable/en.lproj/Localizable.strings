@@ -27,3 +27,6 @@
 "openApp" = "Open TrainLCD";
 "controlDescription" = "Opens TrainLCD from the Lock Screen or Control Center.";
 "widgetDescription" = "Shows the line and destination for your current ride";
+"presetsWidgetTitle" = "Presets";
+"presetsWidgetDescription" = "Shows your saved presets and starts a ride with a tap";
+"presetsWidgetEmpty" = "Save a preset in the app to start a ride straight from here.";

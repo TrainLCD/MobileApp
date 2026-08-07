@@ -26,6 +26,7 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useInitialNearbyStation } from '~/hooks/useInitialNearbyStation';
 import { useLineSelection } from '~/hooks/useLineSelection';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
+import { usePresetsWidgetSync } from '~/hooks/usePresetsWidgetSync';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import isTablet from '~/utils/isTablet';
@@ -72,6 +73,14 @@ const NearbyStationLoader = () => (
     <SkeletonPlaceholder.Item width="100%" height={72} />
   </SkeletonPlaceholder>
 );
+
+// 副作用のみのフックは画面本体ではなくレンダレスコンポーネントに寄せる(docs/state-management.md)
+const FxPresetsWidgetSync: React.FC<
+  Parameters<typeof usePresetsWidgetSync>[0]
+> = (params) => {
+  usePresetsWidgetSync(params);
+  return null;
+};
 
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
@@ -300,6 +309,12 @@ const SelectLineScreen = () => {
   // --- JSX ---
   return (
     <>
+      {/* 取得済みのプリセットをホーム画面ウィジェットへ同期する */}
+      <FxPresetsWidgetSync
+        carouselData={carouselData}
+        routes={routes}
+        isRoutesDBInitialized={isRoutesDBInitialized}
+      />
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <RNAnimated.ScrollView
           style={StyleSheet.absoluteFill}

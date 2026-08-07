@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  既定サイズは乗車中ウィジェット(ride_widget_info)と同じ2x2。
+  一覧はListView(PresetsWidgetService)なので、拡大すれば入るぶんだけ表示件数が増え、
+  収まりきらない残りはスクロールで辿れる。
+  縮小の下限は、1行すら成立しない大きさで置かれないよう既定サイズと同じにしている。
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_presets_description"
+    android:initialLayout="@layout/widget_presets"
+    android:minHeight="110dp"
+    android:minResizeHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minWidth="110dp"
+    android:previewLayout="@layout/widget_presets"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen" />

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  アプリ内で登録したプリセットを並べるウィジェット。
+  iOS版のPresetsWidgetと同じ体裁で、
+  ヘッダー + 「路線色サークル / プリセット名 / 始発駅→終着駅」の行で構成する
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_presets_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_marginEnd="4dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_notification_live_update"
+            android:tint="@color/widget_text_secondary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_presets_title"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!--
+      行はPresetsWidgetServiceがアダプタとして供給する。
+      高さに入るぶんだけ表示され、残りはスクロールで辿れる
+    -->
+    <ListView
+        android:id="@+id/widget_presets_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="2dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="0dp" />
+
+    <!-- setEmptyViewでListViewと排他に切り替わる -->
+    <TextView
+        android:id="@+id/widget_presets_empty"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:text="@string/widget_presets_empty"
+        android:textColor="@color/widget_text_secondary"
+        android:textSize="12sp" />
+</LinearLayout>

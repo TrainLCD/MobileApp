@@ -2190,6 +2190,124 @@ describe('useDeepLink', () => {
     });
   });
 
+  describe('preset (ホーム画面ウィジェット)', () => {
+    const PRESET_ID = '11111111-1111-4111-8111-111111111111';
+
+    it('presetが指定されたらpendingQuickActionRouteIdを立てて路線選択画面へ戻す', async () => {
+      (navigationRef.isReady as jest.Mock).mockReturnValue(true);
+      mockGetInitialURL.mockResolvedValue(`trainlcd://?preset=${PRESET_ID}`);
+      mockParse.mockReturnValue({ queryParams: { preset: PRESET_ID } });
+
+      const { mockSetNavigationState } = setupAtoms();
+      const { mockFetchByLine, mockFetchByIds } = setupQueries();
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockSetNavigationState).toHaveBeenCalled();
+      });
+
+      const navResult = mockSetNavigationState.mock.calls[0][0](
+        createNavigationState()
+      );
+      expect(navResult.pendingQuickActionRouteId).toBe(PRESET_ID);
+
+      expect(navigationRef.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'RESET' })
+      );
+      // 経路はアプリ内DBから解決するため、ディープリンク側では駅を取得しない
+      expect(mockFetchByLine).not.toHaveBeenCalled();
+      expect(mockFetchByIds).not.toHaveBeenCalled();
+    });
+
+    it('UUID形式でないpresetは無視する', async () => {
+      (navigationRef.isReady as jest.Mock).mockReturnValue(true);
+      mockGetInitialURL.mockResolvedValue('trainlcd://?preset=not-a-uuid');
+      mockParse.mockReturnValue({ queryParams: { preset: 'not-a-uuid' } });
+
+      const { mockSetNavigationState } = setupAtoms();
+      setupQueries();
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockGetInitialURL).toHaveBeenCalled();
+      });
+
+      expect(mockSetNavigationState).not.toHaveBeenCalled();
+      expect(navigationRef.dispatch).not.toHaveBeenCalled();
+    });
+
+    it('presetは他の経路パラメータより優先される', async () => {
+      (navigationRef.isReady as jest.Mock).mockReturnValue(true);
+      mockGetInitialURL.mockResolvedValue(
+        `trainlcd://?preset=${PRESET_ID}&sids=1,2`
+      );
+      mockParse.mockReturnValue({
+        queryParams: { preset: PRESET_ID, sids: '1,2' },
+      });
+
+      const { mockSetNavigationState } = setupAtoms();
+      const { mockFetchByIds } = setupQueries();
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockSetNavigationState).toHaveBeenCalled();
+      });
+
+      expect(mockFetchByIds).not.toHaveBeenCalled();
+    });
+
+    it('ナビゲーションが準備できないままならpendingQuickActionRouteIdを戻す', async () => {
+      jest.useFakeTimers();
+      (navigationRef.isReady as jest.Mock).mockReturnValue(false);
+      mockGetInitialURL.mockResolvedValue(`trainlcd://?preset=${PRESET_ID}`);
+      mockParse.mockReturnValue({ queryParams: { preset: PRESET_ID } });
+
+      const { mockSetNavigationState } = setupAtoms();
+      setupQueries();
+
+      render(
+        <HookBridge
+          onReady={() => {
+            /* noop */
+          }}
+        />
+      );
+
+      // waitForNavReadyのリトライ(100/200/400/800ms)を消化させる
+      await act(async () => {
+        await jest.advanceTimersByTimeAsync(2000);
+      });
+
+      expect(mockSetNavigationState).toHaveBeenCalledTimes(2);
+      const revertResult = mockSetNavigationState.mock.calls[1][0](
+        createNavigationState({ pendingQuickActionRouteId: PRESET_ID })
+      );
+      expect(revertResult.pendingQuickActionRouteId).toBeNull();
+      expect(navigationRef.dispatch).not.toHaveBeenCalled();
+    });
+  });
+
   it('ナビゲーターがリトライ中に準備完了した場合はナビゲートする', async () => {
     // The previous version used real timers and waited up to 5s for the
     // 100ms retry to fire — under CI load that real-time wait was the

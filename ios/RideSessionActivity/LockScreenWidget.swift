@@ -10,13 +10,14 @@ import SwiftUI
 import WidgetKit
 
 // ライブアクティビティ・ロック画面ウィジェット・ホーム画面ウィジェット・
-// ロック画面コントロールを同一Extensionで配信するためのバンドル
+// プリセットウィジェット・ロック画面コントロールを同一Extensionで配信するためのバンドル
 @main
 struct RideSessionWidgetBundle: WidgetBundle {
   var body: some Widget {
     RideSessionWidget()
     LockScreenWidget()
     HomeScreenWidget()
+    PresetsWidget()
     // ControlWidgetはiOS 18以降のみ。Extensionのデプロイターゲットは16.1のため条件付きで追加する
     if #available(iOS 18.0, *) {
       LockScreenControl()

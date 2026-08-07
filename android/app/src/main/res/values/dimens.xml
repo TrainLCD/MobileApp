@@ -13,4 +13,10 @@
     GradientDrawableが角丸を短辺の半分までに丸めるため、そちらの見た目は従来どおり変わらない
   -->
   <dimen name="widget_line_bar_corner_radius">3.5dp</dimen>
+  <!--
+    プリセットウィジェットの行に置くサークルの直径と、その線幅(直径の約1/7)。
+    2セル分の高さのウィジェットにも2行収まるよう、乗車中ウィジェット(48dp)より小さくしている
+  -->
+  <dimen name="widget_preset_circle_size">30dp</dimen>
+  <dimen name="widget_preset_line_stroke_width">4dp</dimen>
 </resources>
