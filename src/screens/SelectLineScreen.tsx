@@ -26,6 +26,7 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useInitialNearbyStation } from '~/hooks/useInitialNearbyStation';
 import { useLineSelection } from '~/hooks/useLineSelection';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
+import { usePresetsWidgetSync } from '~/hooks/usePresetsWidgetSync';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import isTablet from '~/utils/isTablet';
@@ -82,6 +83,8 @@ const SelectLineScreen = () => {
   useStationsCache(station);
   const { carouselData, routes, isRoutesDBInitialized } =
     usePresetCarouselData();
+  // 取得済みのプリセットをホーム画面ウィジェットへ同期する
+  usePresetsWidgetSync({ carouselData, routes, isRoutesDBInitialized });
   const {
     handleLineSelected,
     handleTrainTypeSelect,
