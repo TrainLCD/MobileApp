@@ -3,17 +3,28 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_background_circle"
-    android:padding="4dp">
+    android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/widget_numbering_circle"
+        android:id="@+id/widget_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:contentDescription="@null"
-        android:src="@drawable/widget_numbering_circle" />
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_background_circle"
+        android:tint="@color/widget_brand" />
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_background_circle_shade" />
+
+    <!--
+      面そのものが路線色のバッジになるため、他のレイアウトのようなナンバリングバッジは重ねず、
+      記号だけを面の前景色で載せる
+    -->
     <TextView
         android:id="@+id/widget_line_symbol"
         android:layout_width="wrap_content"
@@ -24,7 +35,7 @@
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
         android:text="@string/widget_line_symbol_placeholder"
-        android:textColor="@color/widget_text_primary"
-        android:textSize="18sp"
+        android:textColor="@color/widget_on_line_primary"
+        android:textSize="20sp"
         android:textStyle="bold" />
 </FrameLayout>

@@ -64,8 +64,15 @@ private class PresetsRemoteViewsFactory(
         }
 
         return RemoteViews(context.packageName, R.layout.widget_presets_row).apply {
-            setInt(R.id.widget_preset_circle, "setColorFilter", lineColor)
+            // 乗車中ウィジェットのナンバリングバッジと同じく、バッジを前景色で塗り潰して
+            // 記号を路線色へ反転させる。どの路線色でもコントラストが確保される
+            setInt(
+                R.id.widget_preset_badge,
+                "setColorFilter",
+                WidgetTheme.onLineColor(lineColor)
+            )
             setTextViewText(R.id.widget_preset_symbol, lineSymbol)
+            setTextColor(R.id.widget_preset_symbol, lineColor)
             setTextViewText(R.id.widget_preset_name, preset.name)
             setTextViewText(R.id.widget_preset_route, route)
             setContentDescription(R.id.widget_preset_row, "${preset.name} / $route")

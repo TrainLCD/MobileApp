@@ -1,35 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 1行しか入らない高さ向け。watchOS/ロック画面のaccessoryInline相当 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  1行しか入らない高さ向け。watchOS/ロック画面のaccessoryInline相当。
+  路線色は面が担うため、旧デザインにあった左端の路線色バーは置かない
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_background"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingStart="10dp"
-    android:paddingTop="8dp"
-    android:paddingEnd="10dp"
-    android:paddingBottom="8dp">
+    android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/widget_line_bar"
-        android:layout_width="4dp"
+        android:id="@+id/widget_background"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
         android:contentDescription="@null"
         android:scaleType="fitXY"
-        android:src="@drawable/widget_line_bar" />
+        android:src="@drawable/widget_background"
+        android:tint="@color/widget_brand" />
 
-    <TextView
-        android:id="@+id/widget_inline_text"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:text="@string/widget_line_not_set"
-        android:textColor="@color/widget_text_primary"
-        android:textSize="13sp"
-        android:textStyle="bold" />
-</LinearLayout>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_background_shade" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:id="@+id/widget_brand_icon"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_notification_live_update"
+            android:tint="@color/widget_on_line_primary" />
+
+        <TextView
+            android:id="@+id/widget_inline_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_line_not_set"
+            android:textColor="@color/widget_on_line_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</FrameLayout>

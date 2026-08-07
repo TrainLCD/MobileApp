@@ -15,6 +15,40 @@ iOS の kind 文字列は型名と同じ(`HomeScreenWidget` / `PresetsWidget`)�
 いずれも iOS 側はロック画面ウィジェット・ロック画面コントロールと同じ
 `RideSessionActivity` Extension の `WidgetBundle` から配信している。
 
+## デザイン
+
+ホーム画面ウィジェットは背景を自前で持てるため、watchOS 向けライブアクティビティ
+(`SmartStackLiveActivityContentView`)と同じ「路線色のベタ塗り + グラデーション」を面全体に敷く。
+ロック画面・watchOS のアクセサリ系はシステムが着色するため路線色を面で出せないが、
+ホーム画面では文字を読む前に色で路線を判別できる。
+
+| 要素 | iOS | Android |
+| --- | --- | --- |
+| 背景 | `LineColorBackground` | `widget_background` + `widget_background_shade` |
+| ナンバリングバッジ | `LineNumberingBadge` | `widget_numbering_badge` |
+| 見出しのカプセル | `LineColorChip` | `widget_chip_background` |
+| 前景色の判定 | `lineForegroundColor` | `WidgetTheme.onLineColor` |
+
+- グラデーションはライブアクティビティと同じ「始点側を沈める乗算 + 対角側のハイライト」。
+  面積が広いぶん上下方向では単調になるため、斜め(iOS は `topLeading` → `bottomTrailing`、
+  Android は `angle="315"`)に流している。
+- 路線色は紺色から黄色まで幅があり、文字色を白で固定すると読めない路線が出る。
+  知覚輝度(`0.299R + 0.587G + 0.114B`)が閾値 `0.7` を超えたら黒、それ以外は白へ倒す。
+  **式と閾値は iOS / Android で必ず揃えること。** 片方だけ変えると同じ路線で文字色が食い違う。
+- ナンバリングバッジは面が路線色である以上、路線色で縁取った円では埋もれる。
+  前景色で塗り潰して記号側を路線色へ反転させ、どの路線色でもコントラストを確保する。
+- 路線色は面が担うようになったため、旧デザインの左端の路線色バーは iOS / Android とも置かない。
+- Android は文字・アイコンの色が路線色で変わるため、レイアウト XML の `textColor` / `tint` は
+  ウィジェットギャラリーのプレビュー用の既定値でしかない。実際の色は `RideWidgetProvider` が
+  `setTextColor` / `setColorFilter` で実行時に上書きする。既定値はブランドカラー
+  (`@color/widget_brand`、未乗車時の色)に揃えてある。
+- 背景が常に路線色になったので、端末のダークテーマで色を変える必要はない
+  (`values-night` の widget 用カラーは廃止済み)。
+
+プリセットウィジェットはプリセットごとに路線が違うため、一覧では面の色をブランドカラーに固定し、
+路線色は行のバッジで見せる。1 件しか表示しない iOS の `systemSmall` だけは、その 1 件の路線色を
+そのまま面に使う。
+
 ## データ経路
 
 アプリのプロセスが落ちていてもウィジェットは描画されるため、
@@ -78,7 +112,12 @@ iOS は WidgetKit にスクロールが無いため、表示できる件数は�
 
 行数計算が予約する高さと実際の描画がずれると最終行が見切れるため、行とヘッダーは
 `.frame(height:)` で `rowHeight` / `headerHeight` に固定し、Dynamic Type や長い
-ローカライズ文字列で伸びないようにしている。見た目を変えたらこれらの定数も合わせること。
+ローカライズ文字列で伸びないようにしている。見た目を変えたらこれらの定数も合わせること
+(ヘッダーを `LineColorChip` に載せた際も、カプセルの上下パディングぶん `headerHeight` を広げている)。
+
+Android の行は `AbsListView.LayoutParams` がマージンを持たないため、行間は行レイアウト外側の
+`FrameLayout` のパディングで作り、カードの下敷き(`widget_preset_row_background`)は
+その内側に敷いて余白まで塗らないようにしている。
 
 | ファミリー | 表示 | タップ |
 | --- | --- | --- |
@@ -99,4 +138,7 @@ iOS は WidgetKit にスクロールが無いため、表示できる件数は�
   Android の `PresetsWidgetStore` のフィールド名、JS の `PresetsWidgetItem`。
 - 同期する最大件数: JS の `MAX_PRESETS_WIDGET_ITEMS`(両 OS 共通)。
   描画側は iOS が実測、Android が `ListView` に任せており、どちらも件数の決め打ちを持たない。
-- 未設定時のフォールバック表示: iOS / Android の双方で同じ文言・同じ色になるようにする。
+- 未設定時のフォールバック表示: iOS / Android の双方で同じ文言・同じ色になるようにする
+  (色は iOS の `LockScreenEntry.fallbackLineColor` / Android の
+  `WidgetStateStore.PLACEHOLDER_LINE_COLOR` と `@color/widget_brand`)。
+- 前景色の判定式と閾値: iOS の `lineForegroundColor` と Android の `WidgetTheme.onLineColor`。
