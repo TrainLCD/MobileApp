@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
+import android.view.View
 import android.widget.RemoteViews
 
 /**
@@ -112,8 +113,11 @@ class RideWidgetProvider : AppWidgetProvider() {
                     inlineViews(context, lineName, lineColor)
                 // 4x2のような横長は高さが足りていても横長レイアウトを使う
                 minHeightDp >= SMALL_MIN_HEIGHT_DP && minWidthDp <= minHeightDp ->
-                    smallViews(context, lineName, boundFor, lineSymbol, lineColor)
-                else -> rectangularViews(context, lineName, boundFor, lineSymbol, lineColor)
+                    smallViews(context, lineName, boundFor, lineSymbol, lineColor, state.loaded)
+                else ->
+                    rectangularViews(
+                        context, lineName, boundFor, lineSymbol, lineColor, state.loaded
+                    )
             }
 
             views.setContentDescription(R.id.widget_root, "$lineName / $boundFor")
@@ -145,6 +149,23 @@ class RideWidgetProvider : AppWidgetProvider() {
             setTextColor(R.id.widget_bound_for, WidgetTheme.onLineColorSecondary(lineColor))
         }
 
+        /**
+         * 方面の手前に置く矢印。
+         * iOS版と同様、乗車中だけ「行き先」であることを示すために出す。
+         * 未乗車時は「方面が未設定です」という案内文なので矢印は付けない
+         */
+        private fun RemoteViews.applyBoundForArrow(loaded: Boolean, lineColor: Int) {
+            setViewVisibility(
+                R.id.widget_bound_for_arrow,
+                if (loaded) View.VISIBLE else View.GONE
+            )
+            setInt(
+                R.id.widget_bound_for_arrow,
+                "setColorFilter",
+                WidgetTheme.onLineColorSecondary(lineColor)
+            )
+        }
+
         private fun circularViews(
             context: Context,
             lineSymbol: String,
@@ -174,12 +195,14 @@ class RideWidgetProvider : AppWidgetProvider() {
             lineName: String,
             boundFor: String,
             lineSymbol: String,
-            lineColor: Int
+            lineColor: Int,
+            loaded: Boolean
         ): RemoteViews =
             RemoteViews(context.packageName, R.layout.widget_ride_small).apply {
                 applyBackground(lineColor)
                 applyNumberingBadge(lineSymbol, lineColor)
                 applyTextColors(lineColor)
+                applyBoundForArrow(loaded, lineColor)
                 setInt(
                     R.id.widget_brand_icon,
                     "setColorFilter",
@@ -194,12 +217,14 @@ class RideWidgetProvider : AppWidgetProvider() {
             lineName: String,
             boundFor: String,
             lineSymbol: String,
-            lineColor: Int
+            lineColor: Int,
+            loaded: Boolean
         ): RemoteViews =
             RemoteViews(context.packageName, R.layout.widget_ride_rectangular).apply {
                 applyBackground(lineColor)
                 applyNumberingBadge(lineSymbol, lineColor)
                 applyTextColors(lineColor)
+                applyBoundForArrow(loaded, lineColor)
                 // ブランド行のカプセルは前景色を薄く敷いたもの。色と不透明度は分けて与える
                 setInt(R.id.widget_brand_chip, "setColorFilter", WidgetTheme.onLineColor(lineColor))
                 setInt(

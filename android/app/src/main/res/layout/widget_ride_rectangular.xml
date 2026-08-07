@@ -91,25 +91,43 @@
                 android:maxLines="2"
                 android:text="@string/widget_line_not_set"
                 android:textColor="@color/widget_on_line_primary"
-                android:textSize="17sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/widget_bound_for"
+            <!-- iOS版のboundForLabel相当。乗車中のみ行き先であることを矢印で示す -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:text="@string/widget_destination_not_set"
-                android:textColor="@color/widget_on_line_secondary"
-                android:textSize="13sp" />
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/widget_bound_for_arrow"
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:layout_marginEnd="3dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_widget_arrow_forward"
+                    android:tint="@color/widget_on_line_secondary" />
+
+                <TextView
+                    android:id="@+id/widget_bound_for"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:text="@string/widget_destination_not_set"
+                    android:textColor="@color/widget_on_line_secondary"
+                    android:textSize="15sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="10dp">
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="12dp">
 
             <ImageView
                 android:id="@+id/widget_numbering_badge"
@@ -125,11 +143,11 @@
                 android:layout_gravity="center"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
+                android:paddingStart="11dp"
+                android:paddingEnd="11dp"
                 android:text="@string/widget_line_symbol_placeholder"
                 android:textColor="@color/widget_brand"
-                android:textSize="20sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
         </FrameLayout>
     </LinearLayout>

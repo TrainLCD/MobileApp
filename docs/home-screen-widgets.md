@@ -58,6 +58,36 @@ iOS の kind 文字列は型名と同じ(`HomeScreenWidget` / `PresetsWidget`)�
 路線色は行のバッジで見せる。1 件しか表示しない iOS の `systemSmall` だけは、その 1 件の路線色を
 そのまま面に使う。
 
+### 乗車中ウィジェットの構成
+
+Android の 4 レイアウトのうち、正方形(`widget_ride_small`)が iOS の `systemSmall` に、
+横長(`widget_ride_rectangular`)が `systemMedium` に対応する。
+残る `widget_ride_inline` / `widget_ride_circular` は iOS のアクセサリ系に相当する Android 固有の
+サイズで、iOS のホーム画面ウィジェットには対応物が無い。
+
+対応するレイアウト同士は寸法・文字サイズを揃える。**片方だけ変えると同じ端末サイズで
+見え方が食い違う。**
+
+| 要素 | iOS(`systemSmall` / `systemMedium`) | Android(正方形 / 横長) |
+| --- | --- | --- |
+| ナンバリングバッジの直径 | 48 / 60 pt | 48 / 60 dp |
+| 路線記号 | 直径 × 0.4(19.2 / 24 pt) | 19 / 24 sp |
+| 路線名 | `.headline` / `.title3`(17 / 20 pt) | 17 / 20 sp |
+| 方面 | `.caption` / `.subheadline`(12 / 15 pt) | 12 / 15 sp |
+| ブランド行 | アイコンのみ / `.caption2`(11 pt) | アイコンのみ / 11 sp |
+
+- 正方形はバッジ行と文字ブロックの間に伸縮する余白を挟み、路線名と方面を下端へ寄せる。
+  詰めて上端に寄せると 2 セルより大きく置かれたときに下半分が空く。
+  iOS は `Spacer(minLength: 8)`、Android は `layout_weight` を持たせた空の `FrameLayout` で作る
+  (`Space` はウィジェットで使えるビューに含まれない)。高さが足りないときはこの余白から縮むため、
+  バッジと文字は最後まで欠けない。
+- 方面には乗車中のみ矢印(iOS は SF Symbol の `arrow.forward`、Android は
+  `ic_widget_arrow_forward`)を添えて行き先であることを示す。未乗車時は「方面が未設定です」という
+  案内文なので矢印は出さない。Android は `RideWidgetProvider.applyBoundForArrow` が
+  `WidgetState.loaded` で表示を切り替える。
+- iOS の `minimumScaleFactor` に相当する縮小は Android の `RemoteViews` では持てないため、
+  はみ出す文字は `ellipsize` で省略する。
+
 ## データ経路
 
 アプリのプロセスが落ちていてもウィジェットは描画されるため、
@@ -151,3 +181,5 @@ Android の行は `AbsListView.LayoutParams` がマージンを持たないた�
   (色は iOS の `LockScreenEntry.fallbackLineColor` / Android の
   `WidgetStateStore.PLACEHOLDER_LINE_COLOR` と `@color/widget_brand`)。
 - 前景色の判定式と閾値: iOS の `lineForegroundColor` と Android の `WidgetTheme.onLineColor`。
+- 乗車中ウィジェットの寸法・文字サイズ: iOS の `HomeScreenWidget.swift` と Android の
+  `widget_ride_small.xml` / `widget_ride_rectangular.xml`(対応表は「乗車中ウィジェットの構成」)。
