@@ -59,6 +59,28 @@ trainlcd-canary://?preset=<SavedRoute.id>   # Canary
 経路そのものは URL に含まれず端末内の DB から解決するため、
 `preset` の値は UUID 書式に一致するもののみ受け付ける。
 
+### サイズ
+
+既定サイズは乗車中ウィジェットと揃えている(iOS は `systemSmall`、Android は 2x2)。
+一覧をまとめて見たい場合に備えて大きいサイズも選べるようにしてあり、
+iOS は `systemSmall` / `systemMedium` / `systemLarge`、Android はリサイズで拡大できる。
+`systemSmall` と `systemMedium` は高さが同じなので表示行数も同じ 2 行になる。
+
+### 表示行数の決め方 (Android)
+
+`PresetsWidgetProvider` はウィジェットの高さから表示行数を導出する。基準に使う値に注意:
+
+- `OPTION_APPWIDGET_MIN_HEIGHT` は**横向き時の高さ**、つまり取り得る中で最小の値。
+  これを基準にすると縦向きで収まるはずの行まで落としてしまうため使わない。
+- Android 12 以降は `OPTION_APPWIDGET_SIZES` で向きごとの実寸が取れるので、
+  サイズごとの `RemoteViews` を `RemoteViews(Map<SizeF, RemoteViews>)` でまとめて渡し、
+  システムに出し分けさせる。
+- それ以前は `OPTION_APPWIDGET_MAX_HEIGHT`(縦向き時の高さ)を使う。
+
+`PADDING_HEIGHT_DP` / `HEADER_HEIGHT_DP` / `ROW_HEIGHT_DP` はレイアウトの実寸から見積もった
+定数のため、`widget_presets.xml` / `widget_presets_row.xml` の余白・文字サイズ・
+サークル径を変えたら合わせて更新する。
+
 ## 変更時に揃えるべき箇所
 
 - ウィジェットの kind 文字列: iOS の `Widget.kind` と、リロードを呼ぶネイティブモジュール側の定数。

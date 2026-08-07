@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  既定サイズは乗車中ウィジェット(ride_widget_info)と同じ2x2。
+  ただし極小サイズ用の代替レイアウトを持たないため、縮小の下限は既定サイズと同じにして
+  一覧が崩れた状態で置かれないようにしている(拡大は可能)。
+-->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_presets_description"
     android:initialLayout="@layout/widget_presets"
     android:minHeight="110dp"
     android:minResizeHeight="110dp"
-    android:minResizeWidth="180dp"
-    android:minWidth="180dp"
+    android:minResizeWidth="110dp"
+    android:minWidth="110dp"
     android:previewLayout="@layout/widget_presets"
     android:resizeMode="horizontal|vertical"
     android:targetCellHeight="2"
-    android:targetCellWidth="4"
+    android:targetCellWidth="2"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen" />

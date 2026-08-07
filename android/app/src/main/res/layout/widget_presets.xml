@@ -10,9 +10,11 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="10dp">
 
+    <!-- 高さが足りないときはPresetsWidgetProviderがヘッダーを隠して1行分の領域を確保する -->
     <LinearLayout
+        android:id="@+id/widget_presets_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -40,7 +42,7 @@
         android:id="@+id/widget_presets_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:orientation="vertical" />
 
     <TextView

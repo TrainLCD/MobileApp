@@ -7,7 +7,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.SizeF
 import android.view.View
 import android.widget.RemoteViews
 
@@ -38,11 +40,18 @@ class PresetsWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
-        /** ヘッダーとルート要素の余白が占める高さ(dp) */
-        private const val CHROME_HEIGHT_DP = 44
+        /** ルート要素の上下パディング(10dpずつ)と行リストの上マージンが占める高さ(dp) */
+        private const val PADDING_HEIGHT_DP = 22
 
-        /** 1行あたりの高さ(dp)。widget_presets_rowのサークル34dp + 上下パディング5dpずつ */
-        private const val ROW_HEIGHT_DP = 44
+        /** ヘッダー(アイコン12dp + 11spのテキスト)が占める高さ(dp) */
+        private const val HEADER_HEIGHT_DP = 16
+
+        /**
+         * 1行あたりの高さ(dp)。
+         * widget_presets_rowの上下パディング3dpずつと、サークル(30dp)より高くなる
+         * テキスト2段(13sp + 11sp ≒ 33dp)から見積もっている。
+         */
+        private const val ROW_HEIGHT_DP = 39
 
         /** ウィジェットの高さが取得できないときに表示する行数 */
         private const val FALLBACK_ROW_COUNT = 2
@@ -65,32 +74,71 @@ class PresetsWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val options: Bundle? = appWidgetManager.getAppWidgetOptions(appWidgetId)
-            val minHeightDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) ?: 0
 
             appWidgetManager.updateAppWidget(
                 appWidgetId,
-                buildRemoteViews(
-                    context,
-                    PresetsWidgetStore.load(context),
-                    resolveRowCount(minHeightDp)
-                )
+                buildResponsiveViews(context, PresetsWidgetStore.load(context), options)
             )
         }
 
-        private fun resolveRowCount(minHeightDp: Int): Int {
-            if (minHeightDp <= 0) {
+        /**
+         * ウィジェットの高さに応じた表示を組み立てる。
+         *
+         * Android 12以降はOPTION_APPWIDGET_SIZESで縦向き・横向きそれぞれの実寸が取れるため、
+         * サイズごとのRemoteViewsをまとめて渡してシステムに出し分けさせる。
+         * それ以前はOPTION_APPWIDGET_MAX_HEIGHT(縦向き時の高さ)を使う。
+         * OPTION_APPWIDGET_MIN_HEIGHTは横向き時の高さ、つまり取り得る中で最小の値なので、
+         * これを基準にすると縦向きで収まるはずの行まで落としてしまう。
+         */
+        private fun buildResponsiveViews(
+            context: Context,
+            presets: List<PresetWidgetItem>,
+            options: Bundle?
+        ): RemoteViews {
+            if (options != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                @Suppress("DEPRECATION")
+                val sizes = options.getParcelableArrayList<SizeF>(
+                    AppWidgetManager.OPTION_APPWIDGET_SIZES
+                )
+                if (!sizes.isNullOrEmpty()) {
+                    return RemoteViews(
+                        sizes.associateWith { size ->
+                            buildRemoteViews(context, presets, size.height.toInt())
+                        }
+                    )
+                }
+            }
+
+            val portraitHeightDp =
+                options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0) ?: 0
+            return buildRemoteViews(context, presets, portraitHeightDp)
+        }
+
+        /**
+         * 与えられた高さに収まる行数を返す。
+         * ヘッダー込みでは1行も置けない高さのときはヘッダーを諦めて1行を優先する。
+         */
+        private fun resolveRowCount(heightDp: Int, withHeader: Boolean): Int {
+            if (heightDp <= 0) {
                 return FALLBACK_ROW_COUNT
             }
-            val available = minHeightDp - CHROME_HEIGHT_DP
-            return (available / ROW_HEIGHT_DP).coerceIn(1, MAX_ROW_COUNT)
+            val chrome = PADDING_HEIGHT_DP + if (withHeader) HEADER_HEIGHT_DP else 0
+            return ((heightDp - chrome) / ROW_HEIGHT_DP).coerceIn(0, MAX_ROW_COUNT)
         }
 
         private fun buildRemoteViews(
             context: Context,
             presets: List<PresetWidgetItem>,
-            rowCount: Int
+            heightDp: Int
         ): RemoteViews {
+            val showHeader = resolveRowCount(heightDp, withHeader = true) > 0
+            val rowCount = resolveRowCount(heightDp, showHeader).coerceAtLeast(1)
+
             val views = RemoteViews(context.packageName, R.layout.widget_presets)
+            views.setViewVisibility(
+                R.id.widget_presets_header,
+                if (showHeader) View.VISIBLE else View.GONE
+            )
             // RemoteViewsは再利用されるため、addViewする前に必ず前回の行を消す
             views.removeAllViews(R.id.widget_presets_list)
 

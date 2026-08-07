@@ -6,8 +6,8 @@
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp">
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp">
 
     <FrameLayout
         android:layout_width="@dimen/widget_preset_circle_size"
@@ -27,11 +27,11 @@
             android:layout_gravity="center"
             android:ellipsize="end"
             android:maxLines="1"
-            android:paddingStart="7dp"
-            android:paddingEnd="7dp"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
             android:text="@string/widget_line_symbol_placeholder"
             android:textColor="@color/widget_text_primary"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="bold" />
     </FrameLayout>
 
@@ -49,7 +49,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/widget_text_primary"
-            android:textSize="14sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
 
         <TextView

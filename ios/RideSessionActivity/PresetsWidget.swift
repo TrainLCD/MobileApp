@@ -16,12 +16,15 @@ import WidgetKit
 // 体裁はアプリ内のプリセットカード(PresetCard.tsx)を踏襲し、
 // 路線色のナンバリングサークル + プリセット名 + 始発駅→終着駅 で構成する。
 
-// systemMedium / systemLargeそれぞれで収まる行数
-private let mediumRowCount = 2
+// 乗車中ウィジェット(HomeScreenWidget)と同じsystemSmall / systemMediumに加え、
+// 一覧をまとめて見たい向けにsystemLargeも選べるようにしている。
+// systemSmallとsystemMediumは高さが同じなので収まる行数も同じ
+private let compactRowCount = 2
 private let largeRowCount = 5
 
-// 行の左に置くナンバリングサークルの直径
-private let rowCircleDiameter: CGFloat = 34
+// 行の左に置くナンバリングサークルの直径。
+// systemSmallの幅でも駅名に十分な余地が残るよう、乗車中ウィジェット(48pt)より小さくしている
+private let rowCircleDiameter: CGFloat = 30
 
 struct PresetsWidgetItem: Codable, Identifiable {
   let id: String
@@ -168,7 +171,7 @@ struct PresetsWidgetEntryView: View {
   }
 
   private var rowCount: Int {
-    family == .systemLarge ? largeRowCount : mediumRowCount
+    family == .systemLarge ? largeRowCount : compactRowCount
   }
 
   private var visiblePresets: [PresetsWidgetItem] {
@@ -257,7 +260,7 @@ struct PresetsWidget: Widget {
     }
     .configurationDisplayName(String(localized: "presetsWidgetTitle"))
     .description(String(localized: "presetsWidgetDescription"))
-    .supportedFamilies([.systemMedium, .systemLarge])
+    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
   }
 }
 
@@ -265,11 +268,13 @@ struct PresetsWidget_Previews: PreviewProvider {
   static var previews: some View {
     Group {
       PresetsWidgetEntryView(entry: .placeholder)
+        .previewContext(WidgetPreviewContext(family: .systemSmall))
+      PresetsWidgetEntryView(entry: .placeholder)
         .previewContext(WidgetPreviewContext(family: .systemMedium))
       PresetsWidgetEntryView(entry: .placeholder)
         .previewContext(WidgetPreviewContext(family: .systemLarge))
       PresetsWidgetEntryView(entry: .empty)
-        .previewContext(WidgetPreviewContext(family: .systemMedium))
+        .previewContext(WidgetPreviewContext(family: .systemSmall))
     }
   }
 }
