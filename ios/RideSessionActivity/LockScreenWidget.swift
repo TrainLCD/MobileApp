@@ -41,6 +41,16 @@ struct LockScreenEntry: TimelineEntry {
     lineColor.isEmpty ? Self.fallbackLineColor : lineColor
   }
 
+  // current()は路線記号が空なら路線名の先頭1文字へ倒すが、路線名まで空だと記号も空のままになる。
+  // ホーム画面ウィジェットのバッジは塗り潰した円なので、空だと白丸だけが出て壊れて見える。
+  // プリセット(PresetsWidgetItem.displayLineSymbol)・Android(RideWidgetProvider)と同じ順で倒す
+  var displayLineSymbol: String {
+    if !lineSymbol.isEmpty {
+      return lineSymbol
+    }
+    return lineName.isEmpty ? "?" : String(lineName.prefix(1))
+  }
+
   static var notLoaded: LockScreenEntry {
     LockScreenEntry(
       date: Date(),

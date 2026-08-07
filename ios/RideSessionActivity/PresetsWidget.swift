@@ -14,7 +14,11 @@ import WidgetKit
 //
 // 表示データはPresetsWidgetModuleがApp Groupへ書き込んだJSONを読む。
 // 体裁はアプリ内のプリセットカード(PresetCard.tsx)を踏襲し、
-// 路線色のナンバリングサークル + プリセット名 + 始発駅→終着駅 で構成する。
+// 路線色のナンバリングバッジ + プリセット名 + 始発駅→終着駅 で構成する。
+//
+// 背景は乗車中ウィジェット(HomeScreenWidget)と同じLineColorBackgroundを敷く。
+// 一覧は路線がプリセットごとに違うため面の色をブランドカラーに固定し、路線色は行のバッジで見せる。
+// systemSmallは1件しか出さないので、その1件の路線色をそのまま面に使う。
 //
 // systemMedium / systemLargeは高さに収まるだけ行を並べる(PresetsWidgetRow)。
 // systemSmallはウィジェット全体が単一のタップ領域で1件しか開けないため、
@@ -28,16 +32,20 @@ import WidgetKit
 private let rowHeight: CGFloat = 40
 private let rowSpacing: CGFloat = 6
 
-// ヘッダー(caption2 + アイコン)の高さと、ヘッダーと一覧の間隔
-private let headerHeight: CGFloat = 18
+// 行のカード(路線色の面から一段持ち上げる半透明の下敷き)の角丸
+private let rowCornerRadius: CGFloat = 10
+
+// ヘッダー(caption2 + アイコンのカプセル)の高さと、ヘッダーと一覧の間隔。
+// LineColorChipの上下パディングぶん、素のテキストだけだった頃より高い
+private let headerHeight: CGFloat = 22
 private let headerSpacing: CGFloat = 6
 
-// 一覧の行に置くナンバリングサークルの直径
-private let rowCircleDiameter: CGFloat = 30
+// 一覧の行に置くナンバリングバッジの直径
+private let rowBadgeDiameter: CGFloat = 30
 
 // systemSmallは1件だけを縦に積んで見せる。下に駅名2行と矢印が入るぶん、
 // 乗車中ウィジェットのsystemSmall(48pt)よりは小さくする
-private let featuredCircleDiameter: CGFloat = 36
+private let featuredBadgeDiameter: CGFloat = 36
 
 struct PresetsWidgetItem: Codable, Identifiable {
   let id: String
@@ -180,14 +188,16 @@ struct PresetsProvider: TimelineProvider {
 
 struct PresetsWidgetRow: View {
   let preset: PresetsWidgetItem
+  // 面の色(= 前景色の基準)。行ごとの路線色ではなくウィジェット全体の背景色を渡す
+  let backgroundLineColor: String
 
   var body: some View {
-    HStack(spacing: 10) {
-      // ホーム画面ウィジェット(乗車中)と同じサークル。路線の見分けが一目で付くようにする
-      HomeScreenNumberingCircle(
+    HStack(spacing: 8) {
+      // ホーム画面ウィジェット(乗車中)と同じバッジ。路線の見分けが一目で付くようにする
+      LineNumberingBadge(
         lineColor: preset.displayLineColor,
         lineSymbol: preset.displayLineSymbol,
-        diameter: rowCircleDiameter
+        diameter: rowBadgeDiameter
       )
       VStack(alignment: .leading, spacing: 1) {
         Text(preset.name)
@@ -196,13 +206,23 @@ struct PresetsWidgetRow: View {
           .lineLimit(1)
         Text(preset.routeDescription)
           .font(.caption2)
-          .foregroundStyle(.secondary)
+          .opacity(0.8)
           .lineLimit(1)
           .minimumScaleFactor(0.8)
       }
       Spacer(minLength: 0)
     }
-    .frame(maxWidth: .infinity, height: rowHeight, alignment: .leading)
+    .padding(.horizontal, 6)
+    // SwiftUIのframeはwidth/heightとmin/ideal/maxを混在できないため、
+    // 横は可変・縦はrowHeight固定をmin/maxの指定で表す
+    .frame(
+      maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight,
+      alignment: .leading)
+    // 路線色の面に直接文字を置くと沈むため、前景色を薄く敷いて行をカードとして持ち上げる
+    .background(
+      RoundedRectangle(cornerRadius: rowCornerRadius, style: .continuous)
+        .fill(lineForegroundColor(for: backgroundLineColor).opacity(0.15))
+    )
     // 行全体をタップ領域にする。Spacerだけでは透明部分がヒットしない
     .contentShape(Rectangle())
   }
@@ -219,17 +239,18 @@ struct PresetsWidgetFeatured: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      HomeScreenNumberingCircle(
+      LineNumberingBadge(
         lineColor: preset.displayLineColor,
         lineSymbol: preset.displayLineSymbol,
-        diameter: featuredCircleDiameter
+        diameter: featuredBadgeDiameter
       )
       Spacer(minLength: 6)
-      Text(preset.name)
-        .font(.caption)
-        .fontWeight(.bold)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
+      LineColorChip(lineColor: preset.displayLineColor) {
+        Text(preset.name)
+          .font(.caption)
+          .fontWeight(.bold)
+          .lineLimit(1)
+      }
       Spacer(minLength: 2)
       if preset.hasStations {
         Text(preset.fromStationName)
@@ -239,7 +260,7 @@ struct PresetsWidgetFeatured: View {
           .minimumScaleFactor(0.6)
         Image(systemName: "arrow.down")
           .font(.caption2)
-          .foregroundStyle(.secondary)
+          .opacity(0.8)
         Text(preset.toStationName)
           .font(.title3)
           .fontWeight(.bold)
@@ -298,17 +319,31 @@ struct PresetsWidgetEntryView: View {
     return URL(string: "\(urlScheme)://?preset=\(encoded)")
   }
 
+  /// 背景に敷く路線色。
+  ///
+  /// 一覧はプリセットごとに路線が違うので面の色をブランドカラーへ固定し、路線色は行のバッジで見せる。
+  /// 1件しか出さないsystemSmallだけはその路線色をそのまま面に使い、乗車中ウィジェットと同じ見え方にする。
+  private var backgroundLineColor: String {
+    if isSingleTapTarget, let preset = entry.presets.first {
+      return preset.displayLineColor
+    }
+    return LockScreenEntry.fallbackLineColor
+  }
+
   // ロック画面コントロール・乗車中ウィジェットと同じtramシンボルで見た目を揃える
   private var header: some View {
-    HStack(spacing: 4) {
-      Image(systemName: "tram.fill")
-      Text("presetsWidgetTitle")
-        .lineLimit(1)
+    HStack(spacing: 0) {
+      LineColorChip(lineColor: backgroundLineColor) {
+        HStack(spacing: 4) {
+          Image(systemName: "tram.fill")
+          Text("presetsWidgetTitle")
+            .lineLimit(1)
+        }
+        .font(.caption2)
+        .fontWeight(.bold)
+      }
       Spacer(minLength: 0)
     }
-    .font(.caption2)
-    .fontWeight(.bold)
-    .foregroundStyle(.secondary)
     // rowCount(for:)がheaderHeightぶんを予約するので、実際の高さも必ずそこへ揃える。
     // Dynamic Typeや長いローカライズ文字列で伸びると最終行が見切れる
     .frame(height: headerHeight, alignment: .leading)
@@ -320,7 +355,7 @@ struct PresetsWidgetEntryView: View {
       Spacer(minLength: 0)
       Text("presetsWidgetEmpty")
         .font(.caption)
-        .foregroundStyle(.secondary)
+        .opacity(0.85)
         .lineLimit(3)
       Spacer(minLength: 0)
     }
@@ -338,10 +373,12 @@ struct PresetsWidgetEntryView: View {
           ForEach(entry.presets.prefix(rowCount(for: proxy.size.height))) { preset in
             if let url = presetURL(preset) {
               Link(destination: url) {
-                PresetsWidgetRow(preset: preset)
+                PresetsWidgetRow(
+                  preset: preset, backgroundLineColor: backgroundLineColor)
               }
             } else {
-              PresetsWidgetRow(preset: preset)
+              PresetsWidgetRow(
+                preset: preset, backgroundLineColor: backgroundLineColor)
             }
           }
         }
@@ -352,7 +389,8 @@ struct PresetsWidgetEntryView: View {
     }
   }
 
-  var body: some View {
+  @ViewBuilder
+  private var content: some View {
     if entry.presets.isEmpty {
       emptyView
     } else if isSingleTapTarget, let preset = entry.presets.first {
@@ -364,17 +402,13 @@ struct PresetsWidgetEntryView: View {
       listView
     }
   }
-}
 
-extension View {
-  // HomeScreenWidgetと同じくiOS 16.1のデプロイターゲットに合わせて互換ラップする
-  @ViewBuilder
-  fileprivate func presetsContainerBackground() -> some View {
-    if #available(iOSApplicationExtension 17.0, *) {
-      containerBackground(.fill.tertiary, for: .widget)
-    } else {
-      padding()
-    }
+  var body: some View {
+    content
+      // バッジだけは内側で路線色を指定して上書きする
+      .foregroundStyle(lineForegroundColor(for: backgroundLineColor))
+      // 背景色はwidgetFamilyと表示中のプリセットで決まるため、Widget側ではなくここで敷く
+      .lineColorContainerBackground(backgroundLineColor)
   }
 }
 
@@ -384,8 +418,8 @@ struct PresetsWidget: Widget {
 
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: PresetsProvider()) { entry in
+      // containerBackgroundはPresetsWidgetEntryView側で敷いている(背景色が表示内容で変わるため)
       PresetsWidgetEntryView(entry: entry)
-        .presetsContainerBackground()
     }
     .configurationDisplayName(String(localized: "presetsWidgetTitle"))
     .description(String(localized: "presetsWidgetDescription"))

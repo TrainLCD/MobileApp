@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  円形レイアウト用の背景の下地。路線色はsetColorFilterで着色する。
+  上にwidget_background_circle_shadeを重ねてグラデーションにする
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="oval">
-    <solid android:color="@color/widget_background" />
+    <solid android:color="#FFFFFFFF" />
 </shape>

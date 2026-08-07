@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widget_background_shadeの円形版。角丸以外の指定は揃える -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:angle="315"
+        android:centerColor="#00000000"
+        android:endColor="#38FFFFFF"
+        android:startColor="#40000000"
+        android:type="linear" />
+</shape>
