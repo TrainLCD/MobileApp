@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   アプリ内で登録したプリセットを並べるウィジェット。
-  iOS版のPresetsWidget(systemMedium / systemLarge)と同じ体裁で、
+  iOS版のPresetsWidgetと同じ体裁で、
   ヘッダー + 「路線色サークル / プリセット名 / 始発駅→終着駅」の行で構成する
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -12,9 +12,7 @@
     android:orientation="vertical"
     android:padding="10dp">
 
-    <!-- 高さが足りないときはPresetsWidgetProviderがヘッダーを隠して1行分の領域を確保する -->
     <LinearLayout
-        android:id="@+id/widget_presets_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -37,14 +35,20 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- 行はPresetsWidgetProviderがwidget_presets_rowをaddViewして組み立てる -->
-    <LinearLayout
+    <!--
+      行はPresetsWidgetServiceがアダプタとして供給する。
+      高さに入るぶんだけ表示され、残りはスクロールで辿れる
+    -->
+    <ListView
         android:id="@+id/widget_presets_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="2dp"
-        android:orientation="vertical" />
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="0dp" />
 
+    <!-- setEmptyViewでListViewと排他に切り替わる -->
     <TextView
         android:id="@+id/widget_presets_empty"
         android:layout_width="match_parent"
@@ -53,6 +57,5 @@
         android:gravity="center_vertical"
         android:text="@string/widget_presets_empty"
         android:textColor="@color/widget_text_secondary"
-        android:textSize="12sp"
-        android:visibility="gone" />
+        android:textSize="12sp" />
 </LinearLayout>

@@ -74,6 +74,14 @@ const NearbyStationLoader = () => (
   </SkeletonPlaceholder>
 );
 
+// 副作用のみのフックは画面本体ではなくレンダレスコンポーネントに寄せる(docs/state-management.md)
+const FxPresetsWidgetSync: React.FC<
+  Parameters<typeof usePresetsWidgetSync>[0]
+> = (params) => {
+  usePresetsWidgetSync(params);
+  return null;
+};
+
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,8 +91,6 @@ const SelectLineScreen = () => {
   useStationsCache(station);
   const { carouselData, routes, isRoutesDBInitialized } =
     usePresetCarouselData();
-  // 取得済みのプリセットをホーム画面ウィジェットへ同期する
-  usePresetsWidgetSync({ carouselData, routes, isRoutesDBInitialized });
   const {
     handleLineSelected,
     handleTrainTypeSelect,
@@ -303,6 +309,12 @@ const SelectLineScreen = () => {
   // --- JSX ---
   return (
     <>
+      {/* 取得済みのプリセットをホーム画面ウィジェットへ同期する */}
+      <FxPresetsWidgetSync
+        carouselData={carouselData}
+        routes={routes}
+        isRoutesDBInitialized={isRoutesDBInitialized}
+      />
       <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
         <RNAnimated.ScrollView
           style={StyleSheet.absoluteFill}

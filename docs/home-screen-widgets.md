@@ -23,7 +23,7 @@ iOS の kind 文字列は型名と同じ(`HomeScreenWidget` / `PresetsWidget`)�
 ```text
 JS (解決済みの表示用文字列)
   ├─ iOS     → PresetsWidgetModule → App Group の UserDefaults → WidgetCenter.reloadTimelines
-  └─ Android → WidgetModule        → SharedPreferences        → AppWidgetManager.updateAppWidget
+  └─ Android → WidgetModule        → SharedPreferences        → notifyAppWidgetViewDataChanged
 ```
 
 - iOS の App Group ID は `Info.plist` の `APP_GROUP_ID`(既定値 `group.me.tinykitten.trainlcd`)。
@@ -59,32 +59,33 @@ trainlcd-canary://?preset=<SavedRoute.id>   # Canary
 経路そのものは URL に含まれず端末内の DB から解決するため、
 `preset` の値は UUID 書式に一致するもののみ受け付ける。
 
-### サイズ
+### サイズと表示件数
 
 既定サイズは乗車中ウィジェットと揃えている(iOS は `systemSmall`、Android は 2x2)。
-一覧をまとめて見たい場合に備えて大きいサイズも選べるようにしてあり、
-iOS は `systemSmall` / `systemMedium` / `systemLarge`、Android はリサイズで拡大できる。
-`systemSmall` と `systemMedium` は高さが同じなので表示行数も同じ 2 行になる。
+一覧をまとめて見たい場合に備えて大きいサイズも選べる。
 
-### 表示行数の決め方 (Android)
+Android は `ListView` + `RemoteViewsService`(`PresetsWidgetService`)のコレクション
+ウィジェットで、入るぶんだけ表示され残りはスクロールで辿れる。行数をウィジェットの高さから
+dp で見積もる方式は、端末・ランチャー・画面の向きで実寸が変わるため必ずずれる
+(`OPTION_APPWIDGET_MIN_HEIGHT` は横向き時＝取り得る最小の高さで、これを基準にすると
+縦向きで収まるはずの行まで落ちる)。アダプタに任せることで高さ計算自体を持たない。
 
-`PresetsWidgetProvider` はウィジェットの高さから表示行数を導出する。基準に使う値に注意:
+iOS は WidgetKit にスクロールが無いためファミリーごとの固定件数になる。
 
-- `OPTION_APPWIDGET_MIN_HEIGHT` は**横向き時の高さ**、つまり取り得る中で最小の値。
-  これを基準にすると縦向きで収まるはずの行まで落としてしまうため使わない。
-- Android 12 以降は `OPTION_APPWIDGET_SIZES` で向きごとの実寸が取れるので、
-  サイズごとの `RemoteViews` を `RemoteViews(Map<SizeF, RemoteViews>)` でまとめて渡し、
-  システムに出し分けさせる。
-- それ以前は `OPTION_APPWIDGET_MAX_HEIGHT`(縦向き時の高さ)を使う。
+| ファミリー | 件数 | タップ |
+| --- | --- | --- |
+| `systemSmall` | 1 | `widgetURL` でウィジェット全体 |
+| `systemMedium` | 2 | 行ごとの `Link` |
+| `systemLarge` | 5 | 行ごとの `Link` |
 
-`PADDING_HEIGHT_DP` / `HEADER_HEIGHT_DP` / `ROW_HEIGHT_DP` はレイアウトの実寸から見積もった
-定数のため、`widget_presets.xml` / `widget_presets_row.xml` の余白・文字サイズ・
-サークル径を変えたら合わせて更新する。
+`systemSmall` はウィジェット全体が単一のタップ領域で、行ごとの `Link` が個別の
+タップ先にならない。表示とタップ先が食い違わないよう 1 件だけ出して `widgetURL` を張る。
 
 ## 変更時に揃えるべき箇所
 
 - ウィジェットの kind 文字列: iOS の `Widget.kind` と、リロードを呼ぶネイティブモジュール側の定数。
 - ストレージのキー名: iOS の `PresetsEntry.storageKey` と `PresetsWidgetModule.presetsStorageKey`、
   Android の `PresetsWidgetStore` のフィールド名、JS の `PresetsWidgetItem`。
-- 表示件数の上限: JS の `MAX_PRESETS_WIDGET_ITEMS` と Android の `MAX_ROW_COUNT`。
+- 同期する最大件数: JS の `MAX_PRESETS_WIDGET_ITEMS`(両 OS 共通)。
+  描画側の上限は iOS の `largeRowCount` のみで、Android は `ListView` に任せている。
 - 未設定時のフォールバック表示: iOS / Android の双方で同じ文言・同じ色になるようにする。

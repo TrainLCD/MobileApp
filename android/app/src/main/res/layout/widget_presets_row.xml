@@ -4,6 +4,7 @@
     android:id="@+id/widget_preset_row"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:paddingTop="3dp"

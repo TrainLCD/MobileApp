@@ -30,15 +30,23 @@ class PresetsWidgetModule: NSObject {
 
   @objc(updatePresets:)
   func updatePresets(_ presets: NSArray?) {
-    guard let presets = presets as? [NSDictionary] else {
+    guard let presets = presets as? [Any] else {
       return
     }
 
-    // Swift側のデコードが部分的に失敗しないよう、欠けたキーは空文字で埋めてから直列化する
-    let items: [[String: String]] = presets.map { dic in
+    // Swift側のデコードが部分的に失敗しないよう、欠けたキーは空文字で埋めてから直列化する。
+    // 想定外の要素は配列ごと捨てずに要素単位で読み飛ばす
+    let items: [[String: String]] = presets.compactMap { element in
+      guard let dic = element as? NSDictionary else {
+        return nil
+      }
       var item: [String: String] = [:]
       for key in Self.itemKeys {
         item[key] = dic[key] as? String ?? ""
+      }
+      // idが無いとディープリンクを組み立てられないため取り込まない(Android側のWidgetModuleと同じ)
+      if item["id"]?.isEmpty != false {
+        return nil
       }
       return item
     }

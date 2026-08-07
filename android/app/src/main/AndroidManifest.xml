@@ -67,5 +67,10 @@
         android:name="android.appwidget.provider"
         android:resource="@xml/presets_widget_info"/>
     </receiver>
+    <!-- プリセットウィジェットの行を供給するアダプタ。BIND_REMOTEVIEWSはシステムのみが保持する -->
+    <service
+      android:name=".PresetsWidgetService"
+      android:exported="false"
+      android:permission="android.permission.BIND_REMOTEVIEWS"/>
   </application>
 </manifest>

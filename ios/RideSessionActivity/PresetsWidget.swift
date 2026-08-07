@@ -170,8 +170,17 @@ struct PresetsWidgetEntryView: View {
     schemeName == "CanaryTrainLCD" ? "trainlcd-canary" : "trainlcd"
   }
 
+  // systemSmallはウィジェット全体が単一のタップ領域で、行ごとのLinkが効かない。
+  // 行を並べるとタップ先と見た目が食い違うため、1件だけ出してwidgetURLで開く
+  private var isSingleTapTarget: Bool {
+    family == .systemSmall
+  }
+
   private var rowCount: Int {
-    family == .systemLarge ? largeRowCount : compactRowCount
+    if isSingleTapTarget {
+      return 1
+    }
+    return family == .systemLarge ? largeRowCount : compactRowCount
   }
 
   private var visiblePresets: [PresetsWidgetItem] {
@@ -215,24 +224,37 @@ struct PresetsWidgetEntryView: View {
     .widgetURL(URL(string: "\(urlScheme)://"))
   }
 
+  private var listView: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      header
+      ForEach(visiblePresets) { preset in
+        // systemSmallではLinkが個別のタップ領域にならないので包まない。
+        // 代わりにウィジェット全体へwidgetURLを張る
+        if !isSingleTapTarget, let url = presetURL(preset) {
+          Link(destination: url) {
+            PresetsWidgetRow(preset: preset)
+          }
+        } else {
+          PresetsWidgetRow(preset: preset)
+        }
+      }
+      Spacer(minLength: 0)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+  }
+
   var body: some View {
     if entry.presets.isEmpty {
       emptyView
+    } else if isSingleTapTarget {
+      // 表示している唯一のプリセットをウィジェット全体のタップ先にする。
+      // URLを組めなかった場合はアプリ起動へ倒す
+      listView
+        .widgetURL(
+          visiblePresets.first.flatMap(presetURL) ?? URL(string: "\(urlScheme)://")
+        )
     } else {
-      VStack(alignment: .leading, spacing: 6) {
-        header
-        ForEach(visiblePresets) { preset in
-          if let url = presetURL(preset) {
-            Link(destination: url) {
-              PresetsWidgetRow(preset: preset)
-            }
-          } else {
-            PresetsWidgetRow(preset: preset)
-          }
-        }
-        Spacer(minLength: 0)
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+      listView
     }
   }
 }

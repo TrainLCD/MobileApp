@@ -8,9 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
-import android.util.SizeF
-import android.view.View
 import android.widget.RemoteViews
 
 /**
@@ -19,6 +16,11 @@ import android.widget.RemoteViews
  * 行をタップすると `trainlcd://?preset=<SavedRoute.id>` のディープリンクでアプリが起動し、
  * 該当プリセットの行き先選択が開く(JS側のuseDeepLink)。
  * iOS版(PresetsWidget.swift)と同じ体裁・同じディープリンクを踏襲する。
+ *
+ * 行の供給はPresetsWidgetServiceに任せている。ウィジェットの高さから表示行数を
+ * 見積もる方式は端末やランチャー・画面の向きで実寸が変わるため必ずずれる。
+ * ListViewのアダプタにすれば「入るだけ表示して残りはスクロール」をシステムが担うので、
+ * ウィジェットを引き伸ばした分だけ素直に表示件数が増える。
  */
 class PresetsWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(
@@ -29,43 +31,19 @@ class PresetsWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
     }
 
-    override fun onAppWidgetOptionsChanged(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int,
-        newOptions: Bundle?
-    ) {
-        // リサイズで表示できる行数が変わるため再描画する
-        updateWidget(context, appWidgetManager, appWidgetId)
-    }
-
     companion object {
-        /** ルート要素の上下パディング(10dpずつ)と行リストの上マージンが占める高さ(dp) */
-        private const val PADDING_HEIGHT_DP = 22
-
-        /** ヘッダー(アイコン12dp + 11spのテキスト)が占める高さ(dp) */
-        private const val HEADER_HEIGHT_DP = 16
-
-        /**
-         * 1行あたりの高さ(dp)。
-         * widget_presets_rowの上下パディング3dpずつと、サークル(30dp)より高くなる
-         * テキスト2段(13sp + 11sp ≒ 33dp)から見積もっている。
-         */
-        private const val ROW_HEIGHT_DP = 39
-
-        /** ウィジェットの高さが取得できないときに表示する行数 */
-        private const val FALLBACK_ROW_COUNT = 2
-
-        /** JS側のMAX_PRESETS_WIDGET_ITEMSと揃えた表示上限 */
-        private const val MAX_ROW_COUNT = 8
-
         /** アプリ側から表示内容を更新する際のエントリポイント */
         fun updateAll(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context) ?: return
             val ids = appWidgetManager.getAppWidgetIds(
                 ComponentName(context.applicationContext, PresetsWidgetProvider::class.java)
             )
+            if (ids.isEmpty()) {
+                return
+            }
             ids.forEach { updateWidget(context, appWidgetManager, it) }
+            // アダプタに再読み込みを促す。これが無いと保存済みの古い一覧が出たままになる
+            appWidgetManager.notifyAppWidgetViewDataChanged(ids, R.id.widget_presets_list)
         }
 
         private fun updateWidget(
@@ -73,172 +51,48 @@ class PresetsWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int
         ) {
-            val options: Bundle? = appWidgetManager.getAppWidgetOptions(appWidgetId)
-
-            appWidgetManager.updateAppWidget(
-                appWidgetId,
-                buildResponsiveViews(context, PresetsWidgetStore.load(context), options)
-            )
-        }
-
-        /**
-         * ウィジェットの高さに応じた表示を組み立てる。
-         *
-         * Android 12以降はOPTION_APPWIDGET_SIZESで縦向き・横向きそれぞれの実寸が取れるため、
-         * サイズごとのRemoteViewsをまとめて渡してシステムに出し分けさせる。
-         * それ以前はOPTION_APPWIDGET_MAX_HEIGHT(縦向き時の高さ)を使う。
-         * OPTION_APPWIDGET_MIN_HEIGHTは横向き時の高さ、つまり取り得る中で最小の値なので、
-         * これを基準にすると縦向きで収まるはずの行まで落としてしまう。
-         */
-        private fun buildResponsiveViews(
-            context: Context,
-            presets: List<PresetWidgetItem>,
-            options: Bundle?
-        ): RemoteViews {
-            if (options != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                @Suppress("DEPRECATION")
-                val sizes = options.getParcelableArrayList<SizeF>(
-                    AppWidgetManager.OPTION_APPWIDGET_SIZES
-                )
-                if (!sizes.isNullOrEmpty()) {
-                    return RemoteViews(
-                        sizes.associateWith { size ->
-                            buildRemoteViews(context, presets, size.height.toInt())
-                        }
-                    )
-                }
-            }
-
-            val portraitHeightDp =
-                options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0) ?: 0
-            return buildRemoteViews(context, presets, portraitHeightDp)
-        }
-
-        /**
-         * 与えられた高さに収まる行数を返す。
-         * ヘッダー込みでは1行も置けない高さのときはヘッダーを諦めて1行を優先する。
-         */
-        private fun resolveRowCount(heightDp: Int, withHeader: Boolean): Int {
-            if (heightDp <= 0) {
-                return FALLBACK_ROW_COUNT
-            }
-            val chrome = PADDING_HEIGHT_DP + if (withHeader) HEADER_HEIGHT_DP else 0
-            return ((heightDp - chrome) / ROW_HEIGHT_DP).coerceIn(0, MAX_ROW_COUNT)
-        }
-
-        private fun buildRemoteViews(
-            context: Context,
-            presets: List<PresetWidgetItem>,
-            heightDp: Int
-        ): RemoteViews {
-            val showHeader = resolveRowCount(heightDp, withHeader = true) > 0
-            val rowCount = resolveRowCount(heightDp, showHeader).coerceAtLeast(1)
-
             val views = RemoteViews(context.packageName, R.layout.widget_presets)
-            views.setViewVisibility(
-                R.id.widget_presets_header,
-                if (showHeader) View.VISIBLE else View.GONE
-            )
-            // RemoteViewsは再利用されるため、addViewする前に必ず前回の行を消す
-            views.removeAllViews(R.id.widget_presets_list)
 
-            if (presets.isEmpty()) {
-                views.setViewVisibility(R.id.widget_presets_list, View.GONE)
-                views.setViewVisibility(R.id.widget_presets_empty, View.VISIBLE)
-                views.setContentDescription(
-                    R.id.widget_presets_root,
-                    context.getString(R.string.widget_presets_empty)
-                )
-                // プリセット未登録時はウィジェット全体をアプリ起動のタップ領域にする
-                createLaunchIntent(context)?.let {
-                    views.setOnClickPendingIntent(R.id.widget_presets_root, it)
-                }
-                return views
+            views.setRemoteAdapter(R.id.widget_presets_list, adapterIntent(context, appWidgetId))
+            // プリセットが0件のときだけ案内文へ差し替える
+            views.setEmptyView(R.id.widget_presets_list, R.id.widget_presets_empty)
+            views.setPendingIntentTemplate(
+                R.id.widget_presets_list,
+                presetIntentTemplate(context)
+            )
+            // 案内文はコレクション側のタップが効かないため、単体でアプリ起動を割り当てる
+            createLaunchIntent(context)?.let {
+                views.setOnClickPendingIntent(R.id.widget_presets_empty, it)
             }
 
-            views.setViewVisibility(R.id.widget_presets_list, View.VISIBLE)
-            views.setViewVisibility(R.id.widget_presets_empty, View.GONE)
-
-            val visiblePresets = presets.take(rowCount)
-            visiblePresets.forEachIndexed { index, preset ->
-                views.addView(
-                    R.id.widget_presets_list,
-                    buildRowViews(context, preset, index)
-                )
-            }
-            views.setContentDescription(
-                R.id.widget_presets_root,
-                visiblePresets.joinToString(", ") { it.name }
-            )
-
-            return views
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
-        private fun buildRowViews(
-            context: Context,
-            preset: PresetWidgetItem,
-            index: Int
-        ): RemoteViews {
-            // iOS版と同様に、路線記号が無い路線ではプリセット名ではなく路線名の先頭1文字で代替する
-            val lineSymbol = when {
-                preset.lineSymbol.isNotEmpty() -> preset.lineSymbol
-                preset.lineName.isNotEmpty() -> preset.lineName.take(1)
-                else -> context.getString(R.string.widget_line_symbol_placeholder)
+        private fun adapterIntent(context: Context, appWidgetId: Int): Intent =
+            Intent(context, PresetsWidgetService::class.java).apply {
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                // ウィジェットIDごとに別のアダプタとして扱わせるためURIを一意にする。
+                // extraだけではIntentが同一とみなされ、複数設置時に片方の一覧が使い回される
+                data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME))
             }
-            val lineColor = WidgetStateStore.parseColor(
-                preset.lineColor.ifEmpty { WidgetStateStore.PLACEHOLDER_LINE_COLOR },
-                WidgetStateStore.parseColor(WidgetStateStore.PLACEHOLDER_LINE_COLOR, 0)
-            )
-            // 駅名が未取得のプリセットでは路線名だけを出す
-            val route =
-                if (preset.fromStationName.isEmpty() || preset.toStationName.isEmpty()) {
-                    preset.lineName
-                } else {
-                    context.getString(
-                        R.string.widget_presets_route,
-                        preset.fromStationName,
-                        preset.toStationName
-                    )
-                }
 
-            return RemoteViews(context.packageName, R.layout.widget_presets_row).apply {
-                setInt(R.id.widget_preset_circle, "setColorFilter", lineColor)
-                setTextViewText(R.id.widget_preset_symbol, lineSymbol)
-                setTextViewText(R.id.widget_preset_name, preset.name)
-                setTextViewText(R.id.widget_preset_route, route)
-                setContentDescription(R.id.widget_preset_row, "${preset.name} / $route")
-                createPresetIntent(context, preset.id, index)?.let {
-                    setOnClickPendingIntent(R.id.widget_preset_row, it)
-                }
-            }
-        }
-
-        private fun createPresetIntent(
-            context: Context,
-            presetId: String,
-            index: Int
-        ): PendingIntent? {
-            val uri = Uri.Builder()
-                .scheme(context.getString(R.string.app_scheme))
-                .authority("")
-                .appendQueryParameter("preset", presetId)
-                .build()
-            val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-                // 他アプリが同じスキームを宣言していても自アプリへ確実に届くよう明示する
-                setPackage(context.packageName)
+        /**
+         * 行タップ時に使うテンプレート。
+         * 実際のURIは各行がsetOnClickFillInIntentで差し込むため、ここではdataを持たせない。
+         * fillInでdataを受け取る必要があるのでPendingIntentはミュータブルにする。
+         */
+        private fun presetIntentTemplate(context: Context): PendingIntent {
+            val intent = Intent(context, MainActivity::class.java).apply {
+                // ReactInstanceManager.onNewIntentはACTION_VIEWのときだけurlイベントを流すため必須
+                action = Intent.ACTION_VIEW
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
-            if (intent.resolveActivity(context.packageManager) == null) {
-                return createLaunchIntent(context)
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
             }
-            return PendingIntent.getActivity(
-                context,
-                // 行ごとにPendingIntentを作り分けるためrequestCodeを変える。
-                // 同じ値を使うとFLAG_UPDATE_CURRENTで全行が最後のURIに揃ってしまう
-                index + 1,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+            return PendingIntent.getActivity(context, 0, intent, flags)
         }
 
         private fun createLaunchIntent(context: Context): PendingIntent? {
@@ -246,7 +100,7 @@ class PresetsWidgetProvider : AppWidgetProvider() {
                 .getLaunchIntentForPackage(context.packageName) ?: return null
             return PendingIntent.getActivity(
                 context,
-                0,
+                1,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
