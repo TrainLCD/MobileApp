@@ -19,8 +19,9 @@ import android.widget.RemoteViews
  *
  * 行の供給はPresetsWidgetServiceに任せている。ウィジェットの高さから表示行数を
  * 見積もる方式は端末やランチャー・画面の向きで実寸が変わるため必ずずれる。
- * ListViewのアダプタにすれば「入るだけ表示して残りはスクロール」をシステムが担うので、
- * ウィジェットを引き伸ばした分だけ素直に表示件数が増える。
+ * ListViewのアダプタにすれば「入るだけ表示して残りは縦スクロール」をシステムが担うので、
+ * 高さ計算を持たずに全件へ到達できる。縦スクロールできる以上リサイズしても
+ * 見られる情報は増えないため、サイズは2x2固定にしている(presets_widget_info.xml)。
  */
 class PresetsWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(

@@ -61,25 +61,36 @@ trainlcd-canary://?preset=<SavedRoute.id>   # Canary
 
 ### サイズと表示件数
 
-既定サイズは乗車中ウィジェットと揃えている(iOS は `systemSmall`、Android は 2x2)。
-一覧をまとめて見たい場合に備えて大きいサイズも選べる。
+サイズは乗車中ウィジェットと揃えている(iOS は `systemSmall`、Android は 2x2)。
 
 Android は `ListView` + `RemoteViewsService`(`PresetsWidgetService`)のコレクション
-ウィジェットで、入るぶんだけ表示され残りはスクロールで辿れる。行数をウィジェットの高さから
-dp で見積もる方式は、端末・ランチャー・画面の向きで実寸が変わるため必ずずれる
-(`OPTION_APPWIDGET_MIN_HEIGHT` は横向き時＝取り得る最小の高さで、これを基準にすると
-縦向きで収まるはずの行まで落ちる)。アダプタに任せることで高さ計算自体を持たない。
+ウィジェットで、入るぶんだけ表示され残りは縦スクロールで辿れる。縦スクロールできる以上
+リサイズしても見られる情報は増えないため、`resizeMode` は `none` で 2x2 に固定している。
 
-iOS は WidgetKit にスクロールが無いためファミリーごとの固定件数になる。
+行数をウィジェットの高さから dp で見積もる方式は採らない。端末・ランチャー・画面の向きで
+実寸が変わるため必ずずれる(`OPTION_APPWIDGET_MIN_HEIGHT` は横向き時＝取り得る最小の
+高さで、これを基準にすると縦向きで収まるはずの行まで落ちる)。アダプタに任せることで
+高さ計算自体を持たない。
 
-| ファミリー | 件数 | タップ |
+iOS は WidgetKit にスクロールが無いため、表示できる件数はウィジェットの高さで決まる。
+ファミリーごとに件数を決め打ちすると端末サイズ差で余白が出たり見切れたりするため、
+`GeometryReader` で実際の描画高を測り、`rowHeight` / `rowSpacing` から収まる行数を求める。
+
+行数計算が予約する高さと実際の描画がずれると最終行が見切れるため、行とヘッダーは
+`.frame(height:)` で `rowHeight` / `headerHeight` に固定し、Dynamic Type や長い
+ローカライズ文字列で伸びないようにしている。見た目を変えたらこれらの定数も合わせること。
+
+| ファミリー | 表示 | タップ |
 | --- | --- | --- |
-| `systemSmall` | 1 | `widgetURL` でウィジェット全体 |
-| `systemMedium` | 2 | 行ごとの `Link` |
-| `systemLarge` | 5 | 行ごとの `Link` |
+| `systemSmall` | 1 件を縦に積んで表示 | `widgetURL` でウィジェット全体 |
+| `systemMedium` | 収まるだけの行 | 行ごとの `Link` |
+| `systemLarge` | 収まるだけの行 | 行ごとの `Link` |
 
-`systemSmall` はウィジェット全体が単一のタップ領域で、行ごとの `Link` が個別の
-タップ先にならない。表示とタップ先が食い違わないよう 1 件だけ出して `widgetURL` を張る。
+`systemSmall` はウィジェット全体が単一のタップ領域で、行ごとの `Link` が個別のタップ先に
+ならない。行を並べても 1 件しか開けず件数を増やす意味が無いため、1 件だけを出す
+(`PresetsWidgetFeatured`)。その 1 件は「始発駅 → 終着駅」を横一列に置くと正方形の
+横幅で先に頭打ちになり駅名がすぐ省略されるので、サークル → プリセット名 → 始発駅 →
+下向き矢印 → 終着駅 の順に縦へ積み、1 駅あたりの幅をフルに使う。
 
 ## 変更時に揃えるべき箇所
 
@@ -87,5 +98,5 @@ iOS は WidgetKit にスクロールが無いためファミリーごとの固�
 - ストレージのキー名: iOS の `PresetsEntry.storageKey` と `PresetsWidgetModule.presetsStorageKey`、
   Android の `PresetsWidgetStore` のフィールド名、JS の `PresetsWidgetItem`。
 - 同期する最大件数: JS の `MAX_PRESETS_WIDGET_ITEMS`(両 OS 共通)。
-  描画側の上限は iOS の `largeRowCount` のみで、Android は `ListView` に任せている。
+  描画側は iOS が実測、Android が `ListView` に任せており、どちらも件数の決め打ちを持たない。
 - 未設定時のフォールバック表示: iOS / Android の双方で同じ文言・同じ色になるようにする。
