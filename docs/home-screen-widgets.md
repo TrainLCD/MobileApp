@@ -75,7 +75,10 @@ Android は `ListView` + `RemoteViewsService`(`PresetsWidgetService`)のコレ�
 iOS は WidgetKit にスクロールが無いため、表示できる件数はウィジェットの高さで決まる。
 ファミリーごとに件数を決め打ちすると端末サイズ差で余白が出たり見切れたりするため、
 `GeometryReader` で実際の描画高を測り、`rowHeight` / `rowSpacing` から収まる行数を求める。
-行の見た目を変えたらこれらの定数も合わせること。
+
+行数計算が予約する高さと実際の描画がずれると最終行が見切れるため、行とヘッダーは
+`.frame(height:)` で `rowHeight` / `headerHeight` に固定し、Dynamic Type や長い
+ローカライズ文字列で伸びないようにしている。見た目を変えたらこれらの定数も合わせること。
 
 | ファミリー | 表示 | タップ |
 | --- | --- | --- |

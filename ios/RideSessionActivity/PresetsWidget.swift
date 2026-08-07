@@ -303,11 +303,15 @@ struct PresetsWidgetEntryView: View {
     HStack(spacing: 4) {
       Image(systemName: "tram.fill")
       Text("presetsWidgetTitle")
+        .lineLimit(1)
       Spacer(minLength: 0)
     }
     .font(.caption2)
     .fontWeight(.bold)
     .foregroundStyle(.secondary)
+    // rowCount(for:)がheaderHeightぶんを予約するので、実際の高さも必ずそこへ揃える。
+    // Dynamic Typeや長いローカライズ文字列で伸びると最終行が見切れる
+    .frame(height: headerHeight, alignment: .leading)
   }
 
   private var emptyView: some View {
