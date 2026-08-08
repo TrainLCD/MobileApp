@@ -8,10 +8,23 @@ android {
   namespace = "me.tinykitten.trainlcd"
   compileSdk = 35
 
+  signingConfigs {
+    // Wear OS の Data Layer はパッケージ名と署名の両方が一致する場合のみ
+    // スマホ・ウォッチ間の通信を許可する。AGP 既定の ~/.android/debug.keystore を
+    // 使うと :app と証明書が食い違い、ローカルの debug ビルド同士で疎通できないため、
+    // :app と同じ鍵を明示的に指定する。
+    getByName("debug") {
+      storeFile = file("../app/debug.keystore")
+      storePassword = "android"
+      keyAlias = "androiddebugkey"
+      keyPassword = "android"
+    }
+  }
+
   defaultConfig {
     applicationId = "me.tinykitten.trainlcd"
     minSdk = 34
-    targetSdk = 34
+    targetSdk = 35
     vectorDrawables {
       useSupportLibrary = true
     }
