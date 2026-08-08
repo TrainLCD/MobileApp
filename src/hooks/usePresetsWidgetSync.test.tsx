@@ -165,6 +165,30 @@ describe('usePresetsWidgetSync', () => {
     );
   });
 
+  // 駅一覧の並びが保存時と反転して返るケース。
+  // direction をそのまま当てると始発駅と行き先が同じ駅になってしまう
+  it('駅一覧の並びが保存時と反転していても始発駅と行き先が同じにならない', () => {
+    const item = createLoopItem({
+      wantedDestinationId: 2,
+      direction: 'OUTBOUND',
+      stations: [
+        createStation(1, '前橋', 'Maebashi', { line } as Partial<Station>),
+        createStation(2, '小田原', 'Odawara', { line } as Partial<Station>),
+      ],
+    });
+    renderHook(() =>
+      usePresetsWidgetSync({
+        carouselData: [item],
+        routes: [createRoute(item.id)],
+        isRoutesDBInitialized: true,
+      })
+    );
+
+    const synced = mockUpdatePresetsWidget.mock.calls[0][0][0];
+    expect(synced.fromStationName).toBe(isJapanese ? '前橋' : 'Maebashi');
+    expect(synced.toStationName).toBe(isJapanese ? '小田原' : 'Odawara');
+  });
+
   it('路線記号が無い場合は空文字を渡してネイティブ側のフォールバックに委ねる', () => {
     const item = createLoopItem({
       stations: [
