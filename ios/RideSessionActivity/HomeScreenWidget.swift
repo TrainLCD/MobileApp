@@ -187,19 +187,11 @@ struct HomeScreenWidgetEntryView: View {
       .minimumScaleFactor(0.7)
   }
 
-  // 乗車中は行き先であることが伝わるよう矢印を添える。
-  // 未乗車時は「方面が未設定です」という案内文なので矢印は付けない
   private var boundForLabel: some View {
-    HStack(spacing: 3) {
-      if entry.loaded {
-        Image(systemName: "arrow.forward")
-          .imageScale(.small)
-      }
-      Text(entry.boundFor)
-        .lineLimit(2)
-        .minimumScaleFactor(0.8)
-    }
-    .opacity(0.85)
+    Text(entry.boundFor)
+      .lineLimit(2)
+      .minimumScaleFactor(0.8)
+      .opacity(0.85)
   }
 
   // 正方形なのでバッジを上に置き、その下に路線名と方面を積む
