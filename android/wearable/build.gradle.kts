@@ -28,16 +28,24 @@ android {
     // アップロード鍵と一致せず受け付けられないため、:app の signingConfigs.release と
     // 同じ TRAINLCD_UPLOAD_* プロパティを参照する。TRAINLCD_UPLOAD_STORE_FILE は :app
     // モジュール起点の相対パス (例: release.jks) として運用されているため、:wearable からは
-    // app/ を基準に解決する。storeFile が空の signingConfig を割り当てると署名タスクが
-    // NPE で落ちるため、プロパティが揃っている場合のみ生成する（未設定時は未署名になる）。
-    val uploadStoreFile = findProperty("TRAINLCD_UPLOAD_STORE_FILE") as String?
-    if (uploadStoreFile != null) {
+    // app/ を基準に解決する。項目が欠けた signingConfig を割り当てると署名タスクが NPE で
+    // 落ちるため、4 つのプロパティが揃っている場合のみ生成する（未設定時は未署名になる）。
+    // 値は trim せず isNotBlank() のみで判定する（パスワード前後の空白を壊さないため）。
+    val uploadStoreFile = (findProperty("TRAINLCD_UPLOAD_STORE_FILE") as String?)?.takeIf { it.isNotBlank() }
+    val uploadStorePassword = (findProperty("TRAINLCD_UPLOAD_STORE_PASSWORD") as String?)?.takeIf { it.isNotBlank() }
+    val uploadKeyAlias = (findProperty("TRAINLCD_UPLOAD_KEY_ALIAS") as String?)?.takeIf { it.isNotBlank() }
+    val uploadKeyPassword = (findProperty("TRAINLCD_UPLOAD_KEY_PASSWORD") as String?)?.takeIf { it.isNotBlank() }
+    if (uploadStoreFile != null &&
+      uploadStorePassword != null &&
+      uploadKeyAlias != null &&
+      uploadKeyPassword != null
+    ) {
       create("release") {
         val keystore = File(uploadStoreFile)
         storeFile = if (keystore.isAbsolute) keystore else rootProject.file("app/$uploadStoreFile")
-        storePassword = findProperty("TRAINLCD_UPLOAD_STORE_PASSWORD") as String?
-        keyAlias = findProperty("TRAINLCD_UPLOAD_KEY_ALIAS") as String?
-        keyPassword = findProperty("TRAINLCD_UPLOAD_KEY_PASSWORD") as String?
+        storePassword = uploadStorePassword
+        keyAlias = uploadKeyAlias
+        keyPassword = uploadKeyPassword
       }
     }
   }
