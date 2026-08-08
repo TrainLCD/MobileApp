@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import type { LineDirection } from '~/models/Bound';
 import { findNearestByCoord } from '~/utils/findNearestByCoord';
+import { getPresetOriginStation } from '~/utils/presetRouteEndpoints';
 
 type UsePresetStopsParams = {
   savedRouteDirection: LineDirection | null | undefined;
@@ -16,12 +17,17 @@ export const usePresetStops = ({
   wantedDestination,
   confirmedStation,
 }: UsePresetStopsParams) => {
-  const presetOrigin = useMemo(() => {
-    if (!savedRouteDirection) return null;
-    return savedRouteDirection === 'INBOUND'
-      ? stations[0]
-      : (stations.at(-1) ?? null);
-  }, [savedRouteDirection, stations]);
+  // 始発駅の解決はプリセットカード・ホーム画面ウィジェットと共通化している。
+  // 駅一覧の並びが保存時と反転していても行き先と同じ駅を掴まないようにするため
+  const presetOrigin = useMemo(
+    () =>
+      getPresetOriginStation({
+        stations,
+        wantedDestinationId: wantedDestination?.groupId ?? null,
+        direction: savedRouteDirection ?? null,
+      }) ?? null,
+    [savedRouteDirection, stations, wantedDestination?.groupId]
+  );
 
   const presetStops = useMemo(() => {
     if (!presetOrigin || !wantedDestination) return undefined;
