@@ -1,3 +1,7 @@
+// signingConfigs ブロック内では `java` が Gradle の java 拡張に解決され java.io.File を
+// 完全修飾名で参照できないため、ここで import しておく。
+import java.io.File
+
 plugins {
   id("com.android.application")
   id("org.jetbrains.kotlin.android")
@@ -19,6 +23,23 @@ android {
       keyAlias = "androiddebugkey"
       keyPassword = "android"
     }
+
+    // release も :app と同じアップロード鍵で署名する。debug 鍵で署名した AAB は Play の
+    // アップロード鍵と一致せず受け付けられないため、:app の signingConfigs.release と
+    // 同じ TRAINLCD_UPLOAD_* プロパティを参照する。TRAINLCD_UPLOAD_STORE_FILE は :app
+    // モジュール起点の相対パス (例: release.jks) として運用されているため、:wearable からは
+    // app/ を基準に解決する。storeFile が空の signingConfig を割り当てると署名タスクが
+    // NPE で落ちるため、プロパティが揃っている場合のみ生成する（未設定時は未署名になる）。
+    val uploadStoreFile = findProperty("TRAINLCD_UPLOAD_STORE_FILE") as String?
+    if (uploadStoreFile != null) {
+      create("release") {
+        val keystore = File(uploadStoreFile)
+        storeFile = if (keystore.isAbsolute) keystore else rootProject.file("app/$uploadStoreFile")
+        storePassword = findProperty("TRAINLCD_UPLOAD_STORE_PASSWORD") as String?
+        keyAlias = findProperty("TRAINLCD_UPLOAD_KEY_ALIAS") as String?
+        keyPassword = findProperty("TRAINLCD_UPLOAD_KEY_PASSWORD") as String?
+      }
+    }
   }
 
   defaultConfig {
@@ -35,7 +56,7 @@ android {
       signingConfig = signingConfigs.getByName("debug")
     }
     release {
-      signingConfig = signingConfigs.getByName("debug")
+      signingConfig = signingConfigs.findByName("release")
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(
@@ -47,17 +68,22 @@ android {
 
   flavorDimensions += "environment"
   productFlavors {
+    // :app と applicationId が同じマルチバンドル配信のため、Play は minSdk が高い側
+    // (:wearable=34 > :app=24) の versionCode が高いことを要求する。逆転すると Wear バンドルが
+    // 常に :app に順位負けし、どの端末にも配信されないためリリースを公開できなくなる。
+    // そのため versionCode は必ず「:app の versionCode + 1」に保ち、:app を bump する際は
+    // 必ず本ファイルも同時に bump すること。
     create("dev") {
       dimension = "environment"
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
-      versionCode = 100000000
-      versionName = "10.0.0"
+      versionCode = 100000580
+      versionName = "10.12.0"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 100000000
-      versionName = "10.0.0"
+      versionCode = 100000580
+      versionName = "10.12.0"
     }
   }
 
