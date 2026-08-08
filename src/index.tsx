@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
 import { Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import CommonDialogPresenter from './components/CommonDialogPresenter';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import { GlobalToast } from './components/GlobalToast';
 import TuningSettings from './components/TuningSettings';
@@ -27,7 +28,7 @@ import MainStack from './stacks/MainStack';
 import { navigationRef } from './stacks/rootNavigation';
 import { store } from './store';
 import { setI18nConfig } from './translation';
-import { showAlertWhilePresenting } from './utils/alertPresentation';
+import { showDialogWhilePresenting } from './utils/dialogPresentation';
 
 SplashScreen.preventAutoHideAsync();
 setI18nConfig();
@@ -67,7 +68,7 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (fontsLoaded || fontsLoadError) {
       if (fontsLoadError) {
-        showAlertWhilePresenting(
+        showDialogWhilePresenting(
           'fontLoadError',
           'Font Load Error',
           'Failed to load fonts.'
@@ -131,26 +132,28 @@ const App: React.FC = () => {
   }
 
   return (
-    <CustomErrorBoundary>
-      <GestureHandlerRootView>
-        <QueryClientProvider client={queryClient}>
-          <ActionSheetProvider>
-            <Provider store={store}>
-              <NavigationContainer ref={navigationRef}>
-                <DeepLinkProvider>
-                  <QuickActionsProvider>
-                    <PortalProvider>
+    <GestureHandlerRootView>
+      <QueryClientProvider client={queryClient}>
+        <ActionSheetProvider>
+          <Provider store={store}>
+            <PortalProvider>
+              {/* 画面をまたいで呼ばれる showDialog を一つの共通モーダルとして描画する。 */}
+              <CommonDialogPresenter />
+              <CustomErrorBoundary>
+                <NavigationContainer ref={navigationRef}>
+                  <DeepLinkProvider>
+                    <QuickActionsProvider>
                       <AppContent />
-                    </PortalProvider>
-                  </QuickActionsProvider>
-                  <GlobalToast />
-                </DeepLinkProvider>
-              </NavigationContainer>
-            </Provider>
-          </ActionSheetProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
-    </CustomErrorBoundary>
+                    </QuickActionsProvider>
+                    <GlobalToast />
+                  </DeepLinkProvider>
+                </NavigationContainer>
+              </CustomErrorBoundary>
+            </PortalProvider>
+          </Provider>
+        </ActionSheetProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 };
 

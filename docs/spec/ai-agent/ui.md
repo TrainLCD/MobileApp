@@ -160,8 +160,8 @@ Figma デザインは人力ではなく Figma MCP で本書を入力として起
   `navigation.goBack()`。
 - 中央: タイトル `AIに行き先を相談`（`Heading`、fontSize 18 相当）。
 - 右: 会話リセットボタン（Ionicons `refresh` または文言ボタン）。
-  タップで確認 `Alert.alert`（ユーザ起点の操作なので直接呼び出し可、
-  CLAUDE.md の StrictMode 規約に適合）→ OK で履歴 state をクリアし
+  タップで `CommonDialogModal` による確認を表示（ユーザ起点のため
+  `showDialog` を使用）→ OK で履歴 state をクリアし
   初期状態に戻す。履歴が空のときは非表示。
 - 背景は画面背景と同色。`SafeAreaView` の上端インセットを含める。
 - 補助表示: タイトル下に現在駅を小さく表示する案
@@ -290,9 +290,15 @@ Figma デザインは人力ではなく Figma MCP で本書を入力として起
 - `SearchBar` のスタイルを踏襲した新規コンポーネント: 高さ 48、
   背景 `#fcfcfc`（LED 時 `#333`）、角丸 8（LED 時 0）、右端に
   48×48 の送信ボタン（黒背景、Ionicons `arrow-up`、白アイコン）。
-- 画面下部固定。`KeyboardAvoidingView`（iOS `padding` / Android は
-  既定動作）でキーボードに追従。下端は
-  `useSafeAreaInsets().bottom` を確保。
+- 画面下部固定。`useKeyboardBottomInset()` が返す下余白でキーボードに
+  追従する（キーボード非表示時は `useSafeAreaInsets().bottom` を確保）。
+  `KeyboardAvoidingView` は使わない: エッジトゥエッジ
+  （`edgeToEdgeEnabled=true`）の Android では `adjustResize` でも
+  ウィンドウが縮まず、RN が送る `endCoordinates.screenY` が画面下端の
+  ままになるため押し上げ量が常に 0 と算出され、入力欄がキーボードに
+  隠れてしまう。
+- キーボード表示でリストの表示領域が縮むため、表示に合わせて
+  末尾へ追従スクロールする。
 - 入力仕様:
   - 複数行入力可（`multiline`、最大 4 行で内部スクロール）。
   - 最大 500 文字（サーバ制約）。450 文字を超えたら右下に
@@ -432,7 +438,7 @@ flowchart LR
   - ja: 再試行
   - en: Retry
 
-文言はドラフト。トンマナ（です・ます調、既存アラート文と同程度の
+文言はドラフト。トンマナ（です・ます調、既存ダイアログ文と同程度の
 丁寧さ）だけ確定とし、字面は Figma 段階で調整してよい。
 
 ## アクセシビリティ
@@ -490,7 +496,7 @@ Figma MCP でデザインを起こす際・レビュー時に確定が必要な�
    `#0071CE` を使う。既存 `Button` 等の `#008ffe` のアプリ全体改定は
    本 PoC のスコープ外とし、必要になった時点で別課題として起票する。
 3. **会話リセットの位置**: ヘッダー右のテキストボタンで確定
-   （確認 Alert を挟むため誤タップしても破壊的でない）。
+   （確認ダイアログを挟むため誤タップしても破壊的でない）。
 4. **提案カード再取得（`GET_STATIONS_BY_IDS`）のタイミング**: 応答
    受信時の一括取得で確定。PoC の実測で体感遅延が問題になった場合
    のみタップ時取得への変更を再検討する。

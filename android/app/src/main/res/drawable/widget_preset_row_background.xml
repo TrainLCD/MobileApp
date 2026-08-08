@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  プリセットの行をカードとして持ち上げる下敷き。iOS版(PresetsWidgetRow)の
+  角丸 + 前景色15%の背景に対応する。
+  プリセットウィジェットの面はブランドカラー固定なので、前景色は白で決め打ちできる。
+  タップのフィードバックが消えないようrippleで包む
+-->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#40FFFFFF">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="@dimen/widget_preset_row_corner_radius" />
+            <solid android:color="#26FFFFFF" />
+        </shape>
+    </item>
+</ripple>

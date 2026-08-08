@@ -24,3 +24,9 @@
 "destinationNotSet" = "方面が未設定です";
 "lineNotSet" = "路線が未設定です";
 "lastUpdated" = "最終更新";
+"openApp" = "TrainLCDを開く";
+"controlDescription" = "ロック画面やコントロールセンターからTrainLCDを開きます。";
+"widgetDescription" = "乗車中の路線と方面を表示します";
+"presetsWidgetTitle" = "プリセット";
+"presetsWidgetDescription" = "登録したプリセットを表示し、タップですぐに乗車を開始します";
+"presetsWidgetEmpty" = "アプリでプリセットを登録すると、ここから直接乗車を開始できます。";

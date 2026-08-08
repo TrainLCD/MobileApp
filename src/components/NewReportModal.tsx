@@ -1,7 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   Keyboard,
   Platform,
   Pressable,
@@ -14,6 +13,7 @@ import {
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
@@ -133,7 +133,7 @@ const NewReportModal: React.FC<Props> = ({
     const hasInput = textRef.current.trim().length > 0;
 
     if (hasInput) {
-      Alert.alert(
+      showDialog(
         translate('confirmDiscardTitle'),
         translate('confirmDiscardMessage'),
         [

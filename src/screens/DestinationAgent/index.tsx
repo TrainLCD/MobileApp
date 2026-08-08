@@ -3,9 +3,6 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   type TextInput,
@@ -17,11 +14,10 @@ import Animated, {
   FadeInDown,
   FadeOut,
   LinearTransition,
+  useAnimatedStyle,
+  withTiming,
 } from 'react-native-reanimated';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
@@ -34,11 +30,13 @@ import {
   useDestinationAgent,
 } from '~/hooks/useDestinationAgent';
 import { useDestinationSelection } from '~/hooks/useDestinationSelection';
+import { useKeyboardBottomInset } from '~/hooks/useKeyboardBottomInset';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { GET_STATIONS_BY_IDS } from '~/lib/graphql/queries';
 import { stationAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
+import { showDialog } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
 import { showToast } from '~/utils/toast';
 import { AgentEmptyState } from './AgentEmptyState';
@@ -147,11 +145,13 @@ const styles = StyleSheet.create({
 
 const SUGGESTION_SKELETON_HEIGHT = 72;
 
+// 入力バーと画面下端(キーボード表示時はキーボード上端)との間隔
+const INPUT_BAR_BOTTOM_GAP = 8;
+
 const SAFE_AREA_EDGES = ['top', 'left', 'right'] as const;
 
 const DestinationAgentScreen = () => {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const station = useAtomValue(stationAtom);
 
@@ -174,6 +174,12 @@ const DestinationAgentScreen = () => {
   // 会話の世代。リセット時にインクリメントし、リセット前に送った
   // リクエストの遅延応答が新しい(空の)会話へ紛れ込むのを防ぐ
   const conversationGenRef = useRef(0);
+
+  const {
+    value: keyboardBottomInset,
+    duration: keyboardAnimationDuration,
+    visible: keyboardVisible,
+  } = useKeyboardBottomInset();
 
   const { sendMessages } = useDestinationAgent();
   const {
@@ -214,6 +220,25 @@ const DestinationAgentScreen = () => {
     }
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [scrollAnchor]);
+
+  // キーボードの分だけリストの表示領域が縮むため、直前まで見えていた末尾の
+  // メッセージがキーボードの裏へ隠れないよう追従させる
+  useEffect(() => {
+    if (!keyboardVisible) {
+      return;
+    }
+    scrollRef.current?.scrollToEnd({ animated: true });
+  }, [keyboardVisible]);
+
+  // 入力バーをキーボードの上へ逃がす。キーボード非表示時は安全領域の下端を確保する
+  const inputBarAnimatedStyle = useAnimatedStyle(
+    () => ({
+      paddingBottom: withTiming(keyboardBottomInset + INPUT_BAR_BOTTOM_GAP, {
+        duration: keyboardAnimationDuration,
+      }),
+    }),
+    [keyboardBottomInset, keyboardAnimationDuration]
+  );
 
   // 提案は軽量情報(stationId 等)しか持たないため、CommonCard が必要とする
   // Line オブジェクトを得るために Station 完全体を一括再取得する。
@@ -399,8 +424,7 @@ const DestinationAgentScreen = () => {
   );
 
   const handleReset = useCallback(() => {
-    // ユーザ起点の onPress なので Alert.alert を直接呼んでよい(CLAUDE.md の StrictMode 規約)
-    Alert.alert(
+    showDialog(
       translate('destinationAgentReset'),
       translate('destinationAgentResetConfirm'),
       [
@@ -529,7 +553,7 @@ const DestinationAgentScreen = () => {
   return (
     <SafeAreaView
       style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}
-      // 下端は入力バー側で insets.bottom を確保するため除外する
+      // 下端は入力バー側でキーボード / 安全領域に応じた余白を確保するため除外する
       edges={SAFE_AREA_EDGES}
     >
       <AgentHeader
@@ -538,10 +562,7 @@ const DestinationAgentScreen = () => {
         onReset={handleReset}
       />
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={styles.flex}>
         <ScrollView
           ref={scrollRef}
           style={styles.flex}
@@ -614,11 +635,11 @@ const DestinationAgentScreen = () => {
           </Animated.View>
         )}
 
-        <View
+        <Animated.View
           style={[
             styles.contentWidth,
             styles.inputBarContainer,
-            { paddingBottom: insets.bottom + 8 },
+            inputBarAnimatedStyle,
           ]}
         >
           <AgentInputBar
@@ -629,8 +650,8 @@ const DestinationAgentScreen = () => {
             rateLimited={rateLimited}
             inputRef={inputRef}
           />
-        </View>
-      </KeyboardAvoidingView>
+        </Animated.View>
+      </View>
 
       <SelectBoundModal
         visible={selectBoundModalVisible}

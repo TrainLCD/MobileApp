@@ -1,31 +1,13 @@
-import { CommonActions } from '@react-navigation/native';
 import * as QuickActions from 'expo-quick-actions';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { navigationRef } from '~/stacks/rootNavigation';
 import navigationState, { presetRoutesAtom } from '~/store/atoms/navigation';
+import { navigateToSelectLine } from '~/utils/navigateToSelectLine';
 
 const MAX_QUICK_ACTIONS = 4;
 
 let handledInitial = false;
-
-const navigateToSelectLine = () => {
-  if (!navigationRef.isReady()) {
-    console.warn(
-      'useQuickActions: ナビゲーションが未準備のためクイックアクションをスキップ'
-    );
-    return false;
-  }
-
-  navigationRef.dispatch(
-    CommonActions.reset({
-      index: 0,
-      routes: [{ name: 'MainStack', params: { screen: 'SelectLine' } }],
-    })
-  );
-  return true;
-};
 
 /**
  * アプリルートで使用するフック。
@@ -66,6 +48,9 @@ export const useQuickActions = () => {
       }));
 
       if (!navigateToSelectLine()) {
+        console.warn(
+          'useQuickActions: ナビゲーションが未準備のためクイックアクションをスキップ'
+        );
         setNavigationState((prev) => ({
           ...prev,
           pendingQuickActionRouteId: null,

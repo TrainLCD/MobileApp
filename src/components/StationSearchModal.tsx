@@ -21,7 +21,7 @@ import {
 import { locationAtom, setLocation } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
-import { showAlertWhilePresenting } from '~/utils/alertPresentation';
+import { showDialogWhilePresenting } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
 import { filterBusLinesForNonBusStation } from '~/utils/line';
 import Button from './Button';
@@ -189,8 +189,8 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
   useEffect(() => {
     if (fetchStationsByNameError || fetchStationsNearbyError) {
-      // StrictMode の二重実行でアラートが重複しないよう共有ガードを使う
-      showAlertWhilePresenting(
+      // StrictMode の二重実行でダイアログが重複しないよう共有ガードを使う
+      showDialogWhilePresenting(
         'stationSearchModalFetchError',
         translate('errorTitle'),
         translate('failedToFetchStation')

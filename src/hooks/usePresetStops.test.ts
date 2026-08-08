@@ -68,6 +68,19 @@ describe('usePresetStops', () => {
       );
       expect(result.current.presetOrigin?.groupId).toBe(ueno.groupId);
     });
+
+    // 駅一覧の並びが保存時と反転していると direction の示す終端が行き先と重なる
+    it('direction の示す終端が wantedDestination と同じ場合は反対側の終端を返す', () => {
+      const { result } = renderHook(() =>
+        usePresetStops({
+          savedRouteDirection: 'OUTBOUND',
+          stations,
+          wantedDestination: ueno,
+          confirmedStation: null,
+        })
+      );
+      expect(result.current.presetOrigin?.groupId).toBe(kitaSenju.groupId);
+    });
   });
 
   describe('presetStops', () => {
