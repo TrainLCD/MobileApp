@@ -290,9 +290,15 @@ Figma デザインは人力ではなく Figma MCP で本書を入力として起
 - `SearchBar` のスタイルを踏襲した新規コンポーネント: 高さ 48、
   背景 `#fcfcfc`（LED 時 `#333`）、角丸 8（LED 時 0）、右端に
   48×48 の送信ボタン（黒背景、Ionicons `arrow-up`、白アイコン）。
-- 画面下部固定。`KeyboardAvoidingView`（iOS `padding` / Android は
-  既定動作）でキーボードに追従。下端は
-  `useSafeAreaInsets().bottom` を確保。
+- 画面下部固定。`useKeyboardBottomInset()` が返す下余白でキーボードに
+  追従する（キーボード非表示時は `useSafeAreaInsets().bottom` を確保）。
+  `KeyboardAvoidingView` は使わない: エッジトゥエッジ
+  （`edgeToEdgeEnabled=true`）の Android では `adjustResize` でも
+  ウィンドウが縮まず、RN が送る `endCoordinates.screenY` が画面下端の
+  ままになるため押し上げ量が常に 0 と算出され、入力欄がキーボードに
+  隠れてしまう。
+- キーボード表示でリストの表示領域が縮むため、表示に合わせて
+  末尾へ追従スクロールする。
 - 入力仕様:
   - 複数行入力可（`multiline`、最大 4 行で内部スクロール）。
   - 最大 500 文字（サーバ制約）。450 文字を超えたら右下に
