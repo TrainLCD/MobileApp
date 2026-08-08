@@ -86,6 +86,15 @@ describe('useKeyboardBottomInset', () => {
       expect(result.current.visible).toBe(true);
     });
 
+    // iOS でも duration が 0 で届くことがあり、そのまま使うと追従が瞬間移動になる
+    it('duration が 0 で届いた場合はフォールバック値を使う', () => {
+      const { result } = loadHook('ios');
+
+      emit('keyboardWillShow', keyboardEvent(336, 0));
+
+      expect(result.current.duration).toBe(250);
+    });
+
     it('キーボードを閉じると安全領域の下端へ戻る', () => {
       mockInsets.bottom = 34;
       const { result } = loadHook('ios');
@@ -118,13 +127,16 @@ describe('useKeyboardBottomInset', () => {
       expect(result.current.visible).toBe(true);
     });
 
-    // did 系は duration: 0 で届くため、追従アニメーション時間はフック側で補う
-    it('duration が 0 でもアニメーション時間を補完する', () => {
+    // did 系は IME の遷移後に届きうるため、そこからさらにアニメーションさせると
+    // 入力バーが隠れたままの時間が伸びる。即座に確定させる
+    it('追従アニメーションを行わない', () => {
       const { result } = loadHook('android');
 
       emit('keyboardDidShow', keyboardEvent(300));
+      expect(result.current.duration).toBe(0);
 
-      expect(result.current.duration).toBeGreaterThan(0);
+      emit('keyboardDidHide', keyboardEvent(0));
+      expect(result.current.duration).toBe(0);
     });
 
     it('システムバー非表示時は加算せずキーボード高さのみを返す', () => {

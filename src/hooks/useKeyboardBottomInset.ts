@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Keyboard, type KeyboardEvent, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Android の keyboardDidShow / keyboardDidHide は IME のアニメーション完了後に
-// duration: 0 で届くため、追従アニメーションの時間はこちらで補う
-// (Android 既定の IME アニメーションに近い値)。
-const ANDROID_KEYBOARD_ANIMATION_DURATION = 250;
+// Android は will 系イベントを持たず、keyboardDidShow / keyboardDidHide は IME の
+// 遷移が終わってから届きうる。そこからさらに時間をかけて動かすと、キーボードが
+// 出揃った後も入力バーが隠れたままの時間が伸びてしまうため、追従アニメーションは
+// 行わず即座に確定させる(`withTiming` は duration: 0 で目標値を即時反映する)。
+const ANDROID_KEYBOARD_ANIMATION_DURATION = 0;
 
 // iOS はアニメーション開始前に will 系が届くので duration をそのまま使えるが、
 // 稀に 0 で届くことがあるため下限を設ける。
