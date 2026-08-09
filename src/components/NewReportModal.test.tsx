@@ -138,6 +138,8 @@ describe('NewReportModal', () => {
         borderRadius: 0,
         color: '#fff',
         backgroundColor: 'transparent',
+        // 非フォーカス時のLEDボーダー色。フォーカス時は #fff に変わる
+        borderColor: 'rgba(255, 255, 255, 0.4)',
       })
     );
   });
