@@ -219,7 +219,7 @@ const NewReportModal: React.FC<Props> = ({
   const remainingCount = Math.max(descriptionLowerLimit - charCount, 0);
 
   const accentColor = isLEDTheme ? '#fff' : ACCENT_COLOR;
-  const mutedTextColor = isLEDTheme ? 'rgba(255, 255, 255, 0.7)' : '#777';
+  const mutedTextColor = isLEDTheme ? 'rgba(255, 255, 255, 0.7)' : '#767676';
   const inputBorderColor = (() => {
     if (isLEDTheme) {
       return inputFocused ? '#fff' : 'rgba(255, 255, 255, 0.4)';
@@ -254,7 +254,7 @@ const NewReportModal: React.FC<Props> = ({
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Pressable onPress={Keyboard.dismiss}>
+        <Pressable accessible={false} onPress={Keyboard.dismiss}>
           <View style={styles.header}>
             <View style={[styles.iconBadge, isLEDTheme && styles.iconBadgeLED]}>
               <Ionicons

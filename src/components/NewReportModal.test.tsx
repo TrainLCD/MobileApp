@@ -1,5 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
+import { StyleSheet } from 'react-native';
 import NewReportModal from './NewReportModal';
 
 // 実体はフォント読み込みで非同期 setState するため、act 警告を避けて素の View に差し替える
@@ -26,6 +27,7 @@ jest.mock('~/utils/dialogPresentation', () => ({
 }));
 
 const { showDialog } = jest.requireMock('~/utils/dialogPresentation');
+const { useAtomValue } = jest.requireMock('jotai');
 
 const defaultProps = {
   visible: true,
@@ -55,6 +57,8 @@ describe('NewReportModal', () => {
       jest.runOnlyPendingTimers();
     });
     jest.useRealTimers();
+    // clearAllMocks は mockReturnValue を復元しないため、LEDテーマの上書きを明示的に戻す
+    useAtomValue.mockReturnValue(false);
     jest.clearAllMocks();
   });
 
@@ -123,5 +127,18 @@ describe('NewReportModal', () => {
 
     expect(getByText('reportSendInProgress')).toBeTruthy();
     expect(input.props.editable).toBe(false);
+  });
+
+  it('LEDテーマでは入力欄が角丸なし・白文字・透過背景になる', () => {
+    useAtomValue.mockReturnValue(true);
+    const { input } = renderModal();
+
+    expect(StyleSheet.flatten(input.props.style)).toEqual(
+      expect.objectContaining({
+        borderRadius: 0,
+        color: '#fff',
+        backgroundColor: 'transparent',
+      })
+    );
   });
 });
