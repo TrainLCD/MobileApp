@@ -127,8 +127,8 @@ jobs:
             fi
           done
 
-      # :wearable は :app と applicationId が同一のマルチバンドル配信のため、Play の同一
-      # リリースに両方の AAB を含める必要がある。:app 単体で公開すると Wear OS トラックに
+      # :wearable は :app と applicationId が同一だが、Play では Wear OS 専用トラックへ
+      # 別建てで配信する。:app しかビルドしないと Wear OS トラックに
       # android.hardware.type.watch を宣言した AAB が存在せず、既存 Wear ユーザーへ
       # アップグレードを提供できずリリースが公開ブロックされる。
       - name: Build devRelease
@@ -151,13 +151,9 @@ jobs:
           path: android/wearable/build/outputs/bundle/devRelease/*.aab
           if-no-files-found: error
 
-      # releaseFiles は「カンマ区切りのみ・要素の trim なし」で解釈されるため、改行や
-      # 余分な空白を挟まず 1 行で列挙する。
-      # mappingFile は指定すると各 versionCode へ同一ファイルが適用され、:wearable に
-      # :app のマッピングが貼られてしまう。両モジュールとも R8 有効
-      # (android.enableMinifyInReleaseBuilds=true) で AAB 内の
-      # BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map を Play が
-      # 自動で取り込むため、明示指定はしない。
+      # :app と :wearable はフォームファクタ別トラックへ個別に配信する。アクションは
+      # releaseFiles 全体の versionCodes を tracks の各トラックへ一律に適用するため、
+      # 1 ステップに両方の AAB を渡してもトラック単位で振り分けられない。
       - name: Upload to Google Play (internal track)
         if: github.event_name == 'push' || inputs.upload_to_play
         # v1.1.5
@@ -165,6 +161,22 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: me.tinykitten.trainlcd.dev
-          releaseFiles: "android/app/build/outputs/bundle/devRelease/*.aab,android/wearable/build/outputs/bundle/devRelease/*.aab"
+          releaseFiles: android/app/build/outputs/bundle/devRelease/*.aab
           tracks: internal
           status: completed
+          mappingFile: android/app/build/outputs/mapping/devRelease/mapping.txt
+
+      # Wear OS 専用トラックは android.hardware.type.watch を宣言した AAB しか受け付けない。
+      # トラック ID は Play Console のフォームファクタ設定に依存する ([prefix]:trackName 形式)
+      # ため、フォームファクタ構成を変えたときは実際のトラック ID と一致しているか確認する。
+      - name: Upload Wear OS AAB to Google Play (Wear OS internal track)
+        if: github.event_name == 'push' || inputs.upload_to_play
+        # v1.1.5
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: me.tinykitten.trainlcd.dev
+          releaseFiles: android/wearable/build/outputs/bundle/devRelease/*.aab
+          tracks: "wear:internal"
+          status: completed
+          mappingFile: android/wearable/build/outputs/mapping/devRelease/mapping.txt
