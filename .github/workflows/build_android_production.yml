@@ -127,11 +127,15 @@ jobs:
             fi
           done
 
+      # :wearable は :app と applicationId が同一だが、Play では Wear OS 専用トラックへ
+      # 別建てで配信する。:app しかビルドしないと Wear OS トラックに
+      # android.hardware.type.watch を宣言した AAB が存在せず、既存 Wear ユーザーへ
+      # アップグレードを提供できずリリースが公開ブロックされる。
       - name: Build prodRelease
         working-directory: android
         env:
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
-        run: ./gradlew :app:bundleProdRelease --no-daemon
+        run: ./gradlew :app:bundleProdRelease :wearable:bundleProdRelease --no-daemon
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
@@ -140,6 +144,16 @@ jobs:
           path: android/app/build/outputs/bundle/prodRelease/*.aab
           if-no-files-found: error
 
+      - name: Upload Wear OS AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wearable-prodRelease
+          path: android/wearable/build/outputs/bundle/prodRelease/*.aab
+          if-no-files-found: error
+
+      # :app と :wearable はフォームファクタ別トラックへ個別に配信する。アクションは
+      # releaseFiles 全体の versionCodes を tracks の各トラックへ一律に適用するため、
+      # 1 ステップに両方の AAB を渡してもトラック単位で振り分けられない。
       - name: Upload to Google Play (internal track)
         if: github.event_name == 'push' || inputs.upload_to_play
         # v1.1.5
@@ -151,3 +165,18 @@ jobs:
           tracks: internal
           status: completed
           mappingFile: android/app/build/outputs/mapping/prodRelease/mapping.txt
+
+      # Wear OS 専用トラックは android.hardware.type.watch を宣言した AAB しか受け付けない。
+      # トラック ID は Play Console のフォームファクタ設定に依存する ([prefix]:trackName 形式)
+      # ため、フォームファクタ構成を変えたときは実際のトラック ID と一致しているか確認する。
+      - name: Upload Wear OS AAB to Google Play (Wear OS internal track)
+        if: github.event_name == 'push' || inputs.upload_to_play
+        # v1.1.5
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: me.tinykitten.trainlcd
+          releaseFiles: android/wearable/build/outputs/bundle/prodRelease/*.aab
+          tracks: "wear:internal"
+          status: completed
+          mappingFile: android/wearable/build/outputs/mapping/prodRelease/mapping.txt
