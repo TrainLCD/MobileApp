@@ -5,6 +5,11 @@ App Bundles and optionally upload them to the Google Play internal track. A push
 to `canary` or `master` uploads the corresponding build automatically. A manual
 run defaults to a build-only dry-run.
 
+Each workflow builds **two** App Bundles — the handheld app (`:app`) and the
+Wear OS app (`:wearable`) — and uploads both into a single Google Play release.
+See [Wear OS multi-bundle release](#wear-os-multi-bundle-release) for why both
+are required.
+
 ## Prerequisites
 
 - A GitHub-hosted `ubuntu-22.04` runner with Node.js 22 and Java 17.
@@ -46,8 +51,61 @@ SSH key remain step-scoped secrets.
 3. Leave **Upload the AAB to Google Play (internal track)** disabled.
 4. Run the workflow and confirm that dependency installation, environment
    validation, signing, bundle creation, and artifact upload succeed.
-5. Confirm that **Upload to Google Play (internal track)** is skipped.
+5. Confirm that both the `app-*Release` and `wearable-*Release` artifacts are
+   produced.
+6. Confirm that **Upload to Google Play (internal track)** is skipped.
 
 Enable **Upload the AAB to Google Play (internal track)** only when the selected
 ref is intended for distribution. Push-triggered Canary and Production workflows
 always upload to the internal track.
+
+## Wear OS multi-bundle release
+
+`:app` and `:wearable` share the same `applicationId`, so Google Play treats
+them as a multi-bundle (multi-form-factor) delivery. Both AABs must land in the
+**same** Play release.
+
+Publishing `:app` alone leaves the Wear OS track without a bundle that declares
+`android.hardware.type.watch`, which makes Play reject the release with:
+
+```text
+This release is not allowed to be published because it does not allow existing
+users to upgrade to the newly added app bundles.
+
+The APK or Android App Bundle in this track must request the
+android.hardware.type.watch feature.
+```
+
+### versionCode ordering
+
+Play delivers the bundle with the **highest** `versionCode` among those whose
+device requirements are met. `:app` (`minSdk 24`, no watch feature declared)
+also satisfies Wear OS device requirements, so it wins on any watch unless
+`:wearable` outranks it. `:wearable` must therefore always be
+`:app` + 1.
+
+`scripts/bump-version.js` enforces this automatically and corrects the value
+even when the two have drifted or collided. Do not edit the Wear OS
+`versionCode` by hand.
+
+### Deobfuscation mapping
+
+Neither workflow passes `mappingFile` to the upload action. The action applies a
+single `mappingFile` to **every** uploaded `versionCode`, which would attach the
+`:app` mapping to the Wear OS bundle.
+
+Both modules build with R8 enabled
+(`android.enableMinifyInReleaseBuilds=true` in `android/gradle.properties`), so
+each AAB already embeds its own mapping at
+`BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map`, and Play
+picks it up automatically.
+
+### releaseFiles syntax
+
+The upload action splits `releaseFiles` on commas only and does not trim the
+resulting entries. List the globs on a single line with no surrounding
+whitespace or newlines:
+
+```yaml
+releaseFiles: "android/app/build/outputs/bundle/prodRelease/*.aab,android/wearable/build/outputs/bundle/prodRelease/*.aab"
+```
