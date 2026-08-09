@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { workerUrl } from './workerApi';
 
@@ -16,9 +17,14 @@ export const REMOTE_CONFIG_KEYS = {
   // ETAフォールバックを継続してよい最大時間(分)。GPS喪失がこれを超えて続く場合は
   // フォールバックを打ち切り、不確実な推定に依存し続けないようにする。
   ETA_FALLBACK_MAX_DURATION_MIN: 'eta_fallback_max_duration_min',
-  // TTS(自動アナウンス)機能の有効/無効。false のとき設定画面のTTSトグルを無効化し、
-  // 音声合成バックエンド障害時などにサーバー側から機能を止められるようにする。
+  // TTS(自動アナウンス)機能の全体マスタースイッチ。false のとき設定画面のTTSトグルを
+  // 無効化し、音声合成バックエンド障害時などにサーバー側から機能を止められるようにする。
   TTS_ENABLED: 'tts_enabled',
+  // TTS機能のプラットフォーム別スイッチ。iOS/Android 片方だけで音声合成が壊れた場合に、
+  // 該当プラットフォームのみ false を配信して止められるようにする。マスタースイッチとの
+  // AND で評価されるため、tts_enabled=false は常に全プラットフォームを止める。
+  TTS_ENABLED_IOS: 'tts_enabled_ios',
+  TTS_ENABLED_ANDROID: 'tts_enabled_android',
   // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
   // エントリポイントごと機能を止められるようにするキルスイッチ。
   AI_AGENT_ENABLED: 'ai_agent_enabled',
@@ -31,6 +37,8 @@ type RemoteConfigResponse = {
   eta_fallback_arrival_confirm_margin_sec?: number;
   eta_fallback_max_duration_min?: number;
   tts_enabled?: boolean;
+  tts_enabled_ios?: boolean;
+  tts_enabled_android?: boolean;
   ai_agent_enabled?: boolean;
 };
 
@@ -48,6 +56,11 @@ const ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK = 30;
 // TTS機能のフォールバック既定値。キルスイッチ用途のため、未配信・取得失敗時は
 // 既存挙動（利用可能）を維持する true をフォールバックとする。
 const TTS_ENABLED_FALLBACK = true;
+
+// TTS機能のプラットフォーム別スイッチのフォールバック既定値。プラットフォーム別キーは
+// 「特定OSだけを止めたいとき」に配信する追加の絞り込みであり、未配信時はマスタースイッチの
+// 判定をそのまま通す必要があるため true をフォールバックとする。
+const TTS_PLATFORM_ENABLED_FALLBACK = true;
 
 // AIエージェント機能のフォールバック既定値。LLM 利用料が発生する機能のため、
 // 未配信・取得失敗時は安全側に倒して無効とする。
@@ -71,6 +84,8 @@ let cachedEtaAssistEnabled: boolean | null = null;
 let cachedEtaFallbackArrivalConfirmMarginSec: number | null = null;
 let cachedEtaFallbackMaxDurationMin: number | null = null;
 let cachedTTSEnabled: boolean | null = null;
+let cachedTTSEnabledIOS: boolean | null = null;
+let cachedTTSEnabledAndroid: boolean | null = null;
 let cachedAIAgentEnabled: boolean | null = null;
 
 // setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
@@ -100,6 +115,8 @@ export const resetRemoteConfigCache = (): void => {
   cachedEtaFallbackArrivalConfirmMarginSec = null;
   cachedEtaFallbackMaxDurationMin = null;
   cachedTTSEnabled = null;
+  cachedTTSEnabledIOS = null;
+  cachedTTSEnabledAndroid = null;
   cachedAIAgentEnabled = null;
   notifyRemoteConfigListeners();
 };
@@ -139,6 +156,12 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   if (typeof data.tts_enabled === 'boolean') {
     cachedTTSEnabled = data.tts_enabled;
+  }
+  if (typeof data.tts_enabled_ios === 'boolean') {
+    cachedTTSEnabledIOS = data.tts_enabled_ios;
+  }
+  if (typeof data.tts_enabled_android === 'boolean') {
+    cachedTTSEnabledAndroid = data.tts_enabled_android;
   }
   if (typeof data.ai_agent_enabled === 'boolean') {
     cachedAIAgentEnabled = data.ai_agent_enabled;
@@ -198,14 +221,31 @@ export const getEtaFallbackMaxDurationMin = (): number => {
   return ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK;
 };
 
-// TTS(自動アナウンス)機能の有効/無効を同期的に取得する。setupRemoteConfig 完了後は
-// 取得済みのリモート値を、未設定・取得失敗時はフォールバック(true=利用可能)を返す。
-// false のとき設定画面のTTSトグルは無効化される(サーバー側キルスイッチ)。
-export const isTTSFeatureEnabled = (): boolean => {
-  if (cachedTTSEnabled != null) {
-    return cachedTTSEnabled;
+// 実行中プラットフォーム向けのTTSスイッチを同期的に取得する。iOS/Android 以外
+// (web など)はプラットフォーム別キーを持たないため、常にフォールバック(true)を返して
+// マスタースイッチの判定へ委ねる。
+const isTTSPlatformEnabled = (): boolean => {
+  switch (Platform.OS) {
+    case 'ios':
+      return cachedTTSEnabledIOS ?? TTS_PLATFORM_ENABLED_FALLBACK;
+    case 'android':
+      return cachedTTSEnabledAndroid ?? TTS_PLATFORM_ENABLED_FALLBACK;
+    default:
+      return TTS_PLATFORM_ENABLED_FALLBACK;
   }
-  return TTS_ENABLED_FALLBACK;
+};
+
+// TTS(自動アナウンス)機能の有効/無効を同期的に取得する。全体マスタースイッチ
+// (tts_enabled)と実行中プラットフォームのスイッチ(tts_enabled_ios / tts_enabled_android)の
+// AND で判定するため、以下をサーバー側から表現できる。
+//   - iOS/Android 両方有効: tts_enabled=true（プラットフォーム別キーは未配信または両方 true）
+//   - 片方のみ有効: tts_enabled=true かつ止めたい側のみ false
+//   - 全体停止: tts_enabled=false（プラットフォーム別キーの値によらず停止）
+// setupRemoteConfig 完了後は取得済みのリモート値を、未設定・取得失敗時はフォールバック
+// (true=利用可能)を返す。false のとき設定画面のTTSトグルは無効化される(サーバー側キルスイッチ)。
+export const isTTSFeatureEnabled = (): boolean => {
+  const masterEnabled = cachedTTSEnabled ?? TTS_ENABLED_FALLBACK;
+  return masterEnabled && isTTSPlatformEnabled();
 };
 
 // AIエージェント(行き先相談)機能の有効/無効を同期的に取得する。setupRemoteConfig 完了後は
