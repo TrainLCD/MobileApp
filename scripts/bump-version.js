@@ -8,6 +8,7 @@ const packageJsonPath = path.join(rootDir, 'package.json');
 const packageLockJsonPath = path.join(rootDir, 'package-lock.json');
 const pbxprojPath = path.join(rootDir, 'ios', 'TrainLCD.xcodeproj', 'project.pbxproj');
 const androidBuildGradlePath = path.join(rootDir, 'android', 'app', 'build.gradle');
+const wearableBuildGradlePath = path.join(rootDir, 'android', 'wearable', 'build.gradle.kts');
 
 const semverPattern = /^\d+\.\d+\.\d+$/;
 const allowedIncrements = new Set(['major', 'minor', 'patch']);
@@ -205,6 +206,43 @@ const updateAndroidBuildGradle = (filePath, versionCode, versionName) => {
   fs.writeFileSync(filePath, content);
 };
 
+// :wearable は Kotlin DSL のため Groovy 側 (`versionCode 1`) と構文が異なり
+// (`create("prod") { versionCode = 1 }`)、専用の置換関数が必要になる。
+// `versionName\b` の \b は versionNameSuffix への誤マッチを防ぐ。
+const replaceKtsFlavorNumericSetting = (source, flavor, key, value) => {
+  const regex = new RegExp(`(create\\("${flavor}"\\)\\s*\\{[\\s\\S]*?${key}\\b\\s*=\\s*)(\\d+)`, 'm');
+  if (!regex.test(source)) {
+    throw new Error(`build.gradle.kts の ${flavor} フレーバーに ${key} が見つかりません。`);
+  }
+  return source.replace(regex, `$1${value}`);
+};
+
+const replaceKtsFlavorStringSetting = (source, flavor, key, value) => {
+  const regex = new RegExp(`(create\\("${flavor}"\\)\\s*\\{[\\s\\S]*?${key}\\b\\s*=\\s*)"([^"]*)"`, 'm');
+  if (!regex.test(source)) {
+    throw new Error(`build.gradle.kts の ${flavor} フレーバーに ${key} が見つかりません。`);
+  }
+  return source.replace(regex, `$1"${value}"`);
+};
+
+// :wearable は :app と applicationId が同一のマルチバンドル配信のため、Play は minSdk が
+// 高い側 (:wearable) の versionCode が高いことを要求する。逆転・同値になるとリリースを
+// 公開できないため、:app の versionCode + 1 に必ず追従させる。
+// 追従を忘れると :app だけが進んで逆転する事故が起きるので、ここで機械的に更新する。
+const updateWearableBuildGradle = (filePath, versionCode, versionName) => {
+  let content = fs.readFileSync(filePath, 'utf8');
+
+  content = replaceKtsFlavorNumericSetting(content, 'dev', 'versionCode', versionCode);
+  content = replaceKtsFlavorNumericSetting(content, 'prod', 'versionCode', versionCode);
+
+  if (versionName) {
+    content = replaceKtsFlavorStringSetting(content, 'dev', 'versionName', versionName);
+    content = replaceKtsFlavorStringSetting(content, 'prod', 'versionName', versionName);
+  }
+
+  fs.writeFileSync(filePath, content);
+};
+
 const extractVersionFromAppConfig = (filePath) => {
   const content = fs.readFileSync(filePath, 'utf8');
   const match = content.match(/version:\s*['"]([^'"]+)['"]/);
@@ -220,6 +258,15 @@ const extractVersionCodeFromBuildGradle = (filePath) => {
   const match = content.match(/prod\s*\{[\s\S]*?versionCode\s+(\d+)/m);
   if (!match) {
     throw new Error('build.gradle の prod フレーバーから versionCode を取得できません。');
+  }
+  return Number(match[1]);
+};
+
+const extractVersionCodeFromWearableBuildGradle = (filePath) => {
+  const content = fs.readFileSync(filePath, 'utf8');
+  const match = content.match(/create\("prod"\)\s*\{[\s\S]*?versionCode\b\s*=\s*(\d+)/m);
+  if (!match) {
+    throw new Error('build.gradle.kts の prod フレーバーから versionCode を取得できません。');
   }
   return Number(match[1]);
 };
@@ -264,6 +311,7 @@ const packageJson = readJson(packageJsonPath);
 
 const currentVersion = extractVersionFromAppConfig(appConfigPath);
 const currentAndroidVersionCode = extractVersionCodeFromBuildGradle(androidBuildGradlePath);
+const currentWearableVersionCode = extractVersionCodeFromWearableBuildGradle(wearableBuildGradlePath);
 const currentIosBuildNumber = extractIosBuildNumberFromPbxproj(pbxprojPath);
 
 let nextVersion = explicitVersion;
@@ -366,6 +414,10 @@ if (versionChanged) {
 updatePbxproj(pbxprojPath, nextIosBuildNumber, versionChanged ? nextVersion : null);
 updateAndroidBuildGradle(androidBuildGradlePath, Math.trunc(nextAndroidVersionCode), versionChanged ? nextVersion : null);
 
+// :wearable は常に :app + 1 に揃える（現在値が同値・逆転していても矯正される）
+const nextWearableVersionCode = Math.trunc(nextAndroidVersionCode) + 1;
+updateWearableBuildGradle(wearableBuildGradlePath, nextWearableVersionCode, versionChanged ? nextVersion : null);
+
 if (versionChanged) {
   console.log(`バージョンを ${currentVersion} → ${nextVersion} に更新しました。`);
 } else {
@@ -373,3 +425,4 @@ if (versionChanged) {
 }
 console.log(`iOS ビルド番号: ${currentIosBuildNumber} → ${nextIosBuildNumber}`);
 console.log(`Android versionCode: ${currentAndroidVersionCode} → ${Math.trunc(nextAndroidVersionCode)}`);
+console.log(`Wear OS versionCode: ${currentWearableVersionCode} → ${nextWearableVersionCode}`);

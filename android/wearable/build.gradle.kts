@@ -79,18 +79,18 @@ android {
     // :app と applicationId が同じマルチバンドル配信のため、Play は minSdk が高い側
     // (:wearable=34 > :app=24) の versionCode が高いことを要求する。逆転すると Wear バンドルが
     // 常に :app に順位負けし、どの端末にも配信されないためリリースを公開できなくなる。
-    // そのため versionCode は必ず「:app の versionCode + 1」に保ち、:app を bump する際は
-    // 必ず本ファイルも同時に bump すること。
+    // そのため versionCode は必ず「:app の versionCode + 1」に保つ。この追従は
+    // scripts/bump-version.js が機械的に行うので、手作業で編集しないこと。
     create("dev") {
       dimension = "environment"
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
-      versionCode = 100000580
+      versionCode = 100000581
       versionName = "10.12.0"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 100000580
+      versionCode = 100000581
       versionName = "10.12.0"
     }
   }
