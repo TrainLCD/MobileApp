@@ -1,7 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
-import { ALL_AVAILABLE_LANGUAGES, type AvailableLanguage } from '~/constants';
+import {
+  ALL_AVAILABLE_LANGUAGES,
+  type AvailableLanguage,
+  DEFAULT_HEADER_TRANSITION_INTERVAL,
+} from '~/constants';
 import type { HeaderTransitionState } from '../models/HeaderTransitionState';
 import navigationState, {
   enabledLanguagesAtom,
@@ -14,7 +18,6 @@ import {
   selectedBoundAtom,
 } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
-import tuningState from '../store/atoms/tuning';
 import { isJapanese } from '../translation';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
@@ -123,7 +126,6 @@ export const useTransitionHeaderState = (): void => {
   const enabledLanguagesFromState = useAtomValue(enabledLanguagesAtom);
   const stationForHeader = useAtomValue(stationForHeaderAtom);
   const setNavigation = useSetAtom(navigationState);
-  const { headerTransitionInterval } = useAtomValue(tuningState);
   const station = useCurrentStation();
 
   const headerStateRef = useValueRef(headerState);
@@ -471,6 +473,6 @@ export const useTransitionHeaderState = (): void => {
       showNextExpression,
       station,
     ]),
-    headerTransitionInterval
+    DEFAULT_HEADER_TRANSITION_INTERVAL
   );
 };

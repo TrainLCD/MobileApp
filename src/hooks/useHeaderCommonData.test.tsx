@@ -40,11 +40,6 @@ jest.mock('../store/atoms/station', () => ({
   default: 'STATION_ATOM',
 }));
 
-jest.mock('../store/atoms/tuning', () => ({
-  __esModule: true,
-  default: 'TUNING_ATOM',
-}));
-
 jest.mock('./useBoundText', () => ({
   __esModule: true,
   useBoundText: jest.fn(),
@@ -145,9 +140,6 @@ describe('useHeaderCommonData', () => {
       }
       if (atom === 'NAVIGATION_ATOM') {
         return { headerState: 'CURRENT' };
-      }
-      if (atom === 'TUNING_ATOM') {
-        return { headerTransitionDelay: 0 };
       }
       return {};
     });

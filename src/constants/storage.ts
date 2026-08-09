@@ -21,9 +21,6 @@ export const STORAGE_KEYS = {
   PARTIALLY_PASS_ALERT_DISMISSED: '@TrainLCD:partiallyPassAlertDismissed',
   TELEMETRY_ENABLED: '@TrainLCD:telemetryEnabled',
   DEV_OVERLAY_ENABLED: '@TrainLCD:devOverlayEnabled',
-  HEADER_TRANSITION_INTERVAL: '@TrainLCD:headerTransitionInterval',
-  HEADER_TRANSITION_DELAY: '@TrainLCD:headerTransitionDelay',
-  BOTTOM_TRANSITION_INTERVAL: '@TrainLCD:bottomTransitionInterval',
   UNTOUCHABLE_MODE_ENABLED: '@TrainLCD:untouchableModeEnabled',
   WALKTHROUGH_COMPLETED: '@TrainLCD:walkthroughCompleted',
   ROUTE_SEARCH_WALKTHROUGH_COMPLETED:

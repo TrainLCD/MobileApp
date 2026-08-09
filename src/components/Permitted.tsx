@@ -451,15 +451,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const devOverlayEnabledStr = storage.getString(
         STORAGE_KEYS.DEV_OVERLAY_ENABLED
       );
-      const headerTransitionIntervalStr = storage.getString(
-        STORAGE_KEYS.HEADER_TRANSITION_INTERVAL
-      );
-      const headerTransitionDelayStr = storage.getString(
-        STORAGE_KEYS.HEADER_TRANSITION_DELAY
-      );
-      const bottomTransitionIntervalStr = storage.getString(
-        STORAGE_KEYS.BOTTOM_TRANSITION_INTERVAL
-      );
       const untouchableModeEnabledStr = storage.getString(
         STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED
       );
@@ -534,33 +525,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           ...prev,
           devOverlayEnabled: devOverlayEnabledStr === 'true',
         }));
-      }
-      if (headerTransitionIntervalStr) {
-        const parsed = Number(headerTransitionIntervalStr);
-        if (!Number.isNaN(parsed)) {
-          setTuning((prev) => ({
-            ...prev,
-            headerTransitionInterval: parsed,
-          }));
-        }
-      }
-      if (headerTransitionDelayStr) {
-        const parsed = Number(headerTransitionDelayStr);
-        if (!Number.isNaN(parsed)) {
-          setTuning((prev) => ({
-            ...prev,
-            headerTransitionDelay: parsed,
-          }));
-        }
-      }
-      if (bottomTransitionIntervalStr) {
-        const parsed = Number(bottomTransitionIntervalStr);
-        if (!Number.isNaN(parsed)) {
-          setTuning((prev) => ({
-            ...prev,
-            bottomTransitionInterval: parsed,
-          }));
-        }
       }
       if (untouchableModeEnabledStr) {
         setTuning((prev) => ({

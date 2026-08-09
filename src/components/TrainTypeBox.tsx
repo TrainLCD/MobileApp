@@ -15,7 +15,11 @@ import {
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
-import { FONTS, parenthesisRegexp } from '../constants';
+import {
+  DEFAULT_HEADER_TRANSITION_DELAY,
+  FONTS,
+  parenthesisRegexp,
+} from '../constants';
 import {
   useCurrentLine,
   useLandscapeWindowDimensions,
@@ -27,7 +31,6 @@ import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { APP_THEME, type AppTheme } from '../models/Theme';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
-import tuningState from '../store/atoms/tuning';
 import { translate } from '../translation';
 import { computeTwoLineTypography } from '../utils/computeTwoLineTypography';
 import isTablet from '../utils/isTablet';
@@ -111,7 +114,6 @@ const TrainTypeBox: React.FC<Props> = ({
 
   const { width: windowWidth } = useLandscapeWindowDimensions();
   const headerState = useAtomValue(headerStateAtom);
-  const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
   const nextTrainType = useNextTrainType();
@@ -237,13 +239,13 @@ const TrainTypeBox: React.FC<Props> = ({
   const updateOpacity = useCallback(() => {
     RNAnimated.timing(textOpacityAnim, {
       toValue: 1,
-      duration: headerTransitionDelay,
+      duration: DEFAULT_HEADER_TRANSITION_DELAY,
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
     }).start(({ finished }) => {
       handleFinish(finished);
     });
-  }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
+  }, [handleFinish, textOpacityAnim]);
 
   // 表示内容または表示設定が変更されたときのみfadeOutFinishedをリセット
   // biome-ignore lint/correctness/useExhaustiveDependencies: 前回表示状態の変更時にもアニメーション状態をリセットする必要がある

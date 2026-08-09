@@ -7,7 +7,6 @@ import { FONTS } from '../constants';
 import { APP_THEME } from '../models/Theme';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
-import tuningState from '../store/atoms/tuning';
 import TrainTypeBox, { resolveTrainTypeFontFamily } from './TrainTypeBox';
 
 jest.mock('jotai', () => ({
@@ -204,7 +203,6 @@ describe('TrainTypeBox language transition', () => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return headerState;
       if (atom === themeAtom) return APP_THEME.TOKYO_METRO;
-      if (atom === tuningState) return { headerTransitionDelay: 1000 };
       return undefined;
     });
     jest

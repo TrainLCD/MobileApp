@@ -11,9 +11,6 @@ jest.mock('jotai', () => ({
     if (atom === require('~/store/atoms/navigation').default) {
       return { headerState: 'CURRENT' };
     }
-    if (atom === require('~/store/atoms/tuning').default) {
-      return { headerTransitionDelay: 300 };
-    }
     return {};
   }),
 }));
@@ -40,11 +37,6 @@ jest.mock('~/store/atoms/navigation', () => ({
 }));
 
 jest.mock('~/store/atoms/station', () => ({
-  __esModule: true,
-  default: {},
-}));
-
-jest.mock('~/store/atoms/tuning', () => ({
   __esModule: true,
   default: {},
 }));

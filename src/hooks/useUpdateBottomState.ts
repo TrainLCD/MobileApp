@@ -1,8 +1,8 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
+import { DEFAULT_BOTTOM_TRANSITION_INTERVAL } from '../constants';
 import navigationState, { bottomStateAtom } from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
-import tuningState from '../store/atoms/tuning';
 import { useInterval } from './useInterval';
 import { useShouldHideTypeChange } from './useShouldHideTypeChange';
 import { useTransferLines } from './useTransferLines';
@@ -12,7 +12,6 @@ import { useValueRef } from './useValueRef';
 export const useUpdateBottomState = () => {
   const bottomState = useAtomValue(bottomStateAtom);
   const setNavigation = useSetAtom(navigationState);
-  const { bottomTransitionInterval } = useAtomValue(tuningState);
   const bottomStateRef = useValueRef(bottomState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -79,7 +78,7 @@ export const useUpdateBottomState = () => {
       setNavigation,
       transferLines.length,
     ]),
-    bottomTransitionInterval
+    DEFAULT_BOTTOM_TRANSITION_INTERVAL
   );
 
   return { pause };

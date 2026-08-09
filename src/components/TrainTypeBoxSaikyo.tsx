@@ -15,12 +15,15 @@ import {
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
-import { FONTS, parenthesisRegexp } from '~/constants';
+import {
+  DEFAULT_HEADER_TRANSITION_DELAY,
+  FONTS,
+  parenthesisRegexp,
+} from '~/constants';
 import { useCurrentLine, useLazyPrevious, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
 import { headerStateAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { computeTwoLineTypography } from '~/utils/computeTwoLineTypography';
 import isTablet from '~/utils/isTablet';
@@ -89,7 +92,6 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const headerState = useAtomValue(headerStateAtom);
-  const { headerTransitionDelay } = useAtomValue(tuningState);
   const currentLine = useCurrentLine();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 
@@ -208,13 +210,13 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   const updateOpacity = useCallback(() => {
     RNAnimated.timing(textOpacityAnim, {
       toValue: 1,
-      duration: headerTransitionDelay,
+      duration: DEFAULT_HEADER_TRANSITION_DELAY,
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
     }).start(({ finished }) => {
       handleFinish(finished);
     });
-  }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
+  }, [handleFinish, textOpacityAnim]);
 
   // 電車種別が変更されたときのみfadeOutFinishedをリセット
   // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある

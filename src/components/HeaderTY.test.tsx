@@ -12,9 +12,6 @@ jest.mock('jotai', () => ({
     if (atom === require('~/store/atoms/navigation').default) {
       return { headerState: 'CURRENT' };
     }
-    if (atom === require('~/store/atoms/tuning').default) {
-      return { headerTransitionDelay: 300 };
-    }
     return {};
   }),
 }));
@@ -43,11 +40,6 @@ jest.mock('~/store/atoms/navigation', () => ({
 }));
 
 jest.mock('~/store/atoms/station', () => ({
-  __esModule: true,
-  default: {},
-}));
-
-jest.mock('~/store/atoms/tuning', () => ({
   __esModule: true,
   default: {},
 }));
@@ -178,9 +170,6 @@ describe('HeaderTY', () => {
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT' };
         }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
-        }
         return {};
       });
 
@@ -198,9 +187,6 @@ describe('HeaderTY', () => {
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'NEXT' };
         }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
-        }
         return {};
       });
 
@@ -217,9 +203,6 @@ describe('HeaderTY', () => {
         }
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'ARRIVING' };
-        }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
         }
         return {};
       });
@@ -241,9 +224,6 @@ describe('HeaderTY', () => {
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT_EN' };
         }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
-        }
         return {};
       });
 
@@ -263,9 +243,6 @@ describe('HeaderTY', () => {
         }
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'NEXT_KANA' };
-        }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
         }
         return {};
       });
@@ -292,9 +269,6 @@ describe('HeaderTY', () => {
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT' };
         }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
-        }
         return {};
       });
 
@@ -316,9 +290,6 @@ describe('HeaderTY', () => {
         }
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT' };
-        }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
         }
         return {};
       });
@@ -342,9 +313,6 @@ describe('HeaderTY', () => {
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'NEXT' };
         }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
-        }
         return {};
       });
 
@@ -364,9 +332,6 @@ describe('HeaderTY', () => {
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT' };
         }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
-        }
         return {};
       });
 
@@ -385,9 +350,6 @@ describe('HeaderTY', () => {
         }
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT' };
-        }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
         }
         return {};
       });
@@ -417,9 +379,6 @@ describe('HeaderTY', () => {
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT' };
         }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
-        }
         return {};
       });
 
@@ -441,9 +400,6 @@ describe('HeaderTY', () => {
         }
         if (atom === require('~/store/atoms/navigation').default) {
           return { headerState: 'CURRENT' };
-        }
-        if (atom === require('~/store/atoms/tuning').default) {
-          return { headerTransitionDelay: 300 };
         }
         return {};
       });

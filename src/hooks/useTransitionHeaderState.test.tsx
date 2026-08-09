@@ -35,11 +35,6 @@ jest.mock('../store/atoms/theme', () => ({
   isLEDThemeAtom: 'LED_THEME_ATOM',
 }));
 
-jest.mock('../store/atoms/tuning', () => ({
-  __esModule: true,
-  default: 'TUNING_ATOM',
-}));
-
 jest.mock('../translation', () => ({
   __esModule: true,
   isJapanese: true,
@@ -168,9 +163,6 @@ describe('useTransitionHeaderState', () => {
       }
       if (atom === 'STATION_FOR_HEADER_ATOM') {
         return navigationAtomValue.stationForHeader;
-      }
-      if (atom === 'TUNING_ATOM') {
-        return { headerTransitionInterval: 1000 };
       }
       if (atom === 'LED_THEME_ATOM') {
         return isLEDTheme;

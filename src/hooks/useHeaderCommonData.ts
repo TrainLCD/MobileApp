@@ -3,10 +3,12 @@ import { useMemo } from 'react';
 import { APP_THEME } from '~/models/Theme';
 import { themeAtom } from '~/store/atoms/theme';
 import type { CommonHeaderProps } from '../components/Header.types';
-import { parenthesisRegexp } from '../constants';
+import {
+  DEFAULT_HEADER_TRANSITION_DELAY,
+  parenthesisRegexp,
+} from '../constants';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
-import tuningState from '../store/atoms/tuning';
 import { getNumberingColor } from '../utils/numbering';
 import { useBoundText } from './useBoundText';
 import { useConnectedLines } from './useConnectedLines';
@@ -31,7 +33,6 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
   const selectedBound = useAtomValue(selectedBoundAtom);
   const arrived = useAtomValue(arrivedAtom);
   const headerState = useAtomValue(headerStateAtom);
-  const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);
 
   // 駅・路線データ
@@ -115,7 +116,7 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
     selectedBound,
     arrived,
     headerState,
-    headerTransitionDelay,
+    headerTransitionDelay: DEFAULT_HEADER_TRANSITION_DELAY,
     headerLangState,
     stationText,
     stateText,
