@@ -50,6 +50,9 @@ const renderWithStore = (
 describe('ExperimentalSettingsScreen', () => {
   afterEach(() => {
     jest.clearAllMocks();
+    // アサーション失敗で個別のmockRestoreに到達しなくても、
+    // spyOnした実装が後続テストへ漏れないようここで一括復元する
+    jest.restoreAllMocks();
     resetDialogPresentationForTests();
   });
 
@@ -72,7 +75,7 @@ describe('ExperimentalSettingsScreen', () => {
   });
 
   it('ストレージへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
-    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+    jest.spyOn(storage, 'set').mockImplementationOnce(() => {
       throw new Error('storage failure');
     });
     const consoleErrorSpy = jest
@@ -97,9 +100,6 @@ describe('ExperimentalSettingsScreen', () => {
         message: 'failedToSavePreference',
       },
     });
-
-    setSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
   });
 
   it('ETA補助トグルは廃止され表示されない(自動有効化)', () => {
@@ -127,7 +127,7 @@ describe('ExperimentalSettingsScreen', () => {
   });
 
   it('テレメトリのストレージ保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
-    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+    jest.spyOn(storage, 'set').mockImplementationOnce(() => {
       throw new Error('storage failure');
     });
     const consoleErrorSpy = jest
@@ -150,9 +150,6 @@ describe('ExperimentalSettingsScreen', () => {
         message: 'failedToSavePreference',
       },
     });
-
-    setSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
   });
 
   it('タッチ不可モードをONにするとatomとストレージへ保存される', () => {
@@ -178,7 +175,7 @@ describe('ExperimentalSettingsScreen', () => {
   });
 
   it('タッチ不可モードのストレージ保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
-    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+    jest.spyOn(storage, 'set').mockImplementationOnce(() => {
       throw new Error('storage failure');
     });
     const consoleErrorSpy = jest
@@ -201,8 +198,5 @@ describe('ExperimentalSettingsScreen', () => {
         message: 'failedToSavePreference',
       },
     });
-
-    setSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
   });
 });
