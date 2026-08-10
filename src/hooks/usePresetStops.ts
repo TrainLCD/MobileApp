@@ -6,6 +6,8 @@ import { getPresetOriginStation } from '~/utils/presetRouteEndpoints';
 
 type UsePresetStopsParams = {
   savedRouteDirection: LineDirection | null | undefined;
+  /** 保存された始発駅(駅グループID)。古いプリセットには無い */
+  savedRouteOriginStationId?: number | null;
   stations: Station[];
   wantedDestination: Station | null | undefined;
   confirmedStation: Station | null | undefined;
@@ -13,20 +15,33 @@ type UsePresetStopsParams = {
 
 export const usePresetStops = ({
   savedRouteDirection,
+  savedRouteOriginStationId,
   stations,
   wantedDestination,
   confirmedStation,
 }: UsePresetStopsParams) => {
-  // 始発駅の解決はプリセットカード・ホーム画面ウィジェットと共通化している。
-  // 駅一覧の並びが保存時と反転していても行き先と同じ駅を掴まないようにするため
+  // 保存された乗車駅を優先する。持たない古いプリセットは direction から終端を求める。
+  // 終端の解決はプリセットカード・ホーム画面ウィジェットと共通化している
+  // (駅一覧の並びが保存時と反転していても行き先と同じ駅を掴まないようにするため)
+  const savedOrigin = useMemo(
+    () =>
+      savedRouteOriginStationId != null
+        ? (stations.find((s) => s.groupId === savedRouteOriginStationId) ??
+          null)
+        : null,
+    [savedRouteOriginStationId, stations]
+  );
+
   const presetOrigin = useMemo(
     () =>
+      savedOrigin ??
       getPresetOriginStation({
         stations,
         wantedDestinationId: wantedDestination?.groupId ?? null,
         direction: savedRouteDirection ?? null,
-      }) ?? null,
-    [savedRouteDirection, stations, wantedDestination?.groupId]
+      }) ??
+      null,
+    [savedOrigin, savedRouteDirection, stations, wantedDestination?.groupId]
   );
 
   const presetStops = useMemo(() => {
@@ -43,19 +58,25 @@ export const usePresetStops = ({
       : stations.slice(wantedIdx, originIdx + 1);
   }, [presetOrigin, wantedDestination, stations]);
 
-  // 両端を除外した中間駅から座標ベースで最寄り駅を探す
-  // 両端を除外することで、どちらの方面を選んでも同一駅が選ばれ、かつ突っ切らない
+  // 乗車開始駅を座標ベースで探す。
+  // 保存された乗車駅がある場合はその駅自身も候補に含める(利用者はそこから乗る想定)。
+  // 持たない古いプリセットでは両端が単なる終端なので、どちらの方面を選んでも
+  // 同一駅が選ばれ、かつ突っ切らないよう両端を除外する
   const nearestPresetStation = useMemo((): Station | undefined => {
-    if (!presetStops || presetStops.length < 3) return undefined;
+    if (!presetStops) return undefined;
 
     const firstId = presetStops[0]?.groupId;
     const lastId = presetStops.at(-1)?.groupId;
-    const intermediates = presetStops.filter(
-      (s) => s.groupId !== firstId && s.groupId !== lastId
-    );
-    if (!intermediates.length) return undefined;
+    const candidates = savedOrigin
+      ? presetStops.filter((s) => s.groupId !== wantedDestination?.groupId)
+      : presetStops.length < 3
+        ? []
+        : presetStops.filter(
+            (s) => s.groupId !== firstId && s.groupId !== lastId
+          );
+    if (!candidates.length) return undefined;
 
-    const exact = intermediates.find(
+    const exact = candidates.find(
       (s) => s.groupId === confirmedStation?.groupId
     );
     if (exact) return exact;
@@ -63,10 +84,12 @@ export const usePresetStops = ({
     return findNearestByCoord(
       confirmedStation?.latitude,
       confirmedStation?.longitude,
-      intermediates
+      candidates
     );
   }, [
     presetStops,
+    savedOrigin,
+    wantedDestination?.groupId,
     confirmedStation?.groupId,
     confirmedStation?.latitude,
     confirmedStation?.longitude,

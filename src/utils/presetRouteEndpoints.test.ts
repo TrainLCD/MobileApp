@@ -2,7 +2,7 @@ import type { Station } from '~/@types/graphql';
 import {
   getPresetOriginStation,
   getPresetRouteEndpoints,
-  resolvePresetSaveDirection,
+  resolvePresetSaveRoute,
 } from './presetRouteEndpoints';
 
 const createStation = (groupId: number): Station =>
@@ -93,6 +93,30 @@ describe('getPresetRouteEndpoints', () => {
     expect(to?.groupId).toBe(4);
   });
 
+  // 直通運転を含む系統では、direction から求めた終端が乗車駅と大きく離れる。
+  // 保存された乗車駅があればそれをそのまま始発駅として表示する
+  it('originStationIdが保存されていればその駅を始発駅にする', () => {
+    const { from, to } = getPresetRouteEndpoints({
+      stations,
+      wantedDestinationId: 4,
+      originStationId: 2,
+      direction: 'INBOUND',
+    });
+    expect(from?.groupId).toBe(2);
+    expect(to?.groupId).toBe(4);
+  });
+
+  it('originStationIdが駅一覧に無ければdirectionの終端へフォールバックする', () => {
+    const { from, to } = getPresetRouteEndpoints({
+      stations,
+      wantedDestinationId: 3,
+      originStationId: 999,
+      direction: 'INBOUND',
+    });
+    expect(from?.groupId).toBe(1);
+    expect(to?.groupId).toBe(3);
+  });
+
   it('駅が1駅しか無い場合は倒す先が無いのでその駅を返す', () => {
     const { from, to } = getPresetRouteEndpoints({
       stations: [createStation(1)],
@@ -146,7 +170,7 @@ describe('getPresetOriginStation', () => {
   });
 });
 
-describe('resolvePresetSaveDirection', () => {
+describe('resolvePresetSaveRoute', () => {
   // 座標付きの駅一覧: 1(北)→4(南) の順に並ぶ
   const coordStations = [
     { groupId: 1, latitude: 35.75, longitude: 139.8 },
@@ -159,109 +183,158 @@ describe('resolvePresetSaveDirection', () => {
     longitude,
   }));
 
-  it('行き先が未指定ならnullを返す', () => {
-    expect(
-      resolvePresetSaveDirection({
-        stations,
-        wantedDestinationId: null,
-        currentStation: stations[0],
-      })
-    ).toBeNull();
+  it('行き先が未指定なら解決しない', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations,
+      wantedDestinationId: null,
+      currentStation: stations[0],
+    });
+    expect(originStation).toBeUndefined();
+    expect(direction).toBeNull();
   });
 
-  it('行き先が駅一覧に無い場合はnullを返す', () => {
-    expect(
-      resolvePresetSaveDirection({
-        stations,
-        wantedDestinationId: 999,
-        currentStation: stations[0],
-      })
-    ).toBeNull();
+  it('行き先が駅一覧に無い場合は解決しない', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations,
+      wantedDestinationId: 999,
+      currentStation: stations[0],
+    });
+    expect(originStation).toBeUndefined();
+    expect(direction).toBeNull();
   });
 
-  it('駅が1駅しか無い場合は始発駅になり得る駅が無いのでnullを返す', () => {
-    expect(
-      resolvePresetSaveDirection({
-        stations: [createStation(1)],
-        wantedDestinationId: 1,
-        currentStation: createStation(1),
-      })
-    ).toBeNull();
+  it('駅が1駅しか無い場合は始発駅になり得る駅が無いので解決しない', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations: [createStation(1)],
+      wantedDestinationId: 1,
+      currentStation: createStation(1),
+    });
+    expect(originStation).toBeUndefined();
+    expect(direction).toBeNull();
   });
 
   it('行き先が先頭駅なら始発駅は末尾側に定まるのでOUTBOUNDを返す', () => {
     expect(
-      resolvePresetSaveDirection({
+      resolvePresetSaveRoute({
         stations,
         wantedDestinationId: 1,
         currentStation: stations[0],
-      })
+      }).direction
     ).toBe('OUTBOUND');
   });
 
   it('行き先が末尾駅なら始発駅は先頭側に定まるのでINBOUNDを返す', () => {
     expect(
-      resolvePresetSaveDirection({
+      resolvePresetSaveRoute({
         stations,
         wantedDestinationId: 4,
         currentStation: stations[3],
-      })
+      }).direction
     ).toBe('INBOUND');
   });
 
-  it('現在駅が行き先より手前ならINBOUNDを返す', () => {
-    expect(
-      resolvePresetSaveDirection({
-        stations,
-        wantedDestinationId: 3,
-        currentStation: stations[1],
-      })
-    ).toBe('INBOUND');
+  // 経路内の最寄駅をそのまま始発駅にする（終端に倒さない）
+  it('現在駅が行き先より手前なら現在駅を始発駅にしてINBOUNDを返す', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations,
+      wantedDestinationId: 3,
+      currentStation: stations[1],
+    });
+    expect(originStation?.groupId).toBe(2);
+    expect(direction).toBe('INBOUND');
   });
 
-  it('現在駅が行き先より奥ならOUTBOUNDを返す', () => {
-    expect(
-      resolvePresetSaveDirection({
-        stations,
-        wantedDestinationId: 2,
-        currentStation: stations[3],
-      })
-    ).toBe('OUTBOUND');
+  it('現在駅が行き先より奥なら現在駅を始発駅にしてOUTBOUNDを返す', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations,
+      wantedDestinationId: 2,
+      currentStation: stations[3],
+    });
+    expect(originStation?.groupId).toBe(4);
+    expect(direction).toBe('OUTBOUND');
   });
 
-  it('現在駅が駅一覧に無い場合は座標最寄りの駅から向きを決める', () => {
+  it('現在駅が駅一覧に無い場合は座標最寄りの駅を始発駅にする', () => {
     // 駅3の近くにいるが駅一覧には含まれない駅
     const offRoute = {
       ...createStation(99),
       latitude: 35.7205,
       longitude: 139.7705,
     };
-    expect(
-      resolvePresetSaveDirection({
-        stations: coordStations,
-        wantedDestinationId: 2,
-        currentStation: offRoute,
-      })
-    ).toBe('OUTBOUND');
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations: coordStations,
+      wantedDestinationId: 2,
+      currentStation: offRoute,
+    });
+    expect(originStation?.groupId).toBe(3);
+    expect(direction).toBe('OUTBOUND');
   });
 
-  it('現在駅が行き先そのものでも座標最寄りの駅から向きを決める', () => {
-    expect(
-      resolvePresetSaveDirection({
-        stations: coordStations,
-        wantedDestinationId: 2,
-        currentStation: coordStations[1],
-      })
-    ).toBe('INBOUND');
+  it('現在駅が行き先そのものでも座標最寄りの駅を始発駅にする', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations: coordStations,
+      wantedDestinationId: 2,
+      currentStation: coordStations[1],
+    });
+    expect(originStation?.groupId).toBe(1);
+    expect(direction).toBe('INBOUND');
   });
 
-  it('現在駅が無く座標も引けない場合はnullを返す', () => {
-    expect(
-      resolvePresetSaveDirection({
-        stations,
-        wantedDestinationId: 2,
-        currentStation: null,
-      })
-    ).toBeNull();
+  it('現在駅が無く座標も引けない場合は解決しない', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations,
+      wantedDestinationId: 2,
+      currentStation: null,
+    });
+    expect(originStation).toBeUndefined();
+    expect(direction).toBeNull();
+  });
+});
+
+// 報告された不具合の再現: 地下鉄赤塚から新宿三丁目行きのプリセットを作ると
+// 直通先の終端(森林公園)が始発駅になってしまっていた
+describe('直通系統での保存→表示', () => {
+  const namedStation = (groupId: number, name: string): Station =>
+    ({ id: groupId, groupId, name }) as Station;
+
+  // 東武東上線からの直通を含む副都心線の系統
+  const throughStations = [
+    namedStation(1, '森林公園'),
+    namedStation(2, '和光市'),
+    namedStation(3, '地下鉄赤塚'),
+    namedStation(4, '池袋'),
+    namedStation(5, '新宿三丁目'),
+    namedStation(6, '渋谷'),
+  ];
+  const chikatetsuAkatsuka = throughStations[2];
+  const shinjukuSanchome = throughStations[4];
+
+  it('乗車駅が始発駅として保存され、そのまま表示される', () => {
+    const { originStation, direction } = resolvePresetSaveRoute({
+      stations: throughStations,
+      wantedDestinationId: shinjukuSanchome.groupId,
+      currentStation: chikatetsuAkatsuka,
+    });
+    expect(originStation?.name).toBe('地下鉄赤塚');
+
+    const { from, to } = getPresetRouteEndpoints({
+      stations: throughStations,
+      wantedDestinationId: shinjukuSanchome.groupId,
+      originStationId: originStation?.groupId ?? null,
+      direction,
+    });
+    expect(from?.name).toBe('地下鉄赤塚');
+    expect(to?.name).toBe('新宿三丁目');
+  });
+
+  it('始発駅を持たない古いプリセットは従来どおり終端を表示する', () => {
+    const { from, to } = getPresetRouteEndpoints({
+      stations: throughStations,
+      wantedDestinationId: shinjukuSanchome.groupId,
+      originStationId: null,
+      direction: 'INBOUND',
+    });
+    expect(from?.name).toBe('森林公園');
+    expect(to?.name).toBe('新宿三丁目');
   });
 });

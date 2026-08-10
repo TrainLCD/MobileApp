@@ -65,7 +65,7 @@ describe('useSavedRoutes', () => {
         }
       );
 
-      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(7));
+      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(8));
       expect(mockDb.execAsync).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('CREATE TABLE IF NOT EXISTS saved_routes')
@@ -184,6 +184,7 @@ describe('useSavedRoutes', () => {
       lineId: 1,
       trainTypeId: 9,
       wantedDestinationId: null,
+      originStationId: null,
       direction: null,
       notifyStationIds: [],
       name: 'WithType',
@@ -194,6 +195,7 @@ describe('useSavedRoutes', () => {
       lineId: 2,
       trainTypeId: null,
       wantedDestinationId: null,
+      originStationId: null,
       direction: null,
       notifyStationIds: [],
       name: 'WithoutType',
@@ -234,6 +236,7 @@ describe('useSavedRoutes', () => {
           withType.lineId,
           withType.trainTypeId,
           withType.wantedDestinationId,
+          withType.originStationId,
           withType.direction,
           null,
           1,
@@ -274,12 +277,13 @@ describe('useSavedRoutes', () => {
       ).toEqual([saved2Defined.id, saved1Defined.id]);
     });
 
-    it('save: wantedDestinationId が non-null で正しく保存・復元される', async () => {
+    it('save: wantedDestinationId / originStationId が non-null で正しく保存・復元される', async () => {
       const withDest: SavedRouteWithTrainTypeInput = {
         hasTrainType: true,
         lineId: 10,
         trainTypeId: 50,
         wantedDestinationId: 999,
+        originStationId: 777,
         direction: 'INBOUND',
         notifyStationIds: [1, 2, 3],
         name: 'WithDest',
@@ -308,6 +312,7 @@ describe('useSavedRoutes', () => {
         throw new Error('save should return route with wantedDestinationId');
       }
       expect(saved.wantedDestinationId).toBe(999);
+      expect(saved.originStationId).toBe(777);
       expect(saved.direction).toBe('INBOUND');
       expect(saved.notifyStationIds).toEqual([1, 2, 3]);
       expect(mockDb.runAsync).toHaveBeenCalledWith(
@@ -318,6 +323,7 @@ describe('useSavedRoutes', () => {
           withDest.lineId,
           withDest.trainTypeId,
           999,
+          777,
           'INBOUND',
           '[1,2,3]',
           1,
@@ -327,6 +333,7 @@ describe('useSavedRoutes', () => {
 
       await waitFor(() => expect(result.current.routes.length).toBe(1));
       expect(result.current.routes[0].wantedDestinationId).toBe(999);
+      expect(result.current.routes[0].originStationId).toBe(777);
       expect(result.current.routes[0].direction).toBe('INBOUND');
       expect(result.current.routes[0].notifyStationIds).toEqual([1, 2, 3]);
     });
@@ -338,6 +345,7 @@ describe('useSavedRoutes', () => {
         lineId: 100,
         trainTypeId: 50,
         wantedDestinationId: null,
+        originStationId: null,
         direction: null,
         notifyStationIds: [],
         name: 'No Dest',
@@ -349,6 +357,7 @@ describe('useSavedRoutes', () => {
         lineId: 100,
         trainTypeId: 50,
         wantedDestinationId: 999,
+        originStationId: null,
         direction: 'INBOUND',
         notifyStationIds: [],
         name: 'With Dest',
@@ -376,6 +385,7 @@ describe('useSavedRoutes', () => {
           lineId: 100,
           trainTypeId: 50,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(routeNoDest);
 
@@ -384,6 +394,7 @@ describe('useSavedRoutes', () => {
           lineId: 100,
           trainTypeId: 50,
           wantedDestinationId: 999,
+          originStationId: null,
         })
       ).toBe(routeWithDest);
 
@@ -392,6 +403,7 @@ describe('useSavedRoutes', () => {
           lineId: 100,
           trainTypeId: 50,
           wantedDestinationId: 888,
+          originStationId: null,
         })
       ).toBeNull();
     });
@@ -438,6 +450,7 @@ describe('useSavedRoutes', () => {
       lineId: 100,
       trainTypeId: 7,
       wantedDestinationId: null,
+      originStationId: null,
       direction: null,
       notifyStationIds: [],
       name: 'With Train Type',
@@ -449,6 +462,7 @@ describe('useSavedRoutes', () => {
       lineId: 200,
       trainTypeId: null,
       wantedDestinationId: null,
+      originStationId: null,
       direction: null,
       notifyStationIds: [],
       name: 'Without Train Type',
@@ -480,6 +494,7 @@ describe('useSavedRoutes', () => {
           lineId: withTrainType.lineId,
           trainTypeId: withTrainType.trainTypeId,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(withTrainType);
     });
@@ -495,6 +510,7 @@ describe('useSavedRoutes', () => {
           lineId: withoutTrainType.lineId,
           trainTypeId: 999,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBeNull();
     });
@@ -509,6 +525,7 @@ describe('useSavedRoutes', () => {
           lineId: withoutTrainType.lineId,
           trainTypeId: null,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(withoutTrainType);
     });
@@ -523,6 +540,7 @@ describe('useSavedRoutes', () => {
           lineId: 9999,
           trainTypeId: 8888,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBeNull();
     });
@@ -538,6 +556,7 @@ describe('useSavedRoutes', () => {
           lineId: withTrainType.lineId,
           trainTypeId: 999, // 実際の trainTypeId は 7
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBeNull();
     });
@@ -553,6 +572,7 @@ describe('useSavedRoutes', () => {
           lineId: withTrainType.lineId,
           trainTypeId: null,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBeNull();
     });
@@ -564,6 +584,7 @@ describe('useSavedRoutes', () => {
         lineId: 300,
         trainTypeId: 10,
         wantedDestinationId: null,
+        originStationId: null,
         direction: null,
         notifyStationIds: [],
         name: 'Route 1',
@@ -575,6 +596,7 @@ describe('useSavedRoutes', () => {
         lineId: 300,
         trainTypeId: 20,
         wantedDestinationId: null,
+        originStationId: null,
         direction: null,
         notifyStationIds: [],
         name: 'Route 2',
@@ -586,6 +608,7 @@ describe('useSavedRoutes', () => {
         lineId: 300,
         trainTypeId: null,
         wantedDestinationId: null,
+        originStationId: null,
         direction: null,
         notifyStationIds: [],
         name: 'Route 3 (no train type)',
@@ -614,6 +637,7 @@ describe('useSavedRoutes', () => {
           lineId: 300,
           trainTypeId: 10,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(route1);
 
@@ -623,6 +647,7 @@ describe('useSavedRoutes', () => {
           lineId: 300,
           trainTypeId: 20,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(route2);
 
@@ -632,6 +657,7 @@ describe('useSavedRoutes', () => {
           lineId: 300,
           trainTypeId: null,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(routeNoTrainType);
 
@@ -641,6 +667,7 @@ describe('useSavedRoutes', () => {
           lineId: 300,
           trainTypeId: 30,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBeNull();
     });
@@ -654,6 +681,7 @@ describe('useSavedRoutes', () => {
         lineId: 500, // JR神戸線のID
         trainTypeId: 50, // サンライズ出雲のgroupId
         wantedDestinationId: null,
+        originStationId: null,
         direction: null,
         notifyStationIds: [],
         name: 'サンライズ出雲',
@@ -682,6 +710,7 @@ describe('useSavedRoutes', () => {
           lineId: 500,
           trainTypeId: 50,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(sunriseLine);
 
@@ -691,6 +720,7 @@ describe('useSavedRoutes', () => {
           lineId: 600,
           trainTypeId: 50,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBe(sunriseLine);
 
@@ -700,6 +730,7 @@ describe('useSavedRoutes', () => {
           lineId: 500,
           trainTypeId: 99,
           wantedDestinationId: null,
+          originStationId: null,
         })
       ).toBeNull();
     });
