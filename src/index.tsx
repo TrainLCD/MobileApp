@@ -18,7 +18,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CommonDialogPresenter from './components/CommonDialogPresenter';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import { GlobalToast } from './components/GlobalToast';
-import TuningSettings from './components/TuningSettings';
 import { queryClient } from './lib/gql';
 import { migrateFromAsyncStorage } from './lib/storage';
 import DeepLinkProvider from './providers/DeepLinkProvider';
@@ -99,12 +98,6 @@ const AppContent: React.FC = () => {
           options={options}
           name="MainStack"
           component={MainStack}
-        />
-
-        <Stack.Screen
-          options={options}
-          name="TuningSettings"
-          component={TuningSettings}
         />
       </Stack.Navigator>
     </>

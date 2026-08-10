@@ -41,7 +41,6 @@ const SETTING_ITEM_ID_MAP = {
   personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
   about_app_licenses: 'about_app_licenses',
-  developer_tuning: 'developer_tuning',
 } as const;
 
 type SettingItemId = keyof typeof SETTING_ITEM_ID_MAP;
@@ -116,8 +115,6 @@ const SettingsItem = ({
         return 'phone-portrait';
       case 'about_app_licenses':
         return 'key';
-      case 'developer_tuning':
-        return 'settings';
       default:
         return 'help';
     }
@@ -358,21 +355,6 @@ const AppSettingsScreen: React.FC = () => {
     [navigation]
   );
 
-  const developerItems: SettingsSectionData[] = useMemo(
-    () =>
-      isDevApp
-        ? [
-            {
-              id: SETTING_ITEM_ID_MAP.developer_tuning,
-              title: translate('tuning'),
-              color: '#5856D6',
-              onPress: () => navigation.navigate('TuningSettings' as never),
-            },
-          ]
-        : [],
-    [navigation]
-  );
-
   const handleScroll = useRef(
     RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
       useNativeDriver: true,
@@ -456,24 +438,6 @@ const AppSettingsScreen: React.FC = () => {
               />
             ))}
           </View>
-
-          {/* 開発者向けセクション */}
-          {developerItems.length > 0 && (
-            <View style={styles.sectionContainer}>
-              <Heading style={styles.sectionHeading}>
-                {translate('forDevelopers')}
-              </Heading>
-              {developerItems.map((item, index) => (
-                <SettingsItem
-                  key={item.id}
-                  item={item}
-                  isFirst={index === 0}
-                  isLast={index === developerItems.length - 1}
-                  onPress={item.onPress}
-                />
-              ))}
-            </View>
-          )}
 
           {/* ビルド情報 */}
           {isDevApp || isBetaBuild ? (

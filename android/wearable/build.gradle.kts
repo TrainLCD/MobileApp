@@ -85,12 +85,12 @@ android {
       dimension = "environment"
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
-      versionCode = 100000587
+      versionCode = 100000588
       versionName = "10.12.1"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 100000587
+      versionCode = 100000588
       versionName = "10.12.1"
     }
   }
