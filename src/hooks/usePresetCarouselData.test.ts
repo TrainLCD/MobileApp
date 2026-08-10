@@ -176,4 +176,104 @@ describe('usePresetCarouselData', () => {
     // 同じ routes なので query は1回のみ
     expect(mockQuery).toHaveBeenCalledTimes(1);
   });
+
+  // 取得中に updateRoutes() などで routes が作り直されると、
+  // 表示のみの更新として既存 carouselData から駅を引き当てようとして空になっていた
+  it('取得中に routes が作り直されても駅データを取りこぼさない', async () => {
+    const route = createLineRoute('uuid-1', 100);
+    const stations = [createStation(10, { line: { id: 100 } })];
+
+    let resolveQuery: (value: unknown) => void = () => {};
+    mockQuery.mockReturnValue(
+      new Promise((resolve) => {
+        resolveQuery = resolve;
+      })
+    );
+
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [route],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+
+    const { result, rerender } = renderHook(() => usePresetCarouselData());
+
+    // 取得完了前に DB から読み直され、内容は同じだが配列・要素の同一性だけが変わる
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [{ ...route }],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+    await act(async () => {
+      rerender({});
+    });
+
+    await act(async () => {
+      resolveQuery({ data: { lineListStations: stations } });
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(result.current.carouselData).toHaveLength(1);
+    expect(result.current.carouselData[0].stations).toEqual(stations);
+  });
+
+  // 新規保存したプリセットだけ駅が空のまま固定されるのを防ぐ
+  it('取得中に新しいプリセットが増えた場合も全件の駅データが揃う', async () => {
+    const existing = createLineRoute('uuid-1', 100);
+    const added = createLineRoute('uuid-2', 200);
+    const existingStations = [createStation(10, { line: { id: 100 } })];
+    const addedStations = [createStation(20, { line: { id: 200 } })];
+
+    mockQuery.mockResolvedValue({
+      data: { lineListStations: existingStations },
+    });
+
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [existing],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+
+    const { result, rerender } = renderHook(() => usePresetCarouselData());
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    // プリセット保存直後: 取得が完了する前に routes が作り直される
+    let resolveQuery: (value: unknown) => void = () => {};
+    mockQuery.mockReturnValue(
+      new Promise((resolve) => {
+        resolveQuery = resolve;
+      })
+    );
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [added, existing],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+    await act(async () => {
+      rerender({});
+    });
+
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [{ ...added }, { ...existing }],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+    await act(async () => {
+      rerender({});
+    });
+
+    await act(async () => {
+      resolveQuery({
+        data: { lineListStations: [...addedStations, ...existingStations] },
+      });
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(result.current.carouselData).toHaveLength(2);
+    expect(result.current.carouselData[0].stations).toEqual(addedStations);
+    expect(result.current.carouselData[1].stations).toEqual(existingStations);
+  });
 });
