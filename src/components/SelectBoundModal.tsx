@@ -227,19 +227,30 @@ export const SelectBoundModal: React.FC<Props> = ({
     [wantedDestination, stations]
   );
 
+  // 終点を明示指定した場合の始発駅はユーザーに選ばせず、経路内の最寄駅から自動で決める。
+  // effectiveStation は区間外なら stations[0] へ倒れてしまい実際の現在地を表さないので、
+  // 生の pendingStation を渡して未設定・区間外のときだけ GPS 確定駅の座標へフォールバックさせる
+  const presetSaveDirection = useMemo(
+    () =>
+      resolvePresetSaveDirection({
+        stations,
+        wantedDestinationId: wantedDestination?.groupId ?? null,
+        currentStation: station ?? confirmedStation,
+      }),
+    [stations, wantedDestination?.groupId, station, confirmedStation]
+  );
+
+  // 保存対象の区間。direction から導くことで、保存する向きと通知駅の絞り込み範囲がズレないようにする
   const effectiveStations = useMemo(() => {
-    if (!applicableWantedDestination || !effectiveStation) return stations;
-    const currentIdx = stations.findIndex(
-      (s) => s.groupId === effectiveStation.groupId
-    );
+    if (!applicableWantedDestination || !presetSaveDirection) return stations;
     const destIdx = stations.findIndex(
       (s) => s.groupId === applicableWantedDestination.groupId
     );
-    if (currentIdx === -1 || destIdx === -1) return stations;
-    return currentIdx <= destIdx
+    if (destIdx === -1) return stations;
+    return presetSaveDirection === 'INBOUND'
       ? stations.slice(0, destIdx + 1)
       : stations.slice(destIdx);
-  }, [stations, applicableWantedDestination, effectiveStation]);
+  }, [stations, applicableWantedDestination, presetSaveDirection]);
 
   const currentIndex = stations.findIndex(
     (s) => s.groupId === effectiveStation?.groupId
@@ -638,17 +649,6 @@ export const SelectBoundModal: React.FC<Props> = ({
 
     setIsPresetNameModalVisible(true);
   }, [savedRoute, removeCurrentRoute, line]);
-
-  // 終点を明示指定した場合の始発駅はユーザーに選ばせず、経路内の最寄駅から自動で決める
-  const presetSaveDirection = useMemo(
-    () =>
-      resolvePresetSaveDirection({
-        stations,
-        wantedDestinationId: wantedDestination?.groupId ?? null,
-        currentStation: effectiveStation ?? confirmedStation,
-      }),
-    [stations, wantedDestination?.groupId, effectiveStation, confirmedStation]
-  );
 
   const presetDefaultName = useMemo(() => {
     const trainName = pendingTrainType
