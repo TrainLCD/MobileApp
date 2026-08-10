@@ -8,6 +8,8 @@ export const SavedRouteWithTrainTypeSchema = z.object({
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.number().int().nonnegative(),
   wantedDestinationId: z.number().int().nonnegative().nullable(),
+  /** 始発駅の駅グループID。未保存の古いプリセットは null */
+  originStationId: z.number().int().nonnegative().nullable(),
   direction: DirectionSchema.nullable(),
   notifyStationIds: z.array(z.number().int().nonnegative()).default([]),
   name: z.string().min(1).max(100),
@@ -24,6 +26,8 @@ export const SavedRouteWithoutTrainTypeSchema = z.object({
   lineId: z.number().int().nonnegative(),
   trainTypeId: z.null(),
   wantedDestinationId: z.number().int().nonnegative().nullable(),
+  /** 始発駅の駅グループID。未保存の古いプリセットは null */
+  originStationId: z.number().int().nonnegative().nullable(),
   direction: DirectionSchema.nullable(),
   notifyStationIds: z.array(z.number().int().nonnegative()).default([]),
   name: z.string().min(1).max(100),

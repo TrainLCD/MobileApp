@@ -375,6 +375,7 @@ const createMockLoopItem = (
   lineId: id * 100,
   trainTypeId: null,
   wantedDestinationId: null,
+  originStationId: null,
   direction: null,
   notifyStationIds: [],
   hasTrainType: false,
