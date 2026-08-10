@@ -13,6 +13,13 @@ const wearableBuildGradlePath = path.join(rootDir, 'android', 'wearable', 'build
 const semverPattern = /^\d+\.\d+\.\d+$/;
 const allowedIncrements = new Set(['major', 'minor', 'patch']);
 
+// :wearable は :app と同じ applicationId を共有し、その versionCode は必ず
+// 「:app + 1」に固定される（理由は updateWearableBuildGradle のコメントを参照）。
+// つまり 1 リリースで versionCode を 2 つ消費するため、:app の増分を 1 にすると
+// 前回の :wearable と今回の :app が同じ値になり、Play が
+// "Version code ... has already been used." を返してアップロードが失敗する。
+const ANDROID_VERSION_CODE_STEP = 2;
+
 const args = process.argv.slice(2);
 let explicitVersion = null;
 let increment = null;
@@ -372,13 +379,29 @@ let nextAndroidVersionCode;
 if (resolvedAndroidExplicit !== null) {
   nextAndroidVersionCode = resolvedAndroidExplicit;
 } else if (shouldIncrementAndroid) {
-  nextAndroidVersionCode = currentAndroidVersionCode + 1;
+  nextAndroidVersionCode = currentAndroidVersionCode + ANDROID_VERSION_CODE_STEP;
 } else {
   nextAndroidVersionCode = currentAndroidVersionCode;
 }
 
 if (!Number.isInteger(nextAndroidVersionCode)) {
   console.error('エラー: AndroidのversionCodeは整数である必要があります。');
+  process.exit(1);
+}
+
+// versionCode を進める意図があるときだけ検査する。据え置き（--no-android-increment）では
+// :app < :wearable が正常な状態なので、この検査を通すと必ず落ちてしまう。
+const androidVersionCodeShouldAdvance =
+  resolvedAndroidExplicit !== null || shouldIncrementAndroid;
+if (
+  androidVersionCodeShouldAdvance &&
+  nextAndroidVersionCode <= currentWearableVersionCode
+) {
+  console.error(
+    `エラー: AndroidのversionCode ${nextAndroidVersionCode} は現在のWear OS versionCode ${currentWearableVersionCode} 以下です。` +
+      'Playでは両モジュールがversionCodeの名前空間を共有するため、既に消費済みの番号と衝突します。' +
+      `--android-version には ${currentWearableVersionCode + 1} 以上を指定してください。`
+  );
   process.exit(1);
 }
 

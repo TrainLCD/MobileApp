@@ -60,7 +60,7 @@ export default {
   android: {
     package: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000587,
+    versionCode: 100000589,
   },
   owner: 'trainlcd',
   experiments: {
