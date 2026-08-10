@@ -397,6 +397,12 @@ describe('SelectBoundModal', () => {
     });
 
     it('オフにすると行き先・始発駅を保存しない', async () => {
+      // 保存結果を保存済み表示に反映してしまわないかを検出できるよう、
+      // save は必ず経路を返すようにしておく
+      mockSaveRoute.mockResolvedValue({
+        id: 'saved-route-id',
+        name: 'テストプリセット',
+      });
       const screen = setupWithDestination();
 
       fireEvent.press(screen.getByText('saveCurrentRoute'));
@@ -410,6 +416,13 @@ describe('SelectBoundModal', () => {
         originStationId: null,
         direction: null,
       });
+
+      // 保存したプリセットは現在の選択と別物なので、保存済み表示には切り替えない
+      await waitFor(() =>
+        expect(screen.queryByTestId('save-preset-modal')).toBeNull()
+      );
+      expect(screen.getByText('saveCurrentRoute')).toBeTruthy();
+      expect(screen.queryByText('removeFromSavedRoutes')).toBeNull();
     });
 
     // 区間で絞らない以上、絞り込み範囲の外にある通知駅も落としてはいけない
