@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import {
   getEtaFallbackArrivalConfirmMarginSec,
@@ -28,9 +29,17 @@ const mockRemoteConfig = (body: unknown, ok = true) => {
   });
 };
 
+// jest-expo の既定 Platform.OS は 'ios'。プラットフォーム別キーのテストでは明示的に
+// 切り替え、afterEach で必ず元へ戻す。
+const originalPlatformOS = Platform.OS;
+const setPlatformOS = (os: typeof Platform.OS) => {
+  Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+};
+
 afterEach(() => {
   jest.clearAllMocks();
   resetRemoteConfigCache();
+  setPlatformOS(originalPlatformOS);
 });
 
 afterAll(() => {
@@ -173,14 +182,16 @@ describe('isTTSFeatureEnabled（サーバー側キルスイッチ）', () => {
   });
 
   it('returns the remote boolean after setup', async () => {
-    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled: false });
+    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled_ios: false });
     await setupRemoteConfig();
+    setPlatformOS('ios');
     expect(isTTSFeatureEnabled()).toBe(false);
   });
 
   it('RemoteがONなら有効', async () => {
-    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled: true });
+    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled_ios: true });
     await setupRemoteConfig();
+    setPlatformOS('ios');
     expect(isTTSFeatureEnabled()).toBe(true);
   });
 
@@ -195,6 +206,155 @@ describe('isTTSFeatureEnabled（サーバー側キルスイッチ）', () => {
     await expect(setupRemoteConfig()).rejects.toThrow(
       'remote config fetch failed: 503'
     );
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+});
+
+describe('isTTSFeatureEnabled（プラットフォーム別スイッチ）', () => {
+  it('プラットフォーム別キーが未配信なら両OSで有効', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500 });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('iOSのみ有効な配信ではAndroidが無効になる', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_ios: true,
+      tts_enabled_android: false,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(false);
+  });
+
+  it('Androidのみ有効な配信ではiOSが無効になる', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_ios: false,
+      tts_enabled_android: true,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(false);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('両方のプラットフォーム別キーがfalseなら両OSで無効', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_ios: false,
+      tts_enabled_android: false,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(false);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(false);
+  });
+
+  it('片方のプラットフォーム別キーだけ配信された場合、未配信側はフォールバック(有効)になる', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_android: false,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(false);
+  });
+
+  // 旧バージョン(プラットフォーム別キー非対応)向けの tts_enabled とは独立して制御できる
+  // ことを保証する回帰テスト。tts_enabled=false のまま当バージョンだけ再開できる。
+  it('旧バージョン向けの tts_enabled は参照しない', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled: false,
+      tts_enabled_ios: true,
+      tts_enabled_android: true,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('tts_enabled=true でもプラットフォーム別キーがfalseなら無効', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled: true,
+      tts_enabled_ios: false,
+      tts_enabled_android: false,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(false);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(false);
+  });
+
+  it('プラットフォーム別キー未配信時に tts_enabled=false でもフォールバック(有効)になる', async () => {
+    mockRemoteConfig({ max_permit_accuracy: 1500, tts_enabled: false });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('真偽値以外のプラットフォーム別キーは無視してフォールバック(有効)する', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_ios: 'false',
+      tts_enabled_android: 0,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isTTSFeatureEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('iOS/Android以外のプラットフォームでは常にフォールバック(有効)になる', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_ios: false,
+      tts_enabled_android: false,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('web');
+    expect(isTTSFeatureEnabled()).toBe(true);
+  });
+
+  it('resetRemoteConfigCache でプラットフォーム別キーも破棄される', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_android: false,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(false);
+
+    resetRemoteConfigCache();
     expect(isTTSFeatureEnabled()).toBe(true);
   });
 });

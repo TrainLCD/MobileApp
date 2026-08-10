@@ -109,6 +109,14 @@ the **highest** `versionCode` among those whose device requirements are met, and
 `:app` (`minSdk 24`, no watch feature declared) satisfies Wear OS device
 requirements too. `:wearable` must therefore always be `:app` + 1.
 
+Because `:wearable` permanently occupies `:app` + 1, **one release consumes two
+version codes**. `scripts/bump-version.js` therefore advances `:app` by 2 per
+bump — advancing it by 1 would make this release's `:app` reuse the previous
+release's `:wearable`, and Play rejects the upload with
+`Version code ... has already been used.` The script also fails fast when an
+explicit `--android-version` lands at or below the current Wear OS
+`versionCode`.
+
 `scripts/bump-version.js` enforces this automatically and corrects the value
 even when the two have drifted or collided. Do not edit the Wear OS
 `versionCode` by hand.
