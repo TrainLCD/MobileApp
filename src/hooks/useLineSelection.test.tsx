@@ -307,6 +307,127 @@ describe('useLineSelection', () => {
     expect(navResult.pendingTrainType).toBeNull();
   });
 
+  // 種別だけ設定して路線単独の駅一覧を残すと、プリセット復元時に使う
+  // lineGroupStations と範囲が食い違い、始発駅・終着駅がずれる
+  it('鉄道路線で station.trainType が指定されていれば lineGroup の駅一覧へ差し替える', async () => {
+    const { mockSetStationState, mockSetNavigationState } = setupMolecules();
+    const { mockFetchByLineId, mockFetchByGroupId, mockFetchTrainTypes } =
+      setupQueries();
+
+    // 路線単独の駅一覧（副都心線のみに相当）
+    const lineStations = [
+      createStation(10, { trainType: { id: 1 } } as Parameters<
+        typeof createStation
+      >[1]),
+      createStation(20),
+    ];
+    mockFetchByLineId.mockResolvedValue({
+      data: { lineStations },
+    });
+
+    const trainTypes = [
+      { id: 1, groupId: 500, name: '各駅停車' } as TrainType,
+      { id: 2, groupId: 501, name: '急行' } as TrainType,
+    ];
+    mockFetchTrainTypes.mockResolvedValue({
+      data: { stationTrainTypes: trainTypes },
+    });
+
+    // 直通を含む系統全体の駅一覧
+    const groupStations = [
+      createStation(1),
+      createStation(10),
+      createStation(20),
+      createStation(30),
+    ];
+    mockFetchByGroupId.mockResolvedValue({
+      data: { lineGroupStations: groupStations },
+    });
+
+    const line = createLine(100, {
+      transportType: TransportType.Rail,
+      station: { id: 10, hasTrainTypes: true } as Line['station'],
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    await act(async () => {
+      await hookRef.current?.handleLineSelected(line);
+    });
+
+    // 指定種別の groupId で駅一覧を取得している
+    expect(mockFetchByGroupId).toHaveBeenCalledWith({
+      variables: { lineGroupId: 500 },
+    });
+
+    const navSetterCalls = mockSetNavigationState.mock.calls;
+    const lastNavSetter = navSetterCalls[navSetterCalls.length - 1][0];
+    const navResult = lastNavSetter(createNavigationState());
+    expect(navResult.pendingTrainType).toEqual(trainTypes[0]);
+
+    const stationSetterCalls = mockSetStationState.mock.calls;
+    const lastStationSetter =
+      stationSetterCalls[stationSetterCalls.length - 1][0];
+    const stationResult = lastStationSetter(createStationState());
+    expect(stationResult.pendingStations).toEqual(groupStations);
+    expect(stationResult.pendingStation?.id).toBe(10);
+  });
+
+  it('lineGroup の駅一覧が空なら路線単独の駅一覧を残す', async () => {
+    const { mockSetStationState } = setupMolecules();
+    const { mockFetchByLineId, mockFetchByGroupId, mockFetchTrainTypes } =
+      setupQueries();
+
+    const lineStations = [
+      createStation(10, { trainType: { id: 1 } } as Parameters<
+        typeof createStation
+      >[1]),
+      createStation(20),
+    ];
+    mockFetchByLineId.mockResolvedValue({
+      data: { lineStations },
+    });
+    mockFetchTrainTypes.mockResolvedValue({
+      data: {
+        stationTrainTypes: [{ id: 1, groupId: 500, name: '各駅停車' }],
+      },
+    });
+    mockFetchByGroupId.mockResolvedValue({
+      data: { lineGroupStations: [] },
+    });
+
+    const line = createLine(100, {
+      transportType: TransportType.Rail,
+      station: { id: 10, hasTrainTypes: true } as Line['station'],
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    await act(async () => {
+      await hookRef.current?.handleLineSelected(line);
+    });
+
+    const stationSetterCalls = mockSetStationState.mock.calls;
+    const lastStationSetter =
+      stationSetterCalls[stationSetterCalls.length - 1][0];
+    const stationResult = lastStationSetter(createStationState());
+    expect(stationResult.pendingStations).toEqual(lineStations);
+  });
+
   it('handleTrainTypeSelect が groupId で駅を取得する', async () => {
     const { mockSetStationState, mockSetNavigationState } = setupMolecules();
     const { mockFetchByGroupId } = setupQueries();

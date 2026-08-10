@@ -165,18 +165,28 @@ export const useLineSelection = (): UseLineSelectionResult => {
           pendingTrainType: initialTrainType as TrainType | null,
         }));
 
-        if (fallbackTrainType?.groupId != null) {
+        // 種別を自動選択したら駅一覧もその系統(直通を含む)へ揃える。
+        // 路線単独の駅一覧のまま種別だけ設定すると、プリセット復元時に使う
+        // lineGroupStations と並び・範囲が食い違い、始発駅・終着駅がずれる
+        if (initialTrainType?.groupId != null) {
           const groupResult = await fetchStationsByLineGroupId({
-            variables: { lineGroupId: fallbackTrainType.groupId },
+            variables: { lineGroupId: initialTrainType.groupId },
           });
           const lineGroupStations = groupResult.data?.lineGroupStations ?? [];
-          setStationState((prev) => ({
-            ...prev,
-            pendingStations: lineGroupStations,
-            pendingStation:
-              lineGroupStations.find((s) => s.id === lineStationId) ??
-              prev.pendingStation,
-          }));
+          // 取得できなかった場合は路線単独の駅一覧を残す（空で潰さない）
+          if (lineGroupStations.length) {
+            setStationState((prev) => ({
+              ...prev,
+              pendingStations: lineGroupStations,
+              // 直通系統では同じ駅でも駅IDが変わりうるため groupId でも引き当てる
+              pendingStation:
+                lineGroupStations.find((s) => s.id === lineStationId) ??
+                lineGroupStations.find(
+                  (s) => s.groupId === pendingStation?.groupId
+                ) ??
+                prev.pendingStation,
+            }));
+          }
         }
       }
     },
