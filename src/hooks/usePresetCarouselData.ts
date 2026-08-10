@@ -20,6 +20,15 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
   const prevFetchKeyRef = useRef('');
   const prevDisplayKeyRef = useRef('');
   const currentRequestIdRef = useRef(0);
+  // 進行中の取得対象。同じ対象の取得を二重に発行しないために保持する
+  const inFlightFetchKeyRef = useRef<string | null>(null);
+  // 取得完了時は常に最新の routes で表示を組み立てる。
+  // effect のクロージャに閉じ込めると、取得中に routes が変わった場合に
+  // 古い表示内容で確定してしまう
+  const latestRoutesRef = useRef<{ routes: SavedRoute[]; displayKey: string }>({
+    routes: [],
+    displayKey: '',
+  });
   // 取得済みの駅データは路線ID / 種別(lineGroup)IDをキーに保持する。
   // carouselData から引き当てる方式だと、取得完了前に routes が作り直された際に
   // まだ駅を持たないプリセットが空配列で確定してしまう
@@ -48,6 +57,8 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
       )
       .join(',');
 
+    latestRoutesRef.current = { routes, displayKey };
+
     const lineStationsCache = lineStationsCacheRef.current;
     const trainTypeStationsCache = trainTypeStationsCacheRef.current;
 
@@ -60,13 +71,22 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
         : lineStationsCache.has(r.lineId)
     );
 
-    const needsFetch = fetchKey !== prevFetchKeyRef.current || !hasAllStations;
+    // 同じ対象の取得が既に走っている場合は再発行しない。
+    // 未取得判定(hasAllStations)は取得完了まで false のままなので、
+    // これが無いと routes が作り直されるたびに取得をやり直してしまう
+    const isFetchingSameKey = inFlightFetchKeyRef.current === fetchKey;
+    const needsFetch =
+      !isFetchingSameKey &&
+      (fetchKey !== prevFetchKeyRef.current || !hasAllStations);
     const needsDisplayUpdate = displayKey !== prevDisplayKeyRef.current;
 
     if (!needsFetch && !needsDisplayUpdate) return;
 
+    // 表示は常に最新の routes から組み立てる
     const applyRoutes = () => {
-      const newData = routes.map((r, i) => ({
+      const { routes: latestRoutes, displayKey: latestDisplayKey } =
+        latestRoutesRef.current;
+      const newData = latestRoutes.map((r, i) => ({
         ...r,
         __k: `${r.id}-${i}`,
         stations:
@@ -75,11 +95,13 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
             : lineStationsCache.get(r.lineId)) ?? [],
       }));
       setCarouselData(newData);
-      prevDisplayKeyRef.current = displayKey;
+      prevDisplayKeyRef.current = latestDisplayKey;
     };
 
-    // 表示項目だけの更新。進行中の取得を打ち切らないよう requestId は進めない
     if (!needsFetch) {
+      // 進行中の取得と同じ対象なら、その完了時に最新 routes で反映される
+      if (isFetchingSameKey) return;
+      // 表示項目だけの更新。進行中の取得を打ち切らないよう requestId は進めない
       applyRoutes();
       return;
     }
@@ -87,6 +109,7 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
     const requestId = ++currentRequestIdRef.current;
     // 同じ fetchKey で重複 fetch しないよう即座にマーク
     prevFetchKeyRef.current = fetchKey;
+    inFlightFetchKeyRef.current = fetchKey;
 
     const fetchAsync = async () => {
       try {
@@ -103,6 +126,8 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
             query: GET_LINE_LIST_STATIONS_PRESET,
             variables: { lineIds },
           });
+          // 追い越された古い応答で共有キャッシュを汚さない
+          if (requestId !== currentRequestIdRef.current) return;
           const fetched = new Map<number, Station[]>();
           for (const s of result.data?.lineListStations ?? []) {
             const lid = s.line?.id;
@@ -129,6 +154,8 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
             query: GET_LINE_GROUP_LIST_STATIONS_PRESET,
             variables: { lineGroupIds },
           });
+          // 追い越された古い応答で共有キャッシュを汚さない
+          if (requestId !== currentRequestIdRef.current) return;
           const fetched = new Map<number, Station[]>();
           for (const s of result.data?.lineGroupListStations ?? []) {
             const gid = s.trainType?.groupId;
@@ -154,6 +181,11 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
           prevFetchKeyRef.current = '';
         }
         console.error(err);
+      } finally {
+        // 追い越された古いリクエストが、進行中の新しい取得の印を消さないようにする
+        if (requestId === currentRequestIdRef.current) {
+          inFlightFetchKeyRef.current = null;
+        }
       }
     };
     fetchAsync();

@@ -213,6 +213,8 @@ describe('usePresetCarouselData', () => {
       await new Promise((r) => setTimeout(r, 0));
     });
 
+    // 同じ取得対象なので取得は1回だけで、進行中のリクエストは差し替えられない
+    expect(mockQuery).toHaveBeenCalledTimes(1);
     expect(result.current.carouselData).toHaveLength(1);
     expect(result.current.carouselData[0].stations).toEqual(stations);
   });
@@ -275,5 +277,75 @@ describe('usePresetCarouselData', () => {
     expect(result.current.carouselData).toHaveLength(2);
     expect(result.current.carouselData[0].stations).toEqual(addedStations);
     expect(result.current.carouselData[1].stations).toEqual(existingStations);
+  });
+
+  // 追い越された古い応答が共有キャッシュを上書きすると、
+  // 以降の表示更新で古い駅データが使われてしまう
+  it('新しい応答を追い越した古い応答でキャッシュを上書きしない', async () => {
+    const routeA = createLineRoute('uuid-1', 100);
+    const routeB = createLineRoute('uuid-2', 200);
+    const staleStations = [createStation(1, { line: { id: 100 } })];
+    const freshStations = [
+      createStation(10, { line: { id: 100 } }),
+      createStation(11, { line: { id: 100 } }),
+    ];
+    const stationsB = [createStation(20, { line: { id: 200 } })];
+
+    let resolveOld: (value: unknown) => void = () => {};
+    let resolveNew: (value: unknown) => void = () => {};
+    mockQuery
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveOld = resolve;
+        })
+      )
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          resolveNew = resolve;
+        })
+      );
+
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [routeA],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+
+    const { result, rerender } = renderHook(() => usePresetCarouselData());
+
+    // 取得対象が変わるので新しいリクエストが発行される
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [routeA, routeB],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+    await act(async () => {
+      rerender({});
+    });
+
+    // 新しい応答が先に、古い応答が後から返る
+    await act(async () => {
+      resolveNew({
+        data: { lineListStations: [...freshStations, ...stationsB] },
+      });
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    await act(async () => {
+      resolveOld({ data: { lineListStations: staleStations } });
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    // 表示項目だけの更新でキャッシュから再構築させる
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [{ ...routeA, name: 'renamed' }, routeB],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+    await act(async () => {
+      rerender({});
+    });
+
+    expect(result.current.carouselData[0].stations).toEqual(freshStations);
+    expect(result.current.carouselData[1].stations).toEqual(stationsB);
   });
 });
