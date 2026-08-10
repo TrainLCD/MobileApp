@@ -309,6 +309,8 @@
   "savePresetTitle": "Save preset",
   "presetNameLabel": "Preset name",
   "presetNamePlaceholder": "Preset name",
+  "presetKeepEndpointsLabel": "Save the origin and destination as they are",
+  "presetKeepEndpointsDescription": "When off, only the stopping pattern is saved, without narrowing it down by destination and origin station.",
   "save": "Save",
   "wrongDirectionWarning": "You may be traveling in the wrong direction. Please check your app settings.",
   "wrongDirectionLoopLineWarning": "You may be traveling in the wrong direction. As this is a loop line, you will still arrive, but it will take longer.",
