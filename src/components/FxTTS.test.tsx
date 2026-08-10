@@ -88,7 +88,7 @@ describe('FxTTS', () => {
     expect(mockedUseTTS).toHaveBeenCalled();
     mockedUseTTS.mockClear();
 
-    // 起動時の非同期取得が後から tts_enabled=false を返したケースを再現する
+    // 起動時の非同期取得が後からTTS無効(プラットフォーム別キーがfalse)を返したケースを再現する
     mockedIsTTSFeatureEnabled.mockReturnValue(false);
     emitRemoteConfigUpdate();
 

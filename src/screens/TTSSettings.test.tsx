@@ -108,7 +108,7 @@ describe('TTSSettingsScreen', () => {
     expect(storage.contains(STORAGE_KEYS.TTS_ENABLED_LANGUAGES)).toBe(false);
   });
 
-  describe('feature flag(tts_enabled)がfalseの場合', () => {
+  describe('feature flag(プラットフォーム別TTSキー)がfalseの場合', () => {
     beforeEach(() => {
       mockedIsTTSFeatureEnabled.mockReturnValue(false);
     });
