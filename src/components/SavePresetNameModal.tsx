@@ -15,6 +15,7 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
+import { Checkbox } from './Checkbox';
 import { CustomModal } from './CustomModal';
 import { Heading } from './Heading';
 import Typography from './Typography';
@@ -22,8 +23,14 @@ import Typography from './Typography';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (name: string) => void;
+  /**
+   * @param keepEndpoints 始発駅・終着駅をそのまま保存するか。
+   * false のときは行き先と始発駅で絞らず停車パターンのみを保存する
+   */
+  onSubmit: (name: string, keepEndpoints: boolean) => void;
   defaultName: string;
+  /** 始発・終着を保存するかの選択肢を出すか（行き先を指定しているときのみ意味を持つ） */
+  showKeepEndpointsOption?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -47,6 +54,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 8,
   },
+  keepEndpointsContainer: {
+    marginTop: 24,
+  },
+  keepEndpointsDescription: {
+    fontSize: RFValue(11),
+    marginTop: 8,
+    opacity: 0.8,
+  },
   buttonContainer: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -64,16 +79,20 @@ export const SavePresetNameModal: React.FC<Props> = ({
   onClose,
   onSubmit,
   defaultName,
+  showKeepEndpointsOption = false,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const textInputRef = useRef<TextInputType>(null);
   const textRef = useRef(defaultName);
   const [isEmpty, setIsEmpty] = useState(false);
+  const [keepEndpoints, setKeepEndpoints] = useState(true);
 
   useEffect(() => {
     if (visible) {
       textRef.current = defaultName;
       setIsEmpty(!defaultName.trim());
+      // 表示のたびに既定(オン)へ戻し、前回の選択を持ち越さない
+      setKeepEndpoints(true);
     }
   }, [visible, defaultName]);
 
@@ -82,11 +101,16 @@ export const SavePresetNameModal: React.FC<Props> = ({
     setIsEmpty(!text.trim());
   }, []);
 
+  const handleToggleKeepEndpoints = useCallback(
+    () => setKeepEndpoints((prev) => !prev),
+    []
+  );
+
   const handleSubmit = useCallback(() => {
     const name = textRef.current.trim();
     if (!name) return;
-    onSubmit(name);
-  }, [onSubmit]);
+    onSubmit(name, keepEndpoints);
+  }, [onSubmit, keepEndpoints]);
 
   const handleShow = useCallback(() => {
     if (Platform.OS === 'ios') {
@@ -135,6 +159,22 @@ export const SavePresetNameModal: React.FC<Props> = ({
           returnKeyType="done"
           onSubmitEditing={handleSubmit}
         />
+
+        {showKeepEndpointsOption ? (
+          <View style={styles.keepEndpointsContainer}>
+            <Checkbox
+              checked={keepEndpoints}
+              onPress={handleToggleKeepEndpoints}
+            >
+              {translate('presetKeepEndpointsLabel')}
+            </Checkbox>
+            <Typography
+              style={[styles.keepEndpointsDescription, { color: textColor }]}
+            >
+              {translate('presetKeepEndpointsDescription')}
+            </Typography>
+          </View>
+        ) : null}
 
         <View style={styles.buttonContainer}>
           <Button onPress={onClose} outline>

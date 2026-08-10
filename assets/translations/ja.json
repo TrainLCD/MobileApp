@@ -310,6 +310,8 @@
   "savePresetTitle": "プリセットを保存",
   "presetNameLabel": "プリセット名",
   "presetNamePlaceholder": "プリセット名",
+  "presetKeepEndpointsLabel": "始発・終着駅もそのまま保存する",
+  "presetKeepEndpointsDescription": "オフにすると、行き先と始発駅で絞り込まずに停車パターンだけを保存します。",
   "save": "保存",
   "wrongDirectionWarning": "選択した行き先と逆方向に進んでいる可能性があります。アプリの設定をご確認ください。",
   "wrongDirectionLoopLineWarning": "選択した行き先と逆方向に進んでいる可能性があります。環状線のため到着は可能ですが、遠回りになります。",
