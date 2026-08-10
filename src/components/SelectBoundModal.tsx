@@ -663,48 +663,64 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [pendingTrainType, line]);
 
   const handlePresetNameSubmit = useCallback(
-    async (name: string) => {
+    async (name: string, keepEndpointsInput: boolean) => {
       if (!line) return;
 
-      const { originStation, direction } = presetSaveRoute;
+      // 行き先を指定していなければそもそも絞り込みが無く、チェックの有無で結果は変わらない
+      const keepEndpoints = keepEndpointsInput || !wantedDestination;
+
+      const { originStation, direction } = keepEndpoints
+        ? presetSaveRoute
+        : { originStation: undefined, direction: null };
+      // 端点を捨てる場合は区間を絞らないため、通知駅の範囲も全区間に戻す
+      const savedStations = keepEndpoints ? effectiveStations : stations;
 
       // 有効な駅IDのみ保存する（wantedDestinationで区間を絞った場合に範囲外を除外）
       const validStationIds = new Set(
-        effectiveStations
-          .map((s) => s.id)
-          .filter((id): id is number => id != null)
+        savedStations.map((s) => s.id).filter((id): id is number => id != null)
       );
       const filteredNotifyStationIds = targetStationIds.filter((id) =>
         validStationIds.has(id)
       );
+      const wantedDestinationId = keepEndpoints
+        ? (wantedDestination?.groupId ?? null)
+        : null;
 
       try {
+        let saved: SavedRoute;
         if (pendingTrainType?.groupId) {
           const newRoute: SavedRouteWithTrainTypeInput = {
             hasTrainType: true,
             name,
             lineId: line.id ?? 0,
             trainTypeId: pendingTrainType?.groupId,
-            wantedDestinationId: wantedDestination?.groupId ?? null,
+            wantedDestinationId,
             originStationId: originStation?.groupId ?? null,
             direction,
             notifyStationIds: filteredNotifyStationIds,
             createdAt: new Date(),
           };
-          setSavedRoute(await saveCurrentRoute(newRoute));
+          saved = await saveCurrentRoute(newRoute);
         } else {
           const newRoute: SavedRouteWithoutTrainTypeInput = {
             hasTrainType: false,
             name,
             lineId: line.id ?? 0,
             trainTypeId: null,
-            wantedDestinationId: wantedDestination?.groupId ?? null,
+            wantedDestinationId,
             originStationId: originStation?.groupId ?? null,
             direction,
             notifyStationIds: filteredNotifyStationIds,
             createdAt: new Date(),
           };
-          setSavedRoute(await saveCurrentRoute(newRoute));
+          saved = await saveCurrentRoute(newRoute);
+        }
+
+        // 端点を捨てた場合、保存したプリセットは現在の選択（行き先で絞った経路）とは
+        // 別物なので保存済み表示にはしない。findSavedRoute も一致させないため、
+        // ここで立てても直後の再検索で戻ってしまう
+        if (keepEndpoints) {
+          setSavedRoute(saved);
         }
 
         setIsPresetNameModalVisible(false);
@@ -723,9 +739,10 @@ export const SelectBoundModal: React.FC<Props> = ({
       saveCurrentRoute,
       line,
       pendingTrainType,
-      wantedDestination?.groupId,
+      wantedDestination,
       targetStationIds,
       effectiveStations,
+      stations,
       presetSaveRoute,
     ]
   );
@@ -1014,6 +1031,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         onClose={() => setIsPresetNameModalVisible(false)}
         onSubmit={handlePresetNameSubmit}
         defaultName={presetDefaultName}
+        showKeepEndpointsOption={!!wantedDestination}
       />
     </>
   );
