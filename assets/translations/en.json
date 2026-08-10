@@ -195,7 +195,7 @@
   "e231Like": "E231 Series",
   "untouchableModeTitle": "Untouchable Mode",
   "untouchableModeDescription": "When enabled, the running screen stops responding to taps, edge swipes and the back gesture so the app is not operated by accident in your pocket or bag. Restart the app if you need to release it while riding.",
-  "untouchableModeEnabledNotice": "Untouchable mode is enabled. The app will not respond to taps. To disable this mode, please restart the app.",
+  "untouchableModeEnabledNotice": "Untouchable mode is enabled. The app will not respond to taps, edge swipes or the back gesture. To disable this mode, please restart the app.",
   "communityRoutes": "Community routes",
   "confirmDeleteRouteText": "Are you sure you want to remove \"%{routeName}\"?",
   "routeSavedText": "✅ The preset has been saved.",

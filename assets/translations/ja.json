@@ -196,7 +196,7 @@
   "e231Like": "E231系風",
   "untouchableModeTitle": "タッチ不可モード",
   "untouchableModeDescription": "有効にすると、走行画面がタップ操作に加えて画面端のスワイプや戻る操作も受け付けなくなり、ポケットやカバンの中での誤操作を防げます。走行中に解除したい場合はアプリを再起動してください。",
-  "untouchableModeEnabledNotice": "タッチ不可モードが有効化されました。アプリはタップに反応しません。このモードを無効にするには、アプリを再起動してください。",
+  "untouchableModeEnabledNotice": "タッチ不可モードが有効化されました。アプリはタップや画面端のスワイプ、戻る操作に反応しません。このモードを無効にするには、アプリを再起動してください。",
   "communityRoutes": "コミュニティルート",
   "confirmDeleteRouteText": "本当に「%{routeName}」を削除しますか？",
   "routeSavedText": "✅ プリセットを保存しました。",

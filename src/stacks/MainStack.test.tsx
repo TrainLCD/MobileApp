@@ -106,6 +106,10 @@ describe('MainStack', () => {
     screenProps.length = 0;
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('タッチ不可モードが有効な場合は走行画面のスワイプバックを無効化する', () => {
     renderWithStore(true);
 
