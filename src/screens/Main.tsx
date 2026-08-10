@@ -44,6 +44,7 @@ import {
   useLazyGraphQLQuery,
   useLoopLine,
   useNextStation,
+  usePreventBackInUntouchableMode,
   useRefreshLeftStations,
   useRefreshStation,
   useResetMainState,
@@ -192,6 +193,11 @@ const FxAndroidPictureInPicture: React.FC = () => {
   useAndroidPictureInPicture();
   return null;
 };
+// iOS の BackHandler は何も発火しないため、購読するのは Android のときだけにする
+const FxPreventBackInUntouchableMode: React.FC = () => {
+  usePreventBackInUntouchableMode();
+  return null;
+};
 
 const MainScreenEffects: React.FC = () => {
   return (
@@ -211,6 +217,7 @@ const MainScreenEffects: React.FC = () => {
       <FxUpdateLiveActivities />
       {Platform.OS === 'android' && <FxUpdateWidget />}
       {Platform.OS === 'android' && <FxAndroidPictureInPicture />}
+      {Platform.OS === 'android' && <FxPreventBackInUntouchableMode />}
     </>
   );
 };

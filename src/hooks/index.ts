@@ -63,6 +63,7 @@ export { useNextTrainType } from './useNextTrainType';
 export { useNumbering } from './useNumbering';
 export { usePresetCarouselData } from './usePresetCarouselData';
 export { usePresetStops } from './usePresetStops';
+export { usePreventBackInUntouchableMode } from './usePreventBackInUntouchableMode';
 export { usePrevious } from './usePrevious';
 export { usePreviousStation } from './usePreviousStation';
 export { useRefreshLeftStations } from './useRefreshLeftStations';
