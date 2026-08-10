@@ -316,7 +316,7 @@ describe('useLineSelection', () => {
 
     // 路線単独の駅一覧（副都心線のみに相当）
     const lineStations = [
-      createStation(10, { trainType: { id: 1 } } as Parameters<
+      createStation(10, { groupId: 100, trainType: { id: 1 } } as Parameters<
         typeof createStation
       >[1]),
       createStation(20),
@@ -333,10 +333,11 @@ describe('useLineSelection', () => {
       data: { stationTrainTypes: trainTypes },
     });
 
-    // 直通を含む系統全体の駅一覧
+    // 直通を含む系統全体の駅一覧。
+    // 直通系統では同じ駅でも駅IDが変わるため、駅ID 10 は含まれず groupId 100 で引き当てる
     const groupStations = [
       createStation(1),
-      createStation(10),
+      createStation(110, { groupId: 100 }),
       createStation(20),
       createStation(30),
     ];
@@ -377,7 +378,8 @@ describe('useLineSelection', () => {
       stationSetterCalls[stationSetterCalls.length - 1][0];
     const stationResult = lastStationSetter(createStationState());
     expect(stationResult.pendingStations).toEqual(groupStations);
-    expect(stationResult.pendingStation?.id).toBe(10);
+    // 駅IDでは引き当てられないので groupId 一致の駅が選ばれる
+    expect(stationResult.pendingStation?.id).toBe(110);
   });
 
   it('lineGroup の駅一覧が空なら路線単独の駅一覧を残す', async () => {
@@ -426,6 +428,97 @@ describe('useLineSelection', () => {
       stationSetterCalls[stationSetterCalls.length - 1][0];
     const stationResult = lastStationSetter(createStationState());
     expect(stationResult.pendingStations).toEqual(lineStations);
+  });
+
+  // 路線を選び直したとき、前の選択の取得結果が新しい状態を上書きしてはいけない
+  it('取得中に別の路線が選ばれたら古い系統駅一覧で上書きしない', async () => {
+    const { mockSetStationState } = setupMolecules();
+    const { mockFetchByLineId, mockFetchByGroupId, mockFetchTrainTypes } =
+      setupQueries();
+
+    const lineStationsA = [
+      createStation(10, { trainType: { id: 1 } } as Parameters<
+        typeof createStation
+      >[1]),
+    ];
+    const lineStationsB = [
+      createStation(20, { trainType: { id: 2 } } as Parameters<
+        typeof createStation
+      >[1]),
+    ];
+    // 呼び出し順ではなく引数で解決先を決める（A と B の実行が入れ替わっても壊れないように）
+    mockFetchByLineId.mockImplementation(
+      ({ variables }: { variables: { lineId: number } }) =>
+        Promise.resolve({
+          data: {
+            lineStations:
+              variables.lineId === 100 ? lineStationsA : lineStationsB,
+          },
+        })
+    );
+
+    mockFetchTrainTypes.mockResolvedValue({
+      data: {
+        stationTrainTypes: [
+          { id: 1, groupId: 500, name: 'A' },
+          { id: 2, groupId: 600, name: 'B' },
+        ],
+      },
+    });
+
+    const groupStationsA = [createStation(910)];
+    const groupStationsB = [createStation(920)];
+    let resolveGroupA: ((value: unknown) => void) | undefined;
+    mockFetchByGroupId.mockImplementation(
+      ({ variables }: { variables: { lineGroupId: number } }) => {
+        if (variables.lineGroupId === 500) {
+          return new Promise((resolve) => {
+            resolveGroupA = resolve;
+          });
+        }
+        return Promise.resolve({
+          data: { lineGroupStations: groupStationsB },
+        });
+      }
+    );
+
+    const lineA = createLine(100, {
+      transportType: TransportType.Rail,
+      station: { id: 10, hasTrainTypes: true } as Line['station'],
+    });
+    const lineB = createLine(200, {
+      transportType: TransportType.Rail,
+      station: { id: 20, hasTrainTypes: true } as Line['station'],
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    await act(async () => {
+      // A を系統駅一覧の取得待ちまで進める
+      const pendingA = hookRef.current?.handleLineSelected(lineA);
+      await new Promise((r) => setTimeout(r, 0));
+      expect(resolveGroupA).toBeDefined();
+
+      // A が系統駅一覧を待っている間に B を選び直す
+      await hookRef.current?.handleLineSelected(lineB);
+
+      // 後から A の応答が返る
+      resolveGroupA?.({ data: { lineGroupStations: groupStationsA } });
+      await pendingA;
+    });
+
+    const stationSetterCalls = mockSetStationState.mock.calls;
+    const lastStationSetter =
+      stationSetterCalls[stationSetterCalls.length - 1][0];
+    const stationResult = lastStationSetter(createStationState());
+    expect(stationResult.pendingStations).toEqual(groupStationsB);
   });
 
   it('handleTrainTypeSelect が groupId で駅を取得する', async () => {

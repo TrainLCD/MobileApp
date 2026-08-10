@@ -1,7 +1,7 @@
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -57,6 +57,8 @@ export type UseLineSelectionResult = {
 
 export const useLineSelection = (): UseLineSelectionResult => {
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
+  // 路線を選び直した際に、前の選択の取得結果が新しい状態を上書きしないよう世代を管理する
+  const selectionGenerationRef = useRef(0);
   const setStationState = useSetAtom(stationState);
   const setLineState = useSetAtom(lineStateAtom);
   const setNavigationState = useSetAtom(navigationState);
@@ -97,6 +99,8 @@ export const useLineSelection = (): UseLineSelectionResult => {
       const lineStationId = line.station?.id;
       if (!lineId || !lineStationId) return;
 
+      const generation = ++selectionGenerationRef.current;
+
       setIsSelectBoundModalOpen(true);
 
       setStationState((prev) => ({
@@ -132,6 +136,9 @@ export const useLineSelection = (): UseLineSelectionResult => {
             })
           : null,
       ]);
+      // 取得中に別の路線が選ばれていたら、この呼び出しの結果は破棄する
+      if (generation !== selectionGenerationRef.current) return;
+
       const fetchedStations = data?.lineStations ?? [];
 
       const pendingStation =
@@ -172,6 +179,8 @@ export const useLineSelection = (): UseLineSelectionResult => {
           const groupResult = await fetchStationsByLineGroupId({
             variables: { lineGroupId: initialTrainType.groupId },
           });
+          if (generation !== selectionGenerationRef.current) return;
+
           const lineGroupStations = groupResult.data?.lineGroupStations ?? [];
           // 取得できなかった場合は路線単独の駅一覧を残す（空で潰さない）
           if (lineGroupStations.length) {
