@@ -1,5 +1,6 @@
 import type { Station } from '~/@types/graphql';
 import type { LineDirection } from '~/models/Bound';
+import { findNearestByCoord } from './findNearestByCoord';
 
 type PresetRouteLike = {
   stations: Station[];
@@ -25,7 +26,7 @@ export type PresetRouteEndpoints = {
  * を使っており、後者は並びが反転して返ることがある。
  * その場合 direction をそのまま当てると始発駅が行き先と同じ駅になってしまう。
  *
- * 保存時のUI(SavePresetNameModal)は始発駅と行き先が同じ選択肢を除外しているため、
+ * 保存時の direction 解決(`resolvePresetSaveDirection`)は始発駅が行き先と同じになる向きを選ばないため、
  * 「direction から求めた終端が行き先と一致する」状態は並びの食い違いでしか起こらない。
  * そこを検知したら反対側の終端へ倒すことで、並び順に依存せず始発駅を復元する。
  */
@@ -52,6 +53,70 @@ export const getPresetOriginStation = ({
   }
 
   return origin;
+};
+
+type ResolvePresetSaveDirectionParams = {
+  stations: Station[];
+  wantedDestinationId?: number | null;
+  /** 乗車駅として扱う駅(選択中の乗車駅、無ければGPS確定駅) */
+  currentStation?: Station | null;
+};
+
+/**
+ * プリセット保存時の direction を自動解決する。
+ *
+ * direction は「駅一覧のどちら側の終端から乗るか」を表す(`getPresetOriginStation` 参照)。
+ * 保存する経路は行き先を境に片側だけなので、経路内の最寄駅がどちら側にあるかで向きが一意に決まる。
+ * 実際の始発駅は復元時に `usePresetStops` が経路内の最寄駅として解決する。
+ *
+ * 最寄駅は現在駅が駅一覧に含まれていればその駅を、含まれていなければ座標距離で最も近い駅を採る。
+ *
+ * 行き先そのものは始発駅になり得ないため候補から除外する。
+ * これは `getPresetOriginStation` が並び順の食い違いを検知するための前提でもある。
+ */
+export const resolvePresetSaveDirection = ({
+  stations,
+  wantedDestinationId,
+  currentStation,
+}: ResolvePresetSaveDirectionParams): LineDirection | null => {
+  if (wantedDestinationId == null) {
+    return null;
+  }
+
+  const destIndex = stations.findIndex(
+    (s) => s.groupId === wantedDestinationId
+  );
+  if (destIndex === -1) {
+    return null;
+  }
+
+  // 行き先が終端にある場合、始発駅になり得る終端は反対側だけに定まる
+  const isHead = destIndex === 0;
+  const isTail = destIndex === stations.length - 1;
+  if (isHead && isTail) {
+    return null;
+  }
+  if (isHead) {
+    return 'OUTBOUND';
+  }
+  if (isTail) {
+    return 'INBOUND';
+  }
+
+  const candidates = stations.filter((s) => s.groupId !== wantedDestinationId);
+  const nearest =
+    candidates.find((s) => s.groupId === currentStation?.groupId) ??
+    findNearestByCoord(
+      currentStation?.latitude,
+      currentStation?.longitude,
+      candidates
+    );
+  if (!nearest) {
+    return null;
+  }
+
+  const nearestIndex = stations.findIndex((s) => s.groupId === nearest.groupId);
+  return nearestIndex < destIndex ? 'INBOUND' : 'OUTBOUND';
 };
 
 /**

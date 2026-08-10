@@ -31,6 +31,7 @@ import {
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
+import { resolvePresetSaveDirection } from '~/utils/presetRouteEndpoints';
 import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -52,10 +53,7 @@ import stationState, {
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { RouteInfoModal } from './RouteInfoModal';
-import {
-  type DirectionOption,
-  SavePresetNameModal,
-} from './SavePresetNameModal';
+import { SavePresetNameModal } from './SavePresetNameModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
@@ -641,32 +639,16 @@ export const SelectBoundModal: React.FC<Props> = ({
     setIsPresetNameModalVisible(true);
   }, [savedRoute, removeCurrentRoute, line]);
 
-  const presetDirectionOptions = useMemo(() => {
-    if (!wantedDestination || !line || !stations.length) return undefined;
-    const options: DirectionOption[] = [];
-    // INBOUND: stations リスト先頭側から終点方向へ向かう列車
-    const firstStation = stations[0];
-    const lastStation = stations[stations.length - 1];
-    if (inboundStations.length && firstStation) {
-      options.push({
-        direction: 'INBOUND',
-        fromStation: firstStation,
-        toStation: wantedDestination,
-        line: (firstStation.line as Line) ?? line,
-      });
-    }
-    // OUTBOUND: stations リスト末尾側から始点方向へ向かう列車
-    if (outboundStations.length && lastStation) {
-      options.push({
-        direction: 'OUTBOUND',
-        fromStation: lastStation,
-        toStation: wantedDestination,
-        line: (lastStation.line as Line) ?? line,
-      });
-    }
-    // fromStation と toStation が同じ場合は除外
-    return options.filter((o) => o.fromStation.groupId !== o.toStation.groupId);
-  }, [wantedDestination, line, stations, inboundStations, outboundStations]);
+  // 終点を明示指定した場合の始発駅はユーザーに選ばせず、経路内の最寄駅から自動で決める
+  const presetSaveDirection = useMemo(
+    () =>
+      resolvePresetSaveDirection({
+        stations,
+        wantedDestinationId: wantedDestination?.groupId ?? null,
+        currentStation: effectiveStation ?? confirmedStation,
+      }),
+    [stations, wantedDestination?.groupId, effectiveStation, confirmedStation]
+  );
 
   const presetDefaultName = useMemo(() => {
     const trainName = pendingTrainType
@@ -678,8 +660,10 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [pendingTrainType, line]);
 
   const handlePresetNameSubmit = useCallback(
-    async (name: string, direction: LineDirection | null) => {
+    async (name: string) => {
       if (!line) return;
+
+      const direction = presetSaveDirection;
 
       // 有効な駅IDのみ保存する（wantedDestinationで区間を絞った場合に範囲外を除外）
       const validStationIds = new Set(
@@ -737,6 +721,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       wantedDestination?.groupId,
       targetStationIds,
       effectiveStations,
+      presetSaveDirection,
     ]
   );
 
@@ -1024,7 +1009,6 @@ export const SelectBoundModal: React.FC<Props> = ({
         onClose={() => setIsPresetNameModalVisible(false)}
         onSubmit={handlePresetNameSubmit}
         defaultName={presetDefaultName}
-        directionOptions={presetDirectionOptions}
       />
     </>
   );
