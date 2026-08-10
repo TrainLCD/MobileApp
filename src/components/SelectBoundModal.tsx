@@ -31,7 +31,7 @@ import {
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
-import { resolvePresetSaveDirection } from '~/utils/presetRouteEndpoints';
+import { resolvePresetSaveRoute } from '~/utils/presetRouteEndpoints';
 import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -230,9 +230,9 @@ export const SelectBoundModal: React.FC<Props> = ({
   // 終点を明示指定した場合の始発駅はユーザーに選ばせず、経路内の最寄駅から自動で決める。
   // effectiveStation は区間外なら stations[0] へ倒れてしまい実際の現在地を表さないので、
   // 生の pendingStation を渡して未設定・区間外のときだけ GPS 確定駅の座標へフォールバックさせる
-  const presetSaveDirection = useMemo(
+  const presetSaveRoute = useMemo(
     () =>
-      resolvePresetSaveDirection({
+      resolvePresetSaveRoute({
         stations,
         wantedDestinationId: wantedDestination?.groupId ?? null,
         currentStation: station ?? confirmedStation,
@@ -242,15 +242,17 @@ export const SelectBoundModal: React.FC<Props> = ({
 
   // 保存対象の区間。direction から導くことで、保存する向きと通知駅の絞り込み範囲がズレないようにする
   const effectiveStations = useMemo(() => {
-    if (!applicableWantedDestination || !presetSaveDirection) return stations;
+    if (!applicableWantedDestination || !presetSaveRoute.direction) {
+      return stations;
+    }
     const destIdx = stations.findIndex(
       (s) => s.groupId === applicableWantedDestination.groupId
     );
     if (destIdx === -1) return stations;
-    return presetSaveDirection === 'INBOUND'
+    return presetSaveRoute.direction === 'INBOUND'
       ? stations.slice(0, destIdx + 1)
       : stations.slice(destIdx);
-  }, [stations, applicableWantedDestination, presetSaveDirection]);
+  }, [stations, applicableWantedDestination, presetSaveRoute.direction]);
 
   const currentIndex = stations.findIndex(
     (s) => s.groupId === effectiveStation?.groupId
@@ -277,6 +279,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     resolvePresetDirection,
   } = usePresetStops({
     savedRouteDirection: savedRoute?.direction,
+    savedRouteOriginStationId: savedRoute?.originStationId,
     stations,
     wantedDestination: applicableWantedDestination,
     confirmedStation,
@@ -663,7 +666,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     async (name: string) => {
       if (!line) return;
 
-      const direction = presetSaveDirection;
+      const { originStation, direction } = presetSaveRoute;
 
       // 有効な駅IDのみ保存する（wantedDestinationで区間を絞った場合に範囲外を除外）
       const validStationIds = new Set(
@@ -683,6 +686,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             lineId: line.id ?? 0,
             trainTypeId: pendingTrainType?.groupId,
             wantedDestinationId: wantedDestination?.groupId ?? null,
+            originStationId: originStation?.groupId ?? null,
             direction,
             notifyStationIds: filteredNotifyStationIds,
             createdAt: new Date(),
@@ -695,6 +699,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             lineId: line.id ?? 0,
             trainTypeId: null,
             wantedDestinationId: wantedDestination?.groupId ?? null,
+            originStationId: originStation?.groupId ?? null,
             direction,
             notifyStationIds: filteredNotifyStationIds,
             createdAt: new Date(),
@@ -721,7 +726,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       wantedDestination?.groupId,
       targetStationIds,
       effectiveStations,
-      presetSaveDirection,
+      presetSaveRoute,
     ]
   );
 

@@ -53,7 +53,7 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
     const displayKey = routes
       .map(
         (r) =>
-          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${r.name}:${r.direction}:${r.wantedDestinationId}:${r.notifyStationIds.join(';')}`
+          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${r.name}:${r.direction}:${r.wantedDestinationId}:${r.originStationId}:${r.notifyStationIds.join(';')}`
       )
       .join(',');
 
