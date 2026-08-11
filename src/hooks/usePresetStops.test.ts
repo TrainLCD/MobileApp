@@ -83,6 +83,54 @@ describe('usePresetStops', () => {
     });
   });
 
+  describe('保存された始発駅', () => {
+    // 直通運転を含む系統では direction から求めた終端が乗車駅と大きく離れる
+    it('savedRouteOriginStationId があればその駅を presetOrigin にする', () => {
+      const { result } = renderHook(() =>
+        usePresetStops({
+          savedRouteDirection: 'INBOUND',
+          savedRouteOriginStationId: minamiSenju.groupId,
+          stations,
+          wantedDestination: ueno,
+          confirmedStation: null,
+        })
+      );
+      expect(result.current.presetOrigin?.groupId).toBe(minamiSenju.groupId);
+      expect(result.current.presetStops?.map((s) => s.groupId)).toEqual([
+        2, 3, 4, 5,
+      ]);
+    });
+
+    it('保存された始発駅が駅一覧に無ければ direction の終端へフォールバックする', () => {
+      const { result } = renderHook(() =>
+        usePresetStops({
+          savedRouteDirection: 'INBOUND',
+          savedRouteOriginStationId: 999,
+          stations,
+          wantedDestination: ueno,
+          confirmedStation: null,
+        })
+      );
+      expect(result.current.presetOrigin?.groupId).toBe(kitaSenju.groupId);
+    });
+
+    // 保存された始発駅に利用者が居る場合、その駅から乗り始められる必要がある
+    it('保存された始発駅は乗車開始駅の候補に含まれる', () => {
+      const { result } = renderHook(() =>
+        usePresetStops({
+          savedRouteDirection: 'INBOUND',
+          savedRouteOriginStationId: minamiSenju.groupId,
+          stations,
+          wantedDestination: ueno,
+          confirmedStation: minamiSenju,
+        })
+      );
+      expect(result.current.nearestPresetStation?.groupId).toBe(
+        minamiSenju.groupId
+      );
+    });
+  });
+
   describe('presetStops', () => {
     it('presetOrigin が null の場合 undefined を返す', () => {
       const { result } = renderHook(() =>

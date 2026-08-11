@@ -115,6 +115,20 @@ const ExperimentalSettingsScreen: React.FC = () => {
     }
   }, [portraitModeEnabled, setPortraitModeEnabled]);
 
+  const handleToggleUntouchableMode = useCallback(() => {
+    const flag = !tuning.untouchableModeEnabled;
+    setTuning((prev) => ({ ...prev, untouchableModeEnabled: flag }));
+    try {
+      storage.set(STORAGE_KEYS.UNTOUCHABLE_MODE_ENABLED, String(flag));
+    } catch (error) {
+      // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
+      // UIと永続値の不整合を防ぐべくatom状態をロールバックする
+      setTuning((prev) => ({ ...prev, untouchableModeEnabled: !flag }));
+      console.error('Failed to save untouchable mode setting', error);
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  }, [tuning.untouchableModeEnabled, setTuning]);
+
   const handleToggleTelemetry = useCallback(() => {
     const flag = !tuning.telemetryEnabled;
     setTuning((prev) => ({ ...prev, telemetryEnabled: flag }));
@@ -162,6 +176,16 @@ const ExperimentalSettingsScreen: React.FC = () => {
           </View>
           <Typography style={styles.description}>
             {translate('telemetryDescription')}
+          </Typography>
+          <View style={styles.toggleSpacer}>
+            <ToggleItem
+              title={translate('untouchableModeTitle')}
+              state={tuning.untouchableModeEnabled}
+              onToggle={handleToggleUntouchableMode}
+            />
+          </View>
+          <Typography style={styles.description}>
+            {translate('untouchableModeDescription')}
           </Typography>
           <Typography style={styles.notice}>
             {translate('experimentalSettingsNotice')}
