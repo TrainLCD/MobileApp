@@ -23,4 +23,10 @@ const tuningState = atom<TuningState>({
   telemetryEnabled: false,
 });
 
+// タッチ不可モードだけを見る購読者（MainStack など）が、他のチューニング値の
+// 変更で再レンダーされないようにするための派生atom
+export const untouchableModeEnabledAtom = atom(
+  (get) => get(tuningState).untouchableModeEnabled
+);
+
 export default tuningState;

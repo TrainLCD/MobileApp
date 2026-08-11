@@ -22,6 +22,7 @@ import SelectLine from '../screens/SelectLineScreen';
 import ThemeSettings from '../screens/ThemeSettings';
 import { selectedBoundAtom, stationAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
+import { untouchableModeEnabledAtom } from '../store/atoms/tuning';
 import { translate } from '../translation';
 
 const Stack = createNativeStackNavigator();
@@ -36,6 +37,7 @@ const MainStack: React.FC = () => {
   const selectedBound = useAtomValue(selectedBoundAtom);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const untouchableModeEnabled = useAtomValue(untouchableModeEnabledAtom);
 
   const isUnderMaintenance = useUnderMaintenance();
   const isInternetAvailable = useConnectivity();
@@ -48,6 +50,17 @@ const MainStack: React.FC = () => {
       },
     }),
     [isLEDTheme]
+  );
+
+  // タッチ不可モード中は走行画面からの離脱操作も誤操作とみなし、iOSの画面端
+  // スワイプ(スワイプバック)をネイティブごと無効化する。Androidの戻るキー・
+  // 戻るジェスチャーは usePreventBackInUntouchableMode 側で握りつぶしている。
+  const mainScreenOptions = useMemo<NativeStackNavigationOptions>(
+    () => ({
+      ...optionsWithCustomStyle,
+      gestureEnabled: !untouchableModeEnabled,
+    }),
+    [optionsWithCustomStyle, untouchableModeEnabled]
   );
 
   if (isUnderMaintenance) {
@@ -81,7 +94,7 @@ const MainStack: React.FC = () => {
           component={SelectLine}
         />
         <Stack.Screen
-          options={optionsWithCustomStyle}
+          options={mainScreenOptions}
           name="Main"
           component={Main}
         />

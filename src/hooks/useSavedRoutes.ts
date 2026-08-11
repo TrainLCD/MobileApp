@@ -15,6 +15,7 @@ interface SavedRouteRow {
   lineId: number;
   trainTypeId: number | null;
   wantedDestinationId: number | null;
+  originStationId: number | null;
   direction: string | null;
   notifyStationIds: string | null; // JSON文字列として保存
   hasTrainType: number; // SQLiteではBOOLEANが数値として保存される
@@ -57,6 +58,7 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
       lineId: row.lineId,
       trainTypeId: row.trainTypeId,
       wantedDestinationId: row.wantedDestinationId ?? null,
+      originStationId: row.originStationId ?? null,
       direction,
       notifyStationIds,
       hasTrainType: true,
@@ -69,6 +71,7 @@ const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
     lineId: row.lineId,
     trainTypeId: null,
     wantedDestinationId: row.wantedDestinationId ?? null,
+    originStationId: row.originStationId ?? null,
     direction,
     notifyStationIds,
     hasTrainType: false,
@@ -87,6 +90,7 @@ const initDb = async (): Promise<void> => {
     lineId INTEGER NOT NULL,
     trainTypeId INTEGER,
     wantedDestinationId INTEGER,
+    originStationId INTEGER,
     direction TEXT,
     notifyStationIds TEXT,
     hasTrainType INTEGER NOT NULL CHECK (hasTrainType IN (0,1)),
@@ -112,6 +116,11 @@ const initDb = async (): Promise<void> => {
   if (!columnNames.has('wantedDestinationId')) {
     await db.execAsync(
       'ALTER TABLE saved_routes ADD COLUMN wantedDestinationId INTEGER;'
+    );
+  }
+  if (!columnNames.has('originStationId')) {
+    await db.execAsync(
+      'ALTER TABLE saved_routes ADD COLUMN originStationId INTEGER;'
     );
   }
   if (!columnNames.has('direction')) {
@@ -215,14 +224,15 @@ export const useSavedRoutes = () => {
 
       await db.runAsync(
         `INSERT INTO saved_routes
-         (id, name, lineId, trainTypeId, wantedDestinationId, direction, notifyStationIds, hasTrainType, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, name, lineId, trainTypeId, wantedDestinationId, originStationId, direction, notifyStationIds, hasTrainType, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           newRoute.id,
           newRoute.name,
           newRoute.lineId,
           newRoute.trainTypeId ?? null,
           newRoute.wantedDestinationId ?? null,
+          newRoute.originStationId ?? null,
           newRoute.direction ?? null,
           newRoute.notifyStationIds.length
             ? JSON.stringify(newRoute.notifyStationIds)

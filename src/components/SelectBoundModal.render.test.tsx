@@ -1,4 +1,9 @@
-import { fireEvent, render, within } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  waitFor,
+  within,
+} from '@testing-library/react-native';
 import { useAtom, useAtomValue } from 'jotai';
 import type React from 'react';
 import { pendingLineAtom, selectedLineAtom } from '../store/atoms/line';
@@ -18,6 +23,8 @@ import { isLEDThemeAtom } from '../store/atoms/theme';
 import { SelectBoundModal } from './SelectBoundModal';
 
 const mockRouteInfoModal = jest.fn();
+const mockSavePresetNameModal = jest.fn();
+const mockSaveRoute = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   CommonActions: { navigate: jest.fn() },
@@ -41,7 +48,7 @@ jest.mock('~/hooks', () => ({
   useSavedRoutes: jest.fn(() => ({
     isInitialized: true,
     find: jest.fn(() => null),
-    save: jest.fn(),
+    save: mockSaveRoute,
     remove: jest.fn(),
   })),
   usePresetStops: jest.fn(() => ({
@@ -126,13 +133,34 @@ jest.mock('./TrainTypeListModal', () => ({
   TrainTypeListModal: () => null,
 }));
 jest.mock('./SavePresetNameModal', () => ({
-  SavePresetNameModal: ({ visible }: { visible: boolean }) =>
-    visible
+  SavePresetNameModal: ({
+    visible,
+    onSubmit,
+    showKeepEndpointsOption,
+  }: {
+    visible: boolean;
+    onSubmit: (name: string, keepEndpoints: boolean) => void;
+    showKeepEndpointsOption?: boolean;
+  }) => {
+    mockSavePresetNameModal({ visible, showKeepEndpointsOption });
+    return visible
       ? (() => {
-          const { View } = require('react-native');
-          return <View testID="save-preset-modal" />;
+          const { Pressable, View } = require('react-native');
+          return (
+            <View testID="save-preset-modal">
+              <Pressable
+                testID="save-preset-submit"
+                onPress={() => onSubmit('テストプリセット', true)}
+              />
+              <Pressable
+                testID="save-preset-submit-without-endpoints"
+                onPress={() => onSubmit('テストプリセット', false)}
+              />
+            </View>
+          );
         })()
-      : null,
+      : null;
+  },
 }));
 
 jest.mock('../stacks/rootNavigation', () => ({
@@ -242,5 +270,169 @@ describe('SelectBoundModal', () => {
     const props = lastCall?.[0] as { stations: Array<{ groupId: number }> };
 
     expect(props.stations.map((station) => station.groupId)).toEqual([1, 2, 3]);
+  });
+
+  // 乗車駅が未設定だと effectiveStation は stations[0] へ倒れるため、
+  // そこから向きを決めると常に INBOUND になってしまう
+  it('乗車駅が未設定の場合はGPS確定駅の座標から保存する向きを決める', async () => {
+    const routeStations = [
+      { groupId: 1, latitude: 35.75, longitude: 139.8 },
+      { groupId: 2, latitude: 35.74, longitude: 139.79 },
+      { groupId: 3, latitude: 35.72, longitude: 139.77 },
+      { groupId: 4, latitude: 35.7, longitude: 139.75 },
+    ].map(({ groupId, latitude, longitude }) => ({
+      id: groupId,
+      groupId,
+      latitude,
+      longitude,
+      line: { id: 10 },
+      lines: [{ id: 10 }],
+    }));
+
+    mockAtomValues({
+      // GPS確定駅は駅一覧の末尾側(駅4付近)にあり、行き先(駅2)の反対側になる
+      station: { id: 99, groupId: 99, latitude: 35.701, longitude: 139.751 },
+      pendingStation: null,
+      pendingStations: routeStations,
+      wantedDestination: routeStations[1],
+      pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+    });
+
+    const screen = render(
+      <SelectBoundModal
+        visible={true}
+        onClose={jest.fn()}
+        loading={false}
+        error={null}
+        onTrainTypeSelect={jest.fn()}
+        onBoundSelect={jest.fn()}
+      />
+    );
+
+    fireEvent.press(screen.getByText('saveCurrentRoute'));
+    fireEvent.press(screen.getByTestId('save-preset-submit'));
+
+    await waitFor(() => expect(mockSaveRoute).toHaveBeenCalled());
+    expect(mockSaveRoute.mock.calls[0][0].direction).toBe('OUTBOUND');
+  });
+
+  describe('始発・終着を保存するかの選択', () => {
+    const routeStations = [1, 2, 3, 4].map((groupId) => ({
+      id: groupId,
+      groupId,
+      latitude: 35.7 + groupId * 0.01,
+      longitude: 139.75 + groupId * 0.01,
+      line: { id: 10 },
+      lines: [{ id: 10 }],
+    }));
+
+    const setupWithDestination = (targetStationIds: number[] = []) => {
+      mockAtomValues({
+        station: routeStations[3],
+        pendingStation: routeStations[3],
+        pendingStations: routeStations,
+        wantedDestination: routeStations[1],
+        pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      });
+      (useAtom as jest.Mock).mockImplementation((atom: unknown) => {
+        if (atom === notifyState) {
+          return [{ targetStationIds }, jest.fn()];
+        }
+        return [{}, jest.fn()];
+      });
+
+      return render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+    };
+
+    it('行き先が未指定なら選択肢を出さない', () => {
+      render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+
+      const lastCall =
+        mockSavePresetNameModal.mock.calls[
+          mockSavePresetNameModal.mock.calls.length - 1
+        ];
+      expect(lastCall?.[0].showKeepEndpointsOption).toBe(false);
+    });
+
+    it('行き先を指定している場合は選択肢を出す', () => {
+      setupWithDestination();
+
+      const lastCall =
+        mockSavePresetNameModal.mock.calls[
+          mockSavePresetNameModal.mock.calls.length - 1
+        ];
+      expect(lastCall?.[0].showKeepEndpointsOption).toBe(true);
+    });
+
+    it('オンのままなら行き先・始発駅を含めて保存する', async () => {
+      const screen = setupWithDestination();
+
+      fireEvent.press(screen.getByText('saveCurrentRoute'));
+      fireEvent.press(screen.getByTestId('save-preset-submit'));
+
+      await waitFor(() => expect(mockSaveRoute).toHaveBeenCalled());
+      expect(mockSaveRoute.mock.calls[0][0]).toMatchObject({
+        wantedDestinationId: 2,
+        originStationId: 4,
+        direction: 'OUTBOUND',
+      });
+    });
+
+    it('オフにすると行き先・始発駅を保存しない', async () => {
+      const screen = setupWithDestination();
+
+      fireEvent.press(screen.getByText('saveCurrentRoute'));
+      fireEvent.press(
+        screen.getByTestId('save-preset-submit-without-endpoints')
+      );
+
+      await waitFor(() => expect(mockSaveRoute).toHaveBeenCalled());
+      expect(mockSaveRoute.mock.calls[0][0]).toMatchObject({
+        wantedDestinationId: null,
+        originStationId: null,
+        direction: null,
+      });
+    });
+
+    // 区間で絞らない以上、絞り込み範囲の外にある通知駅も落としてはいけない
+    it('オフにすると全区間の通知駅を保存する', async () => {
+      const screen = setupWithDestination([1, 4]);
+
+      fireEvent.press(screen.getByText('saveCurrentRoute'));
+      fireEvent.press(
+        screen.getByTestId('save-preset-submit-without-endpoints')
+      );
+
+      await waitFor(() => expect(mockSaveRoute).toHaveBeenCalled());
+      expect(mockSaveRoute.mock.calls[0][0].notifyStationIds).toEqual([1, 4]);
+    });
+
+    it('オンのままなら保存区間内の通知駅だけを保存する', async () => {
+      const screen = setupWithDestination([1, 4]);
+
+      fireEvent.press(screen.getByText('saveCurrentRoute'));
+      fireEvent.press(screen.getByTestId('save-preset-submit'));
+
+      await waitFor(() => expect(mockSaveRoute).toHaveBeenCalled());
+      expect(mockSaveRoute.mock.calls[0][0].notifyStationIds).toEqual([4]);
+    });
   });
 });

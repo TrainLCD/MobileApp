@@ -158,6 +158,19 @@ describe('useDeepLink', () => {
   };
 
   beforeEach(() => {
+    // Every test runs on fake timers, including the ones that never advance
+    // them. `waitForNavReady` retries through real `setTimeout`
+    // (100/200/400/800ms), and a test that finishes before that chain settles
+    // leaves it pending: ~1.5s later the callback fires inside whichever test
+    // is running then, reads the *shared* `navigationRef` mock, and — if that
+    // test stubbed `isReady()` as true — dispatches `NAVIGATE → MainStack/Main`
+    // into the shared `dispatch` mock, breaking its negative assertions
+    // (#6607). Fake timers make those pending callbacks discardable, which is
+    // what `jest.clearAllTimers()` in afterEach does; with real timers that
+    // call had nothing to clear. It also stops the chains from keeping the
+    // Node event loop alive ("Jest did not exit one second after...").
+    jest.useFakeTimers();
+
     // jest.clearAllMocks (afterEach) clears call history but not
     // mockReturnValue / mockReturnValueOnce settings — those leak across
     // tests and cause order-dependent flakes (e.g. an isReady queue from
@@ -177,9 +190,12 @@ describe('useDeepLink', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    // Belt-and-suspenders: if a test forgot to call useRealTimers, leaked
-    // fake timers would silently change the behavior of every subsequent
-    // test. Force-restore real timers and drop any pending fake timers.
+    // Drop every timer the test left behind — notably the `waitForNavReady`
+    // retry chains described in beforeEach — before handing control to the
+    // next test. Their promises stay unresolved forever, which is exactly
+    // what we want: the abandoned continuation can no longer touch the
+    // shared navigationRef mocks. Restoring real timers afterwards keeps the
+    // fake clock from bleeding into unrelated suites.
     jest.clearAllTimers();
     jest.useRealTimers();
   });
@@ -2234,16 +2250,22 @@ describe('useDeepLink', () => {
       const { mockSetNavigationState } = setupAtoms();
       setupQueries();
 
+      const hookRef: { current: HookResult } = { current: null };
       render(
         <HookBridge
-          onReady={() => {
-            /* noop */
+          onReady={(value) => {
+            hookRef.current = value;
           }}
         />
       );
 
+      // `getInitialURL` having been called only proves the effect started —
+      // handleUrl still has async work ahead of it, so a negative assertion
+      // placed right after that would pass before the code under test has had
+      // a chance to misbehave. `initialUrlProcessed` flips in the effect's
+      // `finally`, which is the real "deep link handling is done" signal.
       await waitFor(() => {
-        expect(mockGetInitialURL).toHaveBeenCalled();
+        expect(hookRef.current?.initialUrlProcessed).toBe(true);
       });
 
       expect(mockSetNavigationState).not.toHaveBeenCalled();
