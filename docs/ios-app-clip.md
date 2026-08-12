@@ -60,3 +60,43 @@ App Clip ターゲットは Xcode の同期グループ
 
 エントリポイントは `AppDelegate.swift` の `@UIApplicationMain` が生成するので、
 `main.m` / `AppDelegate.h` / `AppDelegate.m` は置かないこと。
+
+## 起動直後クラッシュの切り分け記録（2026-08-12）
+
+PR #6672（白画面修正）と #6675（アーカイブ修正）を取り込んだ canary
+10.13.0 (2836)（[Build iOS Canary #31595303476](https://github.com/TrainLCD/MobileApp/actions/runs/31595303476)）で、
+App Clip が起動直後にクラッシュする事象が報告された。以前の「白画面のまま固まる」
+とは別症状。ビルドログの精査で以下は **正常** と確認済みなので、再調査時に
+疑わなくてよい。
+
+- `Bundle React Native code and images` は Clip ターゲットでも実行され、
+  `hermesc -emit-binary -O` でコンパイルした `main.jsbundle` とアセット 516 件が
+  `CanaryAppClip.app` に同梱されている（`SKIP_BUNDLING` の痕跡なし）。
+- `[CP] Embed Pods Frameworks` が `ExpoModulesJSI` / `React` /
+  `ReactNativeDependencies` / `hermesvm` の 4 動的フレームワークを Clip の
+  `Frameworks/` へ埋め込み署名済み。dyld のライブラリ欠落で落ちる線は薄い。
+- entitlements（`application-identifier` / `parent-application-identifiers` /
+  `on-demand-install-capable` / associated domains）は期待どおりで、
+  `ValidateEmbeddedBinary` と App Store Connect のアップロード検証も通過。
+- Clip 専用の `Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/ExpoModulesProvider.swift`
+  がコンパイルされており、#6672 の Expo モジュール登録経路は生きている。
+
+切り分けの前提知識:
+
+- Release ビルドでは JS の致命的例外は `RCTFatal` がログを吐くだけで abort
+  しない（前回それが「白画面」として表面化した）。ホーム画面へ落ちる
+  「クラッシュ」はネイティブ層（NSException / Swift fatalError / dyld /
+  watchdog / Jetsam）で起きている可能性が高い。
+- 原因確定にはクラッシュレポートが必須。Xcode → Window → Organizer → Crashes、
+  または端末の 設定 → プライバシーとセキュリティ → 解析と改善 → 解析データ で
+  `CanaryAppClip` から始まる `.ips` を取得する。
+- dSYM は Actions の `app-canary-dsyms` アーティファクトにあるが、prebuilt の
+  `React` / `hermesvm` / `ReactNativeDependencies` の dSYM は含まれない
+  （アップロード時に警告が出ている）。この 3 フレームワーク内のフレームは
+  手動シンボリケートが必要。
+
+クラッシュとは独立した既知の問題として、Clip ターゲットは
+`INFOPLIST_KEY_UILaunchStoryboardName` が空文字のため起動スクリーンが無い。
+`SplashScreenAppClip.storyboard` は Resources に同梱済みなので、クラッシュ解決後に
+この設定を張ればスプラッシュを表示できる（expo-splash-screen は storyboard
+不在時に何もせず戻るだけで、クラッシュはしない）。
