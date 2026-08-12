@@ -252,7 +252,7 @@ const MainScreen: React.FC = () => {
   // 回転して横長レイアウトを維持する。端末の回転ロック ON でも横表示を保てる。
   const landscapeKeepStyle = useMemo<ViewStyle>(() => {
     if (windowHeight <= windowWidth) {
-      return StyleSheet.absoluteFillObject;
+      return StyleSheet.absoluteFill;
     }
     return {
       position: 'absolute',
