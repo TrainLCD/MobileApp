@@ -37,14 +37,6 @@ export default {
         image: './assets/splash-icon.png',
       },
     ],
-    [
-      'expo-build-properties',
-      {
-        ios: {
-          buildReactNativeFromSource: true,
-        },
-      },
-    ],
   ],
   extra: {
     eas: {
