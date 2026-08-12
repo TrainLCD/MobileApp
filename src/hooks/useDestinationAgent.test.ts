@@ -371,6 +371,59 @@ describe('useDestinationAgent', () => {
     }
   });
 
+  it('同一駅(stationGroupId が同じ)の重複提案は最初の 1 件だけ残す', async () => {
+    // 熱海駅のように 1 つの駅が路線ごとに別 stationId を持つケース
+    mockStreamResponse([
+      doneEvent({
+        reply: 'ok',
+        suggestions: [
+          {
+            stationId: 1131301,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道線'],
+          },
+          {
+            stationId: 1132401,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道本線'],
+          },
+          {
+            stationId: 1133101,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['伊東線'],
+          },
+          {
+            stationId: 1121301,
+            stationGroupId: 1121301,
+            name: '鬼怒川温泉',
+            nameRoman: 'Kinugawa-Onsen',
+            lineNames: ['東武鬼怒川線'],
+          },
+        ],
+        refused: false,
+      }),
+    ]);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([
+      { role: 'user', content: '温泉のある観光地に行きたい' },
+    ]);
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      // 提案順(モデルの優先順)を保ったまま先頭の熱海だけが残る
+      expect(res.data.suggestions.map((s) => s.stationId)).toEqual([
+        1131301, 1121301,
+      ]);
+    }
+  });
+
   it('429 は rateLimited を返す', async () => {
     mockErrorResponse(429);
 

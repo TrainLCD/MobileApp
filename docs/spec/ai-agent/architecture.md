@@ -183,6 +183,11 @@ Firebase callable 互換（`{ data: {...} }` → `{ result: {...} }`）とし、
 - `refused`: トピックゲートで謝絶した場合 `true`。クライアントは
   定型文を表示するだけでよい。
 
+同一の物理駅が路線ごとに別 `stationId` を持つため（例: 熱海駅の
+東海道線 / 東海道本線 / 伊東線）、`suggestions` には同じ駅が複数件
+含まれうる。クライアントは受信時に `stationGroupId` で重複を落とし、
+最初の 1 件だけを残す（詳細は「クライアント設計 > 提案駅選択」）。
+
 ### 会話状態管理
 
 サーバはステートレスとする（KV へのセッション保存はしない）。会話履歴は
@@ -715,7 +720,12 @@ Expo SDK 更新時はこのパッチの要否を再確認する。
 
 1. エージェントの `suggestions` は軽量情報（stationId 等）しか持たない
    ため、`GET_STATIONS_BY_IDS`（`stations(ids:)`）で `StationFields`
-   完全な `Station` を再取得する。
+   完全な `Station` を再取得する。再取得の前後で同一駅の重複を落とす:
+   受信時は `dedupeAgentSuggestions`（`useDestinationAgent`）が
+   `stationGroupId` で、再取得後は `dedupeStationsByGroupId`
+   （`src/utils/station.ts`）が API 由来の `groupId` で間引く
+   （提案の `stationGroupId` はサーバ検証の対象外＝untrusted なため
+   二段構えにする）。いずれもモデルが提示した優先順は保つ。
 2. `RouteSearchScreen.tsx` の `handleLineSelected` 相当のロジック
    （`GET_ROUTE_TYPES_LIGHT` → 種別選択 → `pendingStations` 構築）を
    共有フック（例: `src/hooks/useDestinationSelection.ts`）に抽出し、

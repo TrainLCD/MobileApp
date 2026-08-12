@@ -74,6 +74,31 @@ const isAgentSuggestion = (value: unknown): value is AgentSuggestion => {
   );
 };
 
+/**
+ * 同じ駅が複数の提案に分かれて返ってくるケース(例: 熱海駅の 東海道線 /
+ * 東海道本線 / 伊東線 のように、1 つの駅が路線ごとに別レコードとして
+ * 存在する)で、同じ駅名のカードが並ぶのを防ぐため、`stationGroupId`
+ * (同一物理駅の識別子)が一致する提案を最初の出現だけ残して間引く。
+ * モデルが提示した優先順は保つ。
+ */
+export const dedupeAgentSuggestions = (
+  suggestions: AgentSuggestion[]
+): AgentSuggestion[] => {
+  if (suggestions.length <= 1) {
+    return suggestions;
+  }
+  const seen = new Set<number>();
+  const result: AgentSuggestion[] = [];
+  for (const suggestion of suggestions) {
+    if (seen.has(suggestion.stationGroupId)) {
+      continue;
+    }
+    seen.add(suggestion.stationGroupId);
+    result.push(suggestion);
+  }
+  return result;
+};
+
 const parseEventData = (data: string): Record<string, unknown> | null => {
   try {
     const parsed: unknown = JSON.parse(data);
@@ -100,9 +125,10 @@ const toChatResultFromObject = (
   }
   return {
     reply: parsed.reply,
-    // サーバー応答は untrusted として扱い、形の合わない要素は落とす
+    // サーバー応答は untrusted として扱い、形の合わない要素は落とし、
+    // 同一駅を指す重複提案は 1 件に間引く
     suggestions: Array.isArray(parsed.suggestions)
-      ? parsed.suggestions.filter(isAgentSuggestion)
+      ? dedupeAgentSuggestions(parsed.suggestions.filter(isAgentSuggestion))
       : [],
     refused: parsed.refused === true,
   };

@@ -38,6 +38,7 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
+import { dedupeStationsByGroupId } from '~/utils/station';
 import { showToast } from '~/utils/toast';
 import { AgentEmptyState } from './AgentEmptyState';
 import { AgentHeader } from './AgentHeader';
@@ -274,9 +275,14 @@ const DestinationAgentScreen = () => {
         .map((id) => byId.get(id))
         .filter((s): s is Station => s != null);
 
+      // 提案側の stationGroupId は untrusted なため、API が返した
+      // 正しい groupId でもう一度同一駅の重複を落とす(熱海のように
+      // 路線ごとに別 stationId を持つ駅が並ぶのを防ぐ)
+      const deduped = dedupeStationsByGroupId(ordered);
+
       setSuggestionStates((prev) => ({
         ...prev,
-        [entryId]: { status: 'loaded', stations: ordered },
+        [entryId]: { status: 'loaded', stations: deduped },
       }));
     },
     [fetchStationsByIds]
