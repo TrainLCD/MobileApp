@@ -15,6 +15,8 @@ jest.mock('~/translation', () => ({
 }));
 
 const SPOTLIGHT_BORDER_RADIUS = 12;
+// 呼び出し側が半径を一切指定しなかった場合の既定値
+const DEFAULT_SPOTLIGHT_BORDER_RADIUS = 8;
 const SPOTLIGHT_RECT = { x: 24, y: 120, width: 320, height: 76 };
 
 const step: WalkthroughStep = {
@@ -76,6 +78,18 @@ describe('WalkthroughOverlay', () => {
         topRight: SPOTLIGHT_BORDER_RADIUS,
         bottomRight: SPOTLIGHT_BORDER_RADIUS,
         bottomLeft: SPOTLIGHT_BORDER_RADIUS,
+      })
+    );
+  });
+
+  it('半径の指定がなければ既定の角丸で切り抜く', () => {
+    expect(getSpotlightPath(renderOverlay(false, SPOTLIGHT_RECT))).toBe(
+      buildRoundedRectPath({
+        ...SPOTLIGHT_RECT,
+        topLeft: DEFAULT_SPOTLIGHT_BORDER_RADIUS,
+        topRight: DEFAULT_SPOTLIGHT_BORDER_RADIUS,
+        bottomRight: DEFAULT_SPOTLIGHT_BORDER_RADIUS,
+        bottomLeft: DEFAULT_SPOTLIGHT_BORDER_RADIUS,
       })
     );
   });
