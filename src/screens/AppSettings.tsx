@@ -45,6 +45,9 @@ const SETTING_ITEM_ID_MAP = {
 
 type SettingItemId = keyof typeof SETTING_ITEM_ID_MAP;
 
+// ウォークスルーの切り抜きは対象項目がリストの先頭・中間・末尾のいずれでも同じ角丸にする
+const SPOTLIGHT_BORDER_RADIUS = 12;
+
 type SettingsSectionData = {
   id: SettingItemId;
   title: string;
@@ -252,7 +255,7 @@ const AppSettingsScreen: React.FC = () => {
         y: themeItemLayout.y,
         width: themeItemLayout.width,
         height: themeItemLayout.height,
-        borderRadius: 12,
+        borderRadius: SPOTLIGHT_BORDER_RADIUS,
       });
     }
   }, [currentStepId, themeItemLayout, setSpotlightArea]);
@@ -264,7 +267,7 @@ const AppSettingsScreen: React.FC = () => {
         y: ttsItemLayout.y,
         width: ttsItemLayout.width,
         height: ttsItemLayout.height,
-        borderRadius: 0,
+        borderRadius: SPOTLIGHT_BORDER_RADIUS,
       });
     }
   }, [currentStepId, ttsItemLayout, setSpotlightArea]);
@@ -276,7 +279,7 @@ const AppSettingsScreen: React.FC = () => {
         y: languagesItemLayout.y,
         width: languagesItemLayout.width,
         height: languagesItemLayout.height,
-        borderRadius: 12,
+        borderRadius: SPOTLIGHT_BORDER_RADIUS,
       });
     }
   }, [currentStepId, languagesItemLayout, setSpotlightArea]);
