@@ -1,5 +1,5 @@
 diff --git a/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java b/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
-index 4dd0e94..1d850e7 100644
+index 4dd0e94..69c49af 100644
 --- a/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
 +++ b/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
 @@ -210,11 +210,32 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
@@ -37,5 +37,5 @@ index 4dd0e94..1d850e7 100644
 +      jobBuilder.setMinimumLatency(0)
 +          .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
      }
-
+ 
      return jobBuilder.build();

@@ -37,6 +37,10 @@ const BATTERY_STATE_MAP: Record<Battery.BatteryState, TelemetryBatteryState> = {
   [Battery.BatteryState.UNPLUGGED]: 'unplugged',
   [Battery.BatteryState.CHARGING]: 'charging',
   [Battery.BatteryState.FULL]: 'full',
+  // SDK 57 の expo-battery で追加された Android 専用の状態。給電中だが充電が
+  // 止まっている(充電上限80%・最適化充電の一時停止など)状況を指し、テレメトリ
+  // 基盤側の enum に対応する値が無いため 'unknown' に寄せる。
+  [Battery.BatteryState.NOT_CHARGING]: 'unknown',
 };
 
 // テレメトリ基盤のGraphQL LocationEventInputに対応
