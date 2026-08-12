@@ -12,7 +12,7 @@ GitHub Actions run number.
 
 ## Prerequisites
 
-- A GitHub-hosted `macos-26` runner with Node.js 22 and CocoaPods available.
+- A GitHub-hosted `macos-26` runner with Node.js 24 and CocoaPods available.
 - An App Store Connect API key whose role permits build upload and provisioning
   management for both app identifiers.
 - Apple development and distribution certificates, each exported with its

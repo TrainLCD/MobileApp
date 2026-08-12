@@ -13,7 +13,7 @@ separate.
 
 ## Prerequisites
 
-- A GitHub-hosted `ubuntu-22.04` runner with Node.js 22 and Java 17.
+- A GitHub-hosted `ubuntu-22.04` runner with Node.js 24 and Java 17.
 - A release keystore and its alias and passwords.
 - A Google Play service account with permission to publish both application IDs
   to the internal track and to the Wear OS track.
