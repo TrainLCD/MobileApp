@@ -27,6 +27,21 @@ App Clip の `AppDelegate.swift` は本体アプリの `ios/AppDelegate.swift` �
    `thirdPartyFabricComponents` が空になり、autolink したネイティブ
    コンポーネントが一切登録されない。
 
+## `Expo` は `internal import` で取り込む
+
+`import Expo` ではなく `internal import Expo` と書くこと。CocoaPods が各ターゲット
+向けに生成する `ios/Pods/Target Support Files/Pods-TrainLCD-<Target>/ExpoModulesProvider.swift`
+が `internal import Expo` を書いており、同じモジュール内でアクセスレベルの
+指定有無が混ざると Swift が
+
+```text
+error: ambiguous implicit access level for import of 'Expo'; it is imported as 'internal' elsewhere
+```
+
+を出してアーカイブが失敗する（実例: [Build iOS Canary #31593391309](https://github.com/TrainLCD/MobileApp/actions/runs/31593391309)）。
+本体アプリの `ios/AppDelegate.swift` も同じ理由で `internal import Expo` になっている。
+`ExpoModulesProvider.swift` は生成物なので、揃えるのは常に App Clip 側。
+
 ## 起動 URL（App Clip Invocation URL）の受け取り
 
 App Clip の起動 URL は `application(_:continue:restorationHandler:)` にしか

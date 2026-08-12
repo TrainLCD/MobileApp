@@ -6,7 +6,11 @@
 //  Copyright © 2025 Facebook. All rights reserved.
 //
 
-import Expo
+// Pods が生成する `ExpoModulesProvider.swift` が同じターゲット内で `internal import Expo`
+// を書いているため、こちらも明示的に `internal` を付ける。素の `import Expo` だと
+// "ambiguous implicit access level for import" でコンパイルが落ちる（本体アプリの
+// ios/AppDelegate.swift も同じ理由で `internal import` にしている）。
+internal import Expo
 import React
 import ReactAppDependencyProvider
 
