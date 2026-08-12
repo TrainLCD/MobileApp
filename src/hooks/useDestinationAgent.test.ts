@@ -371,8 +371,55 @@ describe('useDestinationAgent', () => {
     }
   });
 
-  it('同一駅(stationGroupId が同じ)の重複提案は最初の 1 件だけ残す', async () => {
-    // 熱海駅のように 1 つの駅が路線ごとに別 stationId を持つケース
+  it('同じ stationId の重複提案は最初の 1 件だけ残す', async () => {
+    mockStreamResponse([
+      doneEvent({
+        reply: 'ok',
+        suggestions: [
+          {
+            stationId: 1131301,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道線'],
+          },
+          {
+            stationId: 1131301,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道線'],
+          },
+          {
+            stationId: 1121301,
+            stationGroupId: 1121301,
+            name: '鬼怒川温泉',
+            nameRoman: 'Kinugawa-Onsen',
+            lineNames: ['東武鬼怒川線'],
+          },
+        ],
+        refused: false,
+      }),
+    ]);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([
+      { role: 'user', content: '温泉のある観光地に行きたい' },
+    ]);
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      // 提案順(モデルの優先順)は保つ
+      expect(res.data.suggestions.map((s) => s.stationId)).toEqual([
+        1131301, 1121301,
+      ]);
+    }
+  });
+
+  it('stationGroupId が同じでも stationId が違う提案は落とさない', async () => {
+    // stationGroupId は untrusted(サーバ検証は stationId 突合のみ)なので、
+    // 取得前に落とすと別駅だった場合に復元できなくなる。同一物理駅の間引きは
+    // 再取得後に API 由来の groupId で行う
     mockStreamResponse([
       doneEvent({
         reply: 'ok',
@@ -398,13 +445,6 @@ describe('useDestinationAgent', () => {
             nameRoman: 'Atami',
             lineNames: ['伊東線'],
           },
-          {
-            stationId: 1121301,
-            stationGroupId: 1121301,
-            name: '鬼怒川温泉',
-            nameRoman: 'Kinugawa-Onsen',
-            lineNames: ['東武鬼怒川線'],
-          },
         ],
         refused: false,
       }),
@@ -417,9 +457,8 @@ describe('useDestinationAgent', () => {
 
     expect(res.ok).toBe(true);
     if (res.ok) {
-      // 提案順(モデルの優先順)を保ったまま先頭の熱海だけが残る
       expect(res.data.suggestions.map((s) => s.stationId)).toEqual([
-        1131301, 1121301,
+        1131301, 1132401, 1133101,
       ]);
     }
   });

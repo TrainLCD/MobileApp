@@ -275,9 +275,10 @@ const DestinationAgentScreen = () => {
         .map((id) => byId.get(id))
         .filter((s): s is Station => s != null);
 
-      // 提案側の stationGroupId は untrusted なため、API が返した
-      // 正しい groupId でもう一度同一駅の重複を落とす(熱海のように
-      // 路線ごとに別 stationId を持つ駅が並ぶのを防ぐ)
+      // 熱海のように 1 つの物理駅が路線ごとに別 stationId を持つケースで
+      // 同じ駅のカードが並ぶのを防ぐ。提案側の stationGroupId は untrusted
+      // (サーバ検証は stationId 突合のみ)なので、間引きは取得前ではなく
+      // ここで API が返した groupId を使って行う
       const deduped = dedupeStationsByGroupId(ordered);
 
       setSuggestionStates((prev) => ({

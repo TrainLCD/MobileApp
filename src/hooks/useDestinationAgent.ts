@@ -75,11 +75,16 @@ const isAgentSuggestion = (value: unknown): value is AgentSuggestion => {
 };
 
 /**
- * 同じ駅が複数の提案に分かれて返ってくるケース(例: 熱海駅の 東海道線 /
- * 東海道本線 / 伊東線 のように、1 つの駅が路線ごとに別レコードとして
- * 存在する)で、同じ駅名のカードが並ぶのを防ぐため、`stationGroupId`
- * (同一物理駅の識別子)が一致する提案を最初の出現だけ残して間引く。
+ * まったく同じ駅(`stationId` が一致)を指す提案を最初の出現だけ残して間引く。
+ * 再取得の ID とスケルトンの React key が重複しないようにするのが目的で、
  * モデルが提示した優先順は保つ。
+ *
+ * ここで `stationGroupId` は見ない。サーバ側の実在性検証はツール結果との
+ * `stationId` 突合だけなので `stationGroupId` は untrusted であり、誤った値が
+ * 別々の駅に付いていると、取得前に落とした駅は `GET_STATIONS_BY_IDS` に
+ * 渡らず復元できなくなる。同一物理駅(例: 熱海駅の 東海道線 / 東海道本線 /
+ * 伊東線)の間引きは、再取得後に API 由来の `groupId` で行う
+ * (`dedupeStationsByGroupId`)。
  */
 export const dedupeAgentSuggestions = (
   suggestions: AgentSuggestion[]
@@ -90,10 +95,10 @@ export const dedupeAgentSuggestions = (
   const seen = new Set<number>();
   const result: AgentSuggestion[] = [];
   for (const suggestion of suggestions) {
-    if (seen.has(suggestion.stationGroupId)) {
+    if (seen.has(suggestion.stationId)) {
       continue;
     }
-    seen.add(suggestion.stationGroupId);
+    seen.add(suggestion.stationId);
     result.push(suggestion);
   }
   return result;
@@ -126,7 +131,7 @@ const toChatResultFromObject = (
   return {
     reply: parsed.reply,
     // サーバー応答は untrusted として扱い、形の合わない要素は落とし、
-    // 同一駅を指す重複提案は 1 件に間引く
+    // 同じ `stationId` を指す重複提案は 1 件に間引く
     suggestions: Array.isArray(parsed.suggestions)
       ? dedupeAgentSuggestions(parsed.suggestions.filter(isAgentSuggestion))
       : [],
