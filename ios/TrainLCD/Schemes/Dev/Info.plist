@@ -69,7 +69,7 @@
 		</dict>
 	</dict>
 	<key>NSMotionUsageDescription</key>
-	<string>画面の演出を端末の動きに合わせて調整するためにモーションセンサーを使用する場合があります。</string>
+	<string>位置情報とあわせて乗車中や徒歩などの移動状況を判定するためにモーションセンサーの情報を使用します。</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
