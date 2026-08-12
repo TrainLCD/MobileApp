@@ -106,22 +106,29 @@ iOS 27.0 beta (24A5408d) の端末で取得した `.ips` は、メインスレ�
 -[RCTReactNativeFactory startReactNativeWithModuleName:inWindow:...]
 ```
 
-で NSException → SIGABRT していることを示していた。連鎖は次のとおり。
+で NSException → SIGABRT していることを示していた。ここまでがクラッシュ
+レポートで直接確認できた事実で、`UIStoryboard(name:bundle:)` に「非空の name」
+の NSAssertion を踏ませる呼び出しが expo-splash-screen
+（`SplashScreenManager.showSplashScreen()`）から行われている。
+
+そこへ至る連鎖は、expo-splash-screen 57.0.6 のソースとビルド設定からの逆算で
+次のとおりと判断した。
 
 1. App Clip ターゲットは `INFOPLIST_KEY_UILaunchStoryboardName = ""`（空文字）
    だったため、生成 Info.plist に `UILaunchStoryboardName` が空文字で出力される。
-2. expo-splash-screen の `SplashScreenManager.showSplashScreen()` は
-   `UILaunchStoryboardName` を読み、**キーが存在するため** フォールバックの
-   `"SplashScreen"` が適用されず、空文字のままになる。
+2. `showSplashScreen()` は `UILaunchStoryboardName` を読み、**キーが存在する
+   ため** フォールバックの `"SplashScreen"` が適用されず、空文字のままになる。
 3. 直後の存在ガード `Bundle.main.path(forResource: "", ofType: "storyboardc")`
-   が iOS 27 beta では nil を返さない（空文字が nil 同様「その拡張子の任意の
-   リソース」を返す挙動になり、同梱済みの `SplashScreenAppClip.storyboardc` に
-   マッチする）ため、ガードをすり抜ける。
-4. `UIStoryboard(name: "", bundle: nil)` が「name は非空であること」の
-   NSAssertion を踏んで即クラッシュする。
+   をすり抜けて `UIStoryboard(name: "", bundle: nil)` に到達している以上、
+   この端末環境（iOS 27.0 beta 24A5408d）では空文字でも path が非 nil を
+   返したことになる（空文字が nil 同様「その拡張子の任意のリソース」を返し、
+   同梱済みの `SplashScreenAppClip.storyboardc` にマッチしたとみられる）。
+   ※戻り値そのものを実測したわけではなく、スタックからの推定。
 
-iOS 26 までは手順 3 のガードが nil を返して黙ってスキップされていた
-（＝スプラッシュが出ないだけ）ので、iOS 27 で初めて顕在化した。本体アプリは
+iOS 26 までの実機では同じ構成でクラッシュ報告が無かった（スプラッシュが
+出ないだけだった）ことから、手順 3 のガードの挙動が OS 側で変わり iOS 27 beta
+で顕在化したと考えている。iOS 26/27 の `path(forResource:ofType:)` の戻り値を
+両 OS で実測比較したわけではない点に注意。本体アプリは
 `UILaunchStoryboardName = SplashScreen`（実在する storyboard）なので影響しない。
 
 対処: App Clip 4 構成（Prod/Canary × Debug/Release）の
@@ -129,5 +136,11 @@ iOS 26 までは手順 3 のガードが nil を返して黙ってスキップ�
 `SplashScreenAppClip` に設定した。これでクラッシュが消えるのと同時に
 Clip の起動スクリーンも表示されるようになる。`GENERATE_INFOPLIST_FILE = YES`
 のターゲットで `INFOPLIST_KEY_UILaunchStoryboardName` を空文字のまま残すと
-iOS 27 以降で同じクラッシュになるため、今後ターゲットを増やすときは必ず
-実在する storyboard 名を設定すること。
+iOS 27 以降で同じクラッシュになる。今後ターゲットを増やすときは、
+
+- そのターゲットの Resources（`PBXResourcesBuildPhase`）に対応環境
+  （Dev/Prod）の storyboard を 1 つだけ含め、その名前を
+  `UILaunchStoryboardName` に設定する（名前だけ設定してファイルを同梱し忘れる
+  と、今度は「storyboard が見つからない」例外で同様に起動時クラッシュする）。
+- ビルド後に生成された `.app` バンドル内へコンパイル済みの
+  `SplashScreenAppClip.storyboardc` が含まれていることを確認する。
