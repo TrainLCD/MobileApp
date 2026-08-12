@@ -1,8 +1,9 @@
 import { render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import { Rect } from 'react-native-svg';
+import { Path } from 'react-native-svg';
 import { THEME_PREFERENCE } from '~/models/Theme';
 import { themePreferenceAtom } from '~/store/atoms/theme';
+import { buildRoundedRectPath } from '~/utils/roundedRectPath';
 import WalkthroughOverlay, { type WalkthroughStep } from './WalkthroughOverlay';
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -14,21 +15,22 @@ jest.mock('~/translation', () => ({
 }));
 
 const SPOTLIGHT_BORDER_RADIUS = 12;
+const SPOTLIGHT_RECT = { x: 24, y: 120, width: 320, height: 76 };
 
 const step: WalkthroughStep = {
   id: 'settingsTheme',
   titleKey: 'settingsWalkthroughTitle2',
   descriptionKey: 'settingsWalkthroughDescription2',
   spotlightArea: {
-    x: 24,
-    y: 120,
-    width: 320,
-    height: 76,
+    ...SPOTLIGHT_RECT,
     borderRadius: SPOTLIGHT_BORDER_RADIUS,
   },
 };
 
-const renderOverlay = (isLEDTheme: boolean) => {
+const renderOverlay = (
+  isLEDTheme: boolean,
+  spotlightArea: WalkthroughStep['spotlightArea'] = step.spotlightArea
+) => {
   const store = createStore();
   store.set(
     themePreferenceAtom,
@@ -39,7 +41,7 @@ const renderOverlay = (isLEDTheme: boolean) => {
     <Provider store={store}>
       <WalkthroughOverlay
         visible
-        step={step}
+        step={{ ...step, spotlightArea }}
         currentStepIndex={0}
         totalSteps={4}
         onNext={jest.fn()}
@@ -50,9 +52,10 @@ const renderOverlay = (isLEDTheme: boolean) => {
   );
 };
 
-// マスク内の切り抜き矩形は fill="black" の Rect のみ
-const getSpotlightRect = (screen: ReturnType<typeof renderOverlay>) =>
-  screen.UNSAFE_getAllByType(Rect).find((rect) => rect.props.fill === 'black');
+// マスク内の切り抜きは fill="black" の Path のみ
+const getSpotlightPath = (screen: ReturnType<typeof renderOverlay>) =>
+  screen.UNSAFE_getAllByType(Path).find((path) => path.props.fill === 'black')
+    ?.props.d;
 
 describe('WalkthroughOverlay', () => {
   beforeEach(() => {
@@ -66,17 +69,91 @@ describe('WalkthroughOverlay', () => {
   });
 
   it('通常テーマでは指定された角丸で切り抜く', () => {
-    const spotlightRect = getSpotlightRect(renderOverlay(false));
-
-    expect(spotlightRect?.props.rx).toBe(SPOTLIGHT_BORDER_RADIUS);
-    expect(spotlightRect?.props.ry).toBe(SPOTLIGHT_BORDER_RADIUS);
+    expect(getSpotlightPath(renderOverlay(false))).toBe(
+      buildRoundedRectPath({
+        ...SPOTLIGHT_RECT,
+        topLeft: SPOTLIGHT_BORDER_RADIUS,
+        topRight: SPOTLIGHT_BORDER_RADIUS,
+        bottomRight: SPOTLIGHT_BORDER_RADIUS,
+        bottomLeft: SPOTLIGHT_BORDER_RADIUS,
+      })
+    );
   });
 
   it('LEDテーマでは角丸なしで切り抜く', () => {
-    const spotlightRect = getSpotlightRect(renderOverlay(true));
+    expect(getSpotlightPath(renderOverlay(true))).toBe(
+      buildRoundedRectPath({
+        ...SPOTLIGHT_RECT,
+        topLeft: 0,
+        topRight: 0,
+        bottomRight: 0,
+        bottomLeft: 0,
+      })
+    );
+  });
 
-    expect(spotlightRect?.props.rx).toBe(0);
-    expect(spotlightRect?.props.ry).toBe(0);
+  it('隅ごとの指定があれば対象要素の形に合わせて切り抜く', () => {
+    const path = getSpotlightPath(
+      renderOverlay(false, {
+        ...SPOTLIGHT_RECT,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
+      })
+    );
+
+    expect(path).toBe(
+      buildRoundedRectPath({
+        ...SPOTLIGHT_RECT,
+        topLeft: 0,
+        topRight: 0,
+        bottomRight: 16,
+        bottomLeft: 16,
+      })
+    );
+  });
+
+  it('隅ごとの指定がない隅には borderRadius が使われる', () => {
+    const path = getSpotlightPath(
+      renderOverlay(false, {
+        ...SPOTLIGHT_RECT,
+        borderRadius: SPOTLIGHT_BORDER_RADIUS,
+        borderTopLeftRadius: 0,
+      })
+    );
+
+    expect(path).toBe(
+      buildRoundedRectPath({
+        ...SPOTLIGHT_RECT,
+        topLeft: 0,
+        topRight: SPOTLIGHT_BORDER_RADIUS,
+        bottomRight: SPOTLIGHT_BORDER_RADIUS,
+        bottomLeft: SPOTLIGHT_BORDER_RADIUS,
+      })
+    );
+  });
+
+  it('LEDテーマでは隅ごとの指定があっても角丸なしにする', () => {
+    const path = getSpotlightPath(
+      renderOverlay(true, {
+        ...SPOTLIGHT_RECT,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
+      })
+    );
+
+    expect(path).toBe(
+      buildRoundedRectPath({
+        ...SPOTLIGHT_RECT,
+        topLeft: 0,
+        topRight: 0,
+        bottomRight: 0,
+        bottomLeft: 0,
+      })
+    );
   });
 
   it('LEDテーマではツールチップも角丸なしになる', () => {

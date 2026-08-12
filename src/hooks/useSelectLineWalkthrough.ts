@@ -44,7 +44,11 @@ export const useSelectLineWalkthrough = () => {
         y: nowHeaderLayout.y,
         width: nowHeaderLayout.width,
         height: nowHeaderLayout.height,
-        borderRadius: 16,
+        // NowHeader のカードは画面上端に密着し下辺のみ角丸なので、切り抜きも同じ形にする
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
       });
     }
   }, [currentStepId, nowHeaderLayout, setSpotlightArea]);
