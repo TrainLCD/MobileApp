@@ -1,7 +1,6 @@
 {
   "expo.jsEngine": "hermes",
   "ios.deploymentTarget": "16.4",
-  "ios.buildReactNativeFromSource": "true",
   "ios.useFrameworks": "static",
   "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
   "newArchEnabled": "true",
