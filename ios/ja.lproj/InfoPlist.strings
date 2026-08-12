@@ -9,3 +9,4 @@
 "NSLocationAlwaysAndWhenInUseUsageDescription" = "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。";
 "NSLocationAlwaysUsageDescription" = "最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。";
 "NSPhotoLibraryAddUsageDescription" = "スクリーンショット画像をiPhoneに保存します。";
+"NSMotionUsageDescription" = "画面の演出を端末の動きに合わせて調整するためにモーションセンサーを使用する場合があります。";
