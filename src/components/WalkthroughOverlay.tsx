@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   Platform,
@@ -8,9 +9,11 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, Mask, Rect } from 'react-native-svg';
+import Svg, { Defs, Mask, Path, Rect } from 'react-native-svg';
+import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
+import { buildRoundedRectPath } from '../utils/roundedRectPath';
 import Typography from './Typography';
 
 export type SpotlightArea = {
@@ -18,7 +21,13 @@ export type SpotlightArea = {
   y: number;
   width: number;
   height: number;
+  /** 4隅共通の角丸。隅ごとの指定がない隅に適用される */
   borderRadius?: number;
+  // 上辺だけ直角のカードなど、対象要素の形に合わせたい場合は隅ごとに指定する
+  borderTopLeftRadius?: number;
+  borderTopRightRadius?: number;
+  borderBottomRightRadius?: number;
+  borderBottomLeftRadius?: number;
 };
 
 export type WalkthroughStepId =
@@ -56,6 +65,9 @@ type Props = {
 };
 
 const ANIMATION_DURATION = 300;
+
+// spotlightArea.borderRadius が指定されていない場合の切り抜き半径
+const DEFAULT_SPOTLIGHT_BORDER_RADIUS = 8;
 
 const styles = StyleSheet.create({
   overlay: {
@@ -125,6 +137,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  // LEDテーマは角丸を使わないため、角丸を持つ要素すべてに重ねて直角化する
+  squareCorners: {
+    borderRadius: 0,
+  },
 });
 
 const WalkthroughOverlay: React.FC<Props> = ({
@@ -137,6 +153,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
   onSkip,
 }) => {
   const insets = useSafeAreaInsets();
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const maskId = useId();
   const overlayRef = useRef<View>(null);
@@ -157,6 +174,28 @@ const WalkthroughOverlay: React.FC<Props> = ({
       y: spotlightArea.y - overlayOffset.y,
     };
   }, [overlayOffset.x, overlayOffset.y, spotlightArea]);
+
+  // 切り抜きの角丸は呼び出し側の指定（隅ごと > 4隅共通）に従うが、LEDテーマでは角丸を使わない
+  const spotlightPath = useMemo(() => {
+    if (!adjustedSpotlightArea) {
+      return null;
+    }
+    const fallbackRadius =
+      adjustedSpotlightArea.borderRadius ?? DEFAULT_SPOTLIGHT_BORDER_RADIUS;
+    const resolveRadius = (cornerRadius: number | undefined) =>
+      isLEDTheme ? 0 : (cornerRadius ?? fallbackRadius);
+
+    return buildRoundedRectPath({
+      x: adjustedSpotlightArea.x,
+      y: adjustedSpotlightArea.y,
+      width: adjustedSpotlightArea.width,
+      height: adjustedSpotlightArea.height,
+      topLeft: resolveRadius(adjustedSpotlightArea.borderTopLeftRadius),
+      topRight: resolveRadius(adjustedSpotlightArea.borderTopRightRadius),
+      bottomRight: resolveRadius(adjustedSpotlightArea.borderBottomRightRadius),
+      bottomLeft: resolveRadius(adjustedSpotlightArea.borderBottomLeftRadius),
+    });
+  }, [adjustedSpotlightArea, isLEDTheme]);
 
   // tooltipPosition === 'top' かつ spotlightArea がある場合は bottom で配置
   const useBottomPositioning =
@@ -238,17 +277,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
                 height={screenHeight}
                 fill="white"
               />
-              {adjustedSpotlightArea && (
-                <Rect
-                  x={adjustedSpotlightArea.x}
-                  y={adjustedSpotlightArea.y}
-                  width={adjustedSpotlightArea.width}
-                  height={adjustedSpotlightArea.height}
-                  rx={adjustedSpotlightArea.borderRadius ?? 8}
-                  ry={adjustedSpotlightArea.borderRadius ?? 8}
-                  fill="black"
-                />
-              )}
+              {spotlightPath && <Path d={spotlightPath} fill="black" />}
             </Mask>
           </Defs>
           <Rect
@@ -262,7 +291,13 @@ const WalkthroughOverlay: React.FC<Props> = ({
         </Svg>
       </Pressable>
 
-      <RNAnimated.View style={[styles.tooltipContainer, animatedTooltipStyle]}>
+      <RNAnimated.View
+        style={[
+          styles.tooltipContainer,
+          animatedTooltipStyle,
+          isLEDTheme && styles.squareCorners,
+        ]}
+      >
         <Typography style={styles.title}>{translate(step.titleKey)}</Typography>
         <Typography style={styles.description}>
           {translate(step.descriptionKey)}
@@ -297,6 +332,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
                   style={[
                     styles.dot,
                     index === currentStepIndex && styles.dotActive,
+                    isLEDTheme && styles.squareCorners,
                   ]}
                 />
               </Pressable>
@@ -304,7 +340,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
           </View>
 
           <Pressable
-            style={styles.nextButton}
+            style={[styles.nextButton, isLEDTheme && styles.squareCorners]}
             onPress={onNext}
             accessibilityRole="button"
             accessibilityLabel={
