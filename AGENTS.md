@@ -49,7 +49,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 
 ## Tooling & Environment Expectations
 
-- Target **Node.js 22.x** and **npm 10.x**.
+- Target **Node.js 24.x** and **npm 11.x**, matching `.nvmrc`. All GitHub Actions workflows pin the same major; keep them in sync when bumping, otherwise a `package-lock.json` generated locally can fail `npm ci` on a runner carrying an older npm.
 - Run `npm install` when dependencies shift; avoid re-locking packages unless instructed.
 - Metro cache issues: run `expo start --clear` only when debugging build failures and document the action.
 - For native builds, rely on project scripts (`npm run android`, `npm run ios`).
