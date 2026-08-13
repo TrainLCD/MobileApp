@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { STATUS_URL, STORAGE_KEYS } from '~/constants';
 import { isTTSFeatureEnabled } from '~/lib/remoteConfig';
 import { storage } from '~/lib/storage';
@@ -60,6 +60,13 @@ const renderWithSpeechState = (speech: Partial<StationState>) => {
   return { ...screen, store };
 };
 
+// jest-expo の既定 Platform.OS は 'ios'。プラットフォーム別の案内を検証する際は
+// 明示的に切り替え、afterEach で必ず元へ戻す。
+const originalPlatformOS = Platform.OS;
+const setPlatformOS = (os: typeof Platform.OS) => {
+  Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+};
+
 describe('TTSSettingsScreen', () => {
   beforeEach(() => {
     mockedIsTTSFeatureEnabled.mockReturnValue(true);
@@ -68,6 +75,7 @@ describe('TTSSettingsScreen', () => {
   afterEach(() => {
     jest.clearAllMocks();
     resetDialogPresentationForTests();
+    setPlatformOS(originalPlatformOS);
   });
 
   it('日本語をOFFにしても英語はONのままになる', () => {
@@ -188,5 +196,74 @@ describe('TTSSettingsScreen', () => {
 
     expect(queryByText('ttsFeatureDisabledText')).toBeNull();
     expect(queryByText('serviceStatus')).toBeNull();
+  });
+
+  // 読み上げ経路がプラットフォームで異なるため、案内文の出し分けを固定する。
+  // 音質案内はAndroidのTTSエンジン設定を指す内容なので、その設定を持たない
+  // iOS・web へ漏れないことまで確認する。
+  describe('プラットフォーム別の案内表示', () => {
+    const openTTSNoticeDialog = () => {
+      const { getByLabelText } = renderWithSpeechState({ enabled: false });
+      fireEvent.press(getByLabelText('toEnabled'));
+    };
+
+    it('[Android] 端末内蔵TTSの音質案内を表示する', () => {
+      setPlatformOS('android');
+
+      const { getByText } = renderWithSpeechState({ enabled: true });
+
+      expect(getByText('ttsVoiceQualityNoticeAndroid')).toBeTruthy();
+    });
+
+    it('[iOS] リモート合成のため音質案内を表示しない', () => {
+      setPlatformOS('ios');
+
+      const { queryByText } = renderWithSpeechState({ enabled: true });
+
+      expect(queryByText('ttsVoiceQualityNoticeAndroid')).toBeNull();
+    });
+
+    it('[web] Android固有の音質案内を表示しない', () => {
+      setPlatformOS('web');
+
+      const { queryByText } = renderWithSpeechState({ enabled: true });
+
+      expect(queryByText('ttsVoiceQualityNoticeAndroid')).toBeNull();
+    });
+
+    it('[iOS] 有効化時の注意ダイアログはリモート合成向けの文言になる', () => {
+      setPlatformOS('ios');
+
+      openTTSNoticeDialog();
+
+      expect(getDialogPresentationSnapshot()).toMatchObject({
+        visible: true,
+        request: { title: 'notice', message: 'ttsAlertTextIOS' },
+      });
+    });
+
+    it('[Android] 有効化時の注意ダイアログは端末内蔵TTS向けの文言になる', () => {
+      setPlatformOS('android');
+
+      openTTSNoticeDialog();
+
+      expect(getDialogPresentationSnapshot()).toMatchObject({
+        visible: true,
+        request: { title: 'notice', message: 'ttsAlertTextAndroid' },
+      });
+    });
+
+    // webのexpo-speechもブラウザ・OSの読み上げ音声を使うため、Androidと同じ
+    // 注意文で実態と合う（web専用キーは設けていない）
+    it('[web] 有効化時の注意ダイアログは端末内蔵TTS向けの文言になる', () => {
+      setPlatformOS('web');
+
+      openTTSNoticeDialog();
+
+      expect(getDialogPresentationSnapshot()).toMatchObject({
+        visible: true,
+        request: { title: 'notice', message: 'ttsAlertTextAndroid' },
+      });
+    });
   });
 });

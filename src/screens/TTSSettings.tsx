@@ -147,8 +147,9 @@ const ListFooter = ({
     >
       {translate('requireJapaneseOrEnglish')}
     </Typography>
-    {/* iOSはOpenAI TTSを利用するため端末内蔵音声の品質案内は不要 */}
-    {Platform.OS !== 'ios' ? (
+    {/* iOSはリモート合成のため品質案内は不要。案内文はAndroidのTTSエンジン設定を
+        指す内容なので、該当する設定を持たないweb等でも出さない */}
+    {Platform.OS === 'android' ? (
       <Typography
         style={{
           marginTop: 8,
@@ -246,8 +247,9 @@ const TTSSettingsScreen: React.FC = () => {
 
       try {
         if (flag && !storage.contains(STORAGE_KEYS.TTS_NOTICE)) {
-          // iOSはリモート合成（通信不可時のみ内蔵TTSへフォールバック）、
-          // Androidは端末内蔵TTSと読み上げ経路が異なるため注意文も分ける
+          // iOSはリモート合成（通信不可時のみ内蔵TTSへフォールバック）で経路が
+          // 異なるため注意文を分ける。Androidとwebはいずれも端末・ブラウザの
+          // 読み上げ音声を使うため、同じ注意文を共有する（web専用キーは設けない）
           const alertTextKey =
             Platform.OS === 'ios' ? 'ttsAlertTextIOS' : 'ttsAlertTextAndroid';
 
