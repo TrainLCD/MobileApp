@@ -147,19 +147,18 @@ const ListFooter = ({
     >
       {translate('requireJapaneseOrEnglish')}
     </Typography>
-    <Typography
-      style={{
-        marginTop: 8,
-        textAlign: 'center',
-        color: '#8B8B8B',
-      }}
-    >
-      {translate(
-        Platform.OS === 'ios'
-          ? 'ttsVoiceQualityNoticeIOS'
-          : 'ttsVoiceQualityNoticeAndroid'
-      )}
-    </Typography>
+    {/* iOSはOpenAI TTSを利用するため端末内蔵音声の品質案内は不要 */}
+    {Platform.OS !== 'ios' ? (
+      <Typography
+        style={{
+          marginTop: 8,
+          textAlign: 'center',
+          color: '#8B8B8B',
+        }}
+      >
+        {translate('ttsVoiceQualityNoticeAndroid')}
+      </Typography>
+    ) : null}
     {!ttsFeatureEnabled ? (
       <>
         <Typography
@@ -247,7 +246,12 @@ const TTSSettingsScreen: React.FC = () => {
 
       try {
         if (flag && !storage.contains(STORAGE_KEYS.TTS_NOTICE)) {
-          showDialog(translate('notice'), translate('ttsAlertText'), [
+          // iOSはリモート合成（通信不可時のみ内蔵TTSへフォールバック）、
+          // Androidは端末内蔵TTSと読み上げ経路が異なるため注意文も分ける
+          const alertTextKey =
+            Platform.OS === 'ios' ? 'ttsAlertTextIOS' : 'ttsAlertTextAndroid';
+
+          showDialog(translate('notice'), translate(alertTextKey), [
             {
               text: translate('doNotShowAgain'),
               style: 'checkbox',
