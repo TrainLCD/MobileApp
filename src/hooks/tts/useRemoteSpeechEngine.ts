@@ -27,8 +27,9 @@ import type {
 
 /**
  * Worker の /tts 経由で gpt-4o-mini-tts に合成させ、expo-audio で再生するエンジン。
- * iOS 専用。合成に失敗した場合は onUnavailable を呼び、呼び出し側 (useTTS) が
- * その回だけ端末内蔵 TTS へフォールバックする。
+ * 使用するかどうかは Remote Config (remote_tts_enabled_ios /
+ * remote_tts_enabled_android) が決める。合成に失敗した場合は onUnavailable を呼び、
+ * 呼び出し側 (useTTS) がその回だけ端末内蔵 TTS へフォールバックする。
  */
 export const useRemoteSpeechEngine = (): SpeechEngine => {
   // 発話ごとに採番する世代 ID。停止や新規発話で古い fetch 継続を破棄し、

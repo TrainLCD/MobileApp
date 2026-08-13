@@ -1,8 +1,8 @@
 import { setAudioModeAsync } from 'expo-audio';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
 import { TransportType } from '~/@types/graphql';
+import { isRemoteTTSEnabled } from '~/lib/remoteConfig';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
@@ -20,11 +20,6 @@ import { useTTSText } from './useTTSText';
 // 解放されず以降の TTS 全体が停止するのを防ぐ。正常な発話（日英合わせても数十秒
 // 程度、リモートは取得時間を含めても十分収まる）はこの時間内に必ず完了する。
 const PLAYBACK_TIMEOUT_MS = 300_000;
-
-// iOS のみ Worker 経由の gpt-4o-mini-tts（女性声）で読み上げる。Android は
-// 端末内蔵 TTS のまま据え置き。iOS でもリモート合成に失敗した回は端末内蔵 TTS へ
-// フォールバックするため、圏外・トンネル・API 障害でもアナウンスは途切れない。
-const shouldUseRemoteTTS = (): boolean => Platform.OS === 'ios';
 
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
@@ -68,8 +63,8 @@ export const useTTS = (): void => {
 
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 端末内蔵 TTS は Android の常用経路であり、iOS ではリモート合成が使えない
-  // ときのフォールバックも担うため、どちらのプラットフォームでも用意しておく。
+  // 端末内蔵 TTS はリモート合成を使わない構成での常用経路であり、リモート合成が
+  // 使えないときのフォールバックも担うため、どちらのプラットフォームでも用意しておく。
   const nativeEngine = useNativeSpeechEngine();
   const remoteEngine = useRemoteSpeechEngine();
 
@@ -225,7 +220,10 @@ export const useTTS = (): void => {
           return;
         }
 
-        if (!shouldUseRemoteTTS()) {
+        // 読み上げ直前に Remote Config を引き、リモート合成(Worker 経由の
+        // gpt-4o-mini-tts)と端末内蔵 TTS のどちらで読み上げるかを決める。起動後に
+        // 設定が届いた場合も次の放送から反映される。
+        if (!isRemoteTTSEnabled()) {
           nativeEngine.speak(request, { onSpeechStarted, onSettled });
           return;
         }

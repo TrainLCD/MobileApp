@@ -1,5 +1,7 @@
-// iOS のリモート TTS (Worker の /tts 経由で OpenAI gpt-4o-mini-tts を利用) の既定値。
-// Android は端末内蔵の TTS (expo-speech) を使い続けるため、これらは参照されない。
+// リモート TTS (Worker の /tts 経由で OpenAI gpt-4o-mini-tts を利用) の既定値。
+// リモート合成を使うかどうかは Remote Config (remote_tts_enabled_ios /
+// remote_tts_enabled_android) が決めるため、端末内蔵 TTS (expo-speech) で読み上げる
+// 構成では参照されない。
 
 // 合成に使うモデル。Worker 側が別モデルへ切り替える場合もリクエストで明示するため、
 // アプリ側の期待するモデルをここで固定する。

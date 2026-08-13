@@ -27,6 +27,12 @@ export const REMOTE_CONFIG_KEYS = {
   // 停止・再開できる。未配信・不正値のときはフォールバック(true=利用可能)。
   TTS_ENABLED_IOS: 'tts_enabled_ios',
   TTS_ENABLED_ANDROID: 'tts_enabled_android',
+  // リモートTTS(Worker の /tts 経由で OpenAI gpt-4o-mini-tts を利用)を使うかどうかの
+  // プラットフォーム別スイッチ。tts_enabled_* が「TTS 機能自体を提供するか」を決めるのに対し、
+  // こちらは「有効な TTS をどのエンジンで読み上げるか」を切り替える。false のときは
+  // 端末内蔵 TTS(expo-speech)で読み上げる。
+  REMOTE_TTS_ENABLED_IOS: 'remote_tts_enabled_ios',
+  REMOTE_TTS_ENABLED_ANDROID: 'remote_tts_enabled_android',
   // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
   // エントリポイントごと機能を止められるようにするキルスイッチ。
   AI_AGENT_ENABLED: 'ai_agent_enabled',
@@ -42,6 +48,8 @@ type RemoteConfigResponse = {
   tts_enabled?: boolean;
   tts_enabled_ios?: boolean;
   tts_enabled_android?: boolean;
+  remote_tts_enabled_ios?: boolean;
+  remote_tts_enabled_android?: boolean;
   ai_agent_enabled?: boolean;
 };
 
@@ -59,6 +67,13 @@ const ETA_FALLBACK_MAX_DURATION_MIN_FALLBACK = 30;
 // TTS機能(プラットフォーム別スイッチ)のフォールバック既定値。キルスイッチ用途のため、
 // 未配信・取得失敗時は既存挙動（利用可能）を維持する true をフォールバックとする。
 const TTS_ENABLED_FALLBACK = true;
+
+// リモートTTSを使うかどうかのフォールバック既定値。現行挙動(iOS はリモート合成、
+// Android は端末内蔵 TTS)をそのまま維持するため、iOS のみ true とする。Android の
+// リモート合成は文字数課金が発生するため、Remote Config で明示的に有効化された
+// ときだけ /tts を参照させる。
+const REMOTE_TTS_ENABLED_IOS_FALLBACK = true;
+const REMOTE_TTS_ENABLED_ANDROID_FALLBACK = false;
 
 // AIエージェント機能のフォールバック既定値。LLM 利用料が発生する機能のため、
 // 未配信・取得失敗時は安全側に倒して無効とする。
@@ -83,6 +98,8 @@ let cachedEtaFallbackArrivalConfirmMarginSec: number | null = null;
 let cachedEtaFallbackMaxDurationMin: number | null = null;
 let cachedTTSEnabledIOS: boolean | null = null;
 let cachedTTSEnabledAndroid: boolean | null = null;
+let cachedRemoteTTSEnabledIOS: boolean | null = null;
+let cachedRemoteTTSEnabledAndroid: boolean | null = null;
 let cachedAIAgentEnabled: boolean | null = null;
 
 // setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
@@ -113,6 +130,8 @@ export const resetRemoteConfigCache = (): void => {
   cachedEtaFallbackMaxDurationMin = null;
   cachedTTSEnabledIOS = null;
   cachedTTSEnabledAndroid = null;
+  cachedRemoteTTSEnabledIOS = null;
+  cachedRemoteTTSEnabledAndroid = null;
   cachedAIAgentEnabled = null;
   notifyRemoteConfigListeners();
 };
@@ -156,6 +175,12 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   if (typeof data.tts_enabled_android === 'boolean') {
     cachedTTSEnabledAndroid = data.tts_enabled_android;
+  }
+  if (typeof data.remote_tts_enabled_ios === 'boolean') {
+    cachedRemoteTTSEnabledIOS = data.remote_tts_enabled_ios;
+  }
+  if (typeof data.remote_tts_enabled_android === 'boolean') {
+    cachedRemoteTTSEnabledAndroid = data.remote_tts_enabled_android;
   }
   if (typeof data.ai_agent_enabled === 'boolean') {
     cachedAIAgentEnabled = data.ai_agent_enabled;
@@ -233,6 +258,27 @@ export const isTTSFeatureEnabled = (): boolean => {
       return cachedTTSEnabledAndroid ?? TTS_ENABLED_FALLBACK;
     default:
       return TTS_ENABLED_FALLBACK;
+  }
+};
+
+// 自動アナウンスをリモートTTS(Worker の /tts 経由で OpenAI gpt-4o-mini-tts を利用)で
+// 読み上げるかどうかを同期的に取得する。false のときは端末内蔵 TTS(expo-speech)で読み上げる。
+// これは TTS 機能自体のキルスイッチ(isTTSFeatureEnabled)とは独立しており、TTS を提供したまま
+// エンジンだけを差し替える用途に使う。
+//   - Android でもリモート合成を使う: remote_tts_enabled_android=true
+//   - 障害・コスト超過時に iOS を端末内蔵 TTS へ退避: remote_tts_enabled_ios=false
+// 未配信・取得失敗時は既存挙動を維持するフォールバック(iOS=true / Android=false)を返す。
+// iOS/Android 以外(web など)はリモート再生経路を持たないため常に false。
+export const isRemoteTTSEnabled = (): boolean => {
+  switch (Platform.OS) {
+    case 'ios':
+      return cachedRemoteTTSEnabledIOS ?? REMOTE_TTS_ENABLED_IOS_FALLBACK;
+    case 'android':
+      return (
+        cachedRemoteTTSEnabledAndroid ?? REMOTE_TTS_ENABLED_ANDROID_FALLBACK
+      );
+    default:
+      return false;
   }
 };
 
