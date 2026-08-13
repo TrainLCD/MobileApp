@@ -1,10 +1,11 @@
 import type { AudioPlayer } from 'expo-audio';
 import { createAudioPlayer } from 'expo-audio';
 
-// このプレイヤーは iOS のリモート TTS 再生専用。Android は端末内蔵の TTS
-// (expo-speech) で読み上げるため、ここを通らない。かつて Android 対応のために
-// あった「プレイヤーを replace() で使い回す」経路は、iOS ではバックグラウンド
-// 再生を壊すため使っておらず、iOS 専用化に伴い削除した。
+// このプレイヤーはリモート TTS の再生専用。リモート合成を使うかどうかは Remote Config
+// (remote_tts_enabled_ios / remote_tts_enabled_android) が決めるため、iOS・Android の
+// どちらもここを通りうる。端末内蔵の TTS (expo-speech) で読み上げる構成では通らない。
+// かつてあった「プレイヤーを replace() で使い回す」経路は、iOS ではバックグラウンド
+// 再生を壊すため復活させず、発話ごとの生成・解放で両プラットフォームを揃える。
 
 // 再生位置が進まない状態がこの時間続いたらストールとみなして打ち切る。
 // 再生エラーや音声フォーカス喪失で停止しても JS へ error イベントも

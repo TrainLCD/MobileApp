@@ -1,23 +1,32 @@
-# リモート TTS (iOS) 設計書
+# リモート TTS 設計書
 
-自動アナウンスの読み上げ手段はプラットフォームで異なる。
+自動アナウンスの読み上げ手段は 2 つあり、どちらを使うかは Remote Config の
+`remote_tts_enabled_ios` / `remote_tts_enabled_android` が決める（[停止スイッチ](#停止スイッチ)）。
 
-| プラットフォーム | 合成 | 再生 |
+| 読み上げ手段 | 合成 | 再生 |
 | --- | --- | --- |
-| iOS | Worker `/tts` 経由の `gpt-4o-mini-tts`（女性声 `nova`） | `expo-audio` |
-| Android | 端末内蔵 TTS (`expo-speech`) | 端末内蔵 TTS |
+| リモート TTS | Worker `/tts` 経由の `gpt-4o-mini-tts`（女性声 `nova`） | `expo-audio` |
+| 端末内蔵 TTS | 端末内蔵 TTS (`expo-speech`) | 端末内蔵 TTS |
 
-iOS でリモート合成に失敗した回は、その放送だけ端末内蔵 TTS で読み上げる。圏外・
-トンネル・API 障害でアナウンスが丸ごと欠落しないようにするためのフォールバックで、
-恒久的な切り替えではない（次の放送では再びリモート合成を試みる）。
+キー未配信・取得失敗時のフォールバックは **iOS = リモート TTS / Android = 端末内蔵 TTS**
+で、これは Remote Config を一切配信しなかった場合の既定動作でもある。Android は文字数
+課金が発生するため、`remote_tts_enabled_android` を `true` で配信したときにだけ `/tts` を
+参照する。
+
+リモート合成に失敗した回は、その放送だけ端末内蔵 TTS で読み上げる。圏外・トンネル・
+API 障害でアナウンスが丸ごと欠落しないようにするためのフォールバックで、恒久的な
+切り替えではない（次の放送では再びリモート合成を試みる）。
 
 ## 構成
 
 ```text
 useTTS ────────────────── 放送タイミング・抑止判定・ダッキング・保留キュー
-  ├─ useRemoteSpeechEngine  iOS: /tts へ合成要求 → expo-audio で再生
-  └─ useNativeSpeechEngine  Android の常用経路 / iOS のフォールバック
+  ├─ useRemoteSpeechEngine  /tts へ合成要求 → expo-audio で再生
+  └─ useNativeSpeechEngine  リモートを使わない構成の常用経路 / リモートのフォールバック
 ```
+
+エンジンの選択は放送直前に `isRemoteTTSEnabled()`（`src/lib/remoteConfig.ts`）を引いて
+決めるため、起動後に Remote Config が届いた場合も次の放送から反映される。
 
 両エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
 
@@ -109,10 +118,25 @@ Azure Speech 版から全面移行済み（Azure 関連のコード・環境変�
 
 ## 停止スイッチ
 
-Remote Config の `tts_enabled_ios` / `tts_enabled_android` が既存のキルスイッチで、
-プラットフォーム単位で TTS 機能ごと停止できる（`useTTSFeatureEnabled`）。リモート
-合成のコストや障害で iOS の読み上げを止めたい場合は `tts_enabled_ios` を `false` に
-する。リモート合成だけを止めて端末内蔵 TTS へ倒す専用スイッチは現時点では持たない。
+Remote Config のキーは 2 系統あり、役割が異なる。
+
+- `tts_enabled_ios` / `tts_enabled_android` — TTS 機能自体のキルスイッチ
+  （`useTTSFeatureEnabled`）。`false` のときは読み上げを行わず、設定画面のトグルも
+  無効化する。フォールバックは `true`（提供する）。
+- `remote_tts_enabled_ios` / `remote_tts_enabled_android` — 読み上げエンジンの選択
+  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内蔵 TTS。
+  フォールバックは iOS が `true`、Android が `false`。
+
+両者は独立しているため、次のような運用ができる。
+
+- **Android でもリモート合成を使う**: `remote_tts_enabled_android` を `true` にする。
+  段階的に開放したい場合はこのキーだけで切り戻せる。
+- **リモート合成のコスト・障害から退避する**: `remote_tts_enabled_*` を `false` にすると、
+  TTS 機能は維持したまま端末内蔵 TTS へ倒れる。読み上げごと止めたい場合のみ
+  `tts_enabled_*` を `false` にする。
+
+iOS / Android 以外（web など）はリモート再生経路を持たないため、`isRemoteTTSEnabled()`
+は常に `false` を返す。
 
 ## キャッシュ
 
