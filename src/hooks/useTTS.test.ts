@@ -171,6 +171,38 @@ describe('useTTS', () => {
     );
   });
 
+  it('「JR」は読み上げ直前に読みが確定する表記へ置換される', async () => {
+    // TTS エンジンが "Jr."（ジュニア）と誤読するため、日本語はカタカナ、
+    // 英語はアルファベット読みさせる表記へ倒す。sub alias 経由（= 読み仮名側に
+    // 「JR」が残るケース）でも置換されることを確認する。
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+    useTTSText.mockReturnValue({
+      text: [
+        '次は、<sub alias="JRセン">JR線</sub>、お乗り換えです。',
+        'Thank you for using the JR Kobe Line.',
+      ],
+    });
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      1,
+      '次は、ジェーアールセン、お乗り換えです。',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'Thank you for using the J-R Kobe Line.',
+      expect.objectContaining({ language: 'en-US' })
+    );
+  });
+
   it('無効時は読み上げない', async () => {
     const store = createStore();
     store.set(speechState, {
