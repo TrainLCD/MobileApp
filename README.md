@@ -169,7 +169,14 @@ npm run watch:test
 
 ### Backend (Cloudflare Workers)
 
-The backend (feedback triage, review notifiers) now lives in the dedicated [TrainLCD/BFF](https://github.com/TrainLCD/BFF) monorepo and is no longer part of this repository. Voice announcements (TTS) are generated on-device with the OS-native speech synthesizer via `expo-speech`.
+The backend (TTS synthesis, feedback triage, review notifiers) now lives in the dedicated [TrainLCD/BFF](https://github.com/TrainLCD/BFF) monorepo and is no longer part of this repository.
+
+Voice announcements (TTS) use a different engine per platform:
+
+- **iOS**: synthesized remotely by `gpt-4o-mini-tts` (female voice) through the Worker's `/tts` endpoint and played back with `expo-audio`. When synthesis is unavailable — no signal, a tunnel, or an API outage — that announcement falls back to the on-device synthesizer so it is never silently dropped.
+- **Android**: synthesized on-device with the OS-native speech synthesizer via `expo-speech`.
+
+Both paths share the same announcement text pipeline; the SSML fragments emitted by the templates are converted to plain text before reaching either engine (`src/utils/speakableText.ts`), because neither engine interprets SSML.
 
 ## Contributing
 
@@ -226,7 +233,7 @@ TrainLCD is built with:
 - **TypeScript** - Type safety and better developer experience
 - **React Navigation** - Navigation library
 - **Tanstack Query** - Data fetching and caching
-- **Cloudflare Workers** - Backend API (auth, feedback, remote config) with R2/KV storage
+- **Cloudflare Workers** - Backend API (auth, TTS, feedback, remote config) with R2/KV storage
 - **Sentry** - Error tracking and performance monitoring
 - **GraphQL** with Code Generator - Typed queries and operations
 
