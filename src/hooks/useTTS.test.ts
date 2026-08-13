@@ -27,6 +27,32 @@ jest.mock('expo-audio', () => ({
   setAudioModeAsync: (...args: unknown[]) => mockSetAudioModeAsync(...args),
 }));
 
+// このファイルは「端末内蔵 TTS で読み上げるまで」を検証する。リモート TTS の
+// 実装そのもの（/tts への送信内容や音声再生）は useRemoteSpeechEngine.test.ts で
+// 検証するため、ここではエンジンを差し替えて挙動を固定する。
+// 既定はリモート合成が使えない状態とし、iOS でも端末内蔵 TTS へフォールバック
+// してくる経路を通す（jest-expo の既定 Platform.OS は 'ios'）。
+const remoteSpeakUnavailable = (
+  _request: unknown,
+  callbacks: { onUnavailable?: () => void; onSettled: () => void }
+) => {
+  (callbacks.onUnavailable ?? callbacks.onSettled)();
+};
+const mockRemoteSpeak = jest.fn(remoteSpeakUnavailable);
+const mockRemoteStop = jest.fn();
+
+// 本物の useRemoteSpeechEngine と同じく、レンダーをまたいで同一のオブジェクトを
+// 返す（毎レンダー新しい参照を返すと useTTS 側の依存が無用に変化してしまう）。
+const mockRemoteEngine = {
+  speak: (...args: unknown[]) =>
+    (mockRemoteSpeak as unknown as (...a: unknown[]) => void)(...args),
+  stop: (...args: unknown[]) => mockRemoteStop(...args),
+};
+
+jest.mock('./tts/useRemoteSpeechEngine', () => ({
+  useRemoteSpeechEngine: () => mockRemoteEngine,
+}));
+
 jest.mock('./useCurrentLine', () => ({
   useCurrentLine: jest.fn(() => undefined),
 }));
@@ -99,6 +125,8 @@ describe('useTTS', () => {
     jest.clearAllMocks();
     settledSpeakCallCount = 0;
     mockGetAvailableVoicesAsync.mockResolvedValue([]);
+    // 個別テストで差し替えたリモートエンジンの挙動を既定へ戻す
+    mockRemoteSpeak.mockImplementation(remoteSpeakUnavailable);
     // テスト間で useTTSText の mock を復元
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
@@ -171,6 +199,38 @@ describe('useTTS', () => {
     );
   });
 
+  it('「JR」は読み上げ直前に読みが確定する表記へ置換される', async () => {
+    // TTS エンジンが "Jr."（ジュニア）と誤読するため、日本語はカタカナ、
+    // 英語はアルファベット読みさせる表記へ倒す。sub alias 経由（= 読み仮名側に
+    // 「JR」が残るケース）でも置換されることを確認する。
+    const { useTTSText } = jest.requireMock('./useTTSText') as {
+      useTTSText: jest.Mock;
+    };
+    useTTSText.mockReturnValue({
+      text: [
+        '次は、<sub alias="JRセン">JR線</sub>、お乗り換えです。',
+        'Thank you for using the JR Kobe Line.',
+      ],
+    });
+
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      1,
+      '次は、ジェーアールセン、お乗り換えです。',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
+    expect(mockSpeak).toHaveBeenNthCalledWith(
+      2,
+      'Thank you for using the J-R Kobe Line.',
+      expect.objectContaining({ language: 'en-US' })
+    );
+  });
+
   it('無効時は読み上げない', async () => {
     const store = createStore();
     store.set(speechState, {
@@ -238,7 +298,7 @@ describe('useTTS', () => {
       expect.objectContaining({ language: 'en-US' })
     );
     expect(warnSpy).toHaveBeenCalledWith(
-      '[useTTS] English text contains Japanese characters, stripping:',
+      '[speakableText] English text contains Japanese characters, stripping:',
       'Arriving at あかさか K 7.'
     );
 
@@ -779,5 +839,101 @@ describe('useTTS', () => {
     expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
       expect.objectContaining({ interruptionMode: 'mixWithOthers' })
     );
+  });
+
+  describe('プラットフォーム別の読み上げ経路', () => {
+    it('[iOS] リモートTTSで読み上げ、端末内蔵TTSは使わない', async () => {
+      mockRemoteSpeak.mockImplementation(
+        (
+          _request: unknown,
+          callbacks: {
+            onSpeechStarted?: () => void;
+            onSettled: () => void;
+          }
+        ) => {
+          callbacks.onSpeechStarted?.();
+          callbacks.onSettled();
+        }
+      );
+
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      expect(mockRemoteSpeak).toHaveBeenCalledWith(
+        {
+          ssmlJa: 'ja text',
+          ssmlEn: 'en text',
+          speakJa: true,
+          speakEn: true,
+        },
+        expect.any(Object)
+      );
+      expect(mockSpeak).not.toHaveBeenCalled();
+    });
+
+    it('[iOS] リモートTTSが使えない回は端末内蔵TTSへフォールバックする', async () => {
+      // 圏外・トンネル・API障害で合成できなくてもアナウンスを欠落させない
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        1,
+        'ja text',
+        expect.objectContaining({ language: 'ja-JP' })
+      );
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        2,
+        'en text',
+        expect.objectContaining({ language: 'en-US' })
+      );
+    });
+
+    it('[iOS] フォールバックした発話の完了でも再生パイプラインが解放される', async () => {
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      mockSetAudioModeAsync.mockClear();
+      await act(async () => {
+        finishAllUtterances();
+      });
+
+      // ダッキングが解除される = playingRef が解放されている
+      expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ interruptionMode: 'mixWithOthers' })
+      );
+    });
+
+    it('[Android] リモートTTSを呼ばず端末内蔵TTSで読み上げる', async () => {
+      setPlatformOS('android');
+
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).not.toHaveBeenCalled();
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        1,
+        'ja text',
+        expect.objectContaining({ language: 'ja-JP' })
+      );
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        2,
+        'en text',
+        expect.objectContaining({ language: 'en-US' })
+      );
+    });
   });
 });
