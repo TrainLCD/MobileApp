@@ -7,6 +7,7 @@ import { TransportType } from '~/@types/graphql';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
+import { fixJrReading } from '../utils/jrReading';
 import { selectBestVoiceIdentifier } from '../utils/nativeTtsVoice';
 import {
   containsJapaneseCharacters,
@@ -291,16 +292,25 @@ export const useTTS = (): void => {
         // テンプレートが生成する SSML 断片を OS ネイティブ TTS 用の
         // プレーンテキストへ変換する。英語はテンプレ側に区切りのカンマが
         // 既に含まれるため <break/> は空白へ置き換える。
+        // 「JR」は TTS エンジンが "Jr."（ジュニア）と誤読するため、読み上げ
+        // 直前のこの段でのみ読み方が確定する表記へ置換する（切り詰め判定は
+        // 置換後の長さで行いたいので truncate より前に適用する）。
         const plainJa =
           shouldSpeakJapanese && canSpeakJa
             ? truncateToSpeechLimit(
-                ssmlToPlainText(ja, { breakReplacement: '、' })
+                fixJrReading(
+                  ssmlToPlainText(ja, { breakReplacement: '、' }),
+                  'JA'
+                )
               )
             : '';
         let plainEn =
           shouldSpeakEnglish && canSpeakEn
             ? truncateToSpeechLimit(
-                ssmlToPlainText(en, { breakReplacement: ' ' })
+                fixJrReading(
+                  ssmlToPlainText(en, { breakReplacement: ' ' }),
+                  'EN'
+                )
               )
             : '';
         // nameRoman が欠落した駅データ等では wrapPhoneme のローマ字フォール
