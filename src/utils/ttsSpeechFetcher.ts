@@ -7,6 +7,9 @@ import { base64ToUint8Array } from './base64ToUint8Array';
 // 解放されず TTS 全体が停止してしまうため、AbortController で上限時間を設ける。
 export const TTS_FETCH_TIMEOUT_MS = 20_000;
 
+// キャッシュファイル名に使える id の文字種（Worker は sha256 の16進文字列を返す）
+const SAFE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+
 // 合成済み音声のパスを保持する上限。1 回の乗車で数十件のアナウンスが生成される
 // ため、無制限に持つとキャッシュディレクトリと Map が膨らみ続ける。
 export const MAX_FETCH_CACHE_SIZE = 50;
@@ -158,16 +161,34 @@ const normalizeAudioForFile = (
 
 const fetchCache = new Map<string, FetchedSpeech>();
 
+// 参照されなくなった音声ファイルを削除する。Map から捨てるだけだと
+// キャッシュディレクトリに実ファイルが残り続けるため、退避と同時に消す。
+// 削除できなくても（既に OS に掃除された等）キャッシュ整理は続ける。
+const deleteCachedAudio = (speech: FetchedSpeech): void => {
+  for (const path of [speech.pathJa, speech.pathEn]) {
+    if (!path) {
+      continue;
+    }
+    try {
+      new File(path).delete();
+    } catch (e) {
+      console.warn('[ttsSpeechFetcher] failed to delete cached audio:', e);
+    }
+  }
+};
+
 // 同一テキストの再放送でリクエストを重ねないためのキャッシュ。Map は挿入順を
 // 保つため、上限超過時に最古のエントリから捨てる。
 const storeInFetchCache = (key: string, value: FetchedSpeech): void => {
   fetchCache.set(key, value);
   while (fetchCache.size > MAX_FETCH_CACHE_SIZE) {
-    const oldestKey = fetchCache.keys().next().value;
-    if (oldestKey === undefined) {
+    const oldest = fetchCache.entries().next().value;
+    if (oldest === undefined) {
       break;
     }
+    const [oldestKey, oldestValue] = oldest;
     fetchCache.delete(oldestKey);
+    deleteCachedAudio(oldestValue);
   }
 };
 
@@ -201,6 +222,9 @@ const buildCacheKey = (opts: {
   ].join('\0');
 
 export const clearFetchCache = (): void => {
+  for (const speech of fetchCache.values()) {
+    deleteCachedAudio(speech);
+  }
   fetchCache.clear();
 };
 
@@ -308,9 +332,12 @@ export const fetchSpeechAudio = async (
 
     const ttsJson = await response.json();
 
-    if (!ttsJson?.result?.id) {
+    // id はキャッシュファイル名に連結するため、パス区切りや `..` が混ざると
+    // キャッシュディレクトリの外へ書き込みうる。応答元は認証済みの自前 Worker
+    // だが、防御としてファイル名に使える文字だけを受理する。
+    if (!ttsJson?.result?.id || !SAFE_ID_PATTERN.test(ttsJson.result.id)) {
       console.warn(
-        '[ttsSpeechFetcher] Invalid TTS response: missing result.id'
+        '[ttsSpeechFetcher] Invalid TTS response: missing or malformed result.id'
       );
       return null;
     }

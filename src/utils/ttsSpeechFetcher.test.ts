@@ -1,4 +1,4 @@
-import { mockFetch } from '~/utils/test/ttsMocks';
+import { mockFetch, mockFileDelete } from '~/utils/test/ttsMocks';
 import {
   clearFetchCache,
   fetchSpeechAudio,
@@ -25,6 +25,8 @@ describe('fetchSpeechAudio', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     clearFetchCache();
+    // clearFetchCache 自体の削除呼び出しを次のテストへ持ち越さない
+    mockFileDelete.mockClear();
   });
 
   afterEach(() => {
@@ -335,6 +337,56 @@ describe('fetchSpeechAudio', () => {
     await fetchSpeechAudio({ ...defaultOptions, textJa: 'あふれさせる' });
     await fetchSpeechAudio({ ...defaultOptions, textJa: 'テキスト0' });
     expect(mockFetch).toHaveBeenCalledTimes(MAX_FETCH_CACHE_SIZE + 2);
+  });
+
+  it('退避したエントリの音声ファイルを削除する', async () => {
+    // Map から捨てるだけだとキャッシュディレクトリに実ファイルが残り続ける
+    mockFetch.mockImplementation(async () =>
+      okResponse({
+        id: 'tts-evict',
+        jaAudioContent: 'QQ==',
+        enAudioContent: 'QQ==',
+      })
+    );
+
+    for (let i = 0; i <= MAX_FETCH_CACHE_SIZE; i += 1) {
+      await fetchSpeechAudio({ ...defaultOptions, textJa: `テキスト${i}` });
+    }
+
+    expect(mockFileDelete.mock.calls.map(([uri]) => uri)).toEqual([
+      '/tmp/tts-evict_ja.wav',
+      '/tmp/tts-evict_en.wav',
+    ]);
+  });
+
+  it('キャッシュクリア時に保持している音声ファイルを削除する', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({
+        id: 'tts-clear',
+        jaAudioContent: 'QQ==',
+        enAudioContent: 'QQ==',
+      })
+    );
+
+    await fetchSpeechAudio(defaultOptions);
+    expect(mockFileDelete).not.toHaveBeenCalled();
+
+    clearFetchCache();
+    expect(mockFileDelete.mock.calls.map(([uri]) => uri)).toEqual([
+      '/tmp/tts-clear_ja.wav',
+      '/tmp/tts-clear_en.wav',
+    ]);
+  });
+
+  it('id がファイル名として安全でない場合は null を返す', async () => {
+    // パス区切りや .. を含む id をそのまま連結するとキャッシュ外へ書き込みうる
+    for (const id of ['../evil', 'a/b', 'a\\b', '']) {
+      clearFetchCache();
+      mockFetch.mockResolvedValue(
+        okResponse({ id, jaAudioContent: 'QQ==', enAudioContent: 'QQ==' })
+      );
+      expect(await fetchSpeechAudio(defaultOptions)).toBeNull();
+    }
   });
 
   it('PCM MIME の場合は WAV として保存する', async () => {

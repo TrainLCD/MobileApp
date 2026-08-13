@@ -71,6 +71,10 @@ describe('useRemoteSpeechEngine', () => {
     });
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('SSML をプレーンテキストへ変換し、モデル・女性声・読み方指示を添えて要求する', async () => {
     const { result } = renderEngine();
 

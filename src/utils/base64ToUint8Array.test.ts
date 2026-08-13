@@ -44,4 +44,20 @@ describe('base64ToUint8Array', () => {
     const result = base64ToUint8Array('QQ==');
     expect(result).toEqual(new Uint8Array([65]));
   });
+
+  it('パディング無しで長さが4の倍数でない入力も復号できる', () => {
+    // 非整数長を new Uint8Array へ渡すと RangeError で落ちるため
+    expect(Array.from(base64ToUint8Array('QQ'))).toEqual([0x41]);
+    expect(Array.from(base64ToUint8Array('YWI'))).toEqual([0x61, 0x62]);
+    expect(Array.from(base64ToUint8Array('YWJj'))).toEqual([0x61, 0x62, 0x63]);
+  });
+
+  it('パディングの有無で同じ結果になる', () => {
+    expect(Array.from(base64ToUint8Array('QQ'))).toEqual(
+      Array.from(base64ToUint8Array('QQ=='))
+    );
+    expect(Array.from(base64ToUint8Array('YWI'))).toEqual(
+      Array.from(base64ToUint8Array('YWI='))
+    );
+  });
 });
