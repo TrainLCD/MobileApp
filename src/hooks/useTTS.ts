@@ -1,5 +1,4 @@
 import { setAudioModeAsync } from 'expo-audio';
-import * as Speech from 'expo-speech';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
@@ -7,46 +6,25 @@ import { TransportType } from '~/@types/graphql';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
-import { fixJrReading } from '../utils/jrReading';
-import { selectBestVoiceIdentifier } from '../utils/nativeTtsVoice';
-import {
-  containsJapaneseCharacters,
-  stripJapaneseCharacters,
-} from '../utils/phoneme';
-import { ssmlToPlainText } from '../utils/ssmlToPlainText';
+import type { SpeechEngineRequest } from './tts/speechEngine';
+import { useNativeSpeechEngine } from './tts/useNativeSpeechEngine';
+import { useRemoteSpeechEngine } from './tts/useRemoteSpeechEngine';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
 import { useStoppingState } from './useStoppingState';
 import { useTTSText } from './useTTSText';
 
-// 発話開始後に onDone / onError / onStopped が一切届かない場合の安全タイムアウト（ミリ秒）。
-// Android の TTS エンジンは音声フォーカス喪失や中断時にコールバックを落とすことがあり、
-// その場合に playingRef が解放されず以降の TTS 全体が停止するのを防ぐ。
-// 正常な発話（日英合わせても数十秒程度）はこの時間内に必ず完了する。
+// 発話開始後に完了・失敗の通知が一切届かない場合の安全タイムアウト（ミリ秒）。
+// 端末内蔵の TTS エンジンは音声フォーカス喪失や中断時にコールバックを落とすこと
+// があり、リモート TTS も取得と再生の双方でハングしうる。その場合に playingRef が
+// 解放されず以降の TTS 全体が停止するのを防ぐ。正常な発話（日英合わせても数十秒
+// 程度、リモートは取得時間を含めても十分収まる）はこの時間内に必ず完了する。
 const PLAYBACK_TIMEOUT_MS = 300_000;
 
-const JA_SPEECH_LANGUAGE = 'ja-JP';
-const EN_SPEECH_LANGUAGE = 'en-US';
-
-// expo-speech は volume 未指定時の既定値が機種・OSバージョンにより最大音量
-// より低くなることがあるため、常に最大値を明示指定して音量が下がる余地を無くす。
-const MAX_SPEECH_VOLUME = 1.0;
-
-// 発話開始前に音声選択（getAvailableVoicesAsync）の完了を待つ上限（ミリ秒）。
-// Android の TTS エンジン初期化がハングした場合でも、この時間を超えたら
-// 音声未指定のまま発話へ進み、アナウンス全体が止まらないようにする。
-const VOICES_READY_TIMEOUT_MS = 5_000;
-
-// Android の TextToSpeech は入力長上限 (通常 4000 文字) を超えると発話自体が
-// 失敗する。通常のアナウンス文はこの上限に達しないが、超過時は静かに失敗する
-// より切り詰めて読み上げる方がマシなため防衛的に丸める。
-const truncateToSpeechLimit = (text: string): string => {
-  const limit = Speech.maxSpeechInputLength;
-  if (typeof limit === 'number' && limit > 0 && text.length > limit) {
-    return text.slice(0, limit);
-  }
-  return text;
-};
+// iOS のみ Worker 経由の gpt-4o-mini-tts（女性声）で読み上げる。Android は
+// 端末内蔵 TTS のまま据え置き。iOS でもリモート合成に失敗した回は端末内蔵 TTS へ
+// フォールバックするため、圏外・トンネル・API 障害でもアナウンスは途切れない。
+const shouldUseRemoteTTS = (): boolean => Platform.OS === 'ios';
 
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
@@ -90,81 +68,27 @@ export const useTTS = (): void => {
 
   const playingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 言語ごとに端末の最高品質音声（premium / enhanced）を明示指定するための識別子。
-  // 見つからない場合は undefined のままシステム既定音声に任せる。
-  const jaVoiceIdRef = useRef<string | undefined>(undefined);
-  const enVoiceIdRef = useRef<string | undefined>(undefined);
-  // Android で音声一覧の取得に成功した（=言語ごとの音声有無を判定できる）か。
-  // expo-speech の Android 実装は対象言語の音声データが端末に無いと setLanguage
-  // が LANG_MISSING_DATA となり端末既定言語にフォールバックするため、音声が
-  // 見つからなかった言語の発話はスキップする判断に使う。
-  const androidVoicesLoadedRef = useRef(false);
+  // 端末内蔵 TTS は Android の常用経路であり、iOS ではリモート合成が使えない
+  // ときのフォールバックも担うため、どちらのプラットフォームでも用意しておく。
+  const nativeEngine = useNativeSpeechEngine();
+  const remoteEngine = useRemoteSpeechEngine();
 
-  // 初回発話が音声選択の完了前に走ると voice 未指定で合成されてしまうため、
-  // 発話側が選択完了を待てるよう Promise を保持する（常に resolve する）。
-  const voicesReadyRef = useRef<Promise<void> | null>(null);
+  const stopAllEngines = useCallback(() => {
+    remoteEngine.stop();
+    nativeEngine.stop();
+  }, [nativeEngine, remoteEngine]);
 
-  useEffect(() => {
-    let cancelled = false;
-    voicesReadyRef.current = (async () => {
-      try {
-        const voices = await Speech.getAvailableVoicesAsync();
-        if (cancelled) {
-          return;
-        }
-        // Android は voice 未指定だと言語フォールバック不備の影響を受けるため、
-        // 高品質音声が無くても既定品質のローカル音声を明示指定する
-        const options = { allowDefaultQuality: Platform.OS === 'android' };
-        jaVoiceIdRef.current = selectBestVoiceIdentifier(
-          voices,
-          JA_SPEECH_LANGUAGE,
-          options
-        );
-        enVoiceIdRef.current = selectBestVoiceIdentifier(
-          voices,
-          EN_SPEECH_LANGUAGE,
-          options
-        );
-        if (Platform.OS === 'android' && voices.length > 0) {
-          androidVoicesLoadedRef.current = true;
-          if (!jaVoiceIdRef.current) {
-            console.warn(
-              '[useTTS] No Japanese voice found on this device; Japanese announcements will be skipped'
-            );
-          }
-          if (!enVoiceIdRef.current) {
-            console.warn(
-              '[useTTS] No English voice found on this device; English announcements will be skipped'
-            );
-          }
-        }
-      } catch (e) {
-        console.warn('[useTTS] getAvailableVoicesAsync failed:', e);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // 音声選択の完了を待つ。取得がハングしても発話全体が止まらないよう上限付き
-  const waitForVoicesReady = useCallback(async () => {
-    const ready = voicesReadyRef.current;
-    if (!ready) {
-      return;
-    }
-    await Promise.race([
-      ready,
-      new Promise<void>((resolve) => {
-        setTimeout(resolve, VOICES_READY_TIMEOUT_MS);
-      }),
-    ]);
-  }, []);
+  // アンマウント時のクリーンアップから参照する。エンジンの識別子を effect の
+  // 依存に入れると、識別子が変わっただけでクリーンアップが走って発話中の
+  // アナウンスを打ち切ってしまうため、ref 経由で最新の実装を呼ぶ。
+  const stopAllEnginesRef = useRef(stopAllEngines);
+  stopAllEnginesRef.current = stopAllEngines;
 
   // OS ネイティブ TTS は expo-audio のプレイヤーを使わないが、iOS の
   // AVSpeechSynthesizer はアプリの音声セッションを共有するため、
   // サイレントスイッチ中の読み上げ・バックグラウンド再生はここで設定した
-  // audio mode に従う。他アプリ音声のダッキングは発話開始直前にのみ有効化し
+  // audio mode に従う。リモート TTS の再生（expo-audio）も同じセッションを使う。
+  // 他アプリ音声のダッキングは発話開始直前にのみ有効化し
   // （setDuckingActiveAsync 参照）、ここでは非ダッキング状態を既定にする。
   const backgroundEnabledRef = useRef(backgroundEnabled);
   backgroundEnabledRef.current = backgroundEnabled;
@@ -226,9 +150,9 @@ export const useTTS = (): void => {
     }
   }, [setDuckingActiveAsync]);
 
-  // 発話開始時に安全タイムアウトを張る。OS の TTS エンジンから完了・エラー・
-  // 停止のいずれのコールバックも届かないままハングした場合でも、playingRef を
-  // 確実に解放して以降の発話が詰まらないようにする。
+  // 発話開始時に安全タイムアウトを張る。TTS エンジンから完了・エラー・停止の
+  // いずれの通知も届かないままハングした場合でも、playingRef を確実に解放して
+  // 以降の発話が詰まらないようにする。
   const armPlaybackWatchdog = useCallback(
     (runId: number) => {
       if (playingTimeoutRef.current) {
@@ -244,13 +168,11 @@ export const useTTS = (): void => {
         // 世代を進めて、強制リセット後に古い発話のコールバックが
         // 再生状態へ割り込むのを無効化する
         speechRunIdRef.current += 1;
-        try {
-          Speech.stop();
-        } catch {}
+        stopAllEngines();
         finishPlaying();
       }, PLAYBACK_TIMEOUT_MS);
     },
-    [finishPlaying]
+    [finishPlaying, stopAllEngines]
   );
 
   const speechWithText = useCallback(
@@ -260,7 +182,7 @@ export const useTTS = (): void => {
       }
 
       // 発話の世代IDを同期的に採番して再生中フラグを立てる。ここを非同期に
-      // すると同一テキストで二重に発話が走りうる。音声選択の完了待ちなどの
+      // すると同一テキストで二重に発話が走りうる。音声セッション設定などの
       // 非同期処理後は isStaleRun で世代を確認し、古い継続を破棄する
       const runId = speechRunIdRef.current + 1;
       speechRunIdRef.current = runId;
@@ -272,89 +194,28 @@ export const useTTS = (): void => {
         !playingRef.current ||
         !isLoadableRef.current;
 
-      void (async () => {
-        // 初回アナウンスが音声選択の完了前に走ると voice 未指定で合成され、
-        // Android では言語フォールバック不備により端末既定言語（日本語）で
-        // 英語文が読まれうる。選択完了を待ってから発話する
-        await waitForVoicesReady();
+      const request: SpeechEngineRequest = {
+        ssmlJa: ja,
+        ssmlEn: en,
+        speakJa: shouldSpeakJapanese,
+        speakEn: shouldSpeakEnglish,
+      };
+
+      const onSpeechStarted = () => {
+        if (firstSpeechRef.current) {
+          firstSpeechRef.current = false;
+          suppressPostFirstSpeechRef.current = true;
+        }
+      };
+
+      const onSettled = () => {
         if (isStaleRun()) {
           return;
         }
+        finishPlaying();
+      };
 
-        // Android で端末に対象言語の音声が1つも無い場合、expo-speech の
-        // setLanguage が LANG_MISSING_DATA で端末既定言語にフォールバックし、
-        // 英語文が日本語音声で合成されてしまう。誤った言語の音声で読み上げる
-        // より、その言語の発話をスキップする方がマシなため発話対象から外す。
-        const voicesKnown = androidVoicesLoadedRef.current;
-        const canSpeakJa = !voicesKnown || Boolean(jaVoiceIdRef.current);
-        const canSpeakEn = !voicesKnown || Boolean(enVoiceIdRef.current);
-
-        // テンプレートが生成する SSML 断片を OS ネイティブ TTS 用の
-        // プレーンテキストへ変換する。英語はテンプレ側に区切りのカンマが
-        // 既に含まれるため <break/> は空白へ置き換える。
-        // 「JR」は TTS エンジンが "Jr."（ジュニア）と誤読するため、読み上げ
-        // 直前のこの段でのみ読み方が確定する表記へ置換する（切り詰め判定は
-        // 置換後の長さで行いたいので truncate より前に適用する）。
-        const plainJa =
-          shouldSpeakJapanese && canSpeakJa
-            ? truncateToSpeechLimit(
-                fixJrReading(
-                  ssmlToPlainText(ja, { breakReplacement: '、' }),
-                  'JA'
-                )
-              )
-            : '';
-        let plainEn =
-          shouldSpeakEnglish && canSpeakEn
-            ? truncateToSpeechLimit(
-                fixJrReading(
-                  ssmlToPlainText(en, { breakReplacement: ' ' }),
-                  'EN'
-                )
-              )
-            : '';
-        // nameRoman が欠落した駅データ等では wrapPhoneme のローマ字フォール
-        // バックが効かず、英語文に日本語が残ることがある。日本語が混じった
-        // 英語文は voice を明示指定していても TTS エンジンが言語を誤判定して
-        // 全文を日本語音声で合成してしまうため、最終防衛線として除去する
-        if (containsJapaneseCharacters(plainEn)) {
-          console.warn(
-            '[useTTS] English text contains Japanese characters, stripping:',
-            plainEn
-          );
-          plainEn = stripJapaneseCharacters(plainEn);
-        }
-
-        const utterances = [
-          plainJa
-            ? {
-                text: plainJa,
-                language: JA_SPEECH_LANGUAGE,
-                voice: jaVoiceIdRef.current,
-              }
-            : null,
-          plainEn
-            ? {
-                text: plainEn,
-                language: EN_SPEECH_LANGUAGE,
-                voice: enVoiceIdRef.current,
-              }
-            : null,
-        ].filter(
-          (
-            u
-          ): u is {
-            text: string;
-            language: string;
-            voice: string | undefined;
-          } => u !== null
-        );
-
-        if (!utterances.length) {
-          finishPlaying();
-          return;
-        }
-
+      void (async () => {
         // 実際に読み上げる直前にのみ他アプリ音声のダッキングを有効化する
         await setDuckingActiveAsync(true);
         if (isStaleRun()) {
@@ -364,52 +225,36 @@ export const useTTS = (): void => {
           return;
         }
 
-        if (firstSpeechRef.current) {
-          firstSpeechRef.current = false;
-          suppressPostFirstSpeechRef.current = true;
+        if (!shouldUseRemoteTTS()) {
+          nativeEngine.speak(request, { onSpeechStarted, onSettled });
+          return;
         }
 
-        // JA→EN を一括で OS の読み上げキューへ積む。Android の TextToSpeech は
-        // speak() 呼び出し時点の言語・音声設定を発話リクエストごとにスナップ
-        // ショットする（setVoice / setLanguage は mParams に保存され speak() が
-        // 要求ごとに複製する）ため、発話ごとに異なる音声を安全に指定できる。
-        // iOS の AVSpeechUtterance も発話単位で音声を保持する。一括で積むことで
-        // エンジンが前の発話の再生中に次の合成を先行でき、発話間の無音
-        // （合成待ちのラグ）を最小化する。完了・エラー・停止のいずれかが全発話
-        // 分そろった時点でパイプラインを解放する。タイムアウトや新規発話で
-        // 世代が進んでいたら、古いコールバックは無視する
-        let remaining = utterances.length;
-        const settle = () => {
-          if (isStaleRun()) {
-            return;
-          }
-          remaining -= 1;
-          if (remaining <= 0) {
-            finishPlaying();
-          }
-        };
-        for (const utterance of utterances) {
-          Speech.speak(utterance.text, {
-            language: utterance.language,
-            volume: MAX_SPEECH_VOLUME,
-            ...(utterance.voice ? { voice: utterance.voice } : {}),
-            onDone: settle,
-            onStopped: settle,
-            onError: (error) => {
-              console.warn('[useTTS] speech error:', error);
-              settle();
-            },
-          });
-        }
+        remoteEngine.speak(request, {
+          onSpeechStarted,
+          onSettled,
+          // 圏外・トンネル・API 障害で合成できなかった回は、その放送だけ
+          // 端末内蔵 TTS で読み上げてアナウンスの欠落を防ぐ
+          onUnavailable: () => {
+            if (isStaleRun()) {
+              return;
+            }
+            console.warn(
+              '[useTTS] Remote TTS unavailable, falling back to on-device TTS'
+            );
+            nativeEngine.speak(request, { onSpeechStarted, onSettled });
+          },
+        });
       })();
     },
     [
       armPlaybackWatchdog,
       finishPlaying,
+      nativeEngine,
+      remoteEngine,
       setDuckingActiveAsync,
       shouldSpeakEnglish,
       shouldSpeakJapanese,
-      waitForVoicesReady,
     ]
   );
 
@@ -482,9 +327,7 @@ export const useTTS = (): void => {
       }
       // 世代を進めて残存コールバックを無効化してから読み上げを停止する
       speechRunIdRef.current += 1;
-      try {
-        Speech.stop();
-      } catch {}
+      stopAllEnginesRef.current();
       playingRef.current = false;
       // 発話中にアンマウントされた場合、ダッキングが張られたまま残るのを防ぐ
       void setDuckingActiveAsync(false);
