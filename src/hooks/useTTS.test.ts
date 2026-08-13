@@ -2,12 +2,20 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import React from 'react';
 import { Platform } from 'react-native';
+import { isRemoteTTSEnabled } from '~/lib/remoteConfig';
 import speechState, { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import { useTTS } from './useTTS';
 
 jest.mock('~/utils/isDevApp', () => ({
   isDevApp: false,
 }));
+
+// リモートTTSを使うかは Remote Config が決める。既定の実装は beforeEach で
+// 出荷時のフォールバック(iOS=リモート / Android=端末内蔵)へ揃える。
+jest.mock('~/lib/remoteConfig', () => ({
+  isRemoteTTSEnabled: jest.fn(),
+}));
+const mockedIsRemoteTTSEnabled = jest.mocked(isRemoteTTSEnabled);
 
 const mockSpeak = jest.fn();
 const mockSpeechStop = jest.fn();
@@ -125,6 +133,8 @@ describe('useTTS', () => {
     jest.clearAllMocks();
     settledSpeakCallCount = 0;
     mockGetAvailableVoicesAsync.mockResolvedValue([]);
+    // 未配信時のフォールバックと同じ判定にしておく
+    mockedIsRemoteTTSEnabled.mockImplementation(() => Platform.OS === 'ios');
     // 個別テストで差し替えたリモートエンジンの挙動を既定へ戻す
     mockRemoteSpeak.mockImplementation(remoteSpeakUnavailable);
     // テスト間で useTTSText の mock を復元
@@ -914,7 +924,7 @@ describe('useTTS', () => {
       );
     });
 
-    it('[Android] リモートTTSを呼ばず端末内蔵TTSで読み上げる', async () => {
+    it('[Android] 既定ではリモートTTSを呼ばず端末内蔵TTSで読み上げる', async () => {
       setPlatformOS('android');
 
       const store = createStore();
@@ -933,6 +943,81 @@ describe('useTTS', () => {
         2,
         'en text',
         expect.objectContaining({ language: 'en-US' })
+      );
+    });
+
+    it('[Android] Remote Configで有効ならリモートTTSで読み上げる', async () => {
+      setPlatformOS('android');
+      mockedIsRemoteTTSEnabled.mockReturnValue(true);
+      mockRemoteSpeak.mockImplementation(
+        (
+          _request: unknown,
+          callbacks: {
+            onSpeechStarted?: () => void;
+            onSettled: () => void;
+          }
+        ) => {
+          callbacks.onSpeechStarted?.();
+          callbacks.onSettled();
+        }
+      );
+
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      expect(mockRemoteSpeak).toHaveBeenCalledWith(
+        {
+          ssmlJa: 'ja text',
+          ssmlEn: 'en text',
+          speakJa: true,
+          speakEn: true,
+        },
+        expect.any(Object)
+      );
+      expect(mockSpeak).not.toHaveBeenCalled();
+    });
+
+    it('[Android] Remote Configで有効でも合成できない回は端末内蔵TTSへフォールバックする', async () => {
+      setPlatformOS('android');
+      mockedIsRemoteTTSEnabled.mockReturnValue(true);
+
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        1,
+        'ja text',
+        expect.objectContaining({ language: 'ja-JP' })
+      );
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        2,
+        'en text',
+        expect.objectContaining({ language: 'en-US' })
+      );
+    });
+
+    it('[iOS] Remote Configで無効なら端末内蔵TTSで読み上げる', async () => {
+      mockedIsRemoteTTSEnabled.mockReturnValue(false);
+
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).not.toHaveBeenCalled();
+      expect(mockSpeak).toHaveBeenNthCalledWith(
+        1,
+        'ja text',
+        expect.objectContaining({ language: 'ja-JP' })
       );
     });
   });

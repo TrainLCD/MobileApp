@@ -1,7 +1,8 @@
 // 自動アナウンスの読み上げ手段を差し替えられるようにするための共通インターフェース。
-// Android は端末内蔵 TTS (useNativeSpeechEngine)、iOS は Worker 経由の
-// gpt-4o-mini-tts (useRemoteSpeechEngine) を使い、リモートが使えないときは
-// useTTS がその回だけ内蔵 TTS へフォールバックする。
+// Worker 経由の gpt-4o-mini-tts (useRemoteSpeechEngine) と端末内蔵 TTS
+// (useNativeSpeechEngine) のどちらを使うかは Remote Config
+// (remote_tts_enabled_ios / remote_tts_enabled_android) が決め、リモートが
+// 使えないときは useTTS がその回だけ内蔵 TTS へフォールバックする。
 
 export interface SpeechEngineRequest {
   // テンプレートが生成した SSML 断片。プレーンテキストへの変換はエンジン側で行う。
