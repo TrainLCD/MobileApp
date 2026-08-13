@@ -48,9 +48,6 @@ SSML を解釈せずタグをそのまま読み上げる。そのため双方の
 [TrainLCD/functions](https://github.com/TrainLCD/functions) の
 `src/routes/tts.ts` にある（GraphQL BFF とは別リポジトリ）。
 
-> **未対応**: 現行の `/tts` は Azure Speech 専用で、この契約をまだ満たしていない。
-> 詳細と必要な作業は「[現行 `/tts` との差分](#現行-tts-との差分)」を参照。
-
 ### リクエスト
 
 `POST /tts` / `Authorization: Bearer <セッショントークン>`
@@ -93,40 +90,22 @@ SSML を解釈せずタグをそのまま読み上げる。そのため双方の
   判定できない場合のみ生 PCM (16bit LE / 24kHz) とみなして WAV ヘッダーを付与する。
   誤判定を避けるため、可能な限り MIME タイプを返すこと。
 
-## 現行 `/tts` との差分
+### サーバー側の実装メモ
 
-現行の [TrainLCD/functions](https://github.com/TrainLCD/functions)
-`src/routes/tts.ts` は **Azure Speech 専用**で、上記の契約とは以下が食い違う。
-そのため gpt-4o-mini-tts での合成にはサーバー側の実装が必要で、それまで iOS は
-毎回フォールバックして端末内蔵 TTS で読み上げる（クラッシュも無音も起きないが、
-女性声 TTS にはならない）。
+Azure Speech 版から全面移行済み（Azure 関連のコード・環境変数・シークレットは
+削除された）。アプリ側と対応が取れている前提は以下のとおり。
 
-| 項目 | 現行 `/tts` | 本設計が要求するもの |
-| --- | --- | --- |
-| 合成エンジン | Azure Speech | OpenAI `gpt-4o-mini-tts` |
-| 入力 | `ssmlJa` / `ssmlEn`（両方必須・SSML） | `textJa` / `textEn`（プレーンテキスト・片方のみ可） |
-| 声の指定 | Azure ボイス名（`<locale>-<Name>Neural` 形式のみ受理） | `nova` などの OpenAI ボイス名 |
-| 読み方の指示 | `mstts:express-as` / `prosody`（env 経由） | `instructions` |
-| モデル指定 | なし | `model` |
-
-変わらないもの:
-
-- 認証（`Authorization: Bearer <セッショントークン>`）と callable 互換の
-  ワイヤ形式（`{ data: … }` / `{ result: … }` / `{ error: { message, status } }`）
-- レスポンスの `id` / `*AudioContent` / `*AudioMimeType`
-- KV/R2 による合成結果キャッシュの考え方（キーに `model` と `voice`、
-  `instructions` を含める必要がある点だけ追加）
-
-サーバー側実装時の注意:
-
-- `OPENAI_API_KEY` は `Env` に既にある（AI エージェントが使用）ため、
-  新たなシークレット追加は不要。
-- 現行の入力上限は可視テキスト 4000 バイト・生 SSML 10000 バイト。プレーン
-  テキスト化で同等のバイト数ガードを維持すること（アプリ側は文字数ベースで
-  `REMOTE_TTS_MAX_INPUT_LENGTH` に丸めるだけなので、バイト数の防衛は
-  サーバー側が担う）。
-- 片言語のみのリクエストが正常系として来る。両方必須のバリデーションは外し、
-  届いた言語だけ合成して対応する `*AudioContent` を返す。
+- ボイス名とモデルは Worker 側で許可制。未知の値はリクエスト → KV(`config:tts`)
+  → `TTS_*` 環境変数の順にフォールバックするため、アプリが古いボイス名を送っても
+  400 にはならず既定の女性声で合成される。
+- 入力上限は Worker 側が UTF-8 **バイト**で検証する（4000 バイト）。アプリ側も
+  同じバイト数で丸める（`REMOTE_TTS_MAX_INPUT_BYTES`）ので、文字数と
+  バイト数の食い違いで無用なフォールバックが起きない。
+- Worker は受け取ったテキストにも `stripSsml` をかける。タグが紛れ込んでも
+  読み上げさせないための二重防御で、プレーンテキストには作用しない。
+- 英語は Worker 側で `normalizeRomanText`（全角記号・略記・長音符の吸収）を
+  通す。アプリが確定させた `J-R` を崩さないよう、ハイフン区切りの頭字語は
+  そのまま残す。
 
 ## 停止スイッチ
 

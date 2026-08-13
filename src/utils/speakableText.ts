@@ -1,6 +1,7 @@
 import { fixJrReading } from './jrReading';
 import { containsJapaneseCharacters, stripJapaneseCharacters } from './phoneme';
 import { ssmlToPlainText } from './ssmlToPlainText';
+import getStringBytes from './stringBytes';
 
 // TTS テンプレートが生成する SSML 断片を、読み上げエンジンへ渡せるプレーン
 // テキストへ変換する。端末内蔵 TTS (expo-speech) も iOS のリモート TTS
@@ -53,4 +54,27 @@ export const truncateToSpeechLimit = (
     return text.slice(0, limit);
   }
   return text;
+};
+
+/**
+ * UTF-8 バイト数の上限に合わせて切り詰める。リモート TTS の Worker は入力長を
+ * バイトで検証するため、文字数で丸めると日本語の長文が 400 で弾かれ、無用な
+ * フォールバックを招く。文字の途中で切らないようコードポイント単位で積む。
+ */
+export const truncateToByteLimit = (text: string, limit: number): string => {
+  if (limit <= 0 || getStringBytes(text) <= limit) {
+    return text;
+  }
+
+  let bytes = 0;
+  let truncated = '';
+  for (const char of text) {
+    const charBytes = getStringBytes(char);
+    if (bytes + charBytes > limit) {
+      break;
+    }
+    bytes += charBytes;
+    truncated += char;
+  }
+  return truncated;
 };

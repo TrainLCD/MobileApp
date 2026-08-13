@@ -1,4 +1,8 @@
-import { toSpeakableText, truncateToSpeechLimit } from './speakableText';
+import {
+  toSpeakableText,
+  truncateToByteLimit,
+  truncateToSpeechLimit,
+} from './speakableText';
 
 describe('toSpeakableText', () => {
   afterEach(() => {
@@ -52,6 +56,34 @@ describe('toSpeakableText', () => {
     expect(toSpeakableText('つぎはあかさかです', 'JA')).toBe(
       'つぎはあかさかです'
     );
+  });
+});
+
+describe('truncateToByteLimit', () => {
+  it('UTF-8 バイト数で切り詰める', () => {
+    // 日本語1文字=3バイトなので、10バイト上限では3文字まで
+    expect(truncateToByteLimit('あいうえお', 10)).toBe('あいう');
+  });
+
+  it('上限以内ならそのまま返す', () => {
+    expect(truncateToByteLimit('あいう', 9)).toBe('あいう');
+    expect(truncateToByteLimit('abc', 10)).toBe('abc');
+  });
+
+  it('文字の途中では切らない', () => {
+    // 8バイト上限でも4バイト目の途中で切って壊れた文字を作らない
+    expect(truncateToByteLimit('あいうえお', 8)).toBe('あい');
+  });
+
+  it('サロゲートペアを割らない', () => {
+    // 絵文字は4バイト。5バイト上限なら1文字だけ入る
+    expect(truncateToByteLimit('🚃🚃', 5)).toBe('🚃');
+    expect(truncateToByteLimit('🚃🚃', 3)).toBe('');
+  });
+
+  it('上限が0以下なら切り詰めない', () => {
+    expect(truncateToByteLimit('あいうえお', 0)).toBe('あいうえお');
+    expect(truncateToByteLimit('あいうえお', -1)).toBe('あいうえお');
   });
 });
 

@@ -21,6 +21,7 @@ export const REMOTE_TTS_INSTRUCTIONS_EN =
   'Keep a steady pace, pause briefly at commas, and pronounce station and line names ' +
   'clearly. Stay neutral and business-like rather than expressive.';
 
-// gpt-4o-mini-tts の入力上限は 4096 文字。超過すると合成自体が失敗するため、
-// 送信前に切り詰める。通常のアナウンス文はこの上限に達しない。
-export const REMOTE_TTS_MAX_INPUT_LENGTH = 4096;
+// Worker(/tts) が受け付ける読み上げテキストの上限(UTF-8 バイト)。超過すると
+// 400 で弾かれて無用なフォールバックを招くため、送信前に切り詰める。
+// Worker 側の TEXT_BYTE_LIMIT と一致させること。通常のアナウンス文は達しない。
+export const REMOTE_TTS_MAX_INPUT_BYTES = 4000;

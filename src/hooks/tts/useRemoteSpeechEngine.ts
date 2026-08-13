@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   REMOTE_TTS_INSTRUCTIONS_EN,
   REMOTE_TTS_INSTRUCTIONS_JA,
-  REMOTE_TTS_MAX_INPUT_LENGTH,
+  REMOTE_TTS_MAX_INPUT_BYTES,
   REMOTE_TTS_MODEL,
   REMOTE_TTS_VOICE,
 } from '../../constants';
@@ -10,7 +10,7 @@ import { getSessionToken } from '../../lib/session';
 import { workerUrl } from '../../lib/workerApi';
 import {
   toSpeakableText,
-  truncateToSpeechLimit,
+  truncateToByteLimit,
 } from '../../utils/speakableText';
 import {
   type PlayAudioHandle,
@@ -162,15 +162,15 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
 
           // 合成は文字数課金のため、無効な言語のテキストは送らない
           const textJa = request.speakJa
-            ? truncateToSpeechLimit(
+            ? truncateToByteLimit(
                 toSpeakableText(request.ssmlJa, 'JA'),
-                REMOTE_TTS_MAX_INPUT_LENGTH
+                REMOTE_TTS_MAX_INPUT_BYTES
               )
             : '';
           const textEn = request.speakEn
-            ? truncateToSpeechLimit(
+            ? truncateToByteLimit(
                 toSpeakableText(request.ssmlEn, 'EN'),
-                REMOTE_TTS_MAX_INPUT_LENGTH
+                REMOTE_TTS_MAX_INPUT_BYTES
               )
             : '';
 
