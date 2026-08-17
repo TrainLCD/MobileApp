@@ -586,17 +586,21 @@ export const SelectBoundModal: React.FC<Props> = ({
       }
 
       // 同一駅が複数回現れる経路ではカードごとに乗車位置が異なるため、
-      // 端の駅から進めない方向を潰す判定もカード固有の位置で行う
-      const boardingIndex = boardingStation
+      // 端の駅から進めない方向を潰す判定もカード固有の位置で行う。
+      // 乗車位置が駅配列から引けなかった場合は判定不能なので現在地基準に戻す
+      // (-1のまま扱うと端の駅ガードがすり抜ける)。
+      const boardingStationIndex = boardingStation
         ? stations.findIndex((s) => s.id === boardingStation.id)
-        : currentIndex;
+        : -1;
+      const boardingIndex =
+        boardingStationIndex === -1 ? currentIndex : boardingStationIndex;
 
       if (
         !boundStations.length ||
         (direction === 'INBOUND' &&
           !isLoopLine &&
           boardingIndex === stations.length - 1) ||
-        (direction === 'OUTBOUND' && !isLoopLine && !boardingIndex)
+        (direction === 'OUTBOUND' && !isLoopLine && boardingIndex === 0)
       ) {
         return <></>;
       }
