@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import type { LineDirection } from '~/models/Bound';
 import {
+  TOEI_OEDO_LINE_HIKARIGAOKA_STATION_ID,
   TOEI_OEDO_LINE_MAJOR_STATIONS_ID,
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_INNER,
   TOEI_OEDO_LINE_TOCHOMAE_STATION_ID_OUTER,
@@ -120,7 +121,27 @@ export const useBounds = (
 
     if (isOedoLine) {
       if (!oedoCurrentStation) return [[], []];
-      return sliceOedoBounds(stations, stations.indexOf(oedoCurrentStation));
+      const [inboundStops, outboundStops] = sliceOedoBounds(
+        stations,
+        stations.indexOf(oedoCurrentStation)
+      );
+
+      // 都庁前(内回り)は駅配列の先頭に位置するためoutboundが空になるが、
+      // 実際には光が丘方面へ乗車できる。boundCandidatesと違いboundsは
+      // inbound/outboundの2枠しか持たないため、路線カード(CommonCard)などの
+      // 方面ヒントから光が丘が欠落しないよう明示的に補う。
+      // なお外回り出現を基準にしたときはoutboundが「六本木・大門方面」で埋まるため
+      // この補完は働かず、乗車位置別の方面カードとも競合しない。
+      if (isTochomaeStation(oedoCurrentStation) && !outboundStops.length) {
+        const hikarigaokaStation = stations.find(
+          (s) => s.id === TOEI_OEDO_LINE_HIKARIGAOKA_STATION_ID
+        );
+        if (hikarigaokaStation) {
+          return [inboundStops, [hikarigaokaStation]];
+        }
+      }
+
+      return [inboundStops, outboundStops];
     }
 
     if (!pendingTrainType || getIsLocal(pendingTrainType)) {

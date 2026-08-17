@@ -472,6 +472,45 @@ describe('useBounds フック', () => {
       }
     );
 
+    // boundsはinbound/outboundの2枠しか持たないため、都庁前(内回り)基準では
+    // outboundが空になる。路線カードの方面ヒントから光が丘が消えないよう補完する。
+    it('現在駅が都庁前(内回り)のとき、boundsのoutboundに光が丘を補完する', () => {
+      setupOedo();
+      (useCurrentStation as jest.Mock).mockReturnValue({
+        id: 9930101,
+        groupId: TOCHOMAE_GROUP_ID,
+      });
+
+      const { getByTestId } = render(<TestComponent stations={oedoStations} />);
+
+      const [inbound, outbound] = JSON.parse(
+        String(getByTestId('bounds').props.children)
+      ) as { id: number }[][];
+      expect(inbound.map((s) => s.id)).toEqual([
+        9930107, 9930113, 9930121, 9930124, 9930138,
+      ]);
+      expect(outbound.map((s) => s.id)).toEqual([9930138]);
+    });
+
+    // 外回り出現を基準にした場合はoutboundが六本木・大門方面で埋まるため補完しない
+    it('現在駅が都庁前(外回り)のとき、boundsのoutboundは環状部の主要駅になる', () => {
+      setupOedo();
+      (useCurrentStation as jest.Mock).mockReturnValue({
+        id: 9930100,
+        groupId: TOCHOMAE_GROUP_ID,
+      });
+
+      const { getByTestId } = render(<TestComponent stations={oedoStations} />);
+
+      const [inbound, outbound] = JSON.parse(
+        String(getByTestId('bounds').props.children)
+      ) as { id: number }[][];
+      expect(inbound.map((s) => s.id)).toEqual([9930138]);
+      expect(outbound.map((s) => s.id)).toEqual([
+        9930124, 9930121, 9930113, 9930107, 9930101,
+      ]);
+    });
+
     it('出現ごとの候補が同じ方面を指す場合は1枚に畳む', () => {
       setupOedo();
       (useCurrentStation as jest.Mock).mockReturnValue({
