@@ -425,16 +425,30 @@ describe('SelectBoundModal', () => {
       expect(screen.getByText('飯田橋・両国方面')).toBeTruthy();
     });
 
-    // 駅配列の先頭(index 0)を乗車位置とみなすと OUTBOUND カードが握り潰されていた
-    it('外回り側から乗るカードは都庁前(外回り)を乗車駅として確定する', () => {
-      const screen = setup();
-
-      fireEvent.press(screen.getByText('六本木・大門方面'));
+    // カードを押した後に stationState へ渡される更新関数を適用し、確定内容を取り出す
+    const pressCardAndResolveState = (
+      screen: ReturnType<typeof setup>,
+      cardTitle: string
+    ) => {
+      fireEvent.press(screen.getByText(cardTitle));
 
       const updater = setStationStateMock.mock.calls.at(-1)?.[0] as (
         prev: Record<string, unknown>
       ) => { station: { id: number }; selectedBound: { id: number } };
-      const next = updater({});
+      return updater({});
+    };
+
+    it('光が丘方面カードは都庁前(外回り)から光が丘ゆきを確定する', () => {
+      const next = pressCardAndResolveState(setup(), '光が丘方面');
+
+      expect(next.station.id).toBe(9930100);
+      // 環状部を通らず分岐側へ直行するため終点は光が丘
+      expect(next.selectedBound.id).toBe(9930138);
+    });
+
+    // 駅配列の先頭(index 0)を乗車位置とみなすと OUTBOUND カードが握り潰されていた
+    it('外回り側から乗るカードは都庁前(外回り)を乗車駅として確定する', () => {
+      const next = pressCardAndResolveState(setup(), '六本木・大門方面');
 
       expect(next.station.id).toBe(9930100);
       // 外回りで環状部を一周した先の終点は都庁前(内回り)
@@ -442,14 +456,7 @@ describe('SelectBoundModal', () => {
     });
 
     it('内回り側から乗るカードは都庁前(内回り)を乗車駅として確定する', () => {
-      const screen = setup();
-
-      fireEvent.press(screen.getByText('飯田橋・両国方面'));
-
-      const updater = setStationStateMock.mock.calls.at(-1)?.[0] as (
-        prev: Record<string, unknown>
-      ) => { station: { id: number }; selectedBound: { id: number } };
-      const next = updater({});
+      const next = pressCardAndResolveState(setup(), '飯田橋・両国方面');
 
       expect(next.station.id).toBe(9930101);
       expect(next.selectedBound.id).toBe(9930138);
