@@ -130,6 +130,7 @@ describe('useBoundText', () => {
       stations: [],
     });
     mockUseBounds.mockReturnValue({
+      boundCandidates: [],
       directionalStops: [],
       bounds: [[], []],
     });
@@ -151,6 +152,7 @@ describe('useBoundText', () => {
       stations: [shinjuku, shibuya],
     });
     mockUseBounds.mockReturnValue({
+      boundCandidates: [],
       directionalStops: [shibuya],
       bounds: [[shibuya], []],
     });
@@ -171,6 +173,7 @@ describe('useBoundText', () => {
       stations: [shinjuku, shibuya],
     });
     mockUseBounds.mockReturnValue({
+      boundCandidates: [],
       directionalStops: [shibuya],
       bounds: [[shibuya], []],
     });
@@ -204,6 +207,7 @@ describe('useBoundText', () => {
       stations: [shinjuku, shibuya],
     });
     mockUseBounds.mockReturnValue({
+      boundCandidates: [],
       directionalStops: [shibuya],
       bounds: [[shibuya], []],
     });
@@ -221,6 +225,7 @@ describe('useBoundText', () => {
       stations: [shinjuku, shibuya],
     });
     mockUseBounds.mockReturnValue({
+      boundCandidates: [],
       directionalStops: [shinjuku, shibuya],
       bounds: [[shinjuku, shibuya], []],
     });
@@ -274,6 +279,7 @@ describe('useBoundText', () => {
         stations: [],
       });
       mockUseBounds.mockReturnValue({
+        boundCandidates: [],
         directionalStops: [tochomae, hikarigaoka],
         bounds: [[tochomae, hikarigaoka], []],
       });
@@ -293,6 +299,7 @@ describe('useBoundText', () => {
         stations: [],
       });
       mockUseBounds.mockReturnValue({
+        boundCandidates: [],
         directionalStops: [tochomae, hikarigaoka],
         bounds: [[tochomae, hikarigaoka], []],
       });
@@ -323,6 +330,7 @@ describe('useBoundText', () => {
         stations: [],
       });
       mockUseBounds.mockReturnValue({
+        boundCandidates: [],
         directionalStops: [tochomae, hikarigaoka],
         bounds: [[tochomae, hikarigaoka], []],
       });
@@ -354,6 +362,7 @@ describe('useBoundText', () => {
         stations: [],
       });
       mockUseBounds.mockReturnValue({
+        boundCandidates: [],
         directionalStops: [tochomae, hikarigaoka],
         bounds: [[tochomae, hikarigaoka], []],
       });
