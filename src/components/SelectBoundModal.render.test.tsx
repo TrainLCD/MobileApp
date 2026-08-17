@@ -4,8 +4,9 @@ import {
   waitFor,
   within,
 } from '@testing-library/react-native';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
+import { useBounds } from '~/hooks';
 import { pendingLineAtom, selectedLineAtom } from '../store/atoms/line';
 import {
   autoModeEnabledAtom,
@@ -13,7 +14,7 @@ import {
   pendingTrainTypeAtom,
 } from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
-import {
+import stationState, {
   pendingStationAtom,
   pendingStationsAtom,
   stationAtom,
@@ -42,6 +43,20 @@ jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
   useBounds: jest.fn(() => ({
     bounds: [[{ id: 1, groupId: 1 }], [{ id: 2, groupId: 2 }]],
+    boundCandidates: [
+      {
+        key: 'INBOUND',
+        direction: 'INBOUND',
+        boardingStation: null,
+        stops: [{ id: 1, groupId: 1 }],
+      },
+      {
+        key: 'OUTBOUND',
+        direction: 'OUTBOUND',
+        boardingStation: null,
+        stops: [{ id: 2, groupId: 2 }],
+      },
+    ],
   })),
   useGetStationsWithTermination: jest.fn(() => jest.fn()),
   useLoopLine: jest.fn(() => ({ isLoopLine: false })),
@@ -95,9 +110,13 @@ jest.mock('./Button', () => {
 });
 
 jest.mock('./CommonCard', () => ({
-  CommonCard: ({ title }: { title: string }) => {
-    const { Text } = require('react-native');
-    return <Text>{title}</Text>;
+  CommonCard: ({ title, onPress }: { title: string; onPress?: () => void }) => {
+    const { Pressable, Text } = require('react-native');
+    return (
+      <Pressable onPress={onPress}>
+        <Text>{title}</Text>
+      </Pressable>
+    );
   },
 }));
 jest.mock('./Heading', () => ({
@@ -314,6 +333,134 @@ describe('SelectBoundModal', () => {
 
     await waitFor(() => expect(mockSaveRoute).toHaveBeenCalled());
     expect(mockSaveRoute.mock.calls[0][0].direction).toBe('OUTBOUND');
+  });
+
+  // 都庁前は環状部の起終点かつ光が丘方面の分岐点で、駅配列に2回出現する。
+  // 乗車位置がカードごとに変わるため、方向2枠のままだと1枚しか出せなかった
+  describe('大江戸線 都庁前(乗車位置がカードごとに変わる経路)', () => {
+    const TOCHOMAE_GROUP_ID = 1130225;
+    const line = { id: 99301, name: '都営大江戸線' };
+    const buildStation = (id: number, groupId: number, name: string) => ({
+      id,
+      groupId,
+      name,
+      nameRoman: name,
+      line,
+      lines: [line],
+    });
+    const tochomaeInner = buildStation(9930101, TOCHOMAE_GROUP_ID, '都庁前');
+    const iidabashi = buildStation(9930107, 9930107, '飯田橋');
+    const ryogoku = buildStation(9930113, 9930113, '両国');
+    const daimon = buildStation(9930121, 9930121, '大門');
+    const roppongi = buildStation(9930124, 9930124, '六本木');
+    const shinjuku = buildStation(9930128, 1130208, '新宿');
+    const tochomaeOuter = buildStation(9930100, TOCHOMAE_GROUP_ID, '都庁前');
+    const hikarigaoka = buildStation(9930138, 9930138, '光が丘');
+
+    const oedoStations = [
+      tochomaeInner,
+      iidabashi,
+      ryogoku,
+      daimon,
+      roppongi,
+      shinjuku,
+      tochomaeOuter,
+      hikarigaoka,
+    ];
+
+    const setStationStateMock = jest.fn();
+
+    const setup = () => {
+      mockAtomValues({
+        station: tochomaeInner,
+        pendingStation: tochomaeInner,
+        pendingStations: oedoStations,
+        pendingLine: line,
+        selectedLine: line,
+      });
+      (useSetAtom as jest.Mock).mockImplementation((atom: unknown) =>
+        atom === stationState ? setStationStateMock : jest.fn()
+      );
+      (useBounds as jest.Mock).mockReturnValue({
+        bounds: [[hikarigaoka], [roppongi, daimon, ryogoku, iidabashi]],
+        boundCandidates: [
+          {
+            key: '9930100-INBOUND',
+            direction: 'INBOUND',
+            boardingStation: tochomaeOuter,
+            stops: [hikarigaoka],
+          },
+          {
+            key: '9930100-OUTBOUND',
+            direction: 'OUTBOUND',
+            boardingStation: tochomaeOuter,
+            stops: [roppongi, daimon, ryogoku, iidabashi, tochomaeInner],
+          },
+          {
+            key: '9930101-INBOUND',
+            direction: 'INBOUND',
+            boardingStation: tochomaeInner,
+            stops: [iidabashi, ryogoku, daimon, roppongi, hikarigaoka],
+          },
+        ],
+      });
+
+      return render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+    };
+
+    it('乗車位置ごとに3方向のカードを描画する', () => {
+      const screen = setup();
+
+      expect(screen.getByText('光が丘方面')).toBeTruthy();
+      expect(screen.getByText('六本木・大門方面')).toBeTruthy();
+      expect(screen.getByText('飯田橋・両国方面')).toBeTruthy();
+    });
+
+    // カードを押した後に stationState へ渡される更新関数を適用し、確定内容を取り出す
+    const pressCardAndResolveState = (
+      screen: ReturnType<typeof setup>,
+      cardTitle: string
+    ) => {
+      fireEvent.press(screen.getByText(cardTitle));
+
+      const updater = setStationStateMock.mock.calls.at(-1)?.[0] as (
+        prev: Record<string, unknown>
+      ) => { station: { id: number }; selectedBound: { id: number } };
+      return updater({});
+    };
+
+    it('光が丘方面カードは都庁前(外回り)から光が丘ゆきを確定する', () => {
+      const next = pressCardAndResolveState(setup(), '光が丘方面');
+
+      expect(next.station.id).toBe(9930100);
+      // 環状部を通らず分岐側へ直行するため終点は光が丘
+      expect(next.selectedBound.id).toBe(9930138);
+    });
+
+    // 駅配列の先頭(index 0)を乗車位置とみなすと OUTBOUND カードが握り潰されていた
+    it('外回り側から乗るカードは都庁前(外回り)を乗車駅として確定する', () => {
+      const next = pressCardAndResolveState(setup(), '六本木・大門方面');
+
+      expect(next.station.id).toBe(9930100);
+      // 外回りで環状部を一周した先の終点は都庁前(内回り)
+      expect(next.selectedBound.id).toBe(9930101);
+    });
+
+    it('内回り側から乗るカードは都庁前(内回り)を乗車駅として確定する', () => {
+      const next = pressCardAndResolveState(setup(), '飯田橋・両国方面');
+
+      expect(next.station.id).toBe(9930101);
+      expect(next.selectedBound.id).toBe(9930138);
+    });
   });
 
   describe('始発・終着を保存するかの選択', () => {
