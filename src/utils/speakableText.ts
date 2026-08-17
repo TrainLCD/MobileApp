@@ -5,7 +5,7 @@ import getStringBytes from './stringBytes';
 
 // TTS テンプレートが生成する SSML 断片を、読み上げエンジンへ渡せるプレーン
 // テキストへ変換する。端末内蔵 TTS (expo-speech) も iOS のリモート TTS
-// (gpt-4o-mini-tts) も SSML を解釈せずタグをそのまま読み上げてしまうため、
+// (Google Cloud TTS) も SSML を解釈せずタグをそのまま読み上げてしまうため、
 // どちらの経路でもこの変換を通す。
 
 /**

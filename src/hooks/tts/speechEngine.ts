@@ -1,5 +1,5 @@
 // 自動アナウンスの読み上げ手段を差し替えられるようにするための共通インターフェース。
-// Worker 経由の gpt-4o-mini-tts (useRemoteSpeechEngine) と端末内蔵 TTS
+// Worker 経由の Google Cloud TTS (useRemoteSpeechEngine) と端末内蔵 TTS
 // (useNativeSpeechEngine) のどちらを使うかは Remote Config
 // (remote_tts_enabled_ios / remote_tts_enabled_android) が決め、リモートが
 // 使えないときは useTTS がその回だけ内蔵 TTS へフォールバックする。

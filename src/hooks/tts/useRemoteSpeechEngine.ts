@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
-  REMOTE_TTS_INSTRUCTIONS_EN,
-  REMOTE_TTS_INSTRUCTIONS_JA,
   REMOTE_TTS_MAX_INPUT_BYTES,
-  REMOTE_TTS_MODEL,
-  REMOTE_TTS_VOICE,
+  REMOTE_TTS_VOICE_EN,
+  REMOTE_TTS_VOICE_JA,
 } from '../../constants';
 import { getSessionToken } from '../../lib/session';
 import { workerUrl } from '../../lib/workerApi';
@@ -26,7 +24,7 @@ import type {
 } from './speechEngine';
 
 /**
- * Worker の /tts 経由で gpt-4o-mini-tts に合成させ、expo-audio で再生するエンジン。
+ * Worker の /tts 経由で Google Cloud TTS に合成させ、expo-audio で再生するエンジン。
  * 使用するかどうかは Remote Config (remote_tts_enabled_ios /
  * remote_tts_enabled_android) が決める。合成に失敗した場合は onUnavailable を呼び、
  * 呼び出し側 (useTTS) がその回だけ端末内蔵 TTS へフォールバックする。
@@ -180,11 +178,8 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
             textEn,
             apiUrl: workerUrl('/tts'),
             idToken,
-            model: REMOTE_TTS_MODEL,
-            jaVoiceName: REMOTE_TTS_VOICE,
-            enVoiceName: REMOTE_TTS_VOICE,
-            instructionsJa: REMOTE_TTS_INSTRUCTIONS_JA,
-            instructionsEn: REMOTE_TTS_INSTRUCTIONS_EN,
+            jaVoiceName: REMOTE_TTS_VOICE_JA,
+            enVoiceName: REMOTE_TTS_VOICE_EN,
           });
 
           if (isStaleRun()) {
