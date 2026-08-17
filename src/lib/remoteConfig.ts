@@ -27,7 +27,7 @@ export const REMOTE_CONFIG_KEYS = {
   // 停止・再開できる。未配信・不正値のときはフォールバック(true=利用可能)。
   TTS_ENABLED_IOS: 'tts_enabled_ios',
   TTS_ENABLED_ANDROID: 'tts_enabled_android',
-  // リモートTTS(Worker の /tts 経由で OpenAI gpt-4o-mini-tts を利用)を使うかどうかの
+  // リモートTTS(Worker の /tts 経由で Google Cloud TTS を利用)を使うかどうかの
   // プラットフォーム別スイッチ。tts_enabled_* が「TTS 機能自体を提供するか」を決めるのに対し、
   // こちらは「有効な TTS をどのエンジンで読み上げるか」を切り替える。false のときは
   // 端末内蔵 TTS(expo-speech)で読み上げる。
@@ -261,7 +261,7 @@ export const isTTSFeatureEnabled = (): boolean => {
   }
 };
 
-// 自動アナウンスをリモートTTS(Worker の /tts 経由で OpenAI gpt-4o-mini-tts を利用)で
+// 自動アナウンスをリモートTTS(Worker の /tts 経由で Google Cloud TTS を利用)で
 // 読み上げるかどうかを同期的に取得する。false のときは端末内蔵 TTS(expo-speech)で読み上げる。
 // これは TTS 機能自体のキルスイッチ(isTTSFeatureEnabled)とは独立しており、TTS を提供したまま
 // エンジンだけを差し替える用途に使う。

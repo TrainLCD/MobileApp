@@ -221,7 +221,7 @@ export const useTTS = (): void => {
         }
 
         // 読み上げ直前に Remote Config を引き、リモート合成(Worker 経由の
-        // gpt-4o-mini-tts)と端末内蔵 TTS のどちらで読み上げるかを決める。起動後に
+        // Google Cloud TTS)と端末内蔵 TTS のどちらで読み上げるかを決める。起動後に
         // 設定が届いた場合も次の放送から反映される。
         if (!isRemoteTTSEnabled()) {
           nativeEngine.speak(request, { onSpeechStarted, onSettled });

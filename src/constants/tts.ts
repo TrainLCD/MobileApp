@@ -1,27 +1,17 @@
-// リモート TTS (Worker の /tts 経由で OpenAI gpt-4o-mini-tts を利用) の既定値。
+// リモート TTS (Worker の /tts 経由で Google Cloud Text-to-Speech を利用) の既定値。
 // リモート合成を使うかどうかは Remote Config (remote_tts_enabled_ios /
 // remote_tts_enabled_android) が決めるため、端末内蔵 TTS (expo-speech) で読み上げる
 // 構成では参照されない。
 
-// 合成に使うモデル。Worker 側が別モデルへ切り替える場合もリクエストで明示するため、
-// アプリ側の期待するモデルをここで固定する。
-export const REMOTE_TTS_MODEL = 'gpt-4o-mini-tts';
+// 車内放送に使う女性声。Cloud TTS のボイス名は `<言語>-<地域>-<系統>-<記号>` で
+// ロケールを含むため、多言語共通のプリセットは無く日英で別々に指定する。系統は
+// 端末内蔵 TTS と同水準の Standard で揃える (Studio・Chirp3-HD 等は単価が桁違いで
+// Worker 側の許可リストにも入っていない)。
+export const REMOTE_TTS_VOICE_JA = 'ja-JP-Standard-B';
+export const REMOTE_TTS_VOICE_EN = 'en-US-Standard-G';
 
-// 車内放送に使う女性声。gpt-4o-mini-tts の音声は多言語対応のため、日英で同一の
-// 声を指定して一人のアナウンサーが読み上げている印象を保つ。
-export const REMOTE_TTS_VOICE = 'nova';
-
-// gpt-4o-mini-tts は SSML を解釈せず、代わりに instructions で読み方を指示する。
-// 駅名・路線名の固有名詞が続くため、速度と間の取り方を明示して聞き取りやすくする。
-export const REMOTE_TTS_INSTRUCTIONS_JA =
-  '鉄道の車内自動放送のアナウンサーとして、落ち着いた丁寧な女性の声で読み上げてください。' +
-  '一定の速さを保ち、句読点では短く間を取ります。駅名や路線名は一語ずつ明瞭に発音し、' +
-  '感情を込めすぎず、事務的で聞き取りやすい調子にしてください。';
-
-export const REMOTE_TTS_INSTRUCTIONS_EN =
-  'Read this as an automated train announcement in a calm, polite female voice. ' +
-  'Keep a steady pace, pause briefly at commas, and pronounce station and line names ' +
-  'clearly. Stay neutral and business-like rather than expressive.';
+// 読み上げ速度・声の高さは Worker の TTS_SPEED / TTS_PITCH で決まる。Standard 系は
+// 読み方のプロンプト指示を受け付けないため、アプリから調整する手段は無い。
 
 // Worker(/tts) が受け付ける読み上げテキストの上限(UTF-8 バイト)。超過すると
 // 400 で弾かれて無用なフォールバックを招くため、送信前に切り詰める。

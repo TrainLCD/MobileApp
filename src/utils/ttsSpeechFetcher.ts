@@ -15,21 +15,18 @@ const SAFE_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 export const MAX_FETCH_CACHE_SIZE = 50;
 
 export interface FetchSpeechOptions {
-  // 読み上げるプレーンテキスト。gpt-4o-mini-tts は SSML を解釈せずタグを
-  // そのまま読み上げてしまうため、呼び出し側で変換済みのものを渡すこと。
-  // 合成は文字数課金のため、ユーザーが無効にしている言語は空/未指定にして
-  // 送信対象から外す（両方空なら何も要求しない）。
+  // 読み上げるプレーンテキスト。Cloud TTS へは input.text として渡るため SSML は
+  // 解釈されず、タグはそのまま読み上げられてしまう。呼び出し側で変換済みのものを
+  // 渡すこと。合成は文字数課金のため、ユーザーが無効にしている言語は空/未指定に
+  // して送信対象から外す（両方空なら何も要求しない）。
   textJa?: string;
   textEn?: string;
   apiUrl: string;
   idToken: string;
-  model?: string;
+  // Cloud TTS のボイス名（例: ja-JP-Standard-B）。ロケールを含むため日英で別々に
+  // 指定する。読み上げ速度・声の高さは Worker 側の設定で決まる。
   jaVoiceName?: string;
   enVoiceName?: string;
-  // 読み方の指示 (gpt-4o-mini-tts の instructions)。SSML の代替として声色・
-  // 速度・間の取り方を指定する。
-  instructionsJa?: string;
-  instructionsEn?: string;
   timeoutMs?: number;
 }
 
@@ -85,10 +82,10 @@ const wrapPcm16LeToWav = (
   return out;
 };
 
-// MIME が欠落・不明なときに先頭バイトから形式を判定する。gpt-4o-mini-tts の
-// 既定応答は MP3 で、生 PCM が返るのは response_format を明示した場合に限られる
-// ため、判定できないバイト列を無条件に PCM 扱いすると MP3 を WAV ヘッダーで
-// 包んで再生不能にしてしまう。
+// MIME が欠落・不明なときに先頭バイトから形式を判定する。Cloud TTS の応答は
+// MP3（既定）か RIFF ヘッダー付きの WAV(LINEAR16) で生 PCM は返らないため、
+// 判定できないバイト列を無条件に PCM 扱いすると MP3 を WAV ヘッダーで包んで
+// 再生不能にしてしまう。
 const sniffAudioFormat = (bytes: Uint8Array): 'mp3' | 'wav' | 'unknown' => {
   // "RIFF" .... "WAVE"
   if (
@@ -148,7 +145,7 @@ const normalizeAudioForFile = (
   }
 
   // MIME 不明時は中身から判定する。どちらとも判定できなければ生 PCM とみなして
-  // WAV 化する（旧 API の既定挙動に合わせたフォールバック）。
+  // WAV 化する（生 PCM を返し得た旧合成エンジン向けに残している保険）。
   const sniffed = sniffAudioFormat(bytes);
   if (sniffed !== 'unknown') {
     return { bytes, ext: sniffed };
@@ -207,7 +204,6 @@ const stripMacrons = (text: string): string =>
 const buildCacheKey = (opts: {
   textJa: string;
   textEn: string;
-  model?: string;
   jaVoiceName?: string;
   enVoiceName?: string;
 }): string =>
@@ -216,7 +212,6 @@ const buildCacheKey = (opts: {
     // 日本語のみ・英語のみ・両方のリクエストが別エントリとして区別される
     opts.textJa,
     opts.textEn,
-    normalizeOptional(opts.model),
     normalizeOptional(opts.jaVoiceName),
     normalizeOptional(opts.enVoiceName),
   ].join('\0');
@@ -236,11 +231,8 @@ export const fetchSpeechAudio = async (
     textEn,
     apiUrl,
     idToken,
-    model,
     jaVoiceName,
     enVoiceName,
-    instructionsJa,
-    instructionsEn,
     timeoutMs = TTS_FETCH_TIMEOUT_MS,
   } = options;
   // 0・負値・NaN・Infinity が明示的に渡された場合もタイムアウト保護が
@@ -261,14 +253,12 @@ export const fetchSpeechAudio = async (
     return null;
   }
 
-  const normalizedModel = normalizeOptional(model);
   const normalizedJaVoiceName = normalizeOptional(jaVoiceName);
   const normalizedEnVoiceName = normalizeOptional(enVoiceName);
 
   const cacheKey = buildCacheKey({
     textJa: trimmedTextJa,
     textEn: sanitizedTextEn,
-    model: normalizedModel,
     jaVoiceName: normalizedJaVoiceName,
     enVoiceName: normalizedEnVoiceName,
   });
@@ -276,9 +266,6 @@ export const fetchSpeechAudio = async (
   if (cached) {
     return cached;
   }
-
-  const normalizedInstructionsJa = normalizeOptional(instructionsJa);
-  const normalizedInstructionsEn = normalizeOptional(instructionsEn);
 
   // 要求しない言語のフィールドは送らない。Worker 側は届いた言語だけを合成する。
   const reqBody = {
@@ -289,9 +276,6 @@ export const fetchSpeechAudio = async (
             ...(normalizedJaVoiceName
               ? { jaVoiceName: normalizedJaVoiceName }
               : {}),
-            ...(normalizedInstructionsJa
-              ? { instructionsJa: normalizedInstructionsJa }
-              : {}),
           }
         : {}),
       ...(wantsEn
@@ -300,12 +284,8 @@ export const fetchSpeechAudio = async (
             ...(normalizedEnVoiceName
               ? { enVoiceName: normalizedEnVoiceName }
               : {}),
-            ...(normalizedInstructionsEn
-              ? { instructionsEn: normalizedInstructionsEn }
-              : {}),
           }
         : {}),
-      ...(normalizedModel ? { model: normalizedModel } : {}),
     },
   };
 
