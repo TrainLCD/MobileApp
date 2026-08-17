@@ -62,8 +62,8 @@ describe('fetchSpeechAudio', () => {
   });
 
   it('プレーンテキストをそのまま送信する（SSML でラップしない）', async () => {
-    // gpt-4o-mini-tts は SSML を解釈せずタグをそのまま読み上げてしまうため、
-    // 呼び出し側が変換済みのプレーンテキストを送る契約になっている
+    // Cloud TTS は input.text に渡された SSML を解釈せずタグをそのまま読み上げて
+    // しまうため、呼び出し側が変換済みのプレーンテキストを送る契約になっている
     mockFetch.mockResolvedValue(
       okResponse({
         id: 'tts-123',
@@ -85,7 +85,8 @@ describe('fetchSpeechAudio', () => {
     expect(body.data.ssmlEn).toBeUndefined();
   });
 
-  it('モデル・音声・読み方指示をリクエストに含める', async () => {
+  it('日英それぞれの音声名をリクエストに含める', async () => {
+    // Cloud TTS のボイス名はロケールを含むため、日英で同じ名前は使えない
     mockFetch.mockResolvedValue(
       okResponse({
         id: 'tts-130',
@@ -96,23 +97,22 @@ describe('fetchSpeechAudio', () => {
 
     await fetchSpeechAudio({
       ...defaultOptions,
-      model: 'gpt-4o-mini-tts',
-      jaVoiceName: 'nova',
-      enVoiceName: 'nova',
-      instructionsJa: '落ち着いた女性の声で',
-      instructionsEn: 'calm female voice',
+      jaVoiceName: 'ja-JP-Standard-B',
+      enVoiceName: 'en-US-Standard-G',
     });
 
     const body = parseRequestBody();
     expect(body.data).toEqual(
       expect.objectContaining({
-        model: 'gpt-4o-mini-tts',
-        jaVoiceName: 'nova',
-        enVoiceName: 'nova',
-        instructionsJa: '落ち着いた女性の声で',
-        instructionsEn: 'calm female voice',
+        jaVoiceName: 'ja-JP-Standard-B',
+        enVoiceName: 'en-US-Standard-G',
       })
     );
+    // Standard 系にはモデル指定も読み方のプロンプト指示も無く、Worker は
+    // 受け取っても無視するため送らない
+    expect(body.data).not.toHaveProperty('model');
+    expect(body.data).not.toHaveProperty('instructionsJa');
+    expect(body.data).not.toHaveProperty('instructionsEn');
   });
 
   it('日本語のみ要求した場合は英語を送らず英語パスも返さない', async () => {
@@ -305,8 +305,14 @@ describe('fetchSpeechAudio', () => {
       })
     );
 
-    await fetchSpeechAudio({ ...defaultOptions, jaVoiceName: 'nova' });
-    await fetchSpeechAudio({ ...defaultOptions, jaVoiceName: 'shimmer' });
+    await fetchSpeechAudio({
+      ...defaultOptions,
+      jaVoiceName: 'ja-JP-Standard-B',
+    });
+    await fetchSpeechAudio({
+      ...defaultOptions,
+      jaVoiceName: 'ja-JP-Standard-C',
+    });
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
@@ -430,7 +436,7 @@ describe('fetchSpeechAudio', () => {
   });
 
   it('MIME 不明でも中身が MP3 なら MP3 として保存する', async () => {
-    // gpt-4o-mini-tts の既定応答は MP3。MIME 欠落時に PCM 扱いして WAV ヘッダーを
+    // Cloud TTS の既定応答は MP3。MIME 欠落時に PCM 扱いして WAV ヘッダーを
     // 被せると再生できなくなるため、先頭バイトで判定する
     // 'SUQz...' = "ID3" タグ、'/+AA' = 0xFF 0xE0 のフレーム同期
     mockFetch.mockResolvedValue(

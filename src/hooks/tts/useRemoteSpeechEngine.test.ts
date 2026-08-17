@@ -1,10 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
-import {
-  REMOTE_TTS_INSTRUCTIONS_EN,
-  REMOTE_TTS_INSTRUCTIONS_JA,
-  REMOTE_TTS_MODEL,
-  REMOTE_TTS_VOICE,
-} from '~/constants';
+import { REMOTE_TTS_VOICE_EN, REMOTE_TTS_VOICE_JA } from '~/constants';
 import type { SpeechEngineRequest } from './speechEngine';
 import { useRemoteSpeechEngine } from './useRemoteSpeechEngine';
 
@@ -75,7 +70,7 @@ describe('useRemoteSpeechEngine', () => {
     jest.clearAllMocks();
   });
 
-  it('SSML をプレーンテキストへ変換し、モデル・女性声・読み方指示を添えて要求する', async () => {
+  it('SSML をプレーンテキストへ変換し、日英それぞれの女性声を添えて要求する', async () => {
     const { result } = renderEngine();
 
     result.current.speak(defaultRequest, { onSettled: jest.fn() });
@@ -88,11 +83,9 @@ describe('useRemoteSpeechEngine', () => {
         textEn: 'The next station is Osaki, J Y 24.',
         apiUrl: 'https://worker.example.com/tts',
         idToken: 'test-token',
-        model: REMOTE_TTS_MODEL,
-        jaVoiceName: REMOTE_TTS_VOICE,
-        enVoiceName: REMOTE_TTS_VOICE,
-        instructionsJa: REMOTE_TTS_INSTRUCTIONS_JA,
-        instructionsEn: REMOTE_TTS_INSTRUCTIONS_EN,
+        // Cloud TTS のボイス名はロケールを含むため日英で別々に指定する
+        jaVoiceName: REMOTE_TTS_VOICE_JA,
+        enVoiceName: REMOTE_TTS_VOICE_EN,
       })
     );
   });
