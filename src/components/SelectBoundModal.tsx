@@ -2,7 +2,14 @@ import { CommonActions, useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
@@ -15,6 +22,7 @@ import {
   usePresetStops,
   useSavedRoutes,
 } from '~/hooks';
+import type { BoundCandidate } from '~/hooks/useBounds';
 import { directionToDirectionName, type LineDirection } from '~/models/Bound';
 import type {
   SavedRoute,
@@ -119,6 +127,11 @@ type RenderButtonProps = {
   boundStations: Station[];
   direction: LineDirection;
   loading: boolean;
+  /**
+   * 大江戸線都庁前のように同一駅が経路内へ複数回現れる場合、カードごとに
+   * 乗車位置が変わるため明示的に受け取る。指定がなければ effectiveStation を使う。
+   */
+  boardingStation?: Station | null;
 };
 
 type Props = {
@@ -175,6 +188,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   const { isLoopLine } = useLoopLine(stations, false);
   const {
     bounds: [inboundStations, outboundStations],
+    boundCandidates,
   } = useBounds(stations);
   const _getTerminatedStations = useGetStationsWithTermination();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
@@ -290,19 +304,22 @@ export const SelectBoundModal: React.FC<Props> = ({
       selectedStation: Station,
       direction: LineDirection,
       terminateBySelectedStation = false,
-      stopsOverride?: Station[]
+      stopsOverride?: Station[],
+      boardingStation?: Station | null
     ) => {
       if (isTransitioningRef.current) return;
       isTransitioningRef.current = true;
       setIsTransitioning(true);
 
+      const departureStation = boardingStation ?? effectiveStation;
+
       let stops = stopsOverride ?? stations;
-      if (!stopsOverride && terminateBySelectedStation && effectiveStation) {
+      if (!stopsOverride && terminateBySelectedStation && departureStation) {
         const destIdx = stations.findIndex(
           (s) => s.groupId === selectedStation.groupId
         );
         const currentIdx = stations.findIndex(
-          (s) => s.groupId === effectiveStation.groupId
+          (s) => s.groupId === departureStation.groupId
         );
         if (destIdx !== -1 && currentIdx !== -1) {
           stops =
@@ -319,8 +336,8 @@ export const SelectBoundModal: React.FC<Props> = ({
       const departureFallback =
         effectiveDirection === 'INBOUND' ? stops[0] : stops.at(-1);
       const startStation = stopsOverride
-        ? (nearestPresetStation ?? departureFallback ?? effectiveStation)
-        : effectiveStation;
+        ? (nearestPresetStation ?? departureFallback ?? departureStation)
+        : departureStation;
 
       setLineState((prev) => ({
         ...prev,
@@ -423,7 +440,12 @@ export const SelectBoundModal: React.FC<Props> = ({
   );
 
   const renderButton = useCallback(
-    ({ boundStations, direction, loading }: RenderButtonProps) => {
+    ({
+      boundStations,
+      direction,
+      loading,
+      boardingStation,
+    }: RenderButtonProps) => {
       if (loading) {
         return (
           <SkeletonPlaceholder borderRadius={4} speed={1500}>
@@ -563,18 +585,30 @@ export const SelectBoundModal: React.FC<Props> = ({
         return <></>;
       }
 
+      // 同一駅が複数回現れる経路ではカードごとに乗車位置が異なるため、
+      // 端の駅から進めない方向を潰す判定もカード固有の位置で行う
+      const boardingIndex = boardingStation
+        ? stations.findIndex((s) => s.id === boardingStation.id)
+        : currentIndex;
+
       if (
         !boundStations.length ||
         (direction === 'INBOUND' &&
           !isLoopLine &&
-          currentIndex === stations.length - 1) ||
-        (direction === 'OUTBOUND' && !isLoopLine && !currentIndex)
+          boardingIndex === stations.length - 1) ||
+        (direction === 'OUTBOUND' && !isLoopLine && !boardingIndex)
       ) {
         return <></>;
       }
 
       const boundSelectOnPress = () =>
-        handleBoundSelected(boundStations[0], direction);
+        handleBoundSelected(
+          boundStations[0],
+          direction,
+          false,
+          undefined,
+          boardingStation
+        );
 
       const title = isLoopLine
         ? loopLineDirectionText(direction)
@@ -612,6 +646,33 @@ export const SelectBoundModal: React.FC<Props> = ({
       presetStops,
     ]
   );
+
+  // 行き先で経路を絞っているときは方向ごとに1枚だけ描画する既存ロジックに従う。
+  // 絞り込みがない通常時のみ、乗車位置別のカード候補(大江戸線都庁前で3方向になる)を使う。
+  const renderableBoundCards = useMemo<BoundCandidate[]>(() => {
+    if (applicableWantedDestination || targetDestination) {
+      return (
+        [
+          { direction: 'INBOUND', stops: inboundStations },
+          { direction: 'OUTBOUND', stops: outboundStations },
+        ] as const
+      )
+        .filter(({ stops }) => stops.length)
+        .map(({ direction, stops }) => ({
+          key: direction,
+          direction,
+          stops,
+          boardingStation: null,
+        }));
+    }
+    return boundCandidates;
+  }, [
+    applicableWantedDestination,
+    targetDestination,
+    inboundStations,
+    outboundStations,
+    boundCandidates,
+  ]);
 
   const toggleAutoModeEnabled = useCallback(() => {
     setNavigationState((prev) => ({
@@ -883,20 +944,16 @@ export const SelectBoundModal: React.FC<Props> = ({
                 isTransitioning && styles.boundCardsDisabled,
               ]}
             >
-              {inboundStations.length
-                ? renderButton({
-                    boundStations: inboundStations,
-                    direction: 'INBOUND',
+              {renderableBoundCards.map((card) => (
+                <Fragment key={card.key}>
+                  {renderButton({
+                    boundStations: card.stops,
+                    direction: card.direction,
                     loading,
-                  })
-                : null}
-              {outboundStations.length
-                ? renderButton({
-                    boundStations: outboundStations,
-                    direction: 'OUTBOUND',
-                    loading,
-                  })
-                : null}
+                    boardingStation: card.boardingStation,
+                  })}
+                </Fragment>
+              ))}
             </View>
 
             <View style={styles.stopsContainer}>
