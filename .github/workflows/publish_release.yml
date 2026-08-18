@@ -1,0 +1,79 @@
+# 手動実行でリリースタグを打ち、GitHub Release を公開するワークフロー。
+# 通常は publish-release / finalize-release スキルをローカルの gh CLI で走らせるが、
+# タグ push や Release 作成が使えない実行環境からリリースを仕上げるための経路として用意している。
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without leading v (e.g. 10.13.1)"
+        required: true
+        type: string
+      target:
+        description: "Branch or SHA to tag"
+        required: false
+        default: "master"
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  TZ: "Asia/Tokyo"
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target }}
+          fetch-depth: 0
+
+      # 破壊的操作の前に、版数・タグ重複・対象 SHA をまとめて検証する。
+      - name: Validate inputs and resolve SHA
+        id: resolve
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::version は MAJOR.MINOR.PATCH 形式で指定してください: $VERSION"
+            exit 1
+          fi
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "::error::対象コミットの package.json version ($PKG_VERSION) が入力 ($VERSION) と一致しません"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "::error::タグ v$VERSION は既に存在します"
+            exit 1
+          fi
+          SHA="$(git rev-parse HEAD)"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "対象 SHA: $SHA / version: v$VERSION"
+
+      - name: Create and push annotated tag
+        env:
+          VERSION: ${{ inputs.version }}
+          SHA: ${{ steps.resolve.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "v$VERSION" "$SHA"
+          git push origin "v$VERSION"
+
+      # タグは前ステップで作成済みのため --target は指定しない（既存タグが優先される）。
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --latest
