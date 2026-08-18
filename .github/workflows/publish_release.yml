@@ -31,11 +31,14 @@ jobs:
           ref: ${{ inputs.target }}
           fetch-depth: 0
 
-      # 破壊的操作の前に、版数・タグ重複・対象 SHA をまとめて検証する。
+      # 破壊的操作の前に、版数・タグ・Release の状態をまとめて検証し、実行モードを決める。
+      # タグ push 後に Release 作成だけが失敗した場合に再実行で復旧できるよう、
+      # 「タグあり・Release なし」は中断せず Release のみ作成する経路へ倒す。
       - name: Validate inputs and resolve SHA
         id: resolve
         env:
           VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
@@ -47,15 +50,45 @@ jobs:
             echo "::error::対象コミットの package.json version ($PKG_VERSION) が入力 ($VERSION) と一致しません"
             exit 1
           fi
-          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
-            echo "::error::タグ v$VERSION は既に存在します"
+          SHA="$(git rev-parse HEAD)"
+
+          git fetch origin --tags --force --quiet
+          TAG_EXISTS=false
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            TAG_EXISTS=true
+          fi
+          RELEASE_EXISTS=false
+          if gh release view "v$VERSION" --json tagName >/dev/null 2>&1; then
+            RELEASE_EXISTS=true
+          fi
+
+          if [ "$TAG_EXISTS" = true ] && [ "$RELEASE_EXISTS" = true ]; then
+            echo "::error::v$VERSION はタグ・Release ともに公開済みです"
             exit 1
           fi
-          SHA="$(git rev-parse HEAD)"
+          if [ "$TAG_EXISTS" = false ] && [ "$RELEASE_EXISTS" = true ]; then
+            echo "::error::タグ v$VERSION が無いのに Release だけ存在します。手動確認が必要です"
+            exit 1
+          fi
+
+          if [ "$TAG_EXISTS" = true ]; then
+            # 前回実行でタグだけ残ったケース。別コミットを指すタグは付け替えず中断する。
+            TAG_SHA="$(git rev-list -n 1 "refs/tags/v$VERSION")"
+            if [ "$TAG_SHA" != "$SHA" ]; then
+              echo "::error::既存タグ v$VERSION は $TAG_SHA を指しており、対象 $SHA と異なります"
+              exit 1
+            fi
+            MODE=release_only
+          else
+            MODE=full
+          fi
+
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
-          echo "対象 SHA: $SHA / version: v$VERSION"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "対象 SHA: $SHA / version: v$VERSION / mode: $MODE"
 
       - name: Create and push annotated tag
+        if: steps.resolve.outputs.mode == 'full'
         env:
           VERSION: ${{ inputs.version }}
           SHA: ${{ steps.resolve.outputs.sha }}
