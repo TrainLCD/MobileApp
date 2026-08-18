@@ -9,11 +9,10 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "strict": true,
-    "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["${configDir}/src/*"]
     },
-    "typeRoots": ["./src/@types", "./node_modules/@types"]
+    "types": ["jest", "node"]
   },
   "extends": "expo/tsconfig.base"
 }

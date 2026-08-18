@@ -13,7 +13,7 @@ const localStyles = StyleSheet.create({
     height: '100%',
   },
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
 });
 

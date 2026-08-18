@@ -371,6 +371,98 @@ describe('useDestinationAgent', () => {
     }
   });
 
+  it('同じ stationId の重複提案は最初の 1 件だけ残す', async () => {
+    mockStreamResponse([
+      doneEvent({
+        reply: 'ok',
+        suggestions: [
+          {
+            stationId: 1131301,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道線'],
+          },
+          {
+            stationId: 1131301,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道線'],
+          },
+          {
+            stationId: 1121301,
+            stationGroupId: 1121301,
+            name: '鬼怒川温泉',
+            nameRoman: 'Kinugawa-Onsen',
+            lineNames: ['東武鬼怒川線'],
+          },
+        ],
+        refused: false,
+      }),
+    ]);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([
+      { role: 'user', content: '温泉のある観光地に行きたい' },
+    ]);
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      // 提案順(モデルの優先順)は保つ
+      expect(res.data.suggestions.map((s) => s.stationId)).toEqual([
+        1131301, 1121301,
+      ]);
+    }
+  });
+
+  it('stationGroupId が同じでも stationId が違う提案は落とさない', async () => {
+    // stationGroupId は untrusted(サーバ検証は stationId 突合のみ)なので、
+    // 取得前に落とすと別駅だった場合に復元できなくなる。同一物理駅の間引きは
+    // 再取得後に API 由来の groupId で行う
+    mockStreamResponse([
+      doneEvent({
+        reply: 'ok',
+        suggestions: [
+          {
+            stationId: 1131301,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道線'],
+          },
+          {
+            stationId: 1132401,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['東海道本線'],
+          },
+          {
+            stationId: 1133101,
+            stationGroupId: 1131301,
+            name: '熱海',
+            nameRoman: 'Atami',
+            lineNames: ['伊東線'],
+          },
+        ],
+        refused: false,
+      }),
+    ]);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([
+      { role: 'user', content: '温泉のある観光地に行きたい' },
+    ]);
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.data.suggestions.map((s) => s.stationId)).toEqual([
+        1131301, 1132401, 1133101,
+      ]);
+    }
+  });
+
   it('429 は rateLimited を返す', async () => {
     mockErrorResponse(429);
 

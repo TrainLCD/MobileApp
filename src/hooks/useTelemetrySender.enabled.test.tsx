@@ -26,6 +26,7 @@ jest.mock('expo-battery', () => ({
     UNPLUGGED: 1,
     CHARGING: 2,
     FULL: 3,
+    NOT_CHARGING: 4,
   },
   getBatteryLevelAsync: jest.fn(),
   getBatteryStateAsync: jest.fn(),
@@ -404,6 +405,27 @@ describe('useTelemetrySender', () => {
         expect(locationCall).toBeDefined();
         const body = JSON.parse(locationCall[1].body);
         expect(body.variables.input.batteryLevel).toBeNull();
+      },
+      { timeout: 2000 }
+    );
+  });
+
+  test('should map NOT_CHARGING battery state to unknown', async () => {
+    mockGetBatteryStateAsync.mockResolvedValue(
+      Battery.BatteryState.NOT_CHARGING
+    );
+
+    renderHook(
+      () => useTelemetrySender(true, 'https://example.com', 'test-token'),
+      { wrapper }
+    );
+
+    await waitFor(
+      () => {
+        const locationCall = findGraphQLCall('sendLocation');
+        expect(locationCall).toBeDefined();
+        const body = JSON.parse(locationCall[1].body);
+        expect(body.variables.input.batteryState).toBe('unknown');
       },
       { timeout: 2000 }
     );

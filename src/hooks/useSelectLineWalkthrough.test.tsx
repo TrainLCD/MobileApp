@@ -62,12 +62,16 @@ describe('useSelectLineWalkthrough', () => {
       });
     });
 
+    // NowHeader のカードは上辺が直角・下辺のみ角丸なので、切り抜きも同じ形になる
     expect(mockSetSpotlightArea).toHaveBeenCalledWith({
       x: 10,
       y: 20,
       width: 300,
       height: 50,
-      borderRadius: 16,
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
+      borderBottomLeftRadius: 16,
+      borderBottomRightRadius: 16,
     });
   });
 

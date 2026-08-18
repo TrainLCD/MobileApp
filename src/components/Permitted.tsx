@@ -14,7 +14,7 @@ import React, {
 import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
-import ViewShot from 'react-native-view-shot';
+import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
 import { showDialog } from '~/utils/dialogPresentation';
@@ -153,7 +153,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     handleTrainTypeModalSelect,
   } = useTrainTypeModal();
 
-  const viewShotRef = useRef<ViewShot>(null);
+  const viewShotRef = useRef<ViewShotRef>(null);
 
   const styles = StyleSheet.create({
     container: { width: '100%', height: '100%' },

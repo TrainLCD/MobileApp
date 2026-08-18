@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     backgroundColor: PANEL_BG,
   },
   chrome: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   content: {
     paddingHorizontal: 16,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   collapsedOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     paddingHorizontal: 14,
     backgroundColor: PANEL_BG,
@@ -981,10 +981,7 @@ const DevOverlay: React.FC = () => {
           colors={AURORA_COLORS}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[
-            StyleSheet.absoluteFillObject,
-            { borderRadius: compactRadius },
-          ]}
+          style={[StyleSheet.absoluteFill, { borderRadius: compactRadius }]}
         />
         <Typography style={styles.collapsedTitle}>TrainLCD DO</Typography>
       </Animated.View>

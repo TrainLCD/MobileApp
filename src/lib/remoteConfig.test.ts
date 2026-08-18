@@ -7,6 +7,7 @@ import {
   isAIAgentFeatureEnabled,
   isEtaAssistEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
+  isRemoteTTSEnabled,
   isTTSFeatureEnabled,
   resetRemoteConfigCache,
   setupRemoteConfig,
@@ -356,6 +357,110 @@ describe('isTTSFeatureEnabled（プラットフォーム別スイッチ）', () 
 
     resetRemoteConfigCache();
     expect(isTTSFeatureEnabled()).toBe(true);
+  });
+});
+
+describe('isRemoteTTSEnabled（リモートTTS切替スイッチ）', () => {
+  it('未配信時は既存挙動どおり iOS のみリモートTTSを使う', () => {
+    setPlatformOS('ios');
+    expect(isRemoteTTSEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isRemoteTTSEnabled()).toBe(false);
+  });
+
+  it('Remote Config で有効化すると Android もリモートTTSを使う', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      remote_tts_enabled_android: true,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('android');
+    expect(isRemoteTTSEnabled()).toBe(true);
+    // Android 側の配信は iOS のフォールバック(true)に影響しない
+    setPlatformOS('ios');
+    expect(isRemoteTTSEnabled()).toBe(true);
+  });
+
+  it('iOSのリモートTTSだけを停止して端末内蔵TTSへ倒せる', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      remote_tts_enabled_ios: false,
+      remote_tts_enabled_android: true,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isRemoteTTSEnabled()).toBe(false);
+    setPlatformOS('android');
+    expect(isRemoteTTSEnabled()).toBe(true);
+  });
+
+  it('真偽値以外は無視してフォールバックする', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      remote_tts_enabled_ios: 'false',
+      remote_tts_enabled_android: 1,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isRemoteTTSEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isRemoteTTSEnabled()).toBe(false);
+  });
+
+  it('取得に失敗してもフォールバックで動作する', async () => {
+    mockRemoteConfig({}, false);
+    await expect(setupRemoteConfig()).rejects.toThrow(
+      'remote config fetch failed: 503'
+    );
+
+    setPlatformOS('ios');
+    expect(isRemoteTTSEnabled()).toBe(true);
+    setPlatformOS('android');
+    expect(isRemoteTTSEnabled()).toBe(false);
+  });
+
+  // TTS機能自体のキルスイッチとは独立していることの回帰テスト。
+  // tts_enabled_* が false でもエンジン選択の判定には影響しない。
+  it('TTS機能キルスイッチとは独立して判定される', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      tts_enabled_android: false,
+      remote_tts_enabled_android: true,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('android');
+    expect(isTTSFeatureEnabled()).toBe(false);
+    expect(isRemoteTTSEnabled()).toBe(true);
+  });
+
+  it('iOS/Android以外のプラットフォームでは常に無効', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      remote_tts_enabled_ios: true,
+      remote_tts_enabled_android: true,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('web');
+    expect(isRemoteTTSEnabled()).toBe(false);
+  });
+
+  it('resetRemoteConfigCache でリモートTTSのキャッシュも破棄される', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      remote_tts_enabled_android: true,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('android');
+    expect(isRemoteTTSEnabled()).toBe(true);
+
+    resetRemoteConfigCache();
+    expect(isRemoteTTSEnabled()).toBe(false);
   });
 });
 

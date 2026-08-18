@@ -1,6 +1,7 @@
 import type { Station, TrainTypeNested } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
 import {
+  dedupeStationsByGroupId,
   getStationLineId,
   getStationPrimaryCode,
   isSameStationShallow,
@@ -294,6 +295,49 @@ describe('getStationLineId', () => {
     });
     // The function uses ?? undefined, so null becomes undefined
     expect(getStationLineId(station)).toBeUndefined();
+  });
+});
+
+describe('dedupeStationsByGroupId', () => {
+  it('returns the same array reference when length <= 1', () => {
+    const empty: Station[] = [];
+    expect(dedupeStationsByGroupId(empty)).toBe(empty);
+
+    const single = [createMockStation({ id: 1, groupId: 1 })];
+    expect(dedupeStationsByGroupId(single)).toBe(single);
+  });
+
+  it('keeps only the first station of each groupId', () => {
+    // 熱海駅を模した重複ケース(路線ごとに別 id・同じ groupId)
+    const stations = [
+      createMockStation({ id: 1131301, groupId: 1131301, name: '熱海' }),
+      createMockStation({ id: 1132401, groupId: 1131301, name: '熱海' }),
+      createMockStation({ id: 1133101, groupId: 1131301, name: '熱海' }),
+      createMockStation({ id: 1121301, groupId: 1121301, name: '鬼怒川温泉' }),
+    ];
+    expect(dedupeStationsByGroupId(stations).map((s) => s.id)).toEqual([
+      1131301, 1121301,
+    ]);
+  });
+
+  it('preserves the original order', () => {
+    const stations = [
+      createMockStation({ id: 3, groupId: 30 }),
+      createMockStation({ id: 1, groupId: 10 }),
+      createMockStation({ id: 2, groupId: 30 }),
+    ];
+    expect(dedupeStationsByGroupId(stations).map((s) => s.id)).toEqual([3, 1]);
+  });
+
+  it('keeps stations without groupId as-is', () => {
+    const stations = [
+      createMockStation({ id: 1, groupId: null }),
+      createMockStation({ id: 2, groupId: null }),
+      createMockStation({ id: 3, groupId: undefined }),
+    ];
+    expect(dedupeStationsByGroupId(stations).map((s) => s.id)).toEqual([
+      1, 2, 3,
+    ]);
   });
 });
 

@@ -1,8 +1,26 @@
 diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-index 9ca869c..3033b31 100644
+index 9ca869c..81d37ec 100644
 --- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
 +++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-@@ -103,24 +103,48 @@ class SpeechModule : Module() {
+@@ -4,6 +4,7 @@ import android.os.Bundle
+ import android.speech.tts.TextToSpeech
+ import android.speech.tts.UtteranceProgressListener
+ import android.speech.tts.Voice
++import android.util.Log
+ import expo.modules.kotlin.Promise
+ import expo.modules.kotlin.modules.Module
+ import expo.modules.kotlin.modules.ModuleDefinition
+@@ -17,6 +18,9 @@ const val speakingDoneEvent = "Exponent.speakingDone"
+ const val speakingStoppedEvent = "Exponent.speakingStopped"
+ const val speakingErrorEvent = "Exponent.speakingError"
+ 
++// TrainLCD patch: voice / language 解決の診断ログ用タグ。
++const val PATCH_LOG_TAG = "TrainLCDSpeech"
++
+ class SpeechModule : Module() {
+   private val delayedUtterances: Queue<Utterance> = ArrayDeque()
+   private val delayedGetVoices: Queue<Promise> = ArrayDeque()
+@@ -103,24 +107,48 @@ class SpeechModule : Module() {
      options.pitch?.let(textToSpeech::setPitch)
      options.rate?.let(textToSpeech::setSpeechRate)
  
@@ -30,7 +48,11 @@ index 9ca869c..3033b31 100644
        }
 -    } ?: Locale.getDefault()
 +    }
-+
+ 
+-    options.voice?.let { voiceName ->
+-      textToSpeech.voices
+-        .firstOrNull { it.name == voiceName }
+-        ?.let(textToSpeech::setVoice)
 +    if (matchedVoice != null) {
 +      textToSpeech.setVoice(matchedVoice)
 +    } else {
@@ -48,11 +70,7 @@ index 9ca869c..3033b31 100644
 +          availability != TextToSpeech.LANG_MISSING_DATA &&
 +            availability != TextToSpeech.LANG_NOT_SUPPORTED
 +        }
- 
--    options.voice?.let { voiceName ->
--      textToSpeech.voices
--        .firstOrNull { it.name == voiceName }
--        ?.let(textToSpeech::setVoice)
++
 +        when {
 +          isUsable(exactLocale) -> exactLocale
 +          isUsable(languageOnlyLocale) -> languageOnlyLocale
