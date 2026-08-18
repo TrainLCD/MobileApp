@@ -105,11 +105,16 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 4. **publish-release の実体を実行（承認済み前提）**
 
    `publish-release` スキルの手順 4〜5 を走らせる:
+
    ```bash
    git tag -a "v<version>" -m "v<version>" <origin/master SHA>
    git push origin "v<version>"
    gh release create "v<version>" --target master --title "v<version>" --generate-notes --latest
    ```
+
+   タグ push や Release 作成が許可されていない実行環境では、上記の代わりに `publish-release` の
+   **経路 B**（`Publish Release` ワークフローを `gh workflow run publish_release.yml --ref dev
+   -f version=<version> -f target=master` で dispatch）を使う。検証内容は同一。
 
    プレフライトで確認済みの項目（タグ・Release 重複、version 一致、SHA）は、破壊操作直前に **非対話で再検証** する（追加承認は取らない）。再検証で不一致が出た場合（並行リリース等で状態が変わっている）は安全のため中断し、検知内容のみ報告する。
 
