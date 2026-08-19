@@ -107,6 +107,8 @@ gh workflow run ai_code_review.yml -f pr_number=1234 -f reasoning_effort=xhigh
 
 コメントは先頭のマーカー `<!-- ai-code-review -->` で識別され、再実行時は
 既存コメントを更新します。push のたびにコメントが増えることはありません。
+更新対象はこのワークフローが `github-actions[bot]` として投稿したコメントに
+限定しています。人間や他の bot が同じマーカーで書いたコメントは更新しません。
 
 指摘は重大度順に並びます。
 
@@ -141,12 +143,17 @@ gh workflow run ai_code_review.yml -f pr_number=1234 -f reasoning_effort=xhigh
 ローカルでの動作確認例です。
 
 ```bash
-gh pr view 1234 --json title,body,baseRefName > /tmp/pr.json
-gh pr diff 1234 > /tmp/pr.diff
+gh pr view 1234 \
+  --json title,body,baseRefName,baseRefOid,headRefOid > /tmp/pr.json
+BASE_SHA="$(jq -r '.baseRefOid' /tmp/pr.json)"
+HEAD_SHA="$(jq -r '.headRefOid' /tmp/pr.json)"
+gh api "repos/TrainLCD/MobileApp/compare/$BASE_SHA...$HEAD_SHA" \
+  -H "Accept: application/vnd.github.v3.diff" > /tmp/pr.diff
 OPENAI_API_KEY="$OPENAI_API_KEY" \
   DIFF_PATH=/tmp/pr.diff \
   PR_META_PATH=/tmp/pr.json \
   OUTPUT_PATH=/tmp/review.md \
+  REVIEWED_SHA="$HEAD_SHA" \
   GUIDELINES_PATH=CLAUDE.md \
   node .github/scripts/ai-code-review.mjs
 ```

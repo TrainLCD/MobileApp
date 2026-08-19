@@ -161,13 +161,14 @@ jobs:
             echo "::notice::レビュー中に PR が更新されたため投稿を中止します ($REVIEWED_SHA -> $CURRENT_SHA)"
             exit 0
           fi
-          # 上書き対象は bot 自身の投稿に限る。投稿者を見ないと、誰かが同じマーカーで
-          # 始まるコメントを書いた場合にそれを上書きしてしまう（write 権限を持つ
-          # トークンは他人のコメントも編集できる）。login と type の両方を許容するのは、
-          # 判定を外して「見つからない」側に倒れると実行のたびに新規コメントを
-          # 量産してしまうため。人間（type=User）は両条件とも満たさない。
+          # 上書き対象は GITHUB_TOKEN の投稿者である github-actions[bot] に厳密一致させる。
+          # 投稿者を見ないと、誰かが同じマーカーで始まるコメントを書いた場合に
+          # それを上書きしてしまう（write 権限を持つトークンは他人のコメントも編集できる）。
+          # type == "Bot" のような広い条件は使わない。coderabbitai[bot] など他の
+          # GitHub App も一致してしまうため。login は角括弧を含みユーザー名として
+          # 登録できない文字列なので、人間が詐称することはできない。
           COMMENT_ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
-            --jq '.[] | select(.user.type == "Bot" or .user.login == "github-actions[bot]") | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
+            --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
           if [ -n "$COMMENT_ID" ]; then
             gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT_ID" \
               -F "body=@$RUNNER_TEMP/review.md" > /dev/null
