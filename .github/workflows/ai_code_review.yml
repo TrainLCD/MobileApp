@@ -1,0 +1,180 @@
+# OpenAI GPT-5.6 Sol に Pull Request の差分をレビューさせ、結果を PR のコメントとして投稿する。
+# 参考情報の提供が目的なので、レビュー結果（指摘の有無）でジョブを失敗させることはしない。
+# 一方で API 呼び出しやコメント投稿の失敗は握り潰さず、ジョブを赤くして原因を追えるようにしている。
+#
+# ⚠️ このワークフローを編集する人へ:
+# pull_request_target を使っているため、このジョブは secrets にアクセスできる。
+# PR の head 側のコードは絶対に checkout・実行しないこと。
+# checkout の ref を head や merge ref に変えた瞬間、PR 作成者が
+# OPENAI_API_KEY と GITHUB_TOKEN を自由に持ち出せるようになる。
+# レビュー対象の差分は compare API から取得し、データとしてのみ扱う。
+#
+# ⚠️ branch protection の必須チェックにしないこと:
+# API 障害でジョブを赤くする設計のため、必須にすると OpenAI の障害で
+# マージが全面停止する。あくまで参考情報を出すだけのワークフロー。
+name: AI Code Review
+
+on:
+  # pull_request ではなく pull_request_target を使う。
+  # pull_request はワークフロー定義自体を PR 側（merge commit）から読むため、
+  # PR に secrets を持ち出すステップを足されると checkout より先に評価されて防げない。
+  # pull_request_target なら定義も下の guard も base 側から読まれるので改竄できない。
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Target PR number"
+        required: true
+        type: string
+      reasoning_effort:
+        description: "Reasoning effort for gpt-5.6-sol"
+        required: false
+        default: "high"
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - xhigh
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# 同じ PR に連続で push された場合、古いレビューは打ち切って最新の差分だけを見る。
+concurrency:
+  group: ai-code-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+env:
+  TZ: "Asia/Tokyo"
+  OPENAI_MODEL: "gpt-5.6-sol"
+
+jobs:
+  review:
+    runs-on: ubuntu-22.04
+    # pull_request_target では fork PR にも secrets が渡るため、この guard が
+    # fork を遮断する唯一の門になる。緩めないこと（OpenAI の課金濫用防止も兼ねる）。
+    # guard 自体は base 側の定義から読まれるので PR 側からは改竄できない。
+    # Draft と skip-ai-review ラベル付き PR も、レビュー待ちではないのでスキップする。
+    if: |
+      github.event_name == 'workflow_dispatch' || (
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.draft == false &&
+        !contains(github.event.pull_request.labels.*.name, 'skip-ai-review')
+      )
+    steps:
+      # base.sha を明示して head 側のコードを checkout しない。head を取ると、
+      # PR で書き換えたレビュースクリプトが OPENAI_API_KEY と同じジョブで実行できてしまう。
+      # レビュー対象の差分は gh pr diff（API）から取るため head の作業ツリーは不要で、
+      # 実行されるのは常に base 側でレビュー済みのスクリプトと CLAUDE.md になる。
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # OPENAI_API_KEY 未設定でも PR を止めないよう、警告を出して後続をスキップする。
+      - name: Check OpenAI credentials
+        id: guard
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "::warning::secrets.OPENAI_API_KEY が未設定のため AI コードレビューをスキップします"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # PR タイトル・本文はレビュー対象の untrusted な入力なので、
+      # シェル変数に展開せず JSON ファイルのままスクリプトへ渡す。
+      - name: Fetch pull request diff
+        id: pr
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$PR_NUMBER" | grep -Eq '^[0-9]+$'; then
+            echo "::error::PR 番号が不正です: $PR_NUMBER"
+            exit 1
+          fi
+          gh pr view "$PR_NUMBER" \
+            --json title,body,baseRefName,baseRefOid,headRefOid > "$RUNNER_TEMP/pr.json"
+          # base/head を同一レスポンスから取り、compare API で不変の SHA ペアに固定する。
+          # gh pr diff は都度「現在の PR」を取りにいくため、上で控えた SHA と食い違い得る。
+          # コメント末尾に出す対象コミットの正しさが、この対応関係に依存している。
+          # なお compare の三点比較は gh pr diff と同じセマンティクスで、出力も一致する。
+          BASE_SHA="$(jq -r '.baseRefOid' "$RUNNER_TEMP/pr.json")"
+          HEAD_SHA="$(jq -r '.headRefOid' "$RUNNER_TEMP/pr.json")"
+          gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA" \
+            -H "Accept: application/vnd.github.v3.diff" > "$RUNNER_TEMP/pr.diff"
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          # 投稿直前に head が動いていないか照合するため、取得時点の SHA を控える。
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "対象: $BASE_SHA...$HEAD_SHA / 差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
+
+      - name: Run AI review
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REASONING_EFFORT: ${{ inputs.reasoning_effort || 'high' }}
+          DIFF_PATH: ${{ runner.temp }}/pr.diff
+          PR_META_PATH: ${{ runner.temp }}/pr.json
+          OUTPUT_PATH: ${{ runner.temp }}/review.md
+          # どのコミットに対するレビューかをコメントに残し、古い結果を見分けられるようにする。
+          REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
+          # リポジトリ規約を渡し、コーディング規約違反も指摘できるようにする。
+          GUIDELINES_PATH: CLAUDE.md
+        run: node .github/scripts/ai-code-review.mjs
+
+      # 再 push のたびにコメントが増えないよう、マーカー付きの既存コメントを更新する。
+      - name: Post review comment
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          # concurrency のキャンセルは完了済みの API 呼び出しや投稿までは取り消さない。
+          # レビュー中に PR が更新されていた場合、古い差分の結果は貼らずに
+          # 新しい実行へ譲る。追い越されただけで異常ではないので exit 0 とする。
+          #
+          # ただしこの照合は best effort。issue comment には条件付き書き込みが
+          # 無いため、照合と投稿の間の push は原理的に排除できない。残る窓は
+          # ミリ秒単位で、通常は後発の実行が同じコメントを上書きして自己修復する。
+          # 後発が失敗した場合に備え、対象コミットをコメント末尾に明記している。
+          CURRENT_SHA="$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)"
+          if [ "$CURRENT_SHA" != "$REVIEWED_SHA" ]; then
+            echo "::notice::レビュー中に PR が更新されたため投稿を中止します ($REVIEWED_SHA -> $CURRENT_SHA)"
+            exit 0
+          fi
+          # 上書き対象は GITHUB_TOKEN の投稿者である github-actions[bot] に厳密一致させる。
+          # 投稿者を見ないと、誰かが同じマーカーで始まるコメントを書いた場合に
+          # それを上書きしてしまう（write 権限を持つトークンは他人のコメントも編集できる）。
+          # type == "Bot" のような広い条件は使わない。coderabbitai[bot] など他の
+          # GitHub App も一致してしまうため。login は角括弧を含みユーザー名として
+          # 登録できない文字列なので、人間が詐称することはできない。
+          COMMENT_ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+            --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
+          if [ -n "$COMMENT_ID" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT_ID" \
+              -F "body=@$RUNNER_TEMP/review.md" > /dev/null
+            echo "既存コメント $COMMENT_ID を更新しました"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+              -F "body=@$RUNNER_TEMP/review.md" > /dev/null
+            echo "レビューコメントを新規投稿しました"
+          fi
