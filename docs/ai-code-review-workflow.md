@@ -36,15 +36,21 @@ permissions が "Read and write permissions" になっているか、または�
 
 ## 実行タイミング
 
-`pull_request` イベントの `opened` / `synchronize` / `reopened` /
+`pull_request_target` イベントの `opened` / `synchronize` / `reopened` /
 `ready_for_review` で自動実行されます。次の PR は対象外です。
 
-- fork からの PR: secrets が渡らないため実行できません
+- fork からの PR: ジョブの `if` guard で遮断しています
 - Draft PR: `ready_for_review` になった時点で実行されます
 - `skip-ai-review` ラベルが付いた PR: 明示的な opt-out
 
 同じ PR に連続で push した場合は `concurrency` により古い実行が
 キャンセルされ、最新の差分のみがレビューされます。
+
+> [!IMPORTANT]
+> `pull_request_target` は常に base 側のワークフロー定義で動きます。
+> このワークフロー自体を変更する PR では、変更後の挙動をその PR 上で
+> 検証できません。マージ後に `workflow_dispatch` で手動実行して確認して
+> ください。
 
 ## 手動実行
 
@@ -118,11 +124,22 @@ OPENAI_API_KEY="$OPENAI_API_KEY" \
 - **head 側のコードを checkout・実行しない**: 危険なのは
   `pull_request_target` という trigger そのものではなく、PR の head 側
   コードを checkout して secrets と同じジョブで実行することです。本
-  ワークフローは `pull_request` を使って fork PR を対象外にしたうえで、
-  checkout を `base.sha` に固定し `persist-credentials: false` を指定
-  しています。実行されるのは常に base 側でレビュー済みの
-  `.github/scripts/ai-code-review.mjs` と `CLAUDE.md` で、PR の差分と
-  メタデータは `gh pr diff` / `gh pr view` が返すデータとしてのみ扱います。
+  ワークフローは head の作業ツリーを一切必要としない（差分は `gh pr diff`
+  つまり API から取得する）ため、checkout を `base.sha` に固定し
+  `persist-credentials: false` を指定しています。実行されるのは常に base
+  側でレビュー済みの `.github/scripts/ai-code-review.mjs` と `CLAUDE.md`
+  で、PR の差分とメタデータは `gh pr diff` / `gh pr view` が返すデータと
+  してのみ扱います。
+- **`pull_request` ではなく `pull_request_target`**: `pull_request` は
+  ワークフロー定義自体を PR 側（merge commit）から読みます。そのため
+  同一リポジトリの PR がこのワークフローに secrets を持ち出すステップを
+  追加でき、checkout より先に評価されるので base 固定では防げません。
+  `pull_request_target` なら定義も下記の guard も base 側から読まれるため、
+  PR 側から改竄できません。
+- **fork PR を guard で遮断する**: `pull_request_target` では fork PR にも
+  secrets が渡ります。`github.event.pull_request.head.repo.full_name ==
+  github.repository` の条件が fork を遮断する唯一の門になるため、緩めない
+  でください。OpenAI API の課金濫用を防ぐ意味も兼ねています。
 - **PR 本文をシェル変数に展開しない**: PR タイトル・本文・差分は
   untrusted な入力です。`GITHUB_ENV` や `GITHUB_OUTPUT` を経由させず、
   JSON ファイルのままスクリプトへ渡してインジェクションの余地を無くしています。

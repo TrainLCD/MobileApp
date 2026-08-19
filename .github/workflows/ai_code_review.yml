@@ -1,10 +1,21 @@
 # OpenAI GPT-5.6 Sol に Pull Request の差分をレビューさせ、結果を PR のコメントとして投稿する。
 # 参考情報の提供が目的なので、レビュー結果（指摘の有無）でジョブを失敗させることはしない。
 # 一方で API 呼び出しやコメント投稿の失敗は握り潰さず、ジョブを赤くして原因を追えるようにしている。
+#
+# ⚠️ このワークフローを編集する人へ:
+# pull_request_target を使っているため、このジョブは secrets にアクセスできる。
+# PR の head 側のコードは絶対に checkout・実行しないこと。
+# checkout の ref を head や merge ref に変えた瞬間、PR 作成者が
+# OPENAI_API_KEY と GITHUB_TOKEN を自由に持ち出せるようになる。
+# レビュー対象の差分は gh pr diff（API）から取得し、データとしてのみ扱う。
 name: AI Code Review
 
 on:
-  pull_request:
+  # pull_request ではなく pull_request_target を使う。
+  # pull_request はワークフロー定義自体を PR 側（merge commit）から読むため、
+  # PR に secrets を持ち出すステップを足されると checkout より先に評価されて防げない。
+  # pull_request_target なら定義も下の guard も base 側から読まれるので改竄できない。
+  pull_request_target:
     types:
       - opened
       - synchronize
@@ -43,7 +54,9 @@ env:
 jobs:
   review:
     runs-on: ubuntu-22.04
-    # fork からの PR には secrets が渡らないため対象外。
+    # pull_request_target では fork PR にも secrets が渡るため、この guard が
+    # fork を遮断する唯一の門になる。緩めないこと（OpenAI の課金濫用防止も兼ねる）。
+    # guard 自体は base 側の定義から読まれるので PR 側からは改竄できない。
     # Draft と skip-ai-review ラベル付き PR も、レビュー待ちではないのでスキップする。
     if: |
       github.event_name == 'workflow_dispatch' || (
@@ -52,8 +65,8 @@ jobs:
         !contains(github.event.pull_request.labels.*.name, 'skip-ai-review')
       )
     steps:
-      # head 側のコードは checkout しない。head を取ると、PR で書き換えた
-      # レビュースクリプトが OPENAI_API_KEY と同じジョブで実行できてしまう。
+      # base.sha を明示して head 側のコードを checkout しない。head を取ると、
+      # PR で書き換えたレビュースクリプトが OPENAI_API_KEY と同じジョブで実行できてしまう。
       # レビュー対象の差分は gh pr diff（API）から取るため head の作業ツリーは不要で、
       # 実行されるのは常に base 側でレビュー済みのスクリプトと CLAUDE.md になる。
       - uses: actions/checkout@v4
