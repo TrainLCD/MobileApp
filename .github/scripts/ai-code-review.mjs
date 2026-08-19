@@ -306,10 +306,15 @@ const renderComment = ({ review, meta }) => {
     );
   }
 
+  // 対象コミットを残しておく。concurrency のキャンセルは完了済みの投稿を
+  // 取り消さないため、PR の HEAD と突き合わせれば古い結果かどうかを判別できる。
+  const target = meta.reviewedSha
+    ? ` / 対象コミット: \`${meta.reviewedSha.slice(0, 7)}\``
+    : '';
   sections.push(
     '---',
     '',
-    `<sub>このレビューは自動生成された参考情報です。最終判断はレビュアーが行ってください。 | model: \`${meta.model}\` / reasoning effort: \`${meta.effort}\` / 差分: ${meta.diffLines} 行</sub>`
+    `<sub>このレビューは自動生成された参考情報です。最終判断はレビュアーが行ってください。 | model: \`${meta.model}\` / reasoning effort: \`${meta.effort}\` / 差分: ${meta.diffLines} 行${target}</sub>`
   );
 
   const body = sections.join('\n');
@@ -329,6 +334,7 @@ const main = async () => {
   const outputPath = readEnv('OUTPUT_PATH');
   const guidelinesPath = readEnv('GUIDELINES_PATH', '');
   const prMetaPath = readEnv('PR_META_PATH', '');
+  const reviewedSha = readEnv('REVIEWED_SHA', '');
   const maxDiffChars = readPositiveInt('MAX_DIFF_CHARS', DEFAULT_MAX_DIFF_CHARS);
   const maxOutputTokens = readPositiveInt(
     'MAX_OUTPUT_TOKENS',
@@ -438,6 +444,7 @@ const main = async () => {
       diffLines,
       diffTruncated: diff.truncated,
       maxDiffChars,
+      reviewedSha,
     },
   });
   await writeFile(outputPath, `${body}\n`, 'utf8');

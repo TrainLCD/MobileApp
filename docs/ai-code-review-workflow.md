@@ -44,7 +44,14 @@ permissions が "Read and write permissions" になっているか、または�
 - `skip-ai-review` ラベルが付いた PR: 明示的な opt-out
 
 同じ PR に連続で push した場合は `concurrency` により古い実行が
-キャンセルされ、最新の差分のみがレビューされます。
+キャンセルされます。ただしキャンセルは実行中のジョブを止めるだけで、完了
+済みの OpenAI 呼び出しやコメント投稿までは取り消しません。そのため投稿の
+直前に PR の `headRefOid` を再取得し、差分を取得した時点の SHA と一致
+しない場合は投稿を中止して新しい実行に委ねます。
+
+それでも「古い実行が投稿したあとに新しい実行が失敗する」ケースでは、コメ
+ントが古い差分のまま残ります。コメント末尾にレビュー対象コミットの短縮
+SHA を出しているので、PR の HEAD と一致しているかで判別してください。
 
 > [!IMPORTANT]
 > `pull_request_target` は常に base 側のワークフロー定義で動きます。
@@ -100,6 +107,7 @@ gh workflow run ai_code_review.yml -f pr_number=1234 -f reasoning_effort=xhigh
 | `OPENAI_BASE_URL` | 任意 | OpenAI 公式 | 互換ゲートウェイやローカル検証用 |
 | `REASONING_EFFORT` | 任意 | `high` | `reasoning.effort` の値 |
 | `PR_META_PATH` | 任意 | なし | PR メタ情報 JSON (`gh pr view` の出力) |
+| `REVIEWED_SHA` | 任意 | なし | レビュー対象コミット。コメント末尾に短縮表示 |
 | `GUIDELINES_PATH` | 任意 | なし | プロンプトへ添付する規約のパス |
 | `MAX_DIFF_CHARS` | 任意 | `300000` | 差分の上限文字数。超過分は切り詰める |
 | `MAX_OUTPUT_TOKENS` | 任意 | `32000` | 出力上限。推論トークンを含む |

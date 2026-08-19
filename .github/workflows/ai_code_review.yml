@@ -106,10 +106,12 @@ jobs:
             echo "::error::PR 番号が不正です: $PR_NUMBER"
             exit 1
           fi
-          gh pr view "$PR_NUMBER" --json title,body,baseRefName > "$RUNNER_TEMP/pr.json"
+          gh pr view "$PR_NUMBER" --json title,body,baseRefName,headRefOid > "$RUNNER_TEMP/pr.json"
           # --patch はコミットごとの連結になり重複するため、統合 diff を使う。
           gh pr diff "$PR_NUMBER" > "$RUNNER_TEMP/pr.diff"
           echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          # 投稿直前に head が動いていないか照合するため、取得時点の SHA を控える。
+          echo "head_sha=$(jq -r '.headRefOid' "$RUNNER_TEMP/pr.json")" >> "$GITHUB_OUTPUT"
           echo "差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
 
       - name: Run AI review
@@ -120,6 +122,8 @@ jobs:
           DIFF_PATH: ${{ runner.temp }}/pr.diff
           PR_META_PATH: ${{ runner.temp }}/pr.json
           OUTPUT_PATH: ${{ runner.temp }}/review.md
+          # どのコミットに対するレビューかをコメントに残し、古い結果を見分けられるようにする。
+          REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
           # リポジトリ規約を渡し、コーディング規約違反も指摘できるようにする。
           GUIDELINES_PATH: CLAUDE.md
         run: node .github/scripts/ai-code-review.mjs
@@ -130,8 +134,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
           set -euo pipefail
+          # concurrency のキャンセルは完了済みの API 呼び出しや投稿までは取り消さない。
+          # レビュー中に PR が更新されていた場合、古い差分の結果は貼らずに
+          # 新しい実行へ譲る。追い越されただけで異常ではないので exit 0 とする。
+          CURRENT_SHA="$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)"
+          if [ "$CURRENT_SHA" != "$REVIEWED_SHA" ]; then
+            echo "::notice::レビュー中に PR が更新されたため投稿を中止します ($REVIEWED_SHA -> $CURRENT_SHA)"
+            exit 0
+          fi
           COMMENT_ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
             --jq '.[] | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
           if [ -n "$COMMENT_ID" ]; then
