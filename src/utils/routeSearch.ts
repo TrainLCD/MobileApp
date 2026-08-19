@@ -86,8 +86,9 @@ export const getSearchResultHeadingText = (
     ? (station.name ?? '')
     : (station.nameRoman ?? station.name ?? '');
   const stationName = rawName
-    // NowHeader と同様、駅名の括弧書き(路線名などの補足)は見出しでは省く
-    .replaceAll(/\([^()]*\)/g, '')
+    // NowHeader と同様、駅名の括弧書き(路線名などの補足)は見出しでは省く。
+    // 駅 API は全角括弧も返すため半角・全角の双方を対象にする(#1175 と同じ事情)
+    .replaceAll(/[（(][^（）()]*[）)]/g, '')
     // 括弧書きの除去で生じた連続空白だけを畳む
     // (「Tokyo Sta. Marunouchi South Exit」のように語間の単一空白を持つ駅名があるため)
     .replace(/\s{2,}/g, ' ')

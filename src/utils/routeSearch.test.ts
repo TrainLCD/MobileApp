@@ -414,6 +414,37 @@ describe('getSearchResultHeadingText', () => {
     );
   });
 
+  it('全角括弧の駅名も見出しから補足を省く', () => {
+    // 駅 API は `電鉄富山（トヨタモビリティ富山）` のような全角括弧を返す (#1175)
+    const station = createStation(1, {
+      name: '電鉄富山（トヨタモビリティ富山）',
+      nameRoman: 'Dentetsu-Toyama（Toyota Mobility）',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe(
+      'searchResultFromStation(電鉄富山)'
+    );
+    expect(getSearchResultHeadingText(station, false)).toBe(
+      'searchResultFromStation(Dentetsu-Toyama)'
+    );
+  });
+
+  it('半角括弧と全角括弧が混在する駅名でも両方を省く', () => {
+    const station = createStation(1, {
+      name: '東京(メトロ)（副都心）',
+      nameRoman: 'Tokyo (Metro)（Fukutoshin）',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe(
+      'searchResultFromStation(東京)'
+    );
+    expect(getSearchResultHeadingText(station, false)).toBe(
+      'searchResultFromStation(Tokyo)'
+    );
+  });
+
   it('括弧書きの前に空白がある駅名でも余分な空白を残さない', () => {
     const station = createStation(1, {
       name: '東京 (メトロ)',
