@@ -1,8 +1,18 @@
 import type { Line, Station, TrainType } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
+import { createStation } from '~/utils/test/factories';
 import {
   computeCurrentStationInRoutes,
+  getSearchResultHeadingText,
   getStationWithMatchingLine,
 } from './routeSearch';
+
+// 文言そのものは翻訳ファイルの責務なので、
+// ここでは「どのキーをどの駅名で引くか」だけを検証できるようにモックする
+jest.mock('~/translation', () => ({
+  translate: (key: string, params?: Record<string, string>) =>
+    params ? `${key}(${params.stationName})` : key,
+}));
 
 // テスト用のモックデータ
 const createMockLine = (id: number, name: string): Line =>
@@ -364,5 +374,88 @@ describe('getStationWithMatchingLine', () => {
 
       expect(result).toBeNull();
     });
+  });
+});
+
+describe('getSearchResultHeadingText', () => {
+  it('鉄道駅では駅名入りの見出しを返す', () => {
+    const station = createStation(1, {
+      name: '東京',
+      nameRoman: 'Tokyo',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe(
+      'searchResultFromStation(東京)'
+    );
+  });
+
+  it('バス停では駅ではなくバス停用の見出しを返す', () => {
+    const station = createStation(1, {
+      name: '東京駅丸の内南口',
+      nameRoman: 'Tokyo Sta. Marunouchi South Exit',
+      line: { transportType: TransportType.Bus },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe(
+      'searchResultFromBusStop(東京駅丸の内南口)'
+    );
+  });
+
+  it('英語ロケールではnameRomanを使う', () => {
+    const station = createStation(1, {
+      name: '東京',
+      nameRoman: 'Tokyo',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, false)).toBe(
+      'searchResultFromStation(Tokyo)'
+    );
+  });
+
+  it('駅名の括弧書きは見出しから省く', () => {
+    const station = createStation(1, {
+      name: '東京(メトロ)',
+      nameRoman: 'Tokyo(Metro)',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe(
+      'searchResultFromStation(東京)'
+    );
+    expect(getSearchResultHeadingText(station, false)).toBe(
+      'searchResultFromStation(Tokyo)'
+    );
+  });
+
+  it('最寄り駅が未確定の場合は駅名なしの見出しを返す', () => {
+    expect(getSearchResultHeadingText(null, true)).toBe('searchResult');
+  });
+
+  it('駅名が空の場合は駅名なしの見出しを返す', () => {
+    const station = createStation(1, {
+      name: '',
+      nameRoman: '',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe('searchResult');
+  });
+});
+
+describe('経路検索見出しの翻訳キー', () => {
+  it('見出しで参照するキーが日英どちらの翻訳にも存在する', () => {
+    const ja = require('../../assets/translations/ja.json');
+    const en = require('../../assets/translations/en.json');
+
+    for (const key of [
+      'searchResult',
+      'searchResultFromStation',
+      'searchResultFromBusStop',
+    ]) {
+      expect(typeof ja[key]).toBe('string');
+      expect(typeof en[key]).toBe('string');
+    }
   });
 });

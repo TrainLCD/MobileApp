@@ -1,4 +1,6 @@
 import type { Line, Station, TrainType } from '~/@types/graphql';
+import { translate } from '~/translation';
+import { isBusLine } from './line';
 
 /**
  * 列車種別に基づいて、現在の駅の路線を決定する
@@ -67,4 +69,27 @@ export const getStationWithMatchingLine = (
   }
 
   return station;
+};
+
+/**
+ * 経路検索結果の見出し文言を組み立てる
+ * @param station 検索の起点となる最寄り駅(位置情報未取得などで未確定の場合は null)
+ * @param isJapanese 日本語ロケールかどうか
+ * @returns 駅が確定していれば駅名入りの見出し、未確定なら駅名なしの見出し
+ */
+export const getSearchResultHeadingText = (
+  station: Station | null,
+  isJapanese: boolean
+): string => {
+  if (!station) return translate('searchResult');
+  // NowHeader と同様、駅名の括弧書き(路線名などの補足)は見出しでは省く
+  const parenthesesRe = /\([^()]*\)/g;
+  const stationName = isJapanese
+    ? (station.name ?? '').replaceAll(parenthesesRe, '')
+    : (station.nameRoman ?? station.name ?? '').replaceAll(parenthesesRe, '');
+  if (!stationName.length) return translate('searchResult');
+  // バス停は「駅」ではないため接尾辞を出し分ける(NowHeader のバスバッジと同じ判定)
+  return isBusLine(station.line)
+    ? translate('searchResultFromBusStop', { stationName })
+    : translate('searchResultFromStation', { stationName });
 };
