@@ -1,4 +1,6 @@
 import type { Line, Station, TrainType } from '~/@types/graphql';
+import { translate } from '~/translation';
+import { isBusLine } from './line';
 
 /**
  * 列車種別に基づいて、現在の駅の路線を決定する
@@ -67,4 +69,34 @@ export const getStationWithMatchingLine = (
   }
 
   return station;
+};
+
+/**
+ * 経路検索結果の見出し文言を組み立てる
+ * @param station 検索の起点となる最寄り駅(位置情報未取得などで未確定の場合は null)
+ * @param isJapanese 日本語ロケールかどうか
+ * @returns 駅が確定していれば駅名入りの見出し、未確定なら駅名なしの見出し
+ */
+export const getSearchResultHeadingText = (
+  station: Station | null,
+  isJapanese: boolean
+): string => {
+  if (!station) return translate('searchResult');
+  const rawName = isJapanese
+    ? (station.name ?? '')
+    : (station.nameRoman ?? station.name ?? '');
+  const stationName = rawName
+    // NowHeader と同様、駅名の括弧書き(路線名などの補足)は見出しでは省く。
+    // 駅 API は全角括弧も返すため半角・全角の双方を対象にする(#1175 と同じ事情)
+    .replaceAll(/[（(][^（）()]*[）)]/g, '')
+    // 括弧書きの除去で生じた連続空白だけを畳む
+    // (「Tokyo Sta. Marunouchi South Exit」のように語間の単一空白を持つ駅名があるため)
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  // 括弧書きを除いた結果が空になる駅名もフォールバックさせる
+  if (!stationName.length) return translate('searchResult');
+  // バス停は「駅」ではないため接尾辞を出し分ける(NowHeader のバスバッジと同じ判定)
+  return isBusLine(station.line)
+    ? translate('searchResultFromBusStop', { stationName })
+    : translate('searchResultFromStation', { stationName });
 };
