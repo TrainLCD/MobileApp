@@ -52,7 +52,14 @@ jobs:
         !contains(github.event.pull_request.labels.*.name, 'skip-ai-review')
       )
     steps:
+      # head 側のコードは checkout しない。head を取ると、PR で書き換えた
+      # レビュースクリプトが OPENAI_API_KEY と同じジョブで実行できてしまう。
+      # レビュー対象の差分は gh pr diff（API）から取るため head の作業ツリーは不要で、
+      # 実行されるのは常に base 側でレビュー済みのスクリプトと CLAUDE.md になる。
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:

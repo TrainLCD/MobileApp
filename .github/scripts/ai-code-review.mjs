@@ -118,11 +118,12 @@ const readPositiveInt = (name, fallback) => {
   if (raw === undefined || raw === '') {
     return fallback;
   }
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
+  // Number.parseInt は '32000abc' を 32000 として通してしまい設定ミスを見逃すため、
+  // 全体一致で検証してから変換する。
+  if (!/^[1-9]\d*$/.test(raw)) {
     throw new Error(`環境変数 ${name} は正の整数で指定してください: ${raw}`);
   }
-  return parsed;
+  return Number(raw);
 };
 
 const truncate = (text, limit) => {
@@ -379,7 +380,8 @@ const main = async () => {
       input,
       reasoning: { effort },
       max_output_tokens: maxOutputTokens,
-      // リポジトリのコードを OpenAI 側に保存させない。
+      // Responses API の application state（保存済み応答）を残さない設定。
+      // abuse monitoring のログは別枠のため、無保存の保証ではない点に注意。
       store: false,
       text: {
         format: {
