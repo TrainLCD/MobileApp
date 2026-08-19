@@ -1,0 +1,112 @@
+# 手動実行でリリースタグを打ち、GitHub Release を公開するワークフロー。
+# 通常は publish-release / finalize-release スキルをローカルの gh CLI で走らせるが、
+# タグ push や Release 作成が使えない実行環境からリリースを仕上げるための経路として用意している。
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without leading v (e.g. 10.13.1)"
+        required: true
+        type: string
+      target:
+        description: "Branch or SHA to tag"
+        required: false
+        default: "master"
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  TZ: "Asia/Tokyo"
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target }}
+          fetch-depth: 0
+
+      # 破壊的操作の前に、版数・タグ・Release の状態をまとめて検証し、実行モードを決める。
+      # タグ push 後に Release 作成だけが失敗した場合に再実行で復旧できるよう、
+      # 「タグあり・Release なし」は中断せず Release のみ作成する経路へ倒す。
+      - name: Validate inputs and resolve SHA
+        id: resolve
+        env:
+          VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::version は MAJOR.MINOR.PATCH 形式で指定してください: $VERSION"
+            exit 1
+          fi
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "::error::対象コミットの package.json version ($PKG_VERSION) が入力 ($VERSION) と一致しません"
+            exit 1
+          fi
+          SHA="$(git rev-parse HEAD)"
+
+          git fetch origin --tags --force --quiet
+          TAG_EXISTS=false
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            TAG_EXISTS=true
+          fi
+          RELEASE_EXISTS=false
+          if gh release view "v$VERSION" --json tagName >/dev/null 2>&1; then
+            RELEASE_EXISTS=true
+          fi
+
+          if [ "$TAG_EXISTS" = true ] && [ "$RELEASE_EXISTS" = true ]; then
+            echo "::error::v$VERSION はタグ・Release ともに公開済みです"
+            exit 1
+          fi
+          if [ "$TAG_EXISTS" = false ] && [ "$RELEASE_EXISTS" = true ]; then
+            echo "::error::タグ v$VERSION が無いのに Release だけ存在します。手動確認が必要です"
+            exit 1
+          fi
+
+          if [ "$TAG_EXISTS" = true ]; then
+            # 前回実行でタグだけ残ったケース。別コミットを指すタグは付け替えず中断する。
+            TAG_SHA="$(git rev-list -n 1 "refs/tags/v$VERSION")"
+            if [ "$TAG_SHA" != "$SHA" ]; then
+              echo "::error::既存タグ v$VERSION は $TAG_SHA を指しており、対象 $SHA と異なります"
+              exit 1
+            fi
+            MODE=release_only
+          else
+            MODE=full
+          fi
+
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "対象 SHA: $SHA / version: v$VERSION / mode: $MODE"
+
+      - name: Create and push annotated tag
+        if: steps.resolve.outputs.mode == 'full'
+        env:
+          VERSION: ${{ inputs.version }}
+          SHA: ${{ steps.resolve.outputs.sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "v$VERSION" "$SHA"
+          git push origin "v$VERSION"
+
+      # タグは前ステップで作成済みのため --target は指定しない（既存タグが優先される）。
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --latest

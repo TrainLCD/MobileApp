@@ -18,11 +18,50 @@ description: Create a git tag on origin/master HEAD and publish a GitHub Release
 ## 前提条件
 
 - カレントディレクトリがリポジトリルート。
-- `gh` CLI 認証済み、`git` が使える。
+- `git` が使える。経路 A（後述）では `gh` CLI 認証済みであること。
 - リリースPR（`release/v<version>` → `master`）は既に **master にマージ済み**。未マージなら中断し、ユーザーに確認する。
 - 作業ツリーがクリーン（未コミット変更なし）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
 
+## 実行経路
+
+タグ作成と Release 公開には 2 つの経路がある。**手元で `gh` が使えるなら経路 A を既定とする。**
+
+| 経路 | 使う場面 | 実体 |
+| ---- | ---- | ---- |
+| **A: ローカル実行** | 手元に認証済み `gh` があり、タグ push が通る | 手順 1〜6 をそのまま実行 |
+| **B: ワークフロー実行** | タグ push や Release 作成が許可されていない実行環境（Claude Code のリモート実行環境など） | `Publish Release` ワークフローを dispatch |
+
+経路 B は `.github/workflows/publish_release.yml` を `workflow_dispatch` で起動する。ワークフロー側が **手順 1・3・4・5 と同じ検証と操作** を実行するため、呼び出し側で個別に流す必要はない。
+
+- 検証: `version` が `MAJOR.MINOR.PATCH` 形式か / 対象コミットの `package.json` の `version` が入力と一致するか / タグ `v<version>` と Release `v<version>` の在否
+- 操作: annotated tag（メッセージ `v<version>`）を対象 SHA に作成して push → `gh release create --generate-notes --latest`
+
+タグと Release の在否の組み合わせで、ワークフローは次のように動く。**タグ push 後に Release 作成だけが失敗しても、同じ dispatch を再実行すれば復旧できる**（経路 B しか使えない環境で手詰まりにならないための設計）。
+
+| タグ | Release | 挙動 |
+| ---- | ---- | ---- |
+| 無 | 無 | タグ作成 → Release 公開（通常経路） |
+| 有 | 無 | **タグ作成をスキップし Release のみ公開**（部分失敗からの復旧）。ただし既存タグが対象 SHA と別のコミットを指す場合は中断する |
+| 有 | 有 | 公開済みとして中断 |
+| 無 | 有 | 異常状態として中断 |
+
+起動方法（`workflow_dispatch` の定義は既定ブランチ `dev` 上にあるため `--ref` は `dev`。タグを打つ対象は `target` 入力で指定する）:
+
+```bash
+gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<手順 2 で記録した SHA>
+```
+
+**`target` にはブランチ名ではなく手順 2 で記録した SHA を渡す。** `master` のようなブランチ名は dispatch 時点で再解決されるため、承認を取った後に別のコミットがマージされると、承認したものと違うコミットにタグが付く。
+
+`gh` が無い環境では GitHub MCP の `actions_run_trigger`（`method: run_workflow`, `workflow_id: publish_release.yml`, `ref: dev`, `inputs: {version, target}`）でも同じ dispatch ができる。
+
+起動後は必ず実行結果を確認し、成功時のみ手順 6 の完了報告へ進む。失敗時はワークフローのログで中断理由（版数不一致・公開済み・タグの指す先が違う等）を読み、原因をユーザーに報告する。
+
+経路 B を選んだ場合も、**dispatch は外部に波及する操作**なので、起動前にタグ名・対象・version をユーザーに提示して承認を取る（手順 4 の承認ゲートと同じ扱い）。
+
 ## 手順
+
+以下は **経路 A（ローカル実行）** の手順。**経路 B** を選んだ場合は手順 1〜3 で対象 SHA と版数の一致を確認したうえで dispatch し、手順 4・5 の代わりにワークフローの完了を待ってから手順 6 へ進む。
 
 1. **バージョン正規化と検証**
 
@@ -90,7 +129,8 @@ description: Create a git tag on origin/master HEAD and publish a GitHub Release
 
 ## 注意事項
 
-- **タグ push と Release 作成は外部に波及する操作**。順序は「タグ push → Release 作成」で固定。Release 作成に失敗した場合でもタグは既に公開済みなので、やり直しは `gh release create` のみで足りる。
+- **タグ push と Release 作成は外部に波及する操作**。順序は「タグ push → Release 作成」で固定。経路 A で Release 作成に失敗した場合、タグは既に公開済みなのでやり直しは `gh release create` のみで足りる。経路 B は同じ状態を検出して Release のみ作成する経路へ倒すため、**同じ dispatch を再実行するだけで復旧できる**（`gh` が使えない環境でも手当てが完結する）。
+- 経路 B のワークフローはタグを打つだけで、**版数バンプは行わない**。`package.json` の版数が対象コミットで既に正しいことが前提であり、一致しなければワークフロー側で中断する。
 - タグを削除・付け直す操作（`git push --delete` や `git tag -f`）はこのスキルの責務外。事故復旧が必要な場合はユーザーに判断を仰ぐ。
 - `--generate-notes` は **直前のタグ** との差分で自動生成される。想定外のタグ（プレリリース含む）が直前に入っていると本文がブレるので、生成後の本文は必ず目視確認する。ブレていた場合は `gh release edit v<version> --notes-start-tag <基準タグ>` などで再生成をユーザーと相談する。
 - リリースノートの人手調整が必要なら、`gh release edit v<version> --notes "..."` で後追い編集する方針（このスキルでは本文の手編集はしない）。

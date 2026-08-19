@@ -34,6 +34,7 @@ import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { AgentEntryBanner } from '~/screens/DestinationAgent/AgentEntryBanner';
 import { showDialogWhilePresenting } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
+import { getSearchResultHeadingText } from '~/utils/routeSearch';
 import { stationAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
@@ -138,6 +139,12 @@ const RouteSearchScreen = () => {
   } = useDestinationSelection();
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
+
+  // 検索の起点となる最寄り駅(またはバス停)を見出しに含める
+  const searchResultHeadingText = useMemo(
+    () => getSearchResultHeadingText(station, isJapanese),
+    [station]
+  );
 
   // ウォークスルー関連
   const {
@@ -413,7 +420,7 @@ const RouteSearchScreen = () => {
                   aiAgentEnabled && styles.searchResultHeadingWithBanner,
                 ]}
               >
-                {translate('searchResult')}
+                {searchResultHeadingText}
               </Heading>
             </View>
           }
