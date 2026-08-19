@@ -45,13 +45,20 @@ permissions が "Read and write permissions" になっているか、または�
 
 同じ PR に連続で push した場合は `concurrency` により古い実行が
 キャンセルされます。ただしキャンセルは実行中のジョブを止めるだけで、完了
-済みの OpenAI 呼び出しやコメント投稿までは取り消しません。そのため投稿の
-直前に PR の `headRefOid` を再取得し、差分を取得した時点の SHA と一致
-しない場合は投稿を中止して新しい実行に委ねます。
+済みの OpenAI 呼び出しやコメント投稿までは取り消しません。そのため次の
+2 段構えで、古い差分のレビューが最新のものに見えないようにしています。
 
-それでも「古い実行が投稿したあとに新しい実行が失敗する」ケースでは、コメ
-ントが古い差分のまま残ります。コメント末尾にレビュー対象コミットの短縮
-SHA を出しているので、PR の HEAD と一致しているかで判別してください。
+1. 差分は `gh pr diff` ではなく compare API (`base...head`) で取得し、
+   `gh pr view` の同一レスポンスから得た SHA ペアに固定する。これにより
+   コメントに出す対象コミットと差分の対応が必ず一致する。
+1. 投稿の直前に PR の `headRefOid` を再取得し、固定した SHA と一致しない
+   場合は投稿を中止して新しい実行に委ねる。
+
+ただし 2 の照合は best effort です。issue comment には条件付き書き込みが
+無いため、照合と投稿の間に push が入る可能性を原理的に排除できません。残る
+窓はミリ秒単位で、通常は後発の実行が同じコメントを上書きして自己修復します。
+後発が失敗した場合はコメントが古いまま残るので、コメント末尾のレビュー対象
+コミットが PR の HEAD と一致しているか確認してください。
 
 > [!IMPORTANT]
 > `pull_request_target` は常に base 側のワークフロー定義で動きます。
@@ -76,7 +83,8 @@ gh workflow run ai_code_review.yml -f pr_number=1234 -f reasoning_effort=xhigh
 
 ## 動作の流れ
 
-1. `gh pr view` / `gh pr diff` で PR のメタデータと統合 diff を取得する。
+1. `gh pr view` で PR のメタデータと base/head の SHA を取得し、compare API
+   (`base...head`) でその SHA ペアに固定した diff を取得する。
 1. `CLAUDE.md`（リポジトリ規約）と PR タイトル・本文・差分をプロンプトに組み立てる。
 1. OpenAI Responses API (`POST /v1/responses`) を Structured Outputs 付きで呼び出す。
 1. 返ってきた JSON を Markdown に整形し、PR にコメントを投稿する。
@@ -132,11 +140,11 @@ OPENAI_API_KEY="$OPENAI_API_KEY" \
 - **head 側のコードを checkout・実行しない**: 危険なのは
   `pull_request_target` という trigger そのものではなく、PR の head 側
   コードを checkout して secrets と同じジョブで実行することです。本
-  ワークフローは head の作業ツリーを一切必要としない（差分は `gh pr diff`
-  つまり API から取得する）ため、checkout を `base.sha` に固定し
+  ワークフローは head の作業ツリーを一切必要としない（差分は compare API
+  から取得する）ため、checkout を `base.sha` に固定し
   `persist-credentials: false` を指定しています。実行されるのは常に base
   側でレビュー済みの `.github/scripts/ai-code-review.mjs` と `CLAUDE.md`
-  で、PR の差分とメタデータは `gh pr diff` / `gh pr view` が返すデータと
+  で、PR の差分とメタデータは compare API / `gh pr view` が返すデータと
   してのみ扱います。
 - **`pull_request` ではなく `pull_request_target`**: `pull_request` は
   ワークフロー定義自体を PR 側（merge commit）から読みます。そのため

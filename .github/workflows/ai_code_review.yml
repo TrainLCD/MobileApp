@@ -106,13 +106,20 @@ jobs:
             echo "::error::PR 番号が不正です: $PR_NUMBER"
             exit 1
           fi
-          gh pr view "$PR_NUMBER" --json title,body,baseRefName,headRefOid > "$RUNNER_TEMP/pr.json"
-          # --patch はコミットごとの連結になり重複するため、統合 diff を使う。
-          gh pr diff "$PR_NUMBER" > "$RUNNER_TEMP/pr.diff"
+          gh pr view "$PR_NUMBER" \
+            --json title,body,baseRefName,baseRefOid,headRefOid > "$RUNNER_TEMP/pr.json"
+          # base/head を同一レスポンスから取り、compare API で不変の SHA ペアに固定する。
+          # gh pr diff は都度「現在の PR」を取りにいくため、上で控えた SHA と食い違い得る。
+          # コメント末尾に出す対象コミットの正しさが、この対応関係に依存している。
+          # なお compare の三点比較は gh pr diff と同じセマンティクスで、出力も一致する。
+          BASE_SHA="$(jq -r '.baseRefOid' "$RUNNER_TEMP/pr.json")"
+          HEAD_SHA="$(jq -r '.headRefOid' "$RUNNER_TEMP/pr.json")"
+          gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA" \
+            -H "Accept: application/vnd.github.v3.diff" > "$RUNNER_TEMP/pr.diff"
           echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           # 投稿直前に head が動いていないか照合するため、取得時点の SHA を控える。
-          echo "head_sha=$(jq -r '.headRefOid' "$RUNNER_TEMP/pr.json")" >> "$GITHUB_OUTPUT"
-          echo "差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "対象: $BASE_SHA...$HEAD_SHA / 差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
 
       - name: Run AI review
         if: steps.guard.outputs.enabled == 'true'
@@ -140,6 +147,11 @@ jobs:
           # concurrency のキャンセルは完了済みの API 呼び出しや投稿までは取り消さない。
           # レビュー中に PR が更新されていた場合、古い差分の結果は貼らずに
           # 新しい実行へ譲る。追い越されただけで異常ではないので exit 0 とする。
+          #
+          # ただしこの照合は best effort。issue comment には条件付き書き込みが
+          # 無いため、照合と投稿の間の push は原理的に排除できない。残る窓は
+          # ミリ秒単位で、通常は後発の実行が同じコメントを上書きして自己修復する。
+          # 後発が失敗した場合に備え、対象コミットをコメント末尾に明記している。
           CURRENT_SHA="$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)"
           if [ "$CURRENT_SHA" != "$REVIEWED_SHA" ]; then
             echo "::notice::レビュー中に PR が更新されたため投稿を中止します ($REVIEWED_SHA -> $CURRENT_SHA)"
