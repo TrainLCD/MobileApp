@@ -7,7 +7,11 @@
 # PR の head 側のコードは絶対に checkout・実行しないこと。
 # checkout の ref を head や merge ref に変えた瞬間、PR 作成者が
 # OPENAI_API_KEY と GITHUB_TOKEN を自由に持ち出せるようになる。
-# レビュー対象の差分は gh pr diff（API）から取得し、データとしてのみ扱う。
+# レビュー対象の差分は compare API から取得し、データとしてのみ扱う。
+#
+# ⚠️ branch protection の必須チェックにしないこと:
+# API 障害でジョブを赤くする設計のため、必須にすると OpenAI の障害で
+# マージが全面停止する。あくまで参考情報を出すだけのワークフロー。
 name: AI Code Review
 
 on:
@@ -157,8 +161,13 @@ jobs:
             echo "::notice::レビュー中に PR が更新されたため投稿を中止します ($REVIEWED_SHA -> $CURRENT_SHA)"
             exit 0
           fi
+          # 上書き対象は bot 自身の投稿に限る。投稿者を見ないと、誰かが同じマーカーで
+          # 始まるコメントを書いた場合にそれを上書きしてしまう（write 権限を持つ
+          # トークンは他人のコメントも編集できる）。login と type の両方を許容するのは、
+          # 判定を外して「見つからない」側に倒れると実行のたびに新規コメントを
+          # 量産してしまうため。人間（type=User）は両条件とも満たさない。
           COMMENT_ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
-            --jq '.[] | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
+            --jq '.[] | select(.user.type == "Bot" or .user.login == "github-actions[bot]") | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
           if [ -n "$COMMENT_ID" ]; then
             gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT_ID" \
               -F "body=@$RUNNER_TEMP/review.md" > /dev/null

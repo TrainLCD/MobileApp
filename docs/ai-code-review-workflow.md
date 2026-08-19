@@ -34,6 +34,17 @@ Secret が未設定の場合、ワークフローは警告を出してレビュ�
 permissions が "Read and write permissions" になっているか、または宣言
 した権限が縮小されていないかを確認してください。
 
+> [!IMPORTANT]
+> OpenAI 側でプロジェクトの予算上限とアラートを必ず設定してください。
+> このワークフロー自体には課金の上限がありません。PR への push ごとに
+> `gpt-5.6-sol` を呼ぶため、上限を設けないと請求が発生するまで異常に
+> 気づけません。`concurrency` で古い実行はキャンセルしますが、既に発射
+> された API 呼び出しは課金されます。
+
+このワークフローは branch protection の必須チェックにしないでください。
+API 障害でジョブを赤くする設計なので、必須にすると OpenAI の障害でマージ
+が全面停止します。あくまで参考情報を出すだけのワークフローです。
+
 ## 実行タイミング
 
 `pull_request_target` イベントの `opened` / `synchronize` / `reopened` /
@@ -42,6 +53,11 @@ permissions が "Read and write permissions" になっているか、または�
 - fork からの PR: ジョブの `if` guard で遮断しています
 - Draft PR: `ready_for_review` になった時点で実行されます
 - `skip-ai-review` ラベルが付いた PR: 明示的な opt-out
+
+これらの除外が効くのは自動実行のときだけです。`workflow_dispatch` による
+手動実行は guard を通らないため、write 権限を持つ人の判断で fork PR・
+Draft・`skip-ai-review` ラベル付きの PR もレビューできます。head 側の
+コードは実行しないので、手動実行でもセキュリティ上の差はありません。
 
 同じ PR に連続で push した場合は `concurrency` により古い実行が
 キャンセルされます。ただしキャンセルは実行中のジョブを止めるだけで、完了
