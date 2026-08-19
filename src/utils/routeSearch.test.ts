@@ -414,6 +414,59 @@ describe('getSearchResultHeadingText', () => {
     );
   });
 
+  it('括弧書きの前に空白がある駅名でも余分な空白を残さない', () => {
+    const station = createStation(1, {
+      name: '東京 (メトロ)',
+      nameRoman: 'Tokyo (Metro)',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe(
+      'searchResultFromStation(東京)'
+    );
+    expect(getSearchResultHeadingText(station, false)).toBe(
+      'searchResultFromStation(Tokyo)'
+    );
+  });
+
+  it('括弧書きが語間にある駅名でも空白が二重にならない', () => {
+    const station = createStation(1, {
+      name: '東京 (メトロ) 前',
+      nameRoman: 'Tokyo (Metro) Station',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe(
+      'searchResultFromStation(東京 前)'
+    );
+    expect(getSearchResultHeadingText(station, false)).toBe(
+      'searchResultFromStation(Tokyo Station)'
+    );
+  });
+
+  it('語間の単一空白を持つ駅名は空白を保持する', () => {
+    const station = createStation(1, {
+      name: '東京駅丸の内南口',
+      nameRoman: 'Tokyo Sta. Marunouchi South Exit',
+      line: { transportType: TransportType.Bus },
+    });
+
+    expect(getSearchResultHeadingText(station, false)).toBe(
+      'searchResultFromBusStop(Tokyo Sta. Marunouchi South Exit)'
+    );
+  });
+
+  it('括弧書きを除くと空白だけになる駅名は駅名なしの見出しを返す', () => {
+    const station = createStation(1, {
+      name: ' (メトロ)',
+      nameRoman: ' (Metro)',
+      line: { transportType: TransportType.Rail },
+    });
+
+    expect(getSearchResultHeadingText(station, true)).toBe('searchResult');
+    expect(getSearchResultHeadingText(station, false)).toBe('searchResult');
+  });
+
   it('駅名の括弧書きは見出しから省く', () => {
     const station = createStation(1, {
       name: '東京(メトロ)',

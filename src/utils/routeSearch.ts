@@ -82,11 +82,17 @@ export const getSearchResultHeadingText = (
   isJapanese: boolean
 ): string => {
   if (!station) return translate('searchResult');
-  // NowHeader と同様、駅名の括弧書き(路線名などの補足)は見出しでは省く
-  const parenthesesRe = /\([^()]*\)/g;
-  const stationName = isJapanese
-    ? (station.name ?? '').replaceAll(parenthesesRe, '')
-    : (station.nameRoman ?? station.name ?? '').replaceAll(parenthesesRe, '');
+  const rawName = isJapanese
+    ? (station.name ?? '')
+    : (station.nameRoman ?? station.name ?? '');
+  const stationName = rawName
+    // NowHeader と同様、駅名の括弧書き(路線名などの補足)は見出しでは省く
+    .replaceAll(/\([^()]*\)/g, '')
+    // 括弧書きの除去で生じた連続空白だけを畳む
+    // (「Tokyo Sta. Marunouchi South Exit」のように語間の単一空白を持つ駅名があるため)
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  // 括弧書きを除いた結果が空になる駅名もフォールバックさせる
   if (!stationName.length) return translate('searchResult');
   // バス停は「駅」ではないため接尾辞を出し分ける(NowHeader のバスバッジと同じ判定)
   return isBusLine(station.line)
