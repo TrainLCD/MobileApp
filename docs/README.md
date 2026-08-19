@@ -10,5 +10,6 @@
 - [Apollo Client → TanStack Query 移行メモ](./apollo-to-react-query-migration.md)
 - [canary リリース PR でのバージョン更新](./bump-version-on-canary-pr.md)
 - [本番リリース PR でのバージョン更新](./bump-version-on-release-pr.md)
+- [AI コードレビュー (GPT-5.6 Sol)](./ai-code-review-workflow.md)
 - [AIエージェント設計書](./spec/ai-agent/architecture.md)
 - [リモートTTS(iOS)設計書](./spec/tts/remote-tts.md)

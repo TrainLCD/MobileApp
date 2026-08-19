@@ -1,0 +1,125 @@
+# OpenAI GPT-5.6 Sol に Pull Request の差分をレビューさせ、結果を PR のコメントとして投稿する。
+# 参考情報の提供が目的なので、レビュー結果（指摘の有無）でジョブを失敗させることはしない。
+# 一方で API 呼び出しやコメント投稿の失敗は握り潰さず、ジョブを赤くして原因を追えるようにしている。
+name: AI Code Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Target PR number"
+        required: true
+        type: string
+      reasoning_effort:
+        description: "Reasoning effort for gpt-5.6-sol"
+        required: false
+        default: "high"
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - xhigh
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# 同じ PR に連続で push された場合、古いレビューは打ち切って最新の差分だけを見る。
+concurrency:
+  group: ai-code-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+env:
+  TZ: "Asia/Tokyo"
+  OPENAI_MODEL: "gpt-5.6-sol"
+
+jobs:
+  review:
+    runs-on: ubuntu-22.04
+    # fork からの PR には secrets が渡らないため対象外。
+    # Draft と skip-ai-review ラベル付き PR も、レビュー待ちではないのでスキップする。
+    if: |
+      github.event_name == 'workflow_dispatch' || (
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.draft == false &&
+        !contains(github.event.pull_request.labels.*.name, 'skip-ai-review')
+      )
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # OPENAI_API_KEY 未設定でも PR を止めないよう、警告を出して後続をスキップする。
+      - name: Check OpenAI credentials
+        id: guard
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "::warning::secrets.OPENAI_API_KEY が未設定のため AI コードレビューをスキップします"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # PR タイトル・本文はレビュー対象の untrusted な入力なので、
+      # シェル変数に展開せず JSON ファイルのままスクリプトへ渡す。
+      - name: Fetch pull request diff
+        id: pr
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$PR_NUMBER" | grep -Eq '^[0-9]+$'; then
+            echo "::error::PR 番号が不正です: $PR_NUMBER"
+            exit 1
+          fi
+          gh pr view "$PR_NUMBER" --json title,body,baseRefName > "$RUNNER_TEMP/pr.json"
+          # --patch はコミットごとの連結になり重複するため、統合 diff を使う。
+          gh pr diff "$PR_NUMBER" > "$RUNNER_TEMP/pr.diff"
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
+
+      - name: Run AI review
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REASONING_EFFORT: ${{ inputs.reasoning_effort || 'high' }}
+          DIFF_PATH: ${{ runner.temp }}/pr.diff
+          PR_META_PATH: ${{ runner.temp }}/pr.json
+          OUTPUT_PATH: ${{ runner.temp }}/review.md
+          # リポジトリ規約を渡し、コーディング規約違反も指摘できるようにする。
+          GUIDELINES_PATH: CLAUDE.md
+        run: node .github/scripts/ai-code-review.mjs
+
+      # 再 push のたびにコメントが増えないよう、マーカー付きの既存コメントを更新する。
+      - name: Post review comment
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          COMMENT_ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+            --jq '.[] | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
+          if [ -n "$COMMENT_ID" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT_ID" \
+              -F "body=@$RUNNER_TEMP/review.md" > /dev/null
+            echo "既存コメント $COMMENT_ID を更新しました"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+              -F "body=@$RUNNER_TEMP/review.md" > /dev/null
+            echo "レビューコメントを新規投稿しました"
+          fi
