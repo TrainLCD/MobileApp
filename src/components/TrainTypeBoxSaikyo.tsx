@@ -37,6 +37,11 @@ type Props = {
   lineColor: string;
 };
 
+// 種別箱の内寸。styles と 2 行レイアウトの高さクランプで同じ値を使う必要があるため、
+// 各所へ数値を直書きせず定数から参照する。
+const BOX_WIDTH = isTablet ? 175 : 96.25;
+const BOX_HEIGHT = isTablet ? 55 : 30.25;
+
 const styles = StyleSheet.create({
   root: {
     justifyContent: 'center',
@@ -50,16 +55,16 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   container: {
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
+    width: BOX_WIDTH,
+    height: BOX_HEIGHT,
     borderBottomLeftRadius: isTablet ? 8 : 4,
     borderBottomRightRadius: isTablet ? 8 : 4,
     overflow: 'hidden',
     position: 'relative',
   },
   gradient: {
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
+    width: BOX_WIDTH,
+    height: BOX_HEIGHT,
     position: 'absolute',
   },
   text: {
@@ -267,6 +272,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
     isTablet,
     numberOfLines,
     prevNumberOfLines,
+    maxHeight: BOX_HEIGHT,
   });
 
   return (

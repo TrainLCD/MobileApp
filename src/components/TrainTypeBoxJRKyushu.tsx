@@ -30,10 +30,15 @@ type Props = {
   trainType: TrainType | null;
 };
 
+// 種別箱の内寸。styles と 2 行レイアウトの高さクランプで同じ値を使う必要があるため、
+// 各所へ数値を直書きせず定数から参照する。
+const BOX_WIDTH = isTablet ? 175 : 128;
+const BOX_HEIGHT = isTablet ? 55 : 35;
+
 const styles = StyleSheet.create({
   box: {
-    width: isTablet ? 175 : 128,
-    height: isTablet ? 55 : 35,
+    width: BOX_WIDTH,
+    height: BOX_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -50,8 +55,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
+    // box より小さい旧値(96.25 x 30.25)が残っており、種別名が箱からはみ出して
+    // 潰れる原因になっていたため box と同じ内寸に揃える。
+    width: BOX_WIDTH,
+    height: BOX_HEIGHT,
   },
 });
 
@@ -221,6 +228,7 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
     isTablet,
     numberOfLines,
     prevNumberOfLines,
+    maxHeight: BOX_HEIGHT,
   });
 
   return (
