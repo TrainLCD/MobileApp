@@ -551,6 +551,49 @@ describe('TypeChangeNotify', () => {
       expect(queryAllByText(/小田原/)).toHaveLength(0);
       expect(queryAllByText(/Odawara/)).toHaveLength(0);
     });
+
+    // 現在駅が経路内に見つからない場合は境界を特定できないため、経路全体から
+    // 推定する従来のロジックへフォールバックする。進行方向より手前の区間を
+    // 除外できないベストエフォートの挙動であることを明示的に固定しておく。
+    it('現在駅がnullの場合はINBOUNDの従来ロジックにフォールバックする', () => {
+      setupMocks({
+        stations: inboundStations,
+        currentStation: null,
+        selectedDirection: 'INBOUND',
+        selectedBound: { name: '小田原', nameRoman: 'Odawara' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      // 経路全体で現在種別(快速)の最終駅となる大船
+      expect(queryAllByText(/大船/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Ofuna/).length).toBeGreaterThan(0);
+    });
+
+    it('現在駅が経路内に無い場合はOUTBOUNDの従来ロジックにフォールバックする', () => {
+      const outboundStations = inboundStations.slice().reverse();
+
+      setupMocks({
+        stations: outboundStations,
+        currentStation: {
+          id: 999,
+          groupId: 999,
+          name: '経路外駅',
+          nameRoman: 'Unknown',
+          line: tokaidoLine,
+          trainType: rapidType,
+          stopCondition: 'STOP',
+        },
+        selectedDirection: 'OUTBOUND',
+        selectedBound: { name: '小田原', nameRoman: 'Odawara' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      // 乗車位置が不明なため、経路全体で次種別(普通)に該当する最初の駅である前橋になる
+      expect(queryAllByText(/前橋/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Maebashi/).length).toBeGreaterThan(0);
+    });
   });
 
   describe('enabledLanguages による表示切替', () => {
