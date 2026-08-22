@@ -176,6 +176,9 @@ describe('TrainTypeBox font family', () => {
 
 describe('TrainTypeBox 2行種別の可読性', () => {
   const BOX_HEIGHT = 30.25;
+  // TrainTypeBox の MINIMUM_FONT_SCALE と揃える。可読性を保てない値
+  // (0.01 など) へ緩められた場合に検知できるよう実値で固定する。
+  const MINIMUM_FONT_SCALE = 0.5;
 
   const twoLineTrainType: TrainType = {
     __typename: 'TrainType',
@@ -198,6 +201,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
   };
 
   afterEach(() => {
+    jest.clearAllMocks();
     jest.restoreAllMocks();
   });
 
@@ -248,7 +252,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     expect(texts.length).toBeGreaterThan(0);
     for (const text of texts) {
       expect(text.props.adjustsFontSizeToFit).toBe(true);
-      expect(text.props.minimumFontScale).toBeGreaterThan(0);
+      expect(text.props.minimumFontScale).toBe(MINIMUM_FONT_SCALE);
     }
   });
 });
