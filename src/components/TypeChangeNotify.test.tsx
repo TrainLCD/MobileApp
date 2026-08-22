@@ -62,21 +62,31 @@ jest.mock('expo-linear-gradient', () => ({
   LinearGradient: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+// jest.clearAllMocks() は呼び出し履歴のみを消去しmockReturnValueの実装は残るため、
+// 各テストの beforeEach で下記の既定値を再設定してテスト間の独立性を保つ
+const mockDefaultWindowDimensions = {
+  width: 812,
+  height: 375,
+  isPortrait: false,
+};
+const mockDefaultLine = {
+  id: 1,
+  nameShort: 'テスト線',
+  nameRoman: 'Test Line',
+  color: '#FF0000',
+  company: { id: 1, nameShort: 'テスト', nameEnglishShort: 'Test' },
+};
+const mockDefaultStation = {
+  id: 1,
+  groupId: 1,
+  name: 'テスト駅',
+  nameRoman: 'Test Station',
+};
+
 jest.mock('~/hooks', () => ({
-  useLandscapeWindowDimensions: jest.fn(() => ({ width: 812, height: 375 })),
-  useCurrentLine: jest.fn(() => ({
-    id: 1,
-    nameShort: 'テスト線',
-    nameRoman: 'Test Line',
-    color: '#FF0000',
-    company: { id: 1, nameShort: 'テスト', nameEnglishShort: 'Test' },
-  })),
-  useCurrentStation: jest.fn(() => ({
-    id: 1,
-    groupId: 1,
-    name: 'テスト駅',
-    nameRoman: 'Test Station',
-  })),
+  useLandscapeWindowDimensions: jest.fn(() => mockDefaultWindowDimensions),
+  useCurrentLine: jest.fn(() => mockDefaultLine),
+  useCurrentStation: jest.fn(() => mockDefaultStation),
   useCurrentTrainType: jest.fn(() => null),
   useNextTrainType: jest.fn(() => null),
 }));
@@ -121,12 +131,18 @@ jest.mock('./Typography', () => {
 describe('TypeChangeNotify', () => {
   beforeEach(() => {
     mockAtomValues();
-    const { useLandscapeWindowDimensions } = require('~/hooks');
-    useLandscapeWindowDimensions.mockReturnValue({
-      width: 812,
-      height: 375,
-      isPortrait: false,
-    });
+    const {
+      useLandscapeWindowDimensions,
+      useCurrentLine,
+      useCurrentStation,
+      useCurrentTrainType,
+      useNextTrainType,
+    } = require('~/hooks');
+    useLandscapeWindowDimensions.mockReturnValue(mockDefaultWindowDimensions);
+    useCurrentLine.mockReturnValue(mockDefaultLine);
+    useCurrentStation.mockReturnValue(mockDefaultStation);
+    useCurrentTrainType.mockReturnValue(null);
+    useNextTrainType.mockReturnValue(null);
   });
 
   afterEach(() => {
