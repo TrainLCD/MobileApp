@@ -1373,36 +1373,43 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
       return afterAllStopLastStation;
     }
 
-    if (typeChangedStationIndex > 0) {
-      // NOTE: 小田急線 小田原〜新宿の種別が変わる駅が開成駅になってしまうので
-      // OUTBOUNDでは現在種別の最終駅ではなく次種別の最初の駅を境界として扱う
-      if (selectedDirection !== 'INBOUND') {
-        return orderedStations[typeChangedStationIndex];
+    // 現在駅が経路内に見つからない場合のみ、経路全体から推定する従来ロジックへ
+    // フォールバックする(進行方向より手前の区間を除外できないベストエフォート)
+    if (orderedCurrentStationIndex === -1) {
+      if (selectedDirection === 'INBOUND') {
+        const currentTypeStations = stations.filter(
+          (s) => s.trainType?.typeId === trainType?.typeId
+        );
+        return currentTypeStations.at(-1);
       }
 
-      // trainTypeを持たない駅が種別変更駅の手前に挟まる経路でも現在種別の駅を返すため、
-      // 変更駅の直前要素ではなく現在駅から変更駅までの範囲を後方検索する
-      const currentTypeStationsUntilChange = orderedStations
-        .slice(orderedCurrentStationIndex, typeChangedStationIndex)
-        .filter((s) => s.trainType?.typeId === trainType?.typeId);
-      return (
-        currentTypeStationsUntilChange.at(-1) ??
-        orderedStations[typeChangedStationIndex]
+      const nextTypeStations = stations.filter(
+        (s) => s.trainType?.typeId === nextTrainType?.typeId
       );
+      return nextTypeStations.at(-1);
     }
 
-    // 現在駅が経路内に見つからない等で境界を特定できない場合のフォールバック
-    if (selectedDirection === 'INBOUND') {
-      const currentTypeStations = stations.filter(
-        (s) => s.trainType?.typeId === trainType?.typeId
-      );
-      return currentTypeStations.at(-1);
+    // 現在駅より先に種別が変わる駅がない場合、経路全体から探すと通過済みの
+    // 同一種別区間を拾ってしまうため何も表示しない
+    if (typeChangedStationIndex === -1) {
+      return undefined;
     }
 
-    const nextTypeStations = stations.filter(
-      (s) => s.trainType?.typeId === nextTrainType?.typeId
+    // NOTE: 小田急線 小田原〜新宿の種別が変わる駅が開成駅になってしまうので
+    // OUTBOUNDでは現在種別の最終駅ではなく次種別の最初の駅を境界として扱う
+    if (selectedDirection !== 'INBOUND') {
+      return orderedStations[typeChangedStationIndex];
+    }
+
+    // trainTypeを持たない駅が種別変更駅の手前に挟まる経路でも現在種別の駅を返すため、
+    // 変更駅の直前要素ではなく現在駅から変更駅までの範囲を後方検索する
+    const currentTypeStationsUntilChange = orderedStations
+      .slice(orderedCurrentStationIndex, typeChangedStationIndex)
+      .filter((s) => s.trainType?.typeId === trainType?.typeId);
+    return (
+      currentTypeStationsUntilChange.at(-1) ??
+      orderedStations[typeChangedStationIndex]
     );
-    return nextTypeStations.at(-1);
   }, [
     trainType,
     nextTrainType,

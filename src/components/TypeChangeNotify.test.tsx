@@ -552,6 +552,32 @@ describe('TypeChangeNotify', () => {
       expect(queryAllByText(/Odawara/)).toHaveLength(0);
     });
 
+    it('現在駅より先に種別変更駅が無い場合は通過済み駅にフォールバックしない', () => {
+      // 現在駅(新宿)より先はすべて同一種別で、通過済みの高崎線内にのみ
+      // nextTrainTypeと同じ普通が存在する経路
+      const noChangeAheadStations = [
+        inboundStations[0],
+        inboundStations[1],
+        inboundStations[2],
+        inboundStations[3],
+        inboundStations[4],
+      ];
+
+      setupMocks({
+        stations: noChangeAheadStations,
+        currentStation: noChangeAheadStations[2],
+        selectedDirection: 'INBOUND',
+        selectedBound: { name: '小田原', nameRoman: 'Odawara' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/前橋/)).toHaveLength(0);
+      expect(queryAllByText(/Maebashi/)).toHaveLength(0);
+      expect(queryAllByText(/大船/)).toHaveLength(0);
+      expect(queryAllByText(/Ofuna/)).toHaveLength(0);
+    });
+
     // 現在駅が経路内に見つからない場合は境界を特定できないため、経路全体から
     // 推定する従来のロジックへフォールバックする。進行方向より手前の区間を
     // 除外できないベストエフォートの挙動であることを明示的に固定しておく。
