@@ -3,6 +3,7 @@ import React from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
+import { computeTwoLineTypography } from '~/utils/computeTwoLineTypography';
 import TrainTypeBoxSaikyo from './TrainTypeBoxSaikyo';
 
 // Mock dependencies
@@ -23,6 +24,15 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('~/hooks/useLazyPrevious', () => ({
   useLazyPrevious: jest.fn((value) => value),
 }));
+
+// 実計算はそのまま使いつつ、maxHeight の結線自体を検証できるよう呼び出しを記録する
+jest.mock('~/utils/computeTwoLineTypography', () => {
+  const actual = jest.requireActual('~/utils/computeTwoLineTypography');
+  return {
+    ...actual,
+    computeTwoLineTypography: jest.fn(actual.computeTwoLineTypography),
+  };
+});
 
 // LinearGradientのcolors propをDOM上から取得できるようにする
 jest.mock('expo-linear-gradient', () => {
@@ -237,9 +247,18 @@ describe('TrainTypeBoxSaikyo', () => {
       nameRoman: 'Commuter Rapid\nvia Kawagoe Line',
     };
 
-    // computeTwoLineTypography へ箱の高さを渡さなくなると 2 行分の行送りが
-    // 箱を超え、adjustsFontSizeToFit が高さ制約を満たせずグリフが潰れる。
-    // maxHeight の結線が外れた場合に検知できるよう不変条件を固定する。
+    // 埼京線版は現行値では maxHeight なしでも箱に収まるため、行送りの確認だけでは
+    // 結線が外れても検知できない。渡している maxHeight 自体を検証して固定する。
+    it('2行種別で箱の高さをmaxHeightとして渡す', () => {
+      render(
+        <TrainTypeBoxSaikyo lineColor="#00ac9a" trainType={twoLineTrainType} />
+      );
+
+      expect(computeTwoLineTypography).toHaveBeenCalledWith(
+        expect.objectContaining({ maxHeight: SAIKYO_BOX_HEIGHT })
+      );
+    });
+
     it('2行種別の行送り2行分が箱の高さに収まる', () => {
       const { UNSAFE_getAllByType } = render(
         <TrainTypeBoxSaikyo lineColor="#00ac9a" trainType={twoLineTrainType} />
@@ -249,7 +268,7 @@ describe('TrainTypeBoxSaikyo', () => {
         (label) => label.props.numberOfLines === 2
       );
 
-      expect(labels.length).toBeGreaterThan(0);
+      expect(labels).toHaveLength(2);
       for (const label of labels) {
         const { lineHeight } = StyleSheet.flatten(label.props.style) as {
           lineHeight: number;
