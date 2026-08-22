@@ -1,7 +1,9 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { Animated, StyleSheet } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
+import { computeTwoLineTypography } from '~/utils/computeTwoLineTypography';
 import TrainTypeBoxSaikyo from './TrainTypeBoxSaikyo';
 
 // Mock dependencies
@@ -22,6 +24,15 @@ jest.mock('react-native-reanimated', () => {
 jest.mock('~/hooks/useLazyPrevious', () => ({
   useLazyPrevious: jest.fn((value) => value),
 }));
+
+// 実計算はそのまま使いつつ、maxHeight の結線自体を検証できるよう呼び出しを記録する
+jest.mock('~/utils/computeTwoLineTypography', () => {
+  const actual = jest.requireActual('~/utils/computeTwoLineTypography');
+  return {
+    ...actual,
+    computeTwoLineTypography: jest.fn(actual.computeTwoLineTypography),
+  };
+});
 
 // LinearGradientのcolors propをDOM上から取得できるようにする
 jest.mock('expo-linear-gradient', () => {
@@ -66,6 +77,9 @@ const TestSplitFunction = ({
 
   return null; // We just care that the component doesn't crash
 };
+
+// TrainTypeBoxSaikyo の BOX_HEIGHT (スマホ時) と揃える。
+const SAIKYO_BOX_HEIGHT = 30.25;
 
 describe('TrainTypeBoxSaikyo', () => {
   const mockTrainType: TrainType = {
@@ -223,6 +237,44 @@ describe('TrainTypeBoxSaikyo', () => {
         />
       );
       expect(hasGradientWithColor(queryAllByTestId, '#abcdef')).toBe(true);
+    });
+  });
+
+  describe('種別箱のレイアウト', () => {
+    const twoLineTrainType: TrainType = {
+      ...mockTrainType,
+      name: '通勤快速\n(川越線直通)',
+      nameRoman: 'Commuter Rapid\nvia Kawagoe Line',
+    };
+
+    // 埼京線版は現行値では maxHeight なしでも箱に収まるため、行送りの確認だけでは
+    // 結線が外れても検知できない。渡している maxHeight 自体を検証して固定する。
+    it('2行種別で箱の高さをmaxHeightとして渡す', () => {
+      render(
+        <TrainTypeBoxSaikyo lineColor="#00ac9a" trainType={twoLineTrainType} />
+      );
+
+      expect(computeTwoLineTypography).toHaveBeenCalledWith(
+        expect.objectContaining({ maxHeight: SAIKYO_BOX_HEIGHT })
+      );
+    });
+
+    it('2行種別の行送り2行分が箱の高さに収まる', () => {
+      const { UNSAFE_getAllByType } = render(
+        <TrainTypeBoxSaikyo lineColor="#00ac9a" trainType={twoLineTrainType} />
+      );
+      // クロスフェードの新旧2層とも2行レイアウトで描画される。
+      const labels = UNSAFE_getAllByType(Animated.Text).filter(
+        (label) => label.props.numberOfLines === 2
+      );
+
+      expect(labels).toHaveLength(2);
+      for (const label of labels) {
+        const { lineHeight } = StyleSheet.flatten(label.props.style) as {
+          lineHeight: number;
+        };
+        expect(lineHeight * 2).toBeLessThanOrEqual(SAIKYO_BOX_HEIGHT);
+      }
     });
   });
 });
