@@ -332,6 +332,203 @@ describe('TypeChangeNotify', () => {
     expect(odakyuTexts).toHaveLength(0);
   });
 
+  describe('種別が変わる駅の特定', () => {
+    const jrEast = { id: 1, nameShort: 'JR東日本' };
+    const shonanShinjukuLine = {
+      id: 11302,
+      nameShort: '湘南新宿ライン',
+      nameRoman: 'Shonan-Shinjuku Line',
+      color: '#E21F26',
+      company: jrEast,
+    };
+    const takasakiLine = {
+      id: 11332,
+      nameShort: '高崎線',
+      nameRoman: 'Takasaki Line',
+      color: '#F68B1E',
+      company: jrEast,
+    };
+    const tokaidoLine = {
+      id: 11301,
+      nameShort: '東海道線',
+      nameRoman: 'Tokaido Line',
+      color: '#F68B1E',
+      company: jrEast,
+    };
+
+    // 高崎線内は普通、湘南新宿ライン内は快速、東海道線内は普通に変わる経路。
+    // 高崎線内の普通と東海道線内の普通は同一の typeId を持つ。
+    const localType = { typeId: 1, name: '普通', nameRoman: 'Local' };
+    const rapidType = { typeId: 2, name: '快速', nameRoman: 'Rapid' };
+
+    // 前橋→小田原の進行方向順(INBOUND時の stations の並び)
+    const inboundStations = [
+      {
+        id: 1,
+        groupId: 1,
+        name: '前橋',
+        nameRoman: 'Maebashi',
+        line: takasakiLine,
+        trainType: localType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 2,
+        groupId: 2,
+        name: '大宮',
+        nameRoman: 'Omiya',
+        line: shonanShinjukuLine,
+        trainType: rapidType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 3,
+        groupId: 3,
+        name: '新宿',
+        nameRoman: 'Shinjuku',
+        line: shonanShinjukuLine,
+        trainType: rapidType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 4,
+        groupId: 4,
+        name: '渋谷',
+        nameRoman: 'Shibuya',
+        line: shonanShinjukuLine,
+        trainType: rapidType,
+        stopCondition: 'STOP',
+      },
+      // 直通の境界駅は路線ごとに1駅ずつ現れる
+      {
+        id: 5,
+        groupId: 5,
+        name: '大船',
+        nameRoman: 'Ofuna',
+        line: shonanShinjukuLine,
+        trainType: rapidType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 6,
+        groupId: 5,
+        name: '大船',
+        nameRoman: 'Ofuna',
+        line: tokaidoLine,
+        trainType: localType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 7,
+        groupId: 6,
+        name: '小田原',
+        nameRoman: 'Odawara',
+        line: tokaidoLine,
+        trainType: localType,
+        stopCondition: 'STOP',
+      },
+    ];
+
+    const setupMocks = ({
+      stations,
+      currentStation,
+      selectedDirection,
+      selectedBound,
+    }: {
+      stations: unknown[];
+      currentStation: unknown;
+      selectedDirection: 'INBOUND' | 'OUTBOUND';
+      selectedBound: { name: string; nameRoman: string };
+    }) => {
+      const {
+        useCurrentLine,
+        useCurrentStation,
+        useCurrentTrainType,
+        useNextTrainType,
+      } = require('~/hooks');
+
+      useCurrentLine.mockReturnValue(shonanShinjukuLine);
+      useCurrentStation.mockReturnValue(currentStation);
+      useCurrentTrainType.mockReturnValue({
+        ...rapidType,
+        color: '#E21F26',
+        line: shonanShinjukuLine,
+      });
+      useNextTrainType.mockReturnValue({
+        ...localType,
+        color: '#F68B1E',
+        line: tokaidoLine,
+      });
+
+      mockAtomValues({
+        stations,
+        selectedDirection,
+        selectedBound,
+        enabledLanguages: ['JA', 'EN'],
+      });
+    };
+
+    it('OUTBOUND時に通過済みの同一種別区間の駅を種別変更駅として表示しない', () => {
+      // OUTBOUND では stations が進行方向と逆順(小田原→前橋)で保持される
+      const outboundStations = inboundStations.slice().reverse();
+
+      setupMocks({
+        stations: outboundStations,
+        // 新宿から乗車し小田原へ向かう
+        currentStation: outboundStations[4],
+        selectedDirection: 'OUTBOUND',
+        selectedBound: { name: '小田原', nameRoman: 'Odawara' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      // 進行方向で最初に普通となる大船が表示され、通過済みの前橋は表示されない
+      expect(queryAllByText(/大船/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Ofuna/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/前橋/)).toHaveLength(0);
+      expect(queryAllByText(/Maebashi/)).toHaveLength(0);
+    });
+
+    it('INBOUND時は現在駅より先で種別が変わる駅を表示する', () => {
+      setupMocks({
+        stations: inboundStations,
+        currentStation: inboundStations[2],
+        selectedDirection: 'INBOUND',
+        selectedBound: { name: '小田原', nameRoman: 'Odawara' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/大船/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Ofuna/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/前橋/)).toHaveLength(0);
+      expect(queryAllByText(/Maebashi/)).toHaveLength(0);
+    });
+
+    it('INBOUND時に現在の種別が経路の後方で再度現れても最初に変わる駅を表示する', () => {
+      const typeRevertingStations = [
+        inboundStations[2],
+        inboundStations[3],
+        inboundStations[5],
+        { ...inboundStations[6], trainType: rapidType },
+      ];
+
+      setupMocks({
+        stations: typeRevertingStations,
+        currentStation: typeRevertingStations[0],
+        selectedDirection: 'INBOUND',
+        selectedBound: { name: '熱海', nameRoman: 'Atami' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/渋谷/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Shibuya/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/小田原/)).toHaveLength(0);
+      expect(queryAllByText(/Odawara/)).toHaveLength(0);
+    });
+  });
+
   describe('enabledLanguages による表示切替', () => {
     const setupLanguageScenario = (enabledLanguages: string[]) => {
       const {
