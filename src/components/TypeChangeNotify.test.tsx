@@ -505,6 +505,30 @@ describe('TypeChangeNotify', () => {
       expect(queryAllByText(/Maebashi/)).toHaveLength(0);
     });
 
+    it('INBOUND時に種別情報のない駅が挟まっても現在種別の最終駅を表示する', () => {
+      const stationsWithUnknownType = [
+        inboundStations[2],
+        inboundStations[3],
+        // trainTypeが取得できない駅
+        { ...inboundStations[4], id: 99, groupId: 99, trainType: undefined },
+        inboundStations[5],
+        inboundStations[6],
+      ];
+
+      setupMocks({
+        stations: stationsWithUnknownType,
+        currentStation: stationsWithUnknownType[0],
+        selectedDirection: 'INBOUND',
+        selectedBound: { name: '小田原', nameRoman: 'Odawara' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/渋谷/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/Shibuya/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/大船/)).toHaveLength(0);
+    });
+
     it('INBOUND時に現在の種別が経路の後方で再度現れても最初に変わる駅を表示する', () => {
       const typeRevertingStations = [
         inboundStations[2],

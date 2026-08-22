@@ -1376,9 +1376,19 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     if (typeChangedStationIndex > 0) {
       // NOTE: 小田急線 小田原〜新宿の種別が変わる駅が開成駅になってしまうので
       // OUTBOUNDでは現在種別の最終駅ではなく次種別の最初の駅を境界として扱う
-      return selectedDirection === 'INBOUND'
-        ? orderedStations[typeChangedStationIndex - 1]
-        : orderedStations[typeChangedStationIndex];
+      if (selectedDirection !== 'INBOUND') {
+        return orderedStations[typeChangedStationIndex];
+      }
+
+      // trainTypeを持たない駅が種別変更駅の手前に挟まる経路でも現在種別の駅を返すため、
+      // 変更駅の直前要素ではなく現在駅から変更駅までの範囲を後方検索する
+      const currentTypeStationsUntilChange = orderedStations
+        .slice(orderedCurrentStationIndex, typeChangedStationIndex)
+        .filter((s) => s.trainType?.typeId === trainType?.typeId);
+      return (
+        currentTypeStationsUntilChange.at(-1) ??
+        orderedStations[typeChangedStationIndex]
+      );
     }
 
     // 現在駅が経路内に見つからない等で境界を特定できない場合のフォールバック
@@ -1400,6 +1410,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     afterAllStopLastStation,
     currentLine,
     isNextTypeIsLocal,
+    orderedCurrentStationIndex,
     orderedStations,
     reversedFinalPassedStationIndex,
     reversedStations,
