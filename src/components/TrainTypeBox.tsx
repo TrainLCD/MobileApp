@@ -55,16 +55,24 @@ export const resolveTrainTypeFontFamily = (
   return theme === APP_THEME.LED ? FONTS.JFDotJiskan24h : FONTS.RobotoBold;
 };
 
+// 種別箱の内寸。styles と 2 行レイアウトの高さクランプで同じ値を使う必要があるため、
+// 各所へ数値を直書きせず定数から参照する。
+const BOX_WIDTH = isTablet ? 175 : 96.25;
+const BOX_HEIGHT = isTablet ? 55 : 30.25;
+// adjustsFontSizeToFit の縮小下限。既定 (0) のままだと収まらないときに
+// グリフが潰れて種別名が消えたように見えるため、可読サイズで下げ止める。
+const MINIMUM_FONT_SCALE = 0.5;
+
 const styles = StyleSheet.create({
   box: {
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
+    width: BOX_WIDTH,
+    height: BOX_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
   },
   gradient: {
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
+    width: BOX_WIDTH,
+    height: BOX_HEIGHT,
     position: 'absolute',
     borderRadius: 4,
   },
@@ -83,12 +91,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    width: isTablet ? 175 : 96.25,
-    height: isTablet ? 55 : 30.25,
+    width: BOX_WIDTH,
+    height: BOX_HEIGHT,
   },
   nextTrainTypeWrapper: {
     position: 'absolute',
-    top: isTablet ? 55 : 30.25,
+    top: BOX_HEIGHT,
     alignItems: 'flex-start',
     overflow: 'visible',
     marginTop: 4,
@@ -327,6 +335,7 @@ const TrainTypeBox: React.FC<Props> = ({
     fontSizeScale,
     numberOfLines,
     prevNumberOfLines,
+    maxHeight: BOX_HEIGHT,
   });
 
   return (
@@ -374,6 +383,7 @@ const TrainTypeBox: React.FC<Props> = ({
               ],
             ]}
             adjustsFontSizeToFit
+            minimumFontScale={MINIMUM_FONT_SCALE}
             numberOfLines={numberOfLines}
           >
             {trainTypeName}
@@ -393,6 +403,7 @@ const TrainTypeBox: React.FC<Props> = ({
             },
           ]}
           adjustsFontSizeToFit
+          minimumFontScale={MINIMUM_FONT_SCALE}
           numberOfLines={prevNumberOfLines}
         >
           {prevTrainTypeName}

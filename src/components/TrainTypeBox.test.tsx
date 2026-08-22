@@ -174,6 +174,89 @@ describe('TrainTypeBox font family', () => {
   });
 });
 
+describe('TrainTypeBox 2行種別の可読性', () => {
+  const BOX_HEIGHT = 30.25;
+  // TrainTypeBox の MINIMUM_FONT_SCALE と揃える。可読性を保てない値
+  // (0.01 など) へ緩められた場合に検知できるよう実値で固定する。
+  const MINIMUM_FONT_SCALE = 0.5;
+
+  const twoLineTrainType: TrainType = {
+    __typename: 'TrainType',
+    id: 1,
+    typeId: 1,
+    groupId: 1,
+    name: '通勤特急\n(狭山線直通)',
+    nameKatakana: 'ツウキントッキュウ',
+    nameRoman: 'Commuter\nLimited Express',
+    nameIpa: null,
+    nameRomanIpa: null,
+    nameTtsSegments: null,
+    nameChinese: '通勤特快',
+    nameKorean: '통근특급',
+    color: '#f00',
+    direction: null,
+    kind: null,
+    line: null,
+    lines: null,
+  };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  const renderWithScale = (fontSizeScale: number) => {
+    (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+      if (atom === headerStateAtom) return 'CURRENT_JA';
+      if (atom === themeAtom) return APP_THEME.TOKYO_METRO;
+      if (atom === tuningState) return { headerTransitionDelay: 1000 };
+      return undefined;
+    });
+    jest
+      .spyOn(Animated, 'timing')
+      .mockImplementation(() => ({ start: jest.fn() }) as never);
+
+    return render(
+      <TrainTypeBox
+        trainType={twoLineTrainType}
+        fontSizeScale={fontSizeScale}
+      />
+    );
+  };
+
+  // 小田急テーマは fontSizeScale 1.2 を渡す。クランプがないと 2 行分の行送りが
+  // 箱の高さ(30.25)を超え、adjustsFontSizeToFit が高さ制約を満たせずに
+  // グリフを潰してしまい種別名が消えたように見える。
+  it.each([1, 1.2])(
+    'fontSizeScale=%p でも2行分の行送りが箱の高さに収まる',
+    (fontSizeScale) => {
+      // マウント直後はクロスフェードの新旧2層が同じ種別名を描画するため、
+      // 両方の行送りが箱に収まっていることを確認する。
+      const { getAllByText } = renderWithScale(fontSizeScale);
+      const labels = getAllByText('通勤特急\n');
+
+      expect(labels.length).toBeGreaterThan(0);
+      for (const label of labels) {
+        const style = StyleSheet.flatten(label.props.style) as {
+          lineHeight: number;
+        };
+        expect(style.lineHeight * 2).toBeLessThanOrEqual(BOX_HEIGHT);
+      }
+    }
+  );
+
+  it('adjustsFontSizeToFitの縮小下限を指定してグリフの消失を防ぐ', () => {
+    const { UNSAFE_root } = renderWithScale(1.2);
+    const texts = UNSAFE_root.findAllByType(Animated.Text);
+
+    expect(texts.length).toBeGreaterThan(0);
+    for (const text of texts) {
+      expect(text.props.adjustsFontSizeToFit).toBe(true);
+      expect(text.props.minimumFontScale).toBe(MINIMUM_FONT_SCALE);
+    }
+  });
+});
+
 describe('TrainTypeBox language transition', () => {
   const trainType: TrainType = {
     __typename: 'TrainType',
