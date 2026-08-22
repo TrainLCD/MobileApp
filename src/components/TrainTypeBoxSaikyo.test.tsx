@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { Animated, StyleSheet } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
 import TrainTypeBoxSaikyo from './TrainTypeBoxSaikyo';
@@ -66,6 +67,9 @@ const TestSplitFunction = ({
 
   return null; // We just care that the component doesn't crash
 };
+
+// TrainTypeBoxSaikyo の BOX_HEIGHT (スマホ時) と揃える。
+const SAIKYO_BOX_HEIGHT = 30.25;
 
 describe('TrainTypeBoxSaikyo', () => {
   const mockTrainType: TrainType = {
@@ -223,6 +227,35 @@ describe('TrainTypeBoxSaikyo', () => {
         />
       );
       expect(hasGradientWithColor(queryAllByTestId, '#abcdef')).toBe(true);
+    });
+  });
+
+  describe('種別箱のレイアウト', () => {
+    const twoLineTrainType: TrainType = {
+      ...mockTrainType,
+      name: '通勤快速\n(川越線直通)',
+      nameRoman: 'Commuter Rapid\nvia Kawagoe Line',
+    };
+
+    // computeTwoLineTypography へ箱の高さを渡さなくなると 2 行分の行送りが
+    // 箱を超え、adjustsFontSizeToFit が高さ制約を満たせずグリフが潰れる。
+    // maxHeight の結線が外れた場合に検知できるよう不変条件を固定する。
+    it('2行種別の行送り2行分が箱の高さに収まる', () => {
+      const { UNSAFE_getAllByType } = render(
+        <TrainTypeBoxSaikyo lineColor="#00ac9a" trainType={twoLineTrainType} />
+      );
+      // クロスフェードの新旧2層とも2行レイアウトで描画される。
+      const labels = UNSAFE_getAllByType(Animated.Text).filter(
+        (label) => label.props.numberOfLines === 2
+      );
+
+      expect(labels.length).toBeGreaterThan(0);
+      for (const label of labels) {
+        const { lineHeight } = StyleSheet.flatten(label.props.style) as {
+          lineHeight: number;
+        };
+        expect(lineHeight * 2).toBeLessThanOrEqual(SAIKYO_BOX_HEIGHT);
+      }
     });
   });
 });
