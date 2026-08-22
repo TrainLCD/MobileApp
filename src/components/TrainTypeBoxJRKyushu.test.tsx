@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 
@@ -128,6 +129,56 @@ describe('TrainTypeBoxJRKyushu', () => {
       expect(() => {
         render(<TrainTypeBoxJRKyushu trainType={null} />);
       }).not.toThrow();
+    });
+  });
+
+  describe('種別箱のレイアウト', () => {
+    const twoLineTrainType: TrainType = {
+      ...mockTrainType,
+      name: '特急\nゆふいんの森',
+      nameRoman: 'Limited Express\nYufuin no Mori',
+    };
+
+    // 寸法を持つViewはboxとtextWrapperの2つだけ。
+    const collectSizedViewStyles = (root: ReturnType<typeof render>) =>
+      root
+        .UNSAFE_getAllByType(View)
+        .map((view) => StyleSheet.flatten(view.props.style))
+        .filter(
+          (style): style is { width: number; height: number } =>
+            typeof style?.width === 'number' &&
+            typeof style?.height === 'number'
+        );
+
+    // textWrapperにbox(128x35)より小さい旧内寸(96.25x30.25)が残っていると、
+    // 種別名が箱からはみ出して潰れる。両者が同じ内寸であることを固定する。
+    it('textWrapperの内寸がboxと一致する', () => {
+      const sizes = collectSizedViewStyles(
+        render(<TrainTypeBoxJRKyushu trainType={mockTrainType} />)
+      );
+
+      expect(sizes).toHaveLength(2);
+      expect(sizes[1].width).toBe(sizes[0].width);
+      expect(sizes[1].height).toBe(sizes[0].height);
+    });
+
+    it('2行種別の行送り2行分が箱の高さに収まる', () => {
+      const view = render(
+        <TrainTypeBoxJRKyushu trainType={twoLineTrainType} />
+      );
+      const boxHeight = collectSizedViewStyles(view)[0].height;
+      // クロスフェードの新旧2層とも2行レイアウトで描画される。
+      const labels = view
+        .UNSAFE_getAllByType(Animated.Text)
+        .filter((label) => label.props.numberOfLines === 2);
+
+      expect(labels.length).toBeGreaterThan(0);
+      for (const label of labels) {
+        const { lineHeight } = StyleSheet.flatten(label.props.style) as {
+          lineHeight: number;
+        };
+        expect(lineHeight * 2).toBeLessThanOrEqual(boxHeight);
+      }
     });
   });
 });
