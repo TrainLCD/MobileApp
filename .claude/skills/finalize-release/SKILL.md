@@ -245,15 +245,23 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
         --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'   # ["squash","merge"] を確認
 
       gh pr merge <n> --merge --delete-branch
-      echo "merge exit=$?"
+      MERGE_RC=$?
+      echo "merge exit=$MERGE_RC"
+      # マージの成否をブロックの終了ステータスへ伝播させる。
+      # EXIT trap が復元・後始末を行い、復元に失敗した場合だけ trap が 1 で上書きする
+      exit "$MERGE_RC"
       ```
 
       - `--squash` / `--rebase` は使わない。
       - required check 不成立・コンフリクト等で弾かれても **force/admin マージしない**。マージ失敗は握ったまま trap の復元へ進む（PR は open のまま残す）。なお `mergeStateStatus=UNSTABLE`（必須でない失敗チェックがあるだけ）は通常マージ可能。
       - **マージが失敗していても Ruleset は必ず復元される**（trap が担保）。
-      - **このブロックが非 0 で終了したら手順 7 の完了報告へ進まない。** 復元失敗（`RESTORE_FAILED=1` → `exit 1`、stderr に `RULESET RESTORE FAILED`）と割り込み（`exit 130` / `143`）はいずれも非 0 で返る。復元失敗は最優先でユーザーに知らせ、Ruleset を緩めたまま放置しない。マージ自体の成否は `merge exit=` の出力で見る（マージ失敗はブロックの終了ステータスには乗らない）。
+      - **ブロックの終了ステータスで成否を判定する**（`merge exit=` の目視に頼らない）:
+        - `0` … マージ成功かつ Ruleset 復元成功。手順 6-4 の検証へ進む。
+        - `1`（stderr に `RULESET RESTORE FAILED`）… Ruleset の復元失敗。最優先でユーザーに知らせ、緩めたまま放置しない。
+        - `130` / `143` … 割り込み（`INT` / `TERM`）。マージは実行されていない。**リリース完了とは報告しない。**
+        - 上記以外の非 0 … **`gh pr merge` の失敗**（`MERGE_RC` がそのまま出る）。手順 6-4 の検証はスキップし、手順 7 は「成功時」ではなく **「失敗時」の分岐で報告する**。`dev@origin` が `master@origin` を包含していない状態なので、**リリース完了とは報告しない。**
       - 復元後の値は `gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で元の値（例 `["squash"]`）に戻ったことを読み取り専用で確認する。
-   4. **検証**: `jj git fetch` 後、
+   4. **検証**（手順 6-3 が `0` で終了した場合のみ実施）: `jj git fetch` 後、
       - dev HEAD が **2 親を持つ merge commit**（squash されていない）であること: `jj log -r 'dev@origin' --no-graph -T 'parents.len() ++ "\n"'` が `2`。
       - `jj log -r 'dev@origin..master@origin' --no-graph -T 'commit_id ++ "\n"'` の出力が空（dev が master を完全包含）。
    5. 一時ファイル（`ruleset_backup.json` / `ruleset_relaxed.json`）は手順 6-3 の trap が削除済み。**`.gitignore` の無視対象なので `jj status` には現れない**。ファイルシステムを直接確認する:
@@ -277,7 +285,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      - 流用時: `既存 PR を流用: <url>`
    - **マージ結果**（sync PR が存在した場合）:
      - 成功時: マージコミット SHA（**2 親の merge commit** である旨）、`dev@origin..master@origin = 0`、dev Ruleset を `<一時緩和して merge commit でマージ→復元（["squash"] に復帰）| 緩和不要（merge 許可済み）>`
-     - 失敗時: PR は open のまま・**Ruleset は復元済み**である旨を明示し、`sync-dev-from-master` 単独再実行ではなく手当ての方針（CI 修正後に手動 or 再マージ）を案内
+     - 失敗時（手順 6-3 が `0` 以外で終了）: 検知根拠として終了ステータスと `merge exit=` の値を示し、PR は open のまま・**Ruleset は復元済み**（復元失敗なら未復元である旨）を明示し、`sync-dev-from-master` 単独再実行ではなく手当ての方針（CI 修正後に手動 or 再マージ）を案内。**`dev@origin` が `master@origin` を包含していないため、リリース完了とは報告しない。**
    - **⚠ 補足**: sync PR を **merge commit でマージした**（squash していない）ことを明示。squash すると merge commit 構造が潰れて dev/master 履歴が壊れる（PR #5838 / #5840 の教訓）。手動でマージし直す状況になった場合も必ず「Create a merge commit」を使うこと。
 
 ## 注意事項
