@@ -202,15 +202,31 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
       RS_ID=<プレフライトで控えた ruleset_id>
       OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
       RULESET_RELAXED=0
+      RESTORE_FAILED=0
+
+      # 復元＋後始末。RULESET_RELAXED を落として冪等化し、INT -> EXIT の二重復元を防ぐ。
+      # 復元は緩和 PUT を試みた場合だけ（未緩和で原状 PUT を投げても無駄な書き込みになる）
+      restore_and_cleanup() {
+        if [ "$RULESET_RELAXED" -eq 1 ]; then
+          RULESET_RELAXED=0
+          if gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_backup.json >/dev/null; then
+            echo "ruleset restored"
+          else
+            RESTORE_FAILED=1
+            echo "!!! RULESET RESTORE FAILED - 手動復元が必要: repos/$OWNER_REPO/rulesets/$RS_ID" >&2
+          fi
+        fi
+        rm -f ruleset_backup.json ruleset_relaxed.json
+      }
 
       # trap は「バックアップ取得より前」に仕掛ける。取得や jq が失敗しても JSON を残さない。
-      # 復元は緩和 PUT を試みた場合だけ（未緩和で原状 PUT を投げても無駄な書き込みになる）
-      trap 'if [ "$RULESET_RELAXED" -eq 1 ]; then
-              gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_backup.json >/dev/null \
-                && echo "ruleset restored" \
-                || echo "!!! RULESET RESTORE FAILED - 手動復元が必要: repos/$OWNER_REPO/rulesets/$RS_ID";
-            fi
-            rm -f ruleset_backup.json ruleset_relaxed.json' EXIT INT TERM
+      # 割り込みは復元・後始末のうえ *明示的に終了* する。handler から戻ると中断された
+      # コマンドの次（= gh pr merge）から実行が再開され、緩和したままマージが走る
+      trap 'restore_and_cleanup; exit 130' INT
+      trap 'restore_and_cleanup; exit 143' TERM
+      # EXIT は冪等な後始末と、復元失敗の非 0 伝播だけを担う
+      # （trap 末尾を rm -f にすると、その成功でブロック全体が exit 0 になってしまう）
+      trap 'restore_and_cleanup; if [ "$RESTORE_FAILED" -eq 1 ]; then exit 1; fi' EXIT
 
       # 復元用バックアップ。リポジトリ直下の相対パス（/tmp は Git Bash と Windows python で
       # 別解決になり read に失敗するため使わない）
@@ -234,12 +250,21 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
       - `--squash` / `--rebase` は使わない。
       - required check 不成立・コンフリクト等で弾かれても **force/admin マージしない**。マージ失敗は握ったまま trap の復元へ進む（PR は open のまま残す）。なお `mergeStateStatus=UNSTABLE`（必須でない失敗チェックがあるだけ）は通常マージ可能。
-      - **マージが失敗していても Ruleset は必ず復元される**（trap が担保）。出力に `RULESET RESTORE FAILED` が出た場合は最優先でユーザーに知らせる（Ruleset を緩めたまま放置しない）。
+      - **マージが失敗していても Ruleset は必ず復元される**（trap が担保）。
+      - **このブロックが非 0 で終了したら手順 7 の完了報告へ進まない。** 復元失敗（`RESTORE_FAILED=1` → `exit 1`、stderr に `RULESET RESTORE FAILED`）と割り込み（`exit 130` / `143`）はいずれも非 0 で返る。復元失敗は最優先でユーザーに知らせ、Ruleset を緩めたまま放置しない。マージ自体の成否は `merge exit=` の出力で見る（マージ失敗はブロックの終了ステータスには乗らない）。
       - 復元後の値は `gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で元の値（例 `["squash"]`）に戻ったことを読み取り専用で確認する。
    4. **検証**: `jj git fetch` 後、
       - dev HEAD が **2 親を持つ merge commit**（squash されていない）であること: `jj log -r 'dev@origin' --no-graph -T 'parents.len() ++ "\n"'` が `2`。
       - `jj log -r 'dev@origin..master@origin' --no-graph -T 'commit_id ++ "\n"'` の出力が空（dev が master を完全包含）。
-   5. 一時ファイル（`ruleset_backup.json` / `ruleset_relaxed.json`）は手順 6-3 の trap が削除済み。念のため `jj status` に残っていないことを確認する（残っていれば削除してから次へ進む。jj は未追跡ファイルも自動でスナップショットするため、放置するとコミットに混入する）。ローカルの `dev` ブックマークは `jj git fetch` の時点で `dev@origin` に追従しているため、git の `pull --ff-only` に相当する操作は不要。
+   5. 一時ファイル（`ruleset_backup.json` / `ruleset_relaxed.json`）は手順 6-3 の trap が削除済み。**`.gitignore` の無視対象なので `jj status` には現れない**。ファイルシステムを直接確認する:
+
+      ```bash
+      test ! -e ruleset_backup.json && test ! -e ruleset_relaxed.json && echo "cleanup ok"
+      ```
+
+      **どちらかが残っていたら、削除して先へ進まずに停止して報告する。** 残存は trap が走らなかったことを意味し、その場合 **Ruleset が緩和されたままの可能性がある**。`gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で現在値を読み、緩和されたままならユーザーに知らせて復元の判断を仰ぐ。
+
+      ローカルの `dev` ブックマークは `jj git fetch` の時点で `dev@origin` に追従しているため、git の `pull --ff-only` に相当する操作は不要。
 
 7. **完了報告**
 
