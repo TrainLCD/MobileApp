@@ -14,7 +14,7 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 | 項目 | 既定値 / 推論元 |
 | ---- | ---- |
 | `base` | リポジトリの既定ブランチ（`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`） |
-| `head` | カレントブランチ（`git rev-parse --abbrev-ref HEAD`） |
+| `head` | `@` から辿れる直近のブックマーク（`jj log -r 'heads(::@ & bookmarks())' --no-graph -T 'local_bookmarks'`） |
 | `title` | 下の「タイトル推論ルール」参照 |
 | `summary` | 空なら「概要」「変更内容」本文はテンプレのコメントのみ残す |
 | `related_issue` | **ユーザー入力を最優先**。指定が `#N`（数値のみ）なら `Closes #N`、`Closes #N` / `Fixes #N` / `Refs #N` 形式ならその接頭語を保って出力。`related_issue` が空のときに限り、コミット件名から `Closes #N` / `Fixes #N` / `Refs #N` を抽出（接頭語を維持。`#N` 単体表記なら `Closes` を補う）。両方とも見つからなければ節のコメントのみ |
@@ -23,11 +23,11 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 
 ### タイトル推論ルール
 
-`origin/<base>..origin/<head>` のコミット件名を対象に、以下を順に試す:
+`<base>@origin..<head>@origin` のコミット件名を対象に、以下を順に試す:
 
 1. **コミット 1 件のみ**: その件名をそのまま使う。
 2. **コミット複数・共通プレフィックスあり**（例: 全て `fix: ...`）: 最新コミットの件名を使う。
-3. **ブランチ名が `feature/` / `fix/` / `hotfix/` / `chore/` / `docs/` 等で始まる**: プレフィックスを取り除き、残りの `kebab-case` を日本語や自然文に整える。確信が持てないときは整形せずブランチ名のまま使ってよい。
+3. **ブックマーク名が `feature/` / `fix/` / `hotfix/` / `chore/` / `docs/` 等で始まる**: プレフィックスを取り除き、残りの `kebab-case` を日本語や自然文に整える。確信が持てないときは整形せずブックマーク名のまま使ってよい。
 4. **どれでも決まらない**: 最新コミット件名を採用し、「このタイトルで作成してよいか」をユーザーに確認する。
 
 Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotfix` を含む）では、タイトル先頭に `Hotfix:` を付ける（CLAUDE.md ルール）。
@@ -36,20 +36,20 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
 ## 前提条件
 
-- カレントディレクトリが `git rev-parse --show-toplevel` で解決できるリポジトリ内。
-- `gh` CLI が認証済み。
-- `head` ブランチが origin に push 済み。未 push の場合はユーザーに push の可否を確認する（勝手に push しない）。
+- カレントディレクトリが `jj workspace root` で解決できるリポジトリ内。
+- `jj` と `gh` CLI が使える（`gh` は認証済み）。このリポジトリは jj / git コロケート構成だが、**VCS 操作は jj に統一する**。git を直接叩くのは jj に対応コマンドが無い場合だけ。
+- `head` ブックマークが origin に push 済み。未 push の場合はユーザーに push の可否を確認する（勝手に push しない）。
 
 ## 手順
 
-1. **head / base の整合性チェックと自動ブランチ切り出し**
+1. **head / base の整合性チェックと自動ブックマーク切り出し**
 
    `base == head` になるケース（例: `dev` に居てデフォルト base も `dev`）は、そのまま進めると PR が作れない。以下のいずれかで救済する:
 
-   - 作業中の変更（staged / unstaged / 直近の未 push コミット）がある場合、**新しいブランチを切ってそこに退避**してから続行する。
+   - 作業コピー `@` に差分がある、または `<base>@origin` より先に未 push のコミットがある場合、**新しいブックマークを切ってそこに退避**してから続行する。
    - 何の変更も無い場合は「PR 対象の差分が無い」と報告して中断する。
 
-   **ブランチ名の推論**（`feature/<slug>` 形式が既定。CLAUDE.md とメモのルール: プレフィックスは `feature/` であり `feat/` ではない）:
+   **ブックマーク名の推論**（`feature/<slug>` 形式が既定。CLAUDE.md とメモのルール: プレフィックスは `feature/` であり `feat/` ではない）:
 
    | プレフィックス | 採用条件 |
    | ---- | ---- |
@@ -62,33 +62,35 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    slug は変更ファイル・コミット件名から短い英小文字 kebab-case を作る（例: `fix-image-cache-collision`）。確信が持てない場合は slug 候補を 1〜2 個出してユーザーに確認。
 
    切り出し手順:
+
    ```bash
-   git switch -c <inferred-branch>
-   # 未コミットなら:
-   git add -u                       # 追跡済みの staged/unstaged をまとめてステージ
-   # 未追跡ファイルも退避対象なら明示的にパス指定で追加（`git add -A` / `.` は使わない）:
-   #   git add path/to/untracked-file ...
-   git commit                       # コミットメッセージは日本語単文（CLAUDE.md）
-   git push -u origin <inferred-branch>
+   jj status                                      # @ に入っている差分を必ず目視確認する
+   jj commit -m "<日本語単文>"                     # @ を確定し、その上に新しい空の @ ができる
+   jj bookmark create <inferred-bookmark> -r @-   # 直前に確定したコミットに付ける
+   jj git push --bookmark <inferred-bookmark>     # 新規ブックマークは自動で追跡される
    ```
+
+   - **`jj status` の目視確認は省略しない**。jj は `.gitignore` されていない未追跡ファイルも自動でスナップショットするため、git の `add` に相当する取捨選択の関門が無い。意図しないファイルが混ざっていたら `.gitignore` に追加するか `jj file untrack <path>` してから確定する。
+   - 一部のパスだけ確定したい場合は `jj commit <path>... -m "<日本語単文>"`。選ばなかった差分は新しい `@` に残る。
    - コミット前に `npx biome check --unsafe --fix ./src` を実行（メモのルール）。
-   - push は新規ブランチなので安全だが、実行前にユーザーへ要約（ブランチ名・含めるファイル・コミットメッセージ案）を提示して承認を取る。
+   - push は新規ブックマークなので安全だが、実行前にユーザーへ要約（ブックマーク名・含めるファイル・コミットメッセージ案）を提示して承認を取る。
 
    以降の手順では推論後の head を使う。
 
 2. **状態確認とモード決定（新規作成 / 更新）**
-   - `git fetch origin <base> <head>` を実行。
-   - `git log --oneline origin/<base>..origin/<head>` で差分があることを確認。無ければ中断して報告。
+   - `jj git fetch` を実行。
+   - `jj log -r '<base>@origin..<head>@origin' --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'` で差分があることを確認。出力が空なら中断して報告。
    - `gh pr list --base <base> --head <head> --state open --json number,url,body` で既存 open PR を確認。
      - **存在しない場合**: 新規作成モード。以降、手順 5 で `gh pr create`。
-     - **存在する場合**: 更新モード。AGENTS.md の「Keep PR bodies in sync with the branch state」に従い、既存本文を最新差分で再生成する。以降、手順 5 で `gh pr edit`。タイトルは既存を**原則尊重**（ユーザー推論より優先）。ただし手順 5 の整合性チェックで主題が大きくズレていると判断した場合のみ更新案を提示する。
+     - **存在する場合**: 更新モード。AGENTS.md の「Keep PR metadata in sync with the bookmark state」に従い、既存本文を最新差分で再生成する。以降、手順 5 で `gh pr edit`。タイトルは既存を**原則尊重**（ユーザー推論より優先）。ただし手順 5 の整合性チェックで主題が大きくズレていると判断した場合のみ更新案を提示する。
 
 3. **変更の種類を判定**
 
-   `origin/<base>..origin/<head>` のコミット件名と変更ファイルを取得:
+   `<base>@origin..<head>@origin` のコミット件名と変更ファイルを取得:
+
    ```bash
-   git log --pretty=%s origin/<base>..origin/<head>
-   git diff --name-only origin/<base>..origin/<head>
+   jj log -r '<base>@origin..<head>@origin' --no-graph -T 'description.first_line() ++ "\n"'
+   jj diff --name-only --from '<base>@origin' --to '<head>@origin'
    ```
 
    **大原則: 判定はアプリの挙動に対する変更かどうかで決める**。下の「コード本体パス」が一切変わっていない場合、「バグ修正」「新機能」「リファクタリング」は OFF（コミット件名に `fix` / `feat` / `追加` 等の語があっても）。スキル・設定・ドキュメントのメタ変更を「新機能」と誤分類しないための安全弁。
@@ -167,12 +169,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    実装手順:
 
-   1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<slug>.md`）。ファイル名に使う ref（ブランチ名・PR 番号など）は **ファイル名として安全な集合（`A-Za-z0-9._-`）にスラッグ化** する。具体的には:
+   1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<slug>.md`）。ファイル名に使う ref（ブックマーク名・PR 番号など）は **ファイル名として安全な集合（`A-Za-z0-9._-`）にスラッグ化** する。具体的には:
       - `/`・改行・制御文字・空白・非 ASCII などを `_` に置換
       - 連続した `_` は 1 つに畳み、先頭・末尾の `_` は除去
       - 必要なら長さを 100〜200 文字程度に切り詰める
 
-      生のブランチ名を直結するとサブディレクトリ解釈や制御文字混入で Write／削除が失敗する。バッククォートは **素のまま** 書く。escape しない。
+      生のブックマーク名を直結するとサブディレクトリ解釈や制御文字混入で Write／削除が失敗する。バッククォートは **素のまま** 書く。escape しない。
    2. 下の `gh` コマンドをサブシェル内で `trap` と一緒に実行する。`gh` の成功・失敗に関わらず `EXIT` / `INT` / `TERM` のどれでも一時ファイルを確実に削除されるようにする（`&&` で `rm` を繋ぐだけだと失敗時に `/tmp` にゴミが残る）。
    3. `gh` 呼び出しと `rm`（を含む `trap`）は Bash tool の 1 呼び出し内で完結させる。別呼び出しで後片付けすると、前段の呼び出しがエラー／中断で終わった場合にクリーンアップが実行されない。
 
@@ -215,14 +217,14 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    )
    ```
 
-   - **タイトルは原則として既存を維持する**。ただし毎回スコープ整合性を再評価し（AGENTS.md「Keep PR metadata in sync with the branch state」）、手順 1 のタイトル推論ルールと最新のコミット群を照合する。現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていない**重大な不整合**がある場合のみ、更新案を提示してユーザー承認を取り `--title` で上書きする。整合している、または軽微な差分にとどまる場合は `--title` を付けない。
+   - **タイトルは原則として既存を維持する**。ただし毎回スコープ整合性を再評価し（AGENTS.md「Keep PR metadata in sync with the bookmark state」）、手順 1 のタイトル推論ルールと最新のコミット群を照合する。現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていない**重大な不整合**がある場合のみ、更新案を提示してユーザー承認を取り `--title` で上書きする。整合している、または軽微な差分にとどまる場合は `--title` を付けない。
    - Assignee は既に付いていれば再指定しない（重複操作を避ける）。付いてなければ `--add-assignee TinyKitten`。
    - 実行後、PR URL と「タイトルを変更したか・どの節を書き換えたか・変更の種類チェック差分」を簡潔に報告する。
 
 ## 注意事項
 
 - テンプレの節構成は改変しない。追加・削除はメンテナ承認が必要。
-- `git push --no-verify` や force push はしない。push が必要ならユーザーに確認。
+- `jj git push` には `--force` に相当する押し切りフラグが無く、既定で `git push --force-with-lease` 相当の安全確認が入る。安全確認で弾かれたら `jj git fetch` してから状態を見直すこと。`--ignore-immutable` などのガード解除フラグは使わない。push が必要ならユーザーに確認。
 - 既存 open PR を上書きしない（重複作成禁止）。
 - Hot fix の場合はタイトルに `Hotfix:` プレフィックスを付けるようユーザーに確認する（CLAUDE.md）。
 - 本文は `gh pr create --body` / `gh pr edit --body` のようにインラインで渡さない。必ず `--body-file` で一時ファイル経由で渡す（バッククォートなど特殊文字の escape 事故を構造的に防ぐため）。

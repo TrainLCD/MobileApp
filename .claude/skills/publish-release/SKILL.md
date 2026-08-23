@@ -17,10 +17,10 @@ description: Create a git tag on origin/master HEAD and publish a GitHub Release
 
 ## 前提条件
 
-- カレントディレクトリがリポジトリルート。
-- `git` が使える。経路 A（後述）では `gh` CLI 認証済みであること。
+- カレントディレクトリがリポジトリルート（`jj workspace root`）。
+- `jj` が使える。経路 A（後述）では `gh` CLI 認証済みであること。このリポジトリは jj / git コロケート構成で、**VCS 操作は jj に統一する**。例外は annotated tag の作成・push だけ（手順 4 に理由を明記）。
 - リリースPR（`release/v<version>` → `master`）は既に **master にマージ済み**。未マージなら中断し、ユーザーに確認する。
-- 作業ツリーがクリーン（未コミット変更なし）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
+- 作業コピー `@` に差分が無い（`jj status` が `The working copy has no changes.`）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
 
 ## 実行経路
 
@@ -69,43 +69,47 @@ gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<�
    - 同名のタグが既に存在するか確認。存在する場合は中断してユーザーに判断を仰ぐ（同じタグを別 SHA に付け直すのは事故のもとなので、このスキルでは勝手に上書きしない）。
 
      ```bash
-     git fetch --tags origin
-     git tag --list "v<version>"
+     jj git fetch
+     jj tag list "v<version>"
      gh release view "v<version>" --json tagName 2>/dev/null || true
      ```
+
+     `jj git fetch` は既定の refspec に従ってブックマークとタグの両方を取り込むので、タグ用に別途 fetch する必要は無い。
 
 2. **master 最新化**
 
    ```bash
-   git fetch origin master --tags
+   jj git fetch
    ```
 
-   - ローカル `master` は切り替えない（タグは `origin/master` の SHA に対して打つため checkout 不要）。
-   - `origin/master` の HEAD SHA を記録する。
+   - 作業コピー `@` は動かさない（タグは `master@origin` のコミットに対して打つため、`jj new` や `jj edit` は不要）。
+   - `master@origin` の HEAD SHA を記録する。
 
      ```bash
-     git rev-parse origin/master
+     jj log -r 'master@origin' --no-graph -T 'commit_id ++ "\n"'
      ```
 
 3. **package.json のバージョン照合**
 
-   - `origin/master:package.json` の `version` フィールドを取得し、入力バージョンと一致するか確認する。
+   - `master@origin` の `package.json` の `version` フィールドを取得し、入力バージョンと一致するか確認する。
 
      ```bash
-     git show origin/master:package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"
+     jj file show -r 'master@origin' package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"
      ```
 
    - 不一致の場合は中断し、ユーザーに原因確認（リリースPR がまだマージされていない／別バージョンがマージされた等）。
 
 4. **タグ作成とプッシュ**
 
-   - `origin/master` の HEAD に **annotated tag** を打つ。タグメッセージは `v<version>` 固定（過去運用と同一）。
+   - `master@origin` の HEAD に **annotated tag** を打つ。タグメッセージは `v<version>` 固定（過去運用と同一）。
 
      ```bash
-     git tag -a "v<version>" -m "v<version>" <origin/master の SHA>
+     git tag -a "v<version>" -m "v<version>" <master@origin の SHA>
      git push origin "v<version>"
      ```
 
+   - **ここだけ jj ではなく git を使う。** `jj tag set` が作れるのは lightweight tag だけで、annotated tag（タグメッセージ・タガー情報を持つ）を作る手段が jj にはない。経路 B のワークフローも annotated tag を打つため、経路 A を lightweight に倒すと同じ版数でもタグの種別が経路ごとに変わってしまう。コロケート構成なので `git tag` はそのまま通り、`jj` 側は次回コマンド実行時にタグを取り込む。
+   - タグ以外の操作を git に広げない。ここで `git switch` / `git commit` などを混ぜると jj の作業コピーと食い違う。
    - push 前に、タグ名・対象 SHA・master 側の最新コミット件名をユーザーに提示して承認を取る。
 
 5. **GitHub Release 公開**
@@ -131,7 +135,7 @@ gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<�
 
 - **タグ push と Release 作成は外部に波及する操作**。順序は「タグ push → Release 作成」で固定。経路 A で Release 作成に失敗した場合、タグは既に公開済みなのでやり直しは `gh release create` のみで足りる。経路 B は同じ状態を検出して Release のみ作成する経路へ倒すため、**同じ dispatch を再実行するだけで復旧できる**（`gh` が使えない環境でも手当てが完結する）。
 - 経路 B のワークフローはタグを打つだけで、**版数バンプは行わない**。`package.json` の版数が対象コミットで既に正しいことが前提であり、一致しなければワークフロー側で中断する。
-- タグを削除・付け直す操作（`git push --delete` や `git tag -f`）はこのスキルの責務外。事故復旧が必要な場合はユーザーに判断を仰ぐ。
+- タグを削除・付け直す操作（`git push --delete` / `git tag -f` / `jj tag delete`）はこのスキルの責務外。事故復旧が必要な場合はユーザーに判断を仰ぐ。
 - `--generate-notes` は **直前のタグ** との差分で自動生成される。想定外のタグ（プレリリース含む）が直前に入っていると本文がブレるので、生成後の本文は必ず目視確認する。ブレていた場合は `gh release edit v<version> --notes-start-tag <基準タグ>` などで再生成をユーザーと相談する。
 - リリースノートの人手調整が必要なら、`gh release edit v<version> --notes "..."` で後追い編集する方針（このスキルでは本文の手編集はしない）。
 - `create-release-pr` の直後に呼ぶのが典型フロー。リリースPR 未マージの状態で呼ばれた場合は、前述のガードで中断する。

@@ -13,24 +13,25 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
 | 項目 | 必須 | 既定値 |
 | ---- | ---- | ---- |
-| `release_version` | 任意 | 省略可。指定されれば本文の「概要」に `v<version>` を入れる。未指定なら `origin/master:package.json` の `version` を使う |
+| `release_version` | 任意 | 省略可。指定されれば本文の「概要」に `v<version>` を入れる。未指定なら `master@origin` の `package.json` の `version` を使う |
 
-ブランチ名は **`chore/dev-from-master` 固定**（過去運用 PR #5838 / #5840 準拠）。入力で変えられない。
+ブックマーク名は **`chore/dev-from-master` 固定**（過去運用 PR #5838 / #5840 準拠）。入力で変えられない。
 
 ## 前提条件
 
-- カレントディレクトリがリポジトリルート。
-- `gh` CLI 認証済み、`git` が使える。
-- 作業ツリーがクリーン（未コミット変更なし）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
-- リモートブランチ `origin/dev` / `origin/master` が存在する。
+- カレントディレクトリがリポジトリルート（`jj workspace root`）。
+- `gh` CLI 認証済み、`jj` が使える。このリポジトリは jj / git コロケート構成だが、**VCS 操作は jj に統一する**。
+- 作業コピー `@` に差分が無い（`jj status` が `The working copy has no changes.`）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
+- リモートブックマーク `dev@origin` / `master@origin` が存在する。
 
 ## 手順
 
 1. **差分確認（無ければ中断）**
 
    ```bash
-   git fetch origin dev master --tags
-   git log --oneline origin/dev..origin/master
+   jj git fetch
+   jj log -r 'dev@origin..master@origin' --no-graph \
+     -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
    ```
 
    - 0 件なら「master は dev に対して進んでいない。同期 PR 不要」で中断し報告。
@@ -50,32 +51,46 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    過去リリースの枝が残っている想定で動く。以下の判定で進める。
 
    ```bash
-   # ローカル・リモートの存在確認
-   git show-ref --verify --quiet refs/heads/chore/dev-from-master && echo LOCAL_EXISTS
-   git ls-remote --heads origin chore/dev-from-master
+   # ローカル・リモートの存在確認（jj git fetch 済みが前提）
+   jj bookmark list --all-remotes 'chore/dev-from-master'
    # 直近の dev 宛 PR の状態
    gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url
    ```
 
-   - **ケース A: どこにも存在しない** → そのまま手順 4 へ。
-   - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、実行可否を承認取り。承認後の手順は以下の順で行う:
-     1. 現在ブランチを `git rev-parse --abbrev-ref HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。
-     2. `git push origin --delete chore/dev-from-master` でリモートを削除。
-     3. ローカルにも存在する場合は `git branch -D chore/dev-from-master` で削除。
-   - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
-   - **ケース D: ケース B または C（＝リモート `origin/chore/dev-from-master` が存在する）で、かつローカルに未 push コミットが有る**: リモート存在を `git rev-parse --verify origin/chore/dev-from-master` で確認したうえで `git cherry origin/chore/dev-from-master` を実行。出力が空でなければ削除せず中断しユーザーに確認。ケース A（どこにも存在しない）からは分岐しない（リモート非存在時の `git cherry` は fatal になるため実行しない）。
+   `jj bookmark list` の出力で `chore/dev-from-master:` 行があればローカルに、`chore/dev-from-master@origin:` 行があれば origin に存在する。両方無ければ何も出力されない。
 
-4. **ブランチを origin/master から切り出して push**
+   - **ケース A: どこにも存在しない** → そのまま手順 4 へ。
+   - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブックマーク名・直近 PR 番号・PR URL をユーザーに提示し、実行可否を承認取り。承認後の手順は以下の順で行う:
+
+     ```bash
+     # origin にだけ在ってローカルに無い場合は、削除を push するために先に追跡させる
+     jj bookmark track 'chore/dev-from-master@origin'
+     jj bookmark delete chore/dev-from-master
+     jj git push --bookmark chore/dev-from-master   # 削除が origin へ伝播する
+     ```
+
+     jj には「今どのブランチに居るか」という概念が無く、作業コピー `@` はブックマークに固定されない。git のように削除前に別ブランチへ退避する必要は無い。
+   - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
+   - **ケース D: ケース B または C で、かつブックマークに `master` / `dev` のどちらにも入っていない固有コミットが有る**: 下の revset が空でなければ削除せず中断しユーザーに確認する。
+
+     ```bash
+     jj log -r '::chore/dev-from-master ~ ::(master@origin | dev@origin)' --no-graph \
+       -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+     ```
+
+     出力が空なら「master / dev に完全に取り込まれた残骸」なので安全に削除できる。ローカルに無く origin にだけ在る場合は `chore/dev-from-master@origin` を対象にする。ケース A（どこにも存在しない）ではブックマークが解決できずエラーになるので実行しない。
+
+4. **ブックマークを master@origin に作って push**
 
    ```bash
-   git fetch origin master
-   git switch -c chore/dev-from-master origin/master
-   git push -u origin chore/dev-from-master
+   jj git fetch
+   jj bookmark create chore/dev-from-master -r 'master@origin'
+   jj git push --bookmark chore/dev-from-master
    ```
 
-   - 何もコミットは積まない（master 先端そのまま）。biome 等のフォーマッタは走らせない（新規コミット無し）。
-   - push 前に、対象 SHA（`git rev-parse origin/master`）・取り込まれるコミット件数・本文に入れる version をユーザーに提示して承認を取る。
-   - **例外**: この PR が版数ファイルで衝突する場合（`master` から特定 PR だけ cherry-pick したリリースの後に起きる。後述の「版数ファイルのコンフリクト解決」を参照）は、この枝に `origin/dev` をマージして解決コミットを 1 つだけ積む。それ以外は master 先端そのまま。
+   - 何もコミットは積まない（master 先端そのまま）。作業コピー `@` を動かす必要も無いので `jj new` / `jj edit` はしない。biome 等のフォーマッタも走らせない（新規コミット無し）。
+   - push 前に、対象 SHA（`jj log -r 'master@origin' --no-graph -T 'commit_id'`）・取り込まれるコミット件数・本文に入れる version をユーザーに提示して承認を取る。
+   - **例外**: この PR が版数ファイルで衝突する場合（`master` から特定 PR だけ cherry-pick したリリースの後に起きる。後述の「版数ファイルのコンフリクト解決」を参照）は、このブックマークに `dev@origin` をマージして解決コミットを 1 つだけ積む。それ以外は master 先端そのまま。
 
 5. **PR 本文を組み立て（テンプレ厳守・全節を実内容で埋める）**
 
@@ -121,9 +136,9 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    ```
 
    **置換ルール**:
-   - `<release_version>`: 入力 `release_version` があればそれ（先頭 `v` は剥がす）。未指定なら `git show origin/master:package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"` の値。取得失敗時は「概要」節から `**v<release_version>**` の部分を丸ごと外す（偽情報を書かない）。
+   - `<release_version>`: 入力 `release_version` があればそれ（先頭 `v` は剥がす）。未指定なら `jj file show -r 'master@origin' package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"` の値。取得失敗時は「概要」節から `**v<release_version>**` の部分を丸ごと外す（偽情報を書かない）。
    - `<N>`: 手順 1 で数えたコミット件数。
-   - `<コミット件名の箇条書き>`: `git log --pretty='- %s' origin/dev..origin/master` の出力をそのまま貼る。**50 件を超える場合**は先頭 50 件 + `- ...他 <M> 件` を付けて省略し、省略した旨を「変更内容」節末尾に 1 行書く。
+   - `<コミット件名の箇条書き>`: `jj log -r 'dev@origin..master@origin' --no-graph -T '"- " ++ description.first_line() ++ "\n"'` の出力をそのまま貼る。**50 件を超える場合**は先頭 50 件 + `- ...他 <M> 件` を付けて省略し、省略した旨を「変更内容」節末尾に 1 行書く。
 
    **チェックボックスの判定**:
    - 変更の種類は **`その他` のみ ON**、他は全 OFF。理由: 当PRはアプリ挙動の変更ではなくマージ操作のため（`create-pr` の「大原則: 判定はアプリの挙動に対する変更か」を適用し、コミット件名のトリガ語句に引きずられない）。
@@ -155,7 +170,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    続けて以下を簡潔に報告:
    - PR URL
-   - 対象 SHA（`origin/master` の HEAD）
+   - 対象 SHA（`master@origin` の HEAD）
    - 取り込みコミット件数と、長い場合は省略したか否か
    - 変更の種類チェック状態（`その他` のみ ON）
    - テスト欄のチェック状態（全 OFF + 説明文あり）
@@ -163,7 +178,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
 ## 版数ファイルのコンフリクト解決（cherry-pick / hotfix リリース後）
 
-通常の「dev から丸ごと」リリースでは `master` が `dev` の完全な祖先になるため、この同期 PR は衝突しない（手順 4 のとおり master 先端そのままで済む）。しかし **リリースブランチを `master` から切って特定 PR だけ cherry-pick したリリース**（`create-release-pr` に「この変更だけ」と指定したホットフィックス型など）では、`dev` を `master` に取り込んでいないため、`master` のリリース版数と `dev` の canary bump 版数が **ねじれたまま** 残り、この同期 PR が版数ファイルで衝突する。
+通常の「dev から丸ごと」リリースでは `master` が `dev` の完全な祖先になるため、この同期 PR は衝突しない（手順 4 のとおり master 先端そのままで済む）。しかし **リリース用ブックマークを `master` から切って特定 PR だけ cherry-pick したリリース**（`create-release-pr` に「この変更だけ」と指定したホットフィックス型など）では、`dev` を `master` に取り込んでいないため、`master` のリリース版数と `dev` の canary bump 版数が **ねじれたまま** 残り、この同期 PR が版数ファイルで衝突する。
 
 衝突するのは版数ファイルのみで、アプリコードは衝突しない:
 
@@ -180,34 +195,41 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
 ### 解決手順
 
-1. `chore/dev-from-master`（= master 先端）に居る状態で `origin/dev` をマージする（手順 4 の「コミットを積まない」原則の唯一の例外）:
+1. `chore/dev-from-master`（= master 先端）と `dev@origin` を親に持つマージコミットを作る（手順 4 の「コミットを積まない」原則の唯一の例外）:
 
    ```bash
-   git switch chore/dev-from-master
-   git merge --no-ff --no-commit origin/dev
+   jj new 'chore/dev-from-master' 'dev@origin' \
+     -m "dev@origin をマージし版数競合を解決（semver=<release>、ビルド番号=<max>）"
+   jj status   # コンフリクトしているファイルを確認
    ```
 
-2. 衝突した版数 3 ファイルを master 側（`--ours`）で確定してから、ビルド番号だけ `dev` 側の最大値へ引き上げる（下は master=530/2743・dev=531/2744 の例）:
+   git と違い、jj はこの時点で **マージコミットが既に存在する**。`--no-commit` のような中間状態やインデックスは無く、未解決のコンフリクトはコミットの中に記録され、作業コピーのファイルにはコンフリクトマーカーとして展開される。そのまま編集して解決していけばよい。
+
+2. 衝突した版数 3 ファイルを master 側の内容で確定してから、ビルド番号だけ `dev` 側の最大値へ引き上げる（下は master=530/2743・dev=531/2744 の例）:
 
    ```bash
-   git checkout --ours android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+   jj restore --from 'master@origin' \
+     android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
    sed -i 's/versionCode 100000530/versionCode 100000531/g' android/app/build.gradle
    sed -i "s/buildNumber: '2743'/buildNumber: '2744'/g; s/versionCode: 100000530/versionCode: 100000531/g" app.config.ts
    sed -i 's/CURRENT_PROJECT_VERSION = 2743;/CURRENT_PROJECT_VERSION = 2744;/g' ios/TrainLCD.xcodeproj/project.pbxproj
+   jj status   # コンフリクトが 1 件も残っていないことを確認する
    ```
 
-   これらの版数ファイルは master↔dev で数値以外の差分が無い（`git diff origin/dev origin/master -- <path>` で確認できる）ため、`--ours` で master を採ってもコンテンツは失われない。
+   これらの版数ファイルは master↔dev で数値以外の差分が無い（`jj diff --from 'dev@origin' --to 'master@origin' <path>` で確認できる）ため、master 側の内容を採ってもコンテンツは失われない。`jj restore` はコンフリクトマーカーごとファイルを置き換えるので、この 3 ファイルについては別途の解決作業は要らない。
 
-3. **`dev` への正味の変化が semver だけ**（ビルド番号は据え置き）であることを確認してからマージコミットを作成し push する:
+3. **`dev` への正味の変化が semver だけ**（ビルド番号は据え置き）であることを確認してから、ブックマークをマージコミットへ移して push する:
 
    ```bash
-   git add android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
-   git diff origin/dev HEAD    # semver（例 10.9.0 -> 10.9.1）のみが出るのが正
-   git commit -m "origin/dev をマージし版数競合を解決（semver=<release>、ビルド番号=<max>）"
-   git push origin chore/dev-from-master
+   jj diff --from 'dev@origin' --to @   # semver（例 10.9.0 -> 10.9.1）のみが出るのが正
+   jj bookmark set chore/dev-from-master -r @
+   jj new                               # @ を確定し、その上に空の作業コピーを作る
+   jj git push --bookmark chore/dev-from-master
    ```
 
-4. 以降は通常どおり merge commit でマージする（`finalize-release` が Ruleset 一時緩和つきで実行する）。マージ後は dev HEAD が 2 親の merge commit になり、`git rev-list --count origin/dev..origin/master` が `0`（dev が master を完全包含）になることを検証する。
+   `jj new` を挟むのは、以後の作業コピー編集がマージコミットを書き換えないようにするため（jj のブックマークは新しいコミットへ自動追従しないので、`jj bookmark set` で明示的に移す）。
+
+4. 以降は通常どおり merge commit でマージする（`finalize-release` が Ruleset 一時緩和つきで実行する）。マージ後は dev HEAD が 2 親の merge commit になり、`jj log -r 'dev@origin..master@origin'` の出力が空（dev が master を完全包含）になることを検証する。
 
 **semver をリリース版数へ更新する判断とビルド番号の採用値は本番の版数に関わるため、自動で確定せずユーザーに確認する。**
 

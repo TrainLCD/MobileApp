@@ -5,7 +5,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 ## Operating Principles for Automation Agents
 
 - **Honor instruction priority:** repository owners & maintainers → latest task prompt → this handbook → other documentation. Surface conflicting requirements immediately.
-- **Preserve the working tree:** operate on the current snapshot, never discard user changes, and avoid destructive commands (`git reset --hard`, `git clean -fd`, etc.).
+- **Preserve the working copy:** operate on the current snapshot, never discard user changes, and avoid destructive commands (`jj abandon`, a bare `jj restore`, `jj op restore`, and any `git reset --hard` / `git clean -fd`). See [Version Control (Jujutsu)](#version-control-jujutsu).
 - **Favor minimal, auditable diffs:** prefer additive edits, keep formatting deterministic, and annotate non-obvious changes with concise comments.
 - **Document reproducibility:** record every manual command you execute and note any local assumptions about environment variables or credentials.
 - **Validate assumptions proactively:** confirm tool versions, workflow expectations, and environment needs instead of relying on cached knowledge.
@@ -104,9 +104,46 @@ This handbook defines how automation agents collaborate safely and effectively o
 - For integration flows, extend `src/test/e2e.ts` and prefer fixtures from `src/__fixtures__/`.
 - When modifying behavior, update or add tests in the same change set; document skipped tests with TODOs and owner rationale.
 
+## Version Control (Jujutsu)
+
+This repository is managed with **Jujutsu (`jj`)** in a colocated layout: `.jj/` and `.git/` sit side by side, so GitHub, `gh`, and CI keep seeing an ordinary Git repository. **Agents drive version control through `jj`, not `git`.**
+
+- **Never run Git commands that move `HEAD`, the index, or the working copy** — `git switch`, `git checkout`, `git commit`, `git merge`, `git rebase`, `git reset`, `git stash`, `git branch`. In a colocated repo they leave jj's working copy and Git's `HEAD` out of step, and the damage usually surfaces later as a conflict nobody can explain.
+- **The only sanctioned Git commands are annotated-tag creation and push** (`git tag -a` / `git push origin <tag>`): `jj tag set` can create lightweight tags only, while the release workflow on GitHub Actions creates annotated ones, and letting the tag type depend on which path ran is a release-metadata hazard. `.claude/skills/publish-release/SKILL.md` records the reasoning.
+- **Steps under `.github/workflows/` stay on Git.** Runners have `git`, not `jj`; do not convert workflow steps to `jj`.
+- **jj snapshots the entire working copy on every command**, including files Git would have left untracked. There is no staging area to act as a filter, so run `jj status` and actually read the list before `jj commit`. Use `jj commit <path>...` when only part of the diff belongs in the commit; the rest stays in the new `@`.
+- **Bookmarks are not branches.** A `jj bookmark` does not advance when you create a new commit. After committing, point it at the commit explicitly (`jj bookmark set <name> -r @-`) before pushing, or the push sends stale history.
+- **`jj git push` has no `--force`.** It applies a `git push --force-with-lease`-equivalent safety check. If a push is rejected, run `jj git fetch` and re-examine the state instead of reaching for guard-removing flags such as `--ignore-immutable`.
+- Recovery is `jj undo` and `jj op log` + `jj op restore`. That makes most mistakes reversible; it is not a licence to run destructive commands in the first place.
+- The repo config defines `trunk()` as `dev@origin`, so `jj log` and revsets can use `trunk()` wherever `dev@origin` is meant.
+
+Command mapping — the skills under `.claude/skills/` follow this table:
+
+| Git | jj |
+| ---- | ---- |
+| `git status` | `jj status` |
+| `git add ...` + `git commit -m "..."` | `jj commit -m "..."`（staging なし。パス限定は `jj commit <path>... -m "..."`） |
+| `git switch -c <branch>` | `jj new <base>` → 作業 → `jj commit -m "..."` → `jj bookmark create <name> -r @-` |
+| `git switch <branch>` | `jj new <bookmark>`（その上で作業）/ `jj edit <rev>`（そのコミットを編集） |
+| `git fetch origin --tags` | `jj git fetch`（bookmark と tag の両方を取り込む） |
+| `git pull --ff-only origin dev` | `jj git fetch`（追跡中のローカル bookmark はこれで追従する） |
+| `git push -u origin <branch>` | `jj git push --bookmark <name>`（新規 bookmark も自動で追跡される） |
+| `git push origin --delete <branch>` | `jj bookmark delete <name>` → `jj git push --bookmark <name>` |
+| `origin/dev` などのリモート参照 | `dev@origin` |
+| `git log --oneline A..B` | `jj log -r 'A..B' --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'` |
+| `git log --pretty='- %s' A..B` | `jj log -r 'A..B' --no-graph -T '"- " ++ description.first_line() ++ "\n"'` |
+| `git diff --name-only A..B` | `jj diff --name-only --from A --to B` |
+| `git show <rev>:<path>` | `jj file show -r <rev> <path>` |
+| `git rev-parse <rev>` | `jj log -r <rev> --no-graph -T 'commit_id'` |
+| `git rev-parse --show-toplevel` | `jj workspace root` |
+| `git merge --no-ff <rev>` | `jj new <target> <rev> -m "..."`（マージコミットは即座に作られ、未解決の衝突はコミット内に記録される） |
+| `git checkout --ours <paths>` | `jj restore --from <rev> <paths>` |
+| `git merge-base --is-ancestor A B` | `jj log -r 'A & ::B'` の出力が空でないこと |
+| `git stash` | 不要（`@` をそのまま残し `jj new <base>` で別作業へ移る） |
+
 ## Commit & Pull Request Protocol
 
-- Follow git-flow for every working branch: create `feature/*`, `fix/*`, and `release/*` branches from `dev`, and reserve `hotfix/*` from `master` for urgent production fixes. Do not create tool-specific prefixes such as `agent/*`.
+- Follow git-flow naming for every working bookmark: create `feature/*`, `fix/*`, and `release/*` bookmarks from `dev@origin`, and reserve `hotfix/*` from `master@origin` for urgent production fixes. Do not create tool-specific prefixes such as `agent/*`. A bookmark is created with `jj bookmark create <name> -r @-` once the commit exists — see [Version Control (Jujutsu)](#version-control-jujutsu).
 - Commit messages must be single-sentence statements in Japanese (e.g., `テレメトリー送信機をリファクタリングしてnull状態を回避`); prefix production hot fixes with `Hotfix:`.
 - Keep commits logically scoped (implementation, tests, docs) and mention generated artifacts in the description.
 - Pull requests must follow `.github/pull_request_template.md`; do not add or remove sections from the template without maintainer approval.
@@ -120,8 +157,8 @@ This handbook defines how automation agents collaborate safely and effectively o
   - Linked issues or tickets.
   - Screenshots or recordings for UI/UX deltas with device names (e.g., Pixel 8, iPhone 15 Pro).
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
-- **Keep PR metadata in sync with the branch state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
-  - **Title**: re-evaluate whether the current title still describes the full scope of the branch. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
+- **Keep PR metadata in sync with the bookmark state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
+  - **Title**: re-evaluate whether the current title still describes the full scope of the bookmark. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
   - **Body**: update the `変更の種類` checkboxes, the `変更内容` summary, and the test-result section so they reflect the updated diff. Preserve human-authored prose sections (`概要`, narrative added under `変更内容`, `関連Issue`, `スクリーンショット`) unless the changes invalidate them.
 
 ## Security & Configuration Guardrails
