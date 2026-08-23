@@ -114,7 +114,13 @@ gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<�
 
    - `master@origin` の HEAD に **annotated tag** を打つ。タグメッセージは `v<version>` 固定（過去運用と同一）。
 
-     > **⚠ 実行前ゲート**: タグ push は取り消しコストの高い外部波及操作。タグ名・対象 SHA・master 側の最新コミット件名をユーザーに提示し、**承認を得てから**下のブロックを実行する。
+     > **⚠ 実行前ゲート（手順 4・5 をまとめて 1 回で承認する）**: タグ push と GitHub Release 公開はどちらも取り消しコストの高い外部波及操作。経路 B が dispatch 全体を 1 回の承認対象にしているのと同じ粒度に揃える。以下をユーザーに提示し、**承認を得てから**手順 4 と手順 5 を続けて実行する。
+     >
+     > - タグ: `v<version>`（annotated、メッセージ `v<version>`）
+     > - 対象 SHA と master 側の最新コミット件名
+     > - GitHub Release: tag=`v<version>` / `--target master` / version=`<version>` / `--generate-notes` / `--latest`
+     >
+     > 手順 5 で改めて承認を取り直さない。
 
      ```bash
      git tag -a "v<version>" -m "v<version>" <master@origin の SHA>
@@ -138,6 +144,7 @@ gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<�
      ```
 
    - `--latest` によって Latest 扱いになる。プレリリース用途（`vX.Y.Zb` 等の b サフィックス）でこのスキルを流用したい場合は、本スキルの責務外として中断し、ユーザーに確認する。
+   - 承認は手順 4 の実行前ゲートで取得済み（あのゲートは Release 公開まで対象に含む）。ここで取り直さない。
 
 6. **完了報告**
 
