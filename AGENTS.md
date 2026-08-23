@@ -5,7 +5,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 ## Operating Principles for Automation Agents
 
 - **Honor instruction priority:** repository owners & maintainers → latest task prompt → this handbook → other documentation. Surface conflicting requirements immediately.
-- **Preserve the working copy:** operate on the current snapshot, never discard user changes, and avoid destructive commands (`jj abandon`, a bare `jj restore`, `jj op restore`, and any `git reset --hard` / `git clean -fd`). See [Version Control (Jujutsu)](#version-control-jujutsu).
+- **Preserve the working copy:** operate on the current snapshot, never discard user changes, and avoid destructive commands (`jj abandon`, a bare `jj restore`, and any `git reset --hard` / `git clean -fd`). `jj op restore` rewinds the whole repository, so it is **forbidden as a normal operation** — it is available for recovery only, and only with the user's explicit approval of that specific rollback. See [Version Control (Jujutsu)](#version-control-jujutsu).
 - **Favor minimal, auditable diffs:** prefer additive edits, keep formatting deterministic, and annotate non-obvious changes with concise comments.
 - **Document reproducibility:** record every manual command you execute and note any local assumptions about environment variables or credentials.
 - **Validate assumptions proactively:** confirm tool versions, workflow expectations, and environment needs instead of relying on cached knowledge.
@@ -114,7 +114,7 @@ This repository is managed with **Jujutsu (`jj`)** in a colocated layout: `.jj/`
 - **jj snapshots the entire working copy on every command**, including files Git would have left untracked. There is no staging area to act as a filter, so run `jj status` and actually read the list before `jj commit`. Use `jj commit <path>...` when only part of the diff belongs in the commit; the rest stays in the new `@`.
 - **Bookmarks are not branches.** A `jj bookmark` does not advance when you create a new commit. After committing, point it at the commit explicitly (`jj bookmark set <name> -r @-`) before pushing, or the push sends stale history.
 - **`jj git push` has no `--force`.** It applies a `git push --force-with-lease`-equivalent safety check. If a push is rejected, run `jj git fetch` and re-examine the state instead of reaching for guard-removing flags such as `--ignore-immutable`.
-- Recovery is `jj undo` and `jj op log` + `jj op restore`. That makes most mistakes reversible; it is not a licence to run destructive commands in the first place.
+- Recovery is `jj undo` (undoes the last operation) and, for anything further back, `jj op log` to inspect followed by `jj op restore`. **`jj op restore` rewinds the entire repository state, so never run it on your own initiative** — show the user the `jj op log` entry you intend to restore to and get explicit approval for that rollback first. Reversibility is not a licence to run destructive commands in the first place.
 - The repo config defines `trunk()` as `dev@origin`, so `jj log` and revsets can use `trunk()` wherever `dev@origin` is meant.
 
 Command mapping — the skills under `.claude/skills/` follow this table:

@@ -28,7 +28,7 @@ TrainLCD のフィードバック置き場（プライベートリポジトリ `
 
 - `gh` CLI が認証済みで、`TrainLCD/Issues` への read 権限を持つアカウントに紐づいていること。
 - カレントディレクトリは MobileApp リポジトリ内（本文の実装プラン生成で `Grep` / `Glob` による軽い確認を行うため）。
-- 書き込み系の操作は**しない**。`gh issue edit` / `gh issue comment` / `gh issue close` / `jj commit` / `jj git push` は呼ばない。
+- 書き込み系の操作は**しない**。`gh issue edit` / `gh issue comment` / `gh issue close` / `gh label create` / `gh label edit` / `gh label delete` / `jj commit` / `jj git push` は呼ばない（読み取り専用の `gh label list` は可）。
 
 ## 参考: TrainLCD/Issues のラベルスキーマ
 
@@ -140,7 +140,7 @@ Issues リポジトリには difficulty ラベルが無いため、Claude が is
 
 ## 注意事項
 
-- **書き込み禁止**: `gh issue edit` / `gh issue comment` / `gh issue close` / `gh label` / `jj commit` / `jj git push` / `gh pr create` のいずれも呼ばない。このスキルは read-only 契約。
+- **書き込み禁止**: `gh issue edit` / `gh issue comment` / `gh issue close` / `gh label create` / `gh label edit` / `gh label delete` / `jj commit` / `jj git push` / `gh pr create` のいずれも呼ばない。このスキルは read-only 契約。読み取り専用の `gh label list`（「参考: TrainLCD/Issues のラベルスキーマ」で最新ラベルを確認するのに使う）は禁止対象ではない。
 - **プール枯渇時は勝手に緩めない**: 条件を緩めるかどうかはユーザー判断。候補が 0-1 件なら「現条件では N 件しか該当しません。`triage` を外す／広げる等の緩和案があります」と報告する。
 - **難易度推定は当たりを付ける程度で可**: 精度に自信が無ければ `unknown` として残し、`difficulty` 指定時には弾く。深掘りで消耗しないこと。
 - **Feedback ラベルの扱い**: `🙏 Feedback` はフィードバック issue のほぼ全件に付く運用のため、`category=Feedback` 単独指定は絞り込み効果が薄い。ユーザーにもその旨を案内する。

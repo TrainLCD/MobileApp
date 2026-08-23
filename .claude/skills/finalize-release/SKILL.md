@@ -64,7 +64,15 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
    - master→dev 差分件数: `jj log -r 'dev@origin..master@origin' --no-graph -T '"- " ++ description.first_line() ++ "\n"'` の行数
      - **0 件なら sync をスキップ** としてプランに記録（中断ではない）。
    - 既存 open な dev<-master PR: `gh pr list --base dev --head chore/dev-from-master --state open --json number,url`
-     - 既に open なら **新規作成はスキップし既存 URL を流用** としてプランに記録。
+     - 既に open な場合、**流用する前にその head が現在の `master@origin` を含むかを照合する**（手順 1 の `jj git fetch` 済みが前提）。前回リリース時の sync PR が未マージのまま残っていると、古い master から作られた PR をマージしてしまい、今回のリリース分が dev に入らない。
+
+       ```bash
+       jj log -r 'master@origin ~ ::chore/dev-from-master@origin' --no-graph \
+         -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+       ```
+
+       - 出力が空（＝ `master@origin` が既存 head の祖先）→ **新規作成はスキップし既存 URL を流用** としてプランに記録。
+       - 出力がある（＝古い master から作られた PR）→ **中断**し、既存 PR を閉じてブックマークを作り直すか否かをユーザーに確認する（自動では作り直さない）。手順 6-4 の事後検証でも検知できるが、その時点ではタグと Release が既に公開済みなので事前に弾く。
    - 既存 `chore/dev-from-master` の状態（open PR が無い前提で）:
      - `jj bookmark list --all-remotes 'chore/dev-from-master'` と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
      - 固有コミットの有無: 下の revset が空でなければ **中断** してユーザーに確認（自動では削除しない）。
@@ -156,40 +164,56 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
 6. **sync PR を merge commit でマージ（dev Ruleset 一時緩和つき）**
 
-   sync が **スキップ**（差分 0 件）された場合はこの手順を飛ばす。新規作成・流用いずれかで dev<-master PR が存在する場合のみ実行する。**緩和→マージ→復元は 1 つの bash 呼び出しにまとめ、`set +e` でマージ失敗を握って復元を無条件実行する**（途中で関数が分かれて復元が飛ぶ事故を防ぐ）。
+   sync が **スキップ**（差分 0 件）された場合はこの手順を飛ばす。新規作成・流用いずれかで dev<-master PR が存在する場合のみ実行する。**緩和→マージ→復元は手順 6-3 の 1 つの bash 呼び出しにまとめ、`set +e` でマージ失敗を握ったうえで `EXIT` trap により復元を無条件実行する**（ブロックが分かれて復元が飛ぶ事故を防ぐ）。
 
    **マージ前にコンフリクトを確認する。** `gh pr view <n> --json mergeable,mergeStateStatus` が `CONFLICTING` を返す場合、`master` から特定コミットだけを cherry-pick したリリース（`create-release-pr` の「この変更だけ」指定など）の後に起きる **版数ファイルのねじれ** が典型。このときは Ruleset 緩和より先に `sync-dev-from-master` の「版数ファイルのコンフリクト解決」に従って版数を解決し（本番版数の判断はユーザー承認を取る）、PR を `MERGEABLE` にしてから 6-3 以降へ進む。`mergeable` はプッシュ直後に非同期で古い値を返すことがあるため、`jj log -r 'dev@origin & ::chore/dev-from-master@origin'` が **空でない**（＝ `dev@origin` が `chore/dev-from-master@origin` の祖先）ことで構造的な包含も確認するとよい。
 
    1. マージ対象 PR 番号を確定（手順 5 で新規作成 or 流用した PR）。jj には「今どのブランチに居るか」という概念が無く作業コピー `@` はブックマークに固定されないため、git のようにマージ前へ退避する操作は不要。
    2. `OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)` を解決。プレフライトの「マージ方式制約」記録を使う:
-      - dev が `merge` を許可済み → **緩和不要**。そのまま手順 6-5 のマージへ。
-      - squash-only 等で `merge` 不許可 → 手順 6-3 の一時緩和を行う。
-   3. **一時緩和**（フル定義をバックアップしてから PUT）。`RS_ID` はプレフライトで控えた `ruleset_id`:
+      - dev が `merge` を許可済み → **緩和不要**。手順 6-3 のブロックから緩和・復元部分を外し、`gh pr merge <n> --merge --delete-branch` だけを実行する。
+      - squash-only 等で `merge` 不許可 → 手順 6-3 をそのまま実行する。
+   3. **緩和 → マージ → 復元（1 つの bash 呼び出しで完結させる）**
+
+      **このブロックは分割しない。** `trap` を緩和 PUT より **前** に仕掛けることで、マージ失敗・中断・想定外エラーのいずれで抜けても復元が必ず走る。`RS_ID` はプレフライトで控えた `ruleset_id`。
+
       ```bash
+      set +e
       RS_ID=<プレフライトで控えた ruleset_id>
-      gh api "repos/$OWNER_REPO/rulesets/$RS_ID" > ruleset_backup.json   # 復元用。リポジトリ直下の相対パス（/tmp は Git Bash と Windows python で別解決になり read に失敗するため使わない）
-      ```
-      `ruleset_backup.json` から `name,target,enforcement,conditions,bypass_actors,rules` を取り出し、`pull_request` ルールの `allowed_merge_methods` にのみ `merge` を追加した `ruleset_relaxed.json` を生成（他は一切変えない。既存方式 `squash` は残す）。
-      ```bash
+      OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+
+      # 復元用バックアップ。リポジトリ直下の相対パス（/tmp は Git Bash と Windows python で
+      # 別解決になり read に失敗するため使わない）
+      gh api "repos/$OWNER_REPO/rulesets/$RS_ID" > ruleset_backup.json || exit 1
+
+      # allowed_merge_methods に merge を足すだけ。他フィールドは一切変えず、既存の squash も残す
+      jq '{name, target, enforcement, conditions, bypass_actors,
+           rules: (.rules | map(
+             if .type == "pull_request"
+             then .parameters.allowed_merge_methods |=
+                    (if index("merge") then . else . + ["merge"] end)
+             else . end))}' ruleset_backup.json > ruleset_relaxed.json
+
+      # 緩和より先に trap を仕掛ける（緩和 PUT 自体が失敗しても復元 PUT は無害な原状 PUT になる）
+      trap 'gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_backup.json >/dev/null \
+              && echo "ruleset restored" \
+              || echo "!!! RULESET RESTORE FAILED - 手動復元が必要: repos/$OWNER_REPO/rulesets/$RS_ID"; \
+            rm -f ruleset_relaxed.json' EXIT INT TERM
+
       gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_relaxed.json \
         --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'   # ["squash","merge"] を確認
-      ```
-   4. **マージ（merge commit）**:
-      ```bash
+
       gh pr merge <n> --merge --delete-branch
+      echo "merge exit=$?"
       ```
+
       - `--squash` / `--rebase` は使わない。
-      - required check 不成立・コンフリクト等で弾かれても **force/admin マージしない**。マージ失敗は握って次の復元へ進む（PR は open のまま残す）。なお `mergeStateStatus=UNSTABLE`（必須でない失敗チェックがあるだけ）は通常マージ可能。
-   5. **復元（緩和した場合は必ず実行）**:
-      ```bash
-      gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_backup.json \
-        --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'   # 元の値（例 ["squash"]）に戻ったことを確認
-      ```
-      **マージが失敗していても Ruleset は必ず復元する。** 復元の PUT 自体が失敗した場合は最優先でユーザーに知らせる（Ruleset を緩めたまま放置しない）。
-   6. **検証**: `jj git fetch` 後、
+      - required check 不成立・コンフリクト等で弾かれても **force/admin マージしない**。マージ失敗は握ったまま trap の復元へ進む（PR は open のまま残す）。なお `mergeStateStatus=UNSTABLE`（必須でない失敗チェックがあるだけ）は通常マージ可能。
+      - **マージが失敗していても Ruleset は必ず復元される**（trap が担保）。出力に `RULESET RESTORE FAILED` が出た場合は最優先でユーザーに知らせる（Ruleset を緩めたまま放置しない）。
+      - 復元後の値は `gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で元の値（例 `["squash"]`）に戻ったことを読み取り専用で確認する。
+   4. **検証**: `jj git fetch` 後、
       - dev HEAD が **2 親を持つ merge commit**（squash されていない）であること: `jj log -r 'dev@origin' --no-graph -T 'parents.len() ++ "\n"'` が `2`。
       - `jj log -r 'dev@origin..master@origin' --no-graph -T 'commit_id ++ "\n"'` の出力が空（dev が master を完全包含）。
-   7. 一時ファイル `ruleset_backup.json` / `ruleset_relaxed.json` を削除する。ローカルの `dev` ブックマークは `jj git fetch` の時点で `dev@origin` に追従しているため、git の `pull --ff-only` に相当する操作は不要。
+   5. 一時ファイル `ruleset_backup.json` を削除する（`ruleset_relaxed.json` は trap が既に消している）。ローカルの `dev` ブックマークは `jj git fetch` の時点で `dev@origin` に追従しているため、git の `pull --ff-only` に相当する操作は不要。
 
 7. **完了報告**
 
@@ -210,6 +234,6 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 - **承認の統合** がこのスキルの付加価値。プレフライトで危ない状態（タグ重複・version 不一致・未マージブックマーク残存等）は **承認ゲートに到達させない** ことで、「承認したら止まらない」契約を守る。マージと Ruleset 緩和も同じ 1 回の承認に含め、マージ直前で追加承認を取らない。
 - 操作順は **タグ → sync PR 作成 → マージ** で固定。publish-release 成功後に sync 作成やマージが失敗しても、タグと Release は既に公開済みで巻き戻さない。sync の PR 作成自体が失敗した場合は原因を修正して `sync-dev-from-master` を単独呼び直しで補完する（その旨を完了報告で案内する）。マージのみ失敗した場合は PR を open のまま残す。
 - ブックマーク削除の push（`jj bookmark delete` → `jj git push`）や annotated tag push は破壊的に見えるが、プレフライトで重複ガードと `MERGED` 確認を済ませた上で実行する前提。
-- **dev Ruleset の一時緩和は不変条件つき**: ①既存の `allowed_merge_methods` を削らず `merge` を**追加するだけ**（広げる方向のみ）、②**マージの成否に関わらず必ず元へ復元**する、③復元は緩和と同一 bash 呼び出し内で `set +e` により無条件実行、④バックアップ/緩和用 JSON はリポジトリ直下の相対パスに置き完了後に削除（`/tmp` は使わない）。復元 PUT 自体が失敗したら最優先で報告する。
+- **dev Ruleset の一時緩和は不変条件つき**: ①既存の `allowed_merge_methods` を削らず `merge` を**追加するだけ**（広げる方向のみ）、②**マージの成否に関わらず必ず元へ復元**する、③復元は緩和と同一 bash 呼び出し内で、緩和 PUT より前に仕掛けた `EXIT` trap により無条件実行（`set +e` でマージ失敗を握る）、④バックアップ/緩和用 JSON はリポジトリ直下の相対パスに置き完了後に削除（`/tmp` は使わない）。復元 PUT 自体が失敗したら最優先で報告する。
 - マージは **必ず merge commit**（`gh pr merge --merge`）。`--squash` / `--rebase` は使わない。required check や branch protection で弾かれても **force/admin マージはしない**（PR を残して報告）。
 - sync が **スキップ**（差分 0 件）のときはマージも Ruleset 緩和も行わない。`merge` が既に許可されている dev では緩和をスキップして素直にマージする。

@@ -71,10 +71,21 @@ gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<�
      ```bash
      jj git fetch
      jj tag list "v<version>"
-     gh release view "v<version>" --json tagName 2>/dev/null || true
      ```
 
      `jj git fetch` は既定の refspec に従ってブックマークとタグの両方を取り込むので、タグ用に別途 fetch する必要は無い。
+
+   - 同名の Release が既に存在するかも確認する。**`|| true` で非 0 終了を握り潰さない**（未発見と認証エラー・レート制限・通信障害が同じ結果になり、判定不能のまま重複公開ガードを素通りしてしまう）。
+
+     ```bash
+     gh release view "v<version>" --json tagName
+     ```
+
+     - exit 0（＝存在する）→ 公開済みとして中断。
+     - 非 0 かつ stderr に `release not found` を含む → 「重複なし」として続行。
+     - それ以外の非 0（認証エラー・レート制限・通信障害等）→ 判定不能なので中断し、stderr をユーザーに報告する。
+
+     `finalize-release` のプレフライトと同じ判定契約。
 
 2. **master 最新化**
 
@@ -103,6 +114,8 @@ gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<�
 
    - `master@origin` の HEAD に **annotated tag** を打つ。タグメッセージは `v<version>` 固定（過去運用と同一）。
 
+     > **⚠ 実行前ゲート**: タグ push は取り消しコストの高い外部波及操作。タグ名・対象 SHA・master 側の最新コミット件名をユーザーに提示し、**承認を得てから**下のブロックを実行する。
+
      ```bash
      git tag -a "v<version>" -m "v<version>" <master@origin の SHA>
      git push origin "v<version>"
@@ -110,7 +123,7 @@ gh workflow run publish_release.yml --ref dev -f version=<version> -f target=<�
 
    - **ここだけ jj ではなく git を使う。** `jj tag set` が作れるのは lightweight tag だけで、annotated tag（タグメッセージ・タガー情報を持つ）を作る手段が jj にはない。経路 B のワークフローも annotated tag を打つため、経路 A を lightweight に倒すと同じ版数でもタグの種別が経路ごとに変わってしまう。コロケート構成なので `git tag` はそのまま通り、`jj` 側は次回コマンド実行時にタグを取り込む。
    - タグ以外の操作を git に広げない。ここで `git switch` / `git commit` などを混ぜると jj の作業コピーと食い違う。
-   - push 前に、タグ名・対象 SHA・master 側の最新コミット件名をユーザーに提示して承認を取る。
+   - 承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
 
 5. **GitHub Release 公開**
 

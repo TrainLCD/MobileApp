@@ -37,7 +37,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 ## 前提条件
 
 - カレントディレクトリが `jj workspace root` で解決できるリポジトリ内。
-- `jj` と `gh` CLI が使える（`gh` は認証済み）。このリポジトリは jj / git コロケート構成だが、**VCS 操作は jj に統一する**。git を直接叩くのは jj に対応コマンドが無い場合だけ。
+- `jj` と `gh` CLI が使える（`gh` は認証済み）。このリポジトリは jj / git コロケート構成だが、**VCS 操作は jj に統一する**。直接叩いてよい git コマンドは annotated tag の作成・push（`git tag -a` / `git push origin <tag>`）だけで、それは `publish-release` / `finalize-release` の責務。**このスキルに tag 操作は無いので、git コマンドは一切使わない**（AGENTS.md「Version Control (Jujutsu)」）。
 - `head` ブックマークが origin に push 済み。未 push の場合はユーザーに push の可否を確認する（勝手に push しない）。
 
 ## 手順
@@ -63,6 +63,8 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    切り出し手順:
 
+   > **⚠ 実行前ゲート**: 下のブロックは origin に波及する push を含む。ブックマーク名・`jj status` で確認した含めるファイル・コミットメッセージ案の 3 点をユーザーに提示し、**承認を得てから**実行する。
+
    ```bash
    jj status                                      # @ に入っている差分を必ず目視確認する
    jj commit -m "<日本語単文>"                     # @ を確定し、その上に新しい空の @ ができる
@@ -73,7 +75,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    - **`jj status` の目視確認は省略しない**。jj は `.gitignore` されていない未追跡ファイルも自動でスナップショットするため、git の `add` に相当する取捨選択の関門が無い。意図しないファイルが混ざっていたら `.gitignore` に追加するか `jj file untrack <path>` してから確定する。
    - 一部のパスだけ確定したい場合は `jj commit <path>... -m "<日本語単文>"`。選ばなかった差分は新しい `@` に残る。
    - コミット前に `npx biome check --unsafe --fix ./src` を実行（メモのルール）。
-   - push は新規ブックマークなので安全だが、実行前にユーザーへ要約（ブックマーク名・含めるファイル・コミットメッセージ案）を提示して承認を取る。
+   - push は新規ブックマークなので安全だが、承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
 
    以降の手順では推論後の head を使う。
 

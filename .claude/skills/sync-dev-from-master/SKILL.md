@@ -82,6 +82,8 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
 4. **ブックマークを master@origin に作って push**
 
+   > **⚠ 実行前ゲート**: 下のブロックは origin に波及する push を含む。対象 SHA（`jj log -r 'master@origin' --no-graph -T 'commit_id'`）・取り込まれるコミット件数・本文に入れる version をユーザーに提示し、**承認を得てから**実行する。
+
    ```bash
    jj git fetch
    jj bookmark create chore/dev-from-master -r 'master@origin'
@@ -89,7 +91,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    ```
 
    - 何もコミットは積まない（master 先端そのまま）。作業コピー `@` を動かす必要も無いので `jj new` / `jj edit` はしない。biome 等のフォーマッタも走らせない（新規コミット無し）。
-   - push 前に、対象 SHA（`jj log -r 'master@origin' --no-graph -T 'commit_id'`）・取り込まれるコミット件数・本文に入れる version をユーザーに提示して承認を取る。
+   - 承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
    - **例外**: この PR が版数ファイルで衝突する場合（`master` から特定 PR だけ cherry-pick したリリースの後に起きる。後述の「版数ファイルのコンフリクト解決」を参照）は、このブックマークに `dev@origin` をマージして解決コミットを 1 つだけ積む。それ以外は master 先端そのまま。
 
 5. **PR 本文を組み立て（テンプレ厳守・全節を実内容で埋める）**
@@ -218,10 +220,23 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    これらの版数ファイルは master↔dev で数値以外の差分が無い（`jj diff --from 'dev@origin' --to 'master@origin' <path>` で確認できる）ため、master 側の内容を採ってもコンテンツは失われない。`jj restore` はコンフリクトマーカーごとファイルを置き換えるので、この 3 ファイルについては別途の解決作業は要らない。
 
-3. **`dev` への正味の変化が semver だけ**（ビルド番号は据え置き）であることを確認してから、ブックマークをマージコミットへ移して push する:
+3. 差分を **版数 3 ファイル** と **それ以外** に分けて確認してから、ブックマークをマージコミットへ移して push する:
 
    ```bash
-   jj diff --from 'dev@origin' --to @   # semver（例 10.9.0 -> 10.9.1）のみが出るのが正
+   # (a) 版数 3 ファイル: semver だけが動き、ビルド番号は据え置きなのが正
+   jj diff --from 'dev@origin' --to @ \
+     android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+
+   # (b) それ以外を含む全体: master にだけ在ったアプリコードが出る。これは同期すべき正当な差分
+   jj diff --stat --from 'dev@origin' --to @
+   ```
+
+   - **(a) の「semver だけ」判定はこの 3 ファイルに限定する。** semver（例 10.9.0 -> 10.9.1）が上がり、`versionCode` / `CURRENT_PROJECT_VERSION` / `buildNumber` が `dev` 側の値のままであることを確認する。ここに想定外の差分があれば中断。
+   - **(b) に「semver だけ」を要求しない。** cherry-pick / hotfix リリースでは master 側で直接入った修正が残っているのが正常であり、それを `dev` へ運ぶことがこの PR の目的。全体差分に semver 以外が出ること自体は正しい。ただし身に覚えの無い差分が混ざっていないかは目視し、内容をユーザーに提示して確認を取る。
+
+   確認後:
+
+   ```bash
    jj bookmark set chore/dev-from-master -r @
    jj new                               # @ を確定し、その上に空の作業コピーを作る
    jj git push --bookmark chore/dev-from-master
