@@ -17,6 +17,7 @@ import Typography from '~/components/Typography';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
+import { getActionSheetColorOptions } from '~/utils/actionSheetColors';
 import { isDevApp } from '~/utils/isDevApp';
 
 type LicenseId =
@@ -302,6 +303,7 @@ const Licenses: React.FC = () => {
           {
             options,
             cancelButtonIndex,
+            ...getActionSheetColorOptions(colors, isLEDTheme),
           },
           (selectedIndex) => {
             if (selectedIndex === 0) {
@@ -315,7 +317,7 @@ const Licenses: React.FC = () => {
         Linking.openURL(item.href);
       }
     },
-    [showActionSheetWithOptions]
+    [colors, isLEDTheme, showActionSheetWithOptions]
   );
 
   const renderItem = useCallback(

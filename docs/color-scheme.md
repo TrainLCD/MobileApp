@@ -125,6 +125,33 @@ const colors = useAtomValue(appColorsAtom);
 (`AppColorsProvider` を挟まないツリーから開いてもダークが届くこと、
 電光掲示板風テーマでは従来の配色のままであること)。
 
+## アクションシート
+
+アクションシートは React のツリーの外に出る一時的な UI なので、`useAppColors()` の
+Context ではなく `getActionSheetColorOptions()`(`src/utils/actionSheetColors.ts`)で
+配色をオプションとして渡す。
+
+```tsx
+showActionSheetWithOptions(
+  {
+    options,
+    cancelButtonIndex,
+    ...getActionSheetColorOptions(colors, isLEDTheme),
+  },
+  handleSelect
+);
+```
+
+iOS は端末ネイティブのシートなので `userInterfaceStyle` だけが効き、Android は JS 実装の
+シートなのでスタイル系だけが効く。両方を一度に渡し、効かない側は無視させている。
+ライト時はスタイルを指定せずライブラリ既定値のままにして導入前と同じ見た目を保つが、
+iOS のネイティブシートは既定で端末の外観に追従してしまうため、ライトでも
+`userInterfaceStyle` だけは明示してアプリ側の設定を優先させる。
+電光掲示板風テーマ中は何も渡さず、導入前と完全に同じ挙動にしている。
+
+走行画面から開くアクションシート(`Permitted.tsx` の長押しメニュー)もモーダルと同じ扱いで
+配色に追従する。走行画面は Provider の外側にあるため、そこでは `appColorsAtom` を直接購読する。
+
 ## 制限事項
 
 `GlobalToast` は元からダークな見た目(背景 `#333` に白文字)なので、配色設定の対象外。
