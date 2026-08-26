@@ -1,5 +1,6 @@
 import { act, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import React from 'react';
 import { Appearance } from 'react-native';
 import { COLOR_SCHEME, COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
 import {
@@ -152,6 +153,8 @@ describe('FxSystemColorScheme', () => {
       });
 
     const store = createStore();
+    // モジュール評価時(上書き前)に読んだ端末の値
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
     store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.LIGHT);
 
     render(
@@ -160,7 +163,7 @@ describe('FxSystemColorScheme', () => {
       </Provider>
     );
 
-    // マウント時点の端末の値はダーク
+    // 上書き中はマウント時の読み取りもしないため、端末の値は保たれる
     expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
 
     // 上書き適用によりライトのイベントが飛んでも、端末の値は書き換えない
@@ -173,5 +176,33 @@ describe('FxSystemColorScheme', () => {
     });
     (listener as AppearanceListener | null)?.({ colorScheme: 'light' });
     expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.LIGHT);
+  });
+
+  // StrictMode は effect の setup/cleanup/setup を行う。2回目のセットアップ時には
+  // 既に上書きが効いているため、無条件に読むとアプリの設定値を端末の値として記録してしまう
+  it('StrictModeで再セットアップされても上書き値を端末の配色として記録しない', () => {
+    let overridden = false;
+    jest.spyOn(Appearance, 'setColorScheme').mockImplementation(() => {
+      overridden = true;
+    });
+    // 上書きが効いた後の読み取りはアプリの設定値(ライト)を返す
+    jest
+      .spyOn(Appearance, 'getColorScheme')
+      .mockImplementation(() => (overridden ? 'light' : 'dark'));
+
+    const store = createStore();
+    // モジュール評価時に読んだ上書き前の端末の値
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.LIGHT);
+
+    render(
+      <React.StrictMode>
+        <Provider store={store}>
+          <FxSystemColorScheme />
+        </Provider>
+      </React.StrictMode>
+    );
+
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
   });
 });

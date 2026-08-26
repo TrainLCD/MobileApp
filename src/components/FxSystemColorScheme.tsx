@@ -60,7 +60,13 @@ const FxSystemColorScheme: React.FC = () => {
       setSystemColorScheme(normalizeSystemScheme(colorScheme));
     });
 
-    setSystemColorScheme(normalizeSystemScheme(Appearance.getColorScheme()));
+    // 上書き中の読み取りもアプリの設定値を返すため、端末の値としては記録できない。
+    // StrictMode や再マウントでこの effect が再実行されると、既に効いている上書きの値を
+    // 読んでしまうので、イベントと同じ条件で弾く。「自動」以外で読まなくても、
+    // systemColorSchemeAtom の初期値が上書き前(モジュール評価時)の端末の値を持っている
+    if (preferenceRef.current === COLOR_SCHEME_PREFERENCE.AUTO) {
+      setSystemColorScheme(normalizeSystemScheme(Appearance.getColorScheme()));
+    }
 
     return () => subscription.remove();
   }, [setSystemColorScheme]);
