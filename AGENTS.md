@@ -156,7 +156,7 @@ Command mapping — the skills under `.claude/skills/` follow this table:
   - Regression risk assessment and mitigation.
   - Commands executed locally (e.g., `npm run lint && npm test && npm run typecheck`).
   - Linked issues or tickets.
-  - Screenshots or recordings for UI/UX deltas with device names (e.g., Pixel 8, iPhone 15 Pro).
+  - Visual evidence for UI/UX deltas, each labeled with where the image came from. Any method is acceptable — a device or simulator capture (label it with the device name, e.g., Pixel 8, iPhone 15 Pro), a React Native Web rendering (`npm run web`), or a mockup / generated image. An image that is not a rendering of the implementation must say so in its label, so a reviewer never mistakes an illustration for observed behavior.
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
 - **Keep PR metadata in sync with the bookmark state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
   - **Title**: re-evaluate whether the current title still describes the full scope of the bookmark. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
@@ -177,7 +177,7 @@ Command mapping — the skills under `.claude/skills/` follow this table:
 - [ ] Update or add tests relevant to code changes.
 - [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
 - [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
-- [ ] Capture screenshots/video for UI changes with device labels.
+- [ ] Attach visual evidence for UI changes, each labeled with its source (device name, React Native Web, or an explicit "not a rendering of the implementation" note for mockups).
 
 **For documentation-only tasks**
 
