@@ -8,11 +8,20 @@ on:
   push:
     branches:
       - '**'
+    # GitHub Actions は YAML のアンカー/エイリアスを解釈しないため、
+    # pull_request 側にも同じ paths を書き下す。片方だけ更新しないこと。
     paths:
       - '.github/scripts/**'
       - '.github/workflows/test_scripts.yml'
       # 実行コマンドは package.json の test:scripts に依存している。
       # スクリプト定義だけが変わった場合も壊れを検出できるようにする。
+      - 'package.json'
+  # push だけだと fork からの PR でスクリプトが変更されてもテストが走らない。
+  # secret を使わず contents: read で動くジョブなので fork PR でも安全に回せる。
+  pull_request:
+    paths:
+      - '.github/scripts/**'
+      - '.github/workflows/test_scripts.yml'
       - 'package.json'
 
 # ブランチ側で書き換えられるコードを実行するワークフローなので、

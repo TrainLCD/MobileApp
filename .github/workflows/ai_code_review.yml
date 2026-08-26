@@ -176,7 +176,12 @@ jobs:
           # 履歴はレビューを補強する情報でしかないので、取得に失敗しても差分
           # レビュー自体は続行する。ただし握り潰さず警告は必ず出す（失敗すると
           # #6722 の「同じ指摘の繰り返し」が無言で再発するため）。
-          # errexit はサブシェル内だけで有効にし、失敗を戻り値で受け取る。
+          #
+          # ⚠️ set +e を省略しないこと。Actions の既定シェルは `bash -e {0}` で
+          # errexit が既に有効なので、`set -uo pipefail` では解除されない。
+          # 外さないままだとサブシェルの失敗でステップごと終了し、下の
+          # フォールバックに到達せず、履歴取得の失敗がレビュー全体の喪失になる。
+          set +e
           (
             set -euo pipefail
             # --paginate と --jq を併用するとページごとに jq が走るため、
@@ -196,6 +201,7 @@ jobs:
             echo "履歴: コメント $(jq 'length' "$RUNNER_TEMP/issue_comments.json") 件 / 行コメント $(jq 'length' "$RUNNER_TEMP/review_comments.json") 件"
           )
           FETCH_STATUS=$?
+          set -e
           if [ "$FETCH_STATUS" -ne 0 ]; then
             echo "::warning::レビュー履歴の取得に失敗しました (exit $FETCH_STATUS)。過去の指摘を入力に含めずにレビューします"
             printf '%s' '{"issueComments":[],"reviewComments":[]}' > "$RUNNER_TEMP/history.json"
