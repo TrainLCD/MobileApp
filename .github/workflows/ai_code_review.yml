@@ -3,12 +3,14 @@
 # 一方で API 呼び出しやコメント投稿の失敗は握り潰さず、ジョブを赤くして原因を追えるようにしている。
 #
 # ⚠️ このワークフローを編集する人へ:
-# このジョブは OPENAI_API_KEY にアクセスできる。自動トリガーを足さないこと。
-# PR イベント起点のトリガー（pull_request / pull_request_target /
-# pull_request_review など）は、ワークフロー定義が PR 側から読まれうるため、
-# PR に「secret を外部送信する step」を足されると防げない。詳しい経緯は下の
-# on: のコメントと docs/ai-code-review-workflow.md を参照。
-# checkout の ref を既定ブランチ以外に変えるのも同じ理由で禁止。
+# 自動トリガーを足さないこと。理由は 2 つあり、どちらか一方だけでも足さない理由になる。
+#  1) コスト: 毎回 base...head の全差分を reasoning_effort: high で送るため、
+#     push のたびに請求が積み上がる。CodeRabbit の再レビューも誘発して二重に効く。
+#  2) セキュリティ: PR イベント起点のトリガー（pull_request / pull_request_target /
+#     pull_request_review など）はワークフロー定義が PR 側から読まれうるため、
+#     PR に「OPENAI_API_KEY を外部送信する step」を足されると防げない。
+# 詳しい経緯は下の on: のコメントと docs/ai-code-review-workflow.md を参照。
+# checkout の ref を既定ブランチ以外に変えるのも 2) と同じ理由で禁止。
 # レビュー対象の差分は compare API から取得し、データとしてのみ扱う。
 #
 # ⚠️ branch protection の必須チェックにしないこと:
@@ -30,6 +32,13 @@ on:
   # 同じ理由で pull_request / pull_request_target も採れない。approve を観測
   # できるイベントは pull_request_review だけなので、「approve 後に自動で 1 回」は
   # secret を守ったまま実現できない。自動化より secret を優先し、手動実行に倒した。
+  #
+  # ⚠️ コスト面でも自動トリガーは持続しない。差分はインクリメンタルではなく毎回
+  # base...head の全差分を reasoning_effort: high で送るため、ラウンドが進むほど
+  # 1 回あたりの入力が増える。concurrency のキャンセルは発射済みの API 呼び出しの
+  # 課金を取り消さない。さらに gpt の指摘が push を誘発し、その push が CodeRabbit の
+  # 再レビュー（従量課金）を誘発するので費用が二重に効く。#6721 では 11 ラウンド
+  # 並走させた結果 OpenAI のクレジットが枯渇した。
   #
   # 毎 push で CodeRabbit と並走させない、という #6723 の本題は手動実行でも
   # 達成できる（実行するかどうかを人が決めるため）。
