@@ -35,6 +35,15 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 - `npm test` — 成功
 - `npm run typecheck` — 成功
 
+### 未検証
+
+上記は JavaScript 側のチェックのみで、ネイティブ側は未検証。
+
+- Android SDK を用いた Kotlin のコンパイル確認（作業環境に Android SDK が無いため未実施）。
+  最初の検証は canary のネイティブビルドになる。
+- Android 実機での動作確認（音楽再生中にアナウンスで他アプリの音量が下がり、
+  読み上げ終了後に戻るか）。
+
 ## 2026-08-26 — Expo SDK 57 系の依存を推奨バージョンへ更新
 
 対象バージョン: v10.13.1 / PR [#6720](https://github.com/TrainLCD/MobileApp/pull/6720)
