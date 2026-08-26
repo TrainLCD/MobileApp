@@ -110,6 +110,7 @@ This repository is managed with **Jujutsu (`jj`)** in a colocated layout: `.jj/`
 
 - **Never run Git commands that move `HEAD`, the index, or the working copy** — `git switch`, `git checkout`, `git commit`, `git merge`, `git rebase`, `git reset`, `git stash`, `git branch`. In a colocated repo they leave jj's working copy and Git's `HEAD` out of step, and the damage usually surfaces later as a conflict nobody can explain.
 - **The only sanctioned Git commands are annotated-tag creation and push** (`git tag -a` / `git push origin <tag>`): `jj tag set` can create lightweight tags only, while the release workflow on GitHub Actions creates annotated ones, and letting the tag type depend on which path ran is a release-metadata hazard. `.claude/skills/publish-release/SKILL.md` records the reasoning.
+- **Server-side writes through the GitHub API are a narrow, named exception — not a general escape hatch.** `.claude/skills/create-pr/SKILL.md` uploads PR screenshots to the orphan branch `assets/pr-screenshots` using the Contents and Git Data APIs. This is permitted because it touches no local state — no working copy, no index, no `HEAD`, no `.jj` — so it cannot desync the colocated repo, which is the hazard the rules above exist to prevent. The exception holds only while **all** of these are true: the target branch carries assets and no application code; it is never merged into `dev` or `master`; published paths are content-addressed, immutable, and never overwritten; and the user approves the write beforehand. Any write to a branch that carries application code still goes through jj.
 - **Steps under `.github/workflows/` stay on Git.** Runners have `git`, not `jj`; do not convert workflow steps to `jj`.
 - **jj snapshots the entire working copy on every command**, including files Git would have left untracked. There is no staging area to act as a filter, so run `jj status` and actually read the list before `jj commit`. Use `jj commit <path>...` when only part of the diff belongs in the commit; the rest stays in the new `@`.
 - **Bookmarks are not branches.** A `jj bookmark` does not advance when you create a new commit. After committing, point it at the commit explicitly (`jj bookmark set <name> -r @-`) before pushing, or the push sends stale history.
@@ -155,7 +156,7 @@ Command mapping — the skills under `.claude/skills/` follow this table:
   - Regression risk assessment and mitigation.
   - Commands executed locally (e.g., `npm run lint && npm test && npm run typecheck`).
   - Linked issues or tickets.
-  - Screenshots or recordings for UI/UX deltas with device names (e.g., Pixel 8, iPhone 15 Pro).
+  - Visual evidence for UI/UX deltas, each labeled with where the image came from. Any method is acceptable — a device or simulator capture (label it with the device name, e.g., Pixel 8, iPhone 15 Pro), a React Native Web rendering (`npm run web`), or a mockup / generated image. An image that is not a rendering of the implementation must say so in its label, so a reviewer never mistakes an illustration for observed behavior. If no image is attached, state the reason in that section instead of leaving it blank.
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
 - **Keep PR metadata in sync with the bookmark state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
   - **Title**: re-evaluate whether the current title still describes the full scope of the bookmark. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
@@ -176,7 +177,7 @@ Command mapping — the skills under `.claude/skills/` follow this table:
 - [ ] Update or add tests relevant to code changes.
 - [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
 - [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
-- [ ] Capture screenshots/video for UI changes with device labels.
+- [ ] Attach visual evidence for UI changes, each labeled with its source (device name, React Native Web, or an explicit 'not a rendering of the implementation' note for mockups); when no image is attached, state why instead of leaving the section blank.
 
 **For documentation-only tasks**
 

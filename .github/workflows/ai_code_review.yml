@@ -3,10 +3,22 @@
 # 一方で API 呼び出しやコメント投稿の失敗は握り潰さず、ジョブを赤くして原因を追えるようにしている。
 #
 # ⚠️ このワークフローを編集する人へ:
-# pull_request_target を使っているため、このジョブは secrets にアクセスできる。
-# PR の head 側のコードは絶対に checkout・実行しないこと。
-# checkout の ref を head や merge ref に変えた瞬間、PR 作成者が
-# OPENAI_API_KEY と GITHUB_TOKEN を自由に持ち出せるようになる。
+# 自動トリガーを足さないこと。理由は 2 つあり、どちらか一方だけでも足さない理由になる。
+#  1) コスト: 毎回 base...head の全差分を送るため、push のたびに請求が積み上がる。
+#     CodeRabbit の再レビューも誘発して二重に効く。
+#  2) セキュリティ: pull_request_review はワークフロー定義が PR 側から読まれうるのに
+#     secret も渡るため、PR に「OPENAI_API_KEY を外部送信する step」を足されると防げない。
+# イベントごとに定義の読み元と secret の扱いが違うので、混同しないこと:
+#   - pull_request:        定義は PR の merge commit 側。同一リポジトリ PR には
+#                          secret が渡り、fork PR には渡らない（token は read-only）。
+#   - pull_request_target: 定義は base リポジトリの既定ブランチ側で、PR から改竄できない。
+#                          secret は fork PR にも渡る。定義の点では安全だが
+#                          1) のコストで採らない（毎 push 実行になる）。
+#   - pull_request_review: 定義は PR の merge commit 側なのに、同一リポジトリ PR には
+#                          secret が渡る。最も危険な組み合わせ。fork PR には渡らない
+#                          ので、脅威が成立するのは同一リポジトリ PR。
+# 詳しい経緯は下の on: のコメントと docs/ai-code-review-workflow.md を参照。
+# checkout の ref を既定ブランチ以外に変えるのも 2) と同じ理由で禁止。
 # レビュー対象の差分は compare API から取得し、データとしてのみ扱う。
 #
 # ⚠️ branch protection の必須チェックにしないこと:
@@ -15,16 +27,30 @@
 name: AI Code Review
 
 on:
-  # pull_request ではなく pull_request_target を使う。
-  # pull_request はワークフロー定義自体を PR 側（merge commit）から読むため、
-  # PR に secrets を持ち出すステップを足されると checkout より先に評価されて防げない。
-  # pull_request_target なら定義も下の guard も base 側から読まれるので改竄できない。
-  pull_request_target:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
+  # ⚠️ 自動トリガーは意図的に持たない。手動実行のみ。
+  #
+  # 当初は CodeRabbit の approve を起点にする pull_request_review を採用した
+  # （#6723）。しかし実測で、同一リポジトリの PR に対して GitHub がこのイベントの
+  # ワークフロー定義を head 側（PR ブランチ）から読むことが分かった（#6724 の
+  # run 73 が実例。base の dev はこのトリガーを持たないのに実行が作られた）。
+  # 定義が PR 側から差し替えられる以上、PR に「OPENAI_API_KEY を外部送信する
+  # step」を足されても防げない。checkout の ref が制御するのは作業ツリーだけで、
+  # 実行されるワークフロー YAML 自体ではないため、base 固定では守れない。
+  #
+  # 同じ理由で pull_request / pull_request_target も採れない。approve を観測
+  # できるイベントは pull_request_review だけなので、「approve 後に自動で 1 回」は
+  # secret を守ったまま実現できない。自動化より secret を優先し、手動実行に倒した。
+  #
+  # ⚠️ コスト面でも自動トリガーは持続しない。差分はインクリメンタルではなく毎回
+  # base...head の全差分を送る（reasoning_effort は既定 high、手動実行で変更可）。
+  # そのため差分や履歴が増えたラウンドでは 1 回あたりの入力も増える（縮むことも
+  # あり、MAX_DIFF_CHARS を超える分は切り詰める）。concurrency のキャンセルは
+  # 発射済みの API 呼び出しの課金を取り消さない。さらに gpt の指摘が push を誘発し、
+  # その push が CodeRabbit の再レビュー（従量課金）を誘発するので費用が二重に効く。
+  # #6721 では 11 ラウンド並走させた結果 OpenAI のクレジットが枯渇した。
+  #
+  # 毎 push で CodeRabbit と並走させない、という #6723 の本題は手動実行でも
+  # 達成できる（実行するかどうかを人が決めるため）。
   workflow_dispatch:
     inputs:
       pr_number:
@@ -46,9 +72,9 @@ permissions:
   contents: read
   pull-requests: write
 
-# 同じ PR に連続で push された場合、古いレビューは打ち切って最新の差分だけを見る。
+# 同じ PR に対して続けて手動実行した場合、古いレビューは打ち切る。
 concurrency:
-  group: ai-code-review-${{ github.event.pull_request.number || inputs.pr_number }}
+  group: ai-code-review-${{ inputs.pr_number }}
   cancel-in-progress: true
 
 env:
@@ -58,24 +84,19 @@ env:
 jobs:
   review:
     runs-on: ubuntu-22.04
-    # pull_request_target では fork PR にも secrets が渡るため、この guard が
-    # fork を遮断する唯一の門になる。緩めないこと（OpenAI の課金濫用防止も兼ねる）。
-    # guard 自体は base 側の定義から読まれるので PR 側からは改竄できない。
-    # Draft と skip-ai-review ラベル付き PR も、レビュー待ちではないのでスキップする。
-    if: |
-      github.event_name == 'workflow_dispatch' || (
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        github.event.pull_request.draft == false &&
-        !contains(github.event.pull_request.labels.*.name, 'skip-ai-review')
-      )
+    # 手動実行のみなので fork / Draft / skip-ai-review の guard は持たない。
+    # 実行できるのは Actions を起動できる write 権限者に限られ、対象 PR も
+    # その人が pr_number で明示する。fork PR や Draft をレビューしたい場合も、
+    # head 側のコードは実行しないためセキュリティ上の差は無い。
     steps:
-      # base.sha を明示して head 側のコードを checkout しない。head を取ると、
-      # PR で書き換えたレビュースクリプトが OPENAI_API_KEY と同じジョブで実行できてしまう。
-      # レビュー対象の差分は gh pr diff（API）から取るため head の作業ツリーは不要で、
-      # 実行されるのは常に base 側でレビュー済みのスクリプトと CLAUDE.md になる。
+      # 既定ブランチに固定する。github.sha にはしないこと。workflow_dispatch は
+      # 実行者が選んだ ref で走るため、github.sha だと未レビューのブランチの
+      # ai-code-review.mjs が OPENAI_API_KEY と同じジョブで実行される。
+      # レビュー対象の差分は compare API から取るため head の作業ツリーは不要で、
+      # 実行されるのは常にレビュー済みのスクリプトと CLAUDE.md になる。
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
 
       - uses: actions/setup-node@v4
@@ -103,7 +124,7 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+          PR_NUMBER: ${{ inputs.pr_number }}
         run: |
           set -euo pipefail
           if ! printf '%s' "$PR_NUMBER" | grep -Eq '^[0-9]+$'; then
@@ -125,6 +146,52 @@ jobs:
           echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
           echo "対象: $BASE_SHA...$HEAD_SHA / 差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
 
+      # 過去の指摘と、それに対する回答を集める。これを入力に含めないと
+      # ラウンドごとに完全な初回レビューをやり直すことになり、回答済みの指摘が
+      # 何度も再生成される（#6722）。
+      # コメント本文も untrusted な入力なので、PR 本文と同様にシェル変数へ
+      # 展開せず JSON ファイルのままスクリプトへ渡す。
+      - name: Fetch review history
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -uo pipefail
+          # 履歴はレビューを補強する情報でしかないので、取得に失敗しても差分
+          # レビュー自体は続行する。ただし握り潰さず警告は必ず出す（失敗すると
+          # #6722 の「同じ指摘の繰り返し」が無言で再発するため）。
+          #
+          # ⚠️ set +e を省略しないこと。Actions の既定シェルは `bash -e {0}` で
+          # errexit が既に有効なので、`set -uo pipefail` では解除されない。
+          # 外さないままだとサブシェルの失敗でステップごと終了し、下の
+          # フォールバックに到達せず、履歴取得の失敗がレビュー全体の喪失になる。
+          set +e
+          (
+            set -euo pipefail
+            # --paginate と --jq を併用するとページごとに jq が走るため、
+            # 配列ではなく 1 行 1 オブジェクトで出して jq -s でまとめる。
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+              --jq '.[] | {author: .user.login, createdAt: .created_at, body: .body}' \
+              | jq -s '.' > "$RUNNER_TEMP/issue_comments.json"
+            # CodeRabbit の実測結果など、行単位のレビューコメントもここに入る。
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/comments" --paginate \
+              --jq '.[] | {author: .user.login, createdAt: .created_at, path: .path, body: .body}' \
+              | jq -s '.' > "$RUNNER_TEMP/review_comments.json"
+            jq -n \
+              --slurpfile issueComments "$RUNNER_TEMP/issue_comments.json" \
+              --slurpfile reviewComments "$RUNNER_TEMP/review_comments.json" \
+              '{issueComments: $issueComments[0], reviewComments: $reviewComments[0]}' \
+              > "$RUNNER_TEMP/history.json"
+            echo "履歴: コメント $(jq 'length' "$RUNNER_TEMP/issue_comments.json") 件 / 行コメント $(jq 'length' "$RUNNER_TEMP/review_comments.json") 件"
+          )
+          FETCH_STATUS=$?
+          set -e
+          if [ "$FETCH_STATUS" -ne 0 ]; then
+            echo "::warning::レビュー履歴の取得に失敗しました (exit $FETCH_STATUS)。過去の指摘を入力に含めずにレビューします"
+            printf '%s' '{"issueComments":[],"reviewComments":[]}' > "$RUNNER_TEMP/history.json"
+          fi
+
       - name: Run AI review
         if: steps.guard.outputs.enabled == 'true'
         env:
@@ -132,6 +199,7 @@ jobs:
           REASONING_EFFORT: ${{ inputs.reasoning_effort || 'high' }}
           DIFF_PATH: ${{ runner.temp }}/pr.diff
           PR_META_PATH: ${{ runner.temp }}/pr.json
+          HISTORY_PATH: ${{ runner.temp }}/history.json
           OUTPUT_PATH: ${{ runner.temp }}/review.md
           # どのコミットに対するレビューかをコメントに残し、古い結果を見分けられるようにする。
           REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
