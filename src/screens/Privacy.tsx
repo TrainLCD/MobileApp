@@ -146,7 +146,9 @@ const PrivacyScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.root, { backgroundColor: colors.subtleSurface }]}
+    >
       <Typography style={[styles.text, styles.headingText]}>
         {translate('privacyTitle')}
       </Typography>

@@ -314,7 +314,10 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
             />
           ) : null}
           <Heading
-            style={[styles.title, !isLEDTheme && { color: colors.text }]}
+            style={[
+              styles.title,
+              !isLEDTheme && { color: colors.modalHeadingText },
+            ]}
           >
             {translate('searchByStationName')}
           </Heading>

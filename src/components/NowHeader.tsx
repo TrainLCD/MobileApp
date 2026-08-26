@@ -138,10 +138,10 @@ export const NowHeader = ({
 
   const busBadgeStyle: ViewStyle = useMemo(
     () => ({
-      backgroundColor: isLEDTheme ? '#2a2a2a' : colors.cardExpanded,
+      backgroundColor: isLEDTheme ? '#2a2a2a' : colors.badgeBackground,
       borderColor: isLEDTheme ? '#444' : colors.border,
     }),
-    [colors.border, colors.cardExpanded, isLEDTheme]
+    [colors.badgeBackground, colors.border, isLEDTheme]
   );
 
   const COLLAPSE_RANGE = 64;

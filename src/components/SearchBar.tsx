@@ -64,7 +64,7 @@ export const SearchBar = ({ onSearch, nameSearch }: Props) => {
         styles.root,
         isLEDTheme
           ? styles.ledBg
-          : [styles.bg, { backgroundColor: colors.card }],
+          : [styles.bg, { backgroundColor: colors.subtleSurface }],
       ]}
     >
       <TextInput

@@ -102,11 +102,7 @@ export const ThemeConfirmModal: React.FC<Props> = ({
           style={[
             styles.previewImageWrap,
             {
-              backgroundColor: isLEDTheme
-                ? '#444'
-                : colors.isDark
-                  ? colors.cardExpanded
-                  : '#e0e0e0',
+              backgroundColor: isLEDTheme ? '#444' : colors.previewBackground,
               borderColor: isLEDTheme ? '#fff' : colors.cardBorder,
               borderRadius: isLEDTheme ? 0 : 16,
             },

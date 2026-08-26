@@ -70,7 +70,10 @@ export const appColorsAtom = atom<AppColors>((get) => {
 ```
 
 `LIGHT_APP_COLORS` の各値は、この機能を入れる前に各画面へ直接書かれていた色と同じものを
-使っている。そのため LED テーマ中は、各コンポーネントに残した `isLEDTheme` 分岐と合わせて
+使っている(同系色でも従来値が違うものはトークンを分けている。
+例: `card` = `#FFFFFF` と `subtleSurface` = `#FCFCFC`)。この対応関係は
+`src/constants/colorScheme.test.ts` で固定しているので、トークンを統合・改名するときは
+そこが落ちないことを確認すること。そのため LED テーマ中は、各コンポーネントに残した `isLEDTheme` 分岐と合わせて
 導入前と完全に同じ色になる。設定値そのものは保持されるので、LED 以外のテーマへ戻せば
 選んでいたダークがそのまま適用される。
 

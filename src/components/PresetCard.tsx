@@ -136,7 +136,7 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
     () => [
       styles.root,
       {
-        backgroundColor: isLEDTheme ? '#2A2A2A' : colors.card,
+        backgroundColor: isLEDTheme ? '#2A2A2A' : colors.subtleSurface,
         borderRadius: isLEDTheme ? 0 : 8,
         ...(isTablet
           ? {}
@@ -147,7 +147,7 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
             }),
       },
     ],
-    [colors.card, isLEDTheme]
+    [colors.subtleSurface, isLEDTheme]
   );
 
   const lineFg = isLEDTheme ? '#CCCCCC' : colors.mutedText;

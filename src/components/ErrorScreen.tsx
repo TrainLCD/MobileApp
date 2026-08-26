@@ -82,7 +82,7 @@ const ErrorScreen: React.FC<Props> = ({
       style={[
         styles.root,
         {
-          backgroundColor: isLEDTheme ? '#212121' : colors.background,
+          backgroundColor: isLEDTheme ? '#212121' : colors.plainBackground,
         },
       ]}
     >

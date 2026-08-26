@@ -74,11 +74,11 @@ const AppContent: React.FC = () => {
     () => ({
       ...options,
       contentStyle: {
-        backgroundColor: colors.background,
+        backgroundColor: colors.plainBackground,
         opacity: 1,
       },
     }),
-    [colors.background]
+    [colors.plainBackground]
   );
 
   const [fontsLoaded, fontsLoadError] = useFonts({

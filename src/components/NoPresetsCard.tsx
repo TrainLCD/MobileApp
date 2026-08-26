@@ -54,7 +54,7 @@ const NoPresetsCardBase: React.FC<Props> = ({ text, icon }) => {
     () => [
       styles.root,
       {
-        backgroundColor: isLEDTheme ? '#2A2A2A' : colors.card,
+        backgroundColor: isLEDTheme ? '#2A2A2A' : colors.subtleSurface,
         borderRadius: isLEDTheme ? 0 : 8,
         ...(isTablet
           ? {}
@@ -63,7 +63,7 @@ const NoPresetsCardBase: React.FC<Props> = ({ text, icon }) => {
             }),
       },
     ],
-    [colors.card, isLEDTheme]
+    [colors.subtleSurface, isLEDTheme]
   );
 
   return (
