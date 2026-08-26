@@ -185,8 +185,22 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         ' "$1"
       }
 
+      has_metadata() { # $1: パス -> EXIF / XMP を含むなら 0
+        node -e '
+          const buf = require("fs").readFileSync(process.argv[1]);
+          const s = buf.toString("latin1");
+          // JPEG APP1 の Exif、PNG の eXIf チャンク、各形式に埋まる XMP パケット
+          const hit = s.includes("Exif\0\0")
+            || s.includes("eXIf")
+            || s.includes("http://ns.adobe.com/xap/1.0/")
+            || s.includes("XML:com.adobe.xmp");
+          process.exit(hit ? 0 : 1);
+        ' "$1"
+      }
+
       set -euo pipefail
       RECORDS="$(mktemp)"   # 検証を通った入力のみ: SRC \t SHA256 \t DEVICE \t CAPTION
+      HAS_METADATA=0
       # 検証が途中で落ちたら残さない（パス・端末名・キャプションを含むため）。
       # 全件通ったら下で解除し、承認後のスクリプトへ引き渡す。
       # INT / TERM は後始末だけでなく必ず終了させる。bash はハンドラの後も処理を続けるため、
@@ -230,6 +244,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         [ -n "$DEVICE" ] || { echo "端末名が必要です（例: iPhone 15 Pro）: $SRC" >&2; exit 1; }
         assert_magic "$SRC" || { echo "実体が画像ではありません（拡張子だけ画像）: $SRC" >&2; exit 1; }
 
+        # 目視では見えないメタデータ。位置情報・端末情報を含みうるので実行前ゲートに載せる
+        if has_metadata "$SRC"; then
+          echo "EXIF/XMP メタデータあり（位置情報・端末情報を含む可能性）: $SRC" >&2
+          HAS_METADATA=1
+        fi
+
         SIZE="$(stat -f%z "$SRC" 2>/dev/null || stat -c%s "$SRC")"
         if [ "$SIZE" -gt 10485760 ]; then
           echo "10MB 超のため拒否: $SRC ($SIZE bytes)" >&2; exit 1
@@ -259,6 +279,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - **デバイス名・キャプションからタブ・改行を除去してからレコードに書く**。ユーザー入力をそのまま TSV に流すと列数・行数が変わり、URL とメタデータの対応が崩れる。
       - **シンボリックリンクは拒否する**。承認からアップロードまでの間に参照先を差し替えられると、ユーザーが目視していない内容が恒久公開される。
       - **拡張子ではなく実バイト列で画像形式を確かめる**（`assert_magic`）。拡張子だけを画像にした別種のファイルが公開ブランチへ出るのを防ぐ。
+      - **EXIF/XMP の有無を検出する**（`has_metadata`）。マジックバイトの確認だけでは、画面に見えない位置情報・端末情報が元バイト列に残ったまま public な資材ブランチへ恒久公開される。検出したら実行前ゲートで提示し、除去するか承知で進めるかをユーザーに選ばせる。
       - **承認した内容の SHA-256 をレコードに固定する**。手順 4-3 で再計算して突き合わせることで、承認とアップロードの間にファイルが差し替わった場合に検出できる（TOCTOU 対策）。
       - **`RECORDS` が空になったら資材ブランチを作る前に停止する**（手順 4-3 へ進まない）。動画を手貼りするか未添付の理由を明記するかをユーザーに確認し、手順 5 の規定に従って理由行（例: `未添付: 動画のみが渡されたため、PR 画面へ直接ドラッグ&ドロップしてください`）を出す。
       - `RECORDS` のパスは標準出力に出して次のステップへ渡す。**この一時ファイルは実行前ゲートを挟んで次の Bash 呼び出しまで残す**（削除は手順 4-3 の `trap` が行う）。
@@ -274,9 +295,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       > 2. 資材ブランチを新規作成するか否か
       > 3. 1MB 超のファイルをそのまま上げるか
       > 4. **アップロードした画像は public リポジトリで誰でも閲覧でき、削除もマージも禁止された資材ブランチに残るため、実質的に恒久公開になること**
-      > 5. **各画像を目視して、アクセストークン・アカウント情報・位置情報・実名などの秘匿情報や個人情報が写り込んでいないこと**
+      > 5. **各画像を目視して、アクセストークン・アカウント情報・実名などの秘匿情報や個人情報が写り込んでいないこと**
+      > 6. **`has_metadata` が EXIF/XMP を検出した画像について、位置情報や端末情報を含んだまま公開してよいか**（目視では見えないため、検出結果を必ず提示する）
 
-      4 と 5 は特に省略しない。スクリーンショットは撮影時の通知バナーやデバッグオーバーレイに認証情報が写り込みやすく、いったん公開 URL になると取り消せない（資材ブランチは削除禁止なので、後から消しても URL の履歴は残る）。写り込みが疑われる場合は、マスキングした画像に差し替えるか、そのファイルを除外してから進む。リポジトリ規約の「認証情報をコミットしない」はこの経路にも等しく適用される。
+      4 以降は特に省略しない。スクリーンショットは撮影時の通知バナーやデバッグオーバーレイに認証情報が写り込みやすく、いったん公開 URL になると取り消せない（資材ブランチは削除禁止なので、後から消しても URL の履歴は残る）。写り込みが疑われる場合は、マスキングした画像に差し替えるか、そのファイルを除外してから進む。リポジトリ規約の「認証情報をコミットしない」はこの経路にも等しく適用される。
+
+      **EXIF/XMP は画面に表示されないので目視では判定できない**。`has_metadata` の検出結果を必ずユーザーに提示し、除去するか承知のうえで進めるかを選んでもらう。除去する例: `exiftool -all= <file>`。除去するとハッシュが変わるので、手順 4-1 からやり直す。
 
    3. **承認後に実行する自己完結スクリプト**（資材ブランチの用意 + アップロード）
 
@@ -304,17 +328,6 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         trap cleanup_work EXIT
         trap 'cleanup_work; exit 130' INT
         trap 'cleanup_work; exit 143' TERM
-
-        git_blob_sha() { # $1: ファイル -> git blob の SHA-1（既存 blob との内容一致確認に使う）
-          node -e '
-            const fs = require("fs"), c = require("crypto");
-            const b = fs.readFileSync(process.argv[1]);
-            const h = c.createHash("sha1");
-            h.update("blob " + b.length + "\0");
-            h.update(b);
-            process.stdout.write(h.digest("hex"));
-          ' "$1"
-        }
 
         api_status() { # $1: エンドポイント -> HTTP ステータスコードだけを返す
           local out
@@ -406,35 +419,52 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
         # 承認後は別プロセスなので、レコードの各行をここでも検証し直す（多層防御）。
         # レコードが何らかの理由で壊れても、未検証のファイルが公開ブランチへ出ないようにする
-        assert_image() { # $1: パス, $2: 承認時に記録した SHA-256
-          [ ! -L "$1" ] || { echo "シンボリックリンクです: $1" >&2; exit 1; }
-          [ -f "$1" ] || { echo "見つかりません: $1" >&2; exit 1; }
-          case "$(printf '%s' "${1##*.}" | tr 'A-Z' 'a-z')" in
-            png|jpg|jpeg|gif|webp) ;;
-            *) echo "非対応の拡張子: $1" >&2; exit 1 ;;
-          esac
-          local size actual
-          size="$(stat -f%z "$1" 2>/dev/null || stat -c%s "$1")"
-          [ "$size" -le 10485760 ] || { echo "10MB 超: $1" >&2; exit 1; }
-          # 承認時のハッシュと一致しなければ、承認後に差し替えられている
-          actual="$( { shasum -a 256 "$1" 2>/dev/null || sha256sum "$1"; } | cut -d" " -f1)"
-          [ "$actual" = "$2" ] || {
-            echo "承認時と内容が異なります（承認後に差し替えられた可能性）: $1" >&2
-            exit 1
-          }
-        }
-
         # ---- アップロード（gh がループの stdin を食わないよう fd 3 から読む） ----
         while IFS="$(printf '\t')" read -r SRC SHA256 DEVICE CAPTION <&3; do
-          assert_image "$SRC" "$SHA256"
+          [ ! -L "$SRC" ] || { echo "シンボリックリンクです: $SRC" >&2; exit 1; }
+
           HASH="${SHA256:0:12}"
           # 拡張子は必ず小文字へ正規化する。大文字のまま保存すると、次回実行時に
-          # 下の allowlist が自分で置いたファイルを「資材以外」と判定し、
+          # allowlist が自分で置いたファイルを「資材以外」と判定し、
           # そのブランチへの書き込みが以後すべて止まる
           BASE="$(basename "$SRC")"
           EXT="$(printf '%s' "${BASE##*.}" | tr 'A-Z' 'a-z')"
           NAME="$(printf '%s.%s' "${BASE%.*}" "$EXT" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
           DEST="$NS/$HASH-$NAME"
+
+          # ファイルの読み込みは 1 回だけにする。検証・base64・blob SHA をすべて同じ
+          # Buffer から作るので、「検証は通ったが送られたのは別の中身」という窓が無い。
+          # 読み直すたびに窓が開くため、shasum → node と分けてはいけない
+          BLOB_SHA="$(node -e '
+            const fs = require("fs"), crypto = require("crypto");
+            const [src, expected, branch, message, out] = process.argv.slice(1);
+            const buf = fs.readFileSync(src);
+
+            if (buf.length > 10485760) {
+              console.error("10MB 超: " + src); process.exit(1);
+            }
+            const head = buf.subarray(0, 12).toString("hex");
+            const isImage = head.startsWith("89504e470d0a1a0a")                        // PNG
+              || head.startsWith("ffd8ff")                                             // JPEG
+              || head.startsWith("474946383761") || head.startsWith("474946383961")    // GIF
+              || (head.startsWith("52494646") && buf.subarray(8, 12).toString() === "WEBP");
+            if (!isImage) {
+              console.error("実体が画像ではありません: " + src); process.exit(1);
+            }
+            const sha256 = crypto.createHash("sha256").update(buf).digest("hex");
+            if (sha256 !== expected) {
+              console.error("承認時と内容が異なります（承認後に差し替えられた可能性）: " + src);
+              process.exit(1);
+            }
+
+            fs.writeFileSync(out, JSON.stringify({
+              message, branch, content: buf.toString("base64"),
+            }));
+            const blob = crypto.createHash("sha1");
+            blob.update("blob " + buf.length + "\0");
+            blob.update(buf);
+            process.stdout.write(blob.digest("hex"));
+          ' "$SRC" "$SHA256" "$ASSET_BRANCH" "PRスクリーンショットを追加: $DEST" "$WORK/payload.json")"
 
           case "$(api_status "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH")" in
             200)
@@ -444,20 +474,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
                 -q '[.sha, .download_url] | @tsv')"
               REMOTE_SHA="${META%%$'\t'*}"
               URL="${META#*$'\t'}"
-              [ "$REMOTE_SHA" = "$(git_blob_sha "$SRC")" ] || {
+              [ "$REMOTE_SHA" = "$BLOB_SHA" ] || {
                 echo "既存ファイルとローカル画像の内容が一致しません: $DEST" >&2
                 exit 1
               }
               ;;
             404)
-              node -e '
-                const fs = require("fs");
-                const [src, branch, message] = process.argv.slice(1);
-                process.stdout.write(JSON.stringify({
-                  message, branch, content: fs.readFileSync(src).toString("base64"),
-                }));
-              ' "$SRC" "$ASSET_BRANCH" "PRスクリーンショットを追加: $DEST" > "$WORK/payload.json"
-
               URL="$(gh api -X PUT "repos/$OWNER_REPO/contents/$DEST" \
                 --input "$WORK/payload.json" -q '.content.download_url')" || {
                 echo "アップロード失敗: $SRC -> $DEST" >&2
@@ -474,7 +496,8 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       ```
 
       - **既存パスを再利用する前に内容の同一性を確かめる**。保存先のファイル名には SHA-256 の先頭 12 桁しか入っていないため、パスの一致だけを根拠に「内容も同一」とみなすと、接頭辞の衝突や別経路からの書き込みがあったときにローカル画像と違う画像を本文へ埋め込む。既存 blob の SHA-1 とローカル画像から計算した git blob SHA-1 を突き合わせ、不一致なら中断する。この照合があるため、パス側のハッシュは可読性を優先して 12 桁のままでよい。
-      - **アップロード直前に `assert_image` で再検証する**。承認後のスクリプトは別プロセスであり、レコードファイルを唯一の入力として信頼している。存在・拡張子・サイズに加えて**承認時に記録した SHA-256 と再計算値を突き合わせる**ので、承認からアップロードまでの間にファイルが差し替わっていれば中止する。手順 4-1 でパスの制御文字・シンボリックリンクを拒否しているのと合わせて多層の防御になる。
+      - **ファイルの読み込みは 1 レコードにつき 1 回だけにする**。サイズ・マジックバイト・SHA-256 の検証、base64 化、git blob SHA の算出をすべて同じ Buffer から行うので、「検証は通ったが送られたのは別の中身」という窓が存在しない。`shasum` で検証してから Node で読み直すような分割をすると、その間に差し替えられた内容がそのまま恒久公開される。
+      - 検証内容は、承認後のスクリプトが別プロセスでレコードファイルだけを入力として信頼することを前提に、**サイズ・実バイト列での画像判定・承認時 SHA-256 との一致**の 3 点。手順 4-1 でパスの制御文字・シンボリックリンクを拒否しているのと合わせて多層の防御になる。
       - **`set -euo pipefail` を必ず入れ、各 API 呼び出しの終了コードと URL の非空を検査する**。これが無いと、複数画像のうち途中の PUT が失敗しても最後の 1 件が成功しただけでループ全体が成功終了し、URL の行数が減った状態で本文を組み立ててしまう（デバイス名・キャプションとの対応がずれる）。失敗したら対象の入力と API エラーを報告して**本文生成ごと中断する**。
       - 出力は `URL\tデバイス名\tキャプション` の 1 レコード 1 行。行順への暗黙の依存をやめ、URL とメタデータを常に同じレコードとして持ち回る。
       - `gh` の成否に関わらず一時ファイル（`WORK` と `RECORDS`）が消えるよう全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
