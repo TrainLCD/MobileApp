@@ -173,8 +173,20 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         case "$SRC" in "~/"*) SRC="$HOME/${SRC#\~/}" ;; esac
       }
 
+      assert_magic() { # $1: パス -> 拡張子ではなく実バイト列で画像形式を確かめる
+        node -e '
+          const b = require("fs").readFileSync(process.argv[1]).subarray(0, 12);
+          const hex = b.toString("hex");
+          const ok = hex.startsWith("89504e470d0a1a0a")                               // PNG
+            || hex.startsWith("ffd8ff")                                               // JPEG
+            || hex.startsWith("474946383761") || hex.startsWith("474946383961")       // GIF
+            || (hex.startsWith("52494646") && b.subarray(8, 12).toString() === "WEBP");
+          process.exit(ok ? 0 : 1);
+        ' "$1"
+      }
+
       set -euo pipefail
-      RECORDS="$(mktemp)"   # 検証を通った入力のみ: SRC \t DEVICE \t CAPTION
+      RECORDS="$(mktemp)"   # 検証を通った入力のみ: SRC \t SHA256 \t DEVICE \t CAPTION
       # 検証が途中で落ちたら残さない（パス・端末名・キャプションを含むため）。
       # 全件通ったら下で解除し、承認後のスクリプトへ引き渡す
       trap 'rm -f "$RECORDS"' EXIT INT TERM
@@ -207,8 +219,10 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
           *) echo "非対応の拡張子: $SRC" >&2; exit 1 ;;
         esac
 
+        [ ! -L "$SRC" ] || { echo "シンボリックリンクは受け付けません（参照先が承認後に変わりうる）: $SRC" >&2; exit 1; }
         [ -f "$SRC" ] || { echo "見つかりません: $SRC" >&2; exit 1; }
         [ -n "$DEVICE" ] || { echo "端末名が必要です（例: iPhone 15 Pro）: $SRC" >&2; exit 1; }
+        assert_magic "$SRC" || { echo "実体が画像ではありません（拡張子だけ画像）: $SRC" >&2; exit 1; }
 
         SIZE="$(stat -f%z "$SRC" 2>/dev/null || stat -c%s "$SRC")"
         if [ "$SIZE" -gt 10485760 ]; then
@@ -218,7 +232,11 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
           echo "1MB 超: $SRC ($SIZE bytes)" >&2; OVERSIZED=1
         fi
 
-        printf '%s\t%s\t%s\n' "$SRC" "$DEVICE" "$CAPTION" >> "$RECORDS"
+        # 承認した内容そのものをハッシュで固定する。承認からアップロードまでの間に
+        # ファイルが差し替わっても、手順 4-3 の照合で検出できる
+        SHA256="$( { shasum -a 256 "$SRC" 2>/dev/null || sha256sum "$SRC"; } | cut -d" " -f1)"
+
+        printf '%s\t%s\t%s\t%s\n' "$SRC" "$SHA256" "$DEVICE" "$CAPTION" >> "$RECORDS"
       done
 
       [ -s "$RECORDS" ] || {
@@ -233,6 +251,9 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - **動画は除外して続行、それ以外の非対応拡張子はエラー**。説明と挙動を一致させる。
       - **サイズは表示するだけでなく判定する**。10MB 超は拒否。`OVERSIZED=1` になったら、縮小するか（macOS なら `sips -Z 1080 <in> --out <out>`）そのまま続行するかを**ユーザーに確認してから**次へ進む。Contents API の推奨上限は 1MB。
       - **デバイス名・キャプションからタブ・改行を除去してからレコードに書く**。ユーザー入力をそのまま TSV に流すと列数・行数が変わり、URL とメタデータの対応が崩れる。
+      - **シンボリックリンクは拒否する**。承認からアップロードまでの間に参照先を差し替えられると、ユーザーが目視していない内容が恒久公開される。
+      - **拡張子ではなく実バイト列で画像形式を確かめる**（`assert_magic`）。拡張子だけを画像にした別種のファイルが公開ブランチへ出るのを防ぐ。
+      - **承認した内容の SHA-256 をレコードに固定する**。手順 4-3 で再計算して突き合わせることで、承認とアップロードの間にファイルが差し替わった場合に検出できる（TOCTOU 対策）。
       - **`RECORDS` が空になったら資材ブランチを作る前に停止する**（手順 4-3 へ進まない）。動画を手貼りするか未添付の理由を明記するかをユーザーに確認し、手順 5 の規定に従って理由行（例: `未添付: 動画のみが渡されたため、PR 画面へ直接ドラッグ&ドロップしてください`）を出す。
       - `RECORDS` のパスは標準出力に出して次のステップへ渡す。**この一時ファイルは実行前ゲートを挟んで次の Bash 呼び出しまで残す**（削除は手順 4-3 の `trap` が行う）。
       - ただし**検証が途中で落ちた場合は残さない**。非対応拡張子・端末名不足・10MB 超・画像 0 件などで抜けると手順 4-3 の `trap` は動かないため、この検証ブロック自身にも `trap` を張り、全件通った時点で解除する。
@@ -321,19 +342,36 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
               echo "$ASSET_BRANCH は本スキルが作った資材ブランチではありません（マーカー不一致）" >&2
               exit 1
             }
-            gh api "repos/$OWNER_REPO/contents?ref=$ASSET_BRANCH" -q '.[].name' > "$WORK/asset-root.txt"
-            if grep -qxE 'src|package.json|package-lock.json|android|ios|app.json' "$WORK/asset-root.txt"; then
-              echo "$ASSET_BRANCH にアプリのコードが含まれています。書き込みを中止します" >&2
+            # 孤立系列であることを履歴から確認する。既定ブランチと共通祖先を持つなら
+            # dev 由来のブランチであり、AGENTS.md の例外条件を満たさない
+            # （無関係な履歴同士の compare に GitHub は 404 を返す）
+            BASE_BRANCH="$(gh api "repos/$OWNER_REPO" -q .default_branch)"
+            if [ "$(api_status "repos/$OWNER_REPO/compare/$BASE_BRANCH...$ASSET_BRANCH")" != "404" ]; then
+              echo "$ASSET_BRANCH は既定ブランチと共通祖先を持ちます（孤立ブランチではありません）" >&2
+              exit 1
+            fi
+
+            # ツリー全体を再帰で取得し、README と規定形式の画像パスだけを許可する（allowlist）。
+            # ルート直下の名前だけを見る denylist では app/ や lib/ 配下のコードを見落とす
+            TIP="$(gh api "repos/$OWNER_REPO/git/ref/heads/$ASSET_BRANCH" -q .object.sha)"
+            gh api "repos/$OWNER_REPO/git/trees/$TIP?recursive=1" \
+              -q '.tree[] | select(.type == "blob") | .path' > "$WORK/asset-tree.txt"
+            if grep -vxE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
+                 "$WORK/asset-tree.txt" | grep -q .; then
+              echo "$ASSET_BRANCH に資材以外のファイルが含まれています。書き込みを中止します" >&2
+              grep -vxE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
+                "$WORK/asset-tree.txt" >&2
               exit 1
             fi
             ;;
           404)
             # README を 1 つ持つツリーを作り、それを親無しコミット (= root commit) にする。
             # README にはマーカーを埋め、次回以降の系列確認に使う
+            # 改行は $'\n' で埋める。列 0 から始まる行を書くと、リスト内の
+            # コードフェンスがそこで閉じてしまい Markdown の構造が壊れる（MD046）
+            README_BODY="$ASSET_MARKER"$'\n''PR 本文へ埋め込むスクリーンショット置き場。アプリのコードは置かない。dev / master へマージしない。'
             BLOB="$(gh api -X POST "repos/$OWNER_REPO/git/blobs" \
-              -f content="$ASSET_MARKER"'
-PR 本文へ埋め込むスクリーンショット置き場。アプリのコードは置かない。dev / master へマージしない。' \
-              -f encoding=utf-8 -q .sha)"
+              -f content="$README_BODY" -f encoding=utf-8 -q .sha)"
             node -e 'process.stdout.write(JSON.stringify({tree:[{path:"README.md",mode:"100644",type:"blob",sha:process.argv[1]}]}))' \
               "$BLOB" > "$WORK/tree.json"
             TREE="$(gh api -X POST "repos/$OWNER_REPO/git/trees" --input "$WORK/tree.json" -q .sha)"
@@ -347,21 +385,28 @@ PR 本文へ埋め込むスクリーンショット置き場。アプリのコ�
 
         # 承認後は別プロセスなので、レコードの各行をここでも検証し直す（多層防御）。
         # レコードが何らかの理由で壊れても、未検証のファイルが公開ブランチへ出ないようにする
-        assert_image() { # $1: パス
+        assert_image() { # $1: パス, $2: 承認時に記録した SHA-256
+          [ ! -L "$1" ] || { echo "シンボリックリンクです: $1" >&2; exit 1; }
           [ -f "$1" ] || { echo "見つかりません: $1" >&2; exit 1; }
           case "$(printf '%s' "${1##*.}" | tr 'A-Z' 'a-z')" in
             png|jpg|jpeg|gif|webp) ;;
             *) echo "非対応の拡張子: $1" >&2; exit 1 ;;
           esac
-          local size
+          local size actual
           size="$(stat -f%z "$1" 2>/dev/null || stat -c%s "$1")"
           [ "$size" -le 10485760 ] || { echo "10MB 超: $1" >&2; exit 1; }
+          # 承認時のハッシュと一致しなければ、承認後に差し替えられている
+          actual="$( { shasum -a 256 "$1" 2>/dev/null || sha256sum "$1"; } | cut -d" " -f1)"
+          [ "$actual" = "$2" ] || {
+            echo "承認時と内容が異なります（承認後に差し替えられた可能性）: $1" >&2
+            exit 1
+          }
         }
 
         # ---- アップロード（gh がループの stdin を食わないよう fd 3 から読む） ----
-        while IFS="$(printf '\t')" read -r SRC DEVICE CAPTION <&3; do
-          assert_image "$SRC"
-          HASH="$( { shasum -a 256 "$SRC" 2>/dev/null || sha256sum "$SRC"; } | cut -c1-12)"
+        while IFS="$(printf '\t')" read -r SRC SHA256 DEVICE CAPTION <&3; do
+          assert_image "$SRC" "$SHA256"
+          HASH="${SHA256:0:12}"
           NAME="$(printf '%s' "$(basename "$SRC")" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
           DEST="$NS/$HASH-$NAME"
 
@@ -403,12 +448,15 @@ PR 本文へ埋め込むスクリーンショット置き場。アプリのコ�
       ```
 
       - **既存パスを再利用する前に内容の同一性を確かめる**。保存先のファイル名には SHA-256 の先頭 12 桁しか入っていないため、パスの一致だけを根拠に「内容も同一」とみなすと、接頭辞の衝突や別経路からの書き込みがあったときにローカル画像と違う画像を本文へ埋め込む。既存 blob の SHA-1 とローカル画像から計算した git blob SHA-1 を突き合わせ、不一致なら中断する。この照合があるため、パス側のハッシュは可読性を優先して 12 桁のままでよい。
-      - **アップロード直前に `assert_image` で再検証する**。承認後のスクリプトは別プロセスであり、レコードファイルを唯一の入力として信頼している。ここで存在・拡張子・サイズをもう一度確かめておけば、レコードが壊れた場合でも未検証のローカルファイルが公開ブランチへ出ることはない。手順 4-1 でパスの制御文字を拒否しているのと合わせて二重の防御になる。
+      - **アップロード直前に `assert_image` で再検証する**。承認後のスクリプトは別プロセスであり、レコードファイルを唯一の入力として信頼している。存在・拡張子・サイズに加えて**承認時に記録した SHA-256 と再計算値を突き合わせる**ので、承認からアップロードまでの間にファイルが差し替わっていれば中止する。手順 4-1 でパスの制御文字・シンボリックリンクを拒否しているのと合わせて多層の防御になる。
       - **`set -euo pipefail` を必ず入れ、各 API 呼び出しの終了コードと URL の非空を検査する**。これが無いと、複数画像のうち途中の PUT が失敗しても最後の 1 件が成功しただけでループ全体が成功終了し、URL の行数が減った状態で本文を組み立ててしまう（デバイス名・キャプションとの対応がずれる）。失敗したら対象の入力と API エラーを報告して**本文生成ごと中断する**。
       - 出力は `URL\tデバイス名\tキャプション` の 1 レコード 1 行。行順への暗黙の依存をやめ、URL とメタデータを常に同じレコードとして持ち回る。
       - `gh` の成否に関わらず一時ファイル（`WORK` と `RECORDS`）が消えるよう全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
       - URL は自分で組み立てず、レスポンスの `download_url` をそのまま使う（ブランチ名の `/` などのエスケープを間違えないため）。得られる URL は `https://raw.githubusercontent.com/<owner>/<repo>/<asset-branch>/<path>` 形式。
-      - **既存ブランチはブランチ名だけで信頼しない**。README のマーカー `create-pr:asset-branch:v1` の一致と、ルート直下にアプリのコード（`src` / `package.json` / `android` / `ios` 等）が無いことを読み取り API で確認してから書き込む。誤って `dev` 由来の同名ブランチが作られていた場合、AGENTS.md に定めた例外条件（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになるため、不一致なら中止する。
+      - **既存ブランチはブランチ名だけで信頼しない**。次の 3 つをすべて確認してから書き込む。誤って `dev` 由来の同名ブランチが作られていた場合、AGENTS.md に定めた例外条件（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになるため、1 つでも合わなければ中止する。
+        1. README にマーカー `create-pr:asset-branch:v1` が含まれること。
+        2. 既定ブランチと**共通祖先を持たない**こと（孤立系列であることの履歴からの裏付け）。無関係な履歴同士の compare に GitHub は 404 を返すので、それ以外なら中止する。
+        3. **ツリー全体を再帰で取得し、`README.md` と規定形式の画像パス（`<名前空間>/<12桁ハッシュ>-<ファイル名>.<拡張子>`）だけが存在すること**。ルート直下の名前を拾う denylist 方式では `app/` や `lib/` の配下に置かれたコードを見落とすため、allowlist で判定する。
       - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
 
 
