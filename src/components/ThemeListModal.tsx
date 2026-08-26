@@ -154,7 +154,7 @@ export const ThemeListModal: React.FC<Props> = ({
         </Pressable>
       );
     },
-    [items.length, currentPreference, isLEDTheme, onSelect]
+    [items.length, currentPreference, isLEDTheme, onSelect, colors.card]
   );
 
   const keyExtractor = useCallback((item: SettingsTheme) => item.value, []);

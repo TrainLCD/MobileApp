@@ -38,6 +38,10 @@ const renderModal = (led = false) => {
 };
 
 describe('CustomModal の配色', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('走行画面から開いてもダークの配色が子孫へ届く', () => {
     const { getByText } = renderModal();
 

@@ -242,11 +242,7 @@ const SelectLineScreen = () => {
   const renderLineCard = useCallback(
     (line: Line, index: number) => {
       if (fetchStationsByLineIdLoading) {
-        return (
-          <SkeletonPlaceholder borderRadius={4} speed={1500}>
-            <SkeletonPlaceholder.Item width="100%" height={72} />
-          </SkeletonPlaceholder>
-        );
+        return <NearbyStationLoader />;
       }
 
       return (

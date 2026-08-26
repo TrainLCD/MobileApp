@@ -7,6 +7,10 @@ import { DARK_APP_COLORS, LIGHT_APP_COLORS } from './colorScheme';
  * ここが落ちないことを必ず確認すること。
  */
 describe('LIGHT_APP_COLORS', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it.each([
     ['background', '#FAFAFA'], // 各設定画面の screenBg
     ['card', '#FFFFFF'], // 設定項目・モーダルの背景 ('white' / '#fff')

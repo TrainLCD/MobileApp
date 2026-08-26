@@ -14,13 +14,14 @@ const FxSystemColorScheme: React.FC = () => {
   const setSystemColorScheme = useSetAtom(systemColorSchemeAtom);
 
   useEffect(() => {
-    // リスナー登録前に端末側が変わっていた場合を取りこぼさないよう、
-    // マウント時に現在値を読み直してから購読する
-    setSystemColorScheme(normalizeSystemScheme(Appearance.getColorScheme()));
-
+    // 先に購読を開始してから現在値を読む。逆順だと、現在値の取得から購読開始までの
+    // 間に端末側が変わった場合にその変更イベントを受け取れず、次に変わるまで
+    // 「自動」が端末設定とずれたままになる
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
       setSystemColorScheme(normalizeSystemScheme(colorScheme));
     });
+
+    setSystemColorScheme(normalizeSystemScheme(Appearance.getColorScheme()));
 
     return () => subscription.remove();
   }, [setSystemColorScheme]);

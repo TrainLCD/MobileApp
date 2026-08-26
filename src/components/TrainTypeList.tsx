@@ -168,7 +168,7 @@ export const TrainTypeList = ({
       borderColor: isLEDTheme ? '#fff' : colors.strongBorder,
       marginBottom: safeAreaBottom,
     }),
-    [isLEDTheme, safeAreaBottom]
+    [colors.strongBorder, isLEDTheme, safeAreaBottom]
   );
 
   return (

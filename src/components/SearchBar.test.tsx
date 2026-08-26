@@ -51,6 +51,10 @@ const renderSearchBar = ({
 };
 
 describe('SearchBar', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   // 従来のライトの配色を変えていないことの回帰テスト
   it('ライトでは従来どおりの背景色と文字色を使う', () => {
     const { containerStyle, inputColor } = renderSearchBar();

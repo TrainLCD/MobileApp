@@ -12,6 +12,10 @@ import {
 import { themePreferenceAtom } from './theme';
 
 describe('colorScheme atoms', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('自動設定では端末の配色に追従する', () => {
     const store = createStore();
     store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);

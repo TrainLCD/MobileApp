@@ -31,8 +31,6 @@ type Props = {
   descriptionLowerLimit: number;
 };
 
-const ACCENT_COLOR = '#008ffe';
-
 // この画面だけで使う淡色。共通パレットへ足すほど汎用でないため局所的に持つ。
 // ライトは従来値をそのまま維持し、ダークの値だけ新規に定義する。
 const REPORT_COLORS = {

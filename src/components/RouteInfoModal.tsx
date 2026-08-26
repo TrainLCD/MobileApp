@@ -235,6 +235,7 @@ export const RouteInfoModal = ({
       onToggleNotification,
       onToggleDestination,
       isLEDTheme,
+      colors.text,
     ]
   );
 

@@ -11,6 +11,7 @@ type AppearanceListener = (preferences: {
 
 describe('FxSystemColorScheme', () => {
   afterEach(() => {
+    jest.clearAllMocks();
     jest.restoreAllMocks();
   });
 
@@ -18,6 +19,51 @@ describe('FxSystemColorScheme', () => {
     jest.spyOn(Appearance, 'getColorScheme').mockReturnValue('dark');
     const store = createStore();
 
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+      </Provider>
+    );
+
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
+  });
+
+  // 現在値の取得を先に行うと、取得から購読開始までの間の変更を取りこぼす
+  it('現在値を読む前に購読を開始する', () => {
+    const callOrder: string[] = [];
+    jest.spyOn(Appearance, 'getColorScheme').mockImplementation(() => {
+      callOrder.push('getColorScheme');
+      return 'light';
+    });
+    jest.spyOn(Appearance, 'addChangeListener').mockImplementation(() => {
+      callOrder.push('addChangeListener');
+      return { remove: jest.fn() } as never;
+    });
+
+    render(
+      <Provider store={createStore()}>
+        <FxSystemColorScheme />
+      </Provider>
+    );
+
+    expect(callOrder).toEqual(['addChangeListener', 'getColorScheme']);
+  });
+
+  it('購読開始から現在値取得までの間に変わってもダークを取りこぼさない', () => {
+    let listener: AppearanceListener | null = null;
+    jest
+      .spyOn(Appearance, 'addChangeListener')
+      .mockImplementation((cb: unknown) => {
+        listener = cb as AppearanceListener;
+        return { remove: jest.fn() } as never;
+      });
+    // 購読直後に端末側がダークへ切り替わった状況を再現する
+    jest.spyOn(Appearance, 'getColorScheme').mockImplementation(() => {
+      (listener as AppearanceListener | null)?.({ colorScheme: 'dark' });
+      return 'dark';
+    });
+
+    const store = createStore();
     render(
       <Provider store={store}>
         <FxSystemColorScheme />

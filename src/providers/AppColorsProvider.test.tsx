@@ -24,6 +24,10 @@ const getColor = (element: { props: Record<string, unknown> }) =>
     .color;
 
 describe('AppColorsProvider', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('配下のコンポーネントへダークの配色を配る', () => {
     const { getByText } = renderWithDarkPreference(
       <AppColorsProvider>
