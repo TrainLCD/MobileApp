@@ -44,11 +44,14 @@ permissions が "Read and write permissions" になっているか、または�
 > 気づけません。`concurrency` で古い実行はキャンセルしますが、**既に発射
 > された API 呼び出しは課金されます**（キャンセルは返金ではありません）。
 >
-> 1 回あたりの費用は差分サイズと `reasoning_effort` に比例し、しかも**差分は
-> インクリメンタルではありません**。毎回 `base...head` の全差分を送るため、
-> 「小さな修正を 1 つ push しただけ」でも毎回フルサイズの課金になります。
-> 差分や履歴が増えたラウンドでは 1 回あたりの入力も増えます（縮むこともあり、
-> `MAX_DIFF_CHARS` を超える分は切り詰めます）。
+> 費用は実際の input / output トークン使用量とモデル料金で決まります。
+> `reasoning_effort` は reasoning トークン（output トークンとして課金される）の
+> 使用量に影響しますが、固定の倍率ではありません。
+>
+> 効いてくるのは、**差分がインクリメンタルではない**点です。毎回 `base...head` の
+> 全差分（`MAX_DIFF_CHARS` 文字まで。超過分は切り詰め）を送るため、「小さな修正を
+> 1 つ push しただけ」でもその時点の差分全体が入力になります。差分や履歴が増えた
+> ラウンドでは入力トークンも増えます（縮むこともあります）。
 
 このワークフローは branch protection の必須チェックにしないでください。
 API 障害でジョブを赤くする設計なので、必須にすると OpenAI の障害でマージ
@@ -102,17 +105,24 @@ API 障害でジョブを赤くする設計なので、必須にすると OpenAI
 > 1. **コストが青天井に膨らむ。** 毎 push で全差分を投げるため請求が積み上がり、
 >    CodeRabbit の再レビューも誘発して二重に課金されます（[コスト](#コスト)）。
 > 1. **`pull_request_review` では secret を守れない。** このイベントはワークフロー
->    定義が PR 側から読まれうるのに secret も渡るため、PR に「`OPENAI_API_KEY` を
->    外部送信する step」を足されても防げません。checkout の ref が制御するのは
->    作業ツリーだけで、実行されるワークフロー YAML 自体ではありません。
+>    定義を PR の merge commit から読むのに、**同一リポジトリの PR には secret が
+>    渡ります**。そのため PR に「`OPENAI_API_KEY` を外部送信する step」を足されても
+>    防げません。checkout の ref が制御するのは作業ツリーだけで、実行される
+>    ワークフロー YAML 自体ではありません。
 >
 > **イベントごとに定義の読み元と secret の扱いが違うので、混同しないでください。**
 >
-> | イベント | ワークフロー定義の読み元 | secret |
-> | --- | --- | --- |
-> | `pull_request` | PR の merge commit 側（PR から改竄できる） | fork PR には渡らない |
-> | `pull_request_target` | base リポジトリの既定ブランチ側（PR から改竄できない） | 渡る |
-> | `pull_request_review` | PR 側から読まれうる（[実測](#設計上の判断)） | 渡る |
+> | イベント | ワークフロー定義の読み元 | 同一リポジトリ PR の secret | fork PR の secret |
+> | --- | --- | --- | --- |
+> | `pull_request` | PR の merge commit（PR から改竄できる） | 渡る | 渡らない（`GITHUB_TOKEN` は read-only） |
+> | `pull_request_target` | base リポジトリの既定ブランチ（PR から改竄できない） | 渡る | 渡る |
+> | `pull_request_review` | PR の merge commit（PR から改竄できる。[実測](#設計上の判断)） | 渡る | 渡らない（`GITHUB_TOKEN` は read-only） |
+>
+> つまり `pull_request_review` の脅威が成立するのは**同一リポジトリの PR**です。
+> fork PR には secret が渡らないため、この経路で `OPENAI_API_KEY` は漏れません。
+> 同一リポジトリのブランチを push できる人は元々 write 権限を持ち任意のワークフローを
+> 走らせられるので権限昇格ではありませんが、「secret を持つジョブの定義を PR 側から
+> 差し替えられる」状態を常態化させないために、自動トリガーは持たない方針です。
 >
 > `pull_request_target` は定義の読み元という点では安全です（元々このワークフローが
 > 使っていたトリガーです）。それでも採らないのは **1. のコスト**が理由で、毎 push
@@ -342,7 +352,9 @@ CI では `.github/workflows/test_scripts.yml`（**Scripts** ワークフロー�
      同一リポジトリの PR に対して head 側の定義でトリガーが評価されました（#6724 の
      run 73。base の `dev` はこのトリガーを持たないのに実行が作られています）。
   1. つまり PR 側でこのワークフローに step を追加でき、CodeRabbit の approve を
-     契機にそれが `OPENAI_API_KEY` と同じジョブで実行されます。
+     契機にそれが `OPENAI_API_KEY` と同じジョブで実行されます。**secret が渡るのは
+     同一リポジトリの PR** です（fork PR には `GITHUB_TOKEN` 以外の secret が渡らず、
+     その `GITHUB_TOKEN` も read-only なので、この経路では漏れません）。
   1. checkout の ref を固定しても守れません。ref が制御するのは作業ツリーだけで、
      実行されるワークフロー YAML 自体ではないためです。
 

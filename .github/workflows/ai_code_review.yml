@@ -9,10 +9,14 @@
 #  2) セキュリティ: pull_request_review はワークフロー定義が PR 側から読まれうるのに
 #     secret も渡るため、PR に「OPENAI_API_KEY を外部送信する step」を足されると防げない。
 # イベントごとに定義の読み元と secret の扱いが違うので、混同しないこと:
-#   - pull_request:        定義は PR の merge commit 側。fork PR には secret が渡らない。
+#   - pull_request:        定義は PR の merge commit 側。同一リポジトリ PR には
+#                          secret が渡り、fork PR には渡らない（token は read-only）。
 #   - pull_request_target: 定義は base リポジトリの既定ブランチ側で、PR から改竄できない。
-#                          secret は渡る。安全だが 1) のコストで採らない（毎 push 実行）。
-#   - pull_request_review: 定義が PR 側から読まれうるうえ secret も渡る。最も危険な組み合わせ。
+#                          secret は fork PR にも渡る。定義の点では安全だが
+#                          1) のコストで採らない（毎 push 実行になる）。
+#   - pull_request_review: 定義は PR の merge commit 側なのに、同一リポジトリ PR には
+#                          secret が渡る。最も危険な組み合わせ。fork PR には渡らない
+#                          ので、脅威が成立するのは同一リポジトリ PR。
 # 詳しい経緯は下の on: のコメントと docs/ai-code-review-workflow.md を参照。
 # checkout の ref を既定ブランチ以外に変えるのも 2) と同じ理由で禁止。
 # レビュー対象の差分は compare API から取得し、データとしてのみ扱う。
