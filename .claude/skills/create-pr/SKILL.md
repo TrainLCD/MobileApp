@@ -190,10 +190,26 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
           const buf = require("fs").readFileSync(process.argv[1]);
           const s = buf.toString("latin1");
           // JPEG APP1 の Exif、PNG の eXIf チャンク、各形式に埋まる XMP パケット
-          const hit = s.includes("Exif\0\0")
+          let hit = s.includes("Exif\0\0")
             || s.includes("eXIf")
             || s.includes("http://ns.adobe.com/xap/1.0/")
             || s.includes("XML:com.adobe.xmp");
+
+          // WebP は RIFF チャンクを走査する。EXIF は TIFF の生データとして入るため
+          // "Exif\0\0" を含まないことがあり、上の文字列一致では拾えない
+          if (!hit
+            && buf.subarray(0, 4).toString("latin1") === "RIFF"
+            && buf.subarray(8, 12).toString("latin1") === "WEBP") {
+            let off = 12;
+            while (off + 8 <= buf.length) {
+              const id = buf.subarray(off, off + 4).toString("latin1");
+              if (id === "EXIF" || id === "XMP ") { hit = true; break; }
+              const size = buf.readUInt32LE(off + 4);
+              const next = off + 8 + size + (size % 2);
+              if (next <= off) break;   // 壊れたサイズで無限ループしない
+              off = next;
+            }
+          }
           process.exit(hit ? 0 : 1);
         ' "$1"
       }
@@ -279,7 +295,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - **デバイス名・キャプションからタブ・改行を除去してからレコードに書く**。ユーザー入力をそのまま TSV に流すと列数・行数が変わり、URL とメタデータの対応が崩れる。
       - **シンボリックリンクは拒否する**。承認からアップロードまでの間に参照先を差し替えられると、ユーザーが目視していない内容が恒久公開される。
       - **拡張子ではなく実バイト列で画像形式を確かめる**（`assert_magic`）。拡張子だけを画像にした別種のファイルが公開ブランチへ出るのを防ぐ。
-      - **EXIF/XMP の有無を検出する**（`has_metadata`）。マジックバイトの確認だけでは、画面に見えない位置情報・端末情報が元バイト列に残ったまま public な資材ブランチへ恒久公開される。検出したら実行前ゲートで提示し、除去するか承知で進めるかをユーザーに選ばせる。
+      - **EXIF/XMP の有無を検出する**（`has_metadata`）。マジックバイトの確認だけでは、画面に見えない位置情報・端末情報が元バイト列に残ったまま public な資材ブランチへ恒久公開される。検出したら実行前ゲートで提示し、除去するか承知で進めるかをユーザーに選ばせる。**WebP は RIFF チャンクを走査する**。WebP の EXIF は TIFF の生データとしてチャンクに入るため `Exif\0\0` を含まないことがあり、文字列一致だけでは取りこぼす。
       - **承認した内容の SHA-256 をレコードに固定する**。手順 4-3 で再計算して突き合わせることで、承認とアップロードの間にファイルが差し替わった場合に検出できる（TOCTOU 対策）。
       - **`RECORDS` が空になったら資材ブランチを作る前に停止する**（手順 4-3 へ進まない）。動画を手貼りするか未添付の理由を明記するかをユーザーに確認し、手順 5 の規定に従って理由行（例: `未添付: 動画のみが渡されたため、PR 画面へ直接ドラッグ&ドロップしてください`）を出す。
       - `RECORDS` のパスは標準出力に出して次のステップへ渡す。**この一時ファイルは実行前ゲートを挟んで次の Bash 呼び出しまで残す**（削除は手順 4-3 の `trap` が行う）。
@@ -381,20 +397,27 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
             gh api "repos/$OWNER_REPO/git/trees/$TIP?recursive=1" > "$WORK/asset-tree.json"
             # ツリーが上限を超えると GitHub は truncated: true と部分的な .tree だけを返す。
             # 部分応答を全件と見なすと、応答に含まれなかった非資材ファイルを見逃す
+            # 全エントリを検査する。blob だけを抜き出すと、gitlink（type: commit）や
+            # シンボリックリンク（mode: 120000）が検査対象から消えて素通りする
             node -e '
               const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
               if (t.truncated) {
                 console.error("ツリーが大きく応答が省略されました（truncated）。全件を検査できないため中止します");
                 process.exit(1);
               }
-              const paths = (t.tree ?? []).filter((e) => e.type === "blob").map((e) => e.path);
-              process.stdout.write(paths.length ? paths.join("\n") + "\n" : "");
-            ' "$WORK/asset-tree.json" > "$WORK/asset-tree.txt"
-            if grep -vixE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
-                 "$WORK/asset-tree.txt" | grep -q .; then
-              echo "$ASSET_BRANCH に資材以外のファイルが含まれています。書き込みを中止します" >&2
-              grep -vixE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
-                "$WORK/asset-tree.txt" >&2
+              const NS = /^[A-Za-z0-9._-]+$/;
+              const ASSET = /^(README\.md|[A-Za-z0-9._-]+\/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp))$/i;
+              const bad = (t.tree ?? []).filter((e) => {
+                if (e.type === "tree") return !NS.test(e.path);          // 名前空間ディレクトリのみ
+                if (e.type !== "blob") return true;                      // commit(gitlink) 等は拒否
+                if (e.mode !== "100644") return true;                    // 実行可能・symlink を拒否
+                return !ASSET.test(e.path);
+              });
+              process.stdout.write(bad.map((e) => e.type + " " + e.mode + " " + e.path).join("\n"));
+            ' "$WORK/asset-tree.json" > "$WORK/asset-violations.txt"
+            if [ -s "$WORK/asset-violations.txt" ]; then
+              echo "$ASSET_BRANCH に資材以外のエントリが含まれています。書き込みを中止します" >&2
+              cat "$WORK/asset-violations.txt" >&2
               exit 1
             fi
             ;;
@@ -505,7 +528,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - **既存ブランチはブランチ名だけで信頼しない**。次の 3 つをすべて確認してから書き込む。誤って `dev` 由来の同名ブランチが作られていた場合、AGENTS.md に定めた例外条件（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになるため、1 つでも合わなければ中止する。
         1. README にマーカー `create-pr:asset-branch:v1` が含まれること。
         2. 既定ブランチと**共通祖先を持たない**こと（孤立系列であることの履歴からの裏付け）。無関係な履歴同士の compare に GitHub は 404 を返すので、それ以外なら中止する。
-        3. **ツリー全体を再帰で取得し、`README.md` と規定形式の画像パス（`<名前空間>/<12桁ハッシュ>-<ファイル名>.<拡張子>`）だけが存在すること**。ルート直下の名前を拾う denylist 方式では `app/` や `lib/` の配下に置かれたコードを見落とすため、allowlist で判定する。**応答の `truncated` が `true` なら全件を検査できていないので中止する**（ツリーが上限を超えると GitHub は部分的な `.tree` を返すため、それを全件と見なすと非資材ファイルを見逃す）。
+        3. **ツリー全体を再帰で取得し、`README.md` と規定形式の画像パス（`<名前空間>/<12桁ハッシュ>-<ファイル名>.<拡張子>`）だけが存在すること**。ルート直下の名前を拾う denylist 方式では `app/` や `lib/` の配下に置かれたコードを見落とすため、allowlist で判定する。**判定は blob だけでなく全エントリに対して行う**。`blob` を抜き出して検査すると、gitlink（`type: commit`）が検査対象から消えて素通りする。`tree` は名前空間ディレクトリのみ、`blob` は mode が `100644`（通常ファイル）のもののみ許可し、シンボリックリンク（`120000`）や実行可能ファイルも拒否する。**応答の `truncated` が `true` なら全件を検査できていないので中止する**（ツリーが上限を超えると GitHub は部分的な `.tree` を返すため、それを全件と見なすと非資材ファイルを見逃す）。
 
         保存先を作るときは**拡張子を必ず小文字へ正規化する**。`Home.PNG` のような入力をそのまま保存すると、初回は成功しても次回実行時に allowlist が自分で置いたファイルを弾き、そのブランチへの書き込みが以後すべて止まる。検査側も大文字小文字を区別しない。
       - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
