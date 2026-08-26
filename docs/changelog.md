@@ -16,10 +16,19 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
   （`expo` 57.0.12 → 57.0.16、`expo-location` 57.0.9 → 57.0.13、
   `expo-notifications` 57.0.10 → 57.0.14 ほか）。
 - `expo-task-manager` が 57.0.9 → 57.0.13 に上がり `patch-package` のパッチが競合したため、
-  57.0.13 上でパッチを再生成（`patches/expo-task-manager+57.0.13.patch`）。パッチ後の挙動は従来と同一。
+  57.0.13 上でパッチを再生成（`patches/expo-task-manager+57.0.13.patch`）。
+  **パッチ適用後の `createJobInfo` は 3 分岐すべて `setMinimumLatency(0)` +
+  `setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE)` となり、57.0.9 にパッチを当てていた
+  従来の出荷状態とバイト単位で同一。** この更新でアプリの実挙動は変わっていない。
+  なおパッチファイルの差分行が変化しているのは、上流 57.0.13 側のベースラインが
+  変わったためであり、パッチ適用後の結果が変わったわけではない。
 - 上流 57.0.13 は API 28–30 分岐に `setOverrideDeadline` を追加済みだが、API 31+ の
   `setExpedited(true)` 単独による `JobInfo.Builder.build()` の `IllegalArgumentException`
   （Android 14+ でのクラッシュ要因）は未修正のため、パッチは引き続き必要。
+- パッチが上流素の状態に対して持つトレードオフ（従来からの継続であり、この更新で
+  新たに生じたものではない）: API 31+ で expedited job を使わないため、Android 12/13 での
+  実行優先度は上流素の状態より低い。これは前面のフォアグラウンド位置情報サービスが
+  プロセスを維持することと、JS 側の `watchPositionAsync` 経路で補われる。
 
 ### 検証結果
 
