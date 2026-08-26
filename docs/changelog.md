@@ -49,8 +49,20 @@ npm test           → Test Suites: 236 passed / Tests: 2540 passed
 
 ### 未検証・申し送り
 
-- `expo-task-manager` のパッチは Android ネイティブコードのため、実機／エミュレータでの
-  バックグラウンド位置情報動作は未確認。
+- **TODO（担当: @TinyKitten）: API 28–30 の実機／エミュレータ回帰確認。**
+  この更新で `createJobInfo` の API 28–30 分岐が上流実装
+  （`setImportantWhileForeground(true)` と `setOverrideDeadline` の併用）に戻り、
+  旧パッチの `setMinimumLatency(0)` と `setOverrideDeadline` の併用から
+  実挙動が変わる。自動テストを追加していない理由は、対象が `node_modules` 配下の
+  Java コードで `patch-package` 適用後にのみ存在し、Jest からは到達できないため
+  （Android の instrumentation テスト基盤はこのリポジトリに未整備）。上流が
+  late constraint を設定済みなので「制約なし」例外の条件は成立せず、旧パッチが
+  対処していたクラッシュは再発しない見込みだが、Android 9–11 実機での
+  バックグラウンド位置情報の配信を一度確認したい。
+- API 31+ 分岐は挙動を変更していないため、この更新に起因する回帰確認は不要。
+  ただし expedited job を使わない現行方針を API 36+ 限定に絞り込むかどうかは、
+  本番 Sentry での Android 12–15 の `IllegalArgumentException` 発生実績を確認したうえで
+  別途判断する（本更新のスコープ外）。
 - `expo install --fix` は最後に `expo-build-properties` を `app.config.ts` の
   `plugins` へ自動追記できず非ゼロ終了する。`app.config.ts` が dynamic config かつ
   元から当該 plugin を登録していない既存の状態に起因するため、この更新では対応していない。
