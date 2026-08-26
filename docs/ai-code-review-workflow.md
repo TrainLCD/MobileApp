@@ -14,10 +14,10 @@ Pull Request の差分を OpenAI の `gpt-5.6-sol` にレビューさせ、
 > モデルによるダブルチェックを目的に併用しています。実際に運用したうえで不要と
 > 判断した場合は廃止する前提のため、恒久的な仕組みとしては扱わないでください。
 >
-> CodeRabbit とは**並走させず、CodeRabbit の approve 後に 1 回だけ**回します
-> (#6723)。並走させると、同じ指摘が両方から出る・gpt の指摘が push を誘発して
-> CodeRabbit の incremental review が最新コミットに追いつけない・両方に課金
-> される、という問題が起きます。
+> CodeRabbit とは**並走させません**（#6723）。並走させると、同じ指摘が両方から
+> 出る・gpt の指摘が push を誘発して CodeRabbit の incremental review が最新
+> コミットに追いつけない・両方に課金される、という問題が起きます。
+> **自動トリガーは持たず、手動実行のみ**です（理由は[実行タイミング](#実行タイミング)）。
 
 ## セットアップ
 
@@ -39,8 +39,8 @@ permissions が "Read and write permissions" になっているか、または�
 
 > [!IMPORTANT]
 > OpenAI 側でプロジェクトの予算上限とアラートを必ず設定してください。
-> このワークフロー自体には課金の上限がありません。CodeRabbit が approve する
-> たびに `gpt-5.6-sol` を呼ぶため、上限を設けないと請求が発生するまで異常に
+> このワークフロー自体には課金の上限がありません。手動実行のたびに
+> `gpt-5.6-sol` を呼ぶため、上限を設けないと請求が発生するまで異常に
 > 気づけません。`concurrency` で古い実行はキャンセルしますが、既に発射
 > された API 呼び出しは課金されます。
 
@@ -50,36 +50,28 @@ API 障害でジョブを赤くする設計なので、必須にすると OpenAI
 
 ## 実行タイミング
 
-**CodeRabbit が approve した時点**で自動実行されます。`pull_request_review`
-イベントの `submitted` を受け、次の条件をすべて満たす場合だけ回ります。
+**自動実行はありません。`workflow_dispatch` による手動実行のみです。**
 
-- レビューの `state` が `approved`
-- レビューの投稿者が `coderabbitai[bot]`（完全一致。`type == "Bot"` のような
-  広い条件にはしないこと。他の GitHub App の approve でも起動してしまう）
-- fork からの PR でない（ジョブの `if` guard で遮断）
-- Draft PR でない
-- `skip-ai-review` ラベルが付いていない
+当初は CodeRabbit の approve を起点にする `pull_request_review` を採用しました
+（#6723）。しかし実測で、同一リポジトリの PR に対して GitHub がこのイベントの
+**ワークフロー定義を head 側（PR ブランチ）から読む**ことが分かったため、撤回して
+います。詳細は[設計上の判断](#設計上の判断)を参照してください。
 
-approve をトリガーにすると、gpt は「もう一人のレビュワー」ではなく
-**approve 済みの PR に対する最後の確認**という位置づけになります。approve 後に
-gpt の指摘で push した場合は CodeRabbit が再レビューし、再度 approve されれば
-gpt がもう一度回ります。ラウンドは回りうるものの、approve が毎回ゲートになる
-ので収束します。
+そのため、CodeRabbit の approve 後に AI レビューを回したい場合は、[手動実行](#手動実行)
+してください。運用上は次の順序を想定しています。
 
-承認が古くなっていた場合はスキップします。CodeRabbit がコミット A を承認した
-直後に B が push されると、approve をゲートにしているつもりで未承認の B を
-レビューしてしまいます。これを避けるため、`github.event.review.commit_id` と
-API から取得した現在の HEAD が一致しない実行は `::notice::` を出して中断します。
-B は CodeRabbit が再レビューして再び approve するので、そのタイミングで本
-ワークフローが改めて起動します。
+1. CodeRabbit のレビューが収束し、approve される。
+1. レビュワーが Actions タブから **AI Code Review** を手動実行する。
+1. 出た指摘に対応し、必要なら再度手動実行する。
 
-CodeRabbit が approve しないまま人間がマージする運用もあるため、
-`workflow_dispatch` による手動実行は残してあります。上記の除外が効くのは自動
-実行のときだけで、手動実行は guard を通らないため、write 権限を持つ人の判断で
-fork PR・Draft・`skip-ai-review` ラベル付きの PR もレビューできます。head 側の
-コードは実行しないので、手動実行でもセキュリティ上の差はありません。
+自動実行を持たないことで、#6723 が問題にしていた次の 3 点はいずれも解消します。
 
-短時間に複数回 approve された場合は `concurrency` により古い実行が
+- 同じ指摘が CodeRabbit と gpt の両方から別々のタイミングで出て往復が二重になる
+- gpt の指摘が push を誘発し続け、CodeRabbit の auto-pause / incremental review が
+  最新コミットに追いつけず承認デッドロックに陥る
+- 重複した指摘に両方のコストを払う
+
+同じ PR に対して続けて手動実行した場合は `concurrency` により古い実行が
 キャンセルされます。ただしキャンセルは実行中のジョブを止めるだけで、完了
 済みの OpenAI 呼び出しやコメント投稿までは取り消しません。そのため次の
 2 段構えで、古い差分のレビューが最新のものに見えないようにしています。
@@ -96,21 +88,12 @@ fork PR・Draft・`skip-ai-review` ラベル付きの PR もレビューでき�
 後発が失敗した場合はコメントが古いまま残るので、コメント末尾のレビュー対象
 コミットが PR の HEAD と一致しているか確認してください。
 
-> [!IMPORTANT]
-> `pull_request_review` のワークフロー定義が base 側から読まれるとは限りません。
-> 実測では、同一リポジトリの PR に対して GitHub は **head 側（PR ブランチ）の
-> 定義**でトリガーを評価しました（#6724 の run 73。base の `dev` はこのトリガーを
-> 持たないのに実行が作られています）。`pull_request_target` の「定義が base 固定
-> だから PR 側から改竄できない」という保証は、このイベントには当てはまりません。
->
-> 同一リポジトリのブランチを push できる時点で write 権限があり、元々任意の
-> ワークフローを走らせられるため実質的なリスク増は小さいと整理していますが、
-> **この前提に寄りかかった設計にはしないでください**。head 側のコードを
-> checkout・実行しないという方針は、この不確かさとは独立に必ず維持します。
->
-> 副作用として、このワークフロー自体を変更する PR では、トリガーの発火と guard の
-> 判定をその PR 上で確認できます。確認できないのは「旧トリガーが消えること」だけ
-> です。
+> [!CAUTION]
+> **このワークフローに自動トリガーを足さないでください。** PR イベント起点の
+> トリガー（`pull_request` / `pull_request_target` / `pull_request_review` など）は、
+> ワークフロー定義が PR 側から読まれうるため、PR に「`OPENAI_API_KEY` を外部送信
+> する step」を足されても防げません。checkout の ref が制御するのは作業ツリーだけ
+> で、実行されるワークフロー YAML 自体ではありません。
 
 ## 手動実行
 
@@ -133,9 +116,8 @@ gh workflow run ai_code_review.yml -f pr_number=1234 -f reasoning_effort=xhigh
 
 ## 動作の流れ
 
-1. `gh pr view` で PR のメタデータと base/head の SHA を取得する。自動実行時は
-   承認されたコミットと HEAD が一致するかを確認し、ずれていれば中断する。
-1. compare API (`base...head`) でその SHA ペアに固定した diff を取得する。
+1. `gh pr view` で PR のメタデータと base/head の SHA を取得し、compare API
+   (`base...head`) でその SHA ペアに固定した diff を取得する。
 1. PR の issue コメントと行単位のレビューコメントを取得し、`history.json` に
    まとめる（[レビュー履歴](#レビュー履歴)）。
 1. `CLAUDE.md`（リポジトリ規約）、レビュー履歴、PR タイトル・本文・差分を
@@ -275,36 +257,41 @@ CI では `.github/workflows/test_scripts.yml`（**Scripts** ワークフロー�
   compare API から取得する）ため、`persist-credentials: false` を指定したうえで、
   checkout する ref を実行経路ごとに次のとおり固定しています。
 
-  | 実行経路 | checkout する ref | 理由 |
-  | --- | --- | --- |
-  | `pull_request_review` の自動実行 | `github.event.pull_request.base.sha` | PR の head を取ると、PR で書き換えたスクリプトが `OPENAI_API_KEY` と同じジョブで動く |
-  | `workflow_dispatch` の手動実行 | `github.event.repository.default_branch` | 手動実行は実行者が選んだ ref で走るため、`github.sha` だと未レビューのブランチのスクリプトが動く |
+  checkout する ref は `github.event.repository.default_branch` に固定しています。
+  `workflow_dispatch` は実行者が選んだ ref で走るため、`github.sha` にすると
+  未レビューのブランチの `ai-code-review.mjs` が `OPENAI_API_KEY` と同じジョブで
+  実行されます。**`github.sha` に戻さないこと。**
 
-  どちらの経路でも動くのはレビュー済みの `.github/scripts/ai-code-review.mjs` と
-  `CLAUDE.md` に限られ、PR の差分とメタデータは compare API / `gh pr view` が
-  返すデータとしてのみ扱います。**フォールバックを `github.sha` に戻さないこと。**
-- **トリガーが `pull_request_review` である理由**: approve を単一の事実として
-  観測できるイベントがこれしか無いためです。コメント本文の文字列マッチのような
-  壊れやすい検出を避けられます。ただし上記のとおり、このイベントの定義が base 側
-  から読まれる保証はありません。したがって「定義と guard が改竄不能」という
-  前提は置かず、**head 側のコードを checkout・実行しない**ことを唯一の砦として
-  維持します。secrets とリポジトリ書き込み権限を持つ点は `pull_request_target`
-  と同じです。
-- **CodeRabbit の approve をトリガーにする**: 毎 push で CodeRabbit と
-  並走させると、(1) 同じ指摘が両方から別々のタイミングで出て往復が二重になる、
-  (2) gpt の指摘が push を誘発し続けるため CodeRabbit の auto-pause /
-  incremental review が機能せず承認デッドロックに陥る、(3) 重複した指摘に
-  両方のコストを払う、という問題が起きます (#6723)。approve は
-  `pull_request_review` イベントとして観測できる単一の事実なので、コメント
-  本文の文字列マッチのような壊れやすい検出は不要です。
-- **approve の投稿者を完全一致で判定する**: `coderabbitai[bot]` に完全一致
-  させます。`type == "Bot"` のような広い条件にすると他の GitHub App の
-  approve でも起動します。既存の Post review comment ステップが同じ理由で
-  厳密一致を使っているので、方針は揃っています。
-- **fork PR を guard で遮断する**: `pull_request_review` では fork PR にも
-  secrets が渡ります。`github.event.pull_request.head.repo.full_name ==
-  github.repository` の条件が fork を遮断する唯一の門になるため、緩めない
-  でください。OpenAI API の課金濫用を防ぐ意味も兼ねています。
+  この固定により、動くのは常に既定ブランチのレビュー済みな
+  `.github/scripts/ai-code-review.mjs` と `CLAUDE.md` に限られ、PR の差分と
+  メタデータは compare API / `gh pr view` が返すデータとしてのみ扱われます。
+- **自動トリガーを持たない（手動実行のみ）**: #6723 の提案どおり
+  `pull_request_review`（CodeRabbit の approve 起点）を一度は実装しましたが、
+  撤回しました。理由は次のとおりです。
+
+  1. GitHub の仕様上、`pull_request_review` の `GITHUB_REF` は PR の merge ブランチ
+     (`refs/pull/N/merge`) であり、ワークフロー定義もそこから解決されます。実測でも
+     同一リポジトリの PR に対して head 側の定義でトリガーが評価されました（#6724 の
+     run 73。base の `dev` はこのトリガーを持たないのに実行が作られています）。
+  1. つまり PR 側でこのワークフローに step を追加でき、CodeRabbit の approve を
+     契機にそれが `OPENAI_API_KEY` と同じジョブで実行されます。
+  1. checkout の ref を固定しても守れません。ref が制御するのは作業ツリーだけで、
+     実行されるワークフロー YAML 自体ではないためです。
+
+  approve を観測できるイベントは `pull_request_review` だけなので、「approve 後に
+  自動で 1 回」を secret を守ったまま実現する方法がありません。自動化より secret を
+  優先し、手動実行に倒しました。#6723 の本題である「CodeRabbit と並走させない」は
+  手動実行でも達成できます。
+
+  なお 2 段構え（secret を持たない軽量トリガーから本体を `workflow_dispatch` で
+  起動する）も検討しましたが、`GITHUB_TOKEN` 起因のイベントは新しいワークフロー実行を
+  作らないため PAT か GitHub App トークンが必要になり、そのトークンを PR 側で
+  書き換え可能なトリガーに置くことになるので採用していません。
+- **fork / Draft / ラベルの guard を持たない**: 手動実行のみなので、起動できるのは
+  Actions を回せる write 権限者に限られ、対象 PR もその人が `pr_number` で明示
+  します。head 側のコードは実行しないため、fork PR や Draft をレビューしても
+  セキュリティ上の差はありません。OpenAI API の課金濫用も、起動できる人が
+  限られることで抑えられます。
 - **PR 本文をシェル変数に展開しない**: PR タイトル・本文・差分は
   untrusted な入力です。`GITHUB_ENV` や `GITHUB_OUTPUT` を経由させず、
   JSON ファイルのままスクリプトへ渡してインジェクションの余地を無くしています。
@@ -342,9 +329,8 @@ CI では `.github/workflows/test_scripts.yml`（**Scripts** ワークフロー�
 
 | 症状 | 原因と対処 |
 | --- | --- |
-| ジョブが動かない | CodeRabbit がまだ approve していない。急ぐ場合は `workflow_dispatch` で手動実行する |
-| 起動したのにレビューされない | 承認後に push があり承認が古くなっている。ログの `::notice::承認されたコミットと現在の HEAD が異なる` を確認する。CodeRabbit の再 approve で自動的に回る |
-| ジョブがスキップされる | fork PR・Draft・`skip-ai-review` ラベル・Secret 未設定 |
+| PR を更新してもレビューが出ない | 自動トリガーは持たない。Actions タブから手動実行する |
+| ジョブがスキップされる | `OPENAI_API_KEY` が未設定。警告を出して成功扱いで終わる |
 | 同じ指摘が繰り返される | 履歴の取得に失敗している。ログの `history=N chars` が 0 なら `Fetch review history` ステップを確認する |
 | 応答が途中で打ち切られた | `MAX_OUTPUT_TOKENS` を上げるか PR を分割する |
 | API が 401 を返す | `OPENAI_API_KEY` が無効。4xx は再試行せず即失敗する |
