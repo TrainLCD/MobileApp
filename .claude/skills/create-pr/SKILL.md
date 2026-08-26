@@ -234,7 +234,15 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    2. **実行前ゲート**
 
-      > **⚠ 実行前ゲート**: 以降は origin への書き込みを伴う。「どのファイルを・リポジトリ内のどのパスへ・どのブランチに上げるか」「資材ブランチを新規作成するか否か」「1MB 超のファイルをそのまま上げるか」をユーザーに提示し、**承認を得てから**実行する。
+      > **⚠ 実行前ゲート**: 以降は origin への書き込みを伴う。次の 5 点をユーザーに提示し、**承認を得てから**実行する。
+      >
+      > 1. どのファイルを・リポジトリ内のどのパスへ・どのブランチに上げるか
+      > 2. 資材ブランチを新規作成するか否か
+      > 3. 1MB 超のファイルをそのまま上げるか
+      > 4. **アップロードした画像は public リポジトリで誰でも閲覧でき、削除もマージも禁止された資材ブランチに残るため、実質的に恒久公開になること**
+      > 5. **各画像を目視して、アクセストークン・アカウント情報・位置情報・実名などの秘匿情報や個人情報が写り込んでいないこと**
+
+      4 と 5 は特に省略しない。スクリーンショットは撮影時の通知バナーやデバッグオーバーレイに認証情報が写り込みやすく、いったん公開 URL になると取り消せない（資材ブランチは削除禁止なので、後から消しても URL の履歴は残る）。写り込みが疑われる場合は、マスキングした画像に差し替えるか、そのファイルを除外してから進む。リポジトリ規約の「認証情報をコミットしない」はこの経路にも等しく適用される。
 
    3. **承認後に実行する自己完結スクリプト**（資材ブランチの用意 + アップロード）
 
@@ -265,8 +273,13 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
           printf '%s' "$out" | head -n1 | awk '{print $2}'
         }
 
+        b64decode() { # 標準入力の base64 を復号（GNU / BSD の -d / -D 差を避けて Node で行う）
+          node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(Buffer.from(s,"base64").toString()))'
+        }
+
         OWNER_REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
         ASSET_BRANCH="assets/pr-screenshots"
+        ASSET_MARKER="create-pr:asset-branch:v1"
         HEAD_BOOKMARK="<head ブックマーク名>"
         HEAD_SHORT="$(jj log -r "$HEAD_BOOKMARK@origin" --no-graph -T 'commit_id.short()')"
         REF_SLUG="$(printf '%s' "$HEAD_BOOKMARK" \
@@ -277,11 +290,32 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
         # ---- 資材ブランチの用意（初回のみ） ----
         case "$(api_status "repos/$OWNER_REPO/branches/$ASSET_BRANCH")" in
-          200) : ;;  # 既にあるので何もしない
+          200)
+            # ブランチ名だけを信頼しない。本スキルが作った資材専用系列であることを機械的に確かめる。
+            # 誤って dev 由来の同名ブランチが作られていた場合、AGENTS.md の例外条件
+            #（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになる
+            [ "$(api_status "repos/$OWNER_REPO/contents/README.md?ref=$ASSET_BRANCH")" = "200" ] || {
+              echo "$ASSET_BRANCH に README.md がありません。資材ブランチではない可能性があります" >&2
+              exit 1
+            }
+            gh api "repos/$OWNER_REPO/contents/README.md?ref=$ASSET_BRANCH" -q .content \
+              | b64decode > "$WORK/asset-readme.txt"
+            grep -qF "$ASSET_MARKER" "$WORK/asset-readme.txt" || {
+              echo "$ASSET_BRANCH は本スキルが作った資材ブランチではありません（マーカー不一致）" >&2
+              exit 1
+            }
+            gh api "repos/$OWNER_REPO/contents?ref=$ASSET_BRANCH" -q '.[].name' > "$WORK/asset-root.txt"
+            if grep -qxE 'src|package.json|package-lock.json|android|ios|app.json' "$WORK/asset-root.txt"; then
+              echo "$ASSET_BRANCH にアプリのコードが含まれています。書き込みを中止します" >&2
+              exit 1
+            fi
+            ;;
           404)
-            # README を 1 つ持つツリーを作り、それを親無しコミット (= root commit) にする
+            # README を 1 つ持つツリーを作り、それを親無しコミット (= root commit) にする。
+            # README にはマーカーを埋め、次回以降の系列確認に使う
             BLOB="$(gh api -X POST "repos/$OWNER_REPO/git/blobs" \
-              -f content='PR 本文へ埋め込むスクリーンショット置き場。アプリのコードは置かない。dev / master へマージしない。' \
+              -f content="$ASSET_MARKER"'
+PR 本文へ埋め込むスクリーンショット置き場。アプリのコードは置かない。dev / master へマージしない。' \
               -f encoding=utf-8 -q .sha)"
             node -e 'process.stdout.write(JSON.stringify({tree:[{path:"README.md",mode:"100644",type:"blob",sha:process.argv[1]}]}))' \
               "$BLOB" > "$WORK/tree.json"
@@ -348,6 +382,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - 出力は `URL\tデバイス名\tキャプション` の 1 レコード 1 行。行順への暗黙の依存をやめ、URL とメタデータを常に同じレコードとして持ち回る。
       - `gh` の成否に関わらず一時ファイル（`WORK` と `RECORDS`）が消えるよう全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
       - URL は自分で組み立てず、レスポンスの `download_url` をそのまま使う（ブランチ名の `/` などのエスケープを間違えないため）。得られる URL は `https://raw.githubusercontent.com/<owner>/<repo>/<asset-branch>/<path>` 形式。
+      - **既存ブランチはブランチ名だけで信頼しない**。README のマーカー `create-pr:asset-branch:v1` の一致と、ルート直下にアプリのコード（`src` / `package.json` / `android` / `ios` 等）が無いことを読み取り API で確認してから書き込む。誤って `dev` 由来の同名ブランチが作られていた場合、AGENTS.md に定めた例外条件（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになるため、不一致なら中止する。
       - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
 
 
@@ -369,9 +404,18 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - **端末名は必須なので、画像は必ず `### <デバイス名>` の見出しでグルーピングする**（テンプレートが端末名の併記を求めているため）。同じ端末の画像は 1 つの見出しの下にまとめる。
       - 幅は `<img width="320">` で指定する。縦長のスクリーンショットが原寸で並ぶと本文が読めなくなるため。**AGENTS.md の MD033（inline HTML 禁止）はリポジトリ内 Markdown 向けのルールで、PR 本文には適用されない**。
       - キャプションがあれば `alt` に入れ、画像の直下にも 1 行で添える。
-      - **デバイス名・キャプションはユーザー入力なので、挿入先ごとにエスケープする**。素通しすると本文が壊れる。
-        - `alt="..."` などの HTML 属性に入れる文字列: `&` → `&amp;`、`"` → `&quot;`、`<` → `&lt;`、`>` → `&gt;` の順で置換する（`&` を最初に処理しないと二重エスケープになる）。
-        - 見出しや本文行に入れる文字列: 改行・制御文字を除去し、`<!-- create-pr:screenshots:start -->` / `<!-- create-pr:screenshots:end -->` と一致する断片が含まれていたら取り除く。**マーカー文字列が本文に紛れ込むと更新モードの境界判定が壊れる**。
+      - **デバイス名・キャプションはユーザー入力なので、下の共通サニタイズを通してから挿入する**。素通しすると本文の構造が壊れる。`<details>` や画像記法・リンク・バッククォートを含む文字列は、見出しや本文のレンダリングを乗っ取れる。
+
+        共通処理（挿入先を問わず必ず行う）:
+
+        1. 改行・タブ・その他の制御文字を除去する。
+        2. `create-pr:screenshots:start` / `create-pr:screenshots:end` と一致する断片を除去する。**マーカー文字列が本文に紛れ込むと更新モードの境界判定が壊れる**。
+        3. `&` → `&amp;`、`<` → `&lt;`、`>` → `&gt;` の順で置換する（`&` を最初に処理しないと二重エスケープになる）。これで生 HTML の注入は無効化される。
+
+        挿入先ごとの追加処理:
+
+        - **HTML 属性**（`alt="..."` など）: さらに `"` → `&quot;` を置換する。
+        - **Markdown テキスト**（`### <デバイス名>` の見出し、画像下のキャプション行）: さらに Markdown の特殊文字 `` ` `` `*` `_` `[` `]` `(` `)` `#` `!` `|` `\` の前にバックスラッシュを置く（`\` を最初に処理する）。見出し・表・リンク・コードスパンの構造を乗っ取られないようにするため。
 
 
 5. **本文組み立て**
