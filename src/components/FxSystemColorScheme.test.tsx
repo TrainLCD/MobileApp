@@ -1,8 +1,12 @@
-import { render } from '@testing-library/react-native';
-import { createStore, Provider } from 'jotai';
+import { act, render } from '@testing-library/react-native';
+import { createStore, Provider, useAtomValue } from 'jotai';
+import React, { useLayoutEffect } from 'react';
 import { Appearance } from 'react-native';
-import { COLOR_SCHEME } from '~/models/ColorScheme';
-import { systemColorSchemeAtom } from '~/store/atoms/colorScheme';
+import { COLOR_SCHEME, COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
+import {
+  colorSchemePreferenceAtom,
+  systemColorSchemeAtom,
+} from '~/store/atoms/colorScheme';
 import FxSystemColorScheme from './FxSystemColorScheme';
 
 type AppearanceListener = (preferences: {
@@ -46,7 +50,11 @@ describe('FxSystemColorScheme', () => {
       </Provider>
     );
 
-    expect(callOrder).toEqual(['addChangeListener', 'getColorScheme']);
+    // 自動のときは追従復帰用の読み直しも走るため、先頭2件の順序で検証する
+    expect(callOrder.slice(0, 2)).toEqual([
+      'addChangeListener',
+      'getColorScheme',
+    ]);
   });
 
   it('購読開始から現在値取得までの間に変わってもダークを取りこぼさない', () => {
@@ -98,5 +106,222 @@ describe('FxSystemColorScheme', () => {
 
     unmount();
     expect(remove).toHaveBeenCalled();
+  });
+
+  // iOS は Info.plist を Automatic にしてあるため、上書きしないと Alert やキーボードなど
+  // native が描く UI だけ端末設定に従ってしまう
+  it('ライト・ダークを明示している間はnativeの外観も上書きする', () => {
+    const setColorScheme = jest
+      .spyOn(Appearance, 'setColorScheme')
+      .mockImplementation(() => {});
+    const store = createStore();
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.DARK);
+
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+      </Provider>
+    );
+
+    // COLOR_SCHEME は大文字なので、そのまま渡すと native 側の変換に失敗する
+    expect(setColorScheme).toHaveBeenCalledWith('dark');
+  });
+
+  it('自動では上書きを解除する', () => {
+    const setColorScheme = jest
+      .spyOn(Appearance, 'setColorScheme')
+      .mockImplementation(() => {});
+    const store = createStore();
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);
+
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+      </Provider>
+    );
+
+    // null ではなく 'unspecified' でないと react-native 側のキャッシュが更新されない
+    expect(setColorScheme).toHaveBeenCalledWith('unspecified');
+  });
+
+  // 上書き中の変更イベントはアプリ自身が起こしたもので、端末の値ではない
+  it('上書き中の変更イベントを端末の配色として記録しない', () => {
+    jest.spyOn(Appearance, 'setColorScheme').mockImplementation(() => {});
+    jest.spyOn(Appearance, 'getColorScheme').mockReturnValue('dark');
+    let listener: AppearanceListener | null = null;
+    jest
+      .spyOn(Appearance, 'addChangeListener')
+      .mockImplementation((cb: unknown) => {
+        listener = cb as AppearanceListener;
+        return { remove: jest.fn() } as never;
+      });
+
+    const store = createStore();
+    // モジュール評価時(上書き前)に読んだ端末の値
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.LIGHT);
+
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+      </Provider>
+    );
+
+    // 上書き中はマウント時の読み取りもしないため、端末の値は保たれる
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
+
+    // 上書き適用によりライトのイベントが飛んでも、端末の値は書き換えない
+    (listener as AppearanceListener | null)?.({ colorScheme: 'light' });
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
+
+    // 自動へ戻すと上書きが外れ、以降のイベントは端末の値として記録する
+    act(() => {
+      store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);
+    });
+    (listener as AppearanceListener | null)?.({ colorScheme: 'light' });
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.LIGHT);
+  });
+
+  // StrictMode は effect の setup/cleanup/setup を行う。2回目のセットアップ時には
+  // 既に上書きが効いているため、無条件に読むとアプリの設定値を端末の値として記録してしまう
+  it('StrictModeで再セットアップされても上書き値を端末の配色として記録しない', () => {
+    let overridden = false;
+    jest.spyOn(Appearance, 'setColorScheme').mockImplementation(() => {
+      overridden = true;
+    });
+    // 上書きが効いた後の読み取りはアプリの設定値(ライト)を返す
+    jest
+      .spyOn(Appearance, 'getColorScheme')
+      .mockImplementation(() => (overridden ? 'light' : 'dark'));
+
+    const store = createStore();
+    // モジュール評価時に読んだ上書き前の端末の値
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.LIGHT);
+
+    render(
+      <React.StrictMode>
+        <Provider store={store}>
+          <FxSystemColorScheme />
+        </Provider>
+      </React.StrictMode>
+    );
+
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
+  });
+
+  // 上書き値と端末の値が同じなら、解除しても実効の配色が変わらず変更イベントは飛ばない
+  it('自動へ戻したとき変更イベントが飛ばなくても端末の値へ追従する', () => {
+    let overridden = true;
+    jest.spyOn(Appearance, 'setColorScheme').mockImplementation((scheme) => {
+      overridden = scheme !== 'unspecified';
+    });
+    // 上書き中はダーク、解除するとライト(端末の現在値)を返す
+    jest
+      .spyOn(Appearance, 'getColorScheme')
+      .mockImplementation(() => (overridden ? 'dark' : 'light'));
+    jest
+      .spyOn(Appearance, 'addChangeListener')
+      .mockImplementation(() => ({ remove: jest.fn() }) as never);
+
+    const store = createStore();
+    // ダークを選ぶ前に記録した、古い端末の値
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.DARK);
+
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+      </Provider>
+    );
+
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
+
+    // リスナーを一切呼ばずに自動へ戻す
+    act(() => {
+      store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);
+    });
+
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.LIGHT);
+  });
+
+  // react-native-web の Appearance は setColorScheme を持たない
+  it('setColorSchemeが無い環境でもマウントできる', () => {
+    const original = Appearance.setColorScheme;
+    Object.defineProperty(Appearance, 'setColorScheme', {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+
+    try {
+      expect(() =>
+        render(
+          <Provider store={createStore()}>
+            <FxSystemColorScheme />
+          </Provider>
+        )
+      ).not.toThrow();
+    } finally {
+      Object.defineProperty(Appearance, 'setColorScheme', {
+        value: original,
+        configurable: true,
+        writable: true,
+      });
+    }
+  });
+
+  // 設定変更のコミット直後、preference 用の useEffect より前に端末イベントが届く状況。
+  // レイアウトエフェクトはツリー順に走るため、FxSystemColorScheme の後ろに置いた
+  // コンポーネントから呼べば「ref 同期後・passive effect 前」を再現できる
+  it('自動へ切り替えた直後に届いた端末イベントを新しい設定で処理する', () => {
+    const EventFirer: React.FC<{ fire: () => void }> = ({ fire }) => {
+      const preference = useAtomValue(colorSchemePreferenceAtom);
+
+      useLayoutEffect(() => {
+        if (preference === COLOR_SCHEME_PREFERENCE.AUTO) {
+          fire();
+        }
+      }, [preference, fire]);
+
+      return null;
+    };
+
+    jest.spyOn(Appearance, 'setColorScheme').mockImplementation(() => {});
+    // 上書き解除直後は native 側のキャッシュがまだ更新されていない状況を再現する
+    jest.spyOn(Appearance, 'getColorScheme').mockReturnValue('dark');
+    let listener: AppearanceListener | null = null;
+    jest
+      .spyOn(Appearance, 'addChangeListener')
+      .mockImplementation((cb: unknown) => {
+        listener = cb as AppearanceListener;
+        return { remove: jest.fn() } as never;
+      });
+
+    const store = createStore();
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.LIGHT);
+
+    const seen: string[] = [];
+    store.sub(systemColorSchemeAtom, () => {
+      seen.push(store.get(systemColorSchemeAtom));
+    });
+
+    const fire = () =>
+      (listener as AppearanceListener | null)?.({ colorScheme: 'light' });
+
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+        <EventFirer fire={fire} />
+      </Provider>
+    );
+
+    act(() => {
+      store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);
+    });
+
+    // ref の同期が遅れていると、このイベントは旧設定(ライト)で弾かれて記録されない
+    expect(seen).toContain(COLOR_SCHEME.LIGHT);
   });
 });
