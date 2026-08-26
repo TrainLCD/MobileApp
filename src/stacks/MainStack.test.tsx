@@ -7,6 +7,7 @@ import MainStack from './MainStack';
 type ScreenProps = {
   name: string;
   options?: { gestureEnabled?: boolean };
+  layout?: unknown;
 };
 
 const screenProps: ScreenProps[] = [];
@@ -78,6 +79,10 @@ jest.mock('~/screens/ThemeSettings', () => ({
   __esModule: true,
   default: () => null,
 }));
+jest.mock('~/screens/ColorSchemeSettings', () => ({
+  __esModule: true,
+  default: () => null,
+}));
 jest.mock('~/screens/TTSSettings', () => ({
   __esModule: true,
   default: () => null,
@@ -120,5 +125,26 @@ describe('MainStack', () => {
     renderWithStore(false);
 
     expect(getMainScreenProps()?.options?.gestureEnabled).toBe(true);
+  });
+
+  // ダークモードは操作系画面限定の機能なので、走行画面だけは
+  // AppColorsProvider を差し込む layout を持たないことを保証する
+  it('走行画面以外のみダークモードのProviderを適用する', () => {
+    renderWithStore(false);
+
+    expect(getMainScreenProps()?.layout).toBeUndefined();
+    expect(
+      screenProps
+        .filter((props) => props.name !== 'Main')
+        .every((props) => typeof props.layout === 'function')
+    ).toBe(true);
+  });
+
+  it('配色設定画面を登録する', () => {
+    renderWithStore(false);
+
+    expect(
+      screenProps.some((props) => props.name === 'ColorSchemeSettings')
+    ).toBe(true);
   });
 });

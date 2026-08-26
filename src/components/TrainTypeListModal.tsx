@@ -7,6 +7,7 @@ import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { fetchedTrainTypesAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -65,9 +66,6 @@ const styles = StyleSheet.create({
   title: {
     width: '100%',
   },
-  headerText: {
-    color: '#111',
-  },
   flatListContentContainer: {
     paddingHorizontal: 24,
     paddingVertical: 72,
@@ -101,6 +99,7 @@ export const TrainTypeListModal = ({
   const fetchedTrainTypes = useAtomValue(fetchedTrainTypesAtom);
   const { height: windowHeight } = useWindowDimensions();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAtomValue(appColorsAtom);
 
   const title = useMemo(() => {
     // 行先がある経路検索では行先の路線名を、無い場合は選択路線名を表示する
@@ -228,7 +227,7 @@ export const TrainTypeListModal = ({
         styles.contentView,
         {
           height: dynamicMinHeight,
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
         },
         isTablet && {
           width: '80%',
@@ -246,14 +245,14 @@ export const TrainTypeListModal = ({
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
             intensity={80}
-            tint="light"
+            tint={colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : Platform.OS === 'android' && !isLEDTheme ? (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: 'rgba(255,255,255,0.92)' },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}
@@ -261,13 +260,18 @@ export const TrainTypeListModal = ({
           singleLine
           style={[
             destination ? styles.subtitle : styles.title,
-            !isLEDTheme && styles.headerText,
+            !isLEDTheme && { color: colors.modalHeadingText },
           ]}
         >
           {title}
         </Heading>
         {destination ? (
-          <Heading style={[styles.title, !isLEDTheme && styles.headerText]}>
+          <Heading
+            style={[
+              styles.title,
+              !isLEDTheme && { color: colors.modalHeadingText },
+            ]}
+          >
             {subtitle}
           </Heading>
         ) : null}
@@ -299,14 +303,14 @@ export const TrainTypeListModal = ({
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
             intensity={80}
-            tint="light"
+            tint={colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : Platform.OS === 'android' && !isLEDTheme ? (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: 'rgba(255,255,255,0.92)' },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}

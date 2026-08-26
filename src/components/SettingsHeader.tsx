@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import Typography from './Typography';
 
@@ -62,6 +63,7 @@ type Props = {
 
 export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const insets = useSafeAreaInsets();
 
   const COLLAPSE_RANGE = 64;
@@ -84,12 +86,12 @@ export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
   const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
     const androidBGColor = isLEDTheme
       ? LED_THEME_BG_COLOR
-      : 'rgba(250,250,250,0.9)';
+      : colors.headerBackground;
     return {
       backgroundColor: Platform.OS === 'android' ? androidBGColor : undefined,
       paddingTop: 32 + insets.top,
     };
-  }, [insets.top, isLEDTheme]);
+  }, [colors.headerBackground, insets.top, isLEDTheme]);
 
   return (
     <View style={styles.nowHeaderContainer}>
@@ -106,7 +108,7 @@ export const SettingsHeader = ({ title, onLayout, scrollY }: Props) => {
         {Platform.OS === 'ios' ? (
           <BlurView
             intensity={40}
-            tint={isLEDTheme ? 'dark' : 'light'}
+            tint={isLEDTheme ? 'dark' : colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : null}

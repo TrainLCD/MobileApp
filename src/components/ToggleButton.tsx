@@ -11,6 +11,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -60,12 +61,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   outlinedButton: {
-    borderColor: '#008ffe',
     borderWidth: 1,
-  },
-  outlinedButtonText: {
-    fontWeight: 'bold',
-    color: '#008ffe',
   },
   stateIndicator: {
     minWidth: isTablet ? 96 : 64,
@@ -95,6 +91,7 @@ export const StatePanel = ({
   style?: StyleProp<ViewStyle>;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   const styleIndicatorStyle: StyleProp<ViewStyle> = useMemo(
     () =>
@@ -106,18 +103,21 @@ export const StatePanel = ({
             borderRadius: 0,
           }
         : {
-            backgroundColor: state ? '#008ffe' : '#fff',
-            borderColor: state ? '#008ffe' : '#aaa',
+            backgroundColor: state ? colors.accent : colors.surface,
+            borderColor: state ? colors.accent : colors.panelOffBorder,
             opacity: disabled ? 0.5 : 1,
             borderRadius: 8,
           },
-    [isLEDTheme, state, disabled]
+    [isLEDTheme, state, disabled, colors]
   );
 
   return (
     <View style={[styles.stateIndicator, styleIndicatorStyle, style]}>
       <Typography
-        style={[styles.stateIndicatorText, { color: state ? '#fff' : '#888' }]}
+        style={[
+          styles.stateIndicatorText,
+          { color: state ? '#fff' : colors.panelOffText },
+        ]}
       >
         {state ? onText : offText}
       </Typography>
@@ -138,6 +138,7 @@ export const ToggleButton: React.FC<Props> = ({
   activeOpacity,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <TouchableOpacity
@@ -146,12 +147,14 @@ export const ToggleButton: React.FC<Props> = ({
       style={[
         isLEDTheme ? styles.buttonLED : styles.button,
         {
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#008ffe',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.accent,
+          borderColor: isLEDTheme ? '#fff' : colors.cardBorder,
         },
         outline && [
           styles.outlinedButton,
           {
-            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+            borderColor: colors.accent,
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.surface,
           },
         ],
         style,
@@ -162,7 +165,7 @@ export const ToggleButton: React.FC<Props> = ({
         style={[
           styles.text,
           styles.textFill,
-          outline && styles.outlinedButtonText,
+          outline && { fontWeight: 'bold' as const, color: colors.accent },
           textStyle,
         ]}
       >

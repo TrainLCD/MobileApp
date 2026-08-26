@@ -5,6 +5,7 @@
 ## ドキュメント一覧
 
 - [状態管理ガイドライン (Jotai)](./state-management.md)
+- [操作系画面のダークモード](./color-scheme.md)
 - [ホーム画面ウィジェット](./home-screen-widgets.md)
 - [iOS App Clip のブートストラップ](./ios-app-clip.md)
 - [Apollo Client → TanStack Query 移行メモ](./apollo-to-react-query-migration.md)

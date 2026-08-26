@@ -17,6 +17,7 @@ import {
   LED_THEME_BG_COLOR,
 } from '~/constants';
 import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -97,6 +98,7 @@ export const ThemeListModal: React.FC<Props> = ({
   onSelect,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAtomValue(appColorsAtom);
   const { height: windowHeight } = useWindowDimensions();
 
   const items = useMemo(() => getSettingsThemes(), []);
@@ -125,7 +127,7 @@ export const ThemeListModal: React.FC<Props> = ({
           style={[
             styles.item,
             {
-              backgroundColor: isLEDTheme ? '#333' : '#fff',
+              backgroundColor: isLEDTheme ? '#333' : colors.card,
               borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
               borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
               borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
@@ -152,7 +154,7 @@ export const ThemeListModal: React.FC<Props> = ({
         </Pressable>
       );
     },
-    [items.length, currentPreference, isLEDTheme, onSelect]
+    [items.length, currentPreference, isLEDTheme, onSelect, colors.card]
   );
 
   const keyExtractor = useCallback((item: SettingsTheme) => item.value, []);
@@ -167,7 +169,7 @@ export const ThemeListModal: React.FC<Props> = ({
         styles.contentView,
         {
           height: dynamicHeight,
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#FAFAFA',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.background,
           borderRadius: isLEDTheme ? 0 : 8,
         },
         isTablet && {
@@ -180,7 +182,11 @@ export const ThemeListModal: React.FC<Props> = ({
       <View
         style={[
           styles.headerContainer,
-          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#FAFAFA' },
+          {
+            backgroundColor: isLEDTheme
+              ? LED_THEME_BG_COLOR
+              : colors.background,
+          },
         ]}
       >
         <Heading>{translate('theme')}</Heading>

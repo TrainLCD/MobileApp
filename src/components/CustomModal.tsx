@@ -12,6 +12,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import { AppColorsProvider } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import isTablet from '~/utils/isTablet';
 
@@ -135,64 +136,69 @@ export const CustomModal: React.FC<Props> = ({
 
   return (
     <Portal>
-      <View
-        style={StyleSheet.absoluteFill}
-        pointerEvents="box-none"
-        testID={testID}
-      >
-        <AnimatedPressable
-          style={[
-            StyleSheet.absoluteFill,
-            styles.backdrop,
-            backdropStyle,
-            animatedBackdropStyle,
-          ]}
-          onPress={handleBackdropPress}
-        />
+      {/* Portal は要素を PortalHost の位置でマウントするため、呼び出し元ツリーの
+          Context が届かない。モーダルは走行画面から開くものも含めて配色設定に
+          追従させるので、ここで Provider を張り直して子孫へ配る */}
+      <AppColorsProvider>
+        <View
+          style={StyleSheet.absoluteFill}
+          pointerEvents="box-none"
+          testID={testID}
+        >
+          <AnimatedPressable
+            style={[
+              StyleSheet.absoluteFill,
+              styles.backdrop,
+              backdropStyle,
+              animatedBackdropStyle,
+            ]}
+            onPress={handleBackdropPress}
+          />
 
-        {avoidKeyboard ? (
-          <KeyboardAvoidingView
-            style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
-            behavior="padding"
-            pointerEvents="box-none"
-          >
-            <Animated.View
-              style={[
-                styles.content,
-                {
-                  borderRadius: isLEDTheme ? 0 : 8,
-                },
-                contentContainerStyle,
-                animatedContentStyle,
-              ]}
-              pointerEvents="auto"
-              onTouchEnd={stopModalTouchPropagation}
+          {avoidKeyboard ? (
+            <KeyboardAvoidingView
+              style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
+              behavior="padding"
+              pointerEvents="box-none"
             >
-              {children}
-            </Animated.View>
-          </KeyboardAvoidingView>
-        ) : (
-          <View
-            style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
-            pointerEvents="box-none"
-          >
-            <Animated.View
-              style={[
-                styles.content,
-                {
-                  borderRadius: isLEDTheme ? 0 : 8,
-                },
-                contentContainerStyle,
-                animatedContentStyle,
-              ]}
-              pointerEvents="auto"
-              onTouchEnd={stopModalTouchPropagation}
+              <Animated.View
+                style={[
+                  styles.content,
+                  {
+                    borderRadius: isLEDTheme ? 0 : 8,
+                  },
+                  contentContainerStyle,
+                  animatedContentStyle,
+                ]}
+                pointerEvents="auto"
+                onTouchEnd={stopModalTouchPropagation}
+              >
+                {children}
+              </Animated.View>
+            </KeyboardAvoidingView>
+          ) : (
+            <View
+              style={[StyleSheet.absoluteFill, styles.center, containerStyle]}
+              pointerEvents="box-none"
             >
-              {children}
-            </Animated.View>
-          </View>
-        )}
-      </View>
+              <Animated.View
+                style={[
+                  styles.content,
+                  {
+                    borderRadius: isLEDTheme ? 0 : 8,
+                  },
+                  contentContainerStyle,
+                  animatedContentStyle,
+                ]}
+                pointerEvents="auto"
+                onTouchEnd={stopModalTouchPropagation}
+              >
+                {children}
+              </Animated.View>
+            </View>
+          )}
+        </View>
+      </AppColorsProvider>
     </Portal>
   );
 };

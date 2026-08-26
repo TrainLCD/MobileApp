@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import {
   Pressable,
@@ -9,6 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
@@ -133,20 +135,11 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   dismissOnBackdropPress,
   confirmButtonDestructive,
   testID,
-}) => (
-  <CustomModal
-    visible={visible}
-    onClose={onClose}
-    onCloseAnimationEnd={onCloseAnimationEnd}
-    dismissOnBackdropPress={dismissOnBackdropPress}
-    testID={testID}
-    contentContainerStyle={[
-      styles.contentView,
-      {
-        backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-      },
-    ]}
-  >
+}) => {
+  // Portal 経由で描画され Context が届かないため atom から直接読む
+  const colors = useAtomValue(appColorsAtom);
+
+  const body = (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <View
@@ -177,12 +170,12 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
             style={[
               styles.checkbox,
               {
-                borderColor: isLEDTheme ? '#fff' : '#008ffe',
+                borderColor: isLEDTheme ? '#fff' : colors.accent,
                 backgroundColor: checkboxChecked
-                  ? '#008ffe'
+                  ? colors.accent
                   : isLEDTheme
                     ? LED_THEME_BG_COLOR
-                    : '#fff',
+                    : colors.surface,
               },
             ]}
           >
@@ -216,5 +209,23 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
         </Button>
       </View>
     </ScrollView>
-  </CustomModal>
-);
+  );
+
+  return (
+    <CustomModal
+      visible={visible}
+      onClose={onClose}
+      onCloseAnimationEnd={onCloseAnimationEnd}
+      dismissOnBackdropPress={dismissOnBackdropPress}
+      testID={testID}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
+        },
+      ]}
+    >
+      {body}
+    </CustomModal>
+  );
+};

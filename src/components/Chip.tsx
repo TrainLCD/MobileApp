@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   type ViewStyle,
 } from 'react-native';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import type { ButtonTestId } from '../test/e2e';
 import { RFValue } from '../utils/rfValue';
@@ -44,9 +45,10 @@ const Chip: React.FC<Props> = ({
   active,
   testID,
 }: Props) => {
+  const colors = useAppColors();
   const backgroundColor = useMemo(
-    () => (active ? color : '#fff'),
-    [active, color]
+    () => (active ? color : colors.surface),
+    [active, color, colors.surface]
   );
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
 

@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
@@ -43,7 +44,6 @@ const styles = StyleSheet.create({
   },
   resetText: {
     fontSize: 14,
-    color: '#008ffe',
   },
 });
 
@@ -55,6 +55,7 @@ type Props = {
 
 export const AgentHeader = ({ showReset, onBack, onReset }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <View style={styles.root}>
@@ -68,7 +69,7 @@ export const AgentHeader = ({ showReset, onBack, onReset }: Props) => {
           <Ionicons
             name="chevron-back"
             size={28}
-            color={isLEDTheme ? '#fff' : '#333'}
+            color={isLEDTheme ? '#fff' : colors.text}
           />
         </TouchableOpacity>
       </View>
@@ -89,7 +90,7 @@ export const AgentHeader = ({ showReset, onBack, onReset }: Props) => {
               onPress={onReset}
             >
               {/* 表示は Figma に合わせて主語を省略した短縮ラベル。読み上げは省略前の文言を使う */}
-              <Typography style={styles.resetText}>
+              <Typography style={[styles.resetText, { color: colors.accent }]}>
                 {translate('destinationAgentResetShort')}
               </Typography>
             </TouchableOpacity>

@@ -18,6 +18,7 @@ import {
   GET_STATIONS_BY_NAME,
   GET_STATIONS_NEARBY,
 } from '~/lib/graphql/queries';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { locationAtom, setLocation } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -101,9 +102,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 24,
   },
-  headerText: {
-    color: '#111',
-  },
   flatListContentContainer: {
     paddingHorizontal: 24,
     paddingTop: 150,
@@ -118,6 +116,9 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
+  // contentContainerStyle は Portal の外側で組み立てるため Context が届かない。
+  // 自身の配色は atom から直接読む(子孫は CustomModal 側の Provider が面倒を見る)。
+  const colors = useAtomValue(appColorsAtom);
   const { height: windowHeight } = useWindowDimensions();
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
   const wasVisibleRef = useRef(false);
@@ -280,7 +281,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         styles.contentView,
         {
           height: dynamicMinHeight,
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
           marginBottom: insets.bottom || 0,
         },
         isTablet && {
@@ -299,18 +300,23 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
             intensity={80}
-            tint="light"
+            tint={colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : Platform.OS === 'android' && !isLEDTheme ? (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: 'rgba(255,255,255,0.92)' },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}
-        <Heading style={[styles.title, !isLEDTheme && styles.headerText]}>
+        <Heading
+          style={[
+            styles.title,
+            !isLEDTheme && { color: colors.modalHeadingText },
+          ]}
+        >
           {translate('searchByStationName')}
         </Heading>
         <SearchBar onSearch={handleSearchStations} nameSearch />
@@ -341,14 +347,14 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
             intensity={80}
-            tint="light"
+            tint={colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : Platform.OS === 'android' && !isLEDTheme ? (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: 'rgba(255,255,255,0.92)' },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}

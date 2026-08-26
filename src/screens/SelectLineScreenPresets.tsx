@@ -12,6 +12,7 @@ import {
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { NoPresetsCard } from '~/components/NoPresetsCard';
 import { PresetCard } from '~/components/PresetCard';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import isTablet from '~/utils/isTablet';
 import { getPresetRouteEndpoints } from '~/utils/presetRouteEndpoints';
 import type { LoopItem } from '../store/atoms/navigation';
@@ -49,6 +50,7 @@ export const SelectLineScreenPresets = ({
   isPresetsLoading,
   onPress,
 }: Props) => {
+  const colors = useAppColors();
   const carouselOffsetRef = useRef(0);
   // 現在の"論理インデックス"（carouselData基準）を保持して、再描画でも位置を維持
   const currentLogicalIndexRef = useRef(0);
@@ -145,7 +147,12 @@ export const SelectLineScreenPresets = ({
       isPresetsLoading ? (
         <View style={{ width: cardWidth }}>
           <View style={isTablet ? undefined : styles.horizontalMargin}>
-            <SkeletonPlaceholder borderRadius={isTablet ? 8 : 4} speed={1500}>
+            <SkeletonPlaceholder
+              borderRadius={isTablet ? 8 : 4}
+              speed={1500}
+              backgroundColor={colors.skeletonBackground}
+              highlightColor={colors.skeletonHighlight}
+            >
               <SkeletonPlaceholder.Item
                 width={isTablet ? cardWidth : cardWidth - 48}
                 height={CARD_HEIGHT}
@@ -164,7 +171,12 @@ export const SelectLineScreenPresets = ({
           </View>
         </View>
       ),
-    [isPresetsLoading, cardWidth]
+    [
+      isPresetsLoading,
+      cardWidth,
+      colors.skeletonBackground,
+      colors.skeletonHighlight,
+    ]
   );
 
   const handleScroll = useCallback(
