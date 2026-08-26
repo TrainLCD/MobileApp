@@ -6,6 +6,7 @@ import React, { useCallback } from 'react';
 import { PermissionsAndroid, Platform, StyleSheet, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import Button from '../components/Button';
 import Typography from '../components/Typography';
 import { useFetchCurrentLocationOnce } from '../hooks';
@@ -19,11 +20,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fcfcfc',
   },
   text: {
     fontSize: RFValue(14),
-    color: '#333',
     marginBottom: 12,
     paddingHorizontal: 24,
     lineHeight: Platform.select({
@@ -59,6 +58,7 @@ const styles = StyleSheet.create({
 });
 
 const PrivacyScreen: React.FC = () => {
+  const colors = useAppColors();
   const navigation = useNavigation();
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
 
@@ -146,11 +146,11 @@ const PrivacyScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]}>
       <Typography style={[styles.text, styles.headingText]}>
         {translate('privacyTitle')}
       </Typography>
-      <Typography style={styles.text}>
+      <Typography style={[styles.text, { color: colors.text }]}>
         {translate('privacyDescription')}
       </Typography>
 

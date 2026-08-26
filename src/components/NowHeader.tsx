@@ -15,6 +15,7 @@ import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants';
 import { useLocationPermissionsGranted } from '~/hooks/useLocationPermissionsGranted';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
@@ -118,6 +119,7 @@ export const NowHeader = ({
   const setLocationAtom = useSetAtom(locationAtom);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const insets = useSafeAreaInsets();
   const locationPermissionsGranted = useLocationPermissionsGranted();
 
@@ -136,10 +138,10 @@ export const NowHeader = ({
 
   const busBadgeStyle: ViewStyle = useMemo(
     () => ({
-      backgroundColor: isLEDTheme ? '#2a2a2a' : '#f0f0f0',
-      borderColor: isLEDTheme ? '#444' : '#ddd',
+      backgroundColor: isLEDTheme ? '#2a2a2a' : colors.cardExpanded,
+      borderColor: isLEDTheme ? '#444' : colors.border,
     }),
-    [isLEDTheme]
+    [colors.border, colors.cardExpanded, isLEDTheme]
   );
 
   const COLLAPSE_RANGE = 64;
@@ -208,12 +210,12 @@ export const NowHeader = ({
   const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
     const androidBGColor = isLEDTheme
       ? LED_THEME_BG_COLOR
-      : 'rgba(250,250,250,0.9)';
+      : colors.headerBackground;
     return {
       backgroundColor: Platform.OS === 'android' ? androidBGColor : undefined,
       paddingTop: 32 + insets.top,
     };
-  }, [insets.top, isLEDTheme]);
+  }, [colors.headerBackground, insets.top, isLEDTheme]);
 
   return (
     <>
@@ -232,7 +234,7 @@ export const NowHeader = ({
           {Platform.OS === 'ios' ? (
             <BlurView
               intensity={40}
-              tint={isLEDTheme ? 'dark' : 'light'}
+              tint={isLEDTheme ? 'dark' : colors.blurTint}
               style={StyleSheet.absoluteFill}
             />
           ) : null}
@@ -267,7 +269,12 @@ export const NowHeader = ({
                   </View>
                 </RNAnimated.View>
               ) : locationPermissionsGranted ? (
-                <SkeletonPlaceholder borderRadius={4} speed={1500}>
+                <SkeletonPlaceholder
+                  borderRadius={4}
+                  speed={1500}
+                  backgroundColor={colors.skeletonBackground}
+                  highlightColor={colors.skeletonHighlight}
+                >
                   <SkeletonPlaceholder.Item width={128} height={32} />
                 </SkeletonPlaceholder>
               ) : (

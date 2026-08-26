@@ -33,6 +33,7 @@ import { useDestinationSelection } from '~/hooks/useDestinationSelection';
 import { useKeyboardBottomInset } from '~/hooks/useKeyboardBottomInset';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { GET_STATIONS_BY_IDS } from '~/lib/graphql/queries';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { stationAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -83,9 +84,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  bg: {
-    backgroundColor: '#FAFAFA',
-  },
   ledBg: {
     backgroundColor: '#212121',
   },
@@ -125,16 +123,12 @@ const styles = StyleSheet.create({
   },
   retryText: {
     fontSize: 14,
-    color: '#008ffe',
   },
   disclaimer: {
     fontSize: 12,
     textAlign: 'center',
     paddingHorizontal: 24,
     marginBottom: 12,
-  },
-  disclaimerColor: {
-    color: '#737373',
   },
   disclaimerLEDColor: {
     color: '#ccc',
@@ -154,6 +148,7 @@ const SAFE_AREA_EDGES = ['top', 'left', 'right'] as const;
 const DestinationAgentScreen = () => {
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const station = useAtomValue(stationAtom);
 
   const [entries, setEntries] = useState<ChatEntry[]>([]);
@@ -473,6 +468,8 @@ const DestinationAgentScreen = () => {
                 key={`${entry.id}-${suggestion.stationId}`}
                 borderRadius={isLEDTheme ? 0 : 8}
                 speed={1500}
+                backgroundColor={colors.skeletonBackground}
+                highlightColor={colors.skeletonHighlight}
               >
                 <SkeletonPlaceholder.Item
                   width="100%"
@@ -502,7 +499,7 @@ const DestinationAgentScreen = () => {
                 }
               }}
             >
-              <Typography style={styles.retryText}>
+              <Typography style={[styles.retryText, { color: colors.accent }]}>
                 {translate('destinationAgentRetry')}
               </Typography>
             </TouchableOpacity>
@@ -549,6 +546,9 @@ const DestinationAgentScreen = () => {
       isLEDTheme,
       resolveSuggestions,
       handleDestinationSelected,
+      colors.accent,
+      colors.skeletonBackground,
+      colors.skeletonHighlight,
     ]
   );
 
@@ -559,7 +559,10 @@ const DestinationAgentScreen = () => {
 
   return (
     <SafeAreaView
-      style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}
+      style={[
+        styles.root,
+        isLEDTheme ? styles.ledBg : { backgroundColor: colors.background },
+      ]}
       // 下端は入力バー側でキーボード / 安全領域に応じた余白を確保するため除外する
       edges={SAFE_AREA_EDGES}
     >
@@ -634,7 +637,9 @@ const DestinationAgentScreen = () => {
             <Typography
               style={[
                 styles.disclaimer,
-                isLEDTheme ? styles.disclaimerLEDColor : styles.disclaimerColor,
+                isLEDTheme
+                  ? styles.disclaimerLEDColor
+                  : { color: colors.secondaryText },
               ]}
             >
               {translate('destinationAgentDisclaimer')}

@@ -10,22 +10,25 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
-import { Provider } from 'jotai';
-import React, { useEffect, useState } from 'react';
+import { Provider, useAtomValue } from 'jotai';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CommonDialogPresenter from './components/CommonDialogPresenter';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
+import FxSystemColorScheme from './components/FxSystemColorScheme';
 import { GlobalToast } from './components/GlobalToast';
 import { queryClient } from './lib/gql';
 import { migrateFromAsyncStorage } from './lib/storage';
+import { AppColorsProvider } from './providers/AppColorsProvider';
 import DeepLinkProvider from './providers/DeepLinkProvider';
 import QuickActionsProvider from './providers/QuickActionsProvider';
 import PrivacyScreen from './screens/Privacy';
 import MainStack from './stacks/MainStack';
 import { navigationRef } from './stacks/rootNavigation';
 import { store } from './store';
+import { appColorsAtom } from './store/atoms/colorScheme';
 import { setI18nConfig } from './translation';
 import { showDialogWhilePresenting } from './utils/dialogPresentation';
 
@@ -45,6 +48,13 @@ const options: NativeStackNavigationOptions = {
   },
 };
 
+// プライバシー画面も操作系画面のためダークモードの対象にする
+const operationScreenLayout = ({
+  children,
+}: {
+  children: React.ReactElement;
+}) => <AppColorsProvider>{children}</AppColorsProvider>;
+
 const AppContent: React.FC = () => {
   useEffect(() => {
     type TextProps = {
@@ -58,6 +68,18 @@ const AppContent: React.FC = () => {
   }, []);
 
   const [permStatus] = Location.useForegroundPermissions();
+
+  const colors = useAtomValue(appColorsAtom);
+  const privacyScreenOptions = useMemo<NativeStackNavigationOptions>(
+    () => ({
+      ...options,
+      contentStyle: {
+        backgroundColor: colors.background,
+        opacity: 1,
+      },
+    }),
+    [colors.background]
+  );
 
   const [fontsLoaded, fontsLoadError] = useFonts({
     Roboto_400Regular,
@@ -88,7 +110,8 @@ const AppContent: React.FC = () => {
       <Stack.Navigator screenOptions={screenOptions}>
         {!permStatus?.granted ? (
           <Stack.Screen
-            options={options}
+            layout={operationScreenLayout}
+            options={privacyScreenOptions}
             name="Privacy"
             component={PrivacyScreen}
           />
@@ -130,6 +153,8 @@ const App: React.FC = () => {
         <ActionSheetProvider>
           <Provider store={store}>
             <PortalProvider>
+              {/* 端末のダークモード設定を購読して atom へ反映する */}
+              <FxSystemColorScheme />
               {/* 画面をまたいで呼ばれる showDialog を一つの共通モーダルとして描画する。 */}
               <CommonDialogPresenter />
               <CustomErrorBoundary>

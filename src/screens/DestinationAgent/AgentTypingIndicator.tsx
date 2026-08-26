@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 // 3 点ドットの位相ずらし(ms)。件数固定なのでキーにも使う
@@ -33,7 +34,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   bg: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
@@ -51,15 +51,14 @@ const styles = StyleSheet.create({
     // ドット群と文言が詰まって見えないよう、root の gap 6 に少し足す
     marginLeft: 2,
   },
-  labelColor: {
-    color: '#737373',
-  },
+
   labelLEDColor: {
     color: '#ccc',
   },
 });
 
 const Dot = ({ delay, isLEDTheme }: { delay: number; isLEDTheme: boolean }) => {
+  const colors = useAppColors();
   const opacity = useSharedValue(DIM_OPACITY);
 
   useEffect(() => {
@@ -98,7 +97,7 @@ const Dot = ({ delay, isLEDTheme }: { delay: number; isLEDTheme: boolean }) => {
       style={[
         styles.dot,
         {
-          backgroundColor: isLEDTheme ? '#fff' : '#333',
+          backgroundColor: isLEDTheme ? '#fff' : colors.text,
           borderRadius: isLEDTheme ? 0 : 4,
         },
         animatedStyle,
@@ -111,12 +110,18 @@ const Dot = ({ delay, isLEDTheme }: { delay: number; isLEDTheme: boolean }) => {
 // label を渡すとドットの右に補助文言(ツール実行中の「駅を検索しています…」等)を並べる。
 export const AgentTypingIndicator = ({ label }: { label?: string }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     // 検索中ラベルの出し入れでバブル幅が変わるため、幅の変化をスプリングで馴染ませる
     <Animated.View
       layout={LinearTransition.springify()}
-      style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}
+      style={[
+        styles.root,
+        isLEDTheme
+          ? styles.ledBg
+          : [styles.bg, { backgroundColor: colors.card }],
+      ]}
     >
       {DOT_DELAYS.map((delay) => (
         <Dot
@@ -130,7 +135,9 @@ export const AgentTypingIndicator = ({ label }: { label?: string }) => {
           <Typography
             style={[
               styles.label,
-              isLEDTheme ? styles.labelLEDColor : styles.labelColor,
+              isLEDTheme
+                ? styles.labelLEDColor
+                : { color: colors.secondaryText },
             ]}
           >
             {label}

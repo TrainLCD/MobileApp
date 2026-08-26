@@ -9,6 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import type { ButtonTestId } from '~/test/e2e';
 import { RFValue } from '~/utils/rfValue';
@@ -47,12 +48,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   outlinedButton: {
-    borderColor: '#008ffe',
     borderWidth: 1,
-  },
-  outlinedButtonText: {
-    fontWeight: 'bold',
-    color: '#008ffe',
   },
 });
 
@@ -66,6 +62,7 @@ const Button: React.FC<Props> = ({
   testID,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <TouchableOpacity
@@ -74,12 +71,16 @@ const Button: React.FC<Props> = ({
       style={[
         isLEDTheme ? styles.buttonLED : styles.button,
         {
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#008ffe',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.accent,
+          borderColor: isLEDTheme ? '#fff' : colors.cardBorder,
           opacity: disabled ? 0.5 : 1,
         },
         outline && [
           styles.outlinedButton,
-          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff' },
+          {
+            borderColor: colors.accent,
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.surface,
+          },
         ],
         style,
       ]}
@@ -87,7 +88,11 @@ const Button: React.FC<Props> = ({
     >
       <Typography
         numberOfLines={1}
-        style={[styles.text, outline && styles.outlinedButtonText, textStyle]}
+        style={[
+          styles.text,
+          outline && { fontWeight: 'bold' as const, color: colors.accent },
+          textStyle,
+        ]}
       >
         {children}
       </Typography>

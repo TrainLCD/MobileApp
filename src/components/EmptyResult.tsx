@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { translate } from '~/translation';
 import Typography from './Typography';
 
@@ -13,9 +14,16 @@ const styles = StyleSheet.create({
 });
 
 export const EmptyResult = ({ loading, hasSearched }: Props) => {
+  const colors = useAppColors();
+
   if (loading) {
     return (
-      <SkeletonPlaceholder borderRadius={4} speed={1500}>
+      <SkeletonPlaceholder
+        borderRadius={4}
+        speed={1500}
+        backgroundColor={colors.skeletonBackground}
+        highlightColor={colors.skeletonHighlight}
+      >
         <SkeletonPlaceholder.Item width="100%" height={72} />
         <SkeletonPlaceholder.Item width="100%" height={72} marginTop={8} />
       </SkeletonPlaceholder>

@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Chip from '~/components/Chip';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
@@ -51,11 +52,12 @@ type Props = {
 
 export const AgentEmptyState = ({ onSelectExample }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <View style={styles.root}>
       <Animated.View entering={FadeInDown.duration(ENTER_DURATION)}>
-        <Ionicons name="sparkles" size={48} color="#008ffe" />
+        <Ionicons name="sparkles" size={48} color={colors.accent} />
       </Animated.View>
       <Animated.View
         entering={FadeInDown.delay(ENTER_STAGGER).duration(ENTER_DURATION)}
@@ -75,7 +77,7 @@ export const AgentEmptyState = ({ onSelectExample }: Props) => {
               )}
             >
               <Chip
-                color="#008ffe"
+                color={colors.accent}
                 style={[styles.chip, isLEDTheme && styles.ledChip]}
                 onPress={() => onSelectExample(text)}
               >

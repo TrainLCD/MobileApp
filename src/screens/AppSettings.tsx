@@ -25,6 +25,7 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isBetaBuild } from '~/utils/isBetaBuild';
 import { isDevApp } from '~/utils/isDevApp';
 import FooterTabBar, { useFooterHeight } from '../components/FooterTabBar';
@@ -34,6 +35,7 @@ import { RFValue } from '../utils/rfValue';
 
 const SETTING_ITEM_ID_MAP = {
   personalize_theme: 'personalize_theme',
+  personalize_color_scheme: 'personalize_color_scheme',
   personalize_tts: 'personalize_tts',
   personalize_languages: 'personalize_languages',
   personalize_notifications: 'personalize_notifications',
@@ -57,9 +59,6 @@ type SettingsSectionData = {
 
 const styles = StyleSheet.create({
   root: { paddingHorizontal: 24, flex: 1 },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
   listContainerStyle: {
     flexGrow: 1,
     marginHorizontal: 24,
@@ -99,11 +98,14 @@ const SettingsItem = ({
   onPress?: () => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   const iconName = useMemo(() => {
     switch (item.id) {
       case 'personalize_theme':
         return 'color-palette';
+      case 'personalize_color_scheme':
+        return 'contrast';
       case 'personalize_tts':
         return 'volume-high';
       case 'personalize_languages':
@@ -134,7 +136,7 @@ const SettingsItem = ({
         alignItems: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
         opacity: onPress ? 1 : 0.5,
         borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
@@ -170,7 +172,7 @@ const SettingsItem = ({
         </Typography>
       </View>
 
-      <CardChevron stroke={isLEDTheme ? 'white' : 'black'} />
+      <CardChevron stroke={isLEDTheme || colors.isDark ? 'white' : 'black'} />
     </TouchableOpacity>
   );
 };
@@ -188,6 +190,7 @@ const AppSettingsScreen: React.FC = () => {
   const footerHeight = useFooterHeight();
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const navigation = useNavigation();
 
   const themeRef = useRef<View>(null);
@@ -294,6 +297,12 @@ const AppSettingsScreen: React.FC = () => {
           onPress: () => navigation.navigate('ThemeSettings' as never),
         },
         {
+          id: SETTING_ITEM_ID_MAP.personalize_color_scheme,
+          title: translate('colorSchemeSettings'),
+          color: '#5856D6',
+          onPress: () => navigation.navigate('ColorSchemeSettings' as never),
+        },
+        {
           id: SETTING_ITEM_ID_MAP.personalize_tts,
           title: translate('autoAnnounce'),
           color: '#34C759',
@@ -366,7 +375,12 @@ const AppSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <SafeAreaView
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.ScrollView
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
@@ -444,7 +458,7 @@ const AppSettingsScreen: React.FC = () => {
 
           {/* ビルド情報 */}
           {isDevApp || isBetaBuild ? (
-            <Typography style={styles.betaNotice}>
+            <Typography style={[styles.betaNotice, { color: colors.text }]}>
               {isDevApp ? translate('canaryNotice') : ''}
               {!isDevApp && isBetaBuild ? translate('betaNotice') : ''}
             </Typography>

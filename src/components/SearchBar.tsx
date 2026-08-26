@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { FONTS } from '~/constants';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
@@ -26,7 +27,6 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   bg: {
-    backgroundColor: '#fcfcfc',
     borderRadius: 8,
   },
   ledBg: {
@@ -49,6 +49,7 @@ type Props = {
 export const SearchBar = ({ onSearch, nameSearch }: Props) => {
   const [searchText, setSearchText] = useState('');
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {
@@ -58,12 +59,23 @@ export const SearchBar = ({ onSearch, nameSearch }: Props) => {
   }, [isLEDTheme]);
 
   return (
-    <View style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}>
+    <View
+      style={[
+        styles.root,
+        isLEDTheme
+          ? styles.ledBg
+          : [styles.bg, { backgroundColor: colors.card }],
+      ]}
+    >
       <TextInput
         style={[
           styles.textInput,
-          { color: isLEDTheme ? 'white' : 'black', fontFamily },
+          {
+            color: isLEDTheme || colors.isDark ? 'white' : 'black',
+            fontFamily,
+          },
         ]}
+        placeholderTextColor={colors.isDark ? colors.secondaryText : undefined}
         onChange={(e) => setSearchText(e.nativeEvent.text)}
         onSubmitEditing={() => onSearch?.(searchText)}
         placeholder={translate(

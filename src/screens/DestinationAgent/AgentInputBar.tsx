@@ -11,6 +11,7 @@ import Animated, {
 import Typography from '~/components/Typography';
 import { FONTS } from '~/constants';
 import { AGENT_MAX_MESSAGE_LENGTH } from '~/hooks/useDestinationAgent';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
@@ -32,7 +33,6 @@ const styles = StyleSheet.create({
     boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
   bg: {
-    backgroundColor: '#fcfcfc',
     borderRadius: 8,
   },
   ledBg: {
@@ -81,6 +81,7 @@ export const AgentInputBar = ({
   inputRef,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   const fontFamily = useMemo(
     () => (isLEDTheme ? FONTS.JFDotJiskan24h : FONTS.RobotoRegular),
@@ -109,12 +110,22 @@ export const AgentInputBar = ({
 
   return (
     <View>
-      <View style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}>
+      <View
+        style={[
+          styles.root,
+          isLEDTheme
+            ? styles.ledBg
+            : [styles.bg, { backgroundColor: colors.card }],
+        ]}
+      >
         <TextInput
           ref={inputRef}
           style={[
             styles.textInput,
-            { color: isLEDTheme ? '#fff' : '#000', fontFamily },
+            {
+              color: isLEDTheme || colors.isDark ? '#fff' : '#000',
+              fontFamily,
+            },
           ]}
           value={value}
           onChangeText={onChangeText}
@@ -136,7 +147,9 @@ export const AgentInputBar = ({
               ? 'destinationAgentRateLimited'
               : 'destinationAgentPlaceholder'
           )}
-          placeholderTextColor={isLEDTheme ? '#ababab' : '#8c8c8c'}
+          placeholderTextColor={
+            isLEDTheme || colors.isDark ? '#ababab' : '#8c8c8c'
+          }
         />
         <Animated.View style={sendButtonAnimatedStyle}>
           <TouchableOpacity

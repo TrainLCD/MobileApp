@@ -2,6 +2,7 @@ import { useAtomValue } from 'jotai';
 import { StyleSheet, View } from 'react-native';
 import Typography from '~/components/Typography';
 import type { AgentMessageRole } from '~/hooks/useDestinationAgent';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 
 // ユーザバブルは白文字とのコントラスト比 4.5:1 以上(WCAG AA)を満たす色を使う。
@@ -33,7 +34,6 @@ const styles = StyleSheet.create({
   },
   assistant: {
     alignSelf: 'flex-start',
-    backgroundColor: '#fff',
   },
   radius: {
     borderRadius: 12,
@@ -70,6 +70,7 @@ type Props = {
 
 export const AgentMessageBubble = ({ role, content }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const isUser = role === 'user';
 
   return (
@@ -77,7 +78,9 @@ export const AgentMessageBubble = ({ role, content }: Props) => {
       accessibilityRole="text"
       style={[
         styles.root,
-        isUser ? styles.user : styles.assistant,
+        isUser
+          ? styles.user
+          : [styles.assistant, { backgroundColor: colors.card }],
         isLEDTheme
           ? [styles.ledBorder, isUser ? styles.ledUser : styles.ledAssistant]
           : [styles.radius, !isUser && styles.shadow],

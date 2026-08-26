@@ -14,6 +14,7 @@ import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { isDevApp } from '~/utils/isDevApp';
@@ -50,9 +51,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
 });
 
 const LicenseHolder = ({
@@ -67,6 +65,7 @@ const LicenseHolder = ({
   onPress: () => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <TouchableOpacity
@@ -77,7 +76,7 @@ const LicenseHolder = ({
         justifyContent: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
         borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
@@ -94,13 +93,13 @@ const LicenseHolder = ({
         <Typography
           style={{
             marginTop: 4,
-            color: '#666',
+            color: colors.mutedText,
           }}
         >
           {item.href}
         </Typography>
         {item.license ? (
-          <Typography style={{ color: '#666', marginTop: 2 }}>
+          <Typography style={{ color: colors.mutedText, marginTop: 2 }}>
             {item.license}
           </Typography>
         ) : null}
@@ -115,25 +114,29 @@ const ListFooter = ({
 }: {
   isLEDTheme: boolean;
   onPressOK: () => void;
-}) => (
-  <>
-    <Typography
-      style={[
-        { marginTop: 24, fontSize: 14, lineHeight: 21 },
-        !isLEDTheme && { color: '#666' },
-      ]}
-    >
-      {translate('odptDisclaimer')}
-    </Typography>
-    <Button
-      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-      textStyle={{ fontWeight: 'bold' }}
-      onPress={onPressOK}
-    >
-      OK
-    </Button>
-  </>
-);
+}) => {
+  const colors = useAppColors();
+
+  return (
+    <>
+      <Typography
+        style={[
+          { marginTop: 24, fontSize: 14, lineHeight: 21 },
+          !isLEDTheme && { color: colors.mutedText },
+        ]}
+      >
+        {translate('odptDisclaimer')}
+      </Typography>
+      <Button
+        style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+        textStyle={{ fontWeight: 'bold' }}
+        onPress={onPressOK}
+      >
+        OK
+      </Button>
+    </>
+  );
+};
 
 const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/';
 const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
@@ -149,6 +152,7 @@ const Licenses: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   const navigation = useNavigation();
   const { showActionSheetWithOptions } = useActionSheet();
@@ -347,7 +351,12 @@ const Licenses: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.FlatList
           data={LICENSE_ITEMS}
           keyExtractor={keyExtractor}

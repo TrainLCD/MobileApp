@@ -5,6 +5,7 @@ import React, { useCallback } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { STATUS_URL } from '~/constants';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -74,13 +75,14 @@ const ErrorScreen: React.FC<Props> = ({
     [navigation]
   );
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <SafeAreaView
       style={[
         styles.root,
         {
-          backgroundColor: isLEDTheme ? '#212121' : '#fff',
+          backgroundColor: isLEDTheme ? '#212121' : colors.background,
         },
       ]}
     >

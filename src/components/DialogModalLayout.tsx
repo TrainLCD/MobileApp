@@ -9,6 +9,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import type { AppColors } from '~/constants/colorScheme';
+import { AppColorsProvider } from '~/providers/AppColorsProvider';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
@@ -94,6 +96,12 @@ const styles = StyleSheet.create({
 export type DialogModalLayoutProps = {
   visible: boolean;
   isLEDTheme: boolean;
+  /**
+   * 操作系画面から開くダイアログだけがダークモードへ追従する。
+   * Portal 経由で描画され Context が届かないため、呼び出し側が atom の値を渡し、
+   * 受け取ったときだけ子孫へ Provider を張り直す(未指定ならライトのまま)。
+   */
+  colors?: AppColors;
   leading: React.ReactNode;
   leadingStyle?: StyleProp<ViewStyle>;
   title: React.ReactNode;
@@ -116,6 +124,7 @@ export type DialogModalLayoutProps = {
 export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   visible,
   isLEDTheme,
+  colors,
   leading,
   leadingStyle,
   title,
@@ -133,20 +142,8 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   dismissOnBackdropPress,
   confirmButtonDestructive,
   testID,
-}) => (
-  <CustomModal
-    visible={visible}
-    onClose={onClose}
-    onCloseAnimationEnd={onCloseAnimationEnd}
-    dismissOnBackdropPress={dismissOnBackdropPress}
-    testID={testID}
-    contentContainerStyle={[
-      styles.contentView,
-      {
-        backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
-      },
-    ]}
-  >
+}) => {
+  const body = (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <View
@@ -177,12 +174,14 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
             style={[
               styles.checkbox,
               {
-                borderColor: isLEDTheme ? '#fff' : '#008ffe',
+                borderColor: isLEDTheme
+                  ? '#fff'
+                  : (colors?.accent ?? '#008ffe'),
                 backgroundColor: checkboxChecked
-                  ? '#008ffe'
+                  ? (colors?.accent ?? '#008ffe')
                   : isLEDTheme
                     ? LED_THEME_BG_COLOR
-                    : '#fff',
+                    : (colors?.surface ?? '#fff'),
               },
             ]}
           >
@@ -216,5 +215,26 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
         </Button>
       </View>
     </ScrollView>
-  </CustomModal>
-);
+  );
+
+  return (
+    <CustomModal
+      visible={visible}
+      onClose={onClose}
+      onCloseAnimationEnd={onCloseAnimationEnd}
+      dismissOnBackdropPress={dismissOnBackdropPress}
+      testID={testID}
+      contentContainerStyle={[
+        styles.contentView,
+        {
+          backgroundColor: isLEDTheme
+            ? LED_THEME_BG_COLOR
+            : (colors?.card ?? '#fff'),
+        },
+      ]}
+    >
+      {/* Portal の内側でないと Context が届かないため、ここで Provider を張る */}
+      {colors ? <AppColorsProvider>{body}</AppColorsProvider> : body}
+    </CustomModal>
+  );
+};

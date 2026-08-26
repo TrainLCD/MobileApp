@@ -17,6 +17,7 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { useTTSFeatureEnabled } from '~/hooks/useTTSFeatureEnabled';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import speechState from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -43,9 +44,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
 });
 
 const SettingsItem = ({
@@ -64,6 +62,7 @@ const SettingsItem = ({
   onToggle: (event: GestureResponderEvent) => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <Pressable
@@ -78,7 +77,7 @@ const SettingsItem = ({
         justifyContent: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
         borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
@@ -115,85 +114,91 @@ const ListFooter = ({
   onToggleTTSLanguage: (language: TTSLanguage) => void;
   onPressServiceStatus: () => void;
   onPressOK: () => void;
-}) => (
-  <>
-    <View style={{ marginTop: 16 }}>
-      {ttsLanguageItems.map((item, index) => {
-        const state = ttsEnabledLanguages.includes(item.id);
-        const disabled =
-          !speechEnabled ||
-          (item.id === 'JA' && state && !ttsEnabledLanguages.includes('EN')) ||
-          (item.id === 'EN' && state && !ttsEnabledLanguages.includes('JA'));
+}) => {
+  const colors = useAppColors();
 
-        return (
-          <SettingsItem
-            key={item.id}
-            item={item}
-            isFirst={index === 0}
-            isLast={index === ttsLanguageItems.length - 1}
-            onToggle={() => onToggleTTSLanguage(item.id)}
-            state={state}
-            disabled={disabled}
-          />
-        );
-      })}
-    </View>
-    <Typography
-      style={{
-        marginTop: 16,
-        textAlign: 'center',
-        color: '#8B8B8B',
-      }}
-    >
-      {translate('requireJapaneseOrEnglish')}
-    </Typography>
-    {/* iOSはリモート合成のため品質案内は不要。案内文はAndroidのTTSエンジン設定を
-        指す内容なので、該当する設定を持たないweb等でも出さない */}
-    {Platform.OS === 'android' ? (
+  return (
+    <>
+      <View style={{ marginTop: 16 }}>
+        {ttsLanguageItems.map((item, index) => {
+          const state = ttsEnabledLanguages.includes(item.id);
+          const disabled =
+            !speechEnabled ||
+            (item.id === 'JA' &&
+              state &&
+              !ttsEnabledLanguages.includes('EN')) ||
+            (item.id === 'EN' && state && !ttsEnabledLanguages.includes('JA'));
+
+          return (
+            <SettingsItem
+              key={item.id}
+              item={item}
+              isFirst={index === 0}
+              isLast={index === ttsLanguageItems.length - 1}
+              onToggle={() => onToggleTTSLanguage(item.id)}
+              state={state}
+              disabled={disabled}
+            />
+          );
+        })}
+      </View>
       <Typography
         style={{
-          marginTop: 8,
+          marginTop: 16,
           textAlign: 'center',
-          color: '#8B8B8B',
+          color: colors.secondaryText,
         }}
       >
-        {translate('ttsVoiceQualityNoticeAndroid')}
+        {translate('requireJapaneseOrEnglish')}
       </Typography>
-    ) : null}
-    {!ttsFeatureEnabled ? (
-      <>
+      {/* iOSはリモート合成のため品質案内は不要。案内文はAndroidのTTSエンジン設定を
+        指す内容なので、該当する設定を持たないweb等でも出さない */}
+      {Platform.OS === 'android' ? (
         <Typography
-          style={{
-            marginTop: 16,
-            textAlign: 'center',
-            color: '#8B8B8B',
-          }}
-        >
-          {translate('ttsFeatureDisabledText')}
-        </Typography>
-        <Typography
-          accessibilityRole="link"
-          onPress={onPressServiceStatus}
           style={{
             marginTop: 8,
             textAlign: 'center',
-            color: '#008ffe',
-            textDecorationLine: 'underline',
+            color: colors.secondaryText,
           }}
         >
-          {translate('serviceStatus')}
+          {translate('ttsVoiceQualityNoticeAndroid')}
         </Typography>
-      </>
-    ) : null}
-    <Button
-      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-      textStyle={{ fontWeight: 'bold' }}
-      onPress={onPressOK}
-    >
-      OK
-    </Button>
-  </>
-);
+      ) : null}
+      {!ttsFeatureEnabled ? (
+        <>
+          <Typography
+            style={{
+              marginTop: 16,
+              textAlign: 'center',
+              color: colors.secondaryText,
+            }}
+          >
+            {translate('ttsFeatureDisabledText')}
+          </Typography>
+          <Typography
+            accessibilityRole="link"
+            onPress={onPressServiceStatus}
+            style={{
+              marginTop: 8,
+              textAlign: 'center',
+              color: colors.accent,
+              textDecorationLine: 'underline',
+            }}
+          >
+            {translate('serviceStatus')}
+          </Typography>
+        </>
+      ) : null}
+      <Button
+        style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+        textStyle={{ fontWeight: 'bold' }}
+        onPress={onPressOK}
+      >
+        OK
+      </Button>
+    </>
+  );
+};
 
 const TTSSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -201,6 +206,7 @@ const TTSSettingsScreen: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const [
     { enabled: speechEnabled, backgroundEnabled, ttsEnabledLanguages },
     setSpeechState,
@@ -456,7 +462,12 @@ const TTSSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.FlatList
           data={SETTING_ITEMS}
           keyExtractor={(item) => item.id}

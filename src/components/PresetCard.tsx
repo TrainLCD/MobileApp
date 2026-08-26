@@ -5,6 +5,7 @@ import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
 import { MARK_SHAPE, NUMBERING_ICON_SIZE } from '~/constants';
 import { useGetLineMark } from '~/hooks/useGetLineMark';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -128,13 +129,14 @@ const BrokenIcon = () => (
 
 const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const getLineMark = useGetLineMark();
 
   const containerStyle = useMemo(
     () => [
       styles.root,
       {
-        backgroundColor: isLEDTheme ? '#2A2A2A' : '#FCFCFC',
+        backgroundColor: isLEDTheme ? '#2A2A2A' : colors.card,
         borderRadius: isLEDTheme ? 0 : 8,
         ...(isTablet
           ? {}
@@ -145,11 +147,11 @@ const PresetCardBase: React.FC<Props> = ({ title, from, to }) => {
             }),
       },
     ],
-    [isLEDTheme]
+    [colors.card, isLEDTheme]
   );
 
-  const lineFg = isLEDTheme ? '#CCCCCC' : '#666666';
-  const metaFg = isLEDTheme ? '#CCCCCC' : '#666666';
+  const lineFg = isLEDTheme ? '#CCCCCC' : colors.mutedText;
+  const metaFg = isLEDTheme ? '#CCCCCC' : colors.mutedText;
 
   const leftCode = getStationPrimaryCode(from ?? null, to ?? null);
   const rightCode = getStationPrimaryCode(to ?? null, from ?? null);

@@ -31,6 +31,7 @@ import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
 import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { AgentEntryBanner } from '~/screens/DestinationAgent/AgentEntryBanner';
 import { showDialogWhilePresenting } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
@@ -53,9 +54,6 @@ const styles = StyleSheet.create({
   root: {
     paddingHorizontal: 24,
     flex: 1,
-  },
-  nonLEDBg: {
-    backgroundColor: '#FAFAFA',
   },
   listHeaderContainer: {
     marginTop: 16,
@@ -105,6 +103,7 @@ const RouteSearchScreen = () => {
   const [hasSearched, setHasSearched] = useState(false);
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const orientation = useDeviceOrientation();
   const isPortraitOrientation = useMemo(
     () =>
@@ -387,7 +386,12 @@ const RouteSearchScreen = () => {
 
   return (
     <>
-      <SafeAreaView style={[styles.root, !isLEDTheme && styles.nonLEDBg]}>
+      <SafeAreaView
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <AnimatedFlashList
           style={StyleSheet.absoluteFill}
           data={searchResults}

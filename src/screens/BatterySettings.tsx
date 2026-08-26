@@ -12,6 +12,7 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -24,12 +25,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
   description: {
     marginTop: 16,
-    color: '#8B8B8B',
     lineHeight: 21,
   },
   okButton: {
@@ -49,6 +46,7 @@ const ToggleItem = ({
   onToggle: () => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <Pressable
@@ -61,7 +59,7 @@ const ToggleItem = ({
         alignItems: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
         borderRadius: isLEDTheme ? 0 : 12,
       }}
     >
@@ -80,6 +78,7 @@ const BatterySettingsScreen: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const [powerSavingLocationEnabled, setPowerSavingLocationEnabled] = useAtom(
     powerSavingLocationEnabledAtom
   );
@@ -111,7 +110,12 @@ const BatterySettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.ScrollView
           contentContainerStyle={
             headerHeight
@@ -126,7 +130,9 @@ const BatterySettingsScreen: React.FC = () => {
             state={powerSavingLocationEnabled}
             onToggle={handleTogglePowerSavingLocation}
           />
-          <Typography style={styles.description}>
+          <Typography
+            style={[styles.description, { color: colors.secondaryText }]}
+          >
             {translate('powerSavingLocationDescription')}
           </Typography>
           <Button

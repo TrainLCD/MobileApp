@@ -6,6 +6,7 @@ import type React from 'react';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -24,7 +25,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#fff',
   },
   previewImage: {
     width: '100%',
@@ -54,6 +54,8 @@ export const ThemeConfirmModal: React.FC<Props> = ({
   onCloseAnimationEnd,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  // Portal 経由で描画され Context が届かないため、配色は atom から直接読む
+  const colors = useAtomValue(appColorsAtom);
 
   const isAuto = themeId === THEME_PREFERENCE.AUTO;
   const themeInfo = useMemo(
@@ -71,6 +73,7 @@ export const ThemeConfirmModal: React.FC<Props> = ({
     <DialogModalLayout
       visible={visible}
       isLEDTheme={isLEDTheme}
+      colors={colors}
       onClose={onClose}
       onConfirm={onConfirm}
       onCloseAnimationEnd={onCloseAnimationEnd}
@@ -99,7 +102,8 @@ export const ThemeConfirmModal: React.FC<Props> = ({
           style={[
             styles.previewImageWrap,
             {
-              backgroundColor: isLEDTheme ? '#444' : '#e0e0e0',
+              backgroundColor: isLEDTheme ? '#444' : colors.cardExpanded,
+              borderColor: isLEDTheme ? '#fff' : colors.cardBorder,
               borderRadius: isLEDTheme ? 0 : 16,
             },
           ]}
