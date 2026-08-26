@@ -1,0 +1,29 @@
+diff --git a/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java b/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
+index 82bc0db..905c385 100644
+--- a/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
++++ b/node_modules/expo-task-manager/android/src/main/java/expo/modules/taskManager/TaskManagerUtils.java
+@@ -214,8 +214,22 @@ public class TaskManagerUtils implements TaskManagerUtilsInterface {
+       jobBuilder.setImportantWhileForeground(true)
+           .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
+     } else {
+-      // For Android 12 (API 31) and above
+-      jobBuilder.setExpedited(true);
++      // For Android 12 (API 31) and above.
++      // setExpedited(true) alone causes JobInfo.Builder.build() to throw
++      // IllegalArgumentException("You're trying to build a job with no constraints,
++      // this is not allowed.") on Android 14+/16 because expedited jobs do not
++      // register an early/late/functional constraint, and the build-time validator
++      // counts none of setPersisted/setRequiresDeviceIdle(false) as a constraint.
++      // We apply the minimum-latency + override-deadline fallback uniformly across
++      // API 31+ rather than gating on SDK_INT >= 36, because OEM/patch-level
++      // variance on Android 14 and 15 can still trip the same crash.
++      // Note on the trade-off: the JS-side watchPositionAsync bypass is gated by
++      // NEEDS_JOBSCHEDULER_BYPASS (src/constants/native.ts), which is true only on
++      // API 36+, so it does NOT offset the loss of expedited priority on API 31-35.
++      // There, the Android foreground location service keeping the process alive is
++      // the only mitigation, at the cost of a possible JS delivery delay under Doze.
++      jobBuilder.setMinimumLatency(0)
++          .setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE);
+     }
+ 
+     return jobBuilder.build();
