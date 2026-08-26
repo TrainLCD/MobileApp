@@ -50,7 +50,11 @@ describe('FxSystemColorScheme', () => {
       </Provider>
     );
 
-    expect(callOrder).toEqual(['addChangeListener', 'getColorScheme']);
+    // 自動のときは追従復帰用の読み直しも走るため、先頭2件の順序で検証する
+    expect(callOrder.slice(0, 2)).toEqual([
+      'addChangeListener',
+      'getColorScheme',
+    ]);
   });
 
   it('購読開始から現在値取得までの間に変わってもダークを取りこぼさない', () => {
@@ -204,5 +208,66 @@ describe('FxSystemColorScheme', () => {
     );
 
     expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
+  });
+
+  // 上書き値と端末の値が同じなら、解除しても実効の配色が変わらず変更イベントは飛ばない
+  it('自動へ戻したとき変更イベントが飛ばなくても端末の値へ追従する', () => {
+    let overridden = true;
+    jest.spyOn(Appearance, 'setColorScheme').mockImplementation((scheme) => {
+      overridden = scheme !== 'unspecified';
+    });
+    // 上書き中はダーク、解除するとライト(端末の現在値)を返す
+    jest
+      .spyOn(Appearance, 'getColorScheme')
+      .mockImplementation(() => (overridden ? 'dark' : 'light'));
+    jest
+      .spyOn(Appearance, 'addChangeListener')
+      .mockImplementation(() => ({ remove: jest.fn() }) as never);
+
+    const store = createStore();
+    // ダークを選ぶ前に記録した、古い端末の値
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.DARK);
+
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+      </Provider>
+    );
+
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
+
+    // リスナーを一切呼ばずに自動へ戻す
+    act(() => {
+      store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);
+    });
+
+    expect(store.get(systemColorSchemeAtom)).toBe(COLOR_SCHEME.LIGHT);
+  });
+
+  // react-native-web の Appearance は setColorScheme を持たない
+  it('setColorSchemeが無い環境でもマウントできる', () => {
+    const original = Appearance.setColorScheme;
+    Object.defineProperty(Appearance, 'setColorScheme', {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+
+    try {
+      expect(() =>
+        render(
+          <Provider store={createStore()}>
+            <FxSystemColorScheme />
+          </Provider>
+        )
+      ).not.toThrow();
+    } finally {
+      Object.defineProperty(Appearance, 'setColorScheme', {
+        value: original,
+        configurable: true,
+        writable: true,
+      });
+    }
   });
 });

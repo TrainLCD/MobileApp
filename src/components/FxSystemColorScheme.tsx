@@ -76,8 +76,21 @@ const FxSystemColorScheme: React.FC = () => {
     // 端末の値として記録してしまわないようにするため
     preferenceRef.current = preference;
 
-    Appearance.setColorScheme(toNativeColorScheme(preference));
-  }, [preference]);
+    // react-native-web の Appearance は setColorScheme を持たない。無条件に呼ぶと
+    // web プレビューがマウント時に落ちるため、存在を確認してから呼ぶ
+    if (typeof Appearance.setColorScheme === 'function') {
+      Appearance.setColorScheme(toNativeColorScheme(preference));
+    }
+
+    if (preference !== COLOR_SCHEME_PREFERENCE.AUTO) {
+      return;
+    }
+
+    // 上書きを解除しても、解除の前後で実効の配色が変わらなければ変更イベントは飛ばない。
+    // 例えばダークを選んでいる間に端末もダークへ変わっていた場合、記録済みの端末の値は
+    // 古いままイベントも来ないので、ここで読み直して追従を復帰させる
+    setSystemColorScheme(normalizeSystemScheme(Appearance.getColorScheme()));
+  }, [preference, setSystemColorScheme]);
 
   return null;
 };

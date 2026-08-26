@@ -179,10 +179,18 @@ iOS は `Info.plist` の `UIUserInterfaceStyle` が `Light` だとアプリ全�
 解除に `null` ではなく `'unspecified'` を渡すこと。react-native 側は `'unspecified'` の
 ときだけ native から現在値を読み直してキャッシュを更新する実装になっている。
 
-上書き中は window の外観がアプリの設定値そのものなので、変更イベントを端末の値として
-記録できない。そのため `FxSystemColorScheme` は「自動」のときだけイベントを
-`systemColorSchemeAtom` へ反映する。「自動」へ戻すと上書きが外れて端末の値でイベントが
-飛ぶので、そこで追従が復帰する。
+上書き中は window の外観がアプリの設定値そのものなので、変更イベントも
+`getColorScheme()` の戻り値も端末の値としては使えない。そのため `FxSystemColorScheme` は
+「自動」のときだけ `systemColorSchemeAtom` へ反映する。マウント時の読み取りも同じ条件で
+弾く(StrictMode や再マウントで effect が再実行されると、既に効いている上書きの値を
+読んでしまうため)。atom の初期値は上書き前(モジュール評価時)の端末の値を持っている。
+
+「自動」へ戻すときは、上書きを解除したうえで `getColorScheme()` を読み直す。解除の前後で
+実効の配色が変わらないと変更イベントが飛ばないためで、ダークを選んでいる間に端末も
+ダークへ変わっていたようなケースでは、これが無いと古い値のまま追従が復帰しない。
+
+`react-native-web` の `Appearance` は `setColorScheme` を持たない。無条件に呼ぶと web
+プレビューがマウント時に落ちるので、存在を確認してから呼ぶ。
 
 Android は `Configuration.uiMode` を読むため、この固定の影響を受けない。
 
