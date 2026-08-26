@@ -188,8 +188,14 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       set -euo pipefail
       RECORDS="$(mktemp)"   # 検証を通った入力のみ: SRC \t SHA256 \t DEVICE \t CAPTION
       # 検証が途中で落ちたら残さない（パス・端末名・キャプションを含むため）。
-      # 全件通ったら下で解除し、承認後のスクリプトへ引き渡す
-      trap 'rm -f "$RECORDS"' EXIT INT TERM
+      # 全件通ったら下で解除し、承認後のスクリプトへ引き渡す。
+      # INT / TERM は後始末だけでなく必ず終了させる。bash はハンドラの後も処理を続けるため、
+      # 削除済みの RECORDS に以降のレコードが書き足されて「部分的に検証しただけの一覧」が
+      # 引き渡されてしまう
+      cleanup_records() { rm -f "$RECORDS"; }
+      trap cleanup_records EXIT
+      trap 'cleanup_records; exit 130' INT
+      trap 'cleanup_records; exit 143' TERM
       OVERSIZED=0
       TAB=$'\t'
       NL=$'\n'
@@ -257,6 +263,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - **`RECORDS` が空になったら資材ブランチを作る前に停止する**（手順 4-3 へ進まない）。動画を手貼りするか未添付の理由を明記するかをユーザーに確認し、手順 5 の規定に従って理由行（例: `未添付: 動画のみが渡されたため、PR 画面へ直接ドラッグ&ドロップしてください`）を出す。
       - `RECORDS` のパスは標準出力に出して次のステップへ渡す。**この一時ファイルは実行前ゲートを挟んで次の Bash 呼び出しまで残す**（削除は手順 4-3 の `trap` が行う）。
       - ただし**検証が途中で落ちた場合は残さない**。非対応拡張子・端末名不足・10MB 超・画像 0 件などで抜けると手順 4-3 の `trap` は動かないため、この検証ブロック自身にも `trap` を張り、全件通った時点で解除する。
+      - **`INT` / `TERM` のハンドラは後始末だけで終わらせず、明示的に `exit` する**。bash はシグナルハンドラの実行後も処理を継続するため、後始末だけだと削除済みの `RECORDS` に以降のレコードが書き足され、**部分的にしか検証していない一覧が正常終了として引き渡される**。手順 4-3 の `trap` も同じ理由で `exit` を伴わせる。
       - **実行前ゲートでユーザーが承認しなかった場合は `rm -f "$RECORDS"` を明示的に実行する**。承認されなければ手順 4-3 は動かず、一時ファイルだけが残るため。
 
    2. **実行前ゲート**
@@ -292,7 +299,11 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         RECORDS="<手順 4-1 が出力した RECORDS のパス>"
 
         WORK="$(mktemp -d)"
-        trap 'rm -rf "$WORK" "$RECORDS"' EXIT INT TERM
+        # INT / TERM は後始末後に必ず終了させる（ハンドラの後も処理が続くため）
+        cleanup_work() { rm -rf "$WORK" "$RECORDS"; }
+        trap cleanup_work EXIT
+        trap 'cleanup_work; exit 130' INT
+        trap 'cleanup_work; exit 143' TERM
 
         git_blob_sha() { # $1: ファイル -> git blob の SHA-1（既存 blob との内容一致確認に使う）
           node -e '
