@@ -20,7 +20,7 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 | `related_issue` | **ユーザー入力を最優先**。指定が `#N`（数値のみ）なら `Closes #N`、`Closes #N` / `Fixes #N` / `Refs #N` 形式ならその接頭語を保って出力。`related_issue` が空のときに限り、コミット件名から `Closes #N` / `Fixes #N` / `Refs #N` を抽出（接頭語を維持。`#N` 単体表記なら `Closes` を補う）。両方とも見つからなければ節のコメントのみ |
 | `skip_checks` | `false`（PR本文「テスト」節のチェック欄 3 項目を ON）。`true` なら全 OFF。**本文表示のみを制御するフラグで、`npm run lint` / `npm test` / `npm run typecheck` の実際の実行は保証しない**。**手順 3 で定義する「コード本体パス」に変更が無い（=テストを実行する意味が無い）ケースでは、`skip_checks` の値に関わらず 3 項目すべて OFF にする** |
 | `labels` | 文字列配列、または未指定。未指定なら付与しない。指定した場合は `gh pr create --label <name>` でアトミックに付与する（作成後に `gh pr edit --add-label` すると `pull_request: opened` トリガのワークフローに間に合わないため、必ず `gh pr create` 時に渡す） |
-| `screenshots` | ローカル画像パスの配列、未指定、または明示的な空配列 `[]`。**未指定でも「スクリーンショット」節は空欄にせず、画像が無い理由を必ず明記する**（手順 5 参照）。更新モードでは**未指定＝既存の画像ブロックを変更しない**、**`[]`＝既存の画像ブロックを削除して理由行に置き換える**、と区別する。各要素は `<ローカルパス>` または `<ローカルパス>\|<デバイス名>\|<キャプション>`（`\|` 区切り、後ろ 2 つは任意。例: `~/shots/home.png\|iPhone 15 Pro\|変更後のホーム画面`）。手順 4 で資材ブランチにアップロードし、本文に埋め込む |
+| `screenshots` | ローカル画像パスの配列、未指定、または明示的な空配列 `[]`。各要素は `<ローカルパス>\|<デバイス名>\|<キャプション>`（**デバイス名は必須**。テンプレートが端末名の併記を求めているため。キャプションのみ任意。例: `~/shots/home.png\|iPhone 15 Pro\|変更後のホーム画面`）。**未指定でも「スクリーンショット」節は空欄にせず、画像が無い理由を必ず明記する**（手順 5 参照）。更新モードでは**未指定＝既存の画像ブロックを変更しない**、**`[]`＝既存の画像ブロックを削除して理由行に置き換える**、と区別する。手順 4 で資材ブランチにアップロードし、本文に埋め込む |
 
 ### タイトル推論ルール
 
@@ -152,11 +152,9 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    1. **入力の正規化と検証**
 
-      対応拡張子は `.png` / `.jpg` / `.jpeg` / `.gif` / `.webp` のみ。**動画（`.mp4` / `.mov` 等）は raw URL ではプレイヤーにならない**ので受け付けず、「PR 画面に直接ドラッグ&ドロップしてください」と案内してその項目だけ除外する。
-
-      **配列要素はメタデータ込みなので、検証は必ず `|` で分解した後のパスに対して行う**。要素そのものを `-f` や `stat` に渡すと、実在する画像でも「見つかりません」になる。
-
       分解には下のヘルパーを使う。**`cut -d'|' -f2` は使わない** — 区切りが 1 つも無い行に対して `cut` は行全体を返すので、`~/shots/home.png` のようにメタデータ無しで渡された要素のデバイス名・キャプションにパスがそのまま入ってしまう。
+
+      検証を通った入力だけを TSV レコードとして書き出し、**後続のアップロードは元の `SCREENSHOTS` 配列ではなくこのレコードを入力にする**。元配列を再走査すると、ここで除外したはずの入力が復活する。
 
       ```bash
       split_entry() { # $1: screenshots の配列要素 -> SRC / DEVICE / CAPTION を設定
@@ -174,27 +172,46 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       }
 
       set -euo pipefail
+      RECORDS="$(mktemp)"   # 検証を通った入力のみ: SRC \t DEVICE \t CAPTION
+      OVERSIZED=0
+
       for entry in "${SCREENSHOTS[@]}"; do
         split_entry "$entry"
-        [ -f "$SRC" ] || { echo "見つかりません: $SRC"; exit 1; }
 
         case "$(printf '%s' "${SRC##*.}" | tr 'A-Z' 'a-z')" in
+          mp4|mov|m4v|webm)
+            # 動画は「除外して続行」。ここで exit すると同時に渡された画像も上がらない
+            echo "動画は本文に埋め込めません。PR 画面へ直接ドラッグ&ドロップしてください: $SRC" >&2
+            continue
+            ;;
           png|jpg|jpeg|gif|webp) ;;
-          *) echo "非対応の拡張子: $SRC"; exit 1 ;;
+          *) echo "非対応の拡張子: $SRC" >&2; exit 1 ;;
         esac
 
-        printf '%s\t%s\t%s\t%s\n' \
-          "$(stat -f%z "$SRC" 2>/dev/null || stat -c%s "$SRC")" "$SRC" "$DEVICE" "$CAPTION"
+        [ -f "$SRC" ] || { echo "見つかりません: $SRC" >&2; exit 1; }
+        [ -n "$DEVICE" ] || { echo "端末名が必要です（例: iPhone 15 Pro）: $SRC" >&2; exit 1; }
+
+        SIZE="$(stat -f%z "$SRC" 2>/dev/null || stat -c%s "$SRC")"
+        if [ "$SIZE" -gt 10485760 ]; then
+          echo "10MB 超のため拒否: $SRC ($SIZE bytes)" >&2; exit 1
+        fi
+        if [ "$SIZE" -gt 1048576 ]; then
+          echo "1MB 超: $SRC ($SIZE bytes)" >&2; OVERSIZED=1
+        fi
+
+        printf '%s\t%s\t%s\n' "$SRC" "$DEVICE" "$CAPTION" >> "$RECORDS"
       done
+
+      [ -s "$RECORDS" ] || echo "アップロード対象の画像がありません（動画のみが渡された可能性）" >&2
       ```
 
-      正規化後の絶対パスとデバイス名・キャプションは **1 レコードとして対応付けたまま**後続へ渡す。行順だけに依存すると、途中で 1 件落ちたときに対応がずれる。
-
-      1MB（1048576 バイト）超は Contents API の推奨上限を超えるので、縮小か JPEG 変換を提案してユーザーの判断を仰ぐ（macOS なら `sips -Z 1080 <in> --out <out>`）。10MB 超はそのまま拒否する。
+      - **端末名は必須**。`.github/pull_request_template.md` が「端末名とともに」添付するよう求めているので、省略された入力はここで弾く。
+      - **動画は除外して続行、それ以外の非対応拡張子はエラー**。説明と挙動を一致させる。
+      - **サイズは表示するだけでなく判定する**。10MB 超は拒否。`OVERSIZED=1` になったら、縮小するか（macOS なら `sips -Z 1080 <in> --out <out>`）そのまま続行するかを**ユーザーに確認してから**次へ進む。Contents API の推奨上限は 1MB。
 
    2. **実行前ゲート**
 
-      > **⚠ 実行前ゲート**: 以降は origin への書き込みを伴う。「どのファイルを・リポジトリ内のどのパスへ・どのブランチに上げるか」「資材ブランチを新規作成するか否か」をユーザーに提示し、**承認を得てから**実行する。
+      > **⚠ 実行前ゲート**: 以降は origin への書き込みを伴う。「どのファイルを・リポジトリ内のどのパスへ・どのブランチに上げるか」「資材ブランチを新規作成するか否か」「1MB 超のファイルをそのまま上げるか」をユーザーに提示し、**承認を得てから**実行する。
 
    3. **資材ブランチの用意**（初回のみ）
 
@@ -213,30 +230,36 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       case "$(api_status "repos/$OWNER_REPO/branches/$ASSET_BRANCH")" in
         200) : ;;  # 既にあるので何もしない
         404)
-          # 空ツリー（全 Git リポジトリに存在する固定 SHA）を指す親無しコミット = root commit
+          # README を 1 つ持つツリーを作り、それを親無しコミット (= root commit) にする
+          BLOB="$(gh api -X POST "repos/$OWNER_REPO/git/blobs" \
+            -f content='PR 本文へ埋め込むスクリーンショット置き場。アプリのコードは置かない。dev / master へマージしない。' \
+            -f encoding=utf-8 -q .sha)"
+          TREE="$(node -e 'process.stdout.write(JSON.stringify({tree:[{path:"README.md",mode:"100644",type:"blob",sha:process.argv[1]}]}))' "$BLOB" \
+            | gh api -X POST "repos/$OWNER_REPO/git/trees" --input - -q .sha)"
           ROOT_COMMIT="$(gh api -X POST "repos/$OWNER_REPO/git/commits" \
-            -f message='PRスクリーンショット置き場を初期化' \
-            -f tree=4b825dc642cb6eb9a060e54bf8d69288fbee4904 \
-            -q .sha)"
+            -f message='PRスクリーンショット置き場を初期化' -f tree="$TREE" -q .sha)"
           gh api -X POST "repos/$OWNER_REPO/git/refs" \
             -f ref="refs/heads/$ASSET_BRANCH" -f sha="$ROOT_COMMIT" >/dev/null
           ;;
-        *) echo "資材ブランチの確認に失敗 (HTTP を確認してください)" >&2; exit 1 ;;
+        *) echo "資材ブランチの確認に失敗（HTTP ステータスを確認してください）" >&2; exit 1 ;;
       esac
       ```
 
-      `parents` を省略すると root commit になる。既にブランチがあれば何もしない。ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
+      - `parents` を省略すると root commit になる。
+      - **空ツリーの固定 SHA (`4b825dc…`) は当てにしない**。空ツリーは「内容から決まる SHA」であってすべてのリポジトリにオブジェクトとして保存されている保証は無く、無ければ root commit 作成が無効な tree SHA で失敗する。README を 1 つ含むツリーを実際に作れば、この前提に依存せずに済むうえ、ブランチの目的がブランチ自身に書かれる。
+      - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
 
    4. **アップロード**
 
-      保存先は `<REF_SLUG>-<HEAD_SHORT>/<連番>-<安全化したファイル名>`。
+      保存先は `<REF_SLUG>-<HEAD_SHORT>/<内容ハッシュ12桁>-<安全化したファイル名>`。
 
       - `REF_SLUG`: head ブックマーク名に手順 6 と同じスラッグ化規則（`A-Za-z0-9._-` 以外を `_`）を適用したもの。
       - `HEAD_SHORT`: `jj log -r '<head>@origin' --no-graph -T 'commit_id.short()'` で得る head コミット ID の短縮形。
+      - `内容ハッシュ`: 画像ファイルの SHA-256 先頭 12 桁。
 
-      **コミット ID を名前空間に必ず含める**。`REF_SLUG` だけで決めると、(a) 同じブックマーク名を後日再利用したとき、(b) `feature/foo` と `feature_foo` がスラッグ化後に同じ文字列へ潰れたときに、過去 PR が参照している URL の中身が別の画像へ差し替わる。**過去に公開したパスは決して上書きしない**（資材ブランチを残す目的そのものが失われる）。コミット ID を挟めばコミットごとに名前空間が変わるので、同一コミットへの再実行だけが同じパスを踏む。
+      **URL は不変にする。過去に公開したパスは決して上書きしない**。`REF_SLUG` だけで決めると、(a) 同じブックマーク名を後日再利用したとき、(b) `feature/foo` と `feature_foo` がスラッグ化後に同じ文字列へ潰れたときに、過去 PR が参照している URL の中身が別の画像へ差し替わる。さらに **同じコミットのまま別の画像を指定して再実行した場合**も、コミット ID だけでは同じパスを踏む。内容ハッシュをファイル名に含めれば、内容が変われば必ず別パスになるので、既存 URL の指す画像は永久に変わらない。
 
-      PR 番号は新規作成時点ではまだ存在しないので使わない。
+      その結果、**同じパスが既に存在する＝内容も同一**なので、上書き用の blob `sha` を扱う必要も無くなる。存在すれば URL を再利用し、無ければ新規作成するだけでよい。PR 番号は新規作成時点ではまだ存在しないので使わない。
 
       ペイロードは **必ず JSON ファイル経由**で渡す。base64 文字列をコマンドライン引数に直接置くと Linux の `MAX_ARG_STRLEN`（1 引数 128KB）を超えて `Argument list too long` になる。JSON 組み立てとバイナリの base64 化は Node で行う（`jq` への依存を増やさない）。
 
@@ -244,49 +267,50 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       (
         set -euo pipefail
         WORK="$(mktemp -d)"
-        trap 'rm -rf "$WORK"' EXIT INT TERM
+        trap 'rm -rf "$WORK" "$RECORDS"' EXIT INT TERM
 
         NS="$REF_SLUG-$HEAD_SHORT"
-        i=0
-        for entry in "${SCREENSHOTS[@]}"; do
-          i=$((i + 1))
-          split_entry "$entry"   # 手順 4-1 で定義したもの
-          NAME="$(printf '%s' "$(basename "$SRC")" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
-          DEST="$NS/$(printf '%02d' "$i")-$NAME"
 
-          # 同一コミットへの再実行で同じパスを踏んだときだけ、上書きに blob sha が要る
-          SHA=""
-          BLOB_STATUS="$(api_status "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH")"
-          case "$BLOB_STATUS" in
-            404) : ;;
-            200) SHA="$(gh api "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH" -q .sha)" ;;
-            *) echo "既存blobの確認に失敗 (HTTP $BLOB_STATUS): $DEST" >&2; exit 1 ;;
+        # gh がループの stdin を食わないよう、レコードは fd 3 から読む
+        while IFS="$(printf '\t')" read -r SRC DEVICE CAPTION <&3; do
+          HASH="$( { shasum -a 256 "$SRC" 2>/dev/null || sha256sum "$SRC"; } | cut -c1-12)"
+          NAME="$(printf '%s' "$(basename "$SRC")" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
+          DEST="$NS/$HASH-$NAME"
+
+          case "$(api_status "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH")" in
+            200)
+              # 同じ内容が既にある。上書きせず URL を再利用する
+              URL="$(gh api "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH" -q .download_url)"
+              ;;
+            404)
+              node -e '
+                const fs = require("fs");
+                const [src, branch, message] = process.argv.slice(1);
+                process.stdout.write(JSON.stringify({
+                  message, branch, content: fs.readFileSync(src).toString("base64"),
+                }));
+              ' "$SRC" "$ASSET_BRANCH" "PRスクリーンショットを追加: $DEST" > "$WORK/payload.json"
+
+              URL="$(gh api -X PUT "repos/$OWNER_REPO/contents/$DEST" \
+                --input "$WORK/payload.json" -q '.content.download_url')" || {
+                echo "アップロード失敗: $SRC -> $DEST" >&2
+                exit 1
+              }
+              ;;
+            *) echo "既存blobの確認に失敗: $DEST" >&2; exit 1 ;;
           esac
 
-          node -e '
-            const fs = require("fs");
-            const [src, branch, message, sha] = process.argv.slice(1);
-            const body = { message, branch, content: fs.readFileSync(src).toString("base64") };
-            if (sha) body.sha = sha;
-            process.stdout.write(JSON.stringify(body));
-          ' "$SRC" "$ASSET_BRANCH" "PRスクリーンショットを追加: $DEST" "$SHA" > "$WORK/payload.json"
-
-          URL="$(gh api -X PUT "repos/$OWNER_REPO/contents/$DEST" \
-            --input "$WORK/payload.json" -q '.content.download_url')" || {
-            echo "アップロード失敗: $SRC -> $DEST" >&2
-            exit 1
-          }
           [ -n "$URL" ] || { echo "URL が空: $SRC -> $DEST" >&2; exit 1; }
-
           printf '%s\t%s\t%s\n' "$URL" "$DEVICE" "$CAPTION"
-        done
+        done 3< "$RECORDS"
       )
       ```
 
-      - **`set -euo pipefail` を必ず入れ、各 PUT の終了コードと URL の非空を検査する**。これが無いと、複数画像のうち途中の PUT が失敗しても最後の 1 件が成功しただけでループ全体が成功終了し、URL の行数が減った状態で本文を組み立ててしまう（デバイス名・キャプションとの対応がずれる）。失敗したら対象の入力と API エラーを報告して**本文生成ごと中断する**。
+      - **`set -euo pipefail` を必ず入れ、各 API 呼び出しの終了コードと URL の非空を検査する**。これが無いと、複数画像のうち途中の PUT が失敗しても最後の 1 件が成功しただけでループ全体が成功終了し、URL の行数が減った状態で本文を組み立ててしまう（デバイス名・キャプションとの対応がずれる）。失敗したら対象の入力と API エラーを報告して**本文生成ごと中断する**。
+      - **存在確認は 404 のみを「無い」として扱う**。認証エラーや 5xx を握り潰すと、既存画像を取りこぼしたまま二重アップロードや誤った中断を招く。
       - 出力は `URL\tデバイス名\tキャプション` の 1 レコード 1 行。行順への暗黙の依存をやめ、URL とメタデータを常に同じレコードとして持ち回る。
       - `gh` の成否に関わらず一時ファイルが消えるよう、ループ全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
-      - URL は自分で組み立てず、レスポンスの `.content.download_url` をそのまま使う（ブランチ名の `/` などのエスケープを間違えないため）。得られる URL は `https://raw.githubusercontent.com/<owner>/<repo>/<asset-branch>/<path>` 形式。
+      - URL は自分で組み立てず、レスポンスの `download_url` をそのまま使う（ブランチ名の `/` などのエスケープを間違えないため）。得られる URL は `https://raw.githubusercontent.com/<owner>/<repo>/<asset-branch>/<path>` 形式。
 
    5. **本文用マークダウンの生成**
 
@@ -295,7 +319,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
       ### iPhone 15 Pro
 
-      <img src="https://raw.githubusercontent.com/TrainLCD/MobileApp/assets/pr-screenshots/feature_foo/01-home.png" width="320" alt="変更後のホーム画面" />
+      <img src="https://raw.githubusercontent.com/TrainLCD/MobileApp/assets/pr-screenshots/feature_foo-a1b2c3d4/9f86d081884c-home.png" width="320" alt="変更後のホーム画面" />
 
       変更後のホーム画面
 
@@ -303,12 +327,13 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       ```
 
       - **マーカーコメントで必ず囲む**。更新モードで自動生成分だけを差し替え、人間が手貼りした画像や散文を壊さないための境界になる。
-      - デバイス名がある画像は `### <デバイス名>` の見出しでグルーピングする（テンプレのコメントが端末名の併記を求めているため）。デバイス名が無いものは見出しを付けずに並べる。
+      - **端末名は必須なので、画像は必ず `### <デバイス名>` の見出しでグルーピングする**（テンプレートが端末名の併記を求めているため）。同じ端末の画像は 1 つの見出しの下にまとめる。
       - 幅は `<img width="320">` で指定する。縦長のスクリーンショットが原寸で並ぶと本文が読めなくなるため。**AGENTS.md の MD033（inline HTML 禁止）はリポジトリ内 Markdown 向けのルールで、PR 本文には適用されない**。
       - キャプションがあれば `alt` に入れ、画像の直下にも 1 行で添える。
       - **デバイス名・キャプションはユーザー入力なので、挿入先ごとにエスケープする**。素通しすると本文が壊れる。
         - `alt="..."` などの HTML 属性に入れる文字列: `&` → `&amp;`、`"` → `&quot;`、`<` → `&lt;`、`>` → `&gt;` の順で置換する（`&` を最初に処理しないと二重エスケープになる）。
         - 見出しや本文行に入れる文字列: 改行・制御文字を除去し、`<!-- create-pr:screenshots:start -->` / `<!-- create-pr:screenshots:end -->` と一致する断片が含まれていたら取り除く。**マーカー文字列が本文に紛れ込むと更新モードの境界判定が壊れる**。
+
 
 5. **本文組み立て**
 
