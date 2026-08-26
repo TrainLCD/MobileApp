@@ -44,17 +44,25 @@ export default {
     },
   },
   ios: {
+    // 既定値は 'light' で、prebuild すると Info.plist の UIUserInterfaceStyle が
+    // Light で書き戻される。それだと端末のダークモード設定を JS から読めなくなり
+    // 外観設定の「自動」が機能しないため、明示的に automatic を指定する。
+    // Android は元から固定されておらず、この指定は expo-system-ui を入れないと
+    // 無視されるため、iOS 側にだけ置く
+    userInterfaceStyle: 'automatic',
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',
-    buildNumber: '2847',
+    buildNumber: '2848',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
-    bundleIdentifier: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
+    bundleIdentifier: IS_DEV
+      ? 'me.tinykitten.trainlcd.dev'
+      : 'me.tinykitten.trainlcd',
     supportsTablet: true,
   },
   android: {
     package: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000635,
+    versionCode: 100000637,
   },
   owner: 'trainlcd',
   experiments: {
