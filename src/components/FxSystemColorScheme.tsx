@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { Appearance } from 'react-native';
 import {
   COLOR_SCHEME,
@@ -71,11 +71,13 @@ const FxSystemColorScheme: React.FC = () => {
     return () => subscription.remove();
   }, [setSystemColorScheme]);
 
-  useEffect(() => {
-    // 上書きの適用より先に ref を更新する。適用時に飛ぶ変更イベントを
-    // 端末の値として記録してしまわないようにするため
+  // 設定変更のコミット直後、下の useEffect が走る前に端末イベントが届くことがある。
+  // その一件を古い設定で判定してしまわないよう、ref の同期だけ先に済ませる
+  useLayoutEffect(() => {
     preferenceRef.current = preference;
+  }, [preference]);
 
+  useEffect(() => {
     // react-native-web の Appearance は setColorScheme を持たない。無条件に呼ぶと
     // web プレビューがマウント時に落ちるため、存在を確認してから呼ぶ
     if (typeof Appearance.setColorScheme === 'function') {

@@ -1,6 +1,6 @@
 import { act, render } from '@testing-library/react-native';
-import { createStore, Provider } from 'jotai';
-import React from 'react';
+import { createStore, Provider, useAtomValue } from 'jotai';
+import React, { useLayoutEffect } from 'react';
 import { Appearance } from 'react-native';
 import { COLOR_SCHEME, COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
 import {
@@ -269,5 +269,59 @@ describe('FxSystemColorScheme', () => {
         writable: true,
       });
     }
+  });
+
+  // 設定変更のコミット直後、preference 用の useEffect より前に端末イベントが届く状況。
+  // レイアウトエフェクトはツリー順に走るため、FxSystemColorScheme の後ろに置いた
+  // コンポーネントから呼べば「ref 同期後・passive effect 前」を再現できる
+  it('自動へ切り替えた直後に届いた端末イベントを新しい設定で処理する', () => {
+    const EventFirer: React.FC<{ fire: () => void }> = ({ fire }) => {
+      const preference = useAtomValue(colorSchemePreferenceAtom);
+
+      useLayoutEffect(() => {
+        if (preference === COLOR_SCHEME_PREFERENCE.AUTO) {
+          fire();
+        }
+      }, [preference, fire]);
+
+      return null;
+    };
+
+    jest.spyOn(Appearance, 'setColorScheme').mockImplementation(() => {});
+    // 上書き解除直後は native 側のキャッシュがまだ更新されていない状況を再現する
+    jest.spyOn(Appearance, 'getColorScheme').mockReturnValue('dark');
+    let listener: AppearanceListener | null = null;
+    jest
+      .spyOn(Appearance, 'addChangeListener')
+      .mockImplementation((cb: unknown) => {
+        listener = cb as AppearanceListener;
+        return { remove: jest.fn() } as never;
+      });
+
+    const store = createStore();
+    store.set(systemColorSchemeAtom, COLOR_SCHEME.DARK);
+    store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.LIGHT);
+
+    const seen: string[] = [];
+    store.sub(systemColorSchemeAtom, () => {
+      seen.push(store.get(systemColorSchemeAtom));
+    });
+
+    const fire = () =>
+      (listener as AppearanceListener | null)?.({ colorScheme: 'light' });
+
+    render(
+      <Provider store={store}>
+        <FxSystemColorScheme />
+        <EventFirer fire={fire} />
+      </Provider>
+    );
+
+    act(() => {
+      store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);
+    });
+
+    // ref の同期が遅れていると、このイベントは旧設定(ライト)で弾かれて記録されない
+    expect(seen).toContain(COLOR_SCHEME.LIGHT);
   });
 });
