@@ -1,4 +1,5 @@
 import { createStore } from 'jotai';
+import { STORAGE_KEYS } from '~/constants';
 import { DARK_APP_COLORS, LIGHT_APP_COLORS } from '~/constants/colorScheme';
 import { COLOR_SCHEME, COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
 import { THEME_PREFERENCE } from '~/models/Theme';
@@ -89,5 +90,47 @@ describe('colorScheme atoms', () => {
 
     store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.DARK);
     expect(store.get(appColorsAtom).isDark).toBe(true);
+  });
+});
+
+// 保存値の読み出しはモジュール評価時に一度だけ走るため、分離した registry の
+// 中で MMKV を仕込んでから読み込む。registry ごとに storage も作り直されるので、
+// 仕込みも同じ registry の中で行う必要がある
+const loadAtoms = (stored?: string) => {
+  let atoms!: typeof import('./colorScheme');
+  jest.isolateModules(() => {
+    if (stored !== undefined) {
+      const { storage: isolatedStorage } = require('~/lib/storage');
+      isolatedStorage.set(STORAGE_KEYS.COLOR_SCHEME_PREFERENCE, stored);
+    }
+    atoms = require('./colorScheme');
+  });
+  return atoms;
+};
+
+describe('起動時の設定復元', () => {
+  it('保存済みの設定を初期値として復元する', () => {
+    const atoms = loadAtoms(COLOR_SCHEME_PREFERENCE.DARK);
+
+    expect(createStore().get(atoms.colorSchemePreferenceAtom)).toBe(
+      COLOR_SCHEME_PREFERENCE.DARK
+    );
+  });
+
+  it('未保存の場合は自動になる', () => {
+    const atoms = loadAtoms();
+
+    expect(createStore().get(atoms.colorSchemePreferenceAtom)).toBe(
+      COLOR_SCHEME_PREFERENCE.AUTO
+    );
+  });
+
+  // 手動編集や旧バージョンの値が残っていても起動できるようにする
+  it('未知の値が保存されていても自動へフォールバックする', () => {
+    const atoms = loadAtoms('sepia');
+
+    expect(createStore().get(atoms.colorSchemePreferenceAtom)).toBe(
+      COLOR_SCHEME_PREFERENCE.AUTO
+    );
   });
 });
