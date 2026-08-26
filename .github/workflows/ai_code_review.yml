@@ -3,7 +3,7 @@
 # 一方で API 呼び出しやコメント投稿の失敗は握り潰さず、ジョブを赤くして原因を追えるようにしている。
 #
 # ⚠️ このワークフローを編集する人へ:
-# pull_request_target を使っているため、このジョブは secrets にアクセスできる。
+# pull_request_review を使っているため、このジョブは secrets にアクセスできる。
 # PR の head 側のコードは絶対に checkout・実行しないこと。
 # checkout の ref を head や merge ref に変えた瞬間、PR 作成者が
 # OPENAI_API_KEY と GITHUB_TOKEN を自由に持ち出せるようになる。
@@ -15,16 +15,20 @@
 name: AI Code Review
 
 on:
-  # pull_request ではなく pull_request_target を使う。
+  # CodeRabbit の approve を待って 1 回だけ回す。毎 push で CodeRabbit と並走
+  # させると、同じ指摘が両方から出る・gpt の指摘が push を誘発して CodeRabbit の
+  # incremental review が最新コミットに追いつけない・両方に課金される、という
+  # 問題が起きる（#6723）。approve 後なら CodeRabbit の指摘は解決済みなので、
+  # gpt は「approve 済みの PR に対する最後の確認」として働く。
+  #
+  # pull_request / pull_request_target ではなく pull_request_review を使う。
   # pull_request はワークフロー定義自体を PR 側（merge commit）から読むため、
   # PR に secrets を持ち出すステップを足されると checkout より先に評価されて防げない。
-  # pull_request_target なら定義も下の guard も base 側から読まれるので改竄できない。
-  pull_request_target:
+  # pull_request_review は pull_request_target と同様に base 側の定義で動くので、
+  # 定義も下の guard も PR 側から改竄できない（secrets と write 権限を持つ点も同じ）。
+  pull_request_review:
     types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
+      - submitted
   workflow_dispatch:
     inputs:
       pr_number:
@@ -46,7 +50,7 @@ permissions:
   contents: read
   pull-requests: write
 
-# 同じ PR に連続で push された場合、古いレビューは打ち切って最新の差分だけを見る。
+# 短時間に複数回 approve された場合、古いレビューは打ち切って最新の差分だけを見る。
 concurrency:
   group: ai-code-review-${{ github.event.pull_request.number || inputs.pr_number }}
   cancel-in-progress: true
@@ -58,12 +62,18 @@ env:
 jobs:
   review:
     runs-on: ubuntu-22.04
-    # pull_request_target では fork PR にも secrets が渡るため、この guard が
+    # pull_request_review では fork PR にも secrets が渡るため、この guard が
     # fork を遮断する唯一の門になる。緩めないこと（OpenAI の課金濫用防止も兼ねる）。
     # guard 自体は base 側の定義から読まれるので PR 側からは改竄できない。
     # Draft と skip-ai-review ラベル付き PR も、レビュー待ちではないのでスキップする。
+    #
+    # 投稿者は coderabbitai[bot] に完全一致で判定する。type == 'Bot' のような
+    # 広い条件にすると他の GitHub App の approve でも起動してしまう。login は
+    # 角括弧を含みユーザー名として登録できない文字列なので、人間は詐称できない。
     if: |
       github.event_name == 'workflow_dispatch' || (
+        github.event.review.state == 'approved' &&
+        github.event.review.user.login == 'coderabbitai[bot]' &&
         github.event.pull_request.head.repo.full_name == github.repository &&
         github.event.pull_request.draft == false &&
         !contains(github.event.pull_request.labels.*.name, 'skip-ai-review')
@@ -125,6 +135,46 @@ jobs:
           echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
           echo "対象: $BASE_SHA...$HEAD_SHA / 差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
 
+      # 過去の指摘と、それに対する回答を集める。これを入力に含めないと
+      # ラウンドごとに完全な初回レビューをやり直すことになり、回答済みの指摘が
+      # 何度も再生成される（#6722）。
+      # コメント本文も untrusted な入力なので、PR 本文と同様にシェル変数へ
+      # 展開せず JSON ファイルのままスクリプトへ渡す。
+      - name: Fetch review history
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -uo pipefail
+          # 履歴はレビューを補強する情報でしかないので、取得に失敗しても差分
+          # レビュー自体は続行する。ただし握り潰さず警告は必ず出す（失敗すると
+          # #6722 の「同じ指摘の繰り返し」が無言で再発するため）。
+          # errexit はサブシェル内だけで有効にし、失敗を戻り値で受け取る。
+          (
+            set -euo pipefail
+            # --paginate と --jq を併用するとページごとに jq が走るため、
+            # 配列ではなく 1 行 1 オブジェクトで出して jq -s でまとめる。
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+              --jq '.[] | {author: .user.login, createdAt: .created_at, body: .body}' \
+              | jq -s '.' > "$RUNNER_TEMP/issue_comments.json"
+            # CodeRabbit の実測結果など、行単位のレビューコメントもここに入る。
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/comments" --paginate \
+              --jq '.[] | {author: .user.login, createdAt: .created_at, path: .path, body: .body}' \
+              | jq -s '.' > "$RUNNER_TEMP/review_comments.json"
+            jq -n \
+              --slurpfile issueComments "$RUNNER_TEMP/issue_comments.json" \
+              --slurpfile reviewComments "$RUNNER_TEMP/review_comments.json" \
+              '{issueComments: $issueComments[0], reviewComments: $reviewComments[0]}' \
+              > "$RUNNER_TEMP/history.json"
+            echo "履歴: コメント $(jq 'length' "$RUNNER_TEMP/issue_comments.json") 件 / 行コメント $(jq 'length' "$RUNNER_TEMP/review_comments.json") 件"
+          )
+          FETCH_STATUS=$?
+          if [ "$FETCH_STATUS" -ne 0 ]; then
+            echo "::warning::レビュー履歴の取得に失敗しました (exit $FETCH_STATUS)。過去の指摘を入力に含めずにレビューします"
+            printf '%s' '{"issueComments":[],"reviewComments":[]}' > "$RUNNER_TEMP/history.json"
+          fi
+
       - name: Run AI review
         if: steps.guard.outputs.enabled == 'true'
         env:
@@ -132,6 +182,7 @@ jobs:
           REASONING_EFFORT: ${{ inputs.reasoning_effort || 'high' }}
           DIFF_PATH: ${{ runner.temp }}/pr.diff
           PR_META_PATH: ${{ runner.temp }}/pr.json
+          HISTORY_PATH: ${{ runner.temp }}/history.json
           OUTPUT_PATH: ${{ runner.temp }}/review.md
           # どのコミットに対するレビューかをコメントに残し、古い結果を見分けられるようにする。
           REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
