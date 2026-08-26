@@ -6,6 +6,10 @@ import {
   toSpeakableText,
   truncateToSpeechLimit,
 } from '../../utils/speakableText';
+import {
+  acquireSpeechAudioFocus,
+  releaseSpeechAudioFocus,
+} from '../../utils/speechAudioFocus';
 import type {
   SpeechEngine,
   SpeechEngineCallbacks,
@@ -114,6 +118,9 @@ export const useNativeSpeechEngine = (): SpeechEngine => {
     try {
       Speech.stop();
     } catch {}
+    // 発話が終わらないまま中断された場合でも、他アプリの音量を下げたままに
+    // しないよう必ずフォーカスを返す（Android 以外では何もしない）
+    releaseSpeechAudioFocus();
   }, []);
 
   const speak = useCallback(
@@ -203,9 +210,16 @@ export const useNativeSpeechEngine = (): SpeechEngine => {
           }
           remaining -= 1;
           if (remaining <= 0) {
+            releaseSpeechAudioFocus();
             callbacks.onSettled();
           }
         };
+        // Android の TextToSpeech はオーディオフォーカスを自分では要求せず、
+        // useTTS が expo-audio へ設定する duckOthers も（再生中のプレイヤーが
+        // 無いため）フォーカス要求を伴わない。発話中だけ自前でフォーカスを
+        // 取得して、音楽など他アプリの音量を下げてもらう。
+        acquireSpeechAudioFocus();
+
         for (const utterance of utterances) {
           Speech.speak(utterance.text, {
             language: utterance.language,
