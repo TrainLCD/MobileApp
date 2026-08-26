@@ -177,7 +177,7 @@ Command mapping — the skills under `.claude/skills/` follow this table:
 - [ ] Update or add tests relevant to code changes.
 - [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
 - [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
-- [ ] Attach visual evidence for UI changes, each labeled with its source (device name, React Native Web, or an explicit "not a rendering of the implementation" note for mockups); when no image is attached, state why instead of leaving the section blank.
+- [ ] Attach visual evidence for UI changes, each labeled with its source (device name, React Native Web, or an explicit 'not a rendering of the implementation' note for mockups); when no image is attached, state why instead of leaving the section blank.
 
 **For documentation-only tasks**
 
