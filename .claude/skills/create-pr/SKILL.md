@@ -154,14 +154,41 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
       対応拡張子は `.png` / `.jpg` / `.jpeg` / `.gif` / `.webp` のみ。**動画（`.mp4` / `.mov` 等）は raw URL ではプレイヤーにならない**ので受け付けず、「PR 画面に直接ドラッグ&ドロップしてください」と案内してその項目だけ除外する。
 
+      **配列要素はメタデータ込みなので、検証は必ず `|` で分解した後のパスに対して行う**。要素そのものを `-f` や `stat` に渡すと、実在する画像でも「見つかりません」になる。
+
+      分解には下のヘルパーを使う。**`cut -d'|' -f2` は使わない** — 区切りが 1 つも無い行に対して `cut` は行全体を返すので、`~/shots/home.png` のようにメタデータ無しで渡された要素のデバイス名・キャプションにパスがそのまま入ってしまう。
+
       ```bash
-      for f in "${SCREENSHOTS[@]}"; do
-        [ -f "$f" ] || { echo "見つかりません: $f"; exit 1; }
-        printf '%s\t%s\n' "$(stat -f%z "$f" 2>/dev/null || stat -c%s "$f")" "$f"
+      split_entry() { # $1: screenshots の配列要素 -> SRC / DEVICE / CAPTION を設定
+        SRC="${1%%|*}"
+        DEVICE=""
+        CAPTION=""
+        REST="${1#*|}"
+        if [ "$REST" != "$1" ]; then
+          DEVICE="${REST%%|*}"
+          TAIL="${REST#*|}"
+          if [ "$TAIL" != "$REST" ]; then CAPTION="$TAIL"; fi
+        fi
+        # 引用符付きで渡るため `~` は展開されない。ここで絶対パス化する
+        case "$SRC" in "~/"*) SRC="$HOME/${SRC#\~/}" ;; esac
+      }
+
+      set -euo pipefail
+      for entry in "${SCREENSHOTS[@]}"; do
+        split_entry "$entry"
+        [ -f "$SRC" ] || { echo "見つかりません: $SRC"; exit 1; }
+
+        case "$(printf '%s' "${SRC##*.}" | tr 'A-Z' 'a-z')" in
+          png|jpg|jpeg|gif|webp) ;;
+          *) echo "非対応の拡張子: $SRC"; exit 1 ;;
+        esac
+
+        printf '%s\t%s\t%s\t%s\n' \
+          "$(stat -f%z "$SRC" 2>/dev/null || stat -c%s "$SRC")" "$SRC" "$DEVICE" "$CAPTION"
       done
       ```
 
-      パスは配列要素として引用符付きで渡すため `~` が展開されない。受け取った時点で絶対パスに正規化しておく。
+      正規化後の絶対パスとデバイス名・キャプションは **1 レコードとして対応付けたまま**後続へ渡す。行順だけに依存すると、途中で 1 件落ちたときに対応がずれる。
 
       1MB（1048576 バイト）超は Contents API の推奨上限を超えるので、縮小か JPEG 変換を提案してユーザーの判断を仰ぐ（macOS なら `sips -Z 1080 <in> --out <out>`）。10MB 超はそのまま拒否する。
 
@@ -190,23 +217,32 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    4. **アップロード**
 
-      保存先は `<REF_SLUG>/<連番>-<安全化したファイル名>`。`REF_SLUG` は head ブックマーク名に手順 6 と同じスラッグ化規則（`A-Za-z0-9._-` 以外を `_`）を適用したもの。PR 番号は新規作成時点ではまだ存在しないので使わない。
+      保存先は `<REF_SLUG>-<HEAD_SHORT>/<連番>-<安全化したファイル名>`。
+
+      - `REF_SLUG`: head ブックマーク名に手順 6 と同じスラッグ化規則（`A-Za-z0-9._-` 以外を `_`）を適用したもの。
+      - `HEAD_SHORT`: `jj log -r '<head>@origin' --no-graph -T 'commit_id.short()'` で得る head コミット ID の短縮形。
+
+      **コミット ID を名前空間に必ず含める**。`REF_SLUG` だけで決めると、(a) 同じブックマーク名を後日再利用したとき、(b) `feature/foo` と `feature_foo` がスラッグ化後に同じ文字列へ潰れたときに、過去 PR が参照している URL の中身が別の画像へ差し替わる。**過去に公開したパスは決して上書きしない**（資材ブランチを残す目的そのものが失われる）。コミット ID を挟めばコミットごとに名前空間が変わるので、同一コミットへの再実行だけが同じパスを踏む。
+
+      PR 番号は新規作成時点ではまだ存在しないので使わない。
 
       ペイロードは **必ず JSON ファイル経由**で渡す。base64 文字列をコマンドライン引数に直接置くと Linux の `MAX_ARG_STRLEN`（1 引数 128KB）を超えて `Argument list too long` になる。JSON 組み立てとバイナリの base64 化は Node で行う（`jq` への依存を増やさない）。
 
       ```bash
       (
+        set -euo pipefail
         WORK="$(mktemp -d)"
         trap 'rm -rf "$WORK"' EXIT INT TERM
 
+        NS="$REF_SLUG-$HEAD_SHORT"
         i=0
         for entry in "${SCREENSHOTS[@]}"; do
           i=$((i + 1))
-          SRC="${entry%%|*}"
+          split_entry "$entry"   # 手順 4-1 で定義したもの
           NAME="$(printf '%s' "$(basename "$SRC")" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
-          DEST="$REF_SLUG/$(printf '%02d' "$i")-$NAME"
+          DEST="$NS/$(printf '%02d' "$i")-$NAME"
 
-          # 同じパスが既にあれば上書きに blob sha が要る（再実行時）
+          # 同一コミットへの再実行で同じパスを踏んだときだけ、上書きに blob sha が要る
           SHA="$(gh api "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH" -q .sha 2>/dev/null || true)"
 
           node -e '
@@ -217,15 +253,22 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
             process.stdout.write(JSON.stringify(body));
           ' "$SRC" "$ASSET_BRANCH" "PRスクリーンショットを追加: $DEST" "$SHA" > "$WORK/payload.json"
 
-          gh api -X PUT "repos/$OWNER_REPO/contents/$DEST" \
-            --input "$WORK/payload.json" -q '.content.download_url'
+          URL="$(gh api -X PUT "repos/$OWNER_REPO/contents/$DEST" \
+            --input "$WORK/payload.json" -q '.content.download_url')" || {
+            echo "アップロード失敗: $SRC -> $DEST" >&2
+            exit 1
+          }
+          [ -n "$URL" ] || { echo "URL が空: $SRC -> $DEST" >&2; exit 1; }
+
+          printf '%s\t%s\t%s\n' "$URL" "$DEVICE" "$CAPTION"
         done
       )
       ```
 
+      - **`set -euo pipefail` を必ず入れ、各 PUT の終了コードと URL の非空を検査する**。これが無いと、複数画像のうち途中の PUT が失敗しても最後の 1 件が成功しただけでループ全体が成功終了し、URL の行数が減った状態で本文を組み立ててしまう（デバイス名・キャプションとの対応がずれる）。失敗したら対象の入力と API エラーを報告して**本文生成ごと中断する**。
+      - 出力は `URL\tデバイス名\tキャプション` の 1 レコード 1 行。行順への暗黙の依存をやめ、URL とメタデータを常に同じレコードとして持ち回る。
       - `gh` の成否に関わらず一時ファイルが消えるよう、ループ全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
       - URL は自分で組み立てず、レスポンスの `.content.download_url` をそのまま使う（ブランチ名の `/` などのエスケープを間違えないため）。得られる URL は `https://raw.githubusercontent.com/<owner>/<repo>/<asset-branch>/<path>` 形式。
-      - 出力された URL 行と入力の対応（デバイス名・キャプション）を保持して次のステップへ渡す。
 
    5. **本文用マークダウンの生成**
 
@@ -245,6 +288,9 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - デバイス名がある画像は `### <デバイス名>` の見出しでグルーピングする（テンプレのコメントが端末名の併記を求めているため）。デバイス名が無いものは見出しを付けずに並べる。
       - 幅は `<img width="320">` で指定する。縦長のスクリーンショットが原寸で並ぶと本文が読めなくなるため。**AGENTS.md の MD033（inline HTML 禁止）はリポジトリ内 Markdown 向けのルールで、PR 本文には適用されない**。
       - キャプションがあれば `alt` に入れ、画像の直下にも 1 行で添える。
+      - **デバイス名・キャプションはユーザー入力なので、挿入先ごとにエスケープする**。素通しすると本文が壊れる。
+        - `alt="..."` などの HTML 属性に入れる文字列: `&` → `&amp;`、`"` → `&quot;`、`<` → `&lt;`、`>` → `&gt;` の順で置換する（`&` を最初に処理しないと二重エスケープになる）。
+        - 見出しや本文行に入れる文字列: 改行・制御文字を除去し、`<!-- create-pr:screenshots:start -->` / `<!-- create-pr:screenshots:end -->` と一致する断片が含まれていたら取り除く。**マーカー文字列が本文に紛れ込むと更新モードの境界判定が壊れる**。
 
 5. **本文組み立て**
 
