@@ -85,6 +85,11 @@ export const useTTS = (): void => {
   // audio mode に従う。リモート TTS の再生（expo-audio）も同じセッションを使う。
   // 他アプリ音声のダッキングは発話開始直前にのみ有効化し
   // （setDuckingActiveAsync 参照）、ここでは非ダッキング状態を既定にする。
+  // ここでのダッキング指定が効くのは iOS だけである。Android は
+  // オーディオフォーカスを要求しない限りダッキングが起きず、interruptionModeAndroid は
+  // expo-audio のプレイヤーが再生を開始したときのフォーカス要求にしか反映されない。
+  // 端末内蔵 TTS 経路のダッキングは useNativeSpeechEngine が
+  // src/utils/speechAudioFocus.ts 経由で自前に取得する。
   const backgroundEnabledRef = useRef(backgroundEnabled);
   backgroundEnabledRef.current = backgroundEnabled;
   // 直近に要求したダッキング状態。backgroundEnabled 変更時の再設定で
