@@ -43,6 +43,10 @@ export default {
       projectId: 'dad36dde-0056-4760-8eda-37f05e7c9c6c',
     },
   },
+  // 既定値は 'light' で、prebuild すると Info.plist の UIUserInterfaceStyle が
+  // Light で書き戻される。それだと端末のダークモード設定を JS から読めなくなり
+  // 外観設定の「自動」が機能しないため、明示的に automatic を指定する
+  userInterfaceStyle: 'automatic',
   ios: {
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',

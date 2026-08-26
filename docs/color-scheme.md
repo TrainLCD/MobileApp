@@ -158,6 +158,34 @@ iOS のネイティブシートは既定で端末の外観に追従してしま�
 走行画面から開くアクションシート(`Permitted.tsx` の長押しメニュー)もモーダルと同じ扱いで
 配色に追従する。走行画面は Provider の外側にあるため、そこでは `appColorsAtom` を直接購読する。
 
+## native の外観設定
+
+iOS は `Info.plist` の `UIUserInterfaceStyle` が `Light` だとアプリ全体がライトに固定され、
+`Appearance.getColorScheme()` が常に `'light'` を返す(`RCTAppearance.mm` は key window
+の trait collection を読むため)。この状態では端末設定を読めず「自動」が機能しないので、
+`Automatic` にしてある。Expo の既定値は `light` で prebuild すると書き戻されるため、
+`app.config.ts` にも `userInterfaceStyle: 'automatic'` を明示している。
+
+固定を外すと `Alert` やキーボードなど native が描く UI が端末設定に従うようになり、
+アプリで「ライト」を選んでいても端末がダークならそこだけ黒くなる。これを防ぐため
+`FxSystemColorScheme` が `Appearance.setColorScheme()` で window の外観を上書きする。
+
+| 配色設定 | `setColorScheme()` へ渡す値 |
+| ---- | ---- |
+| 自動 | `'unspecified'`(上書きの解除) |
+| ライト | `'light'` |
+| ダーク | `'dark'` |
+
+解除に `null` ではなく `'unspecified'` を渡すこと。react-native 側は `'unspecified'` の
+ときだけ native から現在値を読み直してキャッシュを更新する実装になっている。
+
+上書き中は window の外観がアプリの設定値そのものなので、変更イベントを端末の値として
+記録できない。そのため `FxSystemColorScheme` は「自動」のときだけイベントを
+`systemColorSchemeAtom` へ反映する。「自動」へ戻すと上書きが外れて端末の値でイベントが
+飛ぶので、そこで追従が復帰する。
+
+Android は `Configuration.uiMode` を読むため、この固定の影響を受けない。
+
 ## 制限事項
 
 `GlobalToast` は元からダークな見た目(背景 `#333` に白文字)なので、配色設定の対象外。
