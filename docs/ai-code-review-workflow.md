@@ -251,20 +251,22 @@ CI では `.github/workflows/test_scripts.yml`（**Scripts** ワークフロー�
 
 ## 設計上の判断
 
-- **未レビューのコードを checkout・実行しない**: 危険なのは trigger そのもの
-  ではなく、PR の head 側コードを checkout して secrets と同じジョブで実行する
-  ことです。本ワークフローは head の作業ツリーを一切必要としない（差分は
-  compare API から取得する）ため、`persist-credentials: false` を指定したうえで、
-  checkout する ref を実行経路ごとに次のとおり固定しています。
+- **既定ブランチ以外を checkout・実行しない**: `workflow_dispatch` は実行者が
+  選んだ ref で走るため、checkout を `github.sha` にすると未レビューのブランチの
+  `ai-code-review.mjs` が `OPENAI_API_KEY` と同じジョブで実行されます。
+  `github.event.repository.default_branch` に固定し、あわせて
+  `persist-credentials: false` を指定しています。**`github.sha` に戻さないこと。**
 
-  checkout する ref は `github.event.repository.default_branch` に固定しています。
-  `workflow_dispatch` は実行者が選んだ ref で走るため、`github.sha` にすると
-  未レビューのブランチの `ai-code-review.mjs` が `OPENAI_API_KEY` と同じジョブで
-  実行されます。**`github.sha` に戻さないこと。**
+  本ワークフローは head の作業ツリーを一切必要としない（差分は compare API から
+  取得する）ため、この固定に不都合はありません。動くのは常に既定ブランチの
+  レビュー済みな `.github/scripts/ai-code-review.mjs` と `CLAUDE.md` に限られ、
+  PR の差分とメタデータは compare API / `gh pr view` が返すデータとしてのみ
+  扱われます。
 
-  この固定により、動くのは常に既定ブランチのレビュー済みな
-  `.github/scripts/ai-code-review.mjs` と `CLAUDE.md` に限られ、PR の差分と
-  メタデータは compare API / `gh pr view` が返すデータとしてのみ扱われます。
+  ただしこれは**手動実行に対する防御であり、自動トリガーの安全性は保証しません**。
+  PR イベント起点のトリガーではワークフロー YAML 自体が PR 側から評価されるため、
+  攻撃者は checkout より前に secret を外部送信する step を追加できます。checkout の
+  ref が制御するのは作業ツリーだけです。詳細は次の項目を参照してください。
 - **自動トリガーを持たない（手動実行のみ）**: #6723 の提案どおり
   `pull_request_review`（CodeRabbit の approve 起点）を一度は実装しましたが、
   撤回しました。理由は次のとおりです。
