@@ -72,8 +72,8 @@ describe('SearchBar', () => {
     expect(inputColor).toBe('white');
   });
 
-  // LEDテーマはダークモード設定の影響を受けない
-  it('LEDテーマではダークを選んでも従来のLEDの配色を使う', () => {
+  // 電光掲示板風テーマはダークモード設定の影響を受けない
+  it('電光掲示板風テーマではダークを選んでも従来の配色を使う', () => {
     const { containerStyle, inputColor } = renderSearchBar({
       colorScheme: COLOR_SCHEME_PREFERENCE.DARK,
       led: true,

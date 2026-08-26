@@ -8,7 +8,7 @@ import { COLOR_SCHEME, type ColorScheme } from '../models/ColorScheme';
  * 同系色でも従来値が異なるもの(白 #FFFFFF と #FCFCFC など)はトークンを分けている。
  * この対応関係は colorScheme.test.ts で固定しているので、統合する場合は
  * 従来の見た目が変わらないことを確認すること。
- * LEDテーマは路線テーマ側で独自の黒背景を持つので、ここでは扱わない。
+ * 電光掲示板風テーマは路線テーマ側で独自の黒背景を持つので、ここでは扱わない。
  */
 export type AppColors = {
   /** 画面全体の背景 */

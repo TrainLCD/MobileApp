@@ -41,7 +41,7 @@ export const systemColorSchemeAtom = atom<ColorScheme>(
   normalizeSystemScheme(Appearance.getColorScheme())
 );
 
-/** 端末設定とユーザー設定だけから決まる配色。LEDテーマの有無は考慮しない */
+/** 端末設定とユーザー設定だけから決まる配色。電光掲示板風テーマの有無は考慮しない */
 export const resolvedColorSchemeAtom = atom<ColorScheme>((get) => {
   const preference = get(colorSchemePreferenceAtom);
   if (preference === COLOR_SCHEME_PREFERENCE.AUTO) {
@@ -53,11 +53,11 @@ export const resolvedColorSchemeAtom = atom<ColorScheme>((get) => {
 /**
  * 実際に適用する配色。
  *
- * LEDテーマは行先表示器を模した独自の配色を全画面で持っており、ダークモードと
- * 併用すると意図しない色の混在が起きる。そのためLEDテーマ選択中はダークモード設定を
- * 無視してライトの値を返し、LEDテーマの見た目を従来のまま保つ。
+ * 電光掲示板風テーマは行先表示器を模した独自の配色を全画面で持っており、ダークモードと
+ * 併用すると意図しない色の混在が起きる。そのため電光掲示板風テーマ選択中はダークモード設定を
+ * 無視してライトの値を返し、電光掲示板風テーマの見た目を従来のまま保つ。
  * 各コンポーネントに残っている `isLEDTheme ? ... : colors.x` の分岐と合わせて、
- * LEDテーマ時はこの機能導入前と完全に同じ色になる。
+ * 電光掲示板風テーマ時はこの機能導入前と完全に同じ色になる。
  */
 export const appColorsAtom = atom<AppColors>((get) => {
   if (get(isLEDThemeAtom)) {

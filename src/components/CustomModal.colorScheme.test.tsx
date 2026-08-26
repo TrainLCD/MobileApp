@@ -48,7 +48,7 @@ describe('CustomModal の配色', () => {
     expect(getByText(DARK_APP_COLORS.card)).toBeTruthy();
   });
 
-  it('LEDテーマではダークを選んでも従来の配色のままにする', () => {
+  it('電光掲示板風テーマではダークを選んでも従来の配色のままにする', () => {
     const { getByText } = renderModal(true);
 
     expect(getByText(LIGHT_APP_COLORS.card)).toBeTruthy();

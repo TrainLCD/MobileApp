@@ -55,10 +55,11 @@ const operationScreenLayout = ({
 従来と同じ見た目のままになる。新しく共通コンポーネントを配色対応させるときも、
 `useAppColors()` を使う限りこの境界は保たれる。
 
-## LED テーマは対象外
+## 電光掲示板風テーマは対象外
 
-LED テーマは行先表示器を模した配色を全画面で持っているため、ダークモードと併用すると
-色の混在が起きる。そこで `appColorsAtom` は **LED テーマ選択中はライトのパレットを返す**。
+電光掲示板風テーマ(コード上の識別子は `isLEDTheme` などの LED 表記)は行先表示器を模した
+配色を全画面で持っているため、ダークモードと併用すると色の混在が起きる。そこで
+`appColorsAtom` は **電光掲示板風テーマ選択中はライトのパレットを返す**。
 
 ```ts
 export const appColorsAtom = atom<AppColors>((get) => {
@@ -73,11 +74,11 @@ export const appColorsAtom = atom<AppColors>((get) => {
 使っている(同系色でも従来値が違うものはトークンを分けている。
 例: `card` = `#FFFFFF` と `subtleSurface` = `#FCFCFC`)。この対応関係は
 `src/constants/colorScheme.test.ts` で固定しているので、トークンを統合・改名するときは
-そこが落ちないことを確認すること。そのため LED テーマ中は、各コンポーネントに残した `isLEDTheme` 分岐と合わせて
-導入前と完全に同じ色になる。設定値そのものは保持されるので、LED 以外のテーマへ戻せば
+そこが落ちないことを確認すること。そのため電光掲示板風テーマ中は、各コンポーネントに残した `isLEDTheme` 分岐と
+合わせて導入前と完全に同じ色になる。設定値そのものは保持されるので、他のテーマへ戻せば
 選んでいたダークがそのまま適用される。
 
-`colors.isDark` も同様に LED テーマ中は `false` になる。
+`colors.isDark` も同様に電光掲示板風テーマ中は `false` になる。
 
 ## 使い方
 
@@ -91,8 +92,8 @@ const colors = useAppColors();
 </View>;
 ```
 
-LED テーマは独自の黒背景を持つため、既存の `isLEDTheme` 分岐はそのまま残し、
-非 LED 側の色だけをパレットへ置き換える。
+電光掲示板風テーマは独自の黒背景を持つため、既存の `isLEDTheme` 分岐はそのまま残し、
+それ以外の色だけをパレットへ置き換える。
 
 ```tsx
 backgroundColor: isLEDTheme ? '#333' : colors.card,
@@ -122,7 +123,7 @@ const colors = useAtomValue(appColorsAtom);
 
 この境界は `src/components/CustomModal.colorScheme.test.tsx` で固定している
 (`AppColorsProvider` を挟まないツリーから開いてもダークが届くこと、
-LED テーマでは従来の配色のままであること)。
+電光掲示板風テーマでは従来の配色のままであること)。
 
 ## 制限事項
 

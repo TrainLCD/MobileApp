@@ -41,22 +41,22 @@ describe('colorScheme atoms', () => {
     expect(store.get(resolvedColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
   });
 
-  // LEDテーマは全画面で独自の配色を持つため、ダークモード設定の影響を受けない
-  it('LEDテーマ選択中はダークを選んでもライトのパレットを返す', () => {
+  // 電光掲示板風テーマは全画面で独自の配色を持つため、ダークモード設定の影響を受けない
+  it('電光掲示板風テーマ選択中はダークを選んでもライトのパレットを返す', () => {
     const store = createStore();
     store.set(themePreferenceAtom, THEME_PREFERENCE.LED);
     store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.DARK);
 
     expect(store.get(appColorsAtom)).toBe(LIGHT_APP_COLORS);
     expect(store.get(isDarkColorSchemeAtom)).toBe(false);
-    // 設定値そのものは保持され、LED以外のテーマへ戻せばダークが適用される
+    // 設定値そのものは保持され、他のテーマへ戻せばダークが適用される
     expect(store.get(resolvedColorSchemeAtom)).toBe(COLOR_SCHEME.DARK);
 
     store.set(themePreferenceAtom, THEME_PREFERENCE.TOKYO_METRO);
     expect(store.get(isDarkColorSchemeAtom)).toBe(true);
   });
 
-  it('LEDテーマ選択中は端末がダークでもライトのパレットを返す', () => {
+  it('電光掲示板風テーマ選択中は端末がダークでもライトのパレットを返す', () => {
     const store = createStore();
     store.set(themePreferenceAtom, THEME_PREFERENCE.LED);
     store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.AUTO);
