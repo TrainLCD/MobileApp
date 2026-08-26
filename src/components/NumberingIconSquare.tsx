@@ -189,6 +189,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 3,
     borderColor: 'white',
+    // 記号は濃色(#231e1f)で描くため、下地を白で塗らないと
+    // ダークモードの背景に沈んで記号が見えなくなる
+    backgroundColor: 'white',
   },
   lineSymbolSmall: {
     fontSize: 10,

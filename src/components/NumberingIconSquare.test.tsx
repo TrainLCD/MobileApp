@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native';
+import { StyleSheet, View } from 'react-native';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconSquare from './NumberingIconSquare';
 
@@ -47,6 +48,21 @@ describe('NumberingIconSquare', () => {
       />
     );
     expect(getByText('G')).toBeTruthy();
+  });
+
+  it('SMALLサイズでも下地が白く塗られる', () => {
+    // 記号色が濃色固定のため、下地が無いとダークモードで記号が見えなくなる
+    const { UNSAFE_getByType } = render(
+      <NumberingIconSquare
+        lineColor="#00ff00"
+        stationNumber="JA-01"
+        allowScaling={false}
+        size={NUMBERING_ICON_SIZE.SMALL}
+      />
+    );
+    expect(StyleSheet.flatten(UNSAFE_getByType(View).props.style)).toEqual(
+      expect.objectContaining({ backgroundColor: 'white' })
+    );
   });
 
   it('allowScaling=trueでレンダリングされる', () => {
