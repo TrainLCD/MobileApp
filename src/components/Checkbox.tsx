@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { appColorsAtom } from '~/store/atoms/colorScheme';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -51,7 +51,7 @@ export const Checkbox: React.FC<Props> = ({
   style,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const colors = useAtomValue(appColorsAtom);
+  const colors = useAppColors();
 
   return (
     <TouchableOpacity

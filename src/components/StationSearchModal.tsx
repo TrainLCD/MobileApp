@@ -307,7 +307,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: colors.headerBackground },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}
@@ -354,7 +354,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: colors.headerBackground },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}

@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Line, TrainType } from '~/@types/graphql';
 import { useCurrentLine } from '~/hooks';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -146,7 +145,7 @@ export const TrainTypeList = ({
   onSelect: (item: TrainType) => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-  const colors = useAtomValue(appColorsAtom);
+  const colors = useAppColors();
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {
