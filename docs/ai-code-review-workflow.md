@@ -269,18 +269,20 @@ CI では `.github/workflows/test_scripts.yml`（**Scripts** ワークフロー�
 
 ## 設計上の判断
 
-- **head 側のコードを checkout・実行しない**: 危険なのは trigger そのもの
+- **未レビューのコードを checkout・実行しない**: 危険なのは trigger そのもの
   ではなく、PR の head 側コードを checkout して secrets と同じジョブで実行する
   ことです。本ワークフローは head の作業ツリーを一切必要としない（差分は
-  compare API から取得する）ため、checkout を `base.sha` に固定し
-  `persist-credentials: false` を指定しています。実行されるのは常にレビュー
-  済みの `.github/scripts/ai-code-review.mjs` と `CLAUDE.md` で、PR の差分と
-  メタデータは compare API / `gh pr view` が返すデータとしてのみ扱います。
-- **手動実行のフォールバックを `github.sha` にしない**: `workflow_dispatch` は
-  実行者が選んだ ref で走るため、`github.sha` へフォールバックすると未レビューの
-  ブランチの `ai-code-review.mjs` が `OPENAI_API_KEY` と同じジョブで実行されます。
-  `github.event.repository.default_branch` に固定し、手動実行でも「動くのは常に
-  レビュー済みのコード」という前提を保っています。
+  compare API から取得する）ため、`persist-credentials: false` を指定したうえで、
+  checkout する ref を実行経路ごとに次のとおり固定しています。
+
+  | 実行経路 | checkout する ref | 理由 |
+  | --- | --- | --- |
+  | `pull_request_review` の自動実行 | `github.event.pull_request.base.sha` | PR の head を取ると、PR で書き換えたスクリプトが `OPENAI_API_KEY` と同じジョブで動く |
+  | `workflow_dispatch` の手動実行 | `github.event.repository.default_branch` | 手動実行は実行者が選んだ ref で走るため、`github.sha` だと未レビューのブランチのスクリプトが動く |
+
+  どちらの経路でも動くのはレビュー済みの `.github/scripts/ai-code-review.mjs` と
+  `CLAUDE.md` に限られ、PR の差分とメタデータは compare API / `gh pr view` が
+  返すデータとしてのみ扱います。**フォールバックを `github.sha` に戻さないこと。**
 - **トリガーが `pull_request_review` である理由**: approve を単一の事実として
   観測できるイベントがこれしか無いためです。コメント本文の文字列マッチのような
   壊れやすい検出を避けられます。ただし上記のとおり、このイベントの定義が base 側
