@@ -365,12 +365,22 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
             # ツリー全体を再帰で取得し、README と規定形式の画像パスだけを許可する（allowlist）。
             # ルート直下の名前だけを見る denylist では app/ や lib/ 配下のコードを見落とす
             TIP="$(gh api "repos/$OWNER_REPO/git/ref/heads/$ASSET_BRANCH" -q .object.sha)"
-            gh api "repos/$OWNER_REPO/git/trees/$TIP?recursive=1" \
-              -q '.tree[] | select(.type == "blob") | .path' > "$WORK/asset-tree.txt"
-            if grep -vxE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
+            gh api "repos/$OWNER_REPO/git/trees/$TIP?recursive=1" > "$WORK/asset-tree.json"
+            # ツリーが上限を超えると GitHub は truncated: true と部分的な .tree だけを返す。
+            # 部分応答を全件と見なすと、応答に含まれなかった非資材ファイルを見逃す
+            node -e '
+              const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+              if (t.truncated) {
+                console.error("ツリーが大きく応答が省略されました（truncated）。全件を検査できないため中止します");
+                process.exit(1);
+              }
+              const paths = (t.tree ?? []).filter((e) => e.type === "blob").map((e) => e.path);
+              process.stdout.write(paths.length ? paths.join("\n") + "\n" : "");
+            ' "$WORK/asset-tree.json" > "$WORK/asset-tree.txt"
+            if grep -vixE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
                  "$WORK/asset-tree.txt" | grep -q .; then
               echo "$ASSET_BRANCH に資材以外のファイルが含まれています。書き込みを中止します" >&2
-              grep -vxE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
+              grep -vixE 'README\.md|[A-Za-z0-9._-]+/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp)' \
                 "$WORK/asset-tree.txt" >&2
               exit 1
             fi
@@ -418,7 +428,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         while IFS="$(printf '\t')" read -r SRC SHA256 DEVICE CAPTION <&3; do
           assert_image "$SRC" "$SHA256"
           HASH="${SHA256:0:12}"
-          NAME="$(printf '%s' "$(basename "$SRC")" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
+          # 拡張子は必ず小文字へ正規化する。大文字のまま保存すると、次回実行時に
+          # 下の allowlist が自分で置いたファイルを「資材以外」と判定し、
+          # そのブランチへの書き込みが以後すべて止まる
+          BASE="$(basename "$SRC")"
+          EXT="$(printf '%s' "${BASE##*.}" | tr 'A-Z' 'a-z')"
+          NAME="$(printf '%s.%s' "${BASE%.*}" "$EXT" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
           DEST="$NS/$HASH-$NAME"
 
           case "$(api_status "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH")" in
@@ -467,9 +482,10 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - **既存ブランチはブランチ名だけで信頼しない**。次の 3 つをすべて確認してから書き込む。誤って `dev` 由来の同名ブランチが作られていた場合、AGENTS.md に定めた例外条件（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになるため、1 つでも合わなければ中止する。
         1. README にマーカー `create-pr:asset-branch:v1` が含まれること。
         2. 既定ブランチと**共通祖先を持たない**こと（孤立系列であることの履歴からの裏付け）。無関係な履歴同士の compare に GitHub は 404 を返すので、それ以外なら中止する。
-        3. **ツリー全体を再帰で取得し、`README.md` と規定形式の画像パス（`<名前空間>/<12桁ハッシュ>-<ファイル名>.<拡張子>`）だけが存在すること**。ルート直下の名前を拾う denylist 方式では `app/` や `lib/` の配下に置かれたコードを見落とすため、allowlist で判定する。
-      - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
+        3. **ツリー全体を再帰で取得し、`README.md` と規定形式の画像パス（`<名前空間>/<12桁ハッシュ>-<ファイル名>.<拡張子>`）だけが存在すること**。ルート直下の名前を拾う denylist 方式では `app/` や `lib/` の配下に置かれたコードを見落とすため、allowlist で判定する。**応答の `truncated` が `true` なら全件を検査できていないので中止する**（ツリーが上限を超えると GitHub は部分的な `.tree` を返すため、それを全件と見なすと非資材ファイルを見逃す）。
 
+        保存先を作るときは**拡張子を必ず小文字へ正規化する**。`Home.PNG` のような入力をそのまま保存すると、初回は成功しても次回実行時に allowlist が自分で置いたファイルを弾き、そのブランチへの書き込みが以後すべて止まる。検査側も大文字小文字を区別しない。
+      - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
 
    4. **本文用マークダウンの生成**
 
@@ -501,7 +517,6 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
         - **HTML 属性**（`alt="..."` など）: さらに `"` → `&quot;` を置換する。
         - **Markdown テキスト**（`### <デバイス名>` の見出し、画像下のキャプション行）: さらに Markdown の特殊文字 `` ` `` `*` `_` `[` `]` `(` `)` `#` `!` `|` `\` の前にバックスラッシュを置く（`\` を最初に処理する）。見出し・表・リンク・コードスパンの構造を乗っ取られないようにするため。
-
 
 5. **本文組み立て**
 
