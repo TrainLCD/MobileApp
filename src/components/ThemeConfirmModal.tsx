@@ -73,7 +73,6 @@ export const ThemeConfirmModal: React.FC<Props> = ({
     <DialogModalLayout
       visible={visible}
       isLEDTheme={isLEDTheme}
-      colors={colors}
       onClose={onClose}
       onConfirm={onConfirm}
       onCloseAnimationEnd={onCloseAnimationEnd}

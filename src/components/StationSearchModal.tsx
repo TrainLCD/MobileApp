@@ -18,7 +18,6 @@ import {
   GET_STATIONS_BY_NAME,
   GET_STATIONS_NEARBY,
 } from '~/lib/graphql/queries';
-import { AppColorsProvider } from '~/providers/AppColorsProvider';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { locationAtom, setLocation } from '~/store/atoms/location';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -117,8 +116,8 @@ type Props = {
 };
 
 export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
-  // Portal 経由で描画されるため AppColorsProvider の Context が届かない。
-  // 自身の配色は atom から直接読み、子孫には Provider を張り直して配る。
+  // contentContainerStyle は Portal の外側で組み立てるため Context が届かない。
+  // 自身の配色は atom から直接読む(子孫は CustomModal 側の Provider が面倒を見る)。
   const colors = useAtomValue(appColorsAtom);
   const { height: windowHeight } = useWindowDimensions();
   const { fetchCurrentLocation } = useFetchCurrentLocationOnce();
@@ -292,83 +291,81 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         },
       ]}
     >
-      <AppColorsProvider>
-        <View
-          style={[
-            styles.headerContainer,
-            { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
-          ]}
-        >
-          {Platform.OS === 'ios' && !isLEDTheme ? (
-            <BlurView
-              intensity={80}
-              tint={colors.blurTint}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : Platform.OS === 'android' && !isLEDTheme ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.headerBackground },
-              ]}
-            />
-          ) : null}
-          <Heading
+      <View
+        style={[
+          styles.headerContainer,
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+        ]}
+      >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint={colors.blurTint}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
             style={[
-              styles.title,
-              !isLEDTheme && { color: colors.modalHeadingText },
+              StyleSheet.absoluteFill,
+              { backgroundColor: colors.headerBackground },
             ]}
-          >
-            {translate('searchByStationName')}
-          </Heading>
-          <SearchBar onSearch={handleSearchStations} nameSearch />
-        </View>
-
-        <FlashList<Station>
-          style={StyleSheet.absoluteFill}
-          data={stations ?? []}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          ItemSeparatorComponent={EmptyLineSeparator}
-          scrollEventThrottle={16}
-          contentContainerStyle={styles.flatListContentContainer}
-          scrollIndicatorInsets={{ top: 150, bottom: 72 }}
-          ListEmptyComponent={
-            <EmptyResult
-              loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}
-              hasSearched={fetchStationsByNameCalled}
-            />
-          }
-        />
-        <View
+          />
+        ) : null}
+        <Heading
           style={[
-            styles.closeButtonContainer,
-            { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+            styles.title,
+            !isLEDTheme && { color: colors.modalHeadingText },
           ]}
         >
-          {Platform.OS === 'ios' && !isLEDTheme ? (
-            <BlurView
-              intensity={80}
-              tint={colors.blurTint}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : Platform.OS === 'android' && !isLEDTheme ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.headerBackground },
-              ]}
-            />
-          ) : null}
-          <Button
-            style={styles.closeButton}
-            textStyle={styles.closeButtonText}
-            onPress={handleClose}
-          >
-            {translate('close')}
-          </Button>
-        </View>
-      </AppColorsProvider>
+          {translate('searchByStationName')}
+        </Heading>
+        <SearchBar onSearch={handleSearchStations} nameSearch />
+      </View>
+
+      <FlashList<Station>
+        style={StyleSheet.absoluteFill}
+        data={stations ?? []}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ItemSeparatorComponent={EmptyLineSeparator}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.flatListContentContainer}
+        scrollIndicatorInsets={{ top: 150, bottom: 72 }}
+        ListEmptyComponent={
+          <EmptyResult
+            loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}
+            hasSearched={fetchStationsByNameCalled}
+          />
+        }
+      />
+      <View
+        style={[
+          styles.closeButtonContainer,
+          { backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : undefined },
+        ]}
+      >
+        {Platform.OS === 'ios' && !isLEDTheme ? (
+          <BlurView
+            intensity={80}
+            tint={colors.blurTint}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : Platform.OS === 'android' && !isLEDTheme ? (
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: colors.headerBackground },
+            ]}
+          />
+        ) : null}
+        <Button
+          style={styles.closeButton}
+          textStyle={styles.closeButtonText}
+          onPress={handleClose}
+        >
+          {translate('close')}
+        </Button>
+      </View>
     </CustomModal>
   );
 };

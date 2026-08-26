@@ -9,6 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { RFValue } from '~/utils/rfValue';
 import Typography from './Typography';
@@ -50,6 +51,7 @@ export const Checkbox: React.FC<Props> = ({
   style,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAtomValue(appColorsAtom);
 
   return (
     <TouchableOpacity
@@ -65,11 +67,15 @@ export const Checkbox: React.FC<Props> = ({
           styles.box,
           {
             backgroundColor: checked
-              ? '#008ffe'
+              ? colors.accent
               : isLEDTheme
                 ? LED_THEME_BG_COLOR
-                : '#fff',
-            borderColor: checked ? '#008ffe' : isLEDTheme ? '#fff' : '#aaa',
+                : colors.surface,
+            borderColor: checked
+              ? colors.accent
+              : isLEDTheme
+                ? '#fff'
+                : colors.strongBorder,
             borderRadius: isLEDTheme ? 0 : 4,
           },
         ]}
@@ -77,7 +83,10 @@ export const Checkbox: React.FC<Props> = ({
         {checked ? <Ionicons name="checkmark" size={16} color="#fff" /> : null}
       </View>
       <Typography
-        style={[styles.label, { color: isLEDTheme ? '#fff' : '#000' }]}
+        style={[
+          styles.label,
+          { color: isLEDTheme || colors.isDark ? '#fff' : '#000' },
+        ]}
       >
         {children}
       </Typography>

@@ -1,3 +1,4 @@
+import { useAtomValue } from 'jotai';
 import type React from 'react';
 import {
   Pressable,
@@ -9,8 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import type { AppColors } from '~/constants/colorScheme';
-import { AppColorsProvider } from '~/providers/AppColorsProvider';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { RFValue } from '~/utils/rfValue';
 import Button from './Button';
 import { CustomModal } from './CustomModal';
@@ -96,12 +96,6 @@ const styles = StyleSheet.create({
 export type DialogModalLayoutProps = {
   visible: boolean;
   isLEDTheme: boolean;
-  /**
-   * 操作系画面から開くダイアログだけがダークモードへ追従する。
-   * Portal 経由で描画され Context が届かないため、呼び出し側が atom の値を渡し、
-   * 受け取ったときだけ子孫へ Provider を張り直す(未指定ならライトのまま)。
-   */
-  colors?: AppColors;
   leading: React.ReactNode;
   leadingStyle?: StyleProp<ViewStyle>;
   title: React.ReactNode;
@@ -124,7 +118,6 @@ export type DialogModalLayoutProps = {
 export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   visible,
   isLEDTheme,
-  colors,
   leading,
   leadingStyle,
   title,
@@ -143,6 +136,9 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
   confirmButtonDestructive,
   testID,
 }) => {
+  // Portal 経由で描画され Context が届かないため atom から直接読む
+  const colors = useAtomValue(appColorsAtom);
+
   const body = (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
@@ -174,14 +170,12 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
             style={[
               styles.checkbox,
               {
-                borderColor: isLEDTheme
-                  ? '#fff'
-                  : (colors?.accent ?? '#008ffe'),
+                borderColor: isLEDTheme ? '#fff' : colors.accent,
                 backgroundColor: checkboxChecked
-                  ? (colors?.accent ?? '#008ffe')
+                  ? colors.accent
                   : isLEDTheme
                     ? LED_THEME_BG_COLOR
-                    : (colors?.surface ?? '#fff'),
+                    : colors.surface,
               },
             ]}
           >
@@ -227,14 +221,11 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
       contentContainerStyle={[
         styles.contentView,
         {
-          backgroundColor: isLEDTheme
-            ? LED_THEME_BG_COLOR
-            : (colors?.card ?? '#fff'),
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
         },
       ]}
     >
-      {/* Portal の内側でないと Context が届かないため、ここで Provider を張る */}
-      {colors ? <AppColorsProvider>{body}</AppColorsProvider> : body}
+      {body}
     </CustomModal>
   );
 };

@@ -16,6 +16,8 @@ describe('LIGHT_APP_COLORS', () => {
     ['cardBorder', '#FFFFFF'], // CommonCard / Button の縁取り
     ['border', '#DDDDDD'], // WalkthroughOverlay のドット・NowHeader のバッジ枠
     ['badgeBackground', '#F0F0F0'], // NowHeader のバスバッジ
+    ['strongBorder', '#AAAAAA'], // 入力欄の枠・TrainTypeList の区切り線
+    ['modalHeaderBackground', 'rgba(255,255,255,0.92)'], // モーダルのヘッダー/フッター
     ['previewBackground', '#E0E0E0'], // ThemeConfirmModal のプレビュー面
     ['text', '#333333'], // Typography の既定色
     ['modalHeadingText', '#111111'], // StationSearchModal の見出し

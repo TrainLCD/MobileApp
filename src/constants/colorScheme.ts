@@ -27,6 +27,10 @@ export type AppColors = {
   border: string;
   /** バッジの背景 */
   badgeBackground: string;
+  /** 入力欄の枠・リストの区切り線など、border より濃い罫線 */
+  strongBorder: string;
+  /** モーダル内で固定されるヘッダー・フッターの半透明背景 */
+  modalHeaderBackground: string;
   /** プレビュー画像を載せる面 */
   previewBackground: string;
   /** 本文の文字色 */
@@ -68,6 +72,8 @@ export const LIGHT_APP_COLORS: AppColors = {
   cardBorder: '#FFFFFF',
   border: '#DDDDDD',
   badgeBackground: '#F0F0F0',
+  strongBorder: '#AAAAAA',
+  modalHeaderBackground: 'rgba(255,255,255,0.92)',
   previewBackground: '#E0E0E0',
   text: '#333333',
   modalHeadingText: '#111111',
@@ -94,6 +100,8 @@ export const DARK_APP_COLORS: AppColors = {
   cardBorder: '#2E3238',
   border: '#2E3238',
   badgeBackground: '#24272C',
+  strongBorder: '#5A6068',
+  modalHeaderBackground: 'rgba(28,30,34,0.92)',
   previewBackground: '#24272C',
   text: '#ECEDEF',
   modalHeadingText: '#ECEDEF',

@@ -98,17 +98,32 @@ LED テーマは独自の黒背景を持つため、既存の `isLEDTheme` 分�
 backgroundColor: isLEDTheme ? '#333' : colors.card,
 ```
 
+## モーダルは走行画面から開いても配色に追従する
+
+モーダルは車内再現(走行画面)とは別コンセプトの画面なので、**どの画面から開いたかに
+かかわらず**配色設定に追従する。走行画面本体だけが対象外という切り分け。
+
+`@gorhom/portal` を使うモーダル(`CustomModal` 系)は、要素が PortalHost の位置で
+マウントされるため呼び出し元ツリーの Context が届かない。そこで `CustomModal` が
+Portal の内側で `AppColorsProvider` を張り直し、子孫へ配色を配っている。
+
+```tsx
+<Portal>
+  <AppColorsProvider>{/* モーダルの中身 */}</AppColorsProvider>
+</Portal>
+```
+
+`contentContainerStyle` のように Portal の外側で組み立てる値は Context が使えないため、
+モーダル本体は `appColorsAtom` を直接購読する。
+
+```tsx
+const colors = useAtomValue(appColorsAtom);
+```
+
+この境界は `src/components/CustomModal.colorScheme.test.tsx` で固定している
+(`AppColorsProvider` を挟まないツリーから開いてもダークが届くこと、
+LED テーマでは従来の配色のままであること)。
+
 ## 制限事項
 
-`@gorhom/portal` を使うモーダル(`CustomModal` 系)は、要素が PortalProvider の位置でマウントされるため
-`AppColorsProvider` の Context が届かない。対応済みのモーダルは、
-自身の配色を `appColorsAtom` から直接読み、子孫には Provider を張り直している
-(`StationSearchModal`、`ThemeConfirmModal`)。
-
-以下は走行画面と共有しているため、今回は従来のライト(または LED)の見た目のままにしている。
-
-- `SelectBoundModal` とその配下
-  (`TrainTypeListModal` / `RouteInfoModal` / `SavePresetNameModal` /
-  `SelectBoundSettingListModal`)
-- 共通ダイアログ(`CommonDialogPresenter` / `CommonDialogModal`)
-- `GlobalToast`
+`GlobalToast` は元からダークな見た目(背景 `#333` に白文字)なので、配色設定の対象外。
