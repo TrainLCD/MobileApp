@@ -12,6 +12,7 @@ import {
 import { CardChevron } from '~/components/CardChevron';
 import Typography from '~/components/Typography';
 import { useAIAgentFeatureEnabled } from '~/hooks/useAIAgentFeatureEnabled';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
@@ -24,7 +25,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   bg: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     // CommonCard と同じ影値
     boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
@@ -45,7 +45,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#008ffe',
   },
 });
 
@@ -58,6 +57,7 @@ type Props = {
 export const AgentEntryBanner = ({ style }: Props) => {
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const enabled = useAIAgentFeatureEnabled();
 
   const handlePress = useCallback(() => {
@@ -74,19 +74,25 @@ export const AgentEntryBanner = ({ style }: Props) => {
       accessibilityRole="button"
       accessibilityLabel={`${translate('destinationAgentEntryTitle')} ${translate('destinationAgentEntrySubtitle')}`}
       onPress={handlePress}
-      style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg, style]}
+      style={[
+        styles.root,
+        isLEDTheme
+          ? styles.ledBg
+          : [styles.bg, { backgroundColor: colors.card }],
+        style,
+      ]}
     >
-      <Ionicons name="sparkles" size={24} color="#008ffe" />
+      <Ionicons name="sparkles" size={24} color={colors.accent} />
       <View style={styles.texts}>
         <Typography style={styles.title}>
           {translate('destinationAgentEntryTitle')}
         </Typography>
-        <Typography style={styles.subtitle}>
+        <Typography style={[styles.subtitle, { color: colors.accent }]}>
           {translate('destinationAgentEntrySubtitle')}
         </Typography>
       </View>
       {/* 既定の stroke(#fff) は白背景で不可視になるため、AppSettings と同じくテーマに応じて指定する */}
-      <CardChevron stroke={isLEDTheme ? '#fff' : '#000'} />
+      <CardChevron stroke={isLEDTheme || colors.isDark ? '#fff' : '#000'} />
     </TouchableOpacity>
   );
 };

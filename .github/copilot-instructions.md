@@ -124,6 +124,33 @@ npm run gql:codegen       # GraphQL型定義再生成
 - [ ] 挙動が変わる場合はドキュメント（README、docs/、インラインコメント）を更新
 - [ ] UI 変更の場合はスクリーンショット/動画をデバイス名とともに記録
 
+## バージョン管理（Jujutsu）
+
+このリポジトリは **Jujutsu（`jj`）** で管理しています。`.jj/` と `.git/` が同居するコロケート構成なので、GitHub・`gh`・CI からは通常の Git リポジトリに見えますが、**バージョン管理操作は `git` ではなく `jj` で行ってください**。
+
+- **`HEAD`・インデックス・作業コピーを動かす Git コマンドは使わない**: `git switch` / `git checkout` / `git commit` / `git merge` / `git rebase` / `git reset` / `git stash` / `git branch`。コロケート構成ではこれらが jj の作業コピーと Git の `HEAD` をズラし、後になって原因不明のコンフリクトとして表面化します。
+- **Git を使ってよいのは annotated tag の作成・push だけ**（`git tag -a` / `git push origin <tag>`）。`jj tag set` は lightweight tag しか作れず、GitHub Actions 側のリリースワークフローは annotated tag を打つため、経路によってタグ種別が変わるのを避ける必要があります。
+- **`.github/workflows/` 配下は Git のまま**。ランナーに `jj` は入っていないので、ワークフローのステップを jj に置き換えないでください。
+- **jj は毎コマンドで作業コピー全体をスナップショットします**。Git なら未追跡のままだったファイルも取り込まれ、ステージングという関門がありません。`jj commit` の前に必ず `jj status` を実行し、内容を目視確認してください。一部のパスだけ確定したい場合は `jj commit <path>...` を使います。
+- **ブックマークはブランチではありません**。新しいコミットを作っても `jj bookmark` は自動で進みません。コミット後に `jj bookmark set <name> -r @-` で明示的に移してから push しないと、古い履歴を push することになります。
+- **`jj git push` に `--force` はありません**。既定で `git push --force-with-lease` 相当の安全確認が入ります。弾かれたら `jj git fetch` して状況を見直すこと。`--ignore-immutable` などのガード解除フラグは使わないでください。
+- 復旧手段は `jj undo`（直前の操作を取り消す）と、それより前へ戻る場合は `jj op log` で確認したうえでの `jj op restore` です。**`jj op restore` はリポジトリ全体の状態を巻き戻すため、自己判断で実行しないでください**。戻したい `jj op log` のエントリをユーザーに提示し、そのロールバックについて明示的な承認を得てから実行します。取り消せることは、破壊的コマンドを試してよい理由にはなりません。
+
+主な対応表（詳細は `AGENTS.md` の "Version Control (Jujutsu)" 節）:
+
+| Git | jj |
+| ---- | ---- |
+| `git status` | `jj status` |
+| `git add ...` + `git commit -m "..."` | `jj commit -m "..."` |
+| `git switch -c <branch>` | `jj new <base>` → `jj commit -m "..."` → `jj bookmark create <name> -r @-` |
+| `git fetch` / `git pull --ff-only` | `jj git fetch` |
+| `git push -u origin <branch>` | `jj git push --bookmark <name>` |
+| `origin/dev` などのリモート参照 | `dev@origin` |
+| `git log --oneline A..B` | `jj log -r 'A..B'` |
+| `git diff --name-only A..B` | `jj diff --name-only --from A --to B` |
+| `git show <rev>:<path>` | `jj file show -r <rev> <path>` |
+| `git stash` | 不要（`@` を残したまま `jj new <base>` で別作業へ） |
+
 ## コミット規約
 
 - コミットメッセージは日本語で記述してください（例: `テレメトリー送信機をリファクタリングしてnull状態を回避`）
@@ -155,7 +182,7 @@ CI が失敗した場合は、根本原因のメモと再現手順を追加す�
 GitHub Copilot を使用する際は、以下の原則に従ってください：
 
 1. **指示の優先順位**: リポジトリオーナー・メンテナー → 最新タスクプロンプト → このハンドブック → その他のドキュメント
-2. **作業ツリーの保護**: 現在のスナップショットを基準に操作し、ユーザーの変更を破棄しない。破壊的なコマンド（`git reset --hard`、`git clean -fd`など）は使用しない
+2. **作業コピーの保護**: 現在のスナップショットを基準に操作し、ユーザーの変更を破棄しない。破壊的なコマンド（`jj abandon`、引数なしの `jj restore`、`git reset --hard` / `git clean -fd`）は使用しない。`jj op restore` はリポジトリ全体を巻き戻すため**通常操作では禁止**で、明示的な承認を得た復旧時のみ例外（「バージョン管理（Jujutsu）」節を参照）
 3. **最小限の監査可能な差分**: 追加的な編集を優先し、フォーマットを決定論的に保ち、自明でない変更には簡潔なコメントを付与
 4. **再現性の文書化**: 実行したすべてのコマンドを記録し、環境変数やクレデンシャルに関するローカルな前提を記載
 5. **前提の積極的な検証**: キャッシュされた知識に頼らず、ツールのバージョン、ワークフローの期待、環境のニーズを確認

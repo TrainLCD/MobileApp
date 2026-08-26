@@ -5,6 +5,7 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Line, TrainType } from '~/@types/graphql';
 import { useCurrentLine } from '~/hooks';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -27,7 +28,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
     lineHeight: RFValue(16),
   },
-  separator: { height: 1, width: '100%', backgroundColor: '#aaa' },
+  separator: { height: 1, width: '100%' },
   emptyText: {
     textAlign: 'center',
     marginTop: 12,
@@ -36,7 +37,15 @@ const styles = StyleSheet.create({
   },
 });
 
-const Separator = () => <View style={styles.separator} />;
+const Separator = () => {
+  const colors = useAppColors();
+
+  return (
+    <View
+      style={[styles.separator, { backgroundColor: colors.strongBorder }]}
+    />
+  );
+};
 
 const ListEmptyComponent = () => (
   <Typography style={styles.emptyText}>
@@ -136,6 +145,7 @@ export const TrainTypeList = ({
   onSelect: (item: TrainType) => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   const renderItem = useCallback(
     ({ item }: { item: TrainType; index: number }) => {
@@ -154,10 +164,10 @@ export const TrainTypeList = ({
   const listStyle = useMemo(
     () => ({
       ...styles.root,
-      borderColor: isLEDTheme ? '#fff' : '#aaa',
+      borderColor: isLEDTheme ? '#fff' : colors.strongBorder,
       marginBottom: safeAreaBottom,
     }),
-    [isLEDTheme, safeAreaBottom]
+    [colors.strongBorder, isLEDTheme, safeAreaBottom]
   );
 
   return (

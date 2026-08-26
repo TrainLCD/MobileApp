@@ -32,6 +32,7 @@ PR が open された瞬間に `pull_request: opened` トリガでこの workflo
 ## リリース特有の注意
 
 - タイトルは過去運用（PR #5811〜 #5826）にならい常に `canary` 固定。ユーザーが別タイトルを希望した場合は確認する。
-- `dev` / `canary` 両ブランチとも origin 前提。ローカル `dev` が未 push ならユーザーに push 可否を確認（`create-pr` 側でも同じガードあり）。
+- `dev` / `canary` 両ブックマークとも origin 前提。canary PR は head が `dev` そのものなので、PR に載るのは `dev@origin` の内容だけ。
+- ローカル `dev` が `dev@origin` より先行している場合は **push を促さずに中断する**。`dev` は protected で直接 push できず（前掲「バージョン bump の取り扱い」）、先行分は PR 経由でしか `dev` に入らないため、このスキルでは解消できない。先行コミットの一覧（`jj log -r 'dev@origin..dev'`）を提示し、別ブックマークへ切り出して PR を出すのかをユーザーに確認する。`create-pr` 側の「未 push なら push 可否を確認」ガードより、こちらの中断判断を優先する。
 - 変更の種類の自動判定・Assignee・テンプレ節構成の遵守は `create-pr` の手順に従う。このスキルで独自に本文を組み立て直さない。
-- 既に open な dev→canary PR がある場合は新規作成せず、既存 URL を再利用する（`create-pr` 側のガードに任せる）。既存 PR にはすでに `pull_request: opened` 起点で bump PR が作られているはずなので、`gh pr list --head "auto-version-bump-<canary_pr_number>" --base dev --state all --json number,url,state` で branch 名一致で確認する（`--search` だとタイトル / 本文の曖昧一致になり別 PR を拾う可能性があるため `--head` / `--base` を使う）。マッチが 0 件のときに限り `gh workflow run bump_version_on_canary_pr.yml -f pr_number=<canary_pr_number> -f head_ref=dev` で手動補填する。マッチがあれば結果（PR URL と state）をそのままユーザーに報告するだけで良い。
+- 既に open な dev→canary PR がある場合は新規作成せず、既存 URL を再利用する（`create-pr` 側のガードに任せる）。既存 PR にはすでに `pull_request: opened` 起点で bump PR が作られているはずなので、`gh pr list --head "auto-version-bump-<canary_pr_number>" --base dev --state all --json number,url,state` でブランチ名一致で確認する（`--search` だとタイトル / 本文の曖昧一致になり別 PR を拾う可能性があるため `--head` / `--base` を使う。ここは GitHub 側のブランチ名を指す）。マッチが 0 件のときに限り `gh workflow run bump_version_on_canary_pr.yml -f pr_number=<canary_pr_number> -f head_ref=dev` で手動補填する。マッチがあれば結果（PR URL と state）をそのままユーザーに報告するだけで良い。

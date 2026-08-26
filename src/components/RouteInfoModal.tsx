@@ -6,6 +6,7 @@ import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { pendingLineAtom } from '~/store/atoms/line';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -44,9 +45,6 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12),
     fontWeight: 'bold',
   },
-  headerText: {
-    color: '#111',
-  },
   closeButtonContainer: {
     position: 'absolute',
     left: 0,
@@ -81,9 +79,6 @@ const styles = StyleSheet.create({
     // Button 既定の boxShadow を打ち消す
     boxShadow: [],
     paddingHorizontal: 12,
-  },
-  expandableToggleTextLight: {
-    color: '#333',
   },
   expandableToggleTextLED: {
     color: '#fff',
@@ -120,6 +115,7 @@ export const RouteInfoModal = ({
   onToggleDestination,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAtomValue(appColorsAtom);
   const { height: windowHeight } = useWindowDimensions();
   const [headerHeight, setHeaderHeight] = useState(HEADER_HEIGHT);
 
@@ -189,7 +185,7 @@ export const RouteInfoModal = ({
                     textStyle={
                       isLEDTheme
                         ? styles.expandableToggleTextLED
-                        : styles.expandableToggleTextLight
+                        : { color: colors.text }
                     }
                     activeOpacity={1}
                   >
@@ -203,7 +199,7 @@ export const RouteInfoModal = ({
                     textStyle={
                       isLEDTheme
                         ? styles.expandableToggleTextLED
-                        : styles.expandableToggleTextLight
+                        : { color: colors.text }
                     }
                     activeOpacity={1}
                     onToggle={() => onToggleDestination(item)}
@@ -239,6 +235,7 @@ export const RouteInfoModal = ({
       onToggleNotification,
       onToggleDestination,
       isLEDTheme,
+      colors.text,
     ]
   );
 
@@ -272,7 +269,7 @@ export const RouteInfoModal = ({
         styles.contentView,
         {
           height: dynamicMinHeight,
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
         },
         isTablet && {
           width: '80%',
@@ -291,23 +288,28 @@ export const RouteInfoModal = ({
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
             intensity={80}
-            tint="light"
+            tint={colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : Platform.OS === 'android' && !isLEDTheme ? (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: 'rgba(255,255,255,0.92)' },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}
         <Typography
-          style={[styles.boldTypography, !isLEDTheme && styles.headerText]}
+          style={[
+            styles.boldTypography,
+            !isLEDTheme && { color: colors.modalHeadingText },
+          ]}
         >
           {lineName}
         </Typography>
-        <Heading style={!isLEDTheme ? styles.headerText : undefined}>
+        <Heading
+          style={!isLEDTheme ? { color: colors.modalHeadingText } : undefined}
+        >
           {trainTypeName}
         </Heading>
       </View>
@@ -341,14 +343,14 @@ export const RouteInfoModal = ({
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
             intensity={80}
-            tint="light"
+            tint={colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : Platform.OS === 'android' && !isLEDTheme ? (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: 'rgba(255,255,255,0.92)' },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}

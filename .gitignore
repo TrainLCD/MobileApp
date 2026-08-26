@@ -153,3 +153,8 @@ dist/
 .claude/settings.local.json
 
 # @end expo-cli
+
+# finalize-release スキルが Ruleset 一時緩和で使う作業ファイル
+# jj は未追跡ファイルも自動スナップショットするため、trap が走らない終了に備えて無視する
+ruleset_backup.json
+ruleset_relaxed.json

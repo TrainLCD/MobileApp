@@ -14,6 +14,7 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import navigationState, {
   enabledLanguagesAtom,
 } from '~/store/atoms/navigation';
@@ -46,9 +47,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
 });
 
 const SettingsItem = ({
@@ -67,6 +65,7 @@ const SettingsItem = ({
   onToggle: (event: GestureResponderEvent) => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <Pressable
@@ -81,7 +80,7 @@ const SettingsItem = ({
         justifyContent: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
         borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
@@ -100,42 +99,46 @@ const SettingsItem = ({
   );
 };
 
-const ListFooter = ({ onPressOK }: { onPressOK: () => void }) => (
-  <>
-    <Typography
-      style={{
-        marginTop: 16,
-        textAlign: 'center',
-        color: '#8B8B8B',
-      }}
-    >
-      {translate('requireJapaneseOrEnglish')}
-    </Typography>
-    <Button
-      style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
-      textStyle={{ fontWeight: 'bold' }}
-      onPress={onPressOK}
-    >
-      OK
-    </Button>
+const ListFooter = ({ onPressOK }: { onPressOK: () => void }) => {
+  const colors = useAppColors();
 
-    <View
-      style={{
-        marginTop: 32,
-      }}
-    >
-      <Link
+  return (
+    <>
+      <Typography
         style={{
+          marginTop: 16,
           textAlign: 'center',
-          fontWeight: 'bold',
+          color: colors.secondaryText,
         }}
-        action={CommonActions.navigate('TTSSettings' as never)}
       >
-        {translate('ttsLanguageSettings')}
-      </Link>
-    </View>
-  </>
-);
+        {translate('requireJapaneseOrEnglish')}
+      </Typography>
+      <Button
+        style={{ width: 128, alignSelf: 'center', marginTop: 32 }}
+        textStyle={{ fontWeight: 'bold' }}
+        onPress={onPressOK}
+      >
+        OK
+      </Button>
+
+      <View
+        style={{
+          marginTop: 32,
+        }}
+      >
+        <Link
+          style={{
+            textAlign: 'center',
+            fontWeight: 'bold',
+          }}
+          action={CommonActions.navigate('TTSSettings' as never)}
+        >
+          {translate('ttsLanguageSettings')}
+        </Link>
+      </View>
+    </>
+  );
+};
 
 const EnabledLanguagesSettings: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -143,6 +146,7 @@ const EnabledLanguagesSettings: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const enabledLanguages = useAtomValue(enabledLanguagesAtom);
   const setNavigation = useSetAtom(navigationState);
 
@@ -255,7 +259,12 @@ const EnabledLanguagesSettings: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.FlatList
           data={SETTING_ITEMS}
           keyExtractor={keyExtractor}

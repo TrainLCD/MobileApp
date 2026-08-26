@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
@@ -30,7 +31,24 @@ type Props = {
   descriptionLowerLimit: number;
 };
 
-const ACCENT_COLOR = '#008ffe';
+// この画面だけで使う淡色。共通パレットへ足すほど汎用でないため局所的に持つ。
+// ライトは従来値をそのまま維持し、ダークの値だけ新規に定義する。
+const REPORT_COLORS = {
+  light: {
+    inputBackground: '#f6f8fa',
+    inputBorder: '#dde3ea',
+    progressTrack: '#e5eaf0',
+    mutedText: '#767676',
+    cautionText: '#555',
+  },
+  dark: {
+    inputBackground: '#24272C',
+    inputBorder: '#3A3E45',
+    progressTrack: '#3A3E45',
+    mutedText: '#9AA0A6',
+    cautionText: '#B4B9BF',
+  },
+} as const;
 
 const styles = StyleSheet.create({
   backdrop: {
@@ -148,6 +166,8 @@ const NewReportModal: React.FC<Props> = ({
   descriptionLowerLimit,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAtomValue(appColorsAtom);
+  const reportColors = colors.isDark ? REPORT_COLORS.dark : REPORT_COLORS.light;
   const textInputRef = useRef<TextInputType>(null);
   const textRef = useRef('');
   const [charCount, setCharCount] = useState(0);
@@ -218,13 +238,15 @@ const NewReportModal: React.FC<Props> = ({
   const sendable = charCount >= descriptionLowerLimit;
   const remainingCount = Math.max(descriptionLowerLimit - charCount, 0);
 
-  const accentColor = isLEDTheme ? '#fff' : ACCENT_COLOR;
-  const mutedTextColor = isLEDTheme ? 'rgba(255, 255, 255, 0.7)' : '#767676';
+  const accentColor = isLEDTheme ? '#fff' : colors.accent;
+  const mutedTextColor = isLEDTheme
+    ? 'rgba(255, 255, 255, 0.7)'
+    : reportColors.mutedText;
   const inputBorderColor = (() => {
     if (isLEDTheme) {
       return inputFocused ? '#fff' : 'rgba(255, 255, 255, 0.4)';
     }
-    return inputFocused ? ACCENT_COLOR : '#dde3ea';
+    return inputFocused ? colors.accent : reportColors.inputBorder;
   })();
 
   return (
@@ -243,7 +265,7 @@ const NewReportModal: React.FC<Props> = ({
               borderColor: '#fff',
             }
           : {
-              backgroundColor: '#fff',
+              backgroundColor: colors.card,
               borderRadius: 16,
             },
       ]}
@@ -284,10 +306,12 @@ const NewReportModal: React.FC<Props> = ({
             style={[
               styles.textInput,
               {
-                color: isLEDTheme ? '#fff' : '#333',
+                color: isLEDTheme ? '#fff' : colors.text,
                 fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
                 borderColor: inputBorderColor,
-                backgroundColor: isLEDTheme ? 'transparent' : '#f6f8fa',
+                backgroundColor: isLEDTheme
+                  ? 'transparent'
+                  : reportColors.inputBackground,
                 borderRadius: isLEDTheme ? 0 : 12,
               },
             ]}
@@ -295,7 +319,7 @@ const NewReportModal: React.FC<Props> = ({
               lowerLimit: descriptionLowerLimit,
             })}
             placeholderTextColor={
-              isLEDTheme ? 'rgba(255, 255, 255, 0.5)' : '#999'
+              isLEDTheme || colors.isDark ? 'rgba(255, 255, 255, 0.5)' : '#999'
             }
           />
 
@@ -306,7 +330,7 @@ const NewReportModal: React.FC<Props> = ({
                 {
                   backgroundColor: isLEDTheme
                     ? 'rgba(255, 255, 255, 0.25)'
-                    : '#e5eaf0',
+                    : reportColors.progressTrack,
                 },
               ]}
             >
@@ -357,7 +381,7 @@ const NewReportModal: React.FC<Props> = ({
               style={[
                 styles.cautionText,
                 {
-                  color: isLEDTheme ? '#fff' : '#555',
+                  color: isLEDTheme ? '#fff' : reportColors.cautionText,
                   lineHeight: RFValue(15),
                 },
               ]}

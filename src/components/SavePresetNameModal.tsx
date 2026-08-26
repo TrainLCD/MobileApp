@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
@@ -46,7 +47,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#aaa',
     paddingHorizontal: 16,
     paddingVertical: 12,
     width: '100%',
@@ -118,7 +118,8 @@ export const SavePresetNameModal: React.FC<Props> = ({
     }
   }, []);
 
-  const textColor = isLEDTheme ? '#fff' : '#000';
+  const colors = useAtomValue(appColorsAtom);
+  const textColor = isLEDTheme || colors.isDark ? '#fff' : '#000';
 
   return (
     <CustomModal
@@ -129,7 +130,7 @@ export const SavePresetNameModal: React.FC<Props> = ({
       contentContainerStyle={[
         styles.contentView,
         {
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
           borderRadius: isLEDTheme ? 0 : 8,
         },
       ]}
@@ -151,11 +152,14 @@ export const SavePresetNameModal: React.FC<Props> = ({
             styles.textInput,
             {
               color: textColor,
+              borderColor: colors.strongBorder,
               fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : undefined,
             },
           ]}
           placeholder={translate('presetNamePlaceholder')}
-          placeholderTextColor={isLEDTheme ? 'rgba(255,255,255,0.5)' : '#999'}
+          placeholderTextColor={
+            isLEDTheme || colors.isDark ? 'rgba(255,255,255,0.5)' : '#999'
+          }
           returnKeyType="done"
           onSubmitEditing={handleSubmit}
         />

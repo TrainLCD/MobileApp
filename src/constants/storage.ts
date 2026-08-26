@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   FIRST_LAUNCH_PASSED: '@TrainLCD:firstLaunchPassed',
   PREVIOUS_THEME: '@TrainLCD:previousTheme',
   THEME_PREFERENCE: '@TrainLCD:themePreference',
+  COLOR_SCHEME_PREFERENCE: '@TrainLCD:colorSchemePreference',
   ENABLED_LANGUAGES: '@TrainLCD:enabledLanguages',
   SPEECH_ENABLED: '@TrainLCD:speechEnabled',
   TTS_ENABLED_LANGUAGES: '@TrainLCD:ttsEnabledLanguages',

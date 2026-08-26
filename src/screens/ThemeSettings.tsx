@@ -18,6 +18,7 @@ import { ThemeConfirmModal } from '~/components/ThemeConfirmModal';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom, themePreferenceAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
@@ -43,9 +44,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
   title: {
     flex: 1,
     fontSize: isTablet ? RFValue(12) : RFValue(14),
@@ -67,6 +65,7 @@ const SettingsItem = ({
   onToggle: (event: GestureResponderEvent) => void;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const isAuto = item.id === THEME_PREFERENCE.AUTO;
   const themeColor = isAuto
     ? AUTO_THEME_GRADIENT_COLORS[0]
@@ -84,7 +83,7 @@ const SettingsItem = ({
         justifyContent: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
         borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
         borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
@@ -143,6 +142,7 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const currentPreference = useAtomValue(themePreferenceAtom);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const setThemePreference = useSetAtom(themePreferenceAtom);
 
   const navigation = useNavigation();
@@ -236,7 +236,12 @@ const ThemeSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.FlatList
           data={visibleItems}
           keyExtractor={keyExtractor}
