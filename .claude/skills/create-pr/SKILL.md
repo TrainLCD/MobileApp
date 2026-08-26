@@ -180,6 +180,11 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       for entry in "${SCREENSHOTS[@]}"; do
         split_entry "$entry"
 
+        # タブ・改行はレコード境界そのものを壊すので、直列化する前にここで落とす
+        # （Markdown / HTML 属性向けのエスケープは手順 4-4 で別途行う）
+        DEVICE="$(printf '%s' "$DEVICE" | tr -d '\t\r\n')"
+        CAPTION="$(printf '%s' "$CAPTION" | tr -d '\t\r\n')"
+
         case "$(printf '%s' "${SRC##*.}" | tr 'A-Z' 'a-z')" in
           mp4|mov|m4v|webm)
             # 動画は「除外して続行」。ここで exit すると同時に渡された画像も上がらない
@@ -204,76 +209,83 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         printf '%s\t%s\t%s\n' "$SRC" "$DEVICE" "$CAPTION" >> "$RECORDS"
       done
 
-      [ -s "$RECORDS" ] || echo "アップロード対象の画像がありません（動画のみが渡された可能性）" >&2
+      if [ -s "$RECORDS" ]; then
+        echo "RECORDS=$RECORDS"   # 承認後のスクリプトへ渡すパス
+      else
+        echo "アップロード対象の画像がありません（動画のみが渡された可能性）" >&2
+      fi
       ```
 
       - **端末名は必須**。`.github/pull_request_template.md` が「端末名とともに」添付するよう求めているので、省略された入力はここで弾く。
       - **動画は除外して続行、それ以外の非対応拡張子はエラー**。説明と挙動を一致させる。
       - **サイズは表示するだけでなく判定する**。10MB 超は拒否。`OVERSIZED=1` になったら、縮小するか（macOS なら `sips -Z 1080 <in> --out <out>`）そのまま続行するかを**ユーザーに確認してから**次へ進む。Contents API の推奨上限は 1MB。
+      - **デバイス名・キャプションからタブ・改行を除去してからレコードに書く**。ユーザー入力をそのまま TSV に流すと列数・行数が変わり、URL とメタデータの対応が崩れる。
+      - **全項目が除外されて `RECORDS` が空になった場合はアップロードを行わず、画像ブロックも作らない**。手順 5 の規定に従い、理由行（例: `未添付: 動画のみが渡されたため、PR 画面へ直接ドラッグ&ドロップしてください`）を出す。
+      - `RECORDS` のパスは標準出力に出して次のステップへ渡す。**この一時ファイルは実行前ゲートを挟んで次の Bash 呼び出しまで残す**（削除は手順 4-3 の `trap` が行う）。
 
    2. **実行前ゲート**
 
       > **⚠ 実行前ゲート**: 以降は origin への書き込みを伴う。「どのファイルを・リポジトリ内のどのパスへ・どのブランチに上げるか」「資材ブランチを新規作成するか否か」「1MB 超のファイルをそのまま上げるか」をユーザーに提示し、**承認を得てから**実行する。
 
-   3. **資材ブランチの用意**（初回のみ）
+   3. **承認後に実行する自己完結スクリプト**（資材ブランチの用意 + アップロード）
 
-      **存在確認では 404 だけを「無い」として扱う**。`2>/dev/null` で握り潰すと、401 / 403 / 5xx といった認証・通信エラーまで「無い」と誤認し、資材ブランチの二重作成や `sha` 無しの PUT による 409 を招く。
+      **このブロックは実行前ゲートを挟んで別の Bash 呼び出しになる。関数定義も変数の初期化もすべてこのブロック内に持たせ、単独で実行できる形にする**。手順 4-1 で定義した `split_entry` や変数は前の呼び出しのシェルには残らないので、依存したまま書くと未定義関数や `set -u` の未定義変数で停止する。前ステップから引き継ぐのは **`RECORDS` のファイルパスだけ**。
 
-      ```bash
-      api_status() { # $1: エンドポイント -> HTTP ステータスコードだけを返す
-        local out
-        out="$(gh api -i "$1" 2>/dev/null || true)"
-        printf '%s' "$out" | head -n1 | awk '{print $2}'
-      }
+      設計上の要点:
 
-      OWNER_REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
-      ASSET_BRANCH="assets/pr-screenshots"
-
-      case "$(api_status "repos/$OWNER_REPO/branches/$ASSET_BRANCH")" in
-        200) : ;;  # 既にあるので何もしない
-        404)
-          # README を 1 つ持つツリーを作り、それを親無しコミット (= root commit) にする
-          BLOB="$(gh api -X POST "repos/$OWNER_REPO/git/blobs" \
-            -f content='PR 本文へ埋め込むスクリーンショット置き場。アプリのコードは置かない。dev / master へマージしない。' \
-            -f encoding=utf-8 -q .sha)"
-          TREE="$(node -e 'process.stdout.write(JSON.stringify({tree:[{path:"README.md",mode:"100644",type:"blob",sha:process.argv[1]}]}))' "$BLOB" \
-            | gh api -X POST "repos/$OWNER_REPO/git/trees" --input - -q .sha)"
-          ROOT_COMMIT="$(gh api -X POST "repos/$OWNER_REPO/git/commits" \
-            -f message='PRスクリーンショット置き場を初期化' -f tree="$TREE" -q .sha)"
-          gh api -X POST "repos/$OWNER_REPO/git/refs" \
-            -f ref="refs/heads/$ASSET_BRANCH" -f sha="$ROOT_COMMIT" >/dev/null
-          ;;
-        *) echo "資材ブランチの確認に失敗（HTTP ステータスを確認してください）" >&2; exit 1 ;;
-      esac
-      ```
-
-      - `parents` を省略すると root commit になる。
+      - **存在確認では 404 だけを「無い」として扱う**。`2>/dev/null` で握り潰すと、401 / 403 / 5xx といった認証・通信エラーまで「無い」と誤認し、資材ブランチの二重作成や誤った中断を招く。
       - **空ツリーの固定 SHA (`4b825dc…`) は当てにしない**。空ツリーは「内容から決まる SHA」であってすべてのリポジトリにオブジェクトとして保存されている保証は無く、無ければ root commit 作成が無効な tree SHA で失敗する。README を 1 つ含むツリーを実際に作れば、この前提に依存せずに済むうえ、ブランチの目的がブランチ自身に書かれる。
-      - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
-
-   4. **アップロード**
-
-      保存先は `<REF_SLUG>-<HEAD_SHORT>/<内容ハッシュ12桁>-<安全化したファイル名>`。
-
-      - `REF_SLUG`: head ブックマーク名に手順 6 と同じスラッグ化規則（`A-Za-z0-9._-` 以外を `_`）を適用したもの。
-      - `HEAD_SHORT`: `jj log -r '<head>@origin' --no-graph -T 'commit_id.short()'` で得る head コミット ID の短縮形。
-      - `内容ハッシュ`: 画像ファイルの SHA-256 先頭 12 桁。
-
-      **URL は不変にする。過去に公開したパスは決して上書きしない**。`REF_SLUG` だけで決めると、(a) 同じブックマーク名を後日再利用したとき、(b) `feature/foo` と `feature_foo` がスラッグ化後に同じ文字列へ潰れたときに、過去 PR が参照している URL の中身が別の画像へ差し替わる。さらに **同じコミットのまま別の画像を指定して再実行した場合**も、コミット ID だけでは同じパスを踏む。内容ハッシュをファイル名に含めれば、内容が変われば必ず別パスになるので、既存 URL の指す画像は永久に変わらない。
-
-      その結果、**同じパスが既に存在する＝内容も同一**なので、上書き用の blob `sha` を扱う必要も無くなる。存在すれば URL を再利用し、無ければ新規作成するだけでよい。PR 番号は新規作成時点ではまだ存在しないので使わない。
-
-      ペイロードは **必ず JSON ファイル経由**で渡す。base64 文字列をコマンドライン引数に直接置くと Linux の `MAX_ARG_STRLEN`（1 引数 128KB）を超えて `Argument list too long` になる。JSON 組み立てとバイナリの base64 化は Node で行う（`jq` への依存を増やさない）。
+      - 保存先は `<REF_SLUG>-<HEAD_SHORT>/<内容ハッシュ12桁>-<安全化したファイル名>`。`REF_SLUG` は head ブックマーク名に手順 6 と同じスラッグ化規則（`A-Za-z0-9._-` 以外を `_`）を適用したもの、`HEAD_SHORT` は head コミット ID の短縮形、内容ハッシュは画像の SHA-256 先頭 12 桁。
+      - **URL は不変にする。過去に公開したパスは決して上書きしない**。`REF_SLUG` だけで決めると、(a) 同じブックマーク名を後日再利用したとき、(b) `feature/foo` と `feature_foo` がスラッグ化後に同じ文字列へ潰れたときに、過去 PR が参照している URL の中身が別の画像へ差し替わる。さらに **同じコミットのまま別の画像を指定して再実行した場合**も、コミット ID だけでは同じパスを踏む。内容ハッシュをファイル名に含めれば、内容が変われば必ず別パスになるので、既存 URL の指す画像は永久に変わらない。名前空間側のプレフィックスが将来衝突したとしても、不変性はこのハッシュが担保する。
+      - その結果、**同じパスが既に存在する＝内容も同一**なので、上書き用の blob `sha` を扱う必要も無い。存在すれば URL を再利用し、無ければ新規作成するだけでよい。PR 番号は新規作成時点ではまだ存在しないので使わない。
+      - ペイロードは **必ず JSON ファイル経由**で渡す。base64 文字列をコマンドライン引数に直接置くと Linux の `MAX_ARG_STRLEN`（1 引数 128KB）を超えて `Argument list too long` になる。JSON 組み立てとバイナリの base64 化は Node で行う（`jq` への依存を増やさない）。
 
       ```bash
       (
         set -euo pipefail
+
+        # ---- 前ステップから引き継ぐのはこのパスだけ ----
+        RECORDS="<手順 4-1 が出力した RECORDS のパス>"
+
         WORK="$(mktemp -d)"
         trap 'rm -rf "$WORK" "$RECORDS"' EXIT INT TERM
 
+        api_status() { # $1: エンドポイント -> HTTP ステータスコードだけを返す
+          local out
+          out="$(gh api -i "$1" 2>/dev/null || true)"
+          printf '%s' "$out" | head -n1 | awk '{print $2}'
+        }
+
+        OWNER_REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+        ASSET_BRANCH="assets/pr-screenshots"
+        HEAD_BOOKMARK="<head ブックマーク名>"
+        HEAD_SHORT="$(jj log -r "$HEAD_BOOKMARK@origin" --no-graph -T 'commit_id.short()')"
+        REF_SLUG="$(printf '%s' "$HEAD_BOOKMARK" \
+          | tr -d '\r\n' | tr -c 'A-Za-z0-9._-' '_' \
+          | sed -E 's/_+/_/g; s/^_+//; s/_+$//' | cut -c1-100)"
+        REF_SLUG="${REF_SLUG:-pr}"
         NS="$REF_SLUG-$HEAD_SHORT"
 
-        # gh がループの stdin を食わないよう、レコードは fd 3 から読む
+        # ---- 資材ブランチの用意（初回のみ） ----
+        case "$(api_status "repos/$OWNER_REPO/branches/$ASSET_BRANCH")" in
+          200) : ;;  # 既にあるので何もしない
+          404)
+            # README を 1 つ持つツリーを作り、それを親無しコミット (= root commit) にする
+            BLOB="$(gh api -X POST "repos/$OWNER_REPO/git/blobs" \
+              -f content='PR 本文へ埋め込むスクリーンショット置き場。アプリのコードは置かない。dev / master へマージしない。' \
+              -f encoding=utf-8 -q .sha)"
+            node -e 'process.stdout.write(JSON.stringify({tree:[{path:"README.md",mode:"100644",type:"blob",sha:process.argv[1]}]}))' \
+              "$BLOB" > "$WORK/tree.json"
+            TREE="$(gh api -X POST "repos/$OWNER_REPO/git/trees" --input "$WORK/tree.json" -q .sha)"
+            ROOT_COMMIT="$(gh api -X POST "repos/$OWNER_REPO/git/commits" \
+              -f message='PRスクリーンショット置き場を初期化' -f tree="$TREE" -q .sha)"
+            gh api -X POST "repos/$OWNER_REPO/git/refs" \
+              -f ref="refs/heads/$ASSET_BRANCH" -f sha="$ROOT_COMMIT" >/dev/null
+            ;;
+          *) echo "資材ブランチの確認に失敗（HTTP ステータスを確認してください）" >&2; exit 1 ;;
+        esac
+
+        # ---- アップロード（gh がループの stdin を食わないよう fd 3 から読む） ----
         while IFS="$(printf '\t')" read -r SRC DEVICE CAPTION <&3; do
           HASH="$( { shasum -a 256 "$SRC" 2>/dev/null || sha256sum "$SRC"; } | cut -c1-12)"
           NAME="$(printf '%s' "$(basename "$SRC")" | tr -c 'A-Za-z0-9._-' '_' | sed -E 's/_+/_/g')"
@@ -309,12 +321,13 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       ```
 
       - **`set -euo pipefail` を必ず入れ、各 API 呼び出しの終了コードと URL の非空を検査する**。これが無いと、複数画像のうち途中の PUT が失敗しても最後の 1 件が成功しただけでループ全体が成功終了し、URL の行数が減った状態で本文を組み立ててしまう（デバイス名・キャプションとの対応がずれる）。失敗したら対象の入力と API エラーを報告して**本文生成ごと中断する**。
-      - **存在確認は 404 のみを「無い」として扱う**。認証エラーや 5xx を握り潰すと、既存画像を取りこぼしたまま二重アップロードや誤った中断を招く。
       - 出力は `URL\tデバイス名\tキャプション` の 1 レコード 1 行。行順への暗黙の依存をやめ、URL とメタデータを常に同じレコードとして持ち回る。
-      - `gh` の成否に関わらず一時ファイルが消えるよう、ループ全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
+      - `gh` の成否に関わらず一時ファイル（`WORK` と `RECORDS`）が消えるよう全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
       - URL は自分で組み立てず、レスポンスの `download_url` をそのまま使う（ブランチ名の `/` などのエスケープを間違えないため）。得られる URL は `https://raw.githubusercontent.com/<owner>/<repo>/<asset-branch>/<path>` 形式。
+      - ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
 
-   5. **本文用マークダウンの生成**
+
+   4. **本文用マークダウンの生成**
 
       ```markdown
       <!-- create-pr:screenshots:start -->
@@ -355,7 +368,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
      | 状況 | 出力内容 |
      | ---- | ---- |
-     | `screenshots` 指定あり | 手順 4-5 の画像ブロックをそのまま挿入する |
+     | `screenshots` 指定あり | 手順 4-4 の画像ブロックをそのまま挿入する |
      | `screenshots` 未指定 かつ **UI 影響パスに変更が無い** | **画像が無い理由を 1 行で明記する**。書式は `UI 変更なし: <根拠>`。例: 「UI 変更なし: `.claude/**` のみの変更で、アプリの画面には影響しません」「UI 変更なし: `src/utils/**` のロジック変更のみで、画面表示に変化はありません」 |
      | `screenshots` 未指定 だが **UI 影響パスに変更がある** | 画面差分が出る可能性が高い。スクリーンショットを撮って `screenshots` に渡すか、撮れない理由を明記するかを**ユーザーに確認する**。撮れない場合はその理由を明記する。例: 「未添付: ネイティブビルドが必要で本環境では撮影できないため」 |
 
@@ -366,7 +379,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
      - `assets/**`
      - `src/translation.ts`（表示文言）
 
-     パス一覧はあくまで機械的なゲートなので、最終判断は差分の中身を見て行う（例: `src/hooks/**` の変更でも表示ロジックを変えているなら UI 変更として扱う）。理由行も手順 4-5 と同じマーカー（`<!-- create-pr:screenshots:start -->` 〜 `<!-- create-pr:screenshots:end -->`）で囲み、更新モードで差し替え可能にしておく。
+     パス一覧はあくまで機械的なゲートなので、最終判断は差分の中身を見て行う（例: `src/hooks/**` の変更でも表示ロジックを変えているなら UI 変更として扱う）。理由行も手順 4-4 と同じマーカー（`<!-- create-pr:screenshots:start -->` 〜 `<!-- create-pr:screenshots:end -->`）で囲み、更新モードで差し替え可能にしておく。
 
    **更新モード**（既存 PR の本文を再生成）
 
