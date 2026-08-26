@@ -156,11 +156,12 @@ gh workflow run ai_code_review.yml -f pr_number=1234 -f reasoning_effort=xhigh
 ### 費用が積み上がる仕組み
 
 - **差分はインクリメンタルではない。** 毎回 `base...head` の全差分を送ります
-  （`reasoning_effort` は既定 `high`。手動実行時に `low` / `medium` / `high` /
-  `xhigh` から選べ、費用もこれに比例します）。CodeRabbit のように「レビュー済み
-  コミットを再レビューしない」動きはしないため、差分や履歴が増えたラウンドでは
-  1 回あたりの入力も増えます（縮むこともあり、`MAX_DIFF_CHARS` を超える分は
-  切り詰めます）。
+  （`MAX_DIFF_CHARS` 文字まで。超過分は切り詰め）。CodeRabbit のように「レビュー
+  済みコミットを再レビューしない」動きはしないため、差分や履歴が増えたラウンドでは
+  入力トークンも増えます（縮むこともあります）。
+- **`reasoning_effort` も効く。** 既定は `high` で、手動実行時に `low` / `medium` /
+  `high` / `xhigh` から選べます。値が大きいほど reasoning トークン（output トークン
+  として課金）が増えやすくなりますが、固定の倍率ではありません。
 - **キャンセルしても返金されない。** `concurrency` は実行中のジョブを止めるだけで、
   既に発射された OpenAI API 呼び出しの課金は取り消されません。
 - **CodeRabbit にも同時に課金される**（従量課金）。gpt の指摘に対応して push すると
