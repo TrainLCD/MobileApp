@@ -46,6 +46,7 @@ import { AgentHeader } from './AgentHeader';
 import { AgentInputBar } from './AgentInputBar';
 import { AgentMessageBubble } from './AgentMessageBubble';
 import { AgentTypingIndicator } from './AgentTypingIndicator';
+import { getAgentColors } from './agentColors';
 
 type GetStationsByIdsData = {
   stations: Station[];
@@ -639,7 +640,7 @@ const DestinationAgentScreen = () => {
                 styles.disclaimer,
                 isLEDTheme
                   ? styles.disclaimerLEDColor
-                  : { color: colors.secondaryText },
+                  : { color: getAgentColors(colors.isDark).mutedText },
               ]}
             >
               {translate('destinationAgentDisclaimer')}

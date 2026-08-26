@@ -15,6 +15,7 @@ import Animated, {
 import Typography from '~/components/Typography';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { getAgentColors } from './agentColors';
 
 // 3 点ドットの位相ずらし(ms)。件数固定なのでキーにも使う
 const DOT_DELAYS = [0, 150, 300] as const;
@@ -137,7 +138,7 @@ export const AgentTypingIndicator = ({ label }: { label?: string }) => {
               styles.label,
               isLEDTheme
                 ? styles.labelLEDColor
-                : { color: colors.secondaryText },
+                : { color: getAgentColors(colors.isDark).mutedText },
             ]}
           >
             {label}
