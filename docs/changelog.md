@@ -17,18 +17,24 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
   `expo-notifications` 57.0.10 → 57.0.14 ほか）。
 - `expo-task-manager` が 57.0.9 → 57.0.13 に上がり `patch-package` のパッチが競合したため、
   57.0.13 上でパッチを再生成（`patches/expo-task-manager+57.0.13.patch`）。
-  **パッチ適用後の `createJobInfo` は 3 分岐すべて `setMinimumLatency(0)` +
-  `setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE)` となり、57.0.9 にパッチを当てていた
-  従来の出荷状態とバイト単位で同一。** この更新でアプリの実挙動は変わっていない。
-  なおパッチファイルの差分行が変化しているのは、上流 57.0.13 側のベースラインが
-  変わったためであり、パッチ適用後の結果が変わったわけではない。
-- 上流 57.0.13 は API 28–30 分岐に `setOverrideDeadline` を追加済みだが、API 31+ の
-  `setExpedited(true)` 単独による `JobInfo.Builder.build()` の `IllegalArgumentException`
-  （Android 14+ でのクラッシュ要因）は未修正のため、パッチは引き続き必要。
-- パッチが上流素の状態に対して持つトレードオフ（従来からの継続であり、この更新で
-  新たに生じたものではない）: API 31+ で expedited job を使わないため、Android 12/13 での
-  実行優先度は上流素の状態より低い。これは前面のフォアグラウンド位置情報サービスが
-  プロセスを維持することと、JS 側の `watchPositionAsync` 経路で補われる。
+  あわせてパッチの適用範囲を **API 31+ の 1 分岐のみ** に縮小した。
+- **API 28–30 分岐は上流 57.0.13 の実装に戻した**（`setImportantWhileForeground(true)` +
+  `setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE)`）。旧パッチがこの分岐を置き換えていたのは、
+  57.0.9 では `setImportantWhileForeground(true)` が単独で置かれており、一部 OEM の
+  `JobInfo.Builder` バリデータが制約なしと判定して `IllegalArgumentException` を投げたため。
+  57.0.13 は上流が late constraint である `setOverrideDeadline` を追加したことでこの原因が
+  解消しており、パッチを維持する理由がなくなった。上流に戻したことで、前面実行時の
+  優先度ヒントと Doze 緩和の効果が復活する。
+- **API 31+ 分岐のパッチは維持**（`setExpedited(true)` → `setMinimumLatency(0)` +
+  `setOverrideDeadline(DEFAULT_OVERRIDE_DEADLINE)`）。上流は未修正で、Android 14+/16 での
+  `JobInfo.Builder.build()` クラッシュ要因が残っているため。この分岐の挙動は従来の
+  出荷状態と同一で、この更新による変更はない。
+- API 31+ 分岐のトレードオフ（従来からの継続であり、この更新で新たに生じたものではない）:
+  expedited job を使わないため実行優先度が上流素の状態より低い。JS 側の
+  `watchPositionAsync` バイパスは `NEEDS_JOBSCHEDULER_BYPASS`（`src/constants/native.ts`）で
+  API 36+ に限定されているため、**API 31–35 ではこのバイパスによる補償が効かない**。
+  当該レンジではフォアグラウンド位置情報サービスによるプロセス維持のみが緩和策で、
+  Doze 下で JS 配信が遅延する可能性がある。パッチ内コメントにも同旨を明記した。
 
 ### 検証結果
 
