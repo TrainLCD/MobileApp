@@ -401,19 +401,22 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
             # シンボリックリンク（mode: 120000）が検査対象から消えて素通りする
             node -e '
               const t = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-              if (t.truncated) {
-                console.error("ツリーが大きく応答が省略されました（truncated）。全件を検査できないため中止します");
+              // 応答の形を先に確かめる。truncated の欠落や tree の欠落を「問題なし」と
+              // 解釈すると、全件を検査しないまま書き込みへ進んでしまう
+              if (!t || t.truncated !== false || !Array.isArray(t.tree)) {
+                console.error("ツリー応答が不正か省略されています（truncated / tree を確認できません）。中止します");
                 process.exit(1);
               }
               const NS = /^[A-Za-z0-9._-]+$/;
               const ASSET = /^(README\.md|[A-Za-z0-9._-]+\/[0-9a-f]{12}-[A-Za-z0-9._-]+\.(png|jpg|jpeg|gif|webp))$/i;
-              const bad = (t.tree ?? []).filter((e) => {
-                if (e.type === "tree") return !NS.test(e.path);          // 名前空間ディレクトリのみ
+              const bad = t.tree.filter((e) => {
+                if (!e || typeof e.path !== "string") return true;       // path 欠落を素通りさせない
+                if (e.type === "tree") return e.mode !== "040000" || !NS.test(e.path);
                 if (e.type !== "blob") return true;                      // commit(gitlink) 等は拒否
                 if (e.mode !== "100644") return true;                    // 実行可能・symlink を拒否
                 return !ASSET.test(e.path);
               });
-              process.stdout.write(bad.map((e) => e.type + " " + e.mode + " " + e.path).join("\n"));
+              process.stdout.write(bad.map((e) => JSON.stringify(e)).join("\n"));
             ' "$WORK/asset-tree.json" > "$WORK/asset-violations.txt"
             if [ -s "$WORK/asset-violations.txt" ]; then
               echo "$ASSET_BRANCH に資材以外のエントリが含まれています。書き込みを中止します" >&2
