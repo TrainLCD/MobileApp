@@ -7,6 +7,7 @@
     "lint": "biome check ./src",
     "format": "biome format ./src --write",
     "test": "cross-env TZ=UTC jest",
+    "test:scripts": "node --test .github/scripts/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "watch:test": "cross-env TZ=UTC jest --watch",
     "gql:codegen": "graphql-codegen --config utils/codegen.ts",
