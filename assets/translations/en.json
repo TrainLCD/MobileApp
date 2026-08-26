@@ -54,7 +54,7 @@
   "colorSchemeAuto": "Auto (follow system)",
   "colorSchemeLight": "Light",
   "colorSchemeDark": "Dark",
-  "colorSchemeDescription": "Changes the colors of screens such as settings and line selection. \"Auto\" follows your device's dark mode setting. The screen shown while riding keeps the colors of the selected theme. While the LED theme is selected, its own colors are used regardless of this setting.",
+  "colorSchemeDescription": "Changes the colors of screens such as settings and line selection. \"Auto\" follows your device's dark mode setting. The screen shown while riding keeps the colors of the selected theme. While the LED theme is selected, screens keep the LED colors regardless of this setting, but some UI such as menus still follows it.",
   "autoTheme": "Auto",
   "themeDescriptionAuto": "Theme changes automatically based on the current line.",
   "tokyoMetroLike": "Tokyo Metro",
