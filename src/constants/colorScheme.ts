@@ -51,7 +51,7 @@ export const LIGHT_APP_COLORS: AppColors = {
   card: '#FFFFFF',
   cardExpanded: '#F5F5F5',
   cardBorder: '#FFFFFF',
-  border: '#E0E0E0',
+  border: '#DDDDDD',
   text: '#333333',
   secondaryText: '#8B8B8B',
   mutedText: '#666666',

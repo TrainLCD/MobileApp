@@ -458,7 +458,7 @@ const AppSettingsScreen: React.FC = () => {
 
           {/* ビルド情報 */}
           {isDevApp || isBetaBuild ? (
-            <Typography style={[styles.betaNotice, { color: colors.text }]}>
+            <Typography style={styles.betaNotice}>
               {isDevApp ? translate('canaryNotice') : ''}
               {!isDevApp && isBetaBuild ? translate('betaNotice') : ''}
             </Typography>

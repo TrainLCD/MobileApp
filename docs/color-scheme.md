@@ -55,6 +55,27 @@ const operationScreenLayout = ({
 従来と同じ見た目のままになる。新しく共通コンポーネントを配色対応させるときも、
 `useAppColors()` を使う限りこの境界は保たれる。
 
+## LED テーマは対象外
+
+LED テーマは行先表示器を模した配色を全画面で持っているため、ダークモードと併用すると
+色の混在が起きる。そこで `appColorsAtom` は **LED テーマ選択中はライトのパレットを返す**。
+
+```ts
+export const appColorsAtom = atom<AppColors>((get) => {
+  if (get(isLEDThemeAtom)) {
+    return LIGHT_APP_COLORS;
+  }
+  return APP_COLORS[get(resolvedColorSchemeAtom)];
+});
+```
+
+`LIGHT_APP_COLORS` の各値は、この機能を入れる前に各画面へ直接書かれていた色と同じものを
+使っている。そのため LED テーマ中は、各コンポーネントに残した `isLEDTheme` 分岐と合わせて
+導入前と完全に同じ色になる。設定値そのものは保持されるので、LED 以外のテーマへ戻せば
+選んでいたダークがそのまま適用される。
+
+`colors.isDark` も同様に LED テーマ中は `false` になる。
+
 ## 使い方
 
 ```tsx

@@ -1,6 +1,10 @@
 import { atom } from 'jotai';
 import { Appearance, type ColorSchemeName } from 'react-native';
-import { APP_COLORS, type AppColors } from '~/constants/colorScheme';
+import {
+  APP_COLORS,
+  type AppColors,
+  LIGHT_APP_COLORS,
+} from '~/constants/colorScheme';
 import { STORAGE_KEYS } from '~/constants/storage';
 import { storage } from '~/lib/storage';
 import {
@@ -10,6 +14,7 @@ import {
   type ColorSchemePreference,
   isColorSchemePreference,
 } from '~/models/ColorScheme';
+import { isLEDThemeAtom } from './theme';
 
 const restorePreference = (): ColorSchemePreference => {
   const stored = storage.getString(STORAGE_KEYS.COLOR_SCHEME_PREFERENCE);
@@ -36,6 +41,7 @@ export const systemColorSchemeAtom = atom<ColorScheme>(
   normalizeSystemScheme(Appearance.getColorScheme())
 );
 
+/** 端末設定とユーザー設定だけから決まる配色。LEDテーマの有無は考慮しない */
 export const resolvedColorSchemeAtom = atom<ColorScheme>((get) => {
   const preference = get(colorSchemePreferenceAtom);
   if (preference === COLOR_SCHEME_PREFERENCE.AUTO) {
@@ -44,12 +50,24 @@ export const resolvedColorSchemeAtom = atom<ColorScheme>((get) => {
   return preference;
 });
 
-export const appColorsAtom = atom<AppColors>(
-  (get) => APP_COLORS[get(resolvedColorSchemeAtom)]
-);
+/**
+ * 実際に適用する配色。
+ *
+ * LEDテーマは行先表示器を模した独自の配色を全画面で持っており、ダークモードと
+ * 併用すると意図しない色の混在が起きる。そのためLEDテーマ選択中はダークモード設定を
+ * 無視してライトの値を返し、LEDテーマの見た目を従来のまま保つ。
+ * 各コンポーネントに残っている `isLEDTheme ? ... : colors.x` の分岐と合わせて、
+ * LEDテーマ時はこの機能導入前と完全に同じ色になる。
+ */
+export const appColorsAtom = atom<AppColors>((get) => {
+  if (get(isLEDThemeAtom)) {
+    return LIGHT_APP_COLORS;
+  }
+  return APP_COLORS[get(resolvedColorSchemeAtom)];
+});
 
 export const isDarkColorSchemeAtom = atom<boolean>(
-  (get) => get(resolvedColorSchemeAtom) === COLOR_SCHEME.DARK
+  (get) => get(appColorsAtom).isDark
 );
 
 export { normalizeSystemScheme };
