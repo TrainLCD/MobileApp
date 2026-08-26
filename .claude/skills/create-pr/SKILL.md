@@ -20,7 +20,7 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 | `related_issue` | **ユーザー入力を最優先**。指定が `#N`（数値のみ）なら `Closes #N`、`Closes #N` / `Fixes #N` / `Refs #N` 形式ならその接頭語を保って出力。`related_issue` が空のときに限り、コミット件名から `Closes #N` / `Fixes #N` / `Refs #N` を抽出（接頭語を維持。`#N` 単体表記なら `Closes` を補う）。両方とも見つからなければ節のコメントのみ |
 | `skip_checks` | `false`（PR本文「テスト」節のチェック欄 3 項目を ON）。`true` なら全 OFF。**本文表示のみを制御するフラグで、`npm run lint` / `npm test` / `npm run typecheck` の実際の実行は保証しない**。**手順 3 で定義する「コード本体パス」に変更が無い（=テストを実行する意味が無い）ケースでは、`skip_checks` の値に関わらず 3 項目すべて OFF にする** |
 | `labels` | 文字列配列、または未指定。未指定なら付与しない。指定した場合は `gh pr create --label <name>` でアトミックに付与する（作成後に `gh pr edit --add-label` すると `pull_request: opened` トリガのワークフローに間に合わないため、必ず `gh pr create` 時に渡す） |
-| `screenshots` | ローカル画像パスの配列、または未指定。**未指定でも「スクリーンショット」節は空欄にせず、画像が無い理由を必ず明記する**（手順 5 参照）。各要素は `<ローカルパス>` または `<ローカルパス>\|<デバイス名>\|<キャプション>`（`\|` 区切り、後ろ 2 つは任意。例: `~/shots/home.png\|iPhone 15 Pro\|変更後のホーム画面`）。手順 4 で資材ブランチにアップロードし、本文に埋め込む |
+| `screenshots` | ローカル画像パスの配列、未指定、または明示的な空配列 `[]`。**未指定でも「スクリーンショット」節は空欄にせず、画像が無い理由を必ず明記する**（手順 5 参照）。更新モードでは**未指定＝既存の画像ブロックを変更しない**、**`[]`＝既存の画像ブロックを削除して理由行に置き換える**、と区別する。各要素は `<ローカルパス>` または `<ローカルパス>\|<デバイス名>\|<キャプション>`（`\|` 区切り、後ろ 2 つは任意。例: `~/shots/home.png\|iPhone 15 Pro\|変更後のホーム画面`）。手順 4 で資材ブランチにアップロードし、本文に埋め込む |
 
 ### タイトル推論ルール
 
@@ -138,7 +138,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
 4. **スクリーンショットのアップロード**（`screenshots` 指定時のみ）
 
-   `screenshots` が空ならこの手順を丸ごとスキップする（スクリーンショット節は従来どおりテンプレのコメントのみ）。
+   `screenshots` が空なら**この手順（アップロード処理）だけをスキップする**。スクリーンショット節に何を書くかは `screenshots` の有無に関わらず手順 5 で決める。**「未指定だから節を空欄にする」ではない** — 未指定時は手順 5 の規定に従って理由行を生成する。
 
    **前提となる制約**: GitHub の PR 本文に画像を出すには公開 URL が必要で、Web UI のドラッグ&ドロップ以外に `user-images.githubusercontent.com` へ直接アップロードする API は存在しない。data URI は camo プロキシに落とされて表示されない。そこで **画像専用の孤立ブランチ `assets/pr-screenshots` に Contents API で直接コミットし、その raw URL を本文に埋め込む**。このリポジトリは public なので raw URL はそのままレンダリングされる。
 
@@ -198,19 +198,31 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    3. **資材ブランチの用意**（初回のみ）
 
+      **存在確認では 404 だけを「無い」として扱う**。`2>/dev/null` で握り潰すと、401 / 403 / 5xx といった認証・通信エラーまで「無い」と誤認し、資材ブランチの二重作成や `sha` 無しの PUT による 409 を招く。
+
       ```bash
+      api_status() { # $1: エンドポイント -> HTTP ステータスコードだけを返す
+        local out
+        out="$(gh api -i "$1" 2>/dev/null || true)"
+        printf '%s' "$out" | head -n1 | awk '{print $2}'
+      }
+
       OWNER_REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
       ASSET_BRANCH="assets/pr-screenshots"
 
-      if ! gh api "repos/$OWNER_REPO/branches/$ASSET_BRANCH" >/dev/null 2>&1; then
-        # 空ツリー（全 Git リポジトリに存在する固定 SHA）を指す親無しコミット = root commit
-        ROOT_COMMIT="$(gh api -X POST "repos/$OWNER_REPO/git/commits" \
-          -f message='PRスクリーンショット置き場を初期化' \
-          -f tree=4b825dc642cb6eb9a060e54bf8d69288fbee4904 \
-          -q .sha)"
-        gh api -X POST "repos/$OWNER_REPO/git/refs" \
-          -f ref="refs/heads/$ASSET_BRANCH" -f sha="$ROOT_COMMIT" >/dev/null
-      fi
+      case "$(api_status "repos/$OWNER_REPO/branches/$ASSET_BRANCH")" in
+        200) : ;;  # 既にあるので何もしない
+        404)
+          # 空ツリー（全 Git リポジトリに存在する固定 SHA）を指す親無しコミット = root commit
+          ROOT_COMMIT="$(gh api -X POST "repos/$OWNER_REPO/git/commits" \
+            -f message='PRスクリーンショット置き場を初期化' \
+            -f tree=4b825dc642cb6eb9a060e54bf8d69288fbee4904 \
+            -q .sha)"
+          gh api -X POST "repos/$OWNER_REPO/git/refs" \
+            -f ref="refs/heads/$ASSET_BRANCH" -f sha="$ROOT_COMMIT" >/dev/null
+          ;;
+        *) echo "資材ブランチの確認に失敗 (HTTP を確認してください)" >&2; exit 1 ;;
+      esac
       ```
 
       `parents` を省略すると root commit になる。既にブランチがあれば何もしない。ブランチ保護 / ruleset で作成や書き込みが弾かれた場合は**握りつぶさずユーザーに報告**し、手貼り（PR 画面へドラッグ&ドロップ）にフォールバックする。
@@ -243,7 +255,13 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
           DEST="$NS/$(printf '%02d' "$i")-$NAME"
 
           # 同一コミットへの再実行で同じパスを踏んだときだけ、上書きに blob sha が要る
-          SHA="$(gh api "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH" -q .sha 2>/dev/null || true)"
+          SHA=""
+          BLOB_STATUS="$(api_status "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH")"
+          case "$BLOB_STATUS" in
+            404) : ;;
+            200) SHA="$(gh api "repos/$OWNER_REPO/contents/$DEST?ref=$ASSET_BRANCH" -q .sha)" ;;
+            *) echo "既存blobの確認に失敗 (HTTP $BLOB_STATUS): $DEST" >&2; exit 1 ;;
+          esac
 
           node -e '
             const fs = require("fs");
@@ -334,7 +352,21 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    | 変更内容 | 冒頭の箇条書きブロック（`-` で始まる連続行）を最新差分で再生成。その下に人間が書いた散文があれば残す。 |
    | テスト | **手順 5 の本文組み立てと同じ判定順を適用**（まずコード本体パス未変更なら 3 項目を強制 OFF。該当しない場合のみ `skip_checks` で ON/OFF）。 |
    | 関連Issue | 既存内容を尊重。コミット件名に `Closes/Fixes/Refs #N` があり、かつ既存本文中に同じ Issue 番号 `#N` を指す表現が存在しない場合のみ追記（重複は作らない。比較時は `Closes` / `closes` / `Fixes` / `fixes` / `Refs` / `refs` を同一視し、空白・記号差は無視して `#N` 単位で照合）。 |
-   | スクリーンショット | `<!-- create-pr:screenshots:start -->` 〜 `<!-- create-pr:screenshots:end -->` の**マーカー内だけ**を再生成する（`screenshots` 指定時は画像ブロック、未指定時は上の理由行）。マーカーが無ければ節の末尾に新規追加。**マーカー外の既存内容（人間が手貼りした画像・散文）は常に温存する**。ただし**マーカー外に人間が貼った画像が既にある場合は理由行を書かない**（「UI 変更なし」と実際の画像が矛盾するため）。 |
+   | スクリーンショット | 下の「更新モードでのスクリーンショット節」を参照。**未指定は「変更なし」であって「消せ」ではない**。 |
+
+   **更新モードでのスクリーンショット節**
+
+   マーカー（`<!-- create-pr:screenshots:start -->` 〜 `<!-- create-pr:screenshots:end -->`）の内側だけを対象にし、外側の既存内容（人間が手貼りした画像・散文）は常に温存する。マーカー内の扱いは下表のとおり。
+
+   | `screenshots` | マーカー内に既存の画像ブロックがある | マーカー内が理由行のみ / マーカーが無い |
+   | ---- | ---- | ---- |
+   | 指定あり | 新しい画像ブロックで置き換える | 新しい画像ブロックを書く（マーカーが無ければ節末尾に新規追加） |
+   | **未指定** | **触らない**（既存の画像・デバイス名・キャプションをそのまま残す） | 手順 5 の規定に従って理由行を生成する |
+   | `[]`（明示的な空配列） | 画像ブロックを削除し、理由行に置き換える | 理由行を生成する |
+
+   **`screenshots` の未指定と空配列 `[]` を必ず区別する**。未指定を「再生成」と解釈すると、初回にアップロードした画像が後続コミットの反映時に理由行へ置き換わって本文から消える。画像を意図的に消したいときだけ空配列を明示的に渡す。
+
+   なお、マーカー外に人間が貼った画像が既にある場合は理由行を書かない（「UI 変更なし」と実際の画像が矛盾するため）。
 
    差し替え後の本文と既存本文の差分をユーザーに提示し、承認を得てから手順 6 へ進む。自動上書き節で人間の手入れらしき痕跡（テンプレのコメント以外の文章）がある場合は、どう扱うかをユーザーに確認する。
 
