@@ -66,6 +66,17 @@ export const appColorsAtom = atom<AppColors>((get) => {
   return APP_COLORS[get(resolvedColorSchemeAtom)];
 });
 
+/**
+ * 電光掲示板風テーマの有無を無視した配色。
+ *
+ * アクションシートのように OS 側のレイヤーへ描かれ、電光掲示板風テーマの配色を
+ * 持ちようがない UI で使う。ここだけ配色設定に追従しないと、他がダークなのに
+ * シートだけ明るいという不具合に見えるため、テーマではなく設定値をそのまま反映する。
+ */
+export const overlayAppColorsAtom = atom<AppColors>(
+  (get) => APP_COLORS[get(resolvedColorSchemeAtom)]
+);
+
 export const isDarkColorSchemeAtom = atom<boolean>(
   (get) => get(appColorsAtom).isDark
 );

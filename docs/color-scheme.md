@@ -132,11 +132,13 @@ Context ではなく `getActionSheetColorOptions()`(`src/utils/actionSheetColors
 配色をオプションとして渡す。
 
 ```tsx
+const actionSheetColors = useAtomValue(overlayAppColorsAtom);
+
 showActionSheetWithOptions(
   {
     options,
     cancelButtonIndex,
-    ...getActionSheetColorOptions(colors, isLEDTheme),
+    ...getActionSheetColorOptions(actionSheetColors),
   },
   handleSelect
 );
@@ -147,7 +149,11 @@ iOS は端末ネイティブのシートなので `userInterfaceStyle` だけが
 ライト時はスタイルを指定せずライブラリ既定値のままにして導入前と同じ見た目を保つが、
 iOS のネイティブシートは既定で端末の外観に追従してしまうため、ライトでも
 `userInterfaceStyle` だけは明示してアプリ側の設定を優先させる。
-電光掲示板風テーマ中は何も渡さず、導入前と完全に同じ挙動にしている。
+
+アクションシートは OS 側のレイヤーに描かれ、電光掲示板風テーマの配色を持ちようがない。
+そのためここだけは電光掲示板風テーマ中も配色設定に追従させる。渡すパレットは
+`appColorsAtom` ではなく、テーマの影響を受けない `overlayAppColorsAtom` を使う。
+追従させないと、他がダークなのにシートだけ明るいという不具合に見えてしまう。
 
 走行画面から開くアクションシート(`Permitted.tsx` の長押しメニュー)もモーダルと同じ扱いで
 配色に追従する。走行画面は Provider の外側にあるため、そこでは `appColorsAtom` を直接購読する。

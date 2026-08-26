@@ -15,6 +15,7 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import { useAppColors } from '~/providers/AppColorsProvider';
+import { overlayAppColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { getActionSheetColorOptions } from '~/utils/actionSheetColors';
@@ -154,6 +155,9 @@ const Licenses: React.FC = () => {
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
+  // アクションシートはOS側のレイヤーに描かれるため、電光掲示板風テーマ中も
+  // 配色設定に追従させる。詳細は getActionSheetColorOptions のコメントを参照
+  const actionSheetColors = useAtomValue(overlayAppColorsAtom);
 
   const navigation = useNavigation();
   const { showActionSheetWithOptions } = useActionSheet();
@@ -303,7 +307,7 @@ const Licenses: React.FC = () => {
           {
             options,
             cancelButtonIndex,
-            ...getActionSheetColorOptions(colors, isLEDTheme),
+            ...getActionSheetColorOptions(actionSheetColors),
           },
           (selectedIndex) => {
             if (selectedIndex === 0) {
@@ -317,7 +321,7 @@ const Licenses: React.FC = () => {
         Linking.openURL(item.href);
       }
     },
-    [colors, isLEDTheme, showActionSheetWithOptions]
+    [actionSheetColors, showActionSheetWithOptions]
   );
 
   const renderItem = useCallback(
