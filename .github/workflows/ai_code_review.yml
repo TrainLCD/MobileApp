@@ -5,6 +5,7 @@
 # ⚠️ このワークフローを編集する人へ:
 # pull_request_review を使っているため、このジョブは secrets にアクセスできる。
 # PR の head 側のコードは絶対に checkout・実行しないこと。
+# 手動実行のフォールバックも既定ブランチに固定すること（github.sha にしない）。
 # checkout の ref を head や merge ref に変えた瞬間、PR 作成者が
 # OPENAI_API_KEY と GITHUB_TOKEN を自由に持ち出せるようになる。
 # レビュー対象の差分は compare API から取得し、データとしてのみ扱う。
@@ -21,11 +22,18 @@ on:
   # 問題が起きる（#6723）。approve 後なら CodeRabbit の指摘は解決済みなので、
   # gpt は「approve 済みの PR に対する最後の確認」として働く。
   #
-  # pull_request / pull_request_target ではなく pull_request_review を使う。
-  # pull_request はワークフロー定義自体を PR 側（merge commit）から読むため、
-  # PR に secrets を持ち出すステップを足されると checkout より先に評価されて防げない。
-  # pull_request_review は pull_request_target と同様に base 側の定義で動くので、
-  # 定義も下の guard も PR 側から改竄できない（secrets と write 権限を持つ点も同じ）。
+  # approve を観測できるイベントは pull_request_review だけなので、
+  # 「approve 後に 1 回」を自動で実現するには他に選択肢が無い。
+  #
+  # ⚠️ pull_request_target と違い、このイベントのワークフロー定義は base 側から
+  # 読まれるとは限らない。実測では、同一リポジトリの PR に対して GitHub は
+  # head 側（PR ブランチ）の定義でトリガーを評価した（#6724 の run 73 が実例。
+  # base の dev はこのトリガーを持たないのに実行が作られた）。
+  # つまり「定義が base 固定だから PR 側から改竄できない」という保証は無い。
+  # 同一リポジトリのブランチを push できる時点で write 権限があり、任意の
+  # ワークフローを走らせられるので実質的なリスク増は小さいが、この前提に
+  # 寄りかかった設計にはしないこと。head 側のコードを checkout・実行しない
+  # という下の方針は、この不確かさとは独立に必ず維持する。
   pull_request_review:
     types:
       - submitted
@@ -62,9 +70,11 @@ env:
 jobs:
   review:
     runs-on: ubuntu-22.04
-    # pull_request_review では fork PR にも secrets が渡るため、この guard が
-    # fork を遮断する唯一の門になる。緩めないこと（OpenAI の課金濫用防止も兼ねる）。
-    # guard 自体は base 側の定義から読まれるので PR 側からは改竄できない。
+    # fork PR にも secrets が渡りうるため、この guard が fork を遮断する門になる。
+    # 緩めないこと（OpenAI の課金濫用防止も兼ねる）。
+    # ただし上に書いたとおり、この guard 自体が base 側から読まれる保証は無い。
+    # guard を突破されても被害が出ないよう、head 側のコードを checkout・実行
+    # しないという方針と併せて多層で守る。
     # Draft と skip-ai-review ラベル付き PR も、レビュー待ちではないのでスキップする。
     #
     # 投稿者は coderabbitai[bot] に完全一致で判定する。type == 'Bot' のような
@@ -82,10 +92,15 @@ jobs:
       # base.sha を明示して head 側のコードを checkout しない。head を取ると、
       # PR で書き換えたレビュースクリプトが OPENAI_API_KEY と同じジョブで実行できてしまう。
       # レビュー対象の差分は gh pr diff（API）から取るため head の作業ツリーは不要で、
-      # 実行されるのは常に base 側でレビュー済みのスクリプトと CLAUDE.md になる。
+      # 実行されるのは常にレビュー済みのスクリプトと CLAUDE.md になる。
+      #
+      # 手動実行のフォールバックは github.sha にしない。workflow_dispatch は実行者が
+      # 選んだ ref で走るため、github.sha だと未レビューのブランチのスクリプトが
+      # OPENAI_API_KEY と同じジョブで実行される。既定ブランチに固定して、
+      # 「動くのは常にレビュー済みのコード」という前提を手動実行でも保つ。
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          ref: ${{ github.event.pull_request.base.sha || github.event.repository.default_branch }}
           persist-credentials: false
 
       - uses: actions/setup-node@v4

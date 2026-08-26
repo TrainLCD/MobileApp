@@ -97,10 +97,20 @@ fork PR・Draft・`skip-ai-review` ラベル付きの PR もレビューでき�
 コミットが PR の HEAD と一致しているか確認してください。
 
 > [!IMPORTANT]
-> `pull_request_review` は `pull_request_target` と同様、常に base 側の
-> ワークフロー定義で動きます。このワークフロー自体を変更する PR では、変更後の
-> 挙動をその PR 上で検証できません。マージ後に `workflow_dispatch` で手動実行
-> して確認してください。
+> `pull_request_review` のワークフロー定義が base 側から読まれるとは限りません。
+> 実測では、同一リポジトリの PR に対して GitHub は **head 側（PR ブランチ）の
+> 定義**でトリガーを評価しました（#6724 の run 73。base の `dev` はこのトリガーを
+> 持たないのに実行が作られています）。`pull_request_target` の「定義が base 固定
+> だから PR 側から改竄できない」という保証は、このイベントには当てはまりません。
+>
+> 同一リポジトリのブランチを push できる時点で write 権限があり、元々任意の
+> ワークフローを走らせられるため実質的なリスク増は小さいと整理していますが、
+> **この前提に寄りかかった設計にはしないでください**。head 側のコードを
+> checkout・実行しないという方針は、この不確かさとは独立に必ず維持します。
+>
+> 副作用として、このワークフロー自体を変更する PR では、トリガーの発火と guard の
+> 判定をその PR 上で確認できます。確認できないのは「旧トリガーが消えること」だけ
+> です。
 
 ## 手動実行
 
@@ -110,6 +120,10 @@ Actions タブの **AI Code Review** から `workflow_dispatch` で任意の PR 
 | --- | --- | --- | --- |
 | `pr_number` | 必須 | なし | レビュー対象の PR 番号 |
 | `reasoning_effort` | 任意 | `high` | 推論深度 (`low`/`medium`/`high`/`xhigh`) |
+
+手動実行では、Actions の UI でどの ref を選んでもレビュースクリプトは既定
+ブランチのものが使われます（`github.sha` へはフォールバックしません）。
+レビュー対象の PR は `pr_number` で指定します。
 
 gh CLI からも実行できます。
 
@@ -255,23 +269,25 @@ CI では `.github/workflows/test_scripts.yml`（**Scripts** ワークフロー�
 
 ## 設計上の判断
 
-- **head 側のコードを checkout・実行しない**: 危険なのは
-  `pull_request_target` という trigger そのものではなく、PR の head 側
-  コードを checkout して secrets と同じジョブで実行することです。本
-  ワークフローは head の作業ツリーを一切必要としない（差分は compare API
-  から取得する）ため、checkout を `base.sha` に固定し
-  `persist-credentials: false` を指定しています。実行されるのは常に base
-  側でレビュー済みの `.github/scripts/ai-code-review.mjs` と `CLAUDE.md`
-  で、PR の差分とメタデータは compare API / `gh pr view` が返すデータと
-  してのみ扱います。
-- **`pull_request` ではなく `pull_request_review`**: `pull_request` は
-  ワークフロー定義自体を PR 側（merge commit）から読みます。そのため
-  同一リポジトリの PR がこのワークフローに secrets を持ち出すステップを
-  追加でき、checkout より先に評価されるので base 固定では防げません。
-  `pull_request_review` は `pull_request_target` と同様に base 側から
-  定義も下記の guard も読まれるため、PR 側から改竄できません。secrets と
-  リポジトリ書き込み権限を持つ点も `pull_request_target` と同じなので、
-  head 側のコードを checkout・実行しないという方針はそのまま維持します。
+- **head 側のコードを checkout・実行しない**: 危険なのは trigger そのもの
+  ではなく、PR の head 側コードを checkout して secrets と同じジョブで実行する
+  ことです。本ワークフローは head の作業ツリーを一切必要としない（差分は
+  compare API から取得する）ため、checkout を `base.sha` に固定し
+  `persist-credentials: false` を指定しています。実行されるのは常にレビュー
+  済みの `.github/scripts/ai-code-review.mjs` と `CLAUDE.md` で、PR の差分と
+  メタデータは compare API / `gh pr view` が返すデータとしてのみ扱います。
+- **手動実行のフォールバックを `github.sha` にしない**: `workflow_dispatch` は
+  実行者が選んだ ref で走るため、`github.sha` へフォールバックすると未レビューの
+  ブランチの `ai-code-review.mjs` が `OPENAI_API_KEY` と同じジョブで実行されます。
+  `github.event.repository.default_branch` に固定し、手動実行でも「動くのは常に
+  レビュー済みのコード」という前提を保っています。
+- **トリガーが `pull_request_review` である理由**: approve を単一の事実として
+  観測できるイベントがこれしか無いためです。コメント本文の文字列マッチのような
+  壊れやすい検出を避けられます。ただし上記のとおり、このイベントの定義が base 側
+  から読まれる保証はありません。したがって「定義と guard が改竄不能」という
+  前提は置かず、**head 側のコードを checkout・実行しない**ことを唯一の砦として
+  維持します。secrets とリポジトリ書き込み権限を持つ点は `pull_request_target`
+  と同じです。
 - **CodeRabbit の approve をトリガーにする**: 毎 push で CodeRabbit と
   並走させると、(1) 同じ指摘が両方から別々のタイミングで出て往復が二重になる、
   (2) gpt の指摘が push を誘発し続けるため CodeRabbit の auto-pause /
