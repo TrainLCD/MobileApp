@@ -3,7 +3,9 @@
 // .github/workflows/ai_code_review.yml から呼ばれる前提で、追加依存を持たず
 // Node 24 標準機能（グローバル fetch / ESM）だけで完結させている。
 
+import { realpathSync } from 'node:fs';
 import { appendFile, readFile, writeFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 
 const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
 const DEFAULT_MODEL = 'gpt-5.6-sol';
@@ -150,7 +152,7 @@ const readPositiveInt = (name, fallback) => {
   return Number(raw);
 };
 
-const truncate = (text, limit) => {
+export const truncate = (text, limit) => {
   if (text.length <= limit) {
     return { text, truncated: false };
   }
@@ -206,12 +208,22 @@ const parsePullRequestMeta = (raw) => {
 const STRUCTURAL_TAG_PATTERN =
   /<(\/?)(pull_request|repository_guidelines|review_history|previous_ai_review|pr_comments|pr_review_comments|comment|diff|title|base_branch|description)\b/gi;
 
-const neutralizeStructuralTags = (text) =>
+export const neutralizeStructuralTags = (text) =>
   text.replace(STRUCTURAL_TAG_PATTERN, '&lt;$1$2');
+
+// 差分にも同じ無害化を掛けるとレビュー対象そのものが変質する。このリポジトリの
+// コードには <title> や <description> が普通に現れるため、書き換えるとモデルが
+// 実在しないマークアップ崩れを指摘しかねない。一方で構造から抜け出せるのは
+// 領域を閉じる終了タグだけなので、<diff> と <pull_request> の終了形に限って
+// 無害化する。差分が最大の untrusted 入力である以上ここを素通しにはできない。
+const DIFF_BOUNDARY_PATTERN = /<\/(diff|pull_request)\b/gi;
+
+export const neutralizeDiffBoundary = (text) =>
+  text.replace(DIFF_BOUNDARY_PATTERN, '&lt;/$1');
 
 // XML 風の属性値に流し込む前に、引用符と山括弧だけを落とす。
 // 対象は GitHub のログイン名・ISO 日時・リポジトリ相対パスに限られる。
-const escapeAttribute = (value) =>
+export const escapeAttribute = (value) =>
   String(value ?? '')
     .replace(/[<>"']/g, '')
     .slice(0, 200);
@@ -219,7 +231,7 @@ const escapeAttribute = (value) =>
 // AI レビューコメントの本文を「今回のレビュー」と「過去の履歴」に分割する。
 // 履歴を畳んだコメントをそのまま次ラウンドの履歴へ積むと入れ子が際限なく
 // 深くなるため、積む前に必ずこの分割を通す。
-const splitArchivedComment = (body) => {
+export const splitArchivedComment = (body) => {
   const index = body.indexOf(ARCHIVE_MARKER);
   if (index === -1) {
     return { current: body, archive: '' };
@@ -232,16 +244,24 @@ const splitArchivedComment = (body) => {
 
 // 畳んである過去ラウンドを新しい順の配列へ戻す。ROUND_MARKER より前は
 // <details> / <summary> の飾りなので捨てる。
-const parseArchivedRounds = (archive) =>
+// renderArchive がラウンド間に挟む水平線は、分割すると前のラウンドの末尾に
+// 残る。落とさずに積み直すと再レンダリングのたびに区切りが増え、保存した
+// ラウンド本文が更新のたびに変質する。
+export const parseArchivedRounds = (archive) =>
   archive
     .split(ROUND_MARKER)
     .slice(1)
-    .map((round) => round.replace(/\s*<\/details>\s*$/, '').trim())
+    .map((round) =>
+      round
+        .replace(/\s*<\/details>\s*$/, '')
+        .replace(/\s*-{3,}\s*$/, '')
+        .trim()
+    )
     .filter((round) => round !== '');
 
 // 前ラウンドのコメント本文から、次に投稿するコメントへ載せる履歴を組み立てる。
 // 先頭が最新ラウンドになるよう積み、上限を超えた分は古い方から落とす。
-const buildArchivedRounds = (previousBody) => {
+export const buildArchivedRounds = (previousBody) => {
   if (!previousBody) {
     return [];
   }
@@ -255,7 +275,7 @@ const buildArchivedRounds = (previousBody) => {
 
 // 履歴セクションを Markdown 化する。budget はコメント全体の上限から
 // 今回のレビュー本文を引いた残りで、収まらないラウンドは切り捨てる。
-const renderArchive = (rounds, budget) => {
+export const renderArchive = (rounds, budget) => {
   if (rounds.length === 0) {
     return '';
   }
@@ -285,7 +305,7 @@ const renderArchive = (rounds, budget) => {
 
 // ワークフローが集めた PR コメントを読み解く。取得に失敗しても差分レビュー
 // 自体は続行できるよう、壊れた入力は空の履歴として扱う。
-const parseHistory = (raw) => {
+export const parseHistory = (raw) => {
   const empty = { previousReview: '', comments: [], reviewComments: [] };
   if (!raw.trim()) {
     return empty;
@@ -348,7 +368,7 @@ const renderCommentEntries = (comments, limit, budget, withPath) => {
   return { entries, used };
 };
 
-const buildHistorySection = (history) => {
+export const buildHistorySection = (history) => {
   const sections = [];
   let budget = MAX_HISTORY_CHARS;
 
@@ -489,7 +509,7 @@ const formatFinding = (finding) => {
   return lines.join('\n');
 };
 
-const renderComment = ({ review, meta, archivedRounds = [] }) => {
+export const renderComment = ({ review, meta, archivedRounds = [] }) => {
   const findings = [...review.findings].sort(
     (a, b) =>
       SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity)
@@ -616,7 +636,7 @@ const main = async () => {
     diff.truncated
       ? '<diff note="サイズ上限により後半を切り詰め済み">'
       : '<diff>',
-    diff.text,
+    neutralizeDiffBoundary(diff.text),
     '</diff>',
     '</pull_request>',
   ]
@@ -706,7 +726,24 @@ const main = async () => {
   }
 };
 
-main().catch((error) => {
-  console.error(`::error::AI コードレビューに失敗しました: ${error.message}`);
-  process.exitCode = 1;
-});
+// テストから純粋関数を import できるよう、直接起動されたときだけ main() を走らせる。
+// import.meta.main は Node のバージョンによっては undefined になり、その場合
+// レビューが無言で実行されなくなるため、どのバージョンでも成立する比較を使う。
+const isDirectRun = () => {
+  const entry = process.argv[1];
+  if (!entry) {
+    return false;
+  }
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(entry)).href;
+  } catch {
+    return false;
+  }
+};
+
+if (isDirectRun()) {
+  main().catch((error) => {
+    console.error(`::error::AI コードレビューに失敗しました: ${error.message}`);
+    process.exitCode = 1;
+  });
+}

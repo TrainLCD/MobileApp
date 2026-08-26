@@ -114,6 +114,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+          # CodeRabbit が実際に承認したコミット。workflow_dispatch では空になる。
+          REVIEW_COMMIT_SHA: ${{ github.event.review.commit_id }}
         run: |
           set -euo pipefail
           if ! printf '%s' "$PR_NUMBER" | grep -Eq '^[0-9]+$'; then
@@ -128,6 +130,15 @@ jobs:
           # なお compare の三点比較は gh pr diff と同じセマンティクスで、出力も一致する。
           BASE_SHA="$(jq -r '.baseRefOid' "$RUNNER_TEMP/pr.json")"
           HEAD_SHA="$(jq -r '.headRefOid' "$RUNNER_TEMP/pr.json")"
+          # 承認が古くなっていないか確かめる。CodeRabbit がコミット A を承認した後に
+          # B が push されると、approve をゲートにしているつもりで未承認の B を
+          # レビューしてしまう。B は CodeRabbit が再レビューして再び approve するので、
+          # ここは黙って譲ってよい（そのタイミングで本ワークフローが改めて起動する）。
+          if [ -n "${REVIEW_COMMIT_SHA:-}" ] && [ "$REVIEW_COMMIT_SHA" != "$HEAD_SHA" ]; then
+            echo "::notice::承認されたコミットと現在の HEAD が異なるためスキップします ($REVIEW_COMMIT_SHA -> $HEAD_SHA)"
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA" \
             -H "Accept: application/vnd.github.v3.diff" > "$RUNNER_TEMP/pr.diff"
           echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
@@ -141,7 +152,7 @@ jobs:
       # コメント本文も untrusted な入力なので、PR 本文と同様にシェル変数へ
       # 展開せず JSON ファイルのままスクリプトへ渡す。
       - name: Fetch review history
-        if: steps.guard.outputs.enabled == 'true'
+        if: steps.guard.outputs.enabled == 'true' && steps.pr.outputs.stale != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
@@ -176,7 +187,7 @@ jobs:
           fi
 
       - name: Run AI review
-        if: steps.guard.outputs.enabled == 'true'
+        if: steps.guard.outputs.enabled == 'true' && steps.pr.outputs.stale != 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           REASONING_EFFORT: ${{ inputs.reasoning_effort || 'high' }}
@@ -192,7 +203,7 @@ jobs:
 
       # 再 push のたびにコメントが増えないよう、マーカー付きの既存コメントを更新する。
       - name: Post review comment
-        if: steps.guard.outputs.enabled == 'true'
+        if: steps.guard.outputs.enabled == 'true' && steps.pr.outputs.stale != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}

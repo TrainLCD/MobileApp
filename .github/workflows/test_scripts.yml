@@ -1,0 +1,25 @@
+# .github/scripts/ 配下の CI 用スクリプトに対するテスト。
+# Jest (test.yml) は jest-expo プリセットで src/** を対象にしているため、
+# この階層は拾われない。追加依存が無く Node 標準のテストランナーだけで動くので、
+# npm ci を挟まない軽量なジョブとして分けている。
+name: Scripts
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - '.github/scripts/**'
+      - '.github/workflows/test_scripts.yml'
+
+jobs:
+  scripts:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run Node test runner
+        run: npm run test:scripts
