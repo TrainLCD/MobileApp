@@ -11,6 +11,15 @@ on:
     paths:
       - '.github/scripts/**'
       - '.github/workflows/test_scripts.yml'
+      # 実行コマンドは package.json の test:scripts に依存している。
+      # スクリプト定義だけが変わった場合も壊れを検出できるようにする。
+      - 'package.json'
+
+# ブランチ側で書き換えられるコードを実行するワークフローなので、
+# GITHUB_TOKEN は読み取りに絞る。リポジトリの既定が書き込み可能な場合でも、
+# ここで明示すれば縮小される。テストに書き込み権限は不要。
+permissions:
+  contents: read
 
 jobs:
   scripts:
@@ -18,6 +27,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # 認証情報を作業ツリーに残さない。テストは git 操作をしない。
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 24
