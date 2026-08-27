@@ -6,6 +6,43 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-08-28 — `npm run android` がアプリ起動段階で失敗する不具合を修正
+
+対象バージョン: v10.13.1
+
+### 内容
+
+- `npm run android` はビルドとインストールに成功した直後、起動段階で
+  `No development build (me.tinykitten.trainlcd) ... is installed.` の
+  `CommandError` で失敗していた。実際に入るのは dev フレーバーの
+  `me.tinykitten.trainlcd.dev` で、expo が期待するパッケージ名と食い違っていた。
+- 原因は `@expo/config-plugins` の `getApplicationIdAsync` が
+  `android/app/build.gradle` を正規表現で走査し、**最初に現れる `applicationId`
+  だけ**を拾う実装になっていること。本プロジェクトでは
+  `defaultConfig.applicationId`（`me.tinykitten.trainlcd`）が先に現れるため、
+  `--variant devDebug` を指定しても product flavor 側の
+  `applicationId "me.tinykitten.trainlcd.dev"` は参照されない。
+- `expo run:android` に `--app-id` を渡すと `AndroidPlatformManager` が
+  `openProjectInCustomRuntimeWithCustomAppIdAsync` 経路に入り、インストール判定に
+  `customAppId` を、起動に `<customAppId>/<namespace>.MainActivity` を使うため、
+  フレーバー付きでも正しく解決される。`package.json` の `android` スクリプトへ
+  `--app-id me.tinykitten.trainlcd.dev` を追加した。
+
+### 検証結果
+
+Android 実機（Samsung SCG13 / Android 16・API 36）で確認した。
+
+- `npm run android` が次の行まで到達し、`CommandError` は発生しない。
+
+  ```text
+  › Opening me.tinykitten.trainlcd.dev/me.tinykitten.trainlcd.MainActivity on SCG13
+  ```
+
+- 起動後に Metro がバンドルを配信し
+  （`Android Bundled 1723ms index.js (3584 modules)`）、アプリが正常に描画される。
+- `assets/translations/ja.json` の `welcomeLabel` を書き換えると、リビルドなしで
+  約 1.4 秒後に画面へ反映される（Fast Refresh の動作確認）。
+
 ## 2026-08-28 — devDebug で JS が APK に焼き込まれ Fast Refresh とデバッガが使えない不具合を修正
 
 対象バージョン: v10.13.1 / Issue [#6741](https://github.com/TrainLCD/MobileApp/issues/6741)
