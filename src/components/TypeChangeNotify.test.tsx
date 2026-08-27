@@ -594,10 +594,10 @@ describe('TypeChangeNotify', () => {
       expect(queryAllByText(/Ofuna/)).toHaveLength(0);
     });
 
-    // 現在駅が経路内に見つからない場合は境界を特定できないため、経路全体から
-    // 推定する従来のロジックへフォールバックする。進行方向より手前の区間を
-    // 除外できないベストエフォートの挙動であることを明示的に固定しておく。
-    it('現在駅がnullの場合はINBOUNDの従来ロジックにフォールバックする', () => {
+    // 現在駅が経路内に見つからない場合は種別変更の境界を特定できない。
+    // 経路全体から推定すると通過済みの区間や終着駅を拾ってしまうため、
+    // 案内自体を表示しないことを回帰テストで固定しておく。
+    it('現在駅がnullの場合は種別変更案内を表示しない', () => {
       setupMocks({
         stations: inboundStations,
         currentStation: null,
@@ -607,12 +607,12 @@ describe('TypeChangeNotify', () => {
 
       const { queryAllByText } = render(<TypeChangeNotify />);
 
-      // 経路全体で現在種別(快速)の最終駅となる大船
-      expect(queryAllByText(/大船/).length).toBeGreaterThan(0);
-      expect(queryAllByText(/Ofuna/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/大船/)).toHaveLength(0);
+      expect(queryAllByText(/Ofuna/)).toHaveLength(0);
+      expect(queryAllByText(/から/)).toHaveLength(0);
     });
 
-    it('現在駅が経路内に無い場合はOUTBOUNDの従来ロジックにフォールバックする', () => {
+    it('現在駅が経路内に無い場合は種別変更案内を表示しない', () => {
       const outboundStations = inboundStations.slice().reverse();
 
       setupMocks({
@@ -632,9 +632,146 @@ describe('TypeChangeNotify', () => {
 
       const { queryAllByText } = render(<TypeChangeNotify />);
 
-      // 乗車位置が不明なため、経路全体で次種別(普通)に該当する最初の駅である前橋になる
-      expect(queryAllByText(/前橋/).length).toBeGreaterThan(0);
-      expect(queryAllByText(/Maebashi/).length).toBeGreaterThan(0);
+      expect(queryAllByText(/前橋/)).toHaveLength(0);
+      expect(queryAllByText(/Maebashi/)).toHaveLength(0);
+      expect(queryAllByText(/から/)).toHaveLength(0);
+    });
+
+    it('種別が変わる駅が経路の終着駅になる場合は種別変更案内を表示しない', () => {
+      // 大船で東海道線に入って終着となる経路。終着駅で種別は変わらない
+      const endsAtTypeChangeStations = inboundStations.slice(0, -1);
+
+      setupMocks({
+        stations: endsAtTypeChangeStations,
+        currentStation: endsAtTypeChangeStations[2],
+        selectedDirection: 'INBOUND',
+        selectedBound: { name: '大船', nameRoman: 'Ofuna' },
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/大船/)).toHaveLength(0);
+      expect(queryAllByText(/Ofuna/)).toHaveLength(0);
+    });
+  });
+
+  // Issue #6746: 種別が各駅停車→急行→各駅停車と往復する経路で、現在駅が経路内に
+  // 見つからないと終着駅を種別変更駅として拾い「海老名から急行海老名ゆきとなります」
+  // という行き先と種別変更駅が同一の案内が生成されていた
+  describe('種別が往復する直通経路(埼玉高速鉄道→相鉄本線)', () => {
+    const localType = { typeId: 1, name: '各駅停車', nameRoman: 'Local' };
+    const expressType = { typeId: 2, name: '急行', nameRoman: 'Express' };
+
+    const createLine = (id: number, nameShort: string, nameRoman: string) => ({
+      id,
+      nameShort,
+      nameRoman,
+      color: '#00A0E9',
+      company: { id, nameShort, nameEnglishShort: nameRoman },
+    });
+
+    const saitamaRapidLine = createLine(
+      99301,
+      '埼玉高速鉄道線',
+      'Saitama Railway Line'
+    );
+    const nambokuLine = createLine(99302, '南北線', 'Namboku Line');
+    const meguroLine = createLine(99303, '東急目黒線', 'Tokyu Meguro Line');
+    const sotetsuMainLine = createLine(99304, '相鉄本線', 'Sotetsu Main Line');
+
+    // 浦和美園→海老名。各駅停車→急行→各駅停車と種別が往復する
+    const stations = [
+      {
+        id: 1,
+        groupId: 1,
+        name: '浦和美園',
+        nameRoman: 'Urawa-Misono',
+        line: saitamaRapidLine,
+        trainType: localType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 2,
+        groupId: 2,
+        name: '目黒',
+        nameRoman: 'Meguro',
+        line: nambokuLine,
+        trainType: localType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 3,
+        groupId: 2,
+        name: '目黒',
+        nameRoman: 'Meguro',
+        line: meguroLine,
+        trainType: expressType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 4,
+        groupId: 3,
+        name: '新横浜',
+        nameRoman: 'Shin-Yokohama',
+        line: meguroLine,
+        trainType: expressType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 5,
+        groupId: 3,
+        name: '新横浜',
+        nameRoman: 'Shin-Yokohama',
+        line: sotetsuMainLine,
+        trainType: localType,
+        stopCondition: 'STOP',
+      },
+      {
+        id: 6,
+        groupId: 4,
+        name: '海老名',
+        nameRoman: 'Ebina',
+        line: sotetsuMainLine,
+        trainType: localType,
+        stopCondition: 'STOP',
+      },
+    ];
+
+    it('現在駅が経路内に無いとき終着駅を種別変更駅として案内しない', () => {
+      const {
+        useCurrentLine,
+        useCurrentStation,
+        useCurrentTrainType,
+        useNextTrainType,
+      } = require('~/hooks');
+
+      useCurrentLine.mockReturnValue(saitamaRapidLine);
+      // 経路設定直後などで現在地が経路上の駅に一致しない状態
+      useCurrentStation.mockReturnValue(null);
+      useCurrentTrainType.mockReturnValue({
+        ...localType,
+        color: '#00A0E9',
+        line: saitamaRapidLine,
+      });
+      // 修正前の useNextTrainType が返していた、既に過ぎた区間の種別
+      useNextTrainType.mockReturnValue({
+        ...expressType,
+        color: '#00A0E9',
+        line: meguroLine,
+      });
+
+      mockAtomValues({
+        stations,
+        selectedDirection: 'INBOUND',
+        selectedBound: { name: '海老名', nameRoman: 'Ebina' },
+        enabledLanguages: ['JA', 'EN'],
+      });
+
+      const { queryAllByText } = render(<TypeChangeNotify />);
+
+      expect(queryAllByText(/海老名/)).toHaveLength(0);
+      expect(queryAllByText(/Ebina/)).toHaveLength(0);
+      expect(queryAllByText(/となります/)).toHaveLength(0);
     });
   });
 
