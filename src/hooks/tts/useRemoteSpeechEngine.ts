@@ -1,11 +1,14 @@
+import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   REMOTE_TTS_MAX_INPUT_BYTES,
+  REMOTE_TTS_SPEED_RATES,
   REMOTE_TTS_VOICE_EN,
   REMOTE_TTS_VOICE_JA,
 } from '../../constants';
 import { getSessionToken } from '../../lib/session';
 import { workerUrl } from '../../lib/workerApi';
+import { ttsSpeedPreferenceAtom } from '../../store/atoms/speech';
 import {
   toSpeakableText,
   truncateToByteLimit,
@@ -35,6 +38,17 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
   const runIdRef = useRef(0);
   const jaHandleRef = useRef<PlayAudioHandle | null>(null);
   const enHandleRef = useRef<PlayAudioHandle | null>(null);
+
+  // 読み上げ速度は設定変更のたびに speak を作り直す必要が無いので ref で持つ。
+  // 発話のたびに最新値を読み、変更直後のアナウンスから新しい速度が反映される。
+  const speedPreference = useAtomValue(ttsSpeedPreferenceAtom);
+  const speedRef = useRef(speedPreference);
+  // 更新はコミット後に行う。React は中断・破棄したレンダーを再実行するため、
+  // レンダー中に書き換えると、実際には反映されなかった速度を非同期の speak が
+  // 読んでしまう。
+  useEffect(() => {
+    speedRef.current = speedPreference;
+  }, [speedPreference]);
 
   // iOS は replace() によるプレイヤー再利用がバックグラウンド再生を壊すため、
   // 発話ごとに生成し、終了時にネイティブごと解放する。
@@ -180,6 +194,7 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
             idToken,
             jaVoiceName: REMOTE_TTS_VOICE_JA,
             enVoiceName: REMOTE_TTS_VOICE_EN,
+            speed: REMOTE_TTS_SPEED_RATES[speedRef.current],
           });
 
           if (isStaleRun()) {
