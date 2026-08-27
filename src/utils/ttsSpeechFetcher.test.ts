@@ -347,7 +347,7 @@ describe('fetchSpeechAudio', () => {
     expect(parseRequestBody().data).not.toHaveProperty('speed');
   });
 
-  it('速度に不正値が渡された場合は送らない', async () => {
+  it('速度がプリセット外・不正値なら送らない', async () => {
     mockFetch.mockResolvedValue(
       okResponse({
         id: 'tts-142',
@@ -361,6 +361,11 @@ describe('fetchSpeechAudio', () => {
       Number.POSITIVE_INFINITY,
       0,
       -1,
+      // 有限の正値だが Worker の許可リストに無い。送ると Worker は既定速度で
+      // 合成するのに、こちらは送った値でキャッシュキーを作ってしまう。
+      0.9,
+      1.2,
+      2,
     ] as const) {
       clearFetchCache();
       mockFetch.mockClear();

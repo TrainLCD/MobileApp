@@ -43,7 +43,12 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
   // 発話のたびに最新値を読み、変更直後のアナウンスから新しい速度が反映される。
   const speedPreference = useAtomValue(ttsSpeedPreferenceAtom);
   const speedRef = useRef(speedPreference);
-  speedRef.current = speedPreference;
+  // 更新はコミット後に行う。React は中断・破棄したレンダーを再実行するため、
+  // レンダー中に書き換えると、実際には反映されなかった速度を非同期の speak が
+  // 読んでしまう。
+  useEffect(() => {
+    speedRef.current = speedPreference;
+  }, [speedPreference]);
 
   // iOS は replace() によるプレイヤー再利用がバックグラウンド再生を壊すため、
   // 発話ごとに生成し、終了時にネイティブごと解放する。

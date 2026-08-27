@@ -1,6 +1,14 @@
 import { fetch } from 'expo/fetch';
 import { File, Paths } from 'expo-file-system';
+import { REMOTE_TTS_SPEED_RATES } from '../constants/tts';
 import { base64ToUint8Array } from './base64ToUint8Array';
+
+// Worker(/tts) の ALLOWED_CLIENT_SPEEDS と一致するプリセット3値。許可リスト外の
+// 値は Worker が無視して既定速度で合成するため、そのまま送るとこちらが作る
+// キャッシュキーと実際の音声が食い違い、別速度の音声を再利用してしまう。
+const ALLOWED_SPEEDS: ReadonlySet<number> = new Set(
+  Object.values(REMOTE_TTS_SPEED_RATES)
+);
 
 // ネットワーク切り替えやドーズ状態に入るとリクエストが応答もエラーも返さず
 // 永久にハングすることがある。その場合に呼び出し側の再生パイプラインが
@@ -263,12 +271,11 @@ export const fetchSpeechAudio = async (
 
   const normalizedJaVoiceName = normalizeOptional(jaVoiceName);
   const normalizedEnVoiceName = normalizeOptional(enVoiceName);
-  // NaN や Infinity をそのまま JSON へ載せると null になり Worker 側で弾かれるため、
-  // 有限の正値だけを送る。それ以外は未指定として Worker の既定速度に任せる。
+  // プリセット3値だけを送る。NaN や Infinity は JSON へ載せると null になって
+  // Worker 側で弾かれ、0.9 のような有限の正値は Worker が既定速度へ倒すため、
+  // どちらも未指定として扱わないとキャッシュキーが実際の速度とずれる。
   const normalizedSpeed =
-    typeof speed === 'number' && Number.isFinite(speed) && speed > 0
-      ? speed
-      : undefined;
+    typeof speed === 'number' && ALLOWED_SPEEDS.has(speed) ? speed : undefined;
 
   const cacheKey = buildCacheKey({
     textJa: trimmedTextJa,
