@@ -16,9 +16,14 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { useRemoteTTSEnabled } from '~/hooks/useRemoteTTSEnabled';
 import { useTTSFeatureEnabled } from '~/hooks/useTTSFeatureEnabled';
+import {
+  TTS_SPEED_PREFERENCE,
+  type TTSSpeedPreference,
+} from '~/models/TTSSpeed';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import speechState from '~/store/atoms/speech';
+import speechState, { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
@@ -37,6 +42,11 @@ type TTSLanguageSettingItem = {
   id: TTSLanguage;
   title: string;
   nationalFlag: string;
+};
+
+type TTSSpeedSettingItem = {
+  id: TTSSpeedPreference;
+  title: string;
 };
 
 const styles = StyleSheet.create({
@@ -98,20 +108,81 @@ const SettingsItem = ({
   );
 };
 
+// 速度はトグルではなく三択なので、配色設定（ColorSchemeSettings）と同じく
+// radio ロールで「使用中 / 設定」を出し分ける。
+const SpeedSettingsItem = ({
+  item,
+  isFirst,
+  isLast,
+  state,
+  disabled,
+  onSelect,
+}: {
+  item: TTSSpeedSettingItem;
+  isFirst: boolean;
+  isLast: boolean;
+  state: boolean;
+  disabled: boolean;
+  onSelect: () => void;
+}) => {
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
+
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityLabel={item.title}
+      accessibilityState={{ checked: state, disabled }}
+      onPress={onSelect}
+      disabled={disabled}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
+        borderTopLeftRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderTopRightRadius: isFirst && !isLEDTheme ? 12 : 0,
+        borderBottomLeftRadius: isLast && !isLEDTheme ? 12 : 0,
+        borderBottomRightRadius: isLast && !isLEDTheme ? 12 : 0,
+      }}
+    >
+      <Typography style={{ flex: 1, fontSize: 21, fontWeight: 'bold' }}>
+        {item.title}
+      </Typography>
+
+      <StatePanel
+        state={state}
+        disabled={disabled}
+        onText={translate('inUse')}
+        offText={translate('select')}
+      />
+    </Pressable>
+  );
+};
+
 const ListFooter = ({
   ttsLanguageItems,
   ttsEnabledLanguages,
+  ttsSpeedItems,
+  ttsSpeedPreference,
+  remoteTTSEnabled,
   speechEnabled,
   ttsFeatureEnabled,
   onToggleTTSLanguage,
+  onSelectTTSSpeed,
   onPressServiceStatus,
   onPressOK,
 }: {
   ttsLanguageItems: TTSLanguageSettingItem[];
   ttsEnabledLanguages: TTSLanguage[];
+  ttsSpeedItems: TTSSpeedSettingItem[];
+  ttsSpeedPreference: TTSSpeedPreference;
+  remoteTTSEnabled: boolean;
   speechEnabled: boolean;
   ttsFeatureEnabled: boolean;
   onToggleTTSLanguage: (language: TTSLanguage) => void;
+  onSelectTTSSpeed: (preference: TTSSpeedPreference) => void;
   onPressServiceStatus: () => void;
   onPressOK: () => void;
 }) => {
@@ -151,6 +222,42 @@ const ListFooter = ({
       >
         {translate('requireJapaneseOrEnglish')}
       </Typography>
+      {/* 速度指定が効くのはリモート合成の経路だけ。端末内蔵TTSで読み上げる構成では
+        端末の読み上げ速度設定が使われるため、選ばせても反映されず誤解を招く */}
+      {remoteTTSEnabled ? (
+        <>
+          <Typography
+            style={{
+              marginTop: 24,
+              marginBottom: 8,
+              fontSize: 18,
+              fontWeight: 'bold',
+            }}
+          >
+            {translate('ttsSpeedTitle')}
+          </Typography>
+          {ttsSpeedItems.map((item, index) => (
+            <SpeedSettingsItem
+              key={item.id}
+              item={item}
+              isFirst={index === 0}
+              isLast={index === ttsSpeedItems.length - 1}
+              onSelect={() => onSelectTTSSpeed(item.id)}
+              state={ttsSpeedPreference === item.id}
+              disabled={!speechEnabled}
+            />
+          ))}
+          <Typography
+            style={{
+              marginTop: 16,
+              textAlign: 'center',
+              color: colors.secondaryText,
+            }}
+          >
+            {translate('ttsSpeedDescription')}
+          </Typography>
+        </>
+      ) : null}
       {/* iOSはリモート合成のため品質案内は不要。案内文はAndroidのTTSエンジン設定を
         指す内容なので、該当する設定を持たないweb等でも出さない */}
       {Platform.OS === 'android' ? (
@@ -211,12 +318,17 @@ const TTSSettingsScreen: React.FC = () => {
     { enabled: speechEnabled, backgroundEnabled, ttsEnabledLanguages },
     setSpeechState,
   ] = useAtom(speechState);
+  const [ttsSpeedPreference, setTTSSpeedPreference] = useAtom(
+    ttsSpeedPreferenceAtom
+  );
 
   const navigation = useNavigation();
 
   // Remote Config のキルスイッチ。起動時の非同期取得完了後に値が届いた場合も
   // 購読経由で再レンダーされ、トグルの無効化が確実に反映される。
   const ttsFeatureEnabled = useTTSFeatureEnabled();
+  // 速度設定はリモート合成でのみ効くため、同じく購読して表示を切り替える。
+  const remoteTTSEnabled = useRemoteTTSEnabled();
 
   const SETTING_ITEMS: SettingItem[] = [
     {
@@ -240,6 +352,24 @@ const TTSSettingsScreen: React.FC = () => {
         id: 'EN',
         title: translate('english'),
         nationalFlag: '🇺🇸',
+      },
+    ],
+    []
+  );
+
+  const TTS_SPEED_ITEMS: TTSSpeedSettingItem[] = useMemo(
+    () => [
+      {
+        id: TTS_SPEED_PREFERENCE.SLOW,
+        title: translate('ttsSpeedSlow'),
+      },
+      {
+        id: TTS_SPEED_PREFERENCE.NORMAL,
+        title: translate('ttsSpeedNormal'),
+      },
+      {
+        id: TTS_SPEED_PREFERENCE.FAST,
+        title: translate('ttsSpeedFast'),
       },
     ],
     []
@@ -387,6 +517,23 @@ const TTSSettingsScreen: React.FC = () => {
     [setSpeechState, ttsEnabledLanguages]
   );
 
+  const handleSelectTTSSpeed = useCallback(
+    (preference: TTSSpeedPreference) => {
+      setTTSSpeedPreference(preference);
+
+      try {
+        storage.set(STORAGE_KEYS.TTS_SPEED_PREFERENCE, preference);
+      } catch (error) {
+        console.error('Failed to save TTS speed preference:', error);
+        showDialog(
+          translate('errorTitle'),
+          translate('failedToSavePreference')
+        );
+      }
+    },
+    [setTTSSpeedPreference]
+  );
+
   // キルスイッチOFF時は保存済みのユーザー設定を保持したまま、表示上はOFF・操作不可にする。
   const effectiveSpeechEnabled = speechEnabled && ttsFeatureEnabled;
 
@@ -483,9 +630,13 @@ const TTSSettingsScreen: React.FC = () => {
             <ListFooter
               ttsLanguageItems={TTS_LANGUAGE_ITEMS}
               ttsEnabledLanguages={ttsEnabledLanguages}
+              ttsSpeedItems={TTS_SPEED_ITEMS}
+              ttsSpeedPreference={ttsSpeedPreference}
+              remoteTTSEnabled={remoteTTSEnabled}
               speechEnabled={effectiveSpeechEnabled}
               ttsFeatureEnabled={ttsFeatureEnabled}
               onToggleTTSLanguage={handleToggleTTSLanguage}
+              onSelectTTSSpeed={handleSelectTTSSpeed}
               onPressServiceStatus={handleServiceStatusPress}
               onPressOK={() => navigation.goBack()}
             />

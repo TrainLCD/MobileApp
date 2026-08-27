@@ -1,6 +1,14 @@
 import { fetch } from 'expo/fetch';
 import { File, Paths } from 'expo-file-system';
+import { REMOTE_TTS_SPEED_RATES } from '../constants/tts';
 import { base64ToUint8Array } from './base64ToUint8Array';
+
+// Worker(/tts) の ALLOWED_CLIENT_SPEEDS と一致するプリセット3値。許可リスト外の
+// 値は Worker が無視して既定速度で合成するため、そのまま送るとこちらが作る
+// キャッシュキーと実際の音声が食い違い、別速度の音声を再利用してしまう。
+const ALLOWED_SPEEDS: ReadonlySet<number> = new Set(
+  Object.values(REMOTE_TTS_SPEED_RATES)
+);
 
 // ネットワーク切り替えやドーズ状態に入るとリクエストが応答もエラーも返さず
 // 永久にハングすることがある。その場合に呼び出し側の再生パイプラインが
@@ -24,9 +32,12 @@ export interface FetchSpeechOptions {
   apiUrl: string;
   idToken: string;
   // Cloud TTS のボイス名（例: ja-JP-Standard-B）。ロケールを含むため日英で別々に
-  // 指定する。読み上げ速度・声の高さは Worker 側の設定で決まる。
+  // 指定する。声の高さは Worker 側の設定で決まる。
   jaVoiceName?: string;
   enVoiceName?: string;
+  // 読み上げ速度（speakingRate）。未指定なら Worker 側の既定値で合成される。
+  // Worker は許可リストにない値を無視するため、送れるのは REMOTE_TTS_SPEED_RATES の値のみ。
+  speed?: number;
   timeoutMs?: number;
 }
 
@@ -206,6 +217,7 @@ const buildCacheKey = (opts: {
   textEn: string;
   jaVoiceName?: string;
   enVoiceName?: string;
+  speed?: number;
 }): string =>
   [
     // 空文字は「その言語を要求しない」を意味するため、両方をキーに含めることで
@@ -214,6 +226,9 @@ const buildCacheKey = (opts: {
     opts.textEn,
     normalizeOptional(opts.jaVoiceName),
     normalizeOptional(opts.enVoiceName),
+    // 速度を変えると同じ文でも別の音声になる。キーへ含めないと、設定変更後も
+    // 変更前の速度の音声を再生し続けてしまう
+    opts.speed ?? '',
   ].join('\0');
 
 export const clearFetchCache = (): void => {
@@ -233,6 +248,7 @@ export const fetchSpeechAudio = async (
     idToken,
     jaVoiceName,
     enVoiceName,
+    speed,
     timeoutMs = TTS_FETCH_TIMEOUT_MS,
   } = options;
   // 0・負値・NaN・Infinity が明示的に渡された場合もタイムアウト保護が
@@ -255,12 +271,18 @@ export const fetchSpeechAudio = async (
 
   const normalizedJaVoiceName = normalizeOptional(jaVoiceName);
   const normalizedEnVoiceName = normalizeOptional(enVoiceName);
+  // プリセット3値だけを送る。NaN や Infinity は JSON へ載せると null になって
+  // Worker 側で弾かれ、0.9 のような有限の正値は Worker が既定速度へ倒すため、
+  // どちらも未指定として扱わないとキャッシュキーが実際の速度とずれる。
+  const normalizedSpeed =
+    typeof speed === 'number' && ALLOWED_SPEEDS.has(speed) ? speed : undefined;
 
   const cacheKey = buildCacheKey({
     textJa: trimmedTextJa,
     textEn: sanitizedTextEn,
     jaVoiceName: normalizedJaVoiceName,
     enVoiceName: normalizedEnVoiceName,
+    speed: normalizedSpeed,
   });
   const cached = fetchCache.get(cacheKey);
   if (cached) {
@@ -286,6 +308,7 @@ export const fetchSpeechAudio = async (
               : {}),
           }
         : {}),
+      ...(normalizedSpeed !== undefined ? { speed: normalizedSpeed } : {}),
     },
   };
 

@@ -1,5 +1,13 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { REMOTE_TTS_VOICE_EN, REMOTE_TTS_VOICE_JA } from '~/constants';
+import { createStore, Provider } from 'jotai';
+import { createElement, type ReactNode } from 'react';
+import {
+  REMOTE_TTS_SPEED_RATES,
+  REMOTE_TTS_VOICE_EN,
+  REMOTE_TTS_VOICE_JA,
+} from '~/constants';
+import { TTS_SPEED_PREFERENCE } from '~/models/TTSSpeed';
+import { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
 import type { SpeechEngineRequest } from './speechEngine';
 import { useRemoteSpeechEngine } from './useRemoteSpeechEngine';
 
@@ -54,6 +62,19 @@ const flushAsync = async () => {
 
 const renderEngine = () => renderHook(() => useRemoteSpeechEngine());
 
+// アナウンス速度の設定は起動時に MMKV から復元されるため、テストでは
+// 明示的に値を入れたストアで包む。
+const renderEngineWithSpeed = (
+  preference: keyof typeof TTS_SPEED_PREFERENCE
+) => {
+  const store = createStore();
+  store.set(ttsSpeedPreferenceAtom, TTS_SPEED_PREFERENCE[preference]);
+  return renderHook(() => useRemoteSpeechEngine(), {
+    wrapper: ({ children }: { children: ReactNode }) =>
+      createElement(Provider, { store }, children),
+  });
+};
+
 describe('useRemoteSpeechEngine', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -86,7 +107,20 @@ describe('useRemoteSpeechEngine', () => {
         // Cloud TTS のボイス名はロケールを含むため日英で別々に指定する
         jaVoiceName: REMOTE_TTS_VOICE_JA,
         enVoiceName: REMOTE_TTS_VOICE_EN,
+        // 設定していなければ「普通」（等速）で要求する
+        speed: REMOTE_TTS_SPEED_RATES.NORMAL,
       })
+    );
+  });
+
+  it('アナウンス速度の設定を読み上げ速度として要求する', async () => {
+    const { result } = renderEngineWithSpeed('SLOW');
+
+    result.current.speak(defaultRequest, { onSettled: jest.fn() });
+    await flushAsync();
+
+    expect(mockFetchSpeechAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ speed: REMOTE_TTS_SPEED_RATES.SLOW })
     );
   });
 
