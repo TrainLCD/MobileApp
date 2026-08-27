@@ -422,6 +422,77 @@ describe('useTrainTypeModal', () => {
     expect(hookRef.current?.trainTypeDisabled).toBe(false);
   });
 
+  it('乗車中の種別変更で進行方向と終点を新しい系統の並びへ引き直す', async () => {
+    const tokaidoLine = { id: 3 };
+    const jobanLine = { id: 11319 };
+
+    // 東海道線 普通(東京→沼津)。品川から東京方面(=OUTBOUND)へ乗車中
+    const shinagawa = createStation(1130103, {
+      name: '品川',
+      line: tokaidoLine,
+    });
+    const numazu = createStation(1130130, { name: '沼津', line: tokaidoLine });
+    const oldStations = [
+      createStation(1130101, { name: '東京', line: tokaidoLine }),
+      createStation(1130102, { name: '新橋', line: tokaidoLine }),
+      shinagawa,
+      numazu,
+    ];
+
+    // 常磐線直通 快速(品川→原ノ町)。東海道線とは並び順が逆になる
+    const haranomachi = createStation(1131899, {
+      name: '原ノ町',
+      line: jobanLine,
+    });
+    const newStations = [
+      shinagawa,
+      createStation(1130102, { name: '新橋', line: tokaidoLine }),
+      createStation(1130101, { name: '東京', line: tokaidoLine }),
+      createStation(1131801, { name: '上野', line: jobanLine }),
+      haranomachi,
+    ];
+
+    setupMocks({
+      stationStateValue: {
+        selectedBound: numazu,
+        station: shinagawa,
+        selectedDirection: 'OUTBOUND' as const,
+      },
+      currentStoppingStation: shinagawa,
+    });
+
+    mockFetchStationsByLineGroupId.mockResolvedValue({
+      data: { lineGroupStations: newStations },
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    await act(async () => {
+      hookRef.current?.handleTrainTypeModalSelect(createTrainType(499));
+    });
+
+    const stationSetter = mockSetStationState.mock.calls[0][0];
+    const result = stationSetter({
+      stations: oldStations,
+      station: shinagawa,
+      selectedBound: numazu,
+      selectedDirection: 'OUTBOUND',
+    });
+
+    expect(result.stations).toEqual(newStations);
+    // 旧系統の終点(沼津)ではなく新系統の終点(原ノ町)が案内される
+    expect(result.selectedBound).toEqual(haranomachi);
+    // 東海道線のOUTBOUND(東京方面)は常磐線快速の並びではINBOUNDにあたる
+    expect(result.selectedDirection).toBe('INBOUND');
+  });
+
   it('handleTrainTypeModalSelect で列車種別選択後にモーダルを閉じてstateを更新する', async () => {
     const trainType = createTrainType(5);
     const newStations = [createStation(10), createStation(11)];

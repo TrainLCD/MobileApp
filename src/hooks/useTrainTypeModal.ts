@@ -6,6 +6,7 @@ import {
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import { findNearestStation } from '~/utils/findNearestStation';
+import { resolveDirectionForNewStations } from '~/utils/resolveDirectionForNewStations';
 import { selectedLineAtom } from '../store/atoms/line';
 import navigationState, {
   fetchedTrainTypesAtom,
@@ -14,7 +15,6 @@ import navigationState, {
 import { resetFirstSpeechAtom } from '../store/atoms/speech';
 import stationState, {
   selectedBoundAtom,
-  selectedDirectionAtom,
   stationAtom,
 } from '../store/atoms/station';
 import { isJapanese } from '../translation';
@@ -25,7 +25,6 @@ import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 export const useTrainTypeModal = () => {
   const selectedBound = useAtomValue(selectedBoundAtom);
   const currentStation = useAtomValue(stationAtom);
-  const selectedDirection = useAtomValue(selectedDirectionAtom);
   const setStationState = useSetAtom(stationState);
   const selectedLine = useAtomValue(selectedLineAtom);
   const fetchedTrainTypes = useAtomValue(fetchedTrainTypesAtom);
@@ -81,21 +80,44 @@ export const useTrainTypeModal = () => {
         );
 
         setStationState((prev) => {
+          // 種別を変えると駅配列が別系統のものへ丸ごと入れ替わるため、
+          // 旧系統基準の進行方向・終点をそのまま引き継ぐと、逆方向や別系統の
+          // 終点(例: 常磐線快速へ変えたのに東海道線の沼津)が案内されてしまう。
+          // 新しい駅配列の並びで方向を引き直し、終点もその方向の端の駅に揃える。
+          const direction = resolveDirectionForNewStations(
+            prev.stations,
+            newStations,
+            currentStation,
+            prev.selectedDirection
+          );
+          const bound = direction
+            ? ((direction === 'INBOUND'
+                ? newStations[newStations.length - 1]
+                : newStations[0]) ?? prev.selectedBound)
+            : prev.selectedBound;
+
           if (currentInNewList) {
-            return { ...prev, stations: newStations };
+            return {
+              ...prev,
+              stations: newStations,
+              selectedDirection: direction,
+              selectedBound: bound,
+            };
           }
 
           const nearest = findNearestStation(
             prev.stations,
             newStations,
             currentStation?.id,
-            selectedDirection
+            prev.selectedDirection
           );
 
           return {
             ...prev,
             stations: newStations,
             ...(nearest ? { station: nearest } : {}),
+            selectedDirection: direction,
+            selectedBound: bound,
           };
         });
 
@@ -122,8 +144,7 @@ export const useTrainTypeModal = () => {
       setNavigation,
       setResetFirstSpeech,
       selectedBound,
-      currentStation?.id,
-      selectedDirection,
+      currentStation,
     ]
   );
 
