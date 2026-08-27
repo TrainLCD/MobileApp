@@ -2,7 +2,12 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import type { Line, LineNested, Station } from '~/@types/graphql';
+import type {
+  Line,
+  LineNested,
+  Station,
+  StationNested,
+} from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import { stationsAtom } from '../store/atoms/station';
@@ -48,6 +53,37 @@ const createLineNested = (overrides: Partial<LineNested> = {}): LineNested => ({
   trainType: null,
   transportType: TransportType.Rail,
   ...overrides,
+});
+
+const createStationNested = (id: number): StationNested => ({
+  __typename: 'StationNested',
+  address: null,
+  closedAt: null,
+  distance: null,
+  groupId: id,
+  hasTrainTypes: false,
+  id,
+  latitude: null,
+  line: null,
+  lines: [],
+  longitude: null,
+  name: `Station${id}`,
+  nameChinese: null,
+  nameIpa: null,
+  nameKatakana: null,
+  nameKorean: null,
+  nameRoman: null,
+  nameRomanIpa: null,
+  nameTtsSegments: null,
+  openedAt: null,
+  postalCode: null,
+  prefectureId: null,
+  stationNumbers: [],
+  status: undefined,
+  stopCondition: undefined,
+  threeLetterCode: null,
+  trainType: null,
+  transportType: undefined,
 });
 
 describe('useTransferLinesFromStation', () => {
@@ -247,6 +283,124 @@ describe('useTransferLinesFromStation', () => {
 
     expect(lines.find((l: Line) => l.id === 2)).toBeUndefined();
     expect(lines.find((l: Line) => l.id === 3)).toBeDefined();
+  });
+
+  // 相鉄 西谷: 相鉄新横浜線から相鉄本線へ直通するが、本線の横浜方面(起点側)へは
+  // 乗り換えが必要なため、直通先路線でも乗換案内に残す
+  it('分岐駅で直通先路線の起点側が経路に含まれない場合は乗り換え路線として残す', () => {
+    const sotetsuMainLine = createLineNested({
+      id: 29001,
+      nameShort: '相鉄本線',
+      station: createStationNested(2900108),
+    });
+    const sotetsuJrLine = createLineNested({
+      id: 29003,
+      nameShort: '相鉄・JR直通線',
+      station: createStationNested(2900302),
+    });
+    const sotetsuShinYokohamaLine = createLineNested({
+      id: 29004,
+      nameShort: '相鉄新横浜線',
+      station: createStationNested(2900403),
+    });
+
+    const nishiyaLines = [
+      sotetsuMainLine,
+      sotetsuJrLine,
+      sotetsuShinYokohamaLine,
+    ];
+
+    const shinYokohama = createStation(2900401, {
+      line: sotetsuShinYokohamaLine,
+      lines: [sotetsuShinYokohamaLine],
+    });
+    const hazawaYokohamaKokudai = createStation(2900402, {
+      line: sotetsuShinYokohamaLine,
+      lines: [sotetsuShinYokohamaLine],
+    });
+    const nishiya = createStation(2900403, {
+      line: sotetsuShinYokohamaLine,
+      lines: nishiyaLines,
+    });
+    const tsurugamine = createStation(2900109, {
+      line: sotetsuMainLine,
+      lines: [sotetsuMainLine],
+    });
+    const futamatagawa = createStation(2900110, {
+      line: sotetsuMainLine,
+      lines: [sotetsuMainLine],
+    });
+
+    stationAtomValue.stations = [
+      shinYokohama,
+      hazawaYokohamaKokudai,
+      nishiya,
+      tsurugamine,
+      futamatagawa,
+    ];
+
+    const { getByTestId } = render(<TestComponent station={nishiya} />);
+    const lines = JSON.parse(
+      getByTestId('transferLines').props.children as string
+    );
+
+    expect(lines.map((l: Line) => l.id)).toEqual([29001, 29003]);
+  });
+
+  // 東急東横線と東京メトロ副都心線の直通: 渋谷は東横線の起点なので
+  // 逆方向の区間が存在せず、従来通り除外される
+  it('直通先路線の起点駅では逆方向の区間が無いため除外したままにする', () => {
+    const fukutoshinLine = createLineNested({
+      id: 28009,
+      nameShort: '東京メトロ副都心線',
+      station: createStationNested(2800916),
+    });
+    const toyokoLine = createLineNested({
+      id: 26001,
+      nameShort: '東急東横線',
+      station: createStationNested(2600101),
+    });
+    const ginzaLine = createLineNested({
+      id: 28001,
+      nameShort: '東京メトロ銀座線',
+      station: createStationNested(2800101),
+    });
+
+    const kitasando = createStation(2800914, {
+      line: fukutoshinLine,
+      lines: [fukutoshinLine],
+    });
+    const meijiJingumae = createStation(2800915, {
+      line: fukutoshinLine,
+      lines: [fukutoshinLine],
+    });
+    const shibuya = createStation(2800916, {
+      line: fukutoshinLine,
+      lines: [fukutoshinLine, toyokoLine, ginzaLine],
+    });
+    const daikanyama = createStation(2600102, {
+      line: toyokoLine,
+      lines: [toyokoLine],
+    });
+    const nakameguro = createStation(2600103, {
+      line: toyokoLine,
+      lines: [toyokoLine],
+    });
+
+    stationAtomValue.stations = [
+      kitasando,
+      meijiJingumae,
+      shibuya,
+      daikanyama,
+      nakameguro,
+    ];
+
+    const { getByTestId } = render(<TestComponent station={shibuya} />);
+    const lines = JSON.parse(
+      getByTestId('transferLines').props.children as string
+    );
+
+    expect(lines.map((l: Line) => l.id)).toEqual([28001]);
   });
 
   it('omitJR が true で JR路線が閾値以上の場合、JR線として集約される', () => {
