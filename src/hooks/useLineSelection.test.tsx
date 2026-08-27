@@ -1,7 +1,7 @@
 import { act, render } from '@testing-library/react-native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
-import type { Line, TrainType } from '~/@types/graphql';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
 import { createLine, createStation } from '~/utils/test/factories';
 import type { LineState } from '../store/atoms/line';
@@ -560,6 +560,111 @@ describe('useLineSelection', () => {
     const navSetter = mockSetNavigationState.mock.calls[0][0];
     const navResult = navSetter(createNavigationState());
     expect(navResult.pendingTrainType).toBe(trainType);
+  });
+
+  it('既定種別の駅一覧が遅れて解決しても、後から選ばれた種別の駅一覧を上書きしない', async () => {
+    const { mockSetStationState, mockSetNavigationState } = setupMolecules();
+    const { mockFetchByLineId, mockFetchByGroupId, mockFetchTrainTypes } =
+      setupQueries();
+
+    const tokaidoLine = { id: 3 };
+    const jobanLine = { id: 11319 };
+
+    // 品川(東海道線)の既定種別は普通(東京→沼津 / groupId 411)
+    const shinagawa = createStation(1130103, {
+      name: '品川',
+      line: tokaidoLine,
+      hasTrainTypes: true,
+      trainType: {
+        id: 1,
+        groupId: 411,
+        name: '普通',
+      } as Station['trainType'],
+    });
+    const lineStations = [
+      createStation(1130101, { name: '東京', line: tokaidoLine }),
+      createStation(1130102, { name: '新橋', line: tokaidoLine }),
+      shinagawa,
+      createStation(1130130, { name: '沼津', line: tokaidoLine }),
+    ];
+    mockFetchByLineId.mockResolvedValue({ data: { lineStations } });
+
+    const localType = { id: 1, groupId: 411, name: '普通' } as TrainType;
+    const rapidType = { id: 2, groupId: 499, name: '快速' } as TrainType;
+    mockFetchTrainTypes.mockResolvedValue({
+      data: { stationTrainTypes: [localType, rapidType] },
+    });
+
+    // 常磐線直通 快速(品川→原ノ町 / groupId 499)
+    const rapidGroupStations = [
+      shinagawa,
+      createStation(1130102, { name: '新橋', line: tokaidoLine }),
+      createStation(1130101, { name: '東京', line: tokaidoLine }),
+      createStation(1131801, { name: '上野', line: jobanLine }),
+      createStation(1131899, { name: '原ノ町', line: jobanLine }),
+    ];
+
+    // 既定種別(411)の駅一覧取得だけを遅延させ、種別選択後に解決させる
+    let resolveLocalGroup: (value: unknown) => void = () => {};
+    const deferredLocalGroup = new Promise((resolve) => {
+      resolveLocalGroup = resolve;
+    });
+    mockFetchByGroupId.mockImplementation(({ variables }) =>
+      variables.lineGroupId === 411
+        ? deferredLocalGroup
+        : Promise.resolve({ data: { lineGroupStations: rapidGroupStations } })
+    );
+
+    const line = createLine(3, {
+      nameShort: '東海道線',
+      station: { id: 1130103, hasTrainTypes: true } as Line['station'],
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    let lineSelection: Promise<void> | undefined;
+    await act(async () => {
+      lineSelection = hookRef.current?.handleLineSelected(line);
+      // 種別一覧が出そろい、既定種別の駅一覧取得が始まるところまで進める
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // 既定種別の駅一覧取得中にユーザーが快速(原ノ町行)を選ぶ
+    await act(async () => {
+      await hookRef.current?.handleTrainTypeSelect(rapidType);
+    });
+
+    // 遅れて既定種別の駅一覧が返ってくる
+    await act(async () => {
+      resolveLocalGroup({ data: { lineGroupStations: lineStations } });
+      await lineSelection;
+    });
+
+    const finalStationState =
+      mockSetStationState.mock.calls.reduce<StationState>(
+        (acc, [updater]) =>
+          typeof updater === 'function' ? updater(acc) : updater,
+        createStationState()
+      );
+    const finalNavigationState =
+      mockSetNavigationState.mock.calls.reduce<NavigationState>(
+        (acc, [updater]) =>
+          typeof updater === 'function' ? updater(acc) : updater,
+        createNavigationState()
+      );
+
+    expect(finalStationState.pendingStations).toEqual(rapidGroupStations);
+    expect(finalStationState.pendingStations.at(-1)?.name).toBe('原ノ町');
+    expect(finalNavigationState.pendingTrainType).toBe(rapidType);
   });
 
   it('handleCloseSelectBoundModal が isSelectBoundModalOpen を false にする', () => {
