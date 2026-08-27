@@ -6,6 +6,48 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-08-28 — devDebug で JS が APK に焼き込まれ Fast Refresh とデバッガが使えない不具合を修正
+
+対象バージョン: v10.13.1 / Issue [#6741](https://github.com/TrainLCD/MobileApp/issues/6741)
+
+### 内容
+
+- `npm run android`（`APP_VARIANT=dev expo run:android -- --variant devDebug`）で入れた
+  ビルドが Metro に接続されず、Fast Refresh も CDP デバッガも使えなかった。JS だけの修正でも
+  毎回フルビルドが必要になっていた。
+- 原因は `android/app/build.gradle` の `react { }` ブロックで `debuggableVariants` が
+  コメントアウトのままだったこと。RN の Gradle プラグインは `debuggableVariants` に
+  **バリアント名が完全一致**（大文字小文字は無視）したときだけ
+  `createBundle<Variant>JsAndAssets` の登録をスキップする
+  （`@react-native/gradle-plugin` の `TaskConfiguration.kt` の `isDebuggableVariant`）。
+  既定値は RN 0.86 時点で `["debug", "debugOptimized"]` だが、本プロジェクトは
+  `flavorDimensions "environment"` を持つためバリアント名が `devDebug` / `prodDebug` になり
+  既定リストに一致せず、debug ビルドでも JS が APK に同梱されていた。
+- `debuggableVariants = ["devDebug", "prodDebug", "devDebugOptimized", "prodDebugOptimized"]`
+  を明示した。`*DebugOptimized` は RN の Gradle プラグインが `maybeCreate` で自動生成する
+  build type で、RN の既定値が `debugOptimized` を含むため同じ扱いに揃えている。
+- 配布ビルドは EAS（`eas.json`）・CI（`build_android_canary.yml` /
+  `build_android_production.yml`）とも `bundleDevRelease` / `bundleProdRelease` の
+  **Release バリアント**を使うため、この変更の影響を受けない。
+- **この変更以降、Android の debug ビルドは起動に Metro が必要**になる。
+
+### 検証結果
+
+Android 実機（Samsung SCG13 / Android 16・API 36）で確認した。
+
+- `./gradlew :app:assembleDevDebug --dry-run` の差分は
+  `:app:createBundleDevDebugJsAndAssets` の 1 タスク削除のみ（828 → 827 タスク）。
+- `assembleDevRelease` / `assembleProdRelease` では
+  `createBundle*ReleaseJsAndAssets` と Sentry のソースマップ関連タスクが従来どおり残る。
+- `assembleProdDebug` と `assembleDevDebugOptimized` /
+  `assembleProdDebugOptimized` はいずれもバンドルタスクが登録されない。
+- ビルドした APK に `index.android.bundle` が含まれない（`unzip -l` で確認）。
+- Metro がバンドルを配信する（`Android Bundled 53547ms index.js (3617 modules)`）。
+- `curl -s http://localhost:8081/json/list` が CDP ターゲット
+  （`React Native Bridgeless [C++ connection]`）を返す。
+- CDP 経由の式評価で `__DEV__ === true`、Hermes、Metro のモジュールレジストリ
+  （`__r` / `__d`）が揃っていることを確認。
+
 ## 2026-08-26 — Android の端末内蔵 TTS でダッキングが効かない不具合を修正
 
 対象バージョン: v10.13.1 / Issue [TrainLCD/Issues#1263](https://github.com/TrainLCD/Issues/issues/1263)
