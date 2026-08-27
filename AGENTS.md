@@ -45,7 +45,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - `utils/`: developer tooling scripts such as GraphQL codegen config.
 - `android/`, `ios/`: native projects.
 
-> The Cloudflare Workers backend (TTS, session issuance, feedback triage via Workers AI, review notifiers) has been moved out of this repository into [TrainLCD/functions](https://github.com/TrainLCD/functions); the GraphQL BFF lives separately in [TrainLCD/BFF](https://github.com/TrainLCD/BFF). The former `functions/` directory no longer lives here.
+> The Cloudflare Workers backend (TTS, session issuance, feedback triage via Workers AI, review notifiers, the AI destination agent) has been moved out of this repository into [TrainLCD/functions](https://github.com/TrainLCD/functions); the former `functions/` directory no longer lives here. The GraphQL API that `src/lib/gql.ts` talks to (`gql.trainlcd.app` / `gql-stg.trainlcd.app`) is served directly by [TrainLCD/StationAPI](https://github.com/TrainLCD/StationAPI), so schema and resolver changes belong there. The GraphQL BFF that used to sit in front of it has been retired and [TrainLCD/BFF](https://github.com/TrainLCD/BFF) is archived — do not send anyone there.
 
 ## Tooling & Environment Expectations
 

@@ -10,10 +10,10 @@
 独自の AI エージェントとユーザが自然言語で対話し、「海が見える駅に行きたい」の
 ような曖昧な要望から実在する駅を最大 5 件提案して、既存の行き先決定フロー
 （`SelectBoundModal` → `selectedBound` 確定）に接続する。LLM 呼び出しは
-BFF（`TrainLCD/BFF` の `functions/` = trainlcd-worker）に新設する
+Worker（`TrainLCD/functions` = trainlcd-worker）に新設する
 `POST /agent/chat` に集約し、アプリは既存のセッション JWT + callable 互換
 ワイヤ形式で fetch するだけにする。駅名の実在性は LLM の tool use から
-BFF ルートワーカー（sapi-bff）の GraphQL `stationsByName` を呼んで担保し、
+StationAPI の GraphQL `stationsByName` を呼んで担保し、
 サーバ側でも「ツール結果に含まれない駅の提案は破棄する」検証を行い、
 嘘をつけない構造にする。トピック外プロンプトは本体 LLM の手前の軽量ゲートで
 謝絶しトークンを守る。
@@ -69,7 +69,7 @@ BFF ルートワーカー（sapi-bff）の GraphQL `stationsByName` を呼んで
 
 ## 全体アーキテクチャ
 
-LLM 呼び出しは必ずサーバ側（BFF）に置く。理由は次の 3 点。
+LLM 呼び出しは必ずサーバ側（Worker）に置く。理由は次の 3 点。
 
 1. API キーをクライアントに配布しない。
 2. レート制限・トピックゲート・実在性検証をサーバで強制でき、
@@ -82,7 +82,7 @@ flowchart TB
     screen["DestinationAgentScreen（新規チャットUI）"]
   end
 
-  subgraph worker["trainlcd-worker（BFF functions/）"]
+  subgraph worker["trainlcd-worker（TrainLCD/functions）"]
     auth["1. JWT検証・レート制限"]
     gate["2. トピックゲート"]
     agent["3. エージェント本体（tool useループ）"]
@@ -93,11 +93,9 @@ flowchart TB
   gw["Cloudflare AI Gateway"]
   llm["LLM API（対話本体: GPT / Claude）"]
 
-  subgraph bff["sapi-bff（BFFルートワーカー）"]
+  subgraph sapi["StationAPI（Cloudflare Workers / Rust）"]
     gql["GraphQL stationsByName"]
   end
-
-  sapi["StationAPI（gRPC-Web）"]
 
   screen -- "POST /agent/chat + セッションJWT" --> auth
   auth --> gate
@@ -106,7 +104,6 @@ flowchart TB
   agent -. "対話・tool use" .-> gw
   gw -.-> llm
   agent -- "search_stations_by_name" --> gql
-  gql --> sapi
   agent --> validate
   validate -- "reply + suggestions" --> screen
 ```
@@ -118,10 +115,10 @@ flowchart TB
 | チャット画面 | MobileApp（新規） | 対話 UI・提案カード・既存フロー接続 |
 | エージェント API | trainlcd-worker | 認証・ゲート・LLM 呼び出し・検証 |
 | LLM 経路 | AI Gateway | ログ・コスト集計・レート制限・キャッシュ |
-| 駅名検索ツール | sapi-bff `/graphql` | `stationsByName` で実在性確認 |
+| 駅名検索ツール | StationAPI `/graphql` | `stationsByName` で実在性確認 |
 | フラグ配信 | `/config/remote` | `ai_agent_enabled` キルスイッチ |
 
-sapi-bff への接続は同一 Cloudflare アカウント内なので Service Binding を
+StationAPI への接続は同一 Cloudflare アカウント内なので Service Binding を
 推奨する（ネットワーク往復なし・認証不要で worker 間呼び出しできる）。
 バインディングが難しい場合は既存 GraphQL エンドポイントへの fetch でも
 成立する。
@@ -256,7 +253,7 @@ tool use ループを挟むと確定応答まで 10〜20 秒かかり、体感�
   ラップするため既存機構のまま機能する。AI Gateway は SSE を
   パススルーする（本文ログ無効化ヘッダも同一に付与）。
 
-## エージェント本体設計（BFF 側）
+## エージェント本体設計（Worker 側）
 
 ### 処理パイプライン
 
@@ -268,7 +265,7 @@ sequenceDiagram
   participant W as trainlcd-worker
   participant WAI as Workers AI
   participant LLM as LLM API（AI Gateway経由）
-  participant S as sapi-bff
+  participant S as StationAPI
 
   App->>W: POST /agent/chat（messages, locale）
   W->>W: JWT検証・入力バリデーション
@@ -377,12 +374,12 @@ calling の `parameters` + `strict: true` に同一スキーマを割り当て�
 }
 ```
 
-- 実装: sapi-bff の
+- 実装: StationAPI の
   `stationsByName(name, limit: 10, fromStationGroupId: <現在駅>)` を呼び、
   `stationId` / `stationGroupId` / `name` / `nameRoman` / `lineNames` に
   絞った軽量 JSON を返す（`StationFields` 全量を返すとツール結果で
   トークンを浪費する）。フィールド名は応答スキーマと同一に統一し、
-  `StationFields` の `groupId` は BFF 内で `stationGroupId` に改名して
+  `StationFields` の `groupId` は Worker 内で `stationGroupId` に改名して
   詰め替える。
 - 並列ツール呼び出しを許可する。モデルは 1 イテレーション内で複数の
   候補名を同時に検索してよい。
@@ -471,11 +468,11 @@ few-shot（`CONFIG_KV` の `config:fewshot`）と同じパターンで、`CONFIG
 | --- | --- |
 | リクエスト全体（Worker 側） | 25 秒 |
 | LLM API 1 呼び出し | 15 秒 |
-| sapi-bff（ツール実行） | 5 秒 |
+| StationAPI（ツール実行） | 5 秒 |
 
 - Worker はリクエスト全体の期限を `AbortController` で管理し、期限超過時
-  は下流の LLM・sapi-bff 呼び出しへキャンセルを伝播して 504 を返す。
-- LLM 呼び出しはコスト重複を避けるため自動再試行しない。sapi-bff への
+  は下流の LLM・StationAPI 呼び出しへキャンセルを伝播して 504 を返す。
+- LLM 呼び出しはコスト重複を避けるため自動再試行しない。StationAPI への
   ツール実行のみ読み取り専用で冪等のため 1 回だけ再試行を許す。
 - クライアントのタイムアウト（30 秒）はサーバ全体期限より長く取り、
   「サーバが先に諦めて確定応答を返す」関係を保つ。タイムアウト後の再送
@@ -488,7 +485,7 @@ few-shot（`CONFIG_KV` の `config:fewshot`）と同じパターンで、`CONFIG
 ## 技術選定
 
 実装に入る前に確定させる、ライブラリの採用・不採用の候補一覧。
-本節の判定は実装開始前のレビューで確定する。方針は「BFF の lean な
+本節の判定は実装開始前のレビューで確定する。方針は「Worker の lean な
 依存構成（現状 `dayjs` + `jsonc-parser` のみ）を崩さず、新規依存を
 最小セットに絞る」こと。
 
@@ -526,7 +523,7 @@ LangChain をエージェント実行基盤として使わない理由:
    自作し始めたら、その時点で LangChain / Mastra 等を再検討する。
    エージェントループが小さいうちは乗り換えコストも小さい。
 
-### ライブラリ候補（BFF: trainlcd-worker）
+### ライブラリ候補（Worker: trainlcd-worker）
 
 | 関心事 | 判定 | 候補 | 理由 |
 | --- | --- | --- | --- |
@@ -812,7 +809,7 @@ Expo SDK 更新時はこのパッチの要否を再確認する。
 
 ## WANT: 自然言語経路検索（将来スケッチ）
 
-sapi-bff には既に `routes` / `connectedRoutes` クエリ
+StationAPI には既に `routes` / `connectedRoutes` クエリ
 （`GetRoutesMinimal` / `GetConnectedRoutes` RPC）があるため、技術的には
 次の拡張で成立する:
 
@@ -831,10 +828,10 @@ sapi-bff には既に `routes` / `connectedRoutes` クエリ
 
 | 対象 | 方法 |
 | --- | --- |
-| BFF: バリデーション・提案検証 | 純関数に切り出して Jest |
-| BFF: エージェントループ | LLM クライアントをモックして Jest |
-| BFF: SSE エンコード・`reply` 差分抽出 | 純関数に切り出して Jest |
-| BFF: 結合 | `wrangler dev` + 手動シナリオ |
+| Worker: バリデーション・提案検証 | 純関数に切り出して Jest |
+| Worker: エージェントループ | LLM クライアントをモックして Jest |
+| Worker: SSE エンコード・`reply` 差分抽出 | 純関数に切り出して Jest |
+| Worker: 結合 | `wrangler dev` + 手動シナリオ |
 | アプリ: SSE パーサ | 純関数（`src/utils/sse.ts`）を Jest（チャンク分割・複数行 data 含む） |
 | アプリ: フック | fetch を `jest.mock`（iOS 経路は XHR フェイク・フォールバックも検証） |
 | アプリ: UI | dev ビルドで手動 QA + スクリーンショット |
@@ -843,7 +840,7 @@ sapi-bff には既に `routes` / `connectedRoutes` クエリ
   空結果時の挙動を重点的に検証する。
 - 手動シナリオは比較検証用の評価セット（曖昧な要望 / 存在しない駅 /
   無関係な話題 / 使い方質問）を流用する。
-- BFF の結合テストでは、AI Gateway のログに本文ペイロードが保存されて
+- Worker の結合テストでは、AI Gateway のログに本文ペイロードが保存されて
   いないこと（`cf-aig-collect-log-payload: false` の適用）も確認する。
 - アプリ側は既存の `src/utils/test/` ヘルパーを流用し、提案タップ →
   `SelectBoundModal` → Main 遷移までを QA する。
@@ -889,17 +886,17 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 
 ## 変更ファイル一覧（想定）
 
-### TrainLCD/BFF（functions/ = trainlcd-worker）
+### TrainLCD/functions（trainlcd-worker）
 
 | ファイル | 内容 |
 | --- | --- |
-| `functions/src/agent/handler.ts`（新規） | `/agent/chat` ハンドラ |
-| `functions/src/agent/gate.ts`（新規） | Workers AI トピックゲート |
-| `functions/src/agent/tools.ts`（新規） | 駅検索ツール（sapi-bff 呼び出し） |
-| `functions/src/agent/validate.ts`（新規） | 提案駅突合・切り詰め（純関数） |
-| `functions/wrangler.jsonc` | ルート・Service Binding・AI Gateway・vars |
-| `functions/package.json` | `ai`・`@ai-sdk/*`・`zod`・`langsmith` 追加 |
-| `functions/.secrets.env.example` | LLM・LangSmith の API キー追記 |
+| `src/agent/handler.ts`（新規） | `/agent/chat` ハンドラ |
+| `src/agent/gate.ts`（新規） | Workers AI トピックゲート |
+| `src/agent/tools.ts`（新規） | 駅検索ツール（StationAPI 呼び出し） |
+| `src/agent/validate.ts`（新規） | 提案駅突合・切り詰め（純関数） |
+| `wrangler.jsonc` | ルート・Service Binding・AI Gateway・vars |
+| `package.json` | `ai`・`@ai-sdk/*`・`zod`・`langsmith` 追加 |
+| `.secrets.env.example` | LLM・LangSmith の API キー追記 |
 
 設定 KV には `config:remote` への `ai_agent_enabled` 追加と、
 `config:agent-faq` の新設を行う。
@@ -923,9 +920,9 @@ LangChain を使わず、検証プラットフォームとして LangSmith を�
 
 | リポジトリ | ファイル | 内容 |
 | --- | --- | --- |
-| BFF | `agent/stream.ts`（新規） | SSE エンコード・差分抽出（純関数） |
-| BFF | `agent/handler.ts` | `streamText` 化・stream ハンドラ |
-| BFF | `index.ts` | `/agent/chat/stream` ルート追加 |
+| trainlcd-worker | `agent/stream.ts`（新規） | SSE エンコード・差分抽出（純関数） |
+| trainlcd-worker | `agent/handler.ts` | `streamText` 化・stream ハンドラ |
+| trainlcd-worker | `index.ts` | `/agent/chat/stream` ルート追加 |
 | MobileApp | `src/utils/sse.ts`（新規） | 最小 SSE パーサ（純関数） |
 | MobileApp | `patches/expo+55.0.26.patch`（新規） | expo/fetch の close 競合ガード |
 | MobileApp | `src/hooks/useDestinationAgent.ts` | SSE 受信 + フォールバック |
