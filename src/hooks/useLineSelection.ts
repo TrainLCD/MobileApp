@@ -1,7 +1,7 @@
 import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
@@ -10,6 +10,7 @@ import {
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
 import { isBusLine } from '~/utils/line';
+import { beginSelection, isLatestSelection } from '~/utils/selectionGeneration';
 import lineStateAtom from '../store/atoms/line';
 import { locationAtom } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -57,9 +58,6 @@ export type UseLineSelectionResult = {
 
 export const useLineSelection = (): UseLineSelectionResult => {
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
-  // 路線・種別・プリセットを選び直した際に、前の選択の取得結果が新しい状態を
-  // 上書きしないよう世代を管理する
-  const selectionGenerationRef = useRef(0);
   const setStationState = useSetAtom(stationState);
   const setLineState = useSetAtom(lineStateAtom);
   const setNavigationState = useSetAtom(navigationState);
@@ -100,7 +98,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
       const lineStationId = line.station?.id;
       if (!lineId || !lineStationId) return;
 
-      const generation = ++selectionGenerationRef.current;
+      const generation = beginSelection();
 
       setIsSelectBoundModalOpen(true);
 
@@ -138,7 +136,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
           : null,
       ]);
       // 取得中に別の路線が選ばれていたら、この呼び出しの結果は破棄する
-      if (generation !== selectionGenerationRef.current) return;
+      if (!isLatestSelection(generation)) return;
 
       const fetchedStations = data?.lineStations ?? [];
 
@@ -180,7 +178,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
           const groupResult = await fetchStationsByLineGroupId({
             variables: { lineGroupId: initialTrainType.groupId },
           });
-          if (generation !== selectionGenerationRef.current) return;
+          if (!isLatestSelection(generation)) return;
 
           const lineGroupStations = groupResult.data?.lineGroupStations ?? [];
           // 取得できなかった場合は路線単独の駅一覧を残す（空で潰さない）
@@ -218,14 +216,14 @@ export const useLineSelection = (): UseLineSelectionResult => {
       // 上書きする。世代を進めておかないと、ユーザーがその取得中に別の種別を選んだ場合に
       // 既定種別(例: 東海道線 普通 沼津行)の駅一覧が後から選択結果を潰し、
       // 選んだ種別と噛み合わない終点・方面が案内される。
-      const generation = ++selectionGenerationRef.current;
+      const generation = beginSelection();
 
       const res = await fetchStationsByLineGroupId({
         variables: {
           lineGroupId: trainType.groupId,
         },
       });
-      if (generation !== selectionGenerationRef.current) return;
+      if (!isLatestSelection(generation)) return;
 
       setStationState((prev) => ({
         ...prev,
@@ -241,12 +239,12 @@ export const useLineSelection = (): UseLineSelectionResult => {
 
   const openModalByLineId = useCallback(
     async (lineId: number, wantedDestinationId?: number | null) => {
-      const generation = ++selectionGenerationRef.current;
+      const generation = beginSelection();
 
       const result = await fetchStationsByLineId({
         variables: { lineId },
       });
-      if (generation !== selectionGenerationRef.current) return;
+      if (!isLatestSelection(generation)) return;
 
       const stations = result.data?.lineStations ?? [];
       if (!stations.length) return;
@@ -307,12 +305,12 @@ export const useLineSelection = (): UseLineSelectionResult => {
 
   const openModalByTrainTypeId = useCallback(
     async (lineGroupId: number, wantedDestinationId?: number | null) => {
-      const generation = ++selectionGenerationRef.current;
+      const generation = beginSelection();
 
       const result = await fetchStationsByLineGroupId({
         variables: { lineGroupId },
       });
-      if (generation !== selectionGenerationRef.current) return;
+      if (!isLatestSelection(generation)) return;
 
       const stations = result.data?.lineGroupStations ?? [];
       if (!stations.length) return;
@@ -371,7 +369,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
           stationId: station.id as number,
         },
       });
-      if (generation !== selectionGenerationRef.current) return;
+      if (!isLatestSelection(generation)) return;
 
       const trainTypes = fetchedTrainTypesData.data?.stationTrainTypes ?? [];
 

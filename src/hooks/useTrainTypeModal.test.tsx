@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
+import { beginSelection } from '~/utils/selectionGeneration';
 import { createLine, createStation } from '~/utils/test/factories';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
@@ -558,6 +559,53 @@ describe('useTrainTypeModal', () => {
       selectedDirection: 'INBOUND',
     });
     expect(result.stations).toEqual(newTypeStations);
+  });
+
+  it('取得中に路線やプリセットが選び直されたら種別の取得結果を破棄する', async () => {
+    const trainTypeStations = [
+      createStation(4990001, { name: '品川' }),
+      createStation(4990002, { name: '原ノ町' }),
+    ];
+
+    setupMocks();
+
+    let resolveTrainTypeSelection: (value: unknown) => void = () => {};
+    const deferredTrainTypeSelection = new Promise((resolve) => {
+      resolveTrainTypeSelection = resolve;
+    });
+    mockFetchStationsByLineGroupId.mockReturnValue(deferredTrainTypeSelection);
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    let trainTypeSelection: Promise<void> | undefined;
+    await act(async () => {
+      trainTypeSelection = hookRef.current?.handleTrainTypeModalSelect(
+        createTrainType(499)
+      ) as unknown as Promise<void>;
+      await Promise.resolve();
+    });
+
+    // 種別の駅一覧取得中に、別フック(useLineSelection)側で路線・プリセットが選び直される
+    act(() => {
+      beginSelection();
+    });
+
+    await act(async () => {
+      resolveTrainTypeSelection({
+        data: { lineGroupStations: trainTypeStations },
+      });
+      await trainTypeSelection;
+    });
+
+    expect(mockSetStationState).not.toHaveBeenCalled();
+    expect(mockSetNavigation).not.toHaveBeenCalled();
   });
 
   it('handleTrainTypeModalSelect で列車種別選択後にモーダルを閉じてstateを更新する', async () => {

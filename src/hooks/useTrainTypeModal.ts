@@ -7,6 +7,7 @@ import {
 } from '~/lib/graphql/queries';
 import { findNearestStation } from '~/utils/findNearestStation';
 import { resolveDirectionForNewStations } from '~/utils/resolveDirectionForNewStations';
+import { beginSelection, isLatestSelection } from '~/utils/selectionGeneration';
 import { selectedLineAtom } from '../store/atoms/line';
 import navigationState, {
   fetchedTrainTypesAtom,
@@ -38,8 +39,6 @@ export const useTrainTypeModal = () => {
   const [isSettingListModalOpen, setIsSettingListModalOpen] = useState(false);
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
   const pendingTrainTypeModalRef = useRef(false);
-  // 種別を選び直した際に、前の選択の取得結果が新しい状態を上書きしないよう世代を管理する
-  const trainTypeSelectionGenerationRef = useRef(0);
 
   const [fetchStationsByLineGroupId, { loading: trainTypeSelectLoading }] =
     useLazyGraphQLQuery<
@@ -68,14 +67,16 @@ export const useTrainTypeModal = () => {
     async (trainType: TrainType) => {
       if (trainType.groupId == null) return;
 
-      const generation = ++trainTypeSelectionGenerationRef.current;
+      // 路線・プリセット選択とも世代を共有し、フックをまたいだ選択の割り込みでも
+      // 古い取得結果が新しい選択を上書きしないようにする
+      const generation = beginSelection();
 
       const res = await fetchStationsByLineGroupId({
         variables: { lineGroupId: trainType.groupId },
       });
-      // 取得中に別の種別が選ばれていたら、この呼び出しの結果は破棄する
-      // (遅れて返った旧種別の駅一覧が、新しい種別の駅一覧・方向・終点を潰さないようにする)
-      if (generation !== trainTypeSelectionGenerationRef.current) return;
+      // 取得中に別の選択(種別・路線・プリセット)が行われていたら、この呼び出しの
+      // 結果は破棄する(遅れて返った駅一覧が新しい選択の駅一覧・方向・終点を潰さないようにする)
+      if (!isLatestSelection(generation)) return;
       if (!res.data?.lineGroupStations) return;
       const newStations = res.data.lineGroupStations;
 
