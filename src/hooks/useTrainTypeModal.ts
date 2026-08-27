@@ -38,6 +38,8 @@ export const useTrainTypeModal = () => {
   const [isSettingListModalOpen, setIsSettingListModalOpen] = useState(false);
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
   const pendingTrainTypeModalRef = useRef(false);
+  // 種別を選び直した際に、前の選択の取得結果が新しい状態を上書きしないよう世代を管理する
+  const trainTypeSelectionGenerationRef = useRef(0);
 
   const [fetchStationsByLineGroupId, { loading: trainTypeSelectLoading }] =
     useLazyGraphQLQuery<
@@ -65,9 +67,15 @@ export const useTrainTypeModal = () => {
   const handleTrainTypeSelect = useCallback(
     async (trainType: TrainType) => {
       if (trainType.groupId == null) return;
+
+      const generation = ++trainTypeSelectionGenerationRef.current;
+
       const res = await fetchStationsByLineGroupId({
         variables: { lineGroupId: trainType.groupId },
       });
+      // 取得中に別の種別が選ばれていたら、この呼び出しの結果は破棄する
+      // (遅れて返った旧種別の駅一覧が、新しい種別の駅一覧・方向・終点を潰さないようにする)
+      if (generation !== trainTypeSelectionGenerationRef.current) return;
       if (!res.data?.lineGroupStations) return;
       const newStations = res.data.lineGroupStations;
 
