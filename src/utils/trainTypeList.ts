@@ -1,4 +1,5 @@
-import type { Line, Station, StationNested } from '~/@types/graphql';
+import uniqBy from 'lodash/uniqBy';
+import type { Line, Station, StationNested, TrainType } from '~/@types/graphql';
 
 /**
  * 各種別が始発（出発駅）で乗車する起点路線を lines から特定する。
@@ -147,4 +148,119 @@ export const formatLineNames = (lines: Line[], ja: boolean): string => {
     })
     .filter(Boolean)
     .join(sep);
+};
+
+/** 種別一覧の 1 行分。表示に必要な値と、絞り込みに使う値をまとめて持つ */
+export type TrainTypeRow = {
+  trainType: TrainType;
+  /** カードの配色・路線記号・ナンバリングに使う乗車路線 */
+  boardingLine: Line;
+  /** ナンバリング表示に使う乗車路線側の駅 */
+  boardingLineStation: StationNested | null;
+  /** カードの見出し（＝種別名）。種別での絞り込みのキーも兼ねる */
+  title: string;
+  /** カードの補足（経由・直通路線） */
+  subtitle: string;
+  /** 経由・直通路線。路線での絞り込みに使う */
+  viaLines: Line[];
+  /** 正規化済みの検索対象テキスト */
+  searchText: string;
+};
+
+/**
+ * 検索の突き合わせ用に文字列を正規化する。
+ * 全角英数で入力されても半角の路線名・種別名に当たるよう NFKC で畳んでから小文字化する。
+ */
+export const normalizeSearchText = (text: string): string =>
+  text.normalize('NFKC').toLowerCase();
+
+/**
+ * 種別 1 件から一覧の 1 行を組み立てる。
+ *
+ * 表示用の値と絞り込み用の値は同じ経由路線から導けるので、行ごとに一度だけ計算して
+ * 使い回す。リストの描画のたびに経由路線を引き直さずに済む。
+ */
+export const buildTrainTypeRow = (
+  trainType: TrainType,
+  selectedLine: Line,
+  boardingStation: Station | null | undefined,
+  destination: Station | null | undefined,
+  ja: boolean
+): TrainTypeRow => {
+  const lines = uniqBy(trainType.lines ?? [], 'id');
+
+  // カードの配色・路線シンボル・ナンバリングは、種別ごとに乗車駅で実際に乗車する
+  // 路線で統一する（選択中の line で固定すると東武東上線経由の種別に西武池袋線の
+  // デザインが当たってしまう）。経路の途中駅から乗る場合は終端路線ではなく乗車路線
+  // を使うことで、乗車駅に必ず存在する駅番号でナンバリングを安定表示できる。
+  const boardingLine = getBoardingLine(
+    lines,
+    boardingStation,
+    selectedLine,
+    destination
+  );
+  const viaLines = getViaLines(lines, boardingLine, destination);
+  const title = (ja ? trainType.name : trainType.nameRoman) ?? '';
+
+  // 同じ種別の路線をグループ化（連続していなくても同じtypeIdなら同一グループ）
+  const groupedViaLines = viaLines.reduce<Line[][]>((groups, l) => {
+    const typeId = l.trainType?.typeId;
+    const existingGroup =
+      typeId !== null && typeId !== undefined
+        ? groups.find((g) => g[0]?.trainType?.typeId === typeId)
+        : undefined;
+    if (existingGroup) {
+      existingGroup.push(l);
+    } else {
+      groups.push([l]);
+    }
+    return groups;
+  }, []);
+
+  const isSingleGroup = groupedViaLines.length <= 1;
+
+  const subtitle = isSingleGroup
+    ? ja
+      ? `${formatLineNames(viaLines, ja)}${viaLines.length ? ' 直通' : ''}`
+      : viaLines.length
+        ? `Via ${formatLineNames(viaLines, ja)}`
+        : ''
+    : groupedViaLines
+        .map((group) => {
+          const names = formatLineNames(group, ja);
+          const typeName = ja
+            ? (group[0]?.trainType?.name ?? '')
+            : (group[0]?.trainType?.nameRoman ?? '');
+          return typeName ? `${names} ${typeName}` : names;
+        })
+        .join('\n');
+
+  // 駅番号（ナンバリング）は乗車路線の乗車駅基準で表示する。乗車路線はカードの
+  // デザインと同一なので CommonCard の路線記号一致が必ず成立し、番号が安定して
+  // 描画される。
+  const boardingLineStation = getBoardingLineStation(
+    boardingStation,
+    boardingLine,
+    selectedLine
+  );
+
+  // 表示言語に関わらず引けるよう、種別名は日英どちらも検索対象に含める
+  const searchText = normalizeSearchText(
+    [
+      trainType.name ?? '',
+      trainType.nameRoman ?? '',
+      subtitle,
+      ...viaLines.flatMap((l) => [l.nameShort ?? '', l.nameRoman ?? '']),
+    ].join(' ')
+  );
+
+  return {
+    trainType,
+    boardingLine,
+    boardingLineStation,
+    title,
+    subtitle,
+    viaLines,
+    searchText,
+  };
 };
