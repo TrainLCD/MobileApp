@@ -151,6 +151,17 @@ describe('TrainTypeFilterBar', () => {
     });
   });
 
+  // iOS は autoCorrect={false}(autocorrectionType = .no) にすると日本語入力の
+  // 変換候補バーごと消え、かなを漢字へ変換できなくなる。Android でも
+  // TYPE_TEXT_FLAG_NO_SUGGESTIONS が立って候補が出なくなるため、無効化しない
+  it('日本語入力の変換候補を潰さないよう、入力欄のオートコレクトは無効化しない', () => {
+    const { getByTestId } = setup();
+
+    expect(
+      getByTestId('trainTypeFilterSearchInput').props.autoCorrect
+    ).not.toBe(false);
+  });
+
   it('入力があるときだけ入力欄のクリアが出る', () => {
     const { queryByTestId } = setup();
     expect(queryByTestId('trainTypeFilterClearQuery')).toBeNull();

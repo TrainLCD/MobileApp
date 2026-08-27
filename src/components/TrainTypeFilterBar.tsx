@@ -391,7 +391,12 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
           placeholder={translate('trainTypeFilterPlaceholder')}
           placeholderTextColor={palette.placeholder}
           autoCapitalize="none"
-          autoCorrect={false}
+          // autoCorrect は既定(true)のままにする。false にすると iOS は
+          // autocorrectionType = .no になり、日本語入力の変換候補バーごと消えて
+          // かなを漢字へ変換できなくなる(iOS の日本語キーボードは候補バー以外に
+          // 変換する手段を持たない)。Android でも TYPE_TEXT_FLAG_NO_SUGGESTIONS
+          // が立ち IME の候補が出なくなる。ローマ字入力に英語のオートコレクトが
+          // かかる副作用より、日本語を入力できることを優先する。
           returnKeyType="search"
           testID="trainTypeFilterSearchInput"
         />
