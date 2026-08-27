@@ -1373,25 +1373,21 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
       return afterAllStopLastStation;
     }
 
-    // 現在駅が経路内に見つからない場合のみ、経路全体から推定する従来ロジックへ
-    // フォールバックする(進行方向より手前の区間を除外できないベストエフォート)
+    // NOTE: 現在駅が経路内に見つからないと進行方向より手前の区間を除外できない。
+    // 経路全体から推定すると、種別が往復する直通経路(埼玉高速鉄道→相鉄本線の
+    // 各駅停車→急行→各駅停車など)で終着駅を種別変更駅として拾ってしまうため、
+    // 境界を特定できないものとして案内自体を表示しない。
     if (orderedCurrentStationIndex === -1) {
-      if (selectedDirection === 'INBOUND') {
-        const currentTypeStations = stations.filter(
-          (s) => s.trainType?.typeId === trainType?.typeId
-        );
-        return currentTypeStations.at(-1);
-      }
-
-      const nextTypeStations = stations.filter(
-        (s) => s.trainType?.typeId === nextTrainType?.typeId
-      );
-      return nextTypeStations.at(-1);
+      return undefined;
     }
 
     // 現在駅より先に種別が変わる駅がない場合、経路全体から探すと通過済みの
-    // 同一種別区間を拾ってしまうため何も表示しない
-    if (typeChangedStationIndex === -1) {
+    // 同一種別区間を拾ってしまうため何も表示しない。
+    // 経路の終着駅で種別が変わることはないため、境界が終着駅になる場合も同様に扱う
+    if (
+      typeChangedStationIndex === -1 ||
+      typeChangedStationIndex === orderedStations.length - 1
+    ) {
       return undefined;
     }
 
@@ -1412,7 +1408,6 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     );
   }, [
     trainType,
-    nextTrainType,
     selectedDirection,
     afterAllStopLastStation,
     currentLine,
@@ -1421,7 +1416,6 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     orderedStations,
     reversedFinalPassedStationIndex,
     reversedStations,
-    stations,
     typeChangedStationIndex,
   ]);
 
