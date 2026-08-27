@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   ENABLED_LANGUAGES: '@TrainLCD:enabledLanguages',
   SPEECH_ENABLED: '@TrainLCD:speechEnabled',
   TTS_ENABLED_LANGUAGES: '@TrainLCD:ttsEnabledLanguages',
+  TTS_SPEED_PREFERENCE: '@TrainLCD:ttsSpeedPreference',
   DOZE_CONFIRMED: '@TrainLCD:dozeConfirmed',
   TTS_NOTICE: '@TrainLCD:ttsNotice',
   LONG_PRESS_NOTICE_DISMISSED: '@TrainLCD:longPressNoticeDismissed',

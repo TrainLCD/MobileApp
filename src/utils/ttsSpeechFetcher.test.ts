@@ -317,6 +317,75 @@ describe('fetchSpeechAudio', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
+  it('読み上げ速度をリクエストに含める', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({
+        id: 'tts-140',
+        jaAudioContent: 'QQ==',
+        enAudioContent: 'QQ==',
+      })
+    );
+
+    await fetchSpeechAudio({ ...defaultOptions, speed: 0.85 });
+
+    expect(parseRequestBody().data).toEqual(
+      expect.objectContaining({ speed: 0.85 })
+    );
+  });
+
+  it('速度未指定なら speed を送らず Worker の既定値に任せる', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({
+        id: 'tts-141',
+        jaAudioContent: 'QQ==',
+        enAudioContent: 'QQ==',
+      })
+    );
+
+    await fetchSpeechAudio(defaultOptions);
+
+    expect(parseRequestBody().data).not.toHaveProperty('speed');
+  });
+
+  it('速度に不正値が渡された場合は送らない', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({
+        id: 'tts-142',
+        jaAudioContent: 'QQ==',
+        enAudioContent: 'QQ==',
+      })
+    );
+
+    for (const speed of [
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      0,
+      -1,
+    ] as const) {
+      clearFetchCache();
+      mockFetch.mockClear();
+      await fetchSpeechAudio({ ...defaultOptions, speed });
+      expect(parseRequestBody().data).not.toHaveProperty('speed');
+    }
+  });
+
+  it('速度が異なればキャッシュを共有しない', async () => {
+    // 速度をキーへ含めないと、設定変更後も変更前の速度の音声を再生してしまう
+    mockFetch.mockResolvedValue(
+      okResponse({
+        id: 'tts-143',
+        jaAudioContent: 'QQ==',
+        enAudioContent: 'QQ==',
+      })
+    );
+
+    await fetchSpeechAudio({ ...defaultOptions, speed: 1.0 });
+    await fetchSpeechAudio({ ...defaultOptions, speed: 1.15 });
+    await fetchSpeechAudio({ ...defaultOptions, speed: 1.0 });
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
   it('キャッシュは上限を超えたら最古のエントリから捨てる', async () => {
     mockFetch.mockImplementation(async () =>
       okResponse({

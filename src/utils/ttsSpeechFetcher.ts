@@ -24,9 +24,12 @@ export interface FetchSpeechOptions {
   apiUrl: string;
   idToken: string;
   // Cloud TTS のボイス名（例: ja-JP-Standard-B）。ロケールを含むため日英で別々に
-  // 指定する。読み上げ速度・声の高さは Worker 側の設定で決まる。
+  // 指定する。声の高さは Worker 側の設定で決まる。
   jaVoiceName?: string;
   enVoiceName?: string;
+  // 読み上げ速度（speakingRate）。未指定なら Worker 側の既定値で合成される。
+  // Worker は許可リストにない値を無視するため、送れるのは REMOTE_TTS_SPEED_RATES の値のみ。
+  speed?: number;
   timeoutMs?: number;
 }
 
@@ -206,6 +209,7 @@ const buildCacheKey = (opts: {
   textEn: string;
   jaVoiceName?: string;
   enVoiceName?: string;
+  speed?: number;
 }): string =>
   [
     // 空文字は「その言語を要求しない」を意味するため、両方をキーに含めることで
@@ -214,6 +218,9 @@ const buildCacheKey = (opts: {
     opts.textEn,
     normalizeOptional(opts.jaVoiceName),
     normalizeOptional(opts.enVoiceName),
+    // 速度を変えると同じ文でも別の音声になる。キーへ含めないと、設定変更後も
+    // 変更前の速度の音声を再生し続けてしまう
+    opts.speed ?? '',
   ].join('\0');
 
 export const clearFetchCache = (): void => {
@@ -233,6 +240,7 @@ export const fetchSpeechAudio = async (
     idToken,
     jaVoiceName,
     enVoiceName,
+    speed,
     timeoutMs = TTS_FETCH_TIMEOUT_MS,
   } = options;
   // 0・負値・NaN・Infinity が明示的に渡された場合もタイムアウト保護が
@@ -255,12 +263,19 @@ export const fetchSpeechAudio = async (
 
   const normalizedJaVoiceName = normalizeOptional(jaVoiceName);
   const normalizedEnVoiceName = normalizeOptional(enVoiceName);
+  // NaN や Infinity をそのまま JSON へ載せると null になり Worker 側で弾かれるため、
+  // 有限の正値だけを送る。それ以外は未指定として Worker の既定速度に任せる。
+  const normalizedSpeed =
+    typeof speed === 'number' && Number.isFinite(speed) && speed > 0
+      ? speed
+      : undefined;
 
   const cacheKey = buildCacheKey({
     textJa: trimmedTextJa,
     textEn: sanitizedTextEn,
     jaVoiceName: normalizedJaVoiceName,
     enVoiceName: normalizedEnVoiceName,
+    speed: normalizedSpeed,
   });
   const cached = fetchCache.get(cacheKey);
   if (cached) {
@@ -286,6 +301,7 @@ export const fetchSpeechAudio = async (
               : {}),
           }
         : {}),
+      ...(normalizedSpeed !== undefined ? { speed: normalizedSpeed } : {}),
     },
   };
 
