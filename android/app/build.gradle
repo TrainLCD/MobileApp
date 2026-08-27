@@ -28,10 +28,17 @@ react {
     // codegenDir = file("../../node_modules/@react-native/codegen")
 
     /* Variants */
-    //   The list of variants to that are debuggable. For those we're going to
-    //   skip the bundling of the JS bundle and the assets. By default is just 'debug'.
-    //   If you add flavors like lite, prod, etc. you'll have to list your debuggableVariants.
-    // debuggableVariants = ["liteDebug", "prodDebug"]
+    //   ここに挙げたバリアントは JS バンドルとアセットの同梱をスキップし、Metro から
+    //   JS を読み込む。判定はバリアント名の完全一致（大文字小文字は無視）で行われる。
+    //   RN の既定値は ["debug", "debugOptimized"] だが、本プロジェクトは
+    //   flavorDimensions "environment" を持つためバリアント名が devDebug / prodDebug
+    //   （および RN プラグインが自動生成する build type の devDebugOptimized /
+    //   prodDebugOptimized）となり、既定リストに一致しない。明示しないと debug ビルドでも
+    //   createBundle<Variant>JsAndAssets が走って JS が APK に焼き込まれ、Metro に接続されず
+    //   Fast Refresh も CDP デバッガも使えなくなる。
+    //   配布ビルドは EAS / CI とも bundleDevRelease / bundleProdRelease（Release バリアント）
+    //   を使うため、このリストの影響を受けない。
+    debuggableVariants = ["devDebug", "prodDebug", "devDebugOptimized", "prodDebugOptimized"]
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
