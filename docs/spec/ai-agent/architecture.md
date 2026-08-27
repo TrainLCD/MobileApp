@@ -115,13 +115,16 @@ flowchart TB
 | チャット画面 | MobileApp（新規） | 対話 UI・提案カード・既存フロー接続 |
 | エージェント API | trainlcd-worker | 認証・ゲート・LLM 呼び出し・検証 |
 | LLM 経路 | AI Gateway | ログ・コスト集計・レート制限・キャッシュ |
-| 駅名検索ツール | StationAPI `/graphql` | `stationsByName` で実在性確認 |
+| 駅名検索ツール | StationAPI `POST /` | `stationsByName` で実在性確認 |
 | フラグ配信 | `/config/remote` | `ai_agent_enabled` キルスイッチ |
 
 StationAPI への接続は同一 Cloudflare アカウント内なので Service Binding を
 推奨する（ネットワーク往復なし・認証不要で worker 間呼び出しできる）。
-バインディングが難しい場合は既存 GraphQL エンドポイントへの fetch でも
-成立する。
+バインディングが難しい場合は GraphQL エンドポイントへの fetch でも成立する。
+いずれの経路でも **StationAPI はサブドメイン直下（`POST /`）でしか GraphQL を
+受け付けない**（`/graphql` は 404）。外部 fetch に使う
+`STATION_API_GRAPHQL_URL` も `https://gql.trainlcd.app/` のようにルートを
+指すこと。
 
 ## 対話 API 設計（trainlcd-worker）
 
