@@ -20,7 +20,7 @@ API 障害でアナウンスが丸ごと欠落しないようにするための�
 ## 構成
 
 ```text
-useTTS ────────────────── 放送タイミング・抑止判定・ダッキング・保留キュー
+useTTS ────────────────── 放送タイミング・抑止判定・音声セッション・保留キュー
   ├─ useRemoteSpeechEngine  /tts へ合成要求 → expo-audio で再生
   └─ useNativeSpeechEngine  リモートを使わない構成の常用経路 / リモートのフォールバック
 ```
@@ -35,6 +35,31 @@ useTTS ────────────────── 放送タイミン
 - `onUnavailable` は「音声を一切生成できず発話しなかった」場合のみ。再生が始まった
   後の失敗は `onSettled` で終える（途中まで読み上げた放送を頭から読み直さない）。
 - `stop()` — 進行中の発話を中断し、ネイティブ資源を解放する。コールバックは呼ばない。
+
+## 他アプリ音声のダッキング
+
+読み上げ中だけ他アプリ（音楽など）の音量を下げる。仕組みはプラットフォームで異なる。
+
+| プラットフォーム | 仕組み | 実装 |
+| --- | --- | --- |
+| iOS | `AVAudioSession` のカテゴリオプション (`duckOthers`) | `useTTS` の `setDuckingActiveAsync` |
+| Android | オーディオフォーカス (`AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`) | `modules/audio-focus`（`src/utils/speechAudioFocus.ts` 経由） |
+
+iOS の `AVSpeechSynthesizer` はアプリの音声セッションを共有するため、`expo-audio` の
+`setAudioModeAsync` に `duckOthers` を指定すれば端末内蔵 TTS・リモート TTS のどちらでも
+ダッキングされる。ダッキングは発話の直前にだけ張り、完了後は `mixWithOthers` へ戻す
+（張ったままにすると、再生停止後も他アプリの音量が復元されないことがある）。
+
+Android のダッキングはオーディオフォーカスの要求でしか起きない。`expo-audio` の Android
+実装は `setAudioModeAsync` では `interruptionMode` を保持するだけで、フォーカスを要求するのは
+プレイヤーが再生を開始したときだけである。リモート TTS は `expo-audio` で再生するのでこれに
+乗るが、端末内蔵 TTS (`expo-speech`) は `android.speech.tts.TextToSpeech` を直接呼ぶだけで
+`AudioManager` に触れないため、フォーカスが一度も要求されずダッキングが起きない。そのため
+`useNativeSpeechEngine` は、発話の直前と直後に Android 専用のローカル Expo モジュール
+`modules/audio-focus` でフォーカスを取得・返却する。
+
+このモジュールはネイティブコードを含むため、反映にはネイティブビルドが必要で
+OTA アップデートでは配信されない。
 
 ## テキストの前処理
 

@@ -6,6 +6,44 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-08-26 — Android の端末内蔵 TTS でダッキングが効かない不具合を修正
+
+対象バージョン: v10.13.1 / Issue [TrainLCD/Issues#1263](https://github.com/TrainLCD/Issues/issues/1263)
+
+### 内容
+
+- 音楽再生中にアナウンスが流れても他アプリの音量が下がらない、という Android からの
+  報告を修正した。Android のダッキングは `AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK` の
+  要求でしか起きないが、`expo-speech` の Android 実装は `AudioManager` に一切触れず、
+  `expo-audio` の `setAudioModeAsync` も値を保持するだけでフォーカスを要求しない
+  （要求するのはプレイヤーの再生開始時のみ）。そのため端末内蔵 TTS 経路では
+  `duckOthers` を指定してもダッキングが一度も発生していなかった。
+- デグレは PR [#6453](https://github.com/TrainLCD/MobileApp/pull/6453)（v10.11.0）。
+  それ以前は合成済み音声を `expo-audio` のプレイヤーで再生していたため、プレイヤーが
+  フォーカスを要求し結果としてダッキングが効いていた。端末内蔵 TTS へ置き換えた際に
+  プレイヤーが経路から外れ、ダッキングだけが落ちた。
+- 発話中だけフォーカスを保持する Android 専用ローカル Expo モジュール
+  `modules/audio-focus` を追加し、`useNativeSpeechEngine` が発話の直前・直後に
+  取得・返却するようにした。iOS は従来どおり `AVAudioSession` のカテゴリオプションで
+  完結するため、モジュールは autolink されず何もしない。
+- **ネイティブモジュールの追加を含むため、反映にはネイティブビルドが必要**で
+  OTA アップデートでは配信されない。
+
+### 検証結果
+
+- `npm run lint` — 成功
+- `npm test` — 成功
+- `npm run typecheck` — 成功
+
+### 未検証
+
+上記は JavaScript 側のチェックのみで、ネイティブ側は未検証。
+
+- Android SDK を用いた Kotlin のコンパイル確認（作業環境に Android SDK が無いため未実施）。
+  最初の検証は canary のネイティブビルドになる。
+- Android 実機での動作確認（音楽再生中にアナウンスで他アプリの音量が下がり、
+  読み上げ終了後に戻るか）。
+
 ## 2026-08-26 — Expo SDK 57 系の依存を推奨バージョンへ更新
 
 対象バージョン: v10.13.1 / PR [#6720](https://github.com/TrainLCD/MobileApp/pull/6720)
