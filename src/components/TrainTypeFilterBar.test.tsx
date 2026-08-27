@@ -153,13 +153,15 @@ describe('TrainTypeFilterBar', () => {
 
   // iOS は autoCorrect={false}(autocorrectionType = .no) にすると日本語入力の
   // 変換候補バーごと消え、かなを漢字へ変換できなくなる。Android でも
-  // TYPE_TEXT_FLAG_NO_SUGGESTIONS が立って候補が出なくなるため、無効化しない
-  it('日本語入力の変換候補を潰さないよう、入力欄のオートコレクトは無効化しない', () => {
+  // TYPE_TEXT_FLAG_NO_SUGGESTIONS が立って候補が出なくなる。
+  // 省略して既定に委ねると、New Architecture のビュー再利用で .no が残った
+  // ビューを引き継ぐことがあるため、true を明示することまで含めて固定する
+  it('日本語入力の変換候補を潰さないよう、入力欄のオートコレクトを明示的に有効化する', () => {
     const { getByTestId } = setup();
 
-    expect(
-      getByTestId('trainTypeFilterSearchInput').props.autoCorrect
-    ).not.toBe(false);
+    expect(getByTestId('trainTypeFilterSearchInput').props.autoCorrect).toBe(
+      true
+    );
   });
 
   it('入力があるときだけ入力欄のクリアが出る', () => {
