@@ -54,7 +54,7 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
     const reversedBelongLines =
       selectedDirection === 'INBOUND' ? belongLines.slice().reverse() : null;
 
-    const notGroupedJoinedLines: Line[] =
+    const joinedLinesInOrder: Line[] =
       selectedDirection === 'INBOUND'
         ? joinedLineIds
             .slice(currentLineIndex + 1, joinedLineIds.length)
@@ -72,60 +72,20 @@ export const useConnectedLines = (excludePassed = true): Line[] => {
               name: l.nameShort?.replace(parenthesisRegexp, ''),
             }))
             .reverse();
-    const companyDuplicatedLines = notGroupedJoinedLines
-      .filter((l, i, arr) => l.company?.id === arr[i - 1]?.company?.id)
-      .map((l) => {
-        if (
-          notGroupedJoinedLines.findIndex(
-            (jl) => jl.company?.id === l.company?.id
-          )
-        ) {
-          return {
-            ...l,
-            name: `${l.company?.nameShort}線`,
-            nameR: `${l.company?.nameEnglishShort} Line`,
-          };
-        }
-        return l;
-      });
-    const companyNotDuplicatedLines = notGroupedJoinedLines.filter((l) => {
-      return (
-        companyDuplicatedLines.findIndex(
-          (jl) => jl.company?.id === l.company?.id
-        ) === -1
-      );
-    });
-
-    const joinedLines = [
-      ...companyDuplicatedLines,
-      ...companyNotDuplicatedLines,
-    ]
-      // 直通する順番通りにソートする
-      .reduce<Line[]>((acc, cur, idx, arr) => {
-        // 直通先が1つしかなければ別に計算する必要はない
-        if (arr.length === 1) {
-          return [cur];
-        }
-
-        // 処理中の路線がグループ化されていない配列の何番目にあるか調べる
-        // このindexが実際の直通順に入るようにしたい
-        const currentIndex = notGroupedJoinedLines.findIndex(
-          (l) => l.id === cur.id
-        );
-
-        // 処理中のindexがcurrentIndexより大きいまたは等しい場合、
-        // 処理が終わった配列を展開しグループ化されていない
-        // 現在路線~最終直通先の配列を返し、次のループへ
-        if (currentIndex <= idx) {
-          return acc.concat(notGroupedJoinedLines.slice(currentIndex));
-        }
-
-        // 処理中のindexがcurrentIndexより小さい場合、
-        // 処理が終わった配列を展開しグループ化されていない
-        // 配列の最初から現在のindexまでを返し、次のループへ
-        return acc.concat(notGroupedJoinedLines.slice(0, currentIndex + 1));
-      }, [])
-      // ループ設計上路線が重複する可能性があるのでここで重複をしばく
+    // NOTE: 以前はここで「同じ会社の路線が連続する場合は会社名でまとめる」処理を挟み、
+    // まとめた配列を直通順へ並べ直していた。しかし並べ直しの reduce が
+    // joinedLinesInOrder から要素を取り直す実装だったため、まとめた結果は
+    // 実質的に破棄されており、グループ化は name / nameR にしか効いていなかった
+    // （表示は nameShort、TTS は nameShort / nameRoman / nameTtsSegments を見る）。
+    // その上で絞り込みが路線 ID ではなく会社 ID を基準にしていたせいで、
+    //   - [相鉄新横浜線, 相鉄本線] のように同一会社が連続すると先に入る路線が落ち、
+    //     直通先として「その会社の最後の路線」が案内される
+    //   - [A社, A社, B社, A社] のように同一会社が飛び飛びで現れると末尾が落ちる
+    // という欠落が起きていた (#6747)。
+    // 直通順の配列をそのまま使えば、グループ化の絞り込みを路線 ID 基準に直した場合と
+    // 同じ並びになる（長さ5・会社3種までの全並びで一致を確認済み）ため、単純化する。
+    const joinedLines = joinedLinesInOrder
+      // 同じ路線が飛び飛びで現れることがあるのでここで重複をしばく
       .filter((l, i, arr) => arr.findIndex((il) => il.id === l.id) === i)
       // NOTE: 終点駅が直通先の次の駅に接続していない場合、実質接続していない路線は省く
       // 例: 池袋→元町・中華街の際横浜を終点と指定した際にみなとみらい線が入り込む
