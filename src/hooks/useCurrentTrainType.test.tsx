@@ -48,6 +48,7 @@ const TRAIN_TYPE_IDS = {
   LOCAL: 1,
   RAPID: 2,
   EXPRESS: 3,
+  MU_SKY: 511,
 } as const;
 
 const createTrainType = (
@@ -189,6 +190,95 @@ describe('useCurrentTrainType', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('trainType').props.children).toBe('null')
+    );
+  });
+
+  it('直近の停車駅と路線が異なる通過駅を走行中でも種別を維持する', async () => {
+    // NOTE: 名鉄ミュースカイ(中部国際空港→新可児)のように、
+    // 直近の停車駅 (空港線) と現在走行中の路線 (常滑線) がずれるケース。
+    // 通過駅には API から trainType が返らないため、現在駅をそのまま引くと
+    // 種別が失われて各駅停車扱いになってしまう。
+    const muSky = createTrainType({
+      typeId: TRAIN_TYPE_IDS.MU_SKY,
+      name: 'ミュースカイ',
+      __typename: 'TrainTypeNested',
+    });
+    const airportLineStop = createStation(3000703, {
+      line: { id: 30007 },
+      trainType: muSky,
+    } as Parameters<typeof createStation>[1]);
+    const tokonameLinePassing = createStation(3000813, {
+      line: { id: 30008 },
+      trainType: null,
+    } as Parameters<typeof createStation>[1]);
+    const tokonameLineStop = createStation(3000804, {
+      line: { id: 30008 },
+      trainType: muSky,
+    } as Parameters<typeof createStation>[1]);
+    stationAtomValue = {
+      stations: [airportLineStop, tokonameLinePassing, tokonameLineStop],
+    };
+    currentStationValue = airportLineStop;
+    currentLineValue = createLine(30008, {
+      station: { id: 3000813, __typename: 'StationNested' } as Line['station'],
+    });
+    navigationAtomValue.trainType = createTrainType({
+      typeId: TRAIN_TYPE_IDS.MU_SKY,
+      name: 'ミュースカイ',
+    });
+
+    const { getByTestId } = render(<TestComponent />);
+
+    await waitFor(() =>
+      expect(getByTestId('trainType').props.children).toBe(
+        TRAIN_TYPE_IDS.MU_SKY
+      )
+    );
+  });
+
+  it('同一路線内で種別が変わる系統では現在地に近い停車駅の種別を採用する', async () => {
+    const rapid = createTrainType({
+      typeId: TRAIN_TYPE_IDS.RAPID,
+      __typename: 'TrainTypeNested',
+    });
+    const local = createTrainType({
+      typeId: TRAIN_TYPE_IDS.LOCAL,
+      __typename: 'TrainTypeNested',
+    });
+    const otherLineStop = createStation(100, {
+      line: { id: 1 },
+      trainType: createTrainType({
+        typeId: TRAIN_TYPE_IDS.EXPRESS,
+        __typename: 'TrainTypeNested',
+      }),
+    } as Parameters<typeof createStation>[1]);
+    const farStop = createStation(200, {
+      line: { id: 2 },
+      trainType: rapid,
+    } as Parameters<typeof createStation>[1]);
+    const nearStop = createStation(201, {
+      line: { id: 2 },
+      trainType: local,
+    } as Parameters<typeof createStation>[1]);
+    const passing = createStation(202, {
+      line: { id: 2 },
+      trainType: null,
+    } as Parameters<typeof createStation>[1]);
+    stationAtomValue = {
+      stations: [otherLineStop, farStop, nearStop, passing],
+    };
+    currentStationValue = otherLineStop;
+    currentLineValue = createLine(2, {
+      station: { id: 202, __typename: 'StationNested' } as Line['station'],
+    });
+    navigationAtomValue.trainType = createTrainType({
+      typeId: TRAIN_TYPE_IDS.RAPID,
+    });
+
+    const { getByTestId } = render(<TestComponent />);
+
+    await waitFor(() =>
+      expect(getByTestId('trainType').props.children).toBe(TRAIN_TYPE_IDS.LOCAL)
     );
   });
 
