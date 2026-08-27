@@ -169,7 +169,7 @@ npm run watch:test
 
 ### Backend (Cloudflare Workers)
 
-The backend Worker (TTS synthesis, session issuance, feedback triage, review notifiers) lives in [TrainLCD/functions](https://github.com/TrainLCD/functions), and the GraphQL BFF lives in [TrainLCD/BFF](https://github.com/TrainLCD/BFF). Neither is part of this repository.
+The backend Worker (TTS synthesis, session issuance, feedback triage, review notifiers, the AI destination agent) lives in [TrainLCD/functions](https://github.com/TrainLCD/functions), and the GraphQL API is served directly by [TrainLCD/StationAPI](https://github.com/TrainLCD/StationAPI). Neither is part of this repository. The GraphQL BFF that used to sit between the app and StationAPI has been retired.
 
 Voice announcements (TTS) use a different engine per platform:
 
