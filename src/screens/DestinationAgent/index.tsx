@@ -154,9 +154,17 @@ const DestinationAgentScreen = () => {
 
   const [entries, setEntries] = useState<ChatEntry[]>([]);
   const [inputText, setInputText] = useState('');
+  // 入力欄は非制御なので、setInputText の更新関数の外から現在値を読めるよう
+  // ref にも持つ。送信失敗時に「下書きがあるか」を判定するのに使う
+  const inputTextRef = useRef('');
   // 入力欄は値を書き戻さない非制御入力なので、親から中身を変えるときは
   // ref.clear() を使い、空にできない場合だけこの key を変えて作り直す
   const [inputResetKey, setInputResetKey] = useState(0);
+
+  const handleInputChange = useCallback((text: string) => {
+    inputTextRef.current = text;
+    setInputText(text);
+  }, []);
   const [sending, setSending] = useState(false);
   // tool イベント受信中(駅検索の tool use ループ中)であることを示すフラグ。
   // 最初の delta が届くか応答が確定した時点で降ろす
@@ -299,6 +307,7 @@ const DestinationAgentScreen = () => {
       setSending(true);
       setSearching(false);
       setInputText('');
+      inputTextRef.current = '';
       // 入力欄自身が値を持つので、表示は明示的に消す。key を変えないのは
       // 送信後もキーボードと焦点を保って続けて質問できるようにするため
       inputRef.current?.clear();
@@ -421,10 +430,15 @@ const DestinationAgentScreen = () => {
           (entry) => entry.id !== userEntry.id && entry.id !== streamingEntry.id
         )
       );
-      // 送信待ちの間にユーザが入力し直していた場合はその内容を優先する
-      setInputText((prev) => (prev.length ? prev : text));
-      // 空でない文字列は ref では戻せないため、入力欄を作り直して表示を合わせる
-      setInputResetKey((n) => n + 1);
+      // 送信待ちの間にユーザが入力し直していた場合はその内容を優先する。
+      // 下書きがあるときは入力欄に手を触れない。作り直すと焦点と IME セッションが
+      // 切れるため、戻す文字列が要らない場合は key を変えないこと
+      if (!inputTextRef.current.length) {
+        setInputText(text);
+        inputTextRef.current = text;
+        // 空でない文字列は ref では戻せないため、入力欄を作り直して表示を合わせる
+        setInputResetKey((n) => n + 1);
+      }
       showToast({
         type: 'error',
         text1: translate('errorTitle'),
@@ -448,6 +462,7 @@ const DestinationAgentScreen = () => {
             setEntries([]);
             setSuggestionStates({});
             setInputText('');
+            inputTextRef.current = '';
             inputRef.current?.clear();
             setRateLimited(false);
           },
@@ -667,7 +682,7 @@ const DestinationAgentScreen = () => {
           <AgentInputBar
             key={inputResetKey}
             value={inputText}
-            onChangeText={setInputText}
+            onChangeText={handleInputChange}
             onSend={() => handleSend(inputText)}
             sending={sending}
             rateLimited={rateLimited}
