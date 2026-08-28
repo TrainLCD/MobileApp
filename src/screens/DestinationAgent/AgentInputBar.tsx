@@ -127,7 +127,11 @@ export const AgentInputBar = ({
               fontFamily,
             },
           ]}
-          value={value}
+          // value を渡して書き戻すと、iOS では未確定文字列(marked text)が壊れて
+          // 日本語の変換候補が出せなくなる。入力値は入力欄自身に持たせ、親へは
+          // onChangeText で通知するだけにする。親から中身を変えたいときは
+          // ref.clear() か、呼び出し側で key を変えて作り直す
+          defaultValue={value}
           onChangeText={onChangeText}
           editable={!rateLimited}
           multiline
