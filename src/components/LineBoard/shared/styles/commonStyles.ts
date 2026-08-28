@@ -14,6 +14,45 @@ export const STATION_NAME_CONTAINER_BOTTOM: number | undefined = isTablet
   ? Platform.select({ android: 64, default: 84 })
   : undefined;
 
+// 斜め書き駅名のフォントサイズ。1行に収まる文字数を決めるため折り返し幅の算出にも使う
+export const HORIZONTAL_STATION_NAME_FONT_SIZE = RFValue(18);
+
+/** 斜め書きで1行に収める全角文字数の既定値 */
+export const HORIZONTAL_STATION_NAME_MAX_CHARS = 8.5;
+
+/**
+ * 斜め書き駅名の折り返し幅を、1行に収めたい全角文字数から求める。
+ * 画面短辺(dim.height)基準だと、フォントサイズを決める RFValue が画面長辺で
+ * スケールするぶん縦長端末ほど1行に入る文字数が減ってしまい、iPhone 17 では
+ * 7文字の「東京テレポート」が改行されていた。全角1文字の幅はフォントサイズと
+ * ほぼ等しいので、文字サイズ基準にして端末によらず同じ文字数を保証する。
+ */
+export const getHorizontalStationNameWidth = (maxChars: number): number =>
+  HORIZONTAL_STATION_NAME_FONT_SIZE * maxChars;
+
+/** 斜め書き駅名の回転角(度)。折り返し幅を変えたときの位置補正にも使う */
+const HORIZONTAL_STATION_NAME_ROTATION_DEG = 55;
+
+/**
+ * 折り返し幅を変えたときに必要な位置補正を返す。
+ * 斜め書きは要素の中心を軸に -55° 回転するため、幅を w0 から w1 へ広げると
+ * 回転中心が右へ動き、回転後の駅名は横に (w1-w0)×(1-cos55°)/2、
+ * 縦に (w1-w0)×sin55°/2 だけずれて路線バーに寄ってしまう。
+ * ずれた分を marginLeft / marginBottom へ戻し、見た目の位置を従来の幅の
+ * ときと揃える。
+ */
+export const getHorizontalStationNameOffset = (
+  previousWidth: number,
+  nextWidth: number
+): { marginLeft: number; marginBottom: number } => {
+  const delta = nextWidth - previousWidth;
+  const rad = (HORIZONTAL_STATION_NAME_ROTATION_DEG * Math.PI) / 180;
+  return {
+    marginLeft: -(delta * (1 - Math.cos(rad))) / 2,
+    marginBottom: (delta * Math.sin(rad)) / 2,
+  };
+};
+
 export const commonLineBoardStyles = StyleSheet.create({
   root: {
     height: '100%',
@@ -140,7 +179,7 @@ export const commonLineBoardStyles = StyleSheet.create({
     marginBottom: Platform.select({ android: isTablet ? -8 : -6, ios: 0 }),
   },
   stationNameHorizontal: {
-    fontSize: RFValue(18),
+    fontSize: HORIZONTAL_STATION_NAME_FONT_SIZE,
     fontWeight: 'bold',
     transform: [{ rotate: '-55deg' }],
   },

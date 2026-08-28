@@ -1,6 +1,12 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
+import {
+  getHorizontalStationNameOffset,
+  getHorizontalStationNameWidth,
+  HORIZONTAL_STATION_NAME_FONT_SIZE,
+  HORIZONTAL_STATION_NAME_MAX_CHARS,
+} from '../styles/commonStyles';
 import { StationName } from './StationName';
 
 // モック設定
@@ -13,6 +19,29 @@ jest.mock('~/utils/isTablet', () => ({
   __esModule: true,
   default: false,
 }));
+
+const WINDOW_HEIGHT = 375;
+
+jest.mock('~/hooks', () => ({
+  useLandscapeWindowDimensions: jest.fn(() => ({
+    width: 812,
+    height: 375,
+    isPortrait: false,
+  })),
+}));
+
+/** 従来の折り返し幅(画面短辺基準)。位置補正の基準値 */
+const LEGACY_HORIZONTAL_WIDTH = WINDOW_HEIGHT / 2.5;
+
+const expectedOffset = getHorizontalStationNameOffset(
+  LEGACY_HORIZONTAL_WIDTH,
+  getHorizontalStationNameWidth(HORIZONTAL_STATION_NAME_MAX_CHARS)
+);
+
+const flattenStyle = (style: unknown): Record<string, unknown>[] =>
+  (Array.isArray(style) ? style.flat() : [style]).filter(
+    (s): s is Record<string, unknown> => !!s && typeof s === 'object'
+  );
 
 jest.mock('../../../Typography', () => {
   const _React = require('react');
@@ -113,12 +142,13 @@ describe('StationName', () => {
     const flattenedStyles = Array.isArray(textElement.props.style)
       ? textElement.props.style.flat()
       : [textElement.props.style];
+    // 折り返し幅を広げたぶんの位置補正が指定値に加算される
     const hasMarginBottom = flattenedStyles.some(
       (s: unknown) =>
         s &&
         typeof s === 'object' &&
         'marginBottom' in s &&
-        s.marginBottom === customMargin
+        s.marginBottom === customMargin + expectedOffset.marginBottom
     );
     expect(hasMarginBottom).toBe(true);
   });
@@ -189,5 +219,52 @@ describe('StationName', () => {
       (s: unknown) => s && typeof s === 'object' && 'color' in s
     );
     expect(hasColorStyle).toBe(true);
+  });
+
+  it('horizontal=true の場合、折り返し幅が「東京テレポート」を1行に収められる', () => {
+    const stationName = '東京テレポート';
+    const longNameStation: Station = {
+      ...mockStation,
+      name: stationName,
+    };
+
+    const { getAllByTestId } = render(
+      <StationName station={longNameStation} horizontal={true} />
+    );
+
+    const textElement = getAllByTestId('typography-text')[0];
+    const flattenedStyles = Array.isArray(textElement.props.style)
+      ? textElement.props.style.flat()
+      : [textElement.props.style];
+    const widthStyle = flattenedStyles.find(
+      (s: unknown): s is { width: number } =>
+        !!s && typeof s === 'object' && 'width' in s
+    );
+
+    // 全角1文字の幅はフォントサイズとほぼ等しいので、
+    // 文字数ぶんの幅が確保できていれば改行されない
+    expect(widthStyle?.width).toBeGreaterThanOrEqual(
+      HORIZONTAL_STATION_NAME_FONT_SIZE * stationName.length
+    );
+  });
+
+  it('horizontal=true の場合、折り返し幅を広げたぶんの位置ずれが補正される', () => {
+    const { getAllByTestId } = render(
+      <StationName station={mockStation} horizontal={true} />
+    );
+
+    const style = Object.assign(
+      {},
+      ...flattenStyle(getAllByTestId('typography-text')[0].props.style)
+    );
+
+    // -55deg 回転の中心は要素の中心なので、幅を広げると回転後の駅名が
+    // 右下へずれる。marginLeft を負に、marginBottom を正に振って打ち消す
+    expect(expectedOffset.marginLeft).toBeLessThan(0);
+    expect(expectedOffset.marginBottom).toBeGreaterThan(0);
+    expect(style.marginLeft).toBeCloseTo(expectedOffset.marginLeft);
+    expect(style.marginBottom).toBeCloseTo(
+      WINDOW_HEIGHT / 6 + expectedOffset.marginBottom
+    );
   });
 });
