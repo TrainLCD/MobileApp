@@ -1,2 +1,5 @@
+# Node のバージョンは .nvmrc・.github/workflows/**・package.json の engines と
+# 揃える。mise は既定で .nvmrc を読まない（idiomatic_version_file_enable_tools が
+# 空のため）ので、ここに明示しないと mise で用意した環境だけ別バージョンになる。
 [tools]
-node = "22"
+node = "24"

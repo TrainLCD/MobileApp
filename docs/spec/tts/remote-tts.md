@@ -81,7 +81,7 @@ Worker 側の設定（`TTS_SPEED` / `TTS_PITCH`）で決まる。
 
 アプリ側は以下を送受信する。Worker 側の実装は
 [TrainLCD/functions](https://github.com/TrainLCD/functions) の
-`src/routes/tts.ts` にある（GraphQL BFF とは別リポジトリ）。
+`src/routes/tts.ts` にある（GraphQL API の StationAPI とは別リポジトリ）。
 
 ### リクエスト
 

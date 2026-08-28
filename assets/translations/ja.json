@@ -173,6 +173,7 @@
   "emptySearchResult": "一致する情報が見つかりませんでした。",
   "stationNameSearchPlaceholder": "どこにいますか？",
   "routeSearchPlaceholder": "どこへ行きますか？",
+  "searchBarClear": "入力をクリア",
   "trainTypesNotExist": "列車種別がありません",
   "trainTypeFilterPlaceholder": "キーワードで絞り込み",
   "trainTypeFilterAxisType": "種別",
