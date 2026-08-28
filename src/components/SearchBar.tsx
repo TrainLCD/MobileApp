@@ -173,6 +173,9 @@ export const SearchBar = ({
       {clearable && searchText.length ? (
         <TouchableOpacity
           accessibilityRole="button"
+          // アイコンだけのボタンは読み上げ名がフォールバックの記号名になり
+          // 操作の目的が伝わらないため、名前を明示する
+          accessibilityLabel={translate('searchBarClear')}
           testID={clearButtonTestID}
           style={styles.clearButton}
           onPress={handleClear}
@@ -186,6 +189,7 @@ export const SearchBar = ({
       ) : null}
       <TouchableOpacity
         accessibilityRole="button"
+        accessibilityLabel={translate('search')}
         style={[
           styles.button,
           isLEDTheme

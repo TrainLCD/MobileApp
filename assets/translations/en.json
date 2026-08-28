@@ -172,6 +172,7 @@
   "emptySearchResult": "No matching information was found.",
   "stationNameSearchPlaceholder": "Where are you?",
   "routeSearchPlaceholder": "Where to?",
+  "searchBarClear": "Clear input",
   "trainTypesNotExist": "No train types available",
   "trainTypeFilterPlaceholder": "Filter by keyword",
   "trainTypeFilterAxisType": "Type",

@@ -130,6 +130,21 @@ describe('SearchBar（親が値を持つ使い方）', () => {
     expect(onChangeText).toHaveBeenCalledWith('');
   });
 
+  // アイコンだけのボタンは読み上げ名がアイコン由来のフォールバックになり、
+  // 何をするボタンなのかが伝わらないための担保
+  it('アイコンだけのボタンにローカライズ済みの読み上げ名を持たせる', () => {
+    const onChangeText = jest.fn();
+    const { getByRole } = renderWithProviders(
+      <SearchBar value="東上" onChangeText={onChangeText} clearable />
+    );
+
+    expect(getByRole('button', { name: 'search' })).toBeTruthy();
+
+    fireEvent.press(getByRole('button', { name: 'searchBarClear' }));
+
+    expect(onChangeText).toHaveBeenCalledWith('');
+  });
+
   it('値を渡さないときは自前で入力を保持し、送信で現在の入力を渡す', () => {
     const onSearch = jest.fn();
     const { getByTestId } = renderWithProviders(
