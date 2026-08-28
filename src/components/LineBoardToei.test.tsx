@@ -1,5 +1,10 @@
 import { render } from '@testing-library/react-native';
 import type { Line, Station } from '~/@types/graphql';
+import {
+  getHorizontalStationNameOffset,
+  getHorizontalStationNameWidth,
+  HORIZONTAL_STATION_NAME_MAX_CHARS,
+} from './LineBoard/shared/styles/commonStyles';
 import LineBoardToei from './LineBoardToei';
 
 // モック設定
@@ -345,5 +350,89 @@ describe('LineBoardToei', () => {
       />
     );
     expect(getByText('新桥')).toBeTruthy();
+  });
+
+  describe('斜め書き駅名(横書き)の折り返し幅と位置補正', () => {
+    // useLandscapeWindowDimensions のモックが返す短辺
+    const WINDOW_HEIGHT = 375;
+
+    const flattenStyle = (style: unknown): Record<string, unknown> =>
+      Object.assign(
+        {},
+        ...(Array.isArray(style) ? style.flat() : [style]).filter(
+          (s: unknown): s is Record<string, unknown> =>
+            !!s && typeof s === 'object'
+        )
+      );
+
+    const renderStationName = (stations: Station[]) => {
+      const { getByText } = render(
+        <LineBoardToei
+          stations={stations}
+          lineColors={['#ed6d00', '#ed6d00']}
+          hasTerminus={false}
+        />
+      );
+      return flattenStyle(getByText('新橋').props.style);
+    };
+
+    beforeEach(() => {
+      const {
+        useIncludesLongStationName,
+      } = require('./LineBoard/shared/hooks/useBarStyles');
+      useIncludesLongStationName.mockReturnValue(true);
+      // 韓国語の入れ子表示を切って駅名の Text を一意に取得する
+      useAtomValue.mockImplementation(
+        createUseAtomValueMock({ enabledLanguages: ['JA'] })
+      );
+    });
+
+    afterEach(() => {
+      const {
+        useIncludesLongStationName,
+      } = require('./LineBoard/shared/hooks/useBarStyles');
+      useIncludesLongStationName.mockReturnValue(false);
+    });
+
+    it('ナンバリングありの場合、既定より広い幅と対応する位置補正が適用される', () => {
+      const style = renderStationName(mockStations);
+
+      const expectedWidth = getHorizontalStationNameWidth(
+        HORIZONTAL_STATION_NAME_MAX_CHARS + 0.5
+      );
+      const expectedOffset = getHorizontalStationNameOffset(
+        WINDOW_HEIGHT / 2,
+        expectedWidth
+      );
+
+      expect(style.width).toBeCloseTo(expectedWidth);
+      expect(style.marginLeft).toBeCloseTo(expectedOffset.marginLeft);
+      expect(style.marginBottom).toBeCloseTo(
+        WINDOW_HEIGHT / 6 + expectedOffset.marginBottom
+      );
+    });
+
+    it('ナンバリングなしの場合、既定の幅と対応する位置補正が適用される', () => {
+      const stationsWithoutNumbering = mockStations.map((s) => ({
+        ...s,
+        stationNumbers: [],
+      })) as Station[];
+
+      const style = renderStationName(stationsWithoutNumbering);
+
+      const expectedWidth = getHorizontalStationNameWidth(
+        HORIZONTAL_STATION_NAME_MAX_CHARS
+      );
+      const expectedOffset = getHorizontalStationNameOffset(
+        WINDOW_HEIGHT / 2.5,
+        expectedWidth
+      );
+
+      expect(style.width).toBeCloseTo(expectedWidth);
+      expect(style.marginLeft).toBeCloseTo(expectedOffset.marginLeft);
+      expect(style.marginBottom).toBeCloseTo(
+        WINDOW_HEIGHT / 10 + expectedOffset.marginBottom
+      );
+    });
   });
 });
