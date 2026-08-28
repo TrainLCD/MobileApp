@@ -5,7 +5,7 @@ import {
   getHorizontalStationNameWidth,
   HORIZONTAL_STATION_NAME_MAX_CHARS,
 } from './LineBoard/shared/styles/commonStyles';
-import LineBoardToei from './LineBoardToei';
+import LineBoardToei, { EN_STATION_NAME_MAX_CHARS } from './LineBoardToei';
 
 // モック設定
 jest.mock('jotai', () => ({
@@ -433,6 +433,37 @@ describe('LineBoardToei', () => {
       expect(style.marginBottom).toBeCloseTo(
         WINDOW_HEIGHT / 10 + expectedOffset.marginBottom
       );
+    });
+
+    it('英語表記の場合、中国語の併記ぶん行が増えるので日本語より狭い幅になる', () => {
+      useAtomValue.mockImplementation(
+        createUseAtomValueMock({ isEn: true, enabledLanguages: ['JA', 'EN'] })
+      );
+
+      const { getAllByText } = render(
+        <LineBoardToei
+          stations={mockStations}
+          lineColors={['#ed6d00', '#ed6d00']}
+          hasTerminus={false}
+        />
+      );
+      const style = flattenStyle(getAllByText('Tokyo')[0].props.style);
+
+      const expectedWidth = getHorizontalStationNameWidth(
+        EN_STATION_NAME_MAX_CHARS
+      );
+      const expectedOffset = getHorizontalStationNameOffset(
+        WINDOW_HEIGHT / 2,
+        expectedWidth
+      );
+
+      expect(style.width).toBeCloseTo(expectedWidth);
+      // 斜め書きの外接矩形は (幅 × sin55°) が支配的なので、
+      // 日本語と同じ広い幅にすると回転後に親からはみ出して併記が切れる
+      expect(style.width).toBeLessThan(
+        getHorizontalStationNameWidth(HORIZONTAL_STATION_NAME_MAX_CHARS + 0.5)
+      );
+      expect(style.marginLeft).toBeCloseTo(expectedOffset.marginLeft);
     });
   });
 });
