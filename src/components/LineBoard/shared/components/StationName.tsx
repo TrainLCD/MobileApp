@@ -5,7 +5,12 @@ import { useLandscapeWindowDimensions } from '~/hooks';
 import getStationNameR from '~/utils/getStationNameR';
 import isTablet from '~/utils/isTablet';
 import Typography from '../../../Typography';
-import { commonLineBoardStyles as styles } from '../styles/commonStyles';
+import {
+  getHorizontalStationNameOffset,
+  getHorizontalStationNameWidth,
+  HORIZONTAL_STATION_NAME_MAX_CHARS,
+  commonLineBoardStyles as styles,
+} from '../styles/commonStyles';
 
 export interface StationNameProps {
   station: Station;
@@ -33,14 +38,22 @@ export const StationName: React.FC<StationNameProps> = React.memo(
     );
     const dim = useLandscapeWindowDimensions();
 
-    const horizontalAdditionalStyle = useMemo(
-      () => ({
-        width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+    const horizontalAdditionalStyle = useMemo(() => {
+      // 従来の折り返し幅(画面短辺基準)。回転後の見た目をこの幅のときと揃えるための基準
+      const previousWidth = isTablet ? dim.height / 3.5 : dim.height / 2.5;
+      const width = getHorizontalStationNameWidth(
+        HORIZONTAL_STATION_NAME_MAX_CHARS
+      );
+      const offset = getHorizontalStationNameOffset(previousWidth, width);
+
+      return {
+        width,
+        marginLeft: offset.marginLeft,
         marginBottom:
-          marginBottom ?? (isTablet ? dim.height / 8 : dim.height / 6),
-      }),
-      [dim.height, marginBottom]
-    );
+          (marginBottom ?? (isTablet ? dim.height / 8 : dim.height / 6)) +
+          offset.marginBottom,
+      };
+    }, [dim.height, marginBottom]);
 
     if (en) {
       return (
