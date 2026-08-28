@@ -464,6 +464,9 @@ describe('LineBoardToei', () => {
         getHorizontalStationNameWidth(HORIZONTAL_STATION_NAME_MAX_CHARS + 0.5)
       );
       expect(style.marginLeft).toBeCloseTo(expectedOffset.marginLeft);
+      expect(style.marginBottom).toBeCloseTo(
+        WINDOW_HEIGHT / 6 + expectedOffset.marginBottom
+      );
     });
   });
 });
