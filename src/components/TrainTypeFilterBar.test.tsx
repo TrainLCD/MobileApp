@@ -1,4 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
+import { useState } from 'react';
+import { Text } from 'react-native';
 import {
   EMPTY_TRAIN_TYPE_FILTER,
   type TrainTypeFilterOptions,
@@ -192,5 +194,42 @@ describe('TrainTypeFilterBar', () => {
 
     expect(queryByTestId('trainTypeFilterAxis-typeNames')).toBeTruthy();
     expect(queryByTestId('trainTypeFilterAxis-lines')).toBeNull();
+  });
+  // 入力欄のクリアボタンは入力欄が自分で空にするため、ここで作り直すと
+  // 焦点と IME セッションが切れる。外からのクリアだけ作り直す
+  it('入力欄内のクリアでは入力欄を作り直さず、外からのクリアでのみ作り直す', () => {
+    const Harness = () => {
+      const [filter, setFilter] = useState<TrainTypeFilterState>(
+        EMPTY_TRAIN_TYPE_FILTER
+      );
+      return (
+        <>
+          <TrainTypeFilterBar
+            options={options}
+            filter={filter}
+            onChange={setFilter}
+          />
+          <Text
+            testID="externalClear"
+            onPress={() => setFilter(EMPTY_TRAIN_TYPE_FILTER)}
+          >
+            ext
+          </Text>
+        </>
+      );
+    };
+
+    const { getByTestId } = render(<Harness />);
+    const input = getByTestId('trainTypeFilterSearchInput');
+
+    fireEvent.changeText(input, '東上');
+    fireEvent.press(getByTestId('trainTypeFilterClearQuery'));
+
+    expect(getByTestId('trainTypeFilterSearchInput')).toBe(input);
+
+    fireEvent.changeText(getByTestId('trainTypeFilterSearchInput'), '東上');
+    fireEvent.press(getByTestId('externalClear'));
+
+    expect(getByTestId('trainTypeFilterSearchInput')).not.toBe(input);
   });
 });

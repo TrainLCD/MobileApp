@@ -140,10 +140,18 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
   // key を変えて入力欄を作り直して表示を合わせる
   const [searchResetKey, setSearchResetKey] = useState(0);
   const prevQuery = useRef(filter.query);
+  // 入力欄のクリアボタン由来の空文字は入力欄が自分で空にしているため、
+  // 作り直す必要がない。ここで作り直すと焦点と IME セッションが切れる
+  const queryChangedByInput = useRef(false);
   useEffect(() => {
-    if (prevQuery.current !== '' && filter.query === '') {
+    if (
+      prevQuery.current !== '' &&
+      filter.query === '' &&
+      !queryChangedByInput.current
+    ) {
       setSearchResetKey((n) => n + 1);
     }
+    queryChangedByInput.current = false;
     prevQuery.current = filter.query;
   }, [filter.query]);
 
@@ -172,7 +180,10 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
   const filterActive = isTrainTypeFilterActive(filter);
 
   const handleQueryChange = useCallback(
-    (query: string) => onChange({ ...filter, query }),
+    (query: string) => {
+      queryChangedByInput.current = true;
+      onChange({ ...filter, query });
+    },
     [filter, onChange]
   );
 
