@@ -361,6 +361,21 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
           placeholder={translate('trainTypeFilterPlaceholder')}
           clearable
           autoCapitalize="none"
+          // autoCorrect を false にすると iOS は autocorrectionType = .no になり、
+          // 日本語入力の変換候補バーごと消えてかなを漢字へ変換できなくなる
+          // (iOS の日本語キーボードは候補バー以外に変換する手段を持たない)。
+          // Android でも TYPE_TEXT_FLAG_NO_SUGGESTIONS が立ち IME の候補が出ない。
+          //
+          // 省略して既定に委ねるだけでは足りない。New Architecture の
+          // RCTTextInputComponentView は autoCorrect が前回 props から変化した
+          // ときしか autocorrectionType を代入せず、prepareForRecycle も
+          // autocorrectionType を戻さない。そのため .no が残ったビューが再利用
+          // されると、props 省略(std::nullopt 同士で変化なし)では .no を引き継ぐ。
+          // 明示的に true を渡してマウントのたびに .yes を確定させる。
+          //
+          // SearchBar 側が既定値を持たないのはこの明示を「変化あり」にするため。
+          // 共有コンポーネントで true を固定すると署名が一致して代入が飛ぶ。
+          autoCorrect
           testID="trainTypeFilterSearchInput"
           clearButtonTestID="trainTypeFilterClearQuery"
         />
