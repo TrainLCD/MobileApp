@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo, useState } from 'react';
 import {
+  Keyboard,
   ScrollView,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -21,6 +21,7 @@ import {
   type TrainTypeFilterState,
   toggleTrainTypeFilterValue,
 } from '~/utils/trainTypeFilter';
+import { SearchBar } from './SearchBar';
 import Typography from './Typography';
 
 /**
@@ -30,7 +31,7 @@ import Typography from './Typography';
 const HEADER_HORIZONTAL_INSET = 24;
 /** パネルを閉じているときにヘッダー下端との間に残す余白 */
 const CLOSED_BOTTOM_INSET = 12;
-/** 電光掲示板風テーマで背景から一段浮かせる面の色（SearchBar と同じ） */
+/** 展開パネルを背景から一段浮かせる面の色（電光掲示板風テーマ用） */
 const LED_SURFACE_COLOR = '#333';
 
 type AxisKey = 'typeNames' | 'lines';
@@ -44,18 +45,6 @@ const styles = StyleSheet.create({
   },
   search: {
     marginTop: 12,
-    height: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    padding: 0,
-    includeFontPadding: false,
   },
   chipsRow: {
     marginTop: 10,
@@ -148,10 +137,6 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
   const palette = useMemo(
     () => ({
       surface: isLEDTheme ? LED_THEME_BG_COLOR : colors.surface,
-      searchBackground: isLEDTheme ? LED_SURFACE_COLOR : colors.subtleSurface,
-      searchRadius: isLEDTheme ? 0 : 8,
-      inputText: isLEDTheme || colors.isDark ? '#fff' : '#000',
-      placeholder: isLEDTheme ? '#9AA0A6' : colors.secondaryText,
       chipBorder: isLEDTheme ? '#fff' : colors.accent,
       chipFill: isLEDTheme ? '#fff' : colors.accent,
       chipTextOn: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
@@ -170,11 +155,6 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
     [colors, isLEDTheme]
   );
 
-  const fontFamily = useMemo(
-    () => (isLEDTheme ? FONTS.JFDotJiskan24h : FONTS.RobotoRegular),
-    [isLEDTheme]
-  );
-
   const filterActive = isTrainTypeFilterActive(filter);
 
   const handleQueryChange = useCallback(
@@ -182,10 +162,9 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
     [filter, onChange]
   );
 
-  const handleClearQuery = useCallback(
-    () => onChange({ ...filter, query: '' }),
-    [filter, onChange]
-  );
+  // 絞り込みは 1 文字ごとに反映されるので、検索ボタンと送信キーはキーボードを
+  // 畳んで結果を見せる役に回す
+  const handleSubmitQuery = useCallback(() => Keyboard.dismiss(), []);
 
   const handleClearAll = useCallback(() => {
     setOpenAxis(null);
@@ -374,53 +353,17 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
 
   return (
     <View style={[styles.root, openAxis ? null : styles.rootClosed]}>
-      <View
-        style={[
-          styles.search,
-          {
-            backgroundColor: palette.searchBackground,
-            borderRadius: palette.searchRadius,
-          },
-        ]}
-      >
-        <Ionicons name="search" size={20} color={palette.placeholder} />
-        <TextInput
-          style={[styles.searchInput, { color: palette.inputText, fontFamily }]}
+      <View style={styles.search}>
+        <SearchBar
           value={filter.query}
           onChangeText={handleQueryChange}
+          onSearch={handleSubmitQuery}
           placeholder={translate('trainTypeFilterPlaceholder')}
-          placeholderTextColor={palette.placeholder}
+          clearable
           autoCapitalize="none"
-          // autoCorrect を false にすると iOS は autocorrectionType = .no になり、
-          // 日本語入力の変換候補バーごと消えてかなを漢字へ変換できなくなる
-          // (iOS の日本語キーボードは候補バー以外に変換する手段を持たない)。
-          // Android でも TYPE_TEXT_FLAG_NO_SUGGESTIONS が立ち IME の候補が出ない。
-          //
-          // 省略して既定に委ねるだけでは足りない。New Architecture の
-          // RCTTextInputComponentView は autoCorrect が前回 props から変化した
-          // ときしか autocorrectionType を代入せず、prepareForRecycle も
-          // autocorrectionType を戻さない。そのため .no が残ったビューが再利用
-          // されると、props 省略(std::nullopt 同士で変化なし)では .no を引き継ぐ。
-          // 明示的に true を渡してマウントのたびに .yes を確定させる。
-          // ローマ字入力に英語のオートコレクトがかかる副作用より、日本語を
-          // 入力できることを優先する。
-          autoCorrect
-          returnKeyType="search"
           testID="trainTypeFilterSearchInput"
+          clearButtonTestID="trainTypeFilterClearQuery"
         />
-        {filter.query.length ? (
-          <TouchableOpacity
-            accessibilityRole="button"
-            onPress={handleClearQuery}
-            testID="trainTypeFilterClearQuery"
-          >
-            <Ionicons
-              name="close-circle"
-              size={18}
-              color={palette.placeholder}
-            />
-          </TouchableOpacity>
-        ) : null}
       </View>
 
       <ScrollView

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { StyleSheet, type ViewStyle } from 'react-native';
 import { DARK_APP_COLORS } from '~/constants/colorScheme';
@@ -18,6 +18,13 @@ type Options = {
   colorScheme?: (typeof COLOR_SCHEME_PREFERENCE)[keyof typeof COLOR_SCHEME_PREFERENCE];
   led?: boolean;
 };
+
+const renderWithProviders = (ui: React.ReactElement) =>
+  render(
+    <Provider store={createStore()}>
+      <AppColorsProvider>{ui}</AppColorsProvider>
+    </Provider>
+  );
 
 const renderSearchBar = ({
   colorScheme = COLOR_SCHEME_PREFERENCE.LIGHT,
@@ -81,5 +88,70 @@ describe('SearchBar', () => {
 
     expect(containerStyle.backgroundColor).toBe('#333');
     expect(inputColor).toBe('white');
+  });
+});
+
+// 種別の絞り込みなど、1 文字ごとに結果を更新する使い方を共通化した分の担保
+describe('SearchBar（親が値を持つ使い方）', () => {
+  it('渡した値を表示し、入力のたびに親へ通知する', () => {
+    const onChangeText = jest.fn();
+    const { getByTestId } = renderWithProviders(
+      <SearchBar
+        value="東上"
+        onChangeText={onChangeText}
+        testID="searchInput"
+      />
+    );
+
+    expect(getByTestId('searchInput').props.value).toBe('東上');
+
+    fireEvent.changeText(getByTestId('searchInput'), '東上線');
+
+    expect(onChangeText).toHaveBeenCalledWith('東上線');
+  });
+
+  it('clearable では入力があるときだけクリアが出て、押すと空文字を通知する', () => {
+    const onChangeText = jest.fn();
+    const { queryByTestId } = renderWithProviders(
+      <SearchBar value="" clearable clearButtonTestID="clear" />
+    );
+    expect(queryByTestId('clear')).toBeNull();
+
+    const { getByTestId } = renderWithProviders(
+      <SearchBar
+        value="東上"
+        onChangeText={onChangeText}
+        clearable
+        clearButtonTestID="clear"
+      />
+    );
+    fireEvent.press(getByTestId('clear'));
+
+    expect(onChangeText).toHaveBeenCalledWith('');
+  });
+
+  it('値を渡さないときは自前で入力を保持し、送信で現在の入力を渡す', () => {
+    const onSearch = jest.fn();
+    const { getByTestId } = renderWithProviders(
+      <SearchBar onSearch={onSearch} testID="searchInput" />
+    );
+
+    fireEvent.changeText(getByTestId('searchInput'), '渋谷');
+    fireEvent(getByTestId('searchInput'), 'submitEditing');
+
+    expect(onSearch).toHaveBeenCalledWith('渋谷');
+  });
+
+  // iOS は autoCorrect={false}(autocorrectionType = .no) にすると日本語入力の
+  // 変換候補バーごと消え、かなを漢字へ変換できなくなる。Android でも
+  // TYPE_TEXT_FLAG_NO_SUGGESTIONS が立って候補が出なくなる。
+  // 省略して既定に委ねると、New Architecture のビュー再利用で .no が残った
+  // ビューを引き継ぐことがあるため、true を明示することまで含めて固定する
+  it('日本語入力の変換候補を潰さないよう、オートコレクトを明示的に有効化する', () => {
+    const { getByTestId } = renderWithProviders(
+      <SearchBar testID="searchInput" />
+    );
+
+    expect(getByTestId('searchInput').props.autoCorrect).toBe(true);
   });
 });
