@@ -34,6 +34,7 @@ import {
 } from './LineBoard/shared/hooks/useBarStyles';
 import {
   commonLineBoardStyles,
+  getHorizontalStationNameOffset,
   getHorizontalStationNameWidth,
   HORIZONTAL_STATION_NAME_MAX_CHARS,
   STATION_NAME_CONTAINER_BOTTOM,
@@ -104,17 +105,32 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
 
   const horizontalAdditionalStyle = useMemo(() => {
     if (!hasNumbering) {
+      // 従来の折り返し幅(画面短辺基準)。回転後の見た目をこの幅のときと揃えるための基準
+      const previousWidth = isTablet ? dim.height / 3 : dim.height / 2.5;
+      const width = getHorizontalStationNameWidth(
+        HORIZONTAL_STATION_NAME_MAX_CHARS
+      );
+      const offset = getHorizontalStationNameOffset(previousWidth, width);
+
       return {
-        marginBottom: dim.height / 10,
-        width: getHorizontalStationNameWidth(HORIZONTAL_STATION_NAME_MAX_CHARS),
+        width,
+        marginLeft: offset.marginLeft,
+        marginBottom: dim.height / 10 + offset.marginBottom,
       };
     }
+
+    const previousWidth = isTablet ? dim.height / 3.5 : dim.height / 2;
+    // ナンバリングを駅名の下に置くぶん斜め書きを長く伸ばせるので既定より広く取る
+    const width = getHorizontalStationNameWidth(
+      HORIZONTAL_STATION_NAME_MAX_CHARS + 0.5
+    );
+    const offset = getHorizontalStationNameOffset(previousWidth, width);
+
     return {
-      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
-      // ナンバリングを駅名の下に置くぶん斜め書きを長く伸ばせるので既定より広く取る
-      width: getHorizontalStationNameWidth(
-        HORIZONTAL_STATION_NAME_MAX_CHARS + 0.5
-      ),
+      width,
+      marginLeft: offset.marginLeft,
+      marginBottom:
+        (isTablet ? dim.height / 10 : dim.height / 6) + offset.marginBottom,
     };
   }, [dim.height, hasNumbering]);
 

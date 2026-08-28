@@ -30,6 +30,29 @@ export const HORIZONTAL_STATION_NAME_MAX_CHARS = 8.5;
 export const getHorizontalStationNameWidth = (maxChars: number): number =>
   HORIZONTAL_STATION_NAME_FONT_SIZE * maxChars;
 
+/** 斜め書き駅名の回転角(度)。折り返し幅を変えたときの位置補正にも使う */
+const HORIZONTAL_STATION_NAME_ROTATION_DEG = 55;
+
+/**
+ * 折り返し幅を変えたときに必要な位置補正を返す。
+ * 斜め書きは要素の中心を軸に -55° 回転するため、幅を w0 から w1 へ広げると
+ * 回転中心が右へ動き、回転後の駅名は横に (w1-w0)×(1-cos55°)/2、
+ * 縦に (w1-w0)×sin55°/2 だけずれて路線バーに寄ってしまう。
+ * ずれた分を marginLeft / marginBottom へ戻し、見た目の位置を従来の幅の
+ * ときと揃える。
+ */
+export const getHorizontalStationNameOffset = (
+  previousWidth: number,
+  nextWidth: number
+): { marginLeft: number; marginBottom: number } => {
+  const delta = nextWidth - previousWidth;
+  const rad = (HORIZONTAL_STATION_NAME_ROTATION_DEG * Math.PI) / 180;
+  return {
+    marginLeft: -(delta * (1 - Math.cos(rad))) / 2,
+    marginBottom: (delta * Math.sin(rad)) / 2,
+  };
+};
+
 export const commonLineBoardStyles = StyleSheet.create({
   root: {
     height: '100%',
