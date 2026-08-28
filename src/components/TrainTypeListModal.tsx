@@ -278,8 +278,8 @@ export const TrainTypeListModal = ({
   const renderItem = useCallback(
     ({ item }: { item: TrainTypeRow }) => (
       <CommonCard
-        targetStation={item.boardingLineStation ?? undefined}
-        line={item.boardingLine}
+        targetStation={item.cardLineStation ?? undefined}
+        line={item.cardLine}
         title={item.title}
         subtitle={item.subtitle}
         loading={loading}
