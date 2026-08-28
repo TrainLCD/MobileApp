@@ -5,7 +5,11 @@ import { useLandscapeWindowDimensions } from '~/hooks';
 import getStationNameR from '~/utils/getStationNameR';
 import isTablet from '~/utils/isTablet';
 import Typography from '../../../Typography';
-import { commonLineBoardStyles as styles } from '../styles/commonStyles';
+import {
+  getHorizontalStationNameWidth,
+  HORIZONTAL_STATION_NAME_MAX_CHARS,
+  commonLineBoardStyles as styles,
+} from '../styles/commonStyles';
 
 export interface StationNameProps {
   station: Station;
@@ -35,7 +39,7 @@ export const StationName: React.FC<StationNameProps> = React.memo(
 
     const horizontalAdditionalStyle = useMemo(
       () => ({
-        width: isTablet ? dim.height / 3.5 : dim.height / 2.5,
+        width: getHorizontalStationNameWidth(HORIZONTAL_STATION_NAME_MAX_CHARS),
         marginBottom:
           marginBottom ?? (isTablet ? dim.height / 8 : dim.height / 6),
       }),

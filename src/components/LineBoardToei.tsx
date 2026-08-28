@@ -34,6 +34,8 @@ import {
 } from './LineBoard/shared/hooks/useBarStyles';
 import {
   commonLineBoardStyles,
+  getHorizontalStationNameWidth,
+  HORIZONTAL_STATION_NAME_MAX_CHARS,
   STATION_NAME_CONTAINER_BOTTOM,
 } from './LineBoard/shared/styles/commonStyles';
 import Typography from './Typography';
@@ -104,12 +106,15 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
     if (!hasNumbering) {
       return {
         marginBottom: dim.height / 10,
-        width: isTablet ? dim.height / 3 : dim.height / 2.5,
+        width: getHorizontalStationNameWidth(HORIZONTAL_STATION_NAME_MAX_CHARS),
       };
     }
     return {
       marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
-      width: isTablet ? dim.height / 3.5 : dim.height / 2,
+      // ナンバリングを駅名の下に置くぶん斜め書きを長く伸ばせるので既定より広く取る
+      width: getHorizontalStationNameWidth(
+        HORIZONTAL_STATION_NAME_MAX_CHARS + 0.5
+      ),
     };
   }, [dim.height, hasNumbering]);
 

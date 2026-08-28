@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
+import { HORIZONTAL_STATION_NAME_FONT_SIZE } from '../styles/commonStyles';
 import { StationName } from './StationName';
 
 // モック設定
@@ -189,5 +190,32 @@ describe('StationName', () => {
       (s: unknown) => s && typeof s === 'object' && 'color' in s
     );
     expect(hasColorStyle).toBe(true);
+  });
+
+  it('horizontal=true の場合、折り返し幅が「東京テレポート」を1行に収められる', () => {
+    const stationName = '東京テレポート';
+    const longNameStation: Station = {
+      ...mockStation,
+      name: stationName,
+    };
+
+    const { getAllByTestId } = render(
+      <StationName station={longNameStation} horizontal={true} />
+    );
+
+    const textElement = getAllByTestId('typography-text')[0];
+    const flattenedStyles = Array.isArray(textElement.props.style)
+      ? textElement.props.style.flat()
+      : [textElement.props.style];
+    const widthStyle = flattenedStyles.find(
+      (s: unknown): s is { width: number } =>
+        !!s && typeof s === 'object' && 'width' in s
+    );
+
+    // 全角1文字の幅はフォントサイズとほぼ等しいので、
+    // 文字数ぶんの幅が確保できていれば改行されない
+    expect(widthStyle?.width).toBeGreaterThanOrEqual(
+      HORIZONTAL_STATION_NAME_FONT_SIZE * stationName.length
+    );
   });
 });
