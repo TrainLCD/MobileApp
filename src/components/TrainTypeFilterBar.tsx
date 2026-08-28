@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   ScrollView,
@@ -133,6 +133,28 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const [openAxis, setOpenAxis] = useState<AxisKey | null>(null);
 
+  // 入力欄には value を渡さない。1 文字ごとに一覧を絞り込んだ結果を書き戻すと、
+  // iOS では未確定文字列(marked text)が壊れて日本語の変換候補が出せなくなる。
+  // 代わりに入力値は SearchBar のローカル state に持たせ(経路検索と同じ扱い)、
+  // 親へは通知するだけにする。外から絞り込みが空に戻されたとき(クリア操作)だけ、
+  // key を変えて入力欄を作り直して表示を合わせる
+  const [searchResetKey, setSearchResetKey] = useState(0);
+  const prevQuery = useRef(filter.query);
+  // 入力欄のクリアボタン由来の空文字は入力欄が自分で空にしているため、
+  // 作り直す必要がない。ここで作り直すと焦点と IME セッションが切れる
+  const queryChangedByInput = useRef(false);
+  useEffect(() => {
+    if (
+      prevQuery.current !== '' &&
+      filter.query === '' &&
+      !queryChangedByInput.current
+    ) {
+      setSearchResetKey((n) => n + 1);
+    }
+    queryChangedByInput.current = false;
+    prevQuery.current = filter.query;
+  }, [filter.query]);
+
   // 電光掲示板風テーマは黒地に白抜きの独自配色を持つので、選択状態の塗りも反転させる
   const palette = useMemo(
     () => ({
@@ -158,7 +180,10 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
   const filterActive = isTrainTypeFilterActive(filter);
 
   const handleQueryChange = useCallback(
-    (query: string) => onChange({ ...filter, query }),
+    (query: string) => {
+      queryChangedByInput.current = true;
+      onChange({ ...filter, query });
+    },
     [filter, onChange]
   );
 
@@ -355,7 +380,8 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
     <View style={[styles.root, openAxis ? null : styles.rootClosed]}>
       <View style={styles.search}>
         <SearchBar
-          value={filter.query}
+          key={searchResetKey}
+          defaultValue={filter.query}
           onChangeText={handleQueryChange}
           onSearch={handleSubmitQuery}
           placeholder={translate('trainTypeFilterPlaceholder')}

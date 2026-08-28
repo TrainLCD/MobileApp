@@ -63,6 +63,11 @@ type Props = {
    */
   value?: string;
   onChangeText?: (text: string) => void;
+  /**
+   * 初期表示だけ親から与えたいときに渡す。以降は入力欄が自分で値を持つので、
+   * 1 文字ごとの書き戻しが起きない（iOS の変換候補が壊れない）
+   */
+  defaultValue?: string;
   /** 既定の翻訳文以外を出したいときだけ渡す */
   placeholder?: string;
   /** 入力があるときに入力欄内のクリアボタンを出す */
@@ -82,6 +87,7 @@ export const SearchBar = ({
   nameSearch,
   value,
   onChangeText,
+  defaultValue,
   placeholder,
   clearable,
   autoCapitalize,
@@ -89,7 +95,7 @@ export const SearchBar = ({
   testID,
   clearButtonTestID,
 }: Props) => {
-  const [internalText, setInternalText] = useState('');
+  const [internalText, setInternalText] = useState(defaultValue ?? '');
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
 
