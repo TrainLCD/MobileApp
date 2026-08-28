@@ -157,16 +157,22 @@ describe('SearchBar（親が値を持つ使い方）', () => {
     expect(onSearch).toHaveBeenCalledWith('渋谷');
   });
 
-  // iOS は autoCorrect={false}(autocorrectionType = .no) にすると日本語入力の
-  // 変換候補バーごと消え、かなを漢字へ変換できなくなる。Android でも
-  // TYPE_TEXT_FLAG_NO_SUGGESTIONS が立って候補が出なくなる。
-  // 省略して既定に委ねると、New Architecture のビュー再利用で .no が残った
-  // ビューを引き継ぐことがあるため、true を明示することまで含めて固定する
-  it('日本語入力の変換候補を潰さないよう、オートコレクトを明示的に有効化する', () => {
+  // New Architecture の RCTTextInputComponentView は autoCorrect が前回 props から
+  // 変化したときしか autocorrectionType を代入しない。共有コンポーネント側で
+  // true を固定すると、変換候補のために true を明示している呼び出し元と署名が
+  // 一致し、再利用ビューでは true → true となって代入が飛び、残った .no を
+  // 引き継いで変換候補が出なくなる。既定を持たないことまで含めて固定する
+  it('オートコレクトは既定値を持たず、渡されたときだけ入力欄へ通す', () => {
     const { getByTestId } = renderWithProviders(
       <SearchBar testID="searchInput" />
     );
 
-    expect(getByTestId('searchInput').props.autoCorrect).toBe(true);
+    expect(getByTestId('searchInput').props.autoCorrect).toBeUndefined();
+
+    const explicit = renderWithProviders(
+      <SearchBar autoCorrect testID="explicitInput" />
+    );
+
+    expect(explicit.getByTestId('explicitInput').props.autoCorrect).toBe(true);
   });
 });
