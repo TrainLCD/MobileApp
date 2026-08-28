@@ -68,6 +68,11 @@ type Props = {
   /** 入力があるときに入力欄内のクリアボタンを出す */
   clearable?: boolean;
   autoCapitalize?: TextInputProps['autoCapitalize'];
+  /**
+   * 日本語入力の変換候補を確実に出したい呼び出し元だけが true を明示する。
+   * ここで既定値を持たせてはいけない理由は下の TextInput のコメントを参照。
+   */
+  autoCorrect?: TextInputProps['autoCorrect'];
   testID?: string;
   clearButtonTestID?: string;
 };
@@ -80,6 +85,7 @@ export const SearchBar = ({
   placeholder,
   clearable,
   autoCapitalize,
+  autoCorrect,
   testID,
   clearButtonTestID,
 }: Props) => {
@@ -154,20 +160,20 @@ export const SearchBar = ({
           )
         }
         autoCapitalize={autoCapitalize}
-        // autoCorrect を false にすると iOS は autocorrectionType = .no になり、
-        // 日本語入力の変換候補バーごと消えてかなを漢字へ変換できなくなる
-        // (iOS の日本語キーボードは候補バー以外に変換する手段を持たない)。
-        // Android でも TYPE_TEXT_FLAG_NO_SUGGESTIONS が立ち IME の候補が出ない。
+        // autoCorrect は呼び出し元から受け取るだけで、ここで既定値を持たせない。
         //
-        // 省略して既定に委ねるだけでは足りない。New Architecture の
-        // RCTTextInputComponentView は autoCorrect が前回 props から変化した
-        // ときしか autocorrectionType を代入せず、prepareForRecycle も
-        // autocorrectionType を戻さない。そのため .no が残ったビューが再利用
-        // されると、props 省略(std::nullopt 同士で変化なし)では .no を引き継ぐ。
-        // 明示的に true を渡してマウントのたびに .yes を確定させる。
-        // ローマ字入力に英語のオートコレクトがかかる副作用より、日本語を
-        // 入力できることを優先する。
-        autoCorrect
+        // New Architecture の RCTTextInputComponentView は autoCorrect が前回
+        // props から変化したときしか autocorrectionType を代入せず、
+        // prepareForRecycle でも autocorrectionType を戻さない
+        // (react-native/React/Fabric/Mounting/ComponentViews/TextInput/
+        //  RCTTextInputComponentView.mm)。
+        //
+        // このコンポーネント自身が true を固定すると、変換候補のために true を
+        // 明示している種別絞り込みと署名が一致し、再利用ビューでは true → true で
+        // 代入自体が起きず、残っていた .no を引き継いで変換候補が出なくなる。
+        // 既定を std::nullopt のままにしておくことで、明示した呼び出し元の true が
+        // 必ず「変化あり」と判定される。
+        autoCorrect={autoCorrect}
         returnKeyType="search"
       />
       {clearable && searchText.length ? (
