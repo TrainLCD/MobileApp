@@ -33,8 +33,7 @@ export const getOriginLine = (
  * 経路順に並ぶ lines のうち、乗車駅を通る最初の路線がその駅で乗車する路線になる。
  * getOriginLine が返す始発側の終端路線は、乗車駅が経路の途中にある場合（例: 池袋から
  * S-TRAIN に乗ると終端は西武秩父線だが乗車するのは西武池袋線）に一致しない。
- * カードの配色・路線記号・ナンバリングはこの乗車路線で統一することで、乗車駅に必ず
- * 存在する駅番号を使ってナンバリングを安定して表示できる。
+ * 経由路線は「その駅で乗ってから先」を出したいので、この乗車路線を起点に切り出す。
  * 乗車駅情報が無い場合（在来アプリ内利用など）は getOriginLine にフォールバックする。
  */
 export const getBoardingLine = (
@@ -153,10 +152,10 @@ export const formatLineNames = (lines: Line[], ja: boolean): string => {
 /** 種別一覧の 1 行分。表示に必要な値と、絞り込みに使う値をまとめて持つ */
 export type TrainTypeRow = {
   trainType: TrainType;
-  /** カードの配色・路線記号・ナンバリングに使う乗車路線 */
-  boardingLine: Line;
-  /** ナンバリング表示に使う乗車路線側の駅 */
-  boardingLineStation: StationNested | null;
+  /** カードの配色・路線記号・ナンバリングに使う路線。全種別で共通 */
+  cardLine: Line;
+  /** ナンバリング表示に使うカード路線側の駅。全種別で共通 */
+  cardLineStation: StationNested | null;
   /** カードの見出し（＝種別名）。種別での絞り込みのキーも兼ねる */
   title: string;
   /** カードの補足（経由・直通路線） */
@@ -189,10 +188,8 @@ export const buildTrainTypeRow = (
 ): TrainTypeRow => {
   const lines = uniqBy(trainType.lines ?? [], 'id');
 
-  // カードの配色・路線シンボル・ナンバリングは、種別ごとに乗車駅で実際に乗車する
-  // 路線で統一する（選択中の line で固定すると東武東上線経由の種別に西武池袋線の
-  // デザインが当たってしまう）。経路の途中駅から乗る場合は終端路線ではなく乗車路線
-  // を使うことで、乗車駅に必ず存在する駅番号でナンバリングを安定表示できる。
+  // 経由路線は乗車駅で実際に乗車する路線から先を出したいので、種別ごとに乗車路線を
+  // 求めて起点にする（経路の途中駅から乗る場合、終端路線は乗車路線と一致しない）。
   const boardingLine = getBoardingLine(
     lines,
     boardingStation,
@@ -235,12 +232,14 @@ export const buildTrainTypeRow = (
         })
         .join('\n');
 
-  // 駅番号（ナンバリング）は乗車路線の乗車駅基準で表示する。乗車路線はカードの
-  // デザインと同一なので CommonCard の路線記号一致が必ず成立し、番号が安定して
-  // 描画される。
-  const boardingLineStation = getBoardingLineStation(
+  // カードの配色・路線記号・ナンバリングは全種別で選択中の路線に揃える。行ごとに
+  // 乗車路線を推定して切り替えると、同じ駅から同じように乗るのに種別ごとに色と記号が
+  // 変わり、一覧として並べたときに種別の違いが読み取りづらくなるため。
+  // 駅番号も同じ路線を基準に引くので CommonCard の路線記号一致が必ず成立する。
+  const cardLine = selectedLine;
+  const cardLineStation = getBoardingLineStation(
     boardingStation,
-    boardingLine,
+    cardLine,
     selectedLine
   );
 
@@ -256,8 +255,8 @@ export const buildTrainTypeRow = (
 
   return {
     trainType,
-    boardingLine,
-    boardingLineStation,
+    cardLine,
+    cardLineStation,
     title,
     subtitle,
     viaLines,
