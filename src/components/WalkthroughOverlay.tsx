@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Path, Rect } from 'react-native-svg';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
 import { RFValue } from '../utils/rfValue';
@@ -80,7 +81,6 @@ const styles = StyleSheet.create({
   tooltipContainer: {
     position: 'absolute',
     maxWidth: 640,
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
     boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.3)',
@@ -96,7 +96,6 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: RFValue(14),
-    color: '#333',
     lineHeight: Platform.select({
       ios: RFValue(20),
       android: RFValue(22),
@@ -110,7 +109,6 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: RFValue(14),
-    color: '#666',
   },
   pagination: {
     flexDirection: 'row',
@@ -120,7 +118,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ddd',
     marginHorizontal: 4,
   },
   dotActive: {
@@ -154,6 +151,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const maskId = useId();
   const overlayRef = useRef<View>(null);
@@ -294,12 +292,13 @@ const WalkthroughOverlay: React.FC<Props> = ({
       <RNAnimated.View
         style={[
           styles.tooltipContainer,
+          { backgroundColor: colors.card },
           animatedTooltipStyle,
           isLEDTheme && styles.squareCorners,
         ]}
       >
         <Typography style={styles.title}>{translate(step.titleKey)}</Typography>
-        <Typography style={styles.description}>
+        <Typography style={[styles.description, { color: colors.text }]}>
           {translate(step.descriptionKey)}
         </Typography>
 
@@ -310,7 +309,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
             accessibilityLabel={translate('walkthroughSkip')}
             accessibilityHint={translate('walkthroughSkipHint')}
           >
-            <Typography style={styles.skipText}>
+            <Typography style={[styles.skipText, { color: colors.mutedText }]}>
               {translate('walkthroughSkip')}
             </Typography>
           </Pressable>
@@ -331,6 +330,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
                 <View
                   style={[
                     styles.dot,
+                    { backgroundColor: colors.border },
                     index === currentStepIndex && styles.dotActive,
                     isLEDTheme && styles.squareCorners,
                   ]}

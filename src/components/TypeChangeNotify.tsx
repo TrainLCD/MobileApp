@@ -1317,6 +1317,30 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     () => reversedStations[reversedFinalPassedStationIndex - 2],
     [reversedStations, reversedFinalPassedStationIndex]
   );
+  // 進行方向順に並べた駅一覧。OUTBOUND時のstationsは進行方向と逆順で保持されている
+  const orderedStations = useMemo(
+    () => (selectedDirection === 'INBOUND' ? stations : reversedStations),
+    [reversedStations, selectedDirection, stations]
+  );
+  const orderedCurrentStationIndex = useMemo(
+    () => orderedStations.findIndex((s) => s.groupId === station?.groupId),
+    [orderedStations, station]
+  );
+  // 現在駅より先で最初に種別が変わる駅の位置
+  // NOTE: 全区間をtypeIdで絞り込むと、既に通過した同一typeIdの区間
+  // (例: 湘南新宿ライン新宿→小田原乗車時に残っている高崎線内の普通区間) を
+  // 拾ってしまうため、現在駅より先の区間だけを走査する
+  const typeChangedStationIndex = useMemo(() => {
+    if (orderedCurrentStationIndex === -1) {
+      return -1;
+    }
+    return orderedStations.findIndex(
+      (s, idx) =>
+        idx > orderedCurrentStationIndex &&
+        !!s.trainType &&
+        s.trainType.typeId !== trainType?.typeId
+    );
+  }, [orderedCurrentStationIndex, orderedStations, trainType]);
   // 「~から先は各駅に止まります」を表示するフラグ
   const isNextTypeIsLocal = useMemo(
     () =>
@@ -1349,28 +1373,50 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
       return afterAllStopLastStation;
     }
 
-    if (selectedDirection === 'INBOUND') {
-      const currentTypeStations = stations.filter(
-        (s) => s.trainType?.typeId === trainType?.typeId
-      );
-      return currentTypeStations.at(-1);
+    // NOTE: 現在駅が経路内に見つからないと進行方向より手前の区間を除外できない。
+    // 経路全体から推定すると、種別が往復する直通経路(埼玉高速鉄道→相鉄本線の
+    // 各駅停車→急行→各駅停車など)で終着駅を種別変更駅として拾ってしまうため、
+    // 境界を特定できないものとして案内自体を表示しない。
+    if (orderedCurrentStationIndex === -1) {
+      return undefined;
     }
 
-    // NOTE: 小田急線 小田原〜新宿の種別が変わる駅が開成駅になってしまうのでOUTBOUNDではnextTrainTypeを使用している
-    const nextTypeStations = stations.filter(
-      (s) => s.trainType?.typeId === nextTrainType?.typeId
+    // 現在駅より先に種別が変わる駅がない場合、経路全体から探すと通過済みの
+    // 同一種別区間を拾ってしまうため何も表示しない。
+    // 経路の終着駅で種別が変わることはないため、境界が終着駅になる場合も同様に扱う
+    if (
+      typeChangedStationIndex === -1 ||
+      typeChangedStationIndex === orderedStations.length - 1
+    ) {
+      return undefined;
+    }
+
+    // NOTE: 小田急線 小田原〜新宿の種別が変わる駅が開成駅になってしまうので
+    // OUTBOUNDでは現在種別の最終駅ではなく次種別の最初の駅を境界として扱う
+    if (selectedDirection !== 'INBOUND') {
+      return orderedStations[typeChangedStationIndex];
+    }
+
+    // trainTypeを持たない駅が種別変更駅の手前に挟まる経路でも現在種別の駅を返すため、
+    // 変更駅の直前要素ではなく現在駅から変更駅までの範囲を後方検索する
+    const currentTypeStationsUntilChange = orderedStations
+      .slice(orderedCurrentStationIndex, typeChangedStationIndex)
+      .filter((s) => s.trainType?.typeId === trainType?.typeId);
+    return (
+      currentTypeStationsUntilChange.at(-1) ??
+      orderedStations[typeChangedStationIndex]
     );
-    return nextTypeStations.at(-1);
   }, [
     trainType,
-    nextTrainType,
     selectedDirection,
     afterAllStopLastStation,
     currentLine,
     isNextTypeIsLocal,
+    orderedCurrentStationIndex,
+    orderedStations,
     reversedFinalPassedStationIndex,
     reversedStations,
-    stations,
+    typeChangedStationIndex,
   ]);
 
   // バー表示用: 種別が変わる直前の駅のlineを中間路線として使用する

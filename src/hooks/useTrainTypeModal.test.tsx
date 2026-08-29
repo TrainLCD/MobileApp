@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
+import { beginSelection } from '~/utils/selectionGeneration';
 import { createLine, createStation } from '~/utils/test/factories';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
@@ -420,6 +421,191 @@ describe('useTrainTypeModal', () => {
     );
 
     expect(hookRef.current?.trainTypeDisabled).toBe(false);
+  });
+
+  it('乗車中の種別変更で進行方向と終点を新しい系統の並びへ引き直す', async () => {
+    const tokaidoLine = { id: 3 };
+    const jobanLine = { id: 11319 };
+
+    // 東海道線 普通(東京→沼津)。品川から東京方面(=OUTBOUND)へ乗車中
+    const shinagawa = createStation(1130103, {
+      name: '品川',
+      line: tokaidoLine,
+    });
+    const numazu = createStation(1130130, { name: '沼津', line: tokaidoLine });
+    const oldStations = [
+      createStation(1130101, { name: '東京', line: tokaidoLine }),
+      createStation(1130102, { name: '新橋', line: tokaidoLine }),
+      shinagawa,
+      numazu,
+    ];
+
+    // 常磐線直通 快速(品川→原ノ町)。東海道線とは並び順が逆になる
+    const haranomachi = createStation(1131899, {
+      name: '原ノ町',
+      line: jobanLine,
+    });
+    const newStations = [
+      shinagawa,
+      createStation(1130102, { name: '新橋', line: tokaidoLine }),
+      createStation(1130101, { name: '東京', line: tokaidoLine }),
+      createStation(1131801, { name: '上野', line: jobanLine }),
+      haranomachi,
+    ];
+
+    setupMocks({
+      stationStateValue: {
+        selectedBound: numazu,
+        station: shinagawa,
+        selectedDirection: 'OUTBOUND' as const,
+      },
+      currentStoppingStation: shinagawa,
+    });
+
+    mockFetchStationsByLineGroupId.mockResolvedValue({
+      data: { lineGroupStations: newStations },
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    await act(async () => {
+      hookRef.current?.handleTrainTypeModalSelect(createTrainType(499));
+    });
+
+    const stationSetter = mockSetStationState.mock.calls[0][0];
+    const result = stationSetter({
+      stations: oldStations,
+      station: shinagawa,
+      selectedBound: numazu,
+      selectedDirection: 'OUTBOUND',
+    });
+
+    expect(result.stations).toEqual(newStations);
+    // 旧系統の終点(沼津)ではなく新系統の終点(原ノ町)が案内される
+    expect(result.selectedBound).toEqual(haranomachi);
+    // 東海道線のOUTBOUND(東京方面)は常磐線快速の並びではINBOUNDにあたる
+    expect(result.selectedDirection).toBe('INBOUND');
+  });
+
+  it('取得中に別の種別が選ばれたら、遅れて返った旧種別の駅一覧で上書きしない', async () => {
+    const oldTypeStations = [
+      createStation(4110001, { name: '東京' }),
+      createStation(4110002, { name: '沼津' }),
+    ];
+    const newTypeStations = [
+      createStation(4990001, { name: '品川' }),
+      createStation(4990002, { name: '原ノ町' }),
+    ];
+
+    setupMocks();
+
+    // 先に選んだ種別の取得だけ保留し、後に選んだ種別を先に完了させる
+    let resolveFirstSelection: (value: unknown) => void = () => {};
+    const deferredFirstSelection = new Promise((resolve) => {
+      resolveFirstSelection = resolve;
+    });
+    mockFetchStationsByLineGroupId.mockImplementation(({ variables }) =>
+      variables.lineGroupId === 411
+        ? deferredFirstSelection
+        : Promise.resolve({ data: { lineGroupStations: newTypeStations } })
+    );
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    let firstSelection: Promise<void> | undefined;
+    await act(async () => {
+      firstSelection = hookRef.current?.handleTrainTypeModalSelect(
+        createTrainType(411)
+      ) as unknown as Promise<void>;
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      hookRef.current?.handleTrainTypeModalSelect(createTrainType(499));
+    });
+
+    const callCountAfterSecondSelection = mockSetStationState.mock.calls.length;
+
+    // 遅れて先の種別の駅一覧が返ってくる
+    await act(async () => {
+      resolveFirstSelection({ data: { lineGroupStations: oldTypeStations } });
+      await firstSelection;
+    });
+
+    // 破棄されるため state 更新は増えない
+    expect(mockSetStationState.mock.calls.length).toBe(
+      callCountAfterSecondSelection
+    );
+    const lastStationSetter =
+      mockSetStationState.mock.calls[callCountAfterSecondSelection - 1][0];
+    const result = lastStationSetter({
+      stations: [],
+      station: null,
+      selectedBound: createStation(100),
+      selectedDirection: 'INBOUND',
+    });
+    expect(result.stations).toEqual(newTypeStations);
+  });
+
+  it('取得中に路線やプリセットが選び直されたら種別の取得結果を破棄する', async () => {
+    const trainTypeStations = [
+      createStation(4990001, { name: '品川' }),
+      createStation(4990002, { name: '原ノ町' }),
+    ];
+
+    setupMocks();
+
+    let resolveTrainTypeSelection: (value: unknown) => void = () => {};
+    const deferredTrainTypeSelection = new Promise((resolve) => {
+      resolveTrainTypeSelection = resolve;
+    });
+    mockFetchStationsByLineGroupId.mockReturnValue(deferredTrainTypeSelection);
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(v) => {
+          hookRef.current = v;
+        }}
+      />
+    );
+
+    let trainTypeSelection: Promise<void> | undefined;
+    await act(async () => {
+      trainTypeSelection = hookRef.current?.handleTrainTypeModalSelect(
+        createTrainType(499)
+      ) as unknown as Promise<void>;
+      await Promise.resolve();
+    });
+
+    // 種別の駅一覧取得中に、別フック(useLineSelection)側で路線・プリセットが選び直される
+    act(() => {
+      beginSelection();
+    });
+
+    await act(async () => {
+      resolveTrainTypeSelection({
+        data: { lineGroupStations: trainTypeStations },
+      });
+      await trainTypeSelection;
+    });
+
+    expect(mockSetStationState).not.toHaveBeenCalled();
+    expect(mockSetNavigation).not.toHaveBeenCalled();
   });
 
   it('handleTrainTypeModalSelect で列車種別選択後にモーダルを閉じてstateを更新する', async () => {

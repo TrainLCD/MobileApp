@@ -29,6 +29,7 @@ import type {
   SavedRouteWithoutTrainTypeInput,
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import notifyState from '~/store/atoms/notify';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -120,7 +121,6 @@ const styles = StyleSheet.create({
   closeButton: { width: '100%' },
   closeButtonText: { fontWeight: 'bold' },
   heading: { width: '100%' },
-  headerText: { color: '#111' },
 });
 
 type RenderButtonProps = {
@@ -192,6 +192,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   } = useBounds(stations);
   const _getTerminatedStations = useGetStationsWithTermination();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAtomValue(appColorsAtom);
 
   const {
     isInitialized: isRoutesDBInitialized,
@@ -900,7 +901,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         contentContainerStyle={[
           styles.contentView,
           {
-            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
             borderRadius: isLEDTheme ? 0 : 8,
           },
           isTablet && {
@@ -921,18 +922,23 @@ export const SelectBoundModal: React.FC<Props> = ({
           {Platform.OS === 'ios' && !isLEDTheme ? (
             <BlurView
               intensity={80}
-              tint="light"
+              tint={colors.blurTint}
               style={StyleSheet.absoluteFill}
             />
           ) : Platform.OS === 'android' && !isLEDTheme ? (
             <View
               style={[
                 StyleSheet.absoluteFill,
-                { backgroundColor: 'rgba(255,255,255,0.92)' },
+                { backgroundColor: colors.modalHeaderBackground },
               ]}
             />
           ) : null}
-          <Heading style={[styles.heading, !isLEDTheme && styles.headerText]}>
+          <Heading
+            style={[
+              styles.heading,
+              !isLEDTheme && { color: colors.modalHeadingText },
+            ]}
+          >
             {translate('selectBoundTitle')}
           </Heading>
         </View>
@@ -1009,14 +1015,14 @@ export const SelectBoundModal: React.FC<Props> = ({
           {Platform.OS === 'ios' && !isLEDTheme ? (
             <BlurView
               intensity={80}
-              tint="light"
+              tint={colors.blurTint}
               style={StyleSheet.absoluteFill}
             />
           ) : Platform.OS === 'android' && !isLEDTheme ? (
             <View
               style={[
                 StyleSheet.absoluteFill,
-                { backgroundColor: 'rgba(255,255,255,0.92)' },
+                { backgroundColor: colors.modalHeaderBackground },
               ]}
             />
           ) : null}

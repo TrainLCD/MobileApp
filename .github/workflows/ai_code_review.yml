@@ -1,0 +1,248 @@
+# OpenAI GPT-5.6 Sol に Pull Request の差分をレビューさせ、結果を PR のコメントとして投稿する。
+# 参考情報の提供が目的なので、レビュー結果（指摘の有無）でジョブを失敗させることはしない。
+# 一方で API 呼び出しやコメント投稿の失敗は握り潰さず、ジョブを赤くして原因を追えるようにしている。
+#
+# ⚠️ このワークフローを編集する人へ:
+# 自動トリガーを足さないこと。理由は 2 つあり、どちらか一方だけでも足さない理由になる。
+#  1) コスト: 毎回 base...head の全差分を送るため、push のたびに請求が積み上がる。
+#     CodeRabbit の再レビューも誘発して二重に効く。
+#  2) セキュリティ: pull_request_review はワークフロー定義が PR 側から読まれうるのに
+#     secret も渡るため、PR に「OPENAI_API_KEY を外部送信する step」を足されると防げない。
+# イベントごとに定義の読み元と secret の扱いが違うので、混同しないこと:
+#   - pull_request:        定義は PR の merge commit 側。同一リポジトリ PR には
+#                          secret が渡り、fork PR には渡らない（token は read-only）。
+#   - pull_request_target: 定義は base リポジトリの既定ブランチ側で、PR から改竄できない。
+#                          secret は fork PR にも渡る。定義の点では安全だが
+#                          1) のコストで採らない（毎 push 実行になる）。
+#   - pull_request_review: 定義は PR の merge commit 側なのに、同一リポジトリ PR には
+#                          secret が渡る。最も危険な組み合わせ。fork PR には渡らない
+#                          ので、脅威が成立するのは同一リポジトリ PR。
+# 詳しい経緯は下の on: のコメントと docs/ai-code-review-workflow.md を参照。
+# checkout の ref を既定ブランチ以外に変えるのも 2) と同じ理由で禁止。
+# レビュー対象の差分は compare API から取得し、データとしてのみ扱う。
+#
+# ⚠️ branch protection の必須チェックにしないこと:
+# API 障害でジョブを赤くする設計のため、必須にすると OpenAI の障害で
+# マージが全面停止する。あくまで参考情報を出すだけのワークフロー。
+name: AI Code Review
+
+on:
+  # ⚠️ 自動トリガーは意図的に持たない。手動実行のみ。
+  #
+  # 当初は CodeRabbit の approve を起点にする pull_request_review を採用した
+  # （#6723）。しかし実測で、同一リポジトリの PR に対して GitHub がこのイベントの
+  # ワークフロー定義を head 側（PR ブランチ）から読むことが分かった（#6724 の
+  # run 73 が実例。base の dev はこのトリガーを持たないのに実行が作られた）。
+  # 定義が PR 側から差し替えられる以上、PR に「OPENAI_API_KEY を外部送信する
+  # step」を足されても防げない。checkout の ref が制御するのは作業ツリーだけで、
+  # 実行されるワークフロー YAML 自体ではないため、base 固定では守れない。
+  #
+  # 同じ理由で pull_request / pull_request_target も採れない。approve を観測
+  # できるイベントは pull_request_review だけなので、「approve 後に自動で 1 回」は
+  # secret を守ったまま実現できない。自動化より secret を優先し、手動実行に倒した。
+  #
+  # ⚠️ コスト面でも自動トリガーは持続しない。差分はインクリメンタルではなく毎回
+  # base...head の全差分を送る（reasoning_effort は既定 high、手動実行で変更可）。
+  # そのため差分や履歴が増えたラウンドでは 1 回あたりの入力も増える（縮むことも
+  # あり、MAX_DIFF_CHARS を超える分は切り詰める）。concurrency のキャンセルは
+  # 発射済みの API 呼び出しの課金を取り消さない。さらに gpt の指摘が push を誘発し、
+  # その push が CodeRabbit の再レビュー（従量課金）を誘発するので費用が二重に効く。
+  # #6721 では 11 ラウンド並走させた結果 OpenAI のクレジットが枯渇した。
+  #
+  # 毎 push で CodeRabbit と並走させない、という #6723 の本題は手動実行でも
+  # 達成できる（実行するかどうかを人が決めるため）。
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Target PR number"
+        required: true
+        type: string
+      reasoning_effort:
+        description: "Reasoning effort for gpt-5.6-sol"
+        required: false
+        default: "high"
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - xhigh
+
+permissions:
+  contents: read
+  pull-requests: write
+
+# 同じ PR に対して続けて手動実行した場合、古いレビューは打ち切る。
+concurrency:
+  group: ai-code-review-${{ inputs.pr_number }}
+  cancel-in-progress: true
+
+env:
+  TZ: "Asia/Tokyo"
+  OPENAI_MODEL: "gpt-5.6-sol"
+
+jobs:
+  review:
+    runs-on: ubuntu-22.04
+    # 手動実行のみなので fork / Draft / skip-ai-review の guard は持たない。
+    # 実行できるのは Actions を起動できる write 権限者に限られ、対象 PR も
+    # その人が pr_number で明示する。fork PR や Draft をレビューしたい場合も、
+    # head 側のコードは実行しないためセキュリティ上の差は無い。
+    steps:
+      # 既定ブランチに固定する。github.sha にはしないこと。workflow_dispatch は
+      # 実行者が選んだ ref で走るため、github.sha だと未レビューのブランチの
+      # ai-code-review.mjs が OPENAI_API_KEY と同じジョブで実行される。
+      # レビュー対象の差分は compare API から取るため head の作業ツリーは不要で、
+      # 実行されるのは常にレビュー済みのスクリプトと CLAUDE.md になる。
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # OPENAI_API_KEY 未設定でも PR を止めないよう、警告を出して後続をスキップする。
+      - name: Check OpenAI credentials
+        id: guard
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${OPENAI_API_KEY:-}" ]; then
+            echo "::warning::secrets.OPENAI_API_KEY が未設定のため AI コードレビューをスキップします"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # PR タイトル・本文はレビュー対象の untrusted な入力なので、
+      # シェル変数に展開せず JSON ファイルのままスクリプトへ渡す。
+      - name: Fetch pull request diff
+        id: pr
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$PR_NUMBER" | grep -Eq '^[0-9]+$'; then
+            echo "::error::PR 番号が不正です: $PR_NUMBER"
+            exit 1
+          fi
+          gh pr view "$PR_NUMBER" \
+            --json title,body,baseRefName,baseRefOid,headRefOid > "$RUNNER_TEMP/pr.json"
+          # base/head を同一レスポンスから取り、compare API で不変の SHA ペアに固定する。
+          # gh pr diff は都度「現在の PR」を取りにいくため、上で控えた SHA と食い違い得る。
+          # コメント末尾に出す対象コミットの正しさが、この対応関係に依存している。
+          # なお compare の三点比較は gh pr diff と同じセマンティクスで、出力も一致する。
+          BASE_SHA="$(jq -r '.baseRefOid' "$RUNNER_TEMP/pr.json")"
+          HEAD_SHA="$(jq -r '.headRefOid' "$RUNNER_TEMP/pr.json")"
+          gh api "repos/$GITHUB_REPOSITORY/compare/$BASE_SHA...$HEAD_SHA" \
+            -H "Accept: application/vnd.github.v3.diff" > "$RUNNER_TEMP/pr.diff"
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          # 投稿直前に head が動いていないか照合するため、取得時点の SHA を控える。
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "対象: $BASE_SHA...$HEAD_SHA / 差分サイズ: $(wc -c < "$RUNNER_TEMP/pr.diff") bytes"
+
+      # 過去の指摘と、それに対する回答を集める。これを入力に含めないと
+      # ラウンドごとに完全な初回レビューをやり直すことになり、回答済みの指摘が
+      # 何度も再生成される（#6722）。
+      # コメント本文も untrusted な入力なので、PR 本文と同様にシェル変数へ
+      # 展開せず JSON ファイルのままスクリプトへ渡す。
+      - name: Fetch review history
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          set -uo pipefail
+          # 履歴はレビューを補強する情報でしかないので、取得に失敗しても差分
+          # レビュー自体は続行する。ただし握り潰さず警告は必ず出す（失敗すると
+          # #6722 の「同じ指摘の繰り返し」が無言で再発するため）。
+          #
+          # ⚠️ set +e を省略しないこと。Actions の既定シェルは `bash -e {0}` で
+          # errexit が既に有効なので、`set -uo pipefail` では解除されない。
+          # 外さないままだとサブシェルの失敗でステップごと終了し、下の
+          # フォールバックに到達せず、履歴取得の失敗がレビュー全体の喪失になる。
+          set +e
+          (
+            set -euo pipefail
+            # --paginate と --jq を併用するとページごとに jq が走るため、
+            # 配列ではなく 1 行 1 オブジェクトで出して jq -s でまとめる。
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+              --jq '.[] | {author: .user.login, createdAt: .created_at, body: .body}' \
+              | jq -s '.' > "$RUNNER_TEMP/issue_comments.json"
+            # CodeRabbit の実測結果など、行単位のレビューコメントもここに入る。
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/comments" --paginate \
+              --jq '.[] | {author: .user.login, createdAt: .created_at, path: .path, body: .body}' \
+              | jq -s '.' > "$RUNNER_TEMP/review_comments.json"
+            jq -n \
+              --slurpfile issueComments "$RUNNER_TEMP/issue_comments.json" \
+              --slurpfile reviewComments "$RUNNER_TEMP/review_comments.json" \
+              '{issueComments: $issueComments[0], reviewComments: $reviewComments[0]}' \
+              > "$RUNNER_TEMP/history.json"
+            echo "履歴: コメント $(jq 'length' "$RUNNER_TEMP/issue_comments.json") 件 / 行コメント $(jq 'length' "$RUNNER_TEMP/review_comments.json") 件"
+          )
+          FETCH_STATUS=$?
+          set -e
+          if [ "$FETCH_STATUS" -ne 0 ]; then
+            echo "::warning::レビュー履歴の取得に失敗しました (exit $FETCH_STATUS)。過去の指摘を入力に含めずにレビューします"
+            printf '%s' '{"issueComments":[],"reviewComments":[]}' > "$RUNNER_TEMP/history.json"
+          fi
+
+      - name: Run AI review
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          REASONING_EFFORT: ${{ inputs.reasoning_effort || 'high' }}
+          DIFF_PATH: ${{ runner.temp }}/pr.diff
+          PR_META_PATH: ${{ runner.temp }}/pr.json
+          HISTORY_PATH: ${{ runner.temp }}/history.json
+          OUTPUT_PATH: ${{ runner.temp }}/review.md
+          # どのコミットに対するレビューかをコメントに残し、古い結果を見分けられるようにする。
+          REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
+          # リポジトリ規約を渡し、コーディング規約違反も指摘できるようにする。
+          GUIDELINES_PATH: CLAUDE.md
+        run: node .github/scripts/ai-code-review.mjs
+
+      # 再 push のたびにコメントが増えないよう、マーカー付きの既存コメントを更新する。
+      - name: Post review comment
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REVIEWED_SHA: ${{ steps.pr.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          # concurrency のキャンセルは完了済みの API 呼び出しや投稿までは取り消さない。
+          # レビュー中に PR が更新されていた場合、古い差分の結果は貼らずに
+          # 新しい実行へ譲る。追い越されただけで異常ではないので exit 0 とする。
+          #
+          # ただしこの照合は best effort。issue comment には条件付き書き込みが
+          # 無いため、照合と投稿の間の push は原理的に排除できない。残る窓は
+          # ミリ秒単位で、通常は後発の実行が同じコメントを上書きして自己修復する。
+          # 後発が失敗した場合に備え、対象コミットをコメント末尾に明記している。
+          CURRENT_SHA="$(gh pr view "$PR_NUMBER" --json headRefOid --jq .headRefOid)"
+          if [ "$CURRENT_SHA" != "$REVIEWED_SHA" ]; then
+            echo "::notice::レビュー中に PR が更新されたため投稿を中止します ($REVIEWED_SHA -> $CURRENT_SHA)"
+            exit 0
+          fi
+          # 上書き対象は GITHUB_TOKEN の投稿者である github-actions[bot] に厳密一致させる。
+          # 投稿者を見ないと、誰かが同じマーカーで始まるコメントを書いた場合に
+          # それを上書きしてしまう（write 権限を持つトークンは他人のコメントも編集できる）。
+          # type == "Bot" のような広い条件は使わない。coderabbitai[bot] など他の
+          # GitHub App も一致してしまうため。login は角括弧を含みユーザー名として
+          # 登録できない文字列なので、人間が詐称することはできない。
+          COMMENT_ID="$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+            --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | startswith("<!-- ai-code-review -->")) | .id' | tail -n 1)"
+          if [ -n "$COMMENT_ID" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$COMMENT_ID" \
+              -F "body=@$RUNNER_TEMP/review.md" > /dev/null
+            echo "既存コメント $COMMENT_ID を更新しました"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+              -F "body=@$RUNNER_TEMP/review.md" > /dev/null
+            echo "レビューコメントを新規投稿しました"
+          fi

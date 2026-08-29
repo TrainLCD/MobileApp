@@ -5,6 +5,7 @@ import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { RFValue } from '~/utils/rfValue';
@@ -55,7 +56,6 @@ const styles = StyleSheet.create({
     boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
   },
   cardBorder: {
-    borderColor: '#fff',
     borderWidth: 1,
   },
   mark: {
@@ -208,6 +208,7 @@ export const CommonCard: React.FC<Props> = ({
   onExpandedChange,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const getLineMark = useGetLineMark();
   const mark = useMemo(() => {
     const m = getLineMark({
@@ -413,9 +414,18 @@ export const CommonCard: React.FC<Props> = ({
     [cardRadius, line.color]
   );
   const rootShadowStyle = hasAccordion ? undefined : styles.cardShadow;
-  const rootBorderStyle = hasAccordion ? undefined : styles.cardBorder;
+  // 背景から浮かせるための縁取り。ダークモードでは白縁だと悪目立ちするため配色に追従させる
+  const borderColorStyle = { borderColor: colors.cardBorder };
+  const rootBorderStyle = hasAccordion
+    ? undefined
+    : [styles.cardBorder, borderColorStyle];
   const accordionWrapperStyle = hasAccordion
-    ? [styles.cardShadow, styles.cardBorder, wrapperRadiusStyle]
+    ? [
+        styles.cardShadow,
+        styles.cardBorder,
+        borderColorStyle,
+        wrapperRadiusStyle,
+      ]
     : undefined;
 
   return (
@@ -561,7 +571,7 @@ export const CommonCard: React.FC<Props> = ({
             styles.expandableWrapper,
             {
               height: animatedHeight,
-              backgroundColor: isLEDTheme ? '#212121' : '#f5f5f5',
+              backgroundColor: isLEDTheme ? '#212121' : colors.cardExpanded,
             },
           ]}
         >

@@ -10,7 +10,7 @@ description: Run the full post-release finishing flow for TrainLCD MobileApp in 
 ## 委譲先
 
 1. **publish-release**: master HEAD に annotated tag を打ち、`gh release create --generate-notes --latest` で GitHub Release を即公開。
-2. **sync-dev-from-master**: `chore/dev-from-master` を master から切り出し、`dev<-master` タイトルのマージPRを作成。
+2. **sync-dev-from-master**: `chore/dev-from-master` ブックマークを `master@origin` に作り、`dev<-master` タイトルのマージPRを作成。
 
 各スキル自体の仕様（安全弁・検証・本文テンプレ・squash merge 禁止警告）はそのまま流用する。このスキルは **差分情報の先読み**・**承認の統合** に加え、**sync PR の merge commit マージまで** を担う。
 
@@ -20,29 +20,33 @@ description: Run the full post-release finishing flow for TrainLCD MobileApp in 
 
 | 項目 | 必須 | 既定値 |
 | ---- | ---- | ---- |
-| `version` | 任意 | 未指定なら `origin/master:package.json` の `version` を使う（先頭 `v` は剥がす） |
+| `version` | 任意 | 未指定なら `master@origin` の `package.json` の `version` を使う（先頭 `v` は剥がす） |
 
 sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自動スキップする。ユーザーが sync だけ飛ばしたい場合は `publish-release` を直接呼んでもらう（このスキルに skip オプションは持たせない）。
 
 ## 前提条件
 
 - 本番リリース PR が **既に master にマージ済み**。未マージなら中断。
-- `gh` CLI 認証済み、`git` が使える。
-- 作業ツリーがクリーン（未コミット変更なし）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
-- リモート `origin/master` / `origin/dev` が存在する。
+- `gh` CLI 認証済み、`jj` が使える。このリポジトリは jj / git コロケート構成で、**VCS 操作は jj に統一する**。例外は annotated tag の作成・push だけ（`publish-release` 手順 4 に理由を明記）。
+- 作業コピー `@` に差分が無い（`jj status` が `The working copy has no changes.`）。残っている場合は中断し、ユーザーにクリーンアップを依頼する。
+- リモートブックマーク `master@origin` / `dev@origin` が存在する。
 
 ## 手順
 
 1. **共通前処理（フェッチと version 解決）**
 
    ```bash
-   git fetch origin dev master --tags
+   jj git fetch
    ```
 
+   `jj git fetch` はブックマークとタグの両方を取り込むので、タグ用に別途 fetch する必要は無い。
+
    `version` が未指定なら:
+
    ```bash
-   git show origin/master:package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"
+   jj file show -r 'master@origin' package.json | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])"
    ```
+
    で取得。`MAJOR.MINOR.PATCH` 形式（SemVer）でなければ中断。
 
 2. **プレフライト（全サブスキルの実行計画を先読み）**
@@ -50,21 +54,47 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
    **この段階では何も書き換え・push しない**。以下を全部先に確認し、実行計画を 1 本にまとめる。失敗条件（重複タグ・version 不一致・既存枝に未マージコミット等）はここで検知し、承認ゲート前に中断する。
 
    **publish-release 側の先読み**:
-   - 既存タグ重複: `git tag --list "v<version>"` と `git ls-remote --tags origin "refs/tags/v<version>"` のいずれかに出力があれば中断。
+   - 既存タグ重複: 手順 1 の `jj git fetch` で origin のタグも取り込まれているので、`jj tag list "v<version>"` に出力があれば中断。
    - 既存 Release 重複: `gh release view "v<version>" --json tagName` を実行し、exit 0（=存在）なら中断。exit 1 かつ stderr に `release not found` を含む場合のみ「重複なし」として続行。それ以外の非 0 終了（認証エラー・レート制限・通信障害等）は判定不能なので中断し、stderr を報告する。
-   - master HEAD SHA: `git rev-parse origin/master`
-   - master HEAD 件名: `git log -1 --format='%s' origin/master`
+   - master HEAD SHA: `jj log -r 'master@origin' --no-graph -T 'commit_id ++ "\n"'`
+   - master HEAD 件名: `jj log -r 'master@origin' --no-graph -T 'description.first_line() ++ "\n"'`
    - package.json version 一致確認 → 不一致で中断。
 
    **sync-dev-from-master 側の先読み**:
-   - master→dev 差分件数: `git rev-list --count origin/dev..origin/master` と `git log --pretty='- %s' origin/dev..origin/master`
+   - master→dev 差分件数: `jj log -r 'dev@origin..master@origin' --no-graph -T '"- " ++ description.first_line() ++ "\n"'` の行数
      - **0 件なら sync をスキップ** としてプランに記録（中断ではない）。
    - 既存 open な dev<-master PR: `gh pr list --base dev --head chore/dev-from-master --state open --json number,url`
-     - 既に open なら **新規作成はスキップし既存 URL を流用** としてプランに記録。
+     - 既に open な場合、**流用する前にその head が現在の `master@origin` を含むかを照合する**（手順 1 の `jj git fetch` 済みが前提）。前回リリース時の sync PR が未マージのまま残っていると、古い master から作られた PR をマージしてしまい、今回のリリース分が dev に入らない。
+
+       ```bash
+       jj log -r 'master@origin ~ ::chore/dev-from-master@origin' --no-graph \
+         -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+       ```
+
+       - 出力が空（＝ `master@origin` が既存 head の祖先）→ **新規作成はスキップし既存 URL を流用** としてプランに記録。
+       - 出力がある（＝古い master から作られた PR）→ **中断**し、既存 PR を閉じてブックマークを作り直すか否かをユーザーに確認する（自動では作り直さない）。手順 6-4 の事後検証でも検知できるが、その時点ではタグと Release が既に公開済みなので事前に弾く。
+   - **版数ねじれの事前検知**（`master` から特定コミットだけ cherry-pick したリリース後に起きる。放置すると手順 6 のマージ段階＝タグと Release の公開後に初めて顕在化する）:
+
+     ```bash
+     BASE=$(jj log -r 'heads(::dev@origin & ::master@origin)' --no-graph -T 'commit_id')
+     jj diff --stat --from "$BASE" --to 'dev@origin' \
+       android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+     jj diff --stat --from "$BASE" --to 'master@origin' \
+       android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+     ```
+
+     - **両方に差分がある** → sync PR は版数ファイルで衝突する。`sync-dev-from-master`「解決方針: semver はリリース版、ビルド番号は最大値」に従った採用値を算出し、**プランに明記して手順 3 の 1 回の承認に含める**。
+     - 片方だけ（通常は canary bump による dev 側のみ）→ 衝突しない。プランへの記載は不要。
    - 既存 `chore/dev-from-master` の状態（open PR が無い前提で）:
-     - `git ls-remote --heads origin chore/dev-from-master` と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
-     - ローカル未 push コミット有無: `git show-ref --verify --quiet refs/heads/chore/dev-from-master` でローカル枝の存在を確認し、有るなら `git cherry origin/chore/dev-from-master` を実行。出力が空でなければ **中断** してユーザーに確認（自動では削除しない）。
-       - 補足: リモート `origin/chore/dev-from-master` が既に削除済みでローカル枝だけ残るケースでは、`git cherry origin/...` は HEAD 基準で誤射する。実体判定は `git log chore/dev-from-master --not origin/master`・`--not origin/dev` がともに空（＝ master/dev に完全マージ済み・固有コミット無し）かで行い、空なら安全な残骸として削除対象に記録する。
+     - `jj bookmark list --all-remotes 'chore/dev-from-master'` と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
+     - 固有コミットの有無: 下の revset が空でなければ **中断** してユーザーに確認（自動では削除しない）。
+
+       ```bash
+       jj log -r '::chore/dev-from-master ~ ::(master@origin | dev@origin)' --no-graph \
+         -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'
+       ```
+
+       ローカルに無く origin にだけ在る場合は `chore/dev-from-master@origin` を対象にする。出力が空なら「master / dev に完全マージ済み・固有コミット無し」なので、安全な残骸として削除対象に記録する。git の `git cherry` と違い HEAD 基準ではなくブックマーク基準で判定するため、リモートが既に消えていても誤射しない。
      - 直近 PR が `MERGED` → 承認後に削除・再作成予定としてプランに記録。
      - それ以外（`CLOSED` のみ、PR 無し等）→ 中断してユーザーに確認（自動では削除しない）。
 
@@ -76,14 +106,22 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
 3. **承認ゲート（一括）**
 
-   以下フォーマットで実行計画を要約し、**1 回だけ** ユーザー承認を取る。承認が出たら手順 4〜6 を連続実行し、途中で止めない。マージと Ruleset 一時緩和もこの 1 回の承認に含める（マージ直前で改めて承認を取らない）。
+   以下フォーマットで実行計画を要約し、**1 回だけ** ユーザー承認を取る。承認が出たら手順 4〜6 を連続実行し、**追加承認は取らない**。マージ・Ruleset 一時緩和・（プレフライトで検知できた場合は）版数コンフリクトの採用値も、この 1 回の承認に含める。
+
+   **例外: 安全上の中断は常に許可される。** 「途中で止めない」は *追加承認を取らない* という意味であって、危険な状態を押し通す意味ではない。以下はその場で停止して報告する（承認済みでも続行しない）:
+
+   - プレフライトで検知できなかった版数コンフリクトが顕在化した（**本番版数の判断は必ずユーザーに委ねる**）
+   - Ruleset の復元に失敗した
+   - required check 不成立・PR が `CONFLICTING` 等でマージできない
+
+   停止する場合は、タグと Release が既に公開済みであることと、残りの手当て方針を必ず併記する。
 
    ```text
    finalize-release 実行計画 (version=v<version>)
 
    [publish-release]
      - タグ: v<version> (annotated, メッセージ "v<version>")
-     - 対象 SHA: <origin/master SHA>
+     - 対象 SHA: <master@origin SHA>
      - master HEAD 件名: <件名>
      - package.json version 一致: OK
      - GitHub Release: --target master --generate-notes --latest
@@ -92,6 +130,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      - master→dev 差分: <N> 件
      - 既存 chore/dev-from-master: <有り (直近 PR #<M> MERGED) → 削除・再作成 | 無し → 新規作成>
      - PR: base=dev, head=chore/dev-from-master, title="dev<-master"
+     - 版数ねじれ: <無し | 有り → semver=<release> / ビルド番号=<max> を採用（この承認に含む）>
      - マージ: 作成後に merge commit でマージ（--delete-branch）
        - dev Ruleset: <merge 許可済み → 緩和不要 | squash-only (ruleset #<id>) → 一時緩和 ["squash"]→["squash","merge"] → マージ → 復元>
    ```
@@ -105,59 +144,135 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 4. **publish-release の実体を実行（承認済み前提）**
 
    `publish-release` スキルの手順 4〜5 を走らせる:
+
    ```bash
-   git tag -a "v<version>" -m "v<version>" <origin/master SHA>
+   git tag -a "v<version>" -m "v<version>" <master@origin SHA>
    git push origin "v<version>"
    gh release create "v<version>" --target master --title "v<version>" --generate-notes --latest
    ```
+
+   **タグの作成・push だけは jj ではなく git を使う**（`jj tag set` は lightweight tag しか作れず、経路 B のワークフローが打つ annotated tag と種別がズレるため。`publish-release` 手順 4 に同じ注記がある）。ここで `git switch` / `git commit` などタグ以外の git 操作を混ぜないこと。
+
+   タグ push や Release 作成が許可されていない実行環境では、上記の代わりに `publish-release` の
+   **経路 B**（`Publish Release` ワークフローの dispatch）を使う。検証内容は同一で、タグと Release
+   の在否を見て「タグあり・Release なし」なら Release のみ作成するため、部分失敗しても再実行で復旧できる。
+
+   ```bash
+   gh workflow run publish_release.yml --ref dev \
+     -f version=<version> -f target=<手順 2 で承認した master@origin SHA>
+   ```
+
+   `target` には**手順 2 のプレフライトで承認した SHA** を渡す。`master` のようなブランチ名は
+   dispatch 時点で再解決され、承認後にマージされた別のコミットにタグが付く恐れがある。
 
    プレフライトで確認済みの項目（タグ・Release 重複、version 一致、SHA）は、破壊操作直前に **非対話で再検証** する（追加承認は取らない）。再検証で不一致が出た場合（並行リリース等で状態が変わっている）は安全のため中断し、検知内容のみ報告する。
 
 5. **sync-dev-from-master の実体を実行（プレフライト判定に従う）**
 
    - **スキップ判定** → 手順を飛ばす。
-   - **既存 open PR 流用** → その URL を完了報告に使い、ブランチ再作成や PR 新規作成はしない。
+   - **既存 open PR 流用** → その URL を完了報告に使い、ブックマーク再作成や PR 新規作成はしない。
    - **通常実行** → `sync-dev-from-master` スキルの手順 3〜6 を走らせる:
-     1. 必要なら `git push origin --delete chore/dev-from-master`（プレフライトで承認済み前提、再承認しない）。
-     2. `git switch -c chore/dev-from-master origin/master` → `git push -u origin chore/dev-from-master`
+     1. 必要なら既存ブックマークを削除（プレフライトで承認済み前提、再承認しない）。origin にだけ在る場合は先に追跡させる:
+
+        ```bash
+        jj bookmark track 'chore/dev-from-master@origin'   # ローカルに無い場合のみ
+        jj bookmark delete chore/dev-from-master
+        jj git push --bookmark chore/dev-from-master        # 削除が origin へ伝播する
+        ```
+
+     2. `jj bookmark create chore/dev-from-master -r 'master@origin'` → `jj git push --bookmark chore/dev-from-master`
      3. PR 本文をテンプレ準拠で組み立てて `gh pr create`（`release_version` には手順 1 の `version` を渡す）。
 
 6. **sync PR を merge commit でマージ（dev Ruleset 一時緩和つき）**
 
-   sync が **スキップ**（差分 0 件）された場合はこの手順を飛ばす。新規作成・流用いずれかで dev<-master PR が存在する場合のみ実行する。**緩和→マージ→復元は 1 つの bash 呼び出しにまとめ、`set +e` でマージ失敗を握って復元を無条件実行する**（途中で関数が分かれて復元が飛ぶ事故を防ぐ）。
+   sync が **スキップ**（差分 0 件）された場合はこの手順を飛ばす。新規作成・流用いずれかで dev<-master PR が存在する場合のみ実行する。**緩和→マージ→復元は手順 6-3 の 1 つの bash 呼び出しにまとめ、`set +e` でマージ失敗を握ったうえで `EXIT` trap により復元を無条件実行する**（ブロックが分かれて復元が飛ぶ事故を防ぐ）。
 
-   **マージ前にコンフリクトを確認する。** `gh pr view <n> --json mergeable,mergeStateStatus` が `CONFLICTING` を返す場合、`master` から特定コミットだけを cherry-pick したリリース（`create-release-pr` の「この変更だけ」指定など）の後に起きる **版数ファイルのねじれ** が典型。このときは Ruleset 緩和より先に `sync-dev-from-master` の「版数ファイルのコンフリクト解決」に従って版数を解決し（本番版数の判断はユーザー承認を取る）、PR を `MERGEABLE` にしてから 6-3 以降へ進む。`mergeable` はプッシュ直後に非同期で古い値を返すことがあるため、`git merge-base --is-ancestor origin/dev origin/chore/dev-from-master` で構造的な包含も確認するとよい。
+   **マージ前にコンフリクトを確認する。** `gh pr view <n> --json mergeable,mergeStateStatus` が `CONFLICTING` を返す場合、`master` から特定コミットだけを cherry-pick したリリース（`create-release-pr` の「この変更だけ」指定など）の後に起きる **版数ファイルのねじれ** が典型。このときは Ruleset 緩和より先に `sync-dev-from-master` の「版数ファイルのコンフリクト解決」に従って版数を解決し、PR を `MERGEABLE` にしてから 6-3 以降へ進む。**プレフライトで検知して手順 3 の承認に採用値を含めていれば、その値をそのまま使い追加承認は取らない。** 検知できていなかった場合は手順 3 の「安全上の中断」に該当するため、ここで停止してユーザーに版数の判断を仰ぐ。`mergeable` はプッシュ直後に非同期で古い値を返すことがあるため、`jj log -r 'dev@origin & ::chore/dev-from-master@origin'` が **空でない**（＝ `dev@origin` が `chore/dev-from-master@origin` の祖先）ことで構造的な包含も確認するとよい。
 
-   1. マージ対象 PR 番号を確定（手順 5 で新規作成 or 流用した PR）。ローカルが `chore/dev-from-master` に居るとブランチ削除で支障が出るため `git switch dev`（または安全な枝）へ退避する。
+   1. マージ対象 PR 番号を確定（手順 5 で新規作成 or 流用した PR）。jj には「今どのブランチに居るか」という概念が無く作業コピー `@` はブックマークに固定されないため、git のようにマージ前へ退避する操作は不要。
    2. `OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)` を解決。プレフライトの「マージ方式制約」記録を使う:
-      - dev が `merge` を許可済み → **緩和不要**。そのまま手順 6-5 のマージへ。
-      - squash-only 等で `merge` 不許可 → 手順 6-3 の一時緩和を行う。
-   3. **一時緩和**（フル定義をバックアップしてから PUT）。`RS_ID` はプレフライトで控えた `ruleset_id`:
+      - dev が `merge` を許可済み → **緩和不要**。手順 6-3 のブロックから緩和・復元部分を外し、`gh pr merge <n> --merge --delete-branch` だけを実行する。
+      - squash-only 等で `merge` 不許可 → 手順 6-3 をそのまま実行する。
+   3. **緩和 → マージ → 復元（1 つの bash 呼び出しで完結させる）**
+
+      **このブロックは分割しない。** `trap` を **バックアップ取得より前** に仕掛けることで、バックアップ取得や `jq` の失敗・マージ失敗・中断・想定外エラーのいずれで抜けても、復元と一時ファイル削除が必ず走る。`RS_ID` はプレフライトで控えた `ruleset_id`。
+
       ```bash
+      set +e
       RS_ID=<プレフライトで控えた ruleset_id>
-      gh api "repos/$OWNER_REPO/rulesets/$RS_ID" > ruleset_backup.json   # 復元用。リポジトリ直下の相対パス（/tmp は Git Bash と Windows python で別解決になり read に失敗するため使わない）
-      ```
-      `ruleset_backup.json` から `name,target,enforcement,conditions,bypass_actors,rules` を取り出し、`pull_request` ルールの `allowed_merge_methods` にのみ `merge` を追加した `ruleset_relaxed.json` を生成（他は一切変えない。既存方式 `squash` は残す）。
-      ```bash
+      OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+      RULESET_RELAXED=0
+      RESTORE_FAILED=0
+
+      # 復元＋後始末。RULESET_RELAXED を落として冪等化し、INT -> EXIT の二重復元を防ぐ。
+      # 復元は緩和 PUT を試みた場合だけ（未緩和で原状 PUT を投げても無駄な書き込みになる）
+      restore_and_cleanup() {
+        if [ "$RULESET_RELAXED" -eq 1 ]; then
+          RULESET_RELAXED=0
+          if gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_backup.json >/dev/null; then
+            echo "ruleset restored"
+          else
+            RESTORE_FAILED=1
+            echo "!!! RULESET RESTORE FAILED - 手動復元が必要: repos/$OWNER_REPO/rulesets/$RS_ID" >&2
+          fi
+        fi
+        rm -f ruleset_backup.json ruleset_relaxed.json
+      }
+
+      # trap は「バックアップ取得より前」に仕掛ける。取得や jq が失敗しても JSON を残さない。
+      # 割り込みは復元・後始末のうえ *明示的に終了* する。handler から戻ると中断された
+      # コマンドの次（= gh pr merge）から実行が再開され、緩和したままマージが走る
+      trap 'restore_and_cleanup; exit 130' INT
+      trap 'restore_and_cleanup; exit 143' TERM
+      # EXIT は冪等な後始末と、復元失敗の非 0 伝播だけを担う
+      # （trap 末尾を rm -f にすると、その成功でブロック全体が exit 0 になってしまう）
+      trap 'restore_and_cleanup; if [ "$RESTORE_FAILED" -eq 1 ]; then exit 1; fi' EXIT
+
+      # 復元用バックアップ。リポジトリ直下の相対パス（/tmp は Git Bash と Windows python で
+      # 別解決になり read に失敗するため使わない）
+      gh api "repos/$OWNER_REPO/rulesets/$RS_ID" > ruleset_backup.json || exit 1
+
+      # allowed_merge_methods に merge を足すだけ。他フィールドは一切変えず、既存の squash も残す
+      jq '{name, target, enforcement, conditions, bypass_actors,
+           rules: (.rules | map(
+             if .type == "pull_request"
+             then .parameters.allowed_merge_methods |=
+                    (if index("merge") then . else . + ["merge"] end)
+             else . end))}' ruleset_backup.json > ruleset_relaxed.json || exit 1
+
+      RULESET_RELAXED=1
       gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_relaxed.json \
         --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'   # ["squash","merge"] を確認
-      ```
-   4. **マージ（merge commit）**:
-      ```bash
+
       gh pr merge <n> --merge --delete-branch
+      MERGE_RC=$?
+      echo "merge exit=$MERGE_RC"
+      # マージの成否をブロックの終了ステータスへ伝播させる。
+      # EXIT trap が復元・後始末を行い、復元に失敗した場合だけ trap が 1 で上書きする
+      exit "$MERGE_RC"
       ```
+
       - `--squash` / `--rebase` は使わない。
-      - required check 不成立・コンフリクト等で弾かれても **force/admin マージしない**。マージ失敗は握って次の復元へ進む（PR は open のまま残す）。なお `mergeStateStatus=UNSTABLE`（必須でない失敗チェックがあるだけ）は通常マージ可能。
-   5. **復元（緩和した場合は必ず実行）**:
+      - required check 不成立・コンフリクト等で弾かれても **force/admin マージしない**。マージ失敗は握ったまま trap の復元へ進む（PR は open のまま残す）。なお `mergeStateStatus=UNSTABLE`（必須でない失敗チェックがあるだけ）は通常マージ可能。
+      - **マージが失敗していても Ruleset は必ず復元される**（trap が担保）。
+      - **ブロックの終了ステータスで成否を判定する**（`merge exit=` の目視に頼らない）:
+        - `0` … マージ成功かつ Ruleset 復元成功。手順 6-4 の検証へ進む。
+        - `1`（stderr に `RULESET RESTORE FAILED`）… Ruleset の復元失敗。最優先でユーザーに知らせ、緩めたまま放置しない。
+        - `130` / `143` … 割り込み（`INT` / `TERM`）。マージは実行されていない。**リリース完了とは報告しない。**
+        - 上記以外の非 0 … **`gh pr merge` の失敗**（`MERGE_RC` がそのまま出る）。手順 6-4 の検証はスキップし、手順 7 は「成功時」ではなく **「失敗時」の分岐で報告する**。`dev@origin` が `master@origin` を包含していない状態なので、**リリース完了とは報告しない。**
+      - 復元後の値は `gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で元の値（例 `["squash"]`）に戻ったことを読み取り専用で確認する。
+   4. **検証**（手順 6-3 が `0` で終了した場合のみ実施）: `jj git fetch` 後、
+      - dev HEAD が **2 親を持つ merge commit**（squash されていない）であること: `jj log -r 'dev@origin' --no-graph -T 'parents.len() ++ "\n"'` が `2`。
+      - `jj log -r 'dev@origin..master@origin' --no-graph -T 'commit_id ++ "\n"'` の出力が空（dev が master を完全包含）。
+   5. 一時ファイル（`ruleset_backup.json` / `ruleset_relaxed.json`）は手順 6-3 の trap が削除済み。**`.gitignore` の無視対象なので `jj status` には現れない**。ファイルシステムを直接確認する:
+
       ```bash
-      gh api -X PUT "repos/$OWNER_REPO/rulesets/$RS_ID" --input ruleset_backup.json \
-        --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'   # 元の値（例 ["squash"]）に戻ったことを確認
+      test ! -e ruleset_backup.json && test ! -e ruleset_relaxed.json && echo "cleanup ok"
       ```
-      **マージが失敗していても Ruleset は必ず復元する。** 復元の PUT 自体が失敗した場合は最優先でユーザーに知らせる（Ruleset を緩めたまま放置しない）。
-   6. **検証**: `git fetch origin dev master` 後、
-      - dev HEAD が **2 親を持つ merge commit**（squash されていない）であること: `git rev-list --parents -n 1 origin/dev` の親が 2 つ。
-      - `git rev-list --count origin/dev..origin/master` が `0`（dev が master を完全包含）。
-   7. 一時ファイル `ruleset_backup.json` / `ruleset_relaxed.json` を削除し、ローカル `dev` を `git pull --ff-only origin dev` で追従させる。
+
+      **どちらかが残っていたら、削除して先へ進まずに停止して報告する。** 残存は trap が走らなかったことを意味し、その場合 **Ruleset が緩和されたままの可能性がある**。`gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で現在値を読み、緩和されたままならユーザーに知らせて復元の判断を仰ぐ。
+
+      ローカルの `dev` ブックマークは `jj git fetch` の時点で `dev@origin` に追従しているため、git の `pull --ff-only` に相当する操作は不要。
 
 7. **完了報告**
 
@@ -169,15 +284,15 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      - スキップ時: `skip (差分なし)`
      - 流用時: `既存 PR を流用: <url>`
    - **マージ結果**（sync PR が存在した場合）:
-     - 成功時: マージコミット SHA（**2 親の merge commit** である旨）、`origin/dev..origin/master = 0`、dev Ruleset を `<一時緩和して merge commit でマージ→復元（["squash"] に復帰）| 緩和不要（merge 許可済み）>`
-     - 失敗時: PR は open のまま・**Ruleset は復元済み**である旨を明示し、`sync-dev-from-master` 単独再実行ではなく手当ての方針（CI 修正後に手動 or 再マージ）を案内
+     - 成功時: マージコミット SHA（**2 親の merge commit** である旨）、`dev@origin..master@origin = 0`、dev Ruleset を `<一時緩和して merge commit でマージ→復元（["squash"] に復帰）| 緩和不要（merge 許可済み）>`
+     - 失敗時（手順 6-3 が `0` 以外で終了）: 検知根拠として終了ステータスと `merge exit=` の値を示し、PR は open のまま・**Ruleset は復元済み**（復元失敗なら未復元である旨）を明示し、`sync-dev-from-master` 単独再実行ではなく手当ての方針（CI 修正後に手動 or 再マージ）を案内。**`dev@origin` が `master@origin` を包含していないため、リリース完了とは報告しない。**
    - **⚠ 補足**: sync PR を **merge commit でマージした**（squash していない）ことを明示。squash すると merge commit 構造が潰れて dev/master 履歴が壊れる（PR #5838 / #5840 の教訓）。手動でマージし直す状況になった場合も必ず「Create a merge commit」を使うこと。
 
 ## 注意事項
 
-- **承認の統合** がこのスキルの付加価値。プレフライトで危ない状態（タグ重複・version 不一致・未マージブランチ残存等）は **承認ゲートに到達させない** ことで、「承認したら止まらない」契約を守る。マージと Ruleset 緩和も同じ 1 回の承認に含め、マージ直前で追加承認を取らない。
+- **承認の統合** がこのスキルの付加価値。プレフライトで危ない状態（タグ重複・version 不一致・未マージブックマーク残存等）は **承認ゲートに到達させない** ことで、「承認したら止まらない」契約を守る。マージと Ruleset 緩和も同じ 1 回の承認に含め、マージ直前で追加承認を取らない。
 - 操作順は **タグ → sync PR 作成 → マージ** で固定。publish-release 成功後に sync 作成やマージが失敗しても、タグと Release は既に公開済みで巻き戻さない。sync の PR 作成自体が失敗した場合は原因を修正して `sync-dev-from-master` を単独呼び直しで補完する（その旨を完了報告で案内する）。マージのみ失敗した場合は PR を open のまま残す。
-- `git push --delete` や annotated tag push は破壊的に見えるが、プレフライトで重複ガードと `MERGED` 確認を済ませた上で実行する前提。
-- **dev Ruleset の一時緩和は不変条件つき**: ①既存の `allowed_merge_methods` を削らず `merge` を**追加するだけ**（広げる方向のみ）、②**マージの成否に関わらず必ず元へ復元**する、③復元は緩和と同一 bash 呼び出し内で `set +e` により無条件実行、④バックアップ/緩和用 JSON はリポジトリ直下の相対パスに置き完了後に削除（`/tmp` は使わない）。復元 PUT 自体が失敗したら最優先で報告する。
+- ブックマーク削除の push（`jj bookmark delete` → `jj git push`）や annotated tag push は破壊的に見えるが、プレフライトで重複ガードと `MERGED` 確認を済ませた上で実行する前提。
+- **dev Ruleset の一時緩和は不変条件つき**: ①既存の `allowed_merge_methods` を削らず `merge` を**追加するだけ**（広げる方向のみ）、②**マージの成否に関わらず必ず元へ復元**する、③復元は緩和と同一 bash 呼び出し内で、**バックアップ取得より前**に仕掛けた `EXIT` trap により実行（`set +e` でマージ失敗を握る。復元は緩和 PUT を試みた場合のみ）、④バックアップ/緩和用 JSON はリポジトリ直下の相対パスに置き（`/tmp` は使わない）、同じ trap で両方削除する。`.gitignore` にも登録済みだが、jj は未追跡ファイルも自動スナップショットするため残骸を放置しない。復元 PUT 自体が失敗したら最優先で報告する。
 - マージは **必ず merge commit**（`gh pr merge --merge`）。`--squash` / `--rebase` は使わない。required check や branch protection で弾かれても **force/admin マージはしない**（PR を残して報告）。
 - sync が **スキップ**（差分 0 件）のときはマージも Ruleset 緩和も行わない。`merge` が既に許可されている dev では緩和をスキップして素直にマージする。

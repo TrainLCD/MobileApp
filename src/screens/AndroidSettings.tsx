@@ -14,6 +14,7 @@ import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { STORAGE_KEYS } from '~/constants';
 import { storage } from '~/lib/storage';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { pictureInPictureAtom } from '~/store/atoms/pictureInPicture';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -24,9 +25,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
 });
 
 const AndroidSettingsScreen: React.FC = () => {
@@ -34,6 +32,7 @@ const AndroidSettingsScreen: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const [{ enabled: pictureInPictureEnabled }, setPictureInPicture] =
     useAtom(pictureInPictureAtom);
   const navigation = useNavigation();
@@ -63,7 +62,12 @@ const AndroidSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.ScrollView
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -84,7 +88,7 @@ const AndroidSettingsScreen: React.FC = () => {
               justifyContent: 'center',
               paddingHorizontal: 24,
               paddingVertical: 16,
-              backgroundColor: isLEDTheme ? '#333' : 'white',
+              backgroundColor: isLEDTheme ? '#333' : colors.card,
               borderRadius: isLEDTheme ? 0 : 12,
             }}
           >
@@ -97,7 +101,7 @@ const AndroidSettingsScreen: React.FC = () => {
             style={{
               marginTop: 16,
               textAlign: 'center',
-              color: '#8B8B8B',
+              color: colors.secondaryText,
             }}
           >
             {translate('pictureInPictureDescription')}

@@ -1,0 +1,46 @@
+# .github/scripts/ 配下の CI 用スクリプトに対するテスト。
+# Jest (test.yml) は jest-expo プリセットで src/** を対象にしているため、
+# この階層は拾われない。追加依存が無く Node 標準のテストランナーだけで動くので、
+# npm ci を挟まない軽量なジョブとして分けている。
+name: Scripts
+
+on:
+  push:
+    branches:
+      - '**'
+    # GitHub Actions は YAML のアンカー/エイリアスを解釈しないため、
+    # pull_request 側にも同じ paths を書き下す。片方だけ更新しないこと。
+    paths:
+      - '.github/scripts/**'
+      - '.github/workflows/test_scripts.yml'
+      # 実行コマンドは package.json の test:scripts に依存している。
+      # スクリプト定義だけが変わった場合も壊れを検出できるようにする。
+      - 'package.json'
+  # push だけだと fork からの PR でスクリプトが変更されてもテストが走らない。
+  # secret を使わず contents: read で動くジョブなので fork PR でも安全に回せる。
+  pull_request:
+    paths:
+      - '.github/scripts/**'
+      - '.github/workflows/test_scripts.yml'
+      - 'package.json'
+
+# ブランチ側で書き換えられるコードを実行するワークフローなので、
+# GITHUB_TOKEN は読み取りに絞る。リポジトリの既定が書き込み可能な場合でも、
+# ここで明示すれば縮小される。テストに書き込み権限は不要。
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 認証情報を作業ツリーに残さない。テストは git 操作をしない。
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run Node test runner
+        run: npm run test:scripts

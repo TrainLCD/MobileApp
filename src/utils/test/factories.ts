@@ -1,5 +1,10 @@
-import type { Line, Station, StationNumber } from '~/@types/graphql';
-import { LineType, OperationStatus, StopCondition } from '~/@types/graphql';
+import type { Company, Line, Station, StationNumber } from '~/@types/graphql';
+import {
+  CompanyType,
+  LineType,
+  OperationStatus,
+  StopCondition,
+} from '~/@types/graphql';
 
 export const createStationNumber = (
   lineSymbol: string,
@@ -102,5 +107,24 @@ export const createLine = (
   status: OperationStatus.InOperation,
   trainType: null,
   transportType: null,
+  ...overrides,
+});
+
+export const createCompany = (
+  id: number,
+  overrides: Partial<Company> = {}
+): Company => ({
+  __typename: 'Company',
+  id,
+  name: `Company${id}`,
+  nameEnglishFull: `Company${id} Railways`,
+  nameEnglishShort: `Company${id}`,
+  nameFull: `Company${id}鉄道`,
+  nameKatakana: `カンパニー${id}`,
+  nameShort: `Company${id}`,
+  railroadId: id,
+  status: OperationStatus.InOperation,
+  type: CompanyType.Private,
+  url: null,
   ...overrides,
 });

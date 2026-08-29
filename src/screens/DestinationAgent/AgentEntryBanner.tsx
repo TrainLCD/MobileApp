@@ -12,6 +12,8 @@ import {
 import { CardChevron } from '~/components/CardChevron';
 import Typography from '~/components/Typography';
 import { useAIAgentFeatureEnabled } from '~/hooks/useAIAgentFeatureEnabled';
+import { useAppColors } from '~/providers/AppColorsProvider';
+import { stationAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 
@@ -24,7 +26,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   bg: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     // CommonCard と同じ影値
     boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
@@ -33,6 +34,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#212121',
     borderColor: '#fff',
     borderWidth: 1,
+  },
+  // Button/CommonCard の無効表現と同じ不透明度
+  disabled: {
+    opacity: 0.5,
   },
   texts: {
     flex: 1,
@@ -45,7 +50,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#008ffe',
   },
 });
 
@@ -58,7 +62,15 @@ type Props = {
 export const AgentEntryBanner = ({ style }: Props) => {
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const enabled = useAIAgentFeatureEnabled();
+  const station = useAtomValue(stationAtom);
+
+  // 現在駅が未確定のままチャットを始めると currentStationGroupId を送れず、
+  // 最寄り駅から直通で行けない駅が提案されてしまう。同じ画面の駅名検索が
+  // station.groupId 無しでは検索しない(RouteSearchScreen の handleSearch)のと
+  // 同じ理由で、現在駅が確定するまでは押せない見た目にして無反応にする。
+  const disabled = !station?.groupId;
 
   const handlePress = useCallback(() => {
     navigation.navigate('DestinationAgent' as never);
@@ -73,20 +85,29 @@ export const AgentEntryBanner = ({ style }: Props) => {
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={`${translate('destinationAgentEntryTitle')} ${translate('destinationAgentEntrySubtitle')}`}
-      onPress={handlePress}
-      style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg, style]}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={disabled ? undefined : handlePress}
+      style={[
+        styles.root,
+        isLEDTheme
+          ? styles.ledBg
+          : [styles.bg, { backgroundColor: colors.card }],
+        disabled && styles.disabled,
+        style,
+      ]}
     >
-      <Ionicons name="sparkles" size={24} color="#008ffe" />
+      <Ionicons name="sparkles" size={24} color={colors.accent} />
       <View style={styles.texts}>
         <Typography style={styles.title}>
           {translate('destinationAgentEntryTitle')}
         </Typography>
-        <Typography style={styles.subtitle}>
+        <Typography style={[styles.subtitle, { color: colors.accent }]}>
           {translate('destinationAgentEntrySubtitle')}
         </Typography>
       </View>
       {/* 既定の stroke(#fff) は白背景で不可視になるため、AppSettings と同じくテーマに応じて指定する */}
-      <CardChevron stroke={isLEDTheme ? '#fff' : '#000'} />
+      <CardChevron stroke={isLEDTheme || colors.isDark ? '#fff' : '#000'} />
     </TouchableOpacity>
   );
 };

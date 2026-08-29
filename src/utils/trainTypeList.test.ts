@@ -1,5 +1,6 @@
-import type { Line, Station } from '~/@types/graphql';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import {
+  buildTrainTypeRow,
   formatLineNames,
   getBoardingLine,
   getBoardingLineStation,
@@ -282,5 +283,75 @@ describe('formatLineNames', () => {
       createLine(2, { nameShort: 'B線' }),
     ];
     expect(formatLineNames(lines, true)).toBe('A線 B線');
+  });
+});
+
+describe('buildTrainTypeRow', () => {
+  const seibuChichibu = createLine(6, { nameShort: '西武秩父線' });
+  // 池袋。西武池袋線・東武東上線・副都心線が乗り入れる
+  const ikebukuro = createBoardingStation([
+    { id: seibuIkebukuro.id, station: createNestedStation('SI-01', 'SI') },
+    { id: tobuTojo.id, station: createNestedStation('TJ-01', 'TJ') },
+    { id: fukutoshin.id, station: createNestedStation('F-09', 'F') },
+  ]);
+  const minatomiraiStation = { line: minatomirai } as Station;
+
+  const createTrainType = (
+    id: number,
+    name: string,
+    lines: Line[]
+  ): TrainType =>
+    ({
+      __typename: 'TrainType',
+      id,
+      name,
+      nameRoman: name,
+      lines,
+    }) as unknown as TrainType;
+
+  // 西武池袋線経由と東武東上線経由。従来は行ごとに乗車路線が変わっていた
+  const viaSeibu = createTrainType(1, '快速急行', [
+    seibuChichibu,
+    seibuIkebukuro,
+    fukutoshin,
+    tokyu,
+    minatomirai,
+  ]);
+  const viaTobu = createTrainType(2, '急行', [
+    tobuTojo,
+    fukutoshin,
+    tokyu,
+    minatomirai,
+  ]);
+
+  it('カードの路線は経由が違っても全種別で選択中の路線に揃う', () => {
+    const rows = [viaSeibu, viaTobu].map((tt) =>
+      buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, minatomiraiStation, true)
+    );
+    expect(rows.map((r) => r.cardLine.id)).toEqual([
+      seibuIkebukuro.id,
+      seibuIkebukuro.id,
+    ]);
+  });
+
+  it('ナンバリングも選択中の路線の乗車駅基準で揃う', () => {
+    const rows = [viaSeibu, viaTobu].map((tt) =>
+      buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, minatomiraiStation, true)
+    );
+    expect(
+      rows.map((r) => r.cardLineStation?.stationNumbers?.[0]?.stationNumber)
+    ).toEqual(['SI-01', 'SI-01']);
+  });
+
+  it('経由路線は種別ごとの乗車路線を起点に切り出したままにする', () => {
+    const row = buildTrainTypeRow(
+      viaTobu,
+      seibuIkebukuro,
+      ikebukuro,
+      minatomiraiStation,
+      true
+    );
+    // 乗車路線(東武東上線)は経由に含めず、そこから行先までの間だけを出す
+    expect(row.viaLines.map((l) => l.id)).toEqual([fukutoshin.id, tokyu.id]);
   });
 });

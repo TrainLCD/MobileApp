@@ -7,6 +7,7 @@ import {
   type TextStyle,
 } from 'react-native';
 import { FONTS } from '../constants';
+import { useAppColors } from '../providers/AppColorsProvider';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 
 const isAnimatedStyleObject = (style: unknown): boolean => {
@@ -52,6 +53,8 @@ const getFontWeight = (style: unknown): TextStyle['fontWeight'] => {
 
 const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  // 操作系画面の外(走行画面)ではライトの配色が返るため、既定の文字色は従来どおり
+  const colors = useAppColors();
 
   const fontFamily = useMemo(() => {
     if (isLEDTheme) {
@@ -70,14 +73,14 @@ const Typography = forwardRef((props: TextProps, ref: LegacyRef<Text>) => {
     () => [
       {
         fontFamily,
-        color: isLEDTheme ? '#fff' : '#333',
+        color: isLEDTheme ? '#fff' : colors.text,
         textAlignVertical: 'center',
       },
       props.style,
       // NOTE: LEDテーマ用フォントはファイルサイズが大きいのでボールドの方を廃止した
       isLEDTheme && { fontWeight: 'normal' },
     ],
-    [fontFamily, isLEDTheme, props.style]
+    [colors.text, fontFamily, isLEDTheme, props.style]
   );
   return <Text {...props} ref={ref} allowFontScaling={false} style={style} />;
 });

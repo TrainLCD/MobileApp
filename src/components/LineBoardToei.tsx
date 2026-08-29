@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -34,6 +34,9 @@ import {
 } from './LineBoard/shared/hooks/useBarStyles';
 import {
   commonLineBoardStyles,
+  getHorizontalStationNameOffset,
+  getHorizontalStationNameWidth,
+  HORIZONTAL_STATION_NAME_MAX_CHARS,
   STATION_NAME_CONTAINER_BOTTOM,
 } from './LineBoard/shared/styles/commonStyles';
 import Typography from './Typography';
@@ -44,6 +47,9 @@ type Props = {
   hasTerminus: boolean;
 };
 
+/** 英語表記の斜め書きが1行に収める幅(全角文字数換算) */
+export const EN_STATION_NAME_MAX_CHARS = 7.5;
+
 const localStyles = StyleSheet.create({
   splittedStationName: {
     marginLeft: 1,
@@ -51,6 +57,14 @@ const localStyles = StyleSheet.create({
   stationNameExtra: {
     fontSize: RFValue(10),
     fontWeight: 'bold',
+  },
+  // 縦書きの併記は1文字ずつ Text を並べるため、Android では行の余白ぶん字間が
+  // 開いて日本語の駅名よりはるかに縦長になる。日本語側(stationName)と同じ考え方で
+  // 負のマージンを当てて詰める。
+  splittedStationNameExtraChar: {
+    fontSize: RFValue(10),
+    fontWeight: 'bold',
+    marginBottom: Platform.select({ android: isTablet ? -5 : -4, ios: 0 }),
   },
   splittedStationNameWithExtraLang: {
     position: 'relative',
@@ -101,17 +115,35 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
   const dim = useLandscapeWindowDimensions();
 
   const horizontalAdditionalStyle = useMemo(() => {
-    if (!hasNumbering) {
-      return {
-        marginBottom: dim.height / 10,
-        width: isTablet ? dim.height / 3 : dim.height / 2.5,
-      };
-    }
+    // 従来の折り返し幅(画面短辺基準)。回転後の見た目をこの幅のときと揃えるための基準
+    const previousWidth = hasNumbering
+      ? isTablet
+        ? dim.height / 3.5
+        : dim.height / 2
+      : isTablet
+        ? dim.height / 3
+        : dim.height / 2.5;
+    const baseMarginBottom =
+      hasNumbering && !isTablet ? dim.height / 6 : dim.height / 10;
+
+    // 英語表記は中国語の併記が次の行に付くぶん行数が増える。斜め書きの外接矩形の
+    // 高さは (幅 × sin55°) が支配的なので、幅を広げると回転後に親の高さを超え、
+    // はみ出した分が Android 側で切り取られてしまう(併記が消える)。英語は単語
+    // 単位で折り返されるため幅を詰めても行数が増えにくく、日本語より狭く取る。
+    // 日本語側はナンバリングを駅名の下に置くぶん斜め書きを長く伸ばせるので広く取る。
+    const width = en
+      ? getHorizontalStationNameWidth(EN_STATION_NAME_MAX_CHARS)
+      : getHorizontalStationNameWidth(
+          HORIZONTAL_STATION_NAME_MAX_CHARS + (hasNumbering ? 0.5 : 0)
+        );
+    const offset = getHorizontalStationNameOffset(previousWidth, width);
+
     return {
-      marginBottom: isTablet ? dim.height / 10 : dim.height / 6,
-      width: isTablet ? dim.height / 3.5 : dim.height / 2,
+      width,
+      marginLeft: offset.marginLeft,
+      marginBottom: baseMarginBottom + offset.marginBottom,
     };
-  }, [dim.height, hasNumbering]);
+  }, [dim.height, hasNumbering, en]);
 
   if (en) {
     return (
@@ -184,7 +216,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
           {station.nameKorean.split('').map((c, j) => (
             <Typography
               style={[
-                styles.stationNameExtra,
+                styles.splittedStationNameExtraChar,
                 passed ? styles.grayColor : null,
               ]}
               key={`${station.id}-ko-${j}`}

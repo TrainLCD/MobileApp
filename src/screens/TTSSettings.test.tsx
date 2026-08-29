@@ -2,9 +2,16 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { Linking, Platform } from 'react-native';
 import { STATUS_URL, STORAGE_KEYS } from '~/constants';
-import { isTTSFeatureEnabled } from '~/lib/remoteConfig';
+import { isRemoteTTSEnabled, isTTSFeatureEnabled } from '~/lib/remoteConfig';
 import { storage } from '~/lib/storage';
-import speechState, { type StationState } from '~/store/atoms/speech';
+import {
+  TTS_SPEED_PREFERENCE,
+  type TTSSpeedPreference,
+} from '~/models/TTSSpeed';
+import speechState, {
+  type StationState,
+  ttsSpeedPreferenceAtom,
+} from '~/store/atoms/speech';
 import {
   getDialogPresentationSnapshot,
   resetDialogPresentationForTests,
@@ -17,10 +24,12 @@ jest.mock('~/utils/isDevApp', () => ({
 
 jest.mock('~/lib/remoteConfig', () => ({
   isTTSFeatureEnabled: jest.fn(() => true),
+  isRemoteTTSEnabled: jest.fn(() => true),
   subscribeRemoteConfig: jest.fn(() => () => {}),
 }));
 
 const mockedIsTTSFeatureEnabled = jest.mocked(isTTSFeatureEnabled);
+const mockedIsRemoteTTSEnabled = jest.mocked(isRemoteTTSEnabled);
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
@@ -41,7 +50,10 @@ jest.mock('~/translation', () => ({
   translate: (key: string) => key,
 }));
 
-const renderWithSpeechState = (speech: Partial<StationState>) => {
+const renderWithSpeechState = (
+  speech: Partial<StationState>,
+  speedPreference?: TTSSpeedPreference
+) => {
   const store = createStore();
   store.set(speechState, {
     enabled: true,
@@ -50,6 +62,9 @@ const renderWithSpeechState = (speech: Partial<StationState>) => {
     monetizedPlanEnabled: false,
     ...speech,
   });
+  if (speedPreference) {
+    store.set(ttsSpeedPreferenceAtom, speedPreference);
+  }
 
   const screen = render(
     <Provider store={store}>
@@ -70,6 +85,7 @@ const setPlatformOS = (os: typeof Platform.OS) => {
 describe('TTSSettingsScreen', () => {
   beforeEach(() => {
     mockedIsTTSFeatureEnabled.mockReturnValue(true);
+    mockedIsRemoteTTSEnabled.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -201,6 +217,77 @@ describe('TTSSettingsScreen', () => {
   // 読み上げ経路がプラットフォームで異なるため、案内文の出し分けを固定する。
   // 音質案内はAndroidのTTSエンジン設定を指す内容なので、その設定を持たない
   // iOS・web へ漏れないことまで確認する。
+  describe('アナウンス速度', () => {
+    it('既定では「普通」が使用中になる', () => {
+      const { getByLabelText } = renderWithSpeechState({ enabled: true });
+
+      expect(
+        getByLabelText('ttsSpeedNormal').props.accessibilityState
+      ).toMatchObject({ checked: true, disabled: false });
+      expect(
+        getByLabelText('ttsSpeedSlow').props.accessibilityState
+      ).toMatchObject({ checked: false });
+      expect(
+        getByLabelText('ttsSpeedFast').props.accessibilityState
+      ).toMatchObject({ checked: false });
+    });
+
+    it('選択した速度を保存する', () => {
+      const { getByLabelText, store } = renderWithSpeechState({
+        enabled: true,
+      });
+
+      fireEvent.press(getByLabelText('ttsSpeedFast'));
+
+      expect(store.get(ttsSpeedPreferenceAtom)).toBe(TTS_SPEED_PREFERENCE.FAST);
+      expect(storage.getString(STORAGE_KEYS.TTS_SPEED_PREFERENCE)).toBe(
+        TTS_SPEED_PREFERENCE.FAST
+      );
+    });
+
+    it('保存済みの速度を選択状態として表示する', () => {
+      const { getByLabelText } = renderWithSpeechState(
+        { enabled: true },
+        TTS_SPEED_PREFERENCE.SLOW
+      );
+
+      expect(
+        getByLabelText('ttsSpeedSlow').props.accessibilityState
+      ).toMatchObject({ checked: true });
+      expect(
+        getByLabelText('ttsSpeedNormal').props.accessibilityState
+      ).toMatchObject({ checked: false });
+    });
+
+    it('端末内蔵TTSで読み上げる構成では速度設定を表示しない', () => {
+      // 端末内蔵TTSは端末側の読み上げ速度設定に従うため、選ばせても反映されない
+      mockedIsRemoteTTSEnabled.mockReturnValue(false);
+
+      const { queryByLabelText, queryByText } = renderWithSpeechState({
+        enabled: true,
+      });
+
+      expect(queryByLabelText('ttsSpeedNormal')).toBeNull();
+      expect(queryByText('ttsSpeedTitle')).toBeNull();
+    });
+
+    it('TTSがOFFの時は速度を変更できない', () => {
+      const { getByLabelText, store } = renderWithSpeechState({
+        enabled: false,
+      });
+
+      fireEvent.press(getByLabelText('ttsSpeedFast'));
+
+      expect(
+        getByLabelText('ttsSpeedFast').props.accessibilityState
+      ).toMatchObject({ checked: false, disabled: true });
+      expect(store.get(ttsSpeedPreferenceAtom)).toBe(
+        TTS_SPEED_PREFERENCE.NORMAL
+      );
+      expect(storage.contains(STORAGE_KEYS.TTS_SPEED_PREFERENCE)).toBe(false);
+    });
+  });
+
   describe('プラットフォーム別の案内表示', () => {
     const openTTSNoticeDialog = () => {
       const { getByLabelText } = renderWithSpeechState({ enabled: false });

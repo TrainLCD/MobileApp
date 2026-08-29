@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { LIQUID_GLASS_AVAILABLE } from '~/utils/liquidGlass';
 
@@ -50,10 +51,7 @@ export type ButtonLayout = {
   height: number;
 };
 
-const ICON_COLOR = {
-  active: '#0A84FF',
-  inactive: '#6B7280', // gray-500 相当
-} as const;
+const ACTIVE_ICON_COLOR = '#0A84FF';
 
 // アクティブタブのアイコン裏に敷くピル。iOS 26 純正タブバーの選択ハイライトを模した
 // アクセントカラーの半透明ティント
@@ -202,6 +200,7 @@ const FooterTabBar: React.FC<Props> = ({
   const navigation = useNavigation();
   const route = useRoute();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   // タブ間の移動で履歴を積まないよう navigate ではなく replace で遷移する。
   // 同一画面への replace は画面の再マウントになるだけなので無視する
@@ -333,7 +332,9 @@ const FooterTabBar: React.FC<Props> = ({
         <Ionicons
           name={active === 'search' ? 'git-commit' : 'git-commit-outline'}
           size={26}
-          color={active === 'search' ? ICON_COLOR.active : ICON_COLOR.inactive}
+          color={
+            active === 'search' ? ACTIVE_ICON_COLOR : colors.tabIconInactive
+          }
         />
       </TabButton>
 
@@ -347,7 +348,7 @@ const FooterTabBar: React.FC<Props> = ({
         <Ionicons
           name={active === 'home' ? 'navigate' : 'navigate-outline'}
           size={28}
-          color={active === 'home' ? ICON_COLOR.active : ICON_COLOR.inactive}
+          color={active === 'home' ? ACTIVE_ICON_COLOR : colors.tabIconInactive}
         />
       </TabButton>
 
@@ -363,7 +364,7 @@ const FooterTabBar: React.FC<Props> = ({
           name={active === 'settings' ? 'settings' : 'settings-outline'}
           size={26}
           color={
-            active === 'settings' ? ICON_COLOR.active : ICON_COLOR.inactive
+            active === 'settings' ? ACTIVE_ICON_COLOR : colors.tabIconInactive
           }
         />
       </TabButton>
@@ -403,7 +404,7 @@ const FooterTabBar: React.FC<Props> = ({
           styles.bar,
           {
             paddingBottom: safePad,
-            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+            backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
           },
         ]}
       >

@@ -15,8 +15,10 @@ import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
+import { overlayAppColorsAtom } from '~/store/atoms/colorScheme';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
+import { getActionSheetColorOptions } from '~/utils/actionSheetColors';
 import { showDialog } from '~/utils/dialogPresentation';
 import { isDevApp } from '~/utils/isDevApp';
 import { getSettingsThemes } from '~/utils/theme';
@@ -134,6 +136,10 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const currentLine = useCurrentLine();
   const navigation = useNavigation();
   const { showActionSheetWithOptions } = useActionSheet();
+  // アクションシートは車内再現(走行画面)とは別レイヤーの一時的なUIなので、
+  // 走行画面から開いた場合も配色設定に追従させる。走行画面はProviderの
+  // 外側にあるため、モーダル本体と同じくatomを直接購読する。
+  const actionSheetColors = useAtomValue(overlayAppColorsAtom);
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
   const {
@@ -409,6 +415,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           options,
           destructiveButtonIndex: Platform.OS === 'ios' ? 0 : undefined,
           cancelButtonIndex: options.length - 1,
+          ...getActionSheetColorOptions(actionSheetColors),
         },
         (buttonIndex) => {
           if (buttonIndex == null || buttonIndex >= actions.length) {
@@ -419,6 +426,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       );
     },
     [
+      actionSheetColors,
       devOverlayEnabled,
       handleReport,
       handleShare,

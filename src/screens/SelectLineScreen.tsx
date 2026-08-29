@@ -29,6 +29,7 @@ import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
 import { usePresetsWidgetSync } from '~/hooks/usePresetsWidgetSync';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import FooterTabBar, { useFooterHeight } from '../components/FooterTabBar';
@@ -59,20 +60,26 @@ const styles = StyleSheet.create({
     marginTop: 32,
     marginBottom: 16,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
 });
 
 // RN 0.81 + New Architecture で tintColor がマウント時に無視されるバグの回避用遅延(ms)
 // https://github.com/facebook/react-native/issues/53987
 const REFRESH_TINT_DELAY_MS = 500;
 
-const NearbyStationLoader = () => (
-  <SkeletonPlaceholder borderRadius={4} speed={1500}>
-    <SkeletonPlaceholder.Item width="100%" height={72} />
-  </SkeletonPlaceholder>
-);
+const NearbyStationLoader = () => {
+  const colors = useAppColors();
+
+  return (
+    <SkeletonPlaceholder
+      borderRadius={4}
+      speed={1500}
+      backgroundColor={colors.skeletonBackground}
+      highlightColor={colors.skeletonHighlight}
+    >
+      <SkeletonPlaceholder.Item width="100%" height={72} />
+    </SkeletonPlaceholder>
+  );
+};
 
 // 副作用のみのフックは画面本体ではなくレンダレスコンポーネントに寄せる(docs/state-management.md)
 const FxPresetsWidgetSync: React.FC<
@@ -126,6 +133,7 @@ const SelectLineScreen = () => {
   const pendingQuickActionRouteId = useAtomValue(pendingQuickActionRouteIdAtom);
   const setNavigationState = useSetAtom(navigationState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   // --- クイックアクションからのプリセット選択 ---
@@ -152,10 +160,10 @@ const SelectLineScreen = () => {
   >();
   useEffect(() => {
     const timer = setTimeout(() => {
-      setRefreshTintColor(isLEDTheme ? '#fff' : undefined);
+      setRefreshTintColor(isLEDTheme || colors.isDark ? '#fff' : undefined);
     }, REFRESH_TINT_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [isLEDTheme]);
+  }, [colors.isDark, isLEDTheme]);
 
   // --- 派生値 ---
   const footerHeight = useFooterHeight();
@@ -234,11 +242,7 @@ const SelectLineScreen = () => {
   const renderLineCard = useCallback(
     (line: Line, index: number) => {
       if (fetchStationsByLineIdLoading) {
-        return (
-          <SkeletonPlaceholder borderRadius={4} speed={1500}>
-            <SkeletonPlaceholder.Item width="100%" height={72} />
-          </SkeletonPlaceholder>
-        );
+        return <NearbyStationLoader />;
       }
 
       return (
@@ -315,7 +319,12 @@ const SelectLineScreen = () => {
         routes={routes}
         isRoutesDBInitialized={isRoutesDBInitialized}
       />
-      <SafeAreaView style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <SafeAreaView
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.ScrollView
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}

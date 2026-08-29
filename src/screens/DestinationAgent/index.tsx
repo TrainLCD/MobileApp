@@ -33,6 +33,7 @@ import { useDestinationSelection } from '~/hooks/useDestinationSelection';
 import { useKeyboardBottomInset } from '~/hooks/useKeyboardBottomInset';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { GET_STATIONS_BY_IDS } from '~/lib/graphql/queries';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { stationAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -45,6 +46,7 @@ import { AgentHeader } from './AgentHeader';
 import { AgentInputBar } from './AgentInputBar';
 import { AgentMessageBubble } from './AgentMessageBubble';
 import { AgentTypingIndicator } from './AgentTypingIndicator';
+import { getAgentColors } from './agentColors';
 
 type GetStationsByIdsData = {
   stations: Station[];
@@ -82,9 +84,6 @@ const TABLET_CONTENT_MAX_WIDTH = 700;
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  },
-  bg: {
-    backgroundColor: '#FAFAFA',
   },
   ledBg: {
     backgroundColor: '#212121',
@@ -125,16 +124,12 @@ const styles = StyleSheet.create({
   },
   retryText: {
     fontSize: 14,
-    color: '#008ffe',
   },
   disclaimer: {
     fontSize: 12,
     textAlign: 'center',
     paddingHorizontal: 24,
     marginBottom: 12,
-  },
-  disclaimerColor: {
-    color: '#737373',
   },
   disclaimerLEDColor: {
     color: '#ccc',
@@ -154,10 +149,22 @@ const SAFE_AREA_EDGES = ['top', 'left', 'right'] as const;
 const DestinationAgentScreen = () => {
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const station = useAtomValue(stationAtom);
 
   const [entries, setEntries] = useState<ChatEntry[]>([]);
   const [inputText, setInputText] = useState('');
+  // 入力欄は非制御なので、setInputText の更新関数の外から現在値を読めるよう
+  // ref にも持つ。送信失敗時に「下書きがあるか」を判定するのに使う
+  const inputTextRef = useRef('');
+  // 入力欄は値を書き戻さない非制御入力なので、親から中身を変えるときは
+  // ref.clear() を使い、空にできない場合だけこの key を変えて作り直す
+  const [inputResetKey, setInputResetKey] = useState(0);
+
+  const handleInputChange = useCallback((text: string) => {
+    inputTextRef.current = text;
+    setInputText(text);
+  }, []);
   const [sending, setSending] = useState(false);
   // tool イベント受信中(駅検索の tool use ループ中)であることを示すフラグ。
   // 最初の delta が届くか応答が確定した時点で降ろす
@@ -300,6 +307,10 @@ const DestinationAgentScreen = () => {
       setSending(true);
       setSearching(false);
       setInputText('');
+      inputTextRef.current = '';
+      // 入力欄自身が値を持つので、表示は明示的に消す。key を変えないのは
+      // 送信後もキーボードと焦点を保って続けて質問できるようにするため
+      inputRef.current?.clear();
       const conversationGen = conversationGenRef.current;
       // 検索中文言の読み上げは 1 送信につき 1 回だけ(tool イベントは複数回届きうる)
       let searchingAnnounced = false;
@@ -419,8 +430,15 @@ const DestinationAgentScreen = () => {
           (entry) => entry.id !== userEntry.id && entry.id !== streamingEntry.id
         )
       );
-      // 送信待ちの間にユーザが入力し直していた場合はその内容を優先する
-      setInputText((prev) => (prev.length ? prev : text));
+      // 送信待ちの間にユーザが入力し直していた場合はその内容を優先する。
+      // 下書きがあるときは入力欄に手を触れない。作り直すと焦点と IME セッションが
+      // 切れるため、戻す文字列が要らない場合は key を変えないこと
+      if (!inputTextRef.current.length) {
+        setInputText(text);
+        inputTextRef.current = text;
+        // 空でない文字列は ref では戻せないため、入力欄を作り直して表示を合わせる
+        setInputResetKey((n) => n + 1);
+      }
       showToast({
         type: 'error',
         text1: translate('errorTitle'),
@@ -444,6 +462,8 @@ const DestinationAgentScreen = () => {
             setEntries([]);
             setSuggestionStates({});
             setInputText('');
+            inputTextRef.current = '';
+            inputRef.current?.clear();
             setRateLimited(false);
           },
         },
@@ -473,6 +493,8 @@ const DestinationAgentScreen = () => {
                 key={`${entry.id}-${suggestion.stationId}`}
                 borderRadius={isLEDTheme ? 0 : 8}
                 speed={1500}
+                backgroundColor={colors.skeletonBackground}
+                highlightColor={colors.skeletonHighlight}
               >
                 <SkeletonPlaceholder.Item
                   width="100%"
@@ -502,7 +524,7 @@ const DestinationAgentScreen = () => {
                 }
               }}
             >
-              <Typography style={styles.retryText}>
+              <Typography style={[styles.retryText, { color: colors.accent }]}>
                 {translate('destinationAgentRetry')}
               </Typography>
             </TouchableOpacity>
@@ -549,6 +571,9 @@ const DestinationAgentScreen = () => {
       isLEDTheme,
       resolveSuggestions,
       handleDestinationSelected,
+      colors.accent,
+      colors.skeletonBackground,
+      colors.skeletonHighlight,
     ]
   );
 
@@ -559,7 +584,10 @@ const DestinationAgentScreen = () => {
 
   return (
     <SafeAreaView
-      style={[styles.root, isLEDTheme ? styles.ledBg : styles.bg]}
+      style={[
+        styles.root,
+        isLEDTheme ? styles.ledBg : { backgroundColor: colors.background },
+      ]}
       // 下端は入力バー側でキーボード / 安全領域に応じた余白を確保するため除外する
       edges={SAFE_AREA_EDGES}
     >
@@ -634,7 +662,9 @@ const DestinationAgentScreen = () => {
             <Typography
               style={[
                 styles.disclaimer,
-                isLEDTheme ? styles.disclaimerLEDColor : styles.disclaimerColor,
+                isLEDTheme
+                  ? styles.disclaimerLEDColor
+                  : { color: getAgentColors(colors.isDark).mutedText },
               ]}
             >
               {translate('destinationAgentDisclaimer')}
@@ -650,8 +680,9 @@ const DestinationAgentScreen = () => {
           ]}
         >
           <AgentInputBar
+            key={inputResetKey}
             value={inputText}
-            onChangeText={setInputText}
+            onChangeText={handleInputChange}
             onSend={() => handleSend(inputText)}
             sending={sending}
             rateLimited={rateLimited}

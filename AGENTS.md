@@ -5,7 +5,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 ## Operating Principles for Automation Agents
 
 - **Honor instruction priority:** repository owners & maintainers → latest task prompt → this handbook → other documentation. Surface conflicting requirements immediately.
-- **Preserve the working tree:** operate on the current snapshot, never discard user changes, and avoid destructive commands (`git reset --hard`, `git clean -fd`, etc.).
+- **Preserve the working copy:** operate on the current snapshot, never discard user changes, and avoid destructive commands (`jj abandon`, a bare `jj restore`, and any `git reset --hard` / `git clean -fd`). `jj op restore` rewinds the whole repository, so it is **forbidden as a normal operation** — it is available for recovery only, and only with the user's explicit approval of that specific rollback. See [Version Control (Jujutsu)](#version-control-jujutsu).
 - **Favor minimal, auditable diffs:** prefer additive edits, keep formatting deterministic, and annotate non-obvious changes with concise comments.
 - **Document reproducibility:** record every manual command you execute and note any local assumptions about environment variables or credentials.
 - **Validate assumptions proactively:** confirm tool versions, workflow expectations, and environment needs instead of relying on cached knowledge.
@@ -45,7 +45,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - `utils/`: developer tooling scripts such as GraphQL codegen config.
 - `android/`, `ios/`: native projects.
 
-> The Cloudflare Workers backend (TTS, session issuance, feedback triage via Workers AI, review notifiers) has been moved out of this repository into [TrainLCD/functions](https://github.com/TrainLCD/functions); the GraphQL BFF lives separately in [TrainLCD/BFF](https://github.com/TrainLCD/BFF). The former `functions/` directory no longer lives here.
+> The Cloudflare Workers backend (TTS, session issuance, feedback triage via Workers AI, review notifiers, the AI destination agent) has been moved out of this repository into [TrainLCD/functions](https://github.com/TrainLCD/functions); the former `functions/` directory no longer lives here. The GraphQL API that `src/lib/gql.ts` talks to (`gql.trainlcd.app` / `gql-stg.trainlcd.app`) is served directly by [TrainLCD/StationAPI](https://github.com/TrainLCD/StationAPI), so schema and resolver changes belong there. The GraphQL BFF that used to sit in front of it has been retired and [TrainLCD/BFF](https://github.com/TrainLCD/BFF) is archived — do not send anyone there.
 
 ## Tooling & Environment Expectations
 
@@ -104,9 +104,47 @@ This handbook defines how automation agents collaborate safely and effectively o
 - For integration flows, extend `src/test/e2e.ts` and prefer fixtures from `src/__fixtures__/`.
 - When modifying behavior, update or add tests in the same change set; document skipped tests with TODOs and owner rationale.
 
+## Version Control (Jujutsu)
+
+This repository is managed with **Jujutsu (`jj`)** in a colocated layout: `.jj/` and `.git/` sit side by side, so GitHub, `gh`, and CI keep seeing an ordinary Git repository. **Agents drive version control through `jj`, not `git`.**
+
+- **Never run Git commands that move `HEAD`, the index, or the working copy** — `git switch`, `git checkout`, `git commit`, `git merge`, `git rebase`, `git reset`, `git stash`, `git branch`. In a colocated repo they leave jj's working copy and Git's `HEAD` out of step, and the damage usually surfaces later as a conflict nobody can explain.
+- **The only sanctioned Git commands are annotated-tag creation and push** (`git tag -a` / `git push origin <tag>`): `jj tag set` can create lightweight tags only, while the release workflow on GitHub Actions creates annotated ones, and letting the tag type depend on which path ran is a release-metadata hazard. `.claude/skills/publish-release/SKILL.md` records the reasoning.
+- **Server-side writes through the GitHub API are a narrow, named exception — not a general escape hatch.** `.claude/skills/create-pr/SKILL.md` uploads PR screenshots to the orphan branch `assets/pr-screenshots` using the Contents and Git Data APIs. This is permitted because it touches no local state — no working copy, no index, no `HEAD`, no `.jj` — so it cannot desync the colocated repo, which is the hazard the rules above exist to prevent. The exception holds only while **all** of these are true: the target branch carries assets and no application code; it is never merged into `dev` or `master`; published paths are content-addressed, immutable, and never overwritten; and the user approves the write beforehand. Any write to a branch that carries application code still goes through jj.
+- **Steps under `.github/workflows/` stay on Git.** Runners have `git`, not `jj`; do not convert workflow steps to `jj`.
+- **jj snapshots the entire working copy on every command**, including files Git would have left untracked. There is no staging area to act as a filter, so run `jj status` and actually read the list before `jj commit`. Use `jj commit <path>...` when only part of the diff belongs in the commit; the rest stays in the new `@`.
+- **Bookmarks are not branches.** A `jj bookmark` does not advance when you create a new commit. After committing, point it at the commit explicitly (`jj bookmark set <name> -r @-`) before pushing, or the push sends stale history.
+- **`jj git push` has no `--force`.** It applies a `git push --force-with-lease`-equivalent safety check. If a push is rejected, run `jj git fetch` and re-examine the state instead of reaching for guard-removing flags such as `--ignore-immutable`.
+- Recovery is `jj undo` (undoes the last operation) and, for anything further back, `jj op log` to inspect followed by `jj op restore`. **`jj op restore` rewinds the entire repository state, so never run it on your own initiative** — show the user the `jj op log` entry you intend to restore to and get explicit approval for that rollback first. Reversibility is not a licence to run destructive commands in the first place.
+- The repo config defines `trunk()` as `dev@origin`, so `jj log` and revsets can use `trunk()` wherever `dev@origin` is meant.
+
+Command mapping — the skills under `.claude/skills/` follow this table:
+
+| Git | jj |
+| ---- | ---- |
+| `git status` | `jj status` |
+| `git add ...` + `git commit -m "..."` | `jj commit -m "..."`（staging なし。パス限定は `jj commit <path>... -m "..."`） |
+| `git switch -c <branch>` | `jj new <base>` → 作業 → `jj commit -m "..."` → `jj bookmark create <name> -r @-` |
+| `git switch <branch>` | `jj new <bookmark>`（その上で作業）/ `jj edit <rev>`（そのコミットを編集） |
+| `git fetch origin --tags` | `jj git fetch`（bookmark と tag の両方を取り込む） |
+| `git pull --ff-only origin dev` | `jj git fetch`（追跡中のローカル bookmark はこれで追従する） |
+| `git push -u origin <branch>` | `jj git push --bookmark <name>`（新規 bookmark も自動で追跡される） |
+| `git push origin --delete <branch>` | `jj bookmark delete <name>` → `jj git push --bookmark <name>` |
+| `origin/dev` などのリモート参照 | `dev@origin` |
+| `git log --oneline A..B` | `jj log -r 'A..B' --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'` |
+| `git log --pretty='- %s' A..B` | `jj log -r 'A..B' --no-graph -T '"- " ++ description.first_line() ++ "\n"'` |
+| `git diff --name-only A..B` | `jj diff --name-only --from A --to B` |
+| `git show <rev>:<path>` | `jj file show -r <rev> <path>` |
+| `git rev-parse <rev>` | `jj log -r <rev> --no-graph -T 'commit_id'` |
+| `git rev-parse --show-toplevel` | `jj workspace root` |
+| `git merge --no-ff <rev>` | `jj new <target> <rev> -m "..."`（マージコミットは即座に作られ、未解決の衝突はコミット内に記録される） |
+| `git checkout --ours <paths>` | `jj restore --from <rev> <paths>` |
+| `git merge-base --is-ancestor A B` | `jj log -r 'A & ::B'` の出力が空でないこと |
+| `git stash` | 不要（`@` をそのまま残し `jj new <base>` で別作業へ移る） |
+
 ## Commit & Pull Request Protocol
 
-- Follow git-flow for every working branch: create `feature/*`, `fix/*`, and `release/*` branches from `dev`, and reserve `hotfix/*` from `master` for urgent production fixes. Do not create tool-specific prefixes such as `agent/*`.
+- Follow git-flow naming for every working bookmark: create `feature/*`, `fix/*`, and `release/*` bookmarks from `dev@origin`, and reserve `hotfix/*` from `master@origin` for urgent production fixes. Do not create tool-specific prefixes such as `agent/*`. A bookmark is created with `jj bookmark create <name> -r @-` once the commit exists — see [Version Control (Jujutsu)](#version-control-jujutsu).
 - Commit messages must be single-sentence statements in Japanese (e.g., `テレメトリー送信機をリファクタリングしてnull状態を回避`); prefix production hot fixes with `Hotfix:`.
 - Keep commits logically scoped (implementation, tests, docs) and mention generated artifacts in the description.
 - Pull requests must follow `.github/pull_request_template.md`; do not add or remove sections from the template without maintainer approval.
@@ -118,10 +156,10 @@ This handbook defines how automation agents collaborate safely and effectively o
   - Regression risk assessment and mitigation.
   - Commands executed locally (e.g., `npm run lint && npm test && npm run typecheck`).
   - Linked issues or tickets.
-  - Screenshots or recordings for UI/UX deltas with device names (e.g., Pixel 8, iPhone 15 Pro).
+  - Visual evidence for UI/UX deltas, each labeled with where the image came from. Any method is acceptable — a device or simulator capture (label it with the device name, e.g., Pixel 8, iPhone 15 Pro), a React Native Web rendering (`npm run web`), or a mockup / generated image. An image that is not a rendering of the implementation must say so in its label, so a reviewer never mistakes an illustration for observed behavior. If no image is attached, state the reason in that section instead of leaving it blank.
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
-- **Keep PR metadata in sync with the branch state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
-  - **Title**: re-evaluate whether the current title still describes the full scope of the branch. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
+- **Keep PR metadata in sync with the bookmark state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
+  - **Title**: re-evaluate whether the current title still describes the full scope of the bookmark. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
   - **Body**: update the `変更の種類` checkboxes, the `変更内容` summary, and the test-result section so they reflect the updated diff. Preserve human-authored prose sections (`概要`, narrative added under `変更内容`, `関連Issue`, `スクリーンショット`) unless the changes invalidate them.
 
 ## Security & Configuration Guardrails
@@ -139,7 +177,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - [ ] Update or add tests relevant to code changes.
 - [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
 - [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
-- [ ] Capture screenshots/video for UI changes with device labels.
+- [ ] Attach visual evidence for UI changes, each labeled with its source (device name, React Native Web, or an explicit 'not a rendering of the implementation' note for mockups); when no image is attached, state why instead of leaving the section blank.
 
 **For documentation-only tasks**
 

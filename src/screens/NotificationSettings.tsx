@@ -12,6 +12,7 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import notifyState from '~/store/atoms/notify';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -24,9 +25,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
 });
 
 const NotificationSettingsScreen: React.FC = () => {
@@ -34,6 +32,7 @@ const NotificationSettingsScreen: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const [{ wrongDirectionNotifyEnabled }, setNotifyState] =
     useAtom(notifyState);
 
@@ -64,7 +63,12 @@ const NotificationSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.ScrollView
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -85,7 +89,7 @@ const NotificationSettingsScreen: React.FC = () => {
               justifyContent: 'center',
               paddingHorizontal: 24,
               paddingVertical: 16,
-              backgroundColor: isLEDTheme ? '#333' : 'white',
+              backgroundColor: isLEDTheme ? '#333' : colors.card,
               borderRadius: isLEDTheme ? 0 : 12,
             }}
           >
@@ -98,7 +102,7 @@ const NotificationSettingsScreen: React.FC = () => {
             style={{
               marginTop: 16,
               textAlign: 'center',
-              color: '#8B8B8B',
+              color: colors.secondaryText,
             }}
           >
             {translate('wrongDirectionNotifyDescription')}

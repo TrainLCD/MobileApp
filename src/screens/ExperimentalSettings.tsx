@@ -12,6 +12,7 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
@@ -25,12 +26,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     flex: 1,
   },
-  screenBg: {
-    backgroundColor: '#FAFAFA',
-  },
   description: {
     marginTop: 16,
-    color: '#8B8B8B',
     lineHeight: 21,
   },
   toggleSpacer: {
@@ -39,7 +36,6 @@ const styles = StyleSheet.create({
   notice: {
     marginTop: 32,
     textAlign: 'center',
-    color: '#8B8B8B',
   },
   okButton: {
     width: 128,
@@ -60,6 +56,7 @@ const ToggleItem = ({
   disabled?: boolean;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
 
   return (
     <Pressable
@@ -73,7 +70,7 @@ const ToggleItem = ({
         alignItems: 'center',
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: isLEDTheme ? '#333' : 'white',
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
         borderRadius: isLEDTheme ? 0 : 12,
         // Remote Config で許可されていない等、操作不可のときは淡色にして無効を示す。
         opacity: disabled ? 0.4 : 1,
@@ -94,6 +91,7 @@ const ExperimentalSettingsScreen: React.FC = () => {
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
   const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
     portraitModeEnabledAtom
   );
@@ -149,7 +147,12 @@ const ExperimentalSettingsScreen: React.FC = () => {
 
   return (
     <>
-      <View style={[styles.root, !isLEDTheme && styles.screenBg]}>
+      <View
+        style={[
+          styles.root,
+          !isLEDTheme && { backgroundColor: colors.background },
+        ]}
+      >
         <RNAnimated.ScrollView
           contentContainerStyle={
             headerHeight
@@ -164,7 +167,9 @@ const ExperimentalSettingsScreen: React.FC = () => {
             state={portraitModeEnabled}
             onToggle={handleTogglePortraitMode}
           />
-          <Typography style={styles.description}>
+          <Typography
+            style={[styles.description, { color: colors.secondaryText }]}
+          >
             {translate('portraitModeDescription')}
           </Typography>
           <View style={styles.toggleSpacer}>
@@ -174,7 +179,9 @@ const ExperimentalSettingsScreen: React.FC = () => {
               onToggle={handleToggleTelemetry}
             />
           </View>
-          <Typography style={styles.description}>
+          <Typography
+            style={[styles.description, { color: colors.secondaryText }]}
+          >
             {translate('telemetryDescription')}
           </Typography>
           <View style={styles.toggleSpacer}>
@@ -184,10 +191,12 @@ const ExperimentalSettingsScreen: React.FC = () => {
               onToggle={handleToggleUntouchableMode}
             />
           </View>
-          <Typography style={styles.description}>
+          <Typography
+            style={[styles.description, { color: colors.secondaryText }]}
+          >
             {translate('untouchableModeDescription')}
           </Typography>
-          <Typography style={styles.notice}>
+          <Typography style={[styles.notice, { color: colors.secondaryText }]}>
             {translate('experimentalSettingsNotice')}
           </Typography>
           <Button

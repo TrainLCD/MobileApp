@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { appColorsAtom } from '~/store/atoms/colorScheme';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import {
@@ -63,12 +64,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     boxShadow: '0px 0px 8px rgba(51, 51, 51, 0.25)',
     borderWidth: 1,
-    borderColor: '#008ffe',
   },
   trainTypeLabel: {
     fontSize: isTablet ? RFValue(12) : RFValue(14),
     fontWeight: 'bold',
-    color: '#008ffe',
     flex: 1,
     marginRight: 12,
   },
@@ -91,7 +90,6 @@ const styles = StyleSheet.create({
   trainTypeDisabledText: {
     fontSize: isTablet ? RFValue(12) : RFValue(14),
     fontWeight: 'bold',
-    color: '#008ffe',
   },
   heading: { width: '100%' },
 });
@@ -146,6 +144,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   onThemePress,
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAtomValue(appColorsAtom);
 
   const normalizedTrainTypeColor = useMemo(
     () => normalizeTrainTypeColor(trainTypeColor),
@@ -176,7 +175,7 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
       contentContainerStyle={[
         styles.contentView,
         {
-          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+          backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
           borderRadius: isLEDTheme ? 0 : 8,
         },
         isTablet && {
@@ -211,21 +210,31 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
               style={[
                 styles.trainTypeButton,
                 {
-                  backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+                  backgroundColor: isLEDTheme
+                    ? LED_THEME_BG_COLOR
+                    : colors.card,
+                  borderColor: colors.accent,
                   borderRadius: isLEDTheme ? 0 : 8,
                   opacity: trainTypeDisabled ? 0.5 : 1,
                 },
               ]}
             >
               {trainTypeDisabled ? (
-                <Typography style={styles.trainTypeDisabledText}>
+                <Typography
+                  style={[
+                    styles.trainTypeDisabledText,
+                    { color: colors.accent },
+                  ]}
+                >
                   {translate(
                     isBus ? 'busRoutesNotExist' : 'trainTypesNotExist'
                   )}
                 </Typography>
               ) : (
                 <>
-                  <Typography style={styles.trainTypeLabel}>
+                  <Typography
+                    style={[styles.trainTypeLabel, { color: colors.accent }]}
+                  >
                     {translate(isBus ? 'busRoute' : 'trainType')}
                   </Typography>
                   <View
@@ -264,12 +273,17 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
               style={[
                 styles.trainTypeButton,
                 {
-                  backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : '#fff',
+                  backgroundColor: isLEDTheme
+                    ? LED_THEME_BG_COLOR
+                    : colors.card,
+                  borderColor: colors.accent,
                   borderRadius: isLEDTheme ? 0 : 8,
                 },
               ]}
             >
-              <Typography style={styles.trainTypeLabel}>
+              <Typography
+                style={[styles.trainTypeLabel, { color: colors.accent }]}
+              >
                 {translate('theme')}
               </Typography>
               <View
@@ -304,14 +318,14 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
         {Platform.OS === 'ios' && !isLEDTheme ? (
           <BlurView
             intensity={80}
-            tint="light"
+            tint={colors.blurTint}
             style={StyleSheet.absoluteFill}
           />
         ) : Platform.OS === 'android' && !isLEDTheme ? (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: 'rgba(255,255,255,0.92)' },
+              { backgroundColor: colors.modalHeaderBackground },
             ]}
           />
         ) : null}
