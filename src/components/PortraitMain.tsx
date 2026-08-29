@@ -966,6 +966,13 @@ const PortraitMain: React.FC = () => {
     [stops, currentStation]
   );
 
+  // 終点に到達したあと到着判定が外れると、arrived が false のまま現在駅は最終駅に
+  // 留まる(!arrived の間 useRefreshStation は現在駅を進めない)。素直に次駅へ進めると
+  // markerRowIndex が範囲外になり、列車ピンが消えて全行が発車済みの淡色になってしまう。
+  // 最終駅より先へは進めないので、その駅に停車しているものとして描く。
+  const atLastStation = currentIndex >= 0 && currentIndex === stops.length - 1;
+  const stoppedHere = arrived || atLastStation;
+
   // 強調する停車駅。停車中は現在駅(停車駅)、発車後・通過中は次の停車駅。
   const currentStopIndex = useMemo(
     () =>
@@ -973,21 +980,21 @@ const PortraitMain: React.FC = () => {
         if (i < currentIndex) {
           return false;
         }
-        if (i === currentIndex && !arrived) {
+        if (i === currentIndex && !stoppedHere) {
           return false;
         }
         return !getIsPass(s);
       }),
-    [stops, currentIndex, arrived]
+    [stops, currentIndex, stoppedHere]
   );
 
   // カード脇の注記に使う「次の停車駅」の位置。
   const nextStopIndex = useMemo(() => {
-    if (!arrived) {
+    if (!stoppedHere) {
       return currentStopIndex;
     }
     return stops.findIndex((s, i) => i > currentIndex && !getIsPass(s));
-  }, [stops, currentIndex, currentStopIndex, arrived]);
+  }, [stops, currentIndex, currentStopIndex, stoppedHere]);
 
   // カード脇の注記。停車中は「つぎ ◯◯」で次にどこへ向かうかを示す。走行中は
   // カードが既に次の停車駅を出しているので同じことは書かず、そこへ着くまでに
@@ -1001,7 +1008,7 @@ const PortraitMain: React.FC = () => {
     if (nextStopIndex < 0) {
       return null;
     }
-    if (arrived) {
+    if (stoppedHere) {
       const next = stops[nextStopIndex];
       return next
         ? translate('portraitNextStop', { station: label(next) })
@@ -1017,16 +1024,19 @@ const PortraitMain: React.FC = () => {
           station: label(passing[0]),
           count: passing.length - 1,
         });
-  }, [stops, currentIndex, nextStopIndex, arrived]);
+  }, [stops, currentIndex, nextStopIndex, stoppedHere]);
 
   // 列車位置のピン(進行方向=下向き)。停車中は現在駅のドット直上、
   // 発車後は現在駅と次駅の境目=発車済みの色が切り替わる位置(次駅行の上端)に出す。
-  const markerRowIndex = arrived ? currentIndex : currentIndex + 1;
-  const markerPosition: MarkerPosition = arrived ? 'above-dot' : 'segment-top';
+  const markerRowIndex = stoppedHere ? currentIndex : currentIndex + 1;
+  const markerPosition: MarkerPosition = stoppedHere
+    ? 'above-dot'
+    : 'segment-top';
 
-  // 走行中(!arrived)または通過中(現在駅が通過駅)はピンを上下にバウンスさせて
+  // 走行中または通過中(現在駅が通過駅)はピンを上下にバウンスさせて
   // 停車中との違いを示す。
-  const markerMoving = !arrived || getIsPass(stops[currentIndex] ?? undefined);
+  const markerMoving =
+    !stoppedHere || getIsPass(stops[currentIndex] ?? undefined);
 
   // rowYs は各行の上端 y を記録する(onLayout は行のレイアウト時にしか発火しないので、
   // currentIndex 変更でコールバックが別行に移っても再取得できない。全行を記録して

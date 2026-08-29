@@ -528,6 +528,31 @@ describe('PortraitMain', () => {
     expect(getByText('portraitPassThrough')).toBeTruthy();
   });
 
+  it('最終駅を発車済み扱いのまま留まってもピンが消えず全行が淡色にならない', () => {
+    // arrived が false の間 useRefreshStation は現在駅を進めないため、終点に着いた
+    // あと到着判定が外れると「最終駅にいて未到着」という状態が続く。素直に次駅へ
+    // 進めるとピンが範囲外へ出て、全行が発車済みの淡色になってしまう。
+    const { getByTestId } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+      ],
+      {
+        arrived: false,
+        currentStation: buildStation(2, '田町', StopCondition.All),
+      }
+    );
+
+    // 列車ピンは最終駅の行に残る
+    expect(
+      within(getByTestId('stop-row-2')).getByTestId('train-chevron')
+    ).toBeTruthy();
+    // 最終駅の行は発車済みの淡色にしない
+    expect(
+      StyleSheet.flatten(getByTestId('stop-body-2').props.style).opacity
+    ).toBeUndefined();
+  });
+
   it('通過駅のない路線では走行中の注記を出さない', () => {
     const { queryByTestId } = renderWithStations(
       [
