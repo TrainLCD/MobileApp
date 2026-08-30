@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
+import { toRelativeEtaStops } from '~/utils/relativeEtaStops';
 import { leftStationsAtom } from '../store/atoms/navigation';
 import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
@@ -9,6 +10,9 @@ import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
  * ここでは表示都合の整形だけを行う薄いラッパー。
  * 返す route.stops は LineBoard に表示中の駅（leftStations）に限定し、
  * 現在駅の到着時刻を基準（0分）とした相対時間に変換する。
+ *
+ * 全駅ぶんの ETA が要る画面(ポートレート)は leftStations で絞られると大半の駅が
+ * 欠けるため、絞り込みを持たない useEstimateArrivalTimesAllStops を使う。
  */
 export const useEstimateArrivalTimes = (options?: { skip?: boolean }) => {
   const leftStations = useAtomValue(leftStationsAtom);
@@ -25,39 +29,14 @@ export const useEstimateArrivalTimes = (options?: { skip?: boolean }) => {
       return null;
     }
 
-    const allStops = route.stops ?? [];
-
-    // 大江戸線の都庁前のように、環状区間(6の字運転)では同じ駅が全stops中に
-    // 複数回出現する。ただしこれらは stationGroupId(同一駅を束ねる論理グループ)
-    // こそ共通だが、stationId は出現ごとに別々に採番されている(例: 都庁前の
-    // 外回り/内回りはそれぞれ別の stationId を持つ)。そのため stationGroupId
-    // で突き合わせると無関係な出現まで拾ってしまうが、stationId なら出現ごとに
-    // 一意なので誤って混同することがない。
-    const baseMinutes =
-      allStops.find((s) => s.stationId === currentStation?.id)
-        ?.departureCumulativeMinutes ?? 0;
-
     const visibleStationIds = new Set(leftStations.map((ls) => ls.id));
 
-    // 現在駅自身は cumulativeMinutes - baseMinutes が0以下になり通常は下のfilterで
-    // 除外されるが、区間内に現在駅のエントリが見つからずbaseMinutesが0に
-    // フォールバックするケースでは生の値が残ってしまう。停車中の駅にはETAを出さない
-    // という表示上の不変条件を計算結果に依存せず保証するため、ここで明示的に除く。
-    const relativeStops = allStops
-      .filter(
-        (s) =>
-          s.stationId != null &&
-          visibleStationIds.has(s.stationId) &&
-          s.stationId !== currentStation?.id
-      )
-      .map((s) => ({
-        ...s,
-        cumulativeMinutes:
-          s.cumulativeMinutes == null
-            ? null
-            : s.cumulativeMinutes - baseMinutes,
-      }))
-      .filter((s) => s.cumulativeMinutes == null || s.cumulativeMinutes > 0);
+    // 相対値への変換は全 stops を見てから行う。先に leftStations で絞ると、
+    // 表示区間の外に出た現在駅を見失って基準が 0 にフォールバックしてしまう。
+    const relativeStops = toRelativeEtaStops(
+      route.stops ?? [],
+      currentStation?.id
+    ).filter((s) => s.stationId != null && visibleStationIds.has(s.stationId));
 
     return { ...route, stops: relativeStops };
   }, [route, leftStations, currentStation?.id]);

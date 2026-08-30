@@ -302,6 +302,8 @@
   "portraitNextStop": "Next %{station}",
   "portraitNextStopFrom": "After %{current}: %{station}",
   "portraitPassThrough": "Passing %{station}",
+  "portraitEtaUnit": "min.",
+  "portraitEtaSoon": "Soon",
   "telemetryDescription": "Your device's geographic coordinates are sent to our analytics server. The information is used only for analytics.",
   "batterySettings": "Battery",
   "powerSavingLocationTitle": "Power-saving location mode",
