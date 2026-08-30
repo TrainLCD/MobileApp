@@ -996,34 +996,37 @@ const PortraitMain: React.FC = () => {
     return stops.findIndex((s, i) => i > currentIndex && !getIsPass(s));
   }, [stops, currentIndex, currentStopIndex, stoppedHere]);
 
-  // カード脇の注記。停車中は「つぎ ◯◯」で次にどこへ向かうかを示す。走行中は
-  // カードが既に次の停車駅を出しているので同じことは書かず、そこへ着くまでに
-  // 通過する駅を示す。通過駅がない路線では何も出さない。
+  // カード脇の注記。いま最寄りにしている駅が通過駅なら「◯◯を通過中」でその駅を
+  // 出す(カードは次の停車駅を出しているので、通過駅の名前はここにしか出ない)。
+  // 停車中は「◯◯のつぎは△△」で、どの駅を起点にした次なのかを明示する
+  // (「つぎ △△」だけでは現在駅の次か、カードが出している駅の次かが読み取れない)。
+  // 停車駅を発車して次の停車駅へ向かっている間はカードと同じことしか書けないので
+  // 何も出さない。
   const cardMetaText = useMemo(() => {
     const label = (station: Station): string =>
       isJapanese
         ? (station.name ?? '')
         : (station.nameRoman ?? station.name ?? '');
 
-    if (nextStopIndex < 0) {
+    const here = stops[currentIndex];
+    if (here && getIsPass(here)) {
+      return translate('portraitPassThrough', { station: label(here) });
+    }
+
+    if (!stoppedHere || nextStopIndex < 0) {
       return null;
     }
-    if (stoppedHere) {
-      const next = stops[nextStopIndex];
-      return next
-        ? translate('portraitNextStop', { station: label(next) })
-        : null;
-    }
-    const passing = stops.slice(currentIndex + 1, nextStopIndex);
-    if (!passing.length) {
+    const next = stops[nextStopIndex];
+    if (!next) {
       return null;
     }
-    return passing.length === 1
-      ? translate('portraitPassThrough', { station: label(passing[0]) })
-      : translate('portraitPassThroughMore', {
-          station: label(passing[0]),
-          count: passing.length - 1,
-        });
+    // 現在駅が路線内に見つからないときは起点を書きようがないので従来表記に落とす。
+    return here
+      ? translate('portraitNextStopFrom', {
+          current: label(here),
+          station: label(next),
+        })
+      : translate('portraitNextStop', { station: label(next) });
   }, [stops, currentIndex, nextStopIndex, stoppedHere]);
 
   // 列車位置のピン(進行方向=下向き)。停車中は現在駅のドット直上、
@@ -1138,8 +1141,11 @@ const PortraitMain: React.FC = () => {
             style={[styles.cardHeadRule, { backgroundColor: colors.border }]}
           />
           {cardMetaText ? (
+            // 起点と次駅の駅名が両方入るため、長い駅名同士だと1行に収まらない
+            // ことがある。末尾を削ると肝心の次駅が消えるので先頭側を省略する。
             <Typography
               numberOfLines={1}
+              ellipsizeMode="head"
               testID="portrait-card-meta"
               style={[styles.cardHeadMeta, { color: passTextColor(colors) }]}
             >
