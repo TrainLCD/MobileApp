@@ -1370,7 +1370,13 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
     useEstimatedMinutesByStationId(estimatedRoute);
   // ETAが1駅も取れない路線(未取得・エラー・データなし)では列ごと出さない。
   // 全行に「--」が並び続けるより、右端を今までどおり空けておく方が素直。
-  const showEta = estimatedMinutesByStationId.size > 0;
+  // 件数ではなく実値の有無で見る。stops は揃っていても cumulativeMinutes が
+  // すべて null の応答があり、件数だけでは「--」だけの列を出してしまう。
+  const hasEta = useMemo(
+    () =>
+      Array.from(estimatedMinutesByStationId.values()).some((m) => m != null),
+    [estimatedMinutesByStationId]
+  );
 
   const lineColor = currentLine?.color ?? FALLBACK_ACCENT;
   const accentColor = useMemo(
@@ -1739,7 +1745,10 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
                   markerMoving={markerMoving}
                   fallbackLineColor={lineColor}
                   elevated={index === markerRowIndex}
-                  showEta={showEta}
+                  // 現在駅とそれより手前の駅は ETA を持たない(相対値が0以下に
+                  // なるので変換側で落ちる)。列を出すと「--」だけが並ぶので、
+                  // 現在駅より先の駅に限って出す。
+                  showEta={hasEta && index > currentIndex}
                   estimatedMinutes={
                     station.id != null
                       ? estimatedMinutesByStationId.get(station.id)

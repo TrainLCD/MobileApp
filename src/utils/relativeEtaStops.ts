@@ -28,9 +28,14 @@ export const toRelativeEtaStops = <T extends EtaStopLike>(
   // 別々に採番されている(例: 都営大江戸線 都庁前の外回り/内回りはそれぞれ別の
   // stationId を持つ)。そのため stationGroupId で突き合わせると無関係な出現まで
   // 拾ってしまうが、stationId なら出現ごとに一意なので誤って混同することがない。
+  // 現在駅が分からないときは探しに行かない。id 無しの stop は stationId が
+  // undefined になりうるので、undefined 同士で一致してしまい、無関係な stop の
+  // 出発時刻を基準に据えてしまう。
   const baseMinutes =
-    stops.find((s) => s.stationId === currentStationId)
-      ?.departureCumulativeMinutes ?? 0;
+    currentStationId == null
+      ? 0
+      : (stops.find((s) => s.stationId === currentStationId)
+          ?.departureCumulativeMinutes ?? 0);
 
   return stops
     .filter((s) => s.stationId != null && s.stationId !== currentStationId)

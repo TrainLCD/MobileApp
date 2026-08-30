@@ -50,6 +50,30 @@ describe('toRelativeEtaStops', () => {
     ]);
   });
 
+  it('現在駅が未確定のときは id 無しの stop を基準に取らない', () => {
+    // currentStationId が undefined だと stationId 未設定の stop と
+    // undefined 同士で一致してしまい、無関係な出発時刻が基準に入る。
+    const stops = [
+      {
+        stationId: undefined,
+        cumulativeMinutes: 4,
+        departureCumulativeMinutes: 30,
+      },
+      stop(2, 5),
+      stop(3, 12),
+    ];
+
+    expect(
+      toRelativeEtaStops(stops, undefined).map((s) => [
+        s.stationId,
+        s.cumulativeMinutes,
+      ])
+    ).toEqual([
+      [2, 5],
+      [3, 12],
+    ]);
+  });
+
   it('stationId が無い stop は除外する', () => {
     const stops = [stop(null, 5), stop(3, 12)];
 

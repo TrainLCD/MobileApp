@@ -681,6 +681,40 @@ describe('PortraitMain', () => {
       expect(queryByTestId('stop-eta-2')).toBeNull();
     });
 
+    it('停車中の駅と発車済みの駅には列を出さない', () => {
+      // これらの駅は相対値が0以下になり変換側で落ちるため、列を出すと
+      // 「--」だけが並ぶ。品川を発車済みなので品川・新橋には出さない。
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(
+        new Map([
+          [3, 4],
+          [4, 11],
+        ])
+      );
+
+      const { queryByTestId } = renderWithStations(etaStations(), {
+        arrived: false,
+      });
+
+      expect(queryByTestId('stop-eta-1')).toBeNull();
+      expect(queryByTestId('stop-eta-3')).toBeTruthy();
+    });
+
+    it('ETAの値がすべて null のときは列ごと出さない', () => {
+      // stops は揃っていても cumulativeMinutes が全部 null の応答がある。
+      // 件数だけで判定すると「--」だけの列が出てしまう。
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(
+        new Map<number, number | null>([
+          [3, null],
+          [4, null],
+        ])
+      );
+
+      const { queryByTestId } = renderWithStations(etaStations());
+
+      expect(queryByTestId('stop-eta-3')).toBeNull();
+      expect(queryByTestId('stop-eta-4')).toBeNull();
+    });
+
     it('ETAが1駅も取れないときは列ごと出さない', () => {
       // 全行に「--」が並び続けるより、右端を今までどおり空けておく
       mockedUseEstimatedMinutesByStationId.mockReturnValue(
