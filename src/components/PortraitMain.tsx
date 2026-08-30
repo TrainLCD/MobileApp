@@ -536,6 +536,10 @@ const styles = StyleSheet.create({
   transferListContent: {
     paddingTop: 10,
     paddingBottom: STOP_LIST_PADDING_V,
+  },
+  // rowGap は直接の子の間にしか入らない。行の親はタップ領域の Pressable なので、
+  // ここに置かないと路線と路線の間が空かない。
+  transferRows: {
     rowGap: TRANSFER_ROW_GAP,
   },
   transferRow: {
@@ -1095,6 +1099,7 @@ const PortraitTransfers = ({
         {/* 停車駅リストと同じ理由で、タップ領域は ScrollView の中に置く */}
         <Pressable
           testID="portrait-transfer-list-tap"
+          style={styles.transferRows}
           onPress={() => onPress?.()}
         >
           {lines.map((line, index) => {

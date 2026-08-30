@@ -746,8 +746,10 @@ describe('PortraitMain', () => {
         transferStation: shinjuku,
       });
 
+      // 行の直接の親はタップ領域の Pressable。ScrollView の
+      // contentContainerStyle に置いても行間には入らない。
       const style = StyleSheet.flatten(
-        getByTestId('portrait-transfer-list').props.contentContainerStyle
+        getByTestId('portrait-transfer-list-tap').props.style
       );
       expect(style.rowGap).toBeGreaterThan(0);
     });
