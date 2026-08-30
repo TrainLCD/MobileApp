@@ -13,6 +13,7 @@ import LineBoardEast from './LineBoardEast';
 import LineBoardJO from './LineBoardJO';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
 import LineBoardLED from './LineBoardLED';
+import LineBoardLowPower from './LineBoardLowPower';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardToei from './LineBoardToei';
 import LineBoardWest from './LineBoardWest';
@@ -133,6 +134,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         );
       case APP_THEME.LED:
         return <LineBoardLED />;
+      case APP_THEME.LOW_POWER:
+        return <LineBoardLowPower stations={slicedLeftStations} />;
       case APP_THEME.JO:
       case APP_THEME.JL:
         return (

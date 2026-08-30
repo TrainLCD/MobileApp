@@ -322,5 +322,13 @@
   "destinationAgentResetShort": "Reset",
   "destinationAgentResetConfirm": "Clear this conversation?",
   "destinationAgentSuggestionsError": "Failed to load suggestions",
-  "destinationAgentRetry": "Retry"
+  "destinationAgentRetry": "Retry",
+  "lowPowerTheme": "Lightweight",
+  "themeDescriptionLowPower": "An original theme with no animation that separates information by brightness alone. It stays readable on small screens and in monochrome.",
+  "arrivingIn": "到着まで",
+  "arrivingInEn": "Arriving in",
+  "stopped": "停車中",
+  "stoppedEn": "Stopped",
+  "transferShort": "のりかえ",
+  "transferShortEn": "Transfer"
 }

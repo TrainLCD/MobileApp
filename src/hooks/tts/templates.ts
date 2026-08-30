@@ -304,6 +304,7 @@ export const JA_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JL]: EMPTY_THEME,
   [APP_THEME.ODAKYU]: EMPTY_THEME,
   [APP_THEME.E231]: EMPTY_THEME,
+  [APP_THEME.LOW_POWER]: EMPTY_THEME,
 };
 
 export const EN_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
@@ -319,4 +320,5 @@ export const EN_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JL]: EMPTY_THEME,
   [APP_THEME.ODAKYU]: EMPTY_THEME,
   [APP_THEME.E231]: EMPTY_THEME,
+  [APP_THEME.LOW_POWER]: EMPTY_THEME,
 };
