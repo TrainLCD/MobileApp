@@ -40,7 +40,11 @@ jest.mock('react-native-safe-area-context', () => ({
   })),
 }));
 
-jest.mock('./NumberingIcon', () => () => null);
+const mockNumberingIcon = jest.fn();
+jest.mock('./NumberingIcon', () => (props: { lineColor: string }) => {
+  mockNumberingIcon(props);
+  return null;
+});
 
 jest.mock('~/hooks', () => ({
   useBoundText: jest.fn(() => ({ JA: '品川・大崎方面' })),
@@ -354,6 +358,17 @@ describe('PortraitMain', () => {
       StyleSheet.flatten(getByTestId('portrait-station-name-slot').props.style)
         .paddingLeft
     ).toBe(8);
+  });
+
+  it('ナンバリングには配色スキームで加工していない路線色をそのまま渡す', () => {
+    renderWithStations([buildStation(1, '品川', StopCondition.All, 'JY-25')], {
+      colorScheme: COLOR_SCHEME_PREFERENCE.DARK,
+    });
+
+    // ダークでも明度を持ち上げず、API 由来の路線色をそのまま描く
+    expect(mockNumberingIcon).toHaveBeenCalledWith(
+      expect.objectContaining({ lineColor: commonData.numberingColor })
+    );
   });
 
   it('現在駅にナンバリングがないときは枠を確保せず駅名表示に充てる', () => {
