@@ -6,15 +6,11 @@ import {
   useDisplayCurrentStation,
   useEstimateArrivalTimes,
   useEstimatedMinutesByStationId,
-  useLandscapeWindowDimensions,
+  useLowPowerLayout,
   useTransferLinesFromStation,
 } from '~/hooks';
 import { isEnAtom } from '~/store/selectors/isEn';
-import {
-  FONTS,
-  LOW_POWER_BASE_HEIGHT,
-  LOW_POWER_THEME_COLORS,
-} from '../constants';
+import { FONTS, LOW_POWER_THEME_COLORS } from '../constants';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { arrivedAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
@@ -215,7 +211,8 @@ export type Props = {
  * 動かない三角形ひとつで示す。
  */
 const LineBoardLowPower: React.FC<Props> = ({ stations }: Props) => {
-  const dim = useLandscapeWindowDimensions();
+  // ヘッダーと同じ実効領域から拡大率を起こし、外周にセーフエリアぶんの余白を足す
+  const { scale, insets } = useLowPowerLayout();
   const arrived = useAtomValue(arrivedAtom);
   const headerState = useAtomValue(headerStateAtom);
   const isEn = useAtomValue(isEnAtom);
@@ -223,8 +220,6 @@ const LineBoardLowPower: React.FC<Props> = ({ stations }: Props) => {
   const { route: estimatedRoute } = useEstimateArrivalTimes();
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
-
-  const scale = dim.height / LOW_POWER_BASE_HEIGHT;
 
   const metrics = useMemo<Metrics>(
     () => ({
@@ -286,12 +281,14 @@ const LineBoardLowPower: React.FC<Props> = ({ stations }: Props) => {
 
   return (
     <View
+      testID="low-power-line-board-root"
       style={{
         flex: 1,
         backgroundColor: background,
         paddingTop: 6 * scale,
-        paddingBottom: 4 * scale,
-        paddingHorizontal: 16 * scale,
+        paddingBottom: 4 * scale + insets.bottom,
+        paddingLeft: 16 * scale + insets.left,
+        paddingRight: 16 * scale + insets.right,
       }}
     >
       <View style={{ flex: 1 }}>
