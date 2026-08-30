@@ -13,9 +13,11 @@ import { memo, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
+  Pressable,
   ScrollView,
   StyleSheet,
   type TextLayoutEventData,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import Animated, {
@@ -36,19 +38,27 @@ import {
   Rect,
   Svg,
 } from 'react-native-svg';
-import type { Station } from '~/@types/graphql';
-import { parenthesisRegexp } from '~/constants';
+import type { Line, Station } from '~/@types/graphql';
+import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import type { AppColors } from '~/constants/colorScheme';
 import {
   useBoundText,
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useGetLineMark,
   useHeaderCommonData,
   useStationNumberIndexFunc,
+  useTransferLines,
   useTransferLinesFromStation,
+  useTransferStationNumbers,
+  useTransferTargetStation,
 } from '~/hooks';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
+import {
+  bottomStateAtom,
+  enabledLanguagesAtom,
+} from '~/store/atoms/navigation';
 import {
   arrivedAtom,
   selectedDirectionAtom,
@@ -64,6 +74,8 @@ import {
   normalizeTrainTypeColor,
 } from '~/utils/trainTypeTextColor';
 import NumberingIcon from './NumberingIcon';
+import TransferLineDot from './TransferLineDot';
+import TransferLineMark from './TransferLineMark';
 import Typography from './Typography';
 
 // 走行画面は AppColorsProvider の外側で描画されるため useAppColors() は常に
@@ -200,6 +212,17 @@ const MARKER_HEAD_OFFSET = Math.round((14 / 37) * MARKER_HEIGHT);
 
 // 停車駅リストの上下パディング
 const STOP_LIST_PADDING_V = 12;
+
+// のりかえ一覧の行。路線マーク(35)と2〜3行のテキストが収まる高さ
+const TRANSFER_ROW_MIN_HEIGHT = isTablet ? 66 : 46;
+
+// のりかえ一覧に添える駅ナンバリングの枠。アイコン自体は実寸で組まれているので
+// この枠に合わせて縮小する
+const TRANSFER_NUMBERING_SIZE = isTablet ? 48 : 32;
+
+// のりかえへの切り替わり。ふわりと乗るだけの短い動きに留める
+const TRANSFER_FADE_DURATION = 220;
+const TRANSFER_FADE_SHIFT = 10;
 
 // リスト下端のフェード。最終行がホームインジケータへ溶けるようにする
 const LIST_FADE_HEIGHT = 72;
@@ -485,7 +508,85 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 0.6,
   },
+  // のりかえ案内。停車駅リストと同じ領域に重ねて出す
+  transferOverlay: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  transferPane: {
+    flex: 1,
+    paddingTop: STOP_LIST_PADDING_V,
+    paddingHorizontal: CONTENT_INSET,
+  },
+  transferListContent: {
+    paddingTop: 10,
+    paddingBottom: STOP_LIST_PADDING_V,
+  },
+  transferRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: TRANSFER_ROW_MIN_HEIGHT,
+  },
+  transferBody: {
+    flex: 1,
+    marginLeft: 5,
+  },
+  transferNameRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  transferLineName: {
+    flexShrink: 1,
+    fontSize: RFValue(14),
+    fontWeight: 'bold',
+  },
+  // 乗換先が案内中の駅と別名のときだけ添える駅名
+  transferStationName: {
+    flexShrink: 1,
+    marginLeft: 8,
+    fontSize: RFValue(9),
+    fontWeight: 'bold',
+  },
+  transferSubName: {
+    fontSize: RFValue(10),
+    fontWeight: 'bold',
+  },
+  transferNumberingBox: {
+    width: TRANSFER_NUMBERING_SIZE,
+    height: TRANSFER_NUMBERING_SIZE,
+    marginLeft: 10,
+  },
+  // transform はレイアウトに影響しないため、実寸の枠を絶対配置で中央に重ねてから
+  // 縮小する。こうすると枠の大きさは TRANSFER_NUMBERING_SIZE のまま保たれる。
+  transferNumbering: {
+    position: 'absolute',
+    left: (TRANSFER_NUMBERING_SIZE - NUMBERING_COLUMN_WIDTH) / 2,
+    top: (TRANSFER_NUMBERING_SIZE - NUMBERING_COLUMN_WIDTH) / 2,
+    width: NUMBERING_COLUMN_WIDTH,
+    height: NUMBERING_COLUMN_WIDTH,
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: [{ scale: TRANSFER_NUMBERING_SIZE / NUMBERING_COLUMN_WIDTH }],
+  },
 });
+
+// 乗換先の駅名。横画面の Transfers と同じ体裁で出す
+const stationLabel = (station: Station | null | undefined): string => {
+  if (!station) {
+    return '';
+  }
+  const name = isJapanese
+    ? (station.name ?? '')
+    : (station.nameRoman ?? station.name ?? '');
+  const stripped = name.replace(parenthesisRegexp, '');
+  if (!stripped) {
+    return '';
+  }
+  return isJapanese ? `${stripped}駅` : `${stripped} Sta.`;
+};
 
 type MarkerPosition = 'above-dot' | 'segment-top' | null;
 
@@ -906,7 +1007,194 @@ const AccentWash = ({ color, opacity }: { color: string; opacity: number }) => {
   );
 };
 
-const PortraitMain: React.FC = () => {
+// のりかえ案内。停車駅リストと同じ領域を占めて、下部の表示状態が TRANSFER の
+// 間だけ上に重なる。行をタップすると横画面と同じく運転路線の切り替え確認へ渡す。
+const PortraitTransfers = ({
+  lines,
+  transferStation,
+  colors,
+  accentColor,
+  bottomInset,
+  onPress,
+}: {
+  lines: Line[];
+  transferStation: Station | null;
+  colors: AppColors;
+  accentColor: string;
+  bottomInset: number;
+  onPress?: (station?: Station) => void;
+}) => {
+  const getLineMarkFunc = useGetLineMark();
+  const stationNumbers = useTransferStationNumbers(lines);
+  const enabledLanguages = useAtomValue(enabledLanguagesAtom);
+
+  const isJaEnabled = enabledLanguages.includes('JA');
+  const isEnEnabled = enabledLanguages.includes('EN');
+  const isZhEnabled = enabledLanguages.includes('ZH');
+  const isKoEnabled = enabledLanguages.includes('KO');
+
+  const passColor = passTextColor(colors);
+
+  return (
+    <View style={styles.transferPane}>
+      {/* 見出しは現在駅カードの頭と同じ組み方にして、画面内の調子を揃える */}
+      <View style={styles.cardHeadRow}>
+        <Typography
+          numberOfLines={1}
+          style={[styles.stateText, { color: accentColor }]}
+        >
+          {translate('transfer')}
+        </Typography>
+        <View
+          style={[styles.cardHeadRule, { backgroundColor: colors.border }]}
+        />
+        {transferStation ? (
+          <Typography
+            numberOfLines={1}
+            testID="portrait-transfer-station"
+            style={[styles.cardHeadMeta, { color: passColor }]}
+          >
+            {stationLabel(transferStation)}
+          </Typography>
+        ) : null}
+      </View>
+
+      <ScrollView
+        testID="portrait-transfer-list"
+        contentContainerStyle={[
+          styles.transferListContent,
+          // 停車駅リストと同じ領域を占めるので下端のセーフエリアを足す。
+          // さらに下端のぼかし(listFade)がこのオーバーレイの上に描かれるため、
+          // 最終行がぼかしへ潜らないようその分も空ける。
+          {
+            paddingBottom: STOP_LIST_PADDING_V + LIST_FADE_HEIGHT + bottomInset,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {lines.map((line, index) => {
+          const lineMark = getLineMarkFunc({
+            line,
+            stationNumbers: line.station?.stationNumbers,
+          });
+          const numbering = stationNumbers[index];
+
+          // 乗換先が案内中の駅と別の駅のときだけ駅名を添える(新線新宿など)。
+          // 幅の狭い縦画面で同じ駅名を全行に並べても情報が増えないため。
+          const showStationName =
+            !!line.station && line.station.groupId !== transferStation?.groupId;
+
+          const cjkLineName = [
+            isZhEnabled ? line.nameChinese : null,
+            isKoEnabled ? line.nameKorean : null,
+          ]
+            .filter((t): t is string => !!t?.length)
+            .map((t) => t.replace(parenthesisRegexp, ''))
+            .join(' / ');
+
+          return (
+            <TouchableOpacity
+              key={line.id}
+              activeOpacity={1}
+              testID={`portrait-transfer-row-${line.id}`}
+              style={styles.transferRow}
+              onPress={() => {
+                if (!line.station) {
+                  return;
+                }
+                onPress?.({
+                  ...line.station,
+                  __typename: 'Station',
+                  line,
+                  lines,
+                } as Station);
+              }}
+            >
+              {lineMark ? (
+                <TransferLineMark
+                  line={line}
+                  mark={lineMark}
+                  size={NUMBERING_ICON_SIZE.MEDIUM}
+                />
+              ) : (
+                <TransferLineDot line={line} />
+              )}
+
+              <View style={styles.transferBody}>
+                <View style={styles.transferNameRow}>
+                  {isJaEnabled && line.nameShort ? (
+                    <Typography
+                      numberOfLines={1}
+                      style={[styles.transferLineName, { color: colors.text }]}
+                    >
+                      {line.nameShort.replace(parenthesisRegexp, '')}
+                    </Typography>
+                  ) : null}
+                  {showStationName ? (
+                    <Typography
+                      numberOfLines={1}
+                      style={[styles.transferStationName, { color: passColor }]}
+                    >
+                      {stationLabel(line.station)}
+                    </Typography>
+                  ) : null}
+                </View>
+                {isEnEnabled && line.nameRoman ? (
+                  <Typography
+                    numberOfLines={1}
+                    style={[
+                      isJaEnabled
+                        ? styles.transferSubName
+                        : styles.transferLineName,
+                      {
+                        color: isJaEnabled ? colors.secondaryText : colors.text,
+                      },
+                    ]}
+                  >
+                    {line.nameRoman.replace(parenthesisRegexp, '')}
+                  </Typography>
+                ) : null}
+                {cjkLineName ? (
+                  <Typography
+                    numberOfLines={1}
+                    style={[
+                      styles.transferSubName,
+                      { color: colors.secondaryText },
+                    ]}
+                  >
+                    {cjkLineName}
+                  </Typography>
+                ) : null}
+              </View>
+
+              {numbering?.stationNumber ? (
+                <View style={styles.transferNumberingBox}>
+                  <View style={styles.transferNumbering}>
+                    <NumberingIcon
+                      shape={numbering.lineSymbolShape ?? 'NOOP'}
+                      lineColor={numbering.lineSymbolColor ?? '#000000'}
+                      stationNumber={numbering.stationNumber}
+                      allowScaling={false}
+                    />
+                  </View>
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+};
+
+type Props = {
+  /** 画面タップ。横画面と同じく下部の表示を次へ進める */
+  onPress?: () => void;
+  /** のりかえ行タップ。運転路線の切り替え確認へ渡す */
+  onTransferPress?: (station?: Station) => void;
+};
+
+const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   // ステータスバー非表示で全画面描画するため SafeAreaView は使わないが、
   // Dynamic Island / ノッチやホームインジケータと表示が被らないよう、
   // 上下のセーフエリア分を padding として確保する。
@@ -919,6 +1207,10 @@ const PortraitMain: React.FC = () => {
   const arrived = useAtomValue(arrivedAtom);
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
+  const bottomState = useAtomValue(bottomStateAtom);
+  const transferLines = useTransferLines();
+  // 案内する乗換路線と対象駅がずれないよう、路線側と同じフックから引く
+  const transferStation = useTransferTargetStation() ?? null;
   // 行先は言語切り替えタイマーで多言語化せず日本語固定で表示する
   const boundText = useBoundText().JA;
 
@@ -1041,6 +1333,34 @@ const PortraitMain: React.FC = () => {
   const markerMoving =
     !stoppedHere || getIsPass(stops[currentIndex] ?? undefined);
 
+  // 乗換路線が無いときは useUpdateBottomState 側でも LINE へ戻されるが、
+  // 戻るまでの間に空の案内が出ないようここでも見る。
+  const showTransfer = bottomState === 'TRANSFER' && transferLines.length > 0;
+
+  // のりかえは停車駅リストの上に重ねて出す。リストを外さないので、
+  // 戻ってきたときもスクロール位置がそのまま保たれる。
+  const transferOpacity = useSharedValue(0);
+  const transferShift = useSharedValue(0);
+  useEffect(() => {
+    if (!showTransfer) {
+      return;
+    }
+    transferOpacity.value = 0;
+    transferShift.value = TRANSFER_FADE_SHIFT;
+    transferOpacity.value = withTiming(1, {
+      duration: TRANSFER_FADE_DURATION,
+    });
+    transferShift.value = withTiming(0, { duration: TRANSFER_FADE_DURATION });
+    return () => {
+      cancelAnimation(transferOpacity);
+      cancelAnimation(transferShift);
+    };
+  }, [showTransfer, transferOpacity, transferShift]);
+  const transferStyle = useAnimatedStyle(() => ({
+    opacity: transferOpacity.value,
+    transform: [{ translateY: transferShift.value }],
+  }));
+
   // rowYs は各行の上端 y を記録する(onLayout は行のレイアウト時にしか発火しないので、
   // currentIndex 変更でコールバックが別行に移っても再取得できない。全行を記録して
   // index で引く)。
@@ -1081,8 +1401,9 @@ const PortraitMain: React.FC = () => {
     // ステータスバーは非表示のため SafeAreaView は使わず素の View を使う。
     // 上端は Dynamic Island / ノッチと路線情報が被らないよう、
     // セーフエリア上端ぶんの padding を確保する。
-    <View
+    <Pressable
       testID="portrait-root"
+      onPress={onPress}
       style={[
         styles.root,
         { backgroundColor: colors.background, paddingTop: insets.top },
@@ -1228,6 +1549,26 @@ const PortraitMain: React.FC = () => {
             );
           })}
         </ScrollView>
+        {showTransfer ? (
+          <Animated.View
+            testID="portrait-transfers"
+            style={[
+              styles.transferOverlay,
+              { backgroundColor: colors.background },
+              transferStyle,
+            ]}
+          >
+            <PortraitTransfers
+              lines={transferLines}
+              transferStation={transferStation}
+              colors={colors}
+              accentColor={accentColor}
+              bottomInset={insets.bottom}
+              onPress={onTransferPress}
+            />
+          </Animated.View>
+        ) : null}
+
         {/* 最終行がホームインジケータへ溶けるよう下端をぼかす */}
         <LinearGradient
           pointerEvents="none"
@@ -1235,7 +1576,7 @@ const PortraitMain: React.FC = () => {
           style={styles.listFade}
         />
       </View>
-    </View>
+    </Pressable>
   );
 };
 
