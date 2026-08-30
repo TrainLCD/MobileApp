@@ -303,6 +303,8 @@
   "portraitNextStop": "つぎは%{station}",
   "portraitNextStopFrom": "%{current}のつぎは%{station}",
   "portraitPassThrough": "%{station}を通過中",
+  "portraitEtaUnit": "分",
+  "portraitEtaSoon": "まもなく",
   "telemetryDescription": "お使いの端末の地理的座標を解析用サーバに送信します。送信された情報は解析以外に使用されません。",
   "batterySettings": "バッテリー",
   "powerSavingLocationTitle": "省電力測位モード",
