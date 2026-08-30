@@ -1,5 +1,5 @@
 diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-index 9ca869c..81d37ec 100644
+index 9ca869c..077cb21 100644
 --- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
 +++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
 @@ -4,6 +4,7 @@ import android.os.Bundle
@@ -20,7 +20,52 @@ index 9ca869c..81d37ec 100644
  class SpeechModule : Module() {
    private val delayedUtterances: Queue<Utterance> = ArrayDeque()
    private val delayedGetVoices: Queue<Promise> = ArrayDeque()
-@@ -103,24 +107,48 @@ class SpeechModule : Module() {
+@@ -83,6 +87,14 @@ class SpeechModule : Module() {
+       throw SpeechUnableToGetVoicesException(err)
+     }
+ 
++    // TrainLCD patch: 端末設定で選ばれているエンジン既定音声を JS 側へ伝える。
++    // 一部エンジンは defaultVoice の取得で例外を投げるため防御する。
++    val defaultVoiceName = try {
++      textToSpeech.defaultVoice?.name
++    } catch (_: Exception) {
++      null
++    }
++
+     return nativeVoices.map {
+       val quality = if (it.quality > Voice.QUALITY_NORMAL) {
+         VoiceQuality.ENHANCED
+@@ -90,11 +102,28 @@ class SpeechModule : Module() {
+         VoiceQuality.DEFAULT
+       }
+ 
++      // TrainLCD patch: features / isNetworkConnectionRequired はエンジン実装に
++      // よっては例外を投げうるため、取得できない場合は保守的な既定値へ倒す。
++      val networkRequired = try {
++        it.isNetworkConnectionRequired
++      } catch (_: Exception) {
++        false
++      }
++      val notInstalled = try {
++        it.features?.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) == true
++      } catch (_: Exception) {
++        false
++      }
++
+       VoiceRecord(
+         identifier = it.name,
+         name = it.name,
+         quality = quality,
+-        language = LanguageUtils.getISOCode(it.locale)
++        language = LanguageUtils.getISOCode(it.locale),
++        qualityScore = it.quality,
++        isDefault = defaultVoiceName != null && it.name == defaultVoiceName,
++        networkRequired = networkRequired,
++        notInstalled = notInstalled
+       )
+     }
+   }
+@@ -103,24 +132,48 @@ class SpeechModule : Module() {
      options.pitch?.let(textToSpeech::setPitch)
      options.rate?.let(textToSpeech::setSpeechRate)
  
@@ -48,11 +93,7 @@ index 9ca869c..81d37ec 100644
        }
 -    } ?: Locale.getDefault()
 +    }
- 
--    options.voice?.let { voiceName ->
--      textToSpeech.voices
--        .firstOrNull { it.name == voiceName }
--        ?.let(textToSpeech::setVoice)
++
 +    if (matchedVoice != null) {
 +      textToSpeech.setVoice(matchedVoice)
 +    } else {
@@ -70,7 +111,11 @@ index 9ca869c..81d37ec 100644
 +          availability != TextToSpeech.LANG_MISSING_DATA &&
 +            availability != TextToSpeech.LANG_NOT_SUPPORTED
 +        }
-+
+ 
+-    options.voice?.let { voiceName ->
+-      textToSpeech.voices
+-        .firstOrNull { it.name == voiceName }
+-        ?.let(textToSpeech::setVoice)
 +        when {
 +          isUsable(exactLocale) -> exactLocale
 +          isUsable(languageOnlyLocale) -> languageOnlyLocale
@@ -85,3 +130,28 @@ index 9ca869c..81d37ec 100644
      }
  
      val params = Bundle().apply {
+diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt
+index 480ce46..e85ad12 100644
+--- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt
++++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt
+@@ -15,5 +15,19 @@ data class VoiceRecord(
+   @Field val identifier: String,
+   @Field val name: String,
+   @Field val quality: VoiceQuality,
+-  @Field val language: String
++  @Field val language: String,
++  // TrainLCD patch: 音声選択の精度を上げるための Android 固有メタデータ。
++  // quality は ENHANCED / DEFAULT の 2 値へ丸められており、ローカル音声同士の
++  // 優劣を判定できない（Google TTS の日本語ローカル音声は軒並み QUALITY_NORMAL
++  // に並ぶ）。android.speech.tts.Voice が持つ生の情報を併せて渡すことで、
++  // JS 側が識別子のアルファベット順という無根拠なタイブレークに頼らずに済む。
++  //
++  // - qualityScore: Voice.getQuality() の生値 (QUALITY_VERY_LOW=100 〜 VERY_HIGH=500)
++  // - isDefault: 端末設定で選ばれているエンジン既定音声か
++  // - networkRequired: 合成にネットワーク接続が必要か（識別子の 'network' 判定より正確）
++  // - notInstalled: 音声データが未ダウンロードで、指定しても合成できない状態か
++  @Field val qualityScore: Int,
++  @Field val isDefault: Boolean,
++  @Field val networkRequired: Boolean,
++  @Field val notInstalled: Boolean
+ ) : Record
