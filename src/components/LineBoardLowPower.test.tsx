@@ -157,6 +157,43 @@ describe('LineBoardLowPower', () => {
     expect(getAllByText('+2')).toHaveLength(1);
   });
 
+  it('groupId が重複していても stationId で現在駅を特定する', () => {
+    // 6の字運転では同じ駅が groupId を共有したまま複数回現れる。
+    // groupId で引くと最初の出現を掴んでしまい、列車位置・現在駅マーク・
+    // 通過済み表示がすべて別の位置に出る
+    const loop = [
+      { ...makeStation(101, '都庁前', 'Tochomae'), groupId: 999 },
+      { ...makeStation(102, '新宿西口', 'Shinjuku-nishiguchi'), groupId: 500 },
+      { ...makeStation(103, '都庁前', 'Tochomae'), groupId: 999 },
+      { ...makeStation(104, '光が丘', 'Hikarigaoka'), groupId: 501 },
+    ] as unknown as Station[];
+    setAtomValues({ arrived: true });
+    useDisplayCurrentStation.mockReturnValue(loop[2]);
+
+    const { getByTestId } = render(<LineBoardLowPower stations={loop} />);
+
+    // 4列なので1列あたり25%。3列目(index 2)の中心は62.5%
+    expect(markerLeft(getByTestId('low-power-line-board-marker'))).toBe(
+      '62.5%'
+    );
+  });
+
+  it('stationId が一致しないときは groupId へ落とす', () => {
+    // useDisplayCurrentStation は stations とは別経路の駅を返すことがあり、
+    // id で引けない。その場合に先頭駅へ黙って落ちないことを担保する
+    setAtomValues({ arrived: true });
+    useDisplayCurrentStation.mockReturnValue({
+      ...STATIONS[2],
+      id: 9999,
+    } as unknown as Station);
+
+    const { getByTestId } = render(<LineBoardLowPower stations={STATIONS} />);
+
+    expect(markerLeft(getByTestId('low-power-line-board-marker'))).toBe(
+      '62.5%'
+    );
+  });
+
   it('駅が空でも落ちない', () => {
     expect(() => render(<LineBoardLowPower stations={[]} />)).not.toThrow();
   });

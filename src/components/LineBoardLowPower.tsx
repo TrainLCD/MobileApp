@@ -240,12 +240,29 @@ const LineBoardLowPower: React.FC<Props> = ({ stations }: Props) => {
     [scale]
   );
 
+  // 6の字運転(大江戸線の都庁前など)では、同じ駅が groupId を共有したまま
+  // 進行方向ごとに別エントリとして現れる。stationId は出現ごとに一意なので
+  // 先にそちらで引き、引けないときだけ groupId へ落とす。この順序は
+  // useDisplayCurrentStation の findIndexByIdentity と揃えてある。
+  const currentStationId = currentStation?.id;
+  const currentStationGroupId = currentStation?.groupId;
   const currentIndex = useMemo(() => {
-    const index = stations.findIndex(
-      (s) => s.groupId === currentStation?.groupId
-    );
-    return index < 0 ? 0 : index;
-  }, [currentStation?.groupId, stations]);
+    if (currentStationId != null) {
+      const byId = stations.findIndex((s) => s.id === currentStationId);
+      if (byId !== -1) {
+        return byId;
+      }
+    }
+    if (currentStationGroupId != null) {
+      const byGroupId = stations.findIndex(
+        (s) => s.groupId === currentStationGroupId
+      );
+      if (byGroupId !== -1) {
+        return byGroupId;
+      }
+    }
+    return 0;
+  }, [currentStationGroupId, currentStationId, stations]);
 
   // 停車中は現在駅の真上、走行中は次駅寄りへ寄せる。接近中はさらに次駅へ近づける
   const markerLeft = useMemo<`${number}%`>(() => {
