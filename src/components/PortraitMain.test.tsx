@@ -683,13 +683,37 @@ describe('PortraitMain', () => {
       expect(getAllByText('新宿駅')).toHaveLength(1);
     });
 
-    it('画面タップで下部の表示を進める', () => {
+    it('上部の路線情報・カードのタップで下部の表示を進める', () => {
       const onPress = jest.fn();
       const { getByTestId } = renderWithStations([shinjuku], { onPress });
 
-      fireEvent.press(getByTestId('portrait-root'));
+      fireEvent.press(getByTestId('portrait-header-tap'));
 
       expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
+    it('停車駅リストのタップでも下部の表示を進める', () => {
+      const onPress = jest.fn();
+      const { getByTestId } = renderWithStations([shinjuku], { onPress });
+
+      fireEvent.press(getByTestId('portrait-stop-list-tap'));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
+    it('のりかえ一覧の余白タップは駅なしで渡す(横画面と同じく表示が進む)', () => {
+      mockedUseTransferLines.mockReturnValue([yamanote]);
+      const onTransferPress = jest.fn();
+      const { getByTestId } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+        transferStation: shinjuku,
+        onTransferPress,
+      });
+
+      fireEvent.press(getByTestId('portrait-transfer-list-tap'));
+
+      expect(onTransferPress).toHaveBeenCalledTimes(1);
+      expect(onTransferPress).toHaveBeenCalledWith(undefined);
     });
 
     it('のりかえ行タップでは路線と駅を渡し、表示は進めない', () => {
@@ -712,6 +736,78 @@ describe('PortraitMain', () => {
         line: yamanote,
       });
       expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('路線と路線の間に余白を取る', () => {
+      mockedUseTransferLines.mockReturnValue([yamanote, keioNew]);
+
+      const { getByTestId } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+        transferStation: shinjuku,
+      });
+
+      // 行の直接の親はタップ領域の Pressable。ScrollView の
+      // contentContainerStyle に置いても行間には入らない。
+      const style = StyleSheet.flatten(
+        getByTestId('portrait-transfer-list-tap').props.style
+      );
+      expect(style.rowGap).toBeGreaterThan(0);
+    });
+
+    it('のりかえ一覧をスクロールした指では表示を進めない', () => {
+      mockedUseTransferLines.mockReturnValue([yamanote]);
+      const onTransferPress = jest.fn();
+
+      const { getByTestId } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+        transferStation: shinjuku,
+        onTransferPress,
+      });
+
+      fireEvent(getByTestId('portrait-transfer-list'), 'scrollBeginDrag');
+      fireEvent.press(getByTestId('portrait-transfer-list-tap'));
+
+      expect(onTransferPress).not.toHaveBeenCalled();
+    });
+
+    it('のりかえ一覧をスクロールした指では路線変更へ渡さない', () => {
+      mockedUseTransferLines.mockReturnValue([yamanote]);
+      const onTransferPress = jest.fn();
+
+      const { getByTestId } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+        transferStation: shinjuku,
+        onTransferPress,
+      });
+
+      fireEvent(getByTestId('portrait-transfer-list'), 'scrollBeginDrag');
+      fireEvent.press(getByTestId('portrait-transfer-row-11302'));
+
+      expect(onTransferPress).not.toHaveBeenCalled();
+    });
+
+    it('停車駅リストをスクロールした指でも表示を進めない', () => {
+      const onPress = jest.fn();
+
+      const { getByTestId } = renderWithStations([shinjuku], { onPress });
+
+      fireEvent(getByTestId('portrait-stop-list'), 'scrollBeginDrag');
+      fireEvent.press(getByTestId('portrait-stop-list-tap'));
+
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('指を置き直せばスクロール後でもタップは効く', () => {
+      const onPress = jest.fn();
+
+      const { getByTestId } = renderWithStations([shinjuku], { onPress });
+
+      fireEvent(getByTestId('portrait-stop-list'), 'scrollBeginDrag');
+      // 指を離して置き直したところからは、また普通のタップとして扱う
+      fireEvent(getByTestId('portrait-root'), 'touchStart');
+      fireEvent.press(getByTestId('portrait-stop-list-tap'));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
     });
   });
 });
