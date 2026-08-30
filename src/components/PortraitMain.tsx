@@ -1677,9 +1677,11 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
           <View style={styles.stationNameRow}>
             {currentStationNumber ? (
               <View style={styles.numberingColumn} testID="numbering-column">
+                {/* ナンバリングは地の上の文字ではなく独立した記号なので、
+                    他のヘッダーと同じく路線色をそのまま渡して加工しない。 */}
                 <NumberingIcon
                   shape={currentStationNumber.lineSymbolShape || ''}
-                  lineColor={accentColorFor(numberingColor, colors.isDark)}
+                  lineColor={numberingColor}
                   stationNumber={currentStationNumber.stationNumber || ''}
                   threeLetterCode={commonData.threeLetterCode}
                 />
