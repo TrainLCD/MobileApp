@@ -3,15 +3,10 @@ import { View } from 'react-native';
 import {
   useEstimateArrivalTimes,
   useEstimatedMinutesByStationId,
-  useLandscapeWindowDimensions,
+  useLowPowerLayout,
   useTransferLines,
 } from '~/hooks';
-import {
-  FONTS,
-  LOW_POWER_BASE_HEIGHT,
-  LOW_POWER_THEME_COLORS,
-  parenthesisRegexp,
-} from '../constants';
+import { FONTS, LOW_POWER_THEME_COLORS, parenthesisRegexp } from '../constants';
 import { translate } from '../translation';
 import type { CommonHeaderProps } from './Header.types';
 import Typography from './Typography';
@@ -43,31 +38,30 @@ const HeaderLowPower: React.FC<CommonHeaderProps> = ({
   trainType,
   isJapaneseState,
 }) => {
-  const dim = useLandscapeWindowDimensions();
+  // 寸法はセーフエリアを除いた実効領域から起こす。ノッチやホームインジケータへ
+  // 文字が潜り込まないよう、外周の余白として insets をそのまま足し込む
+  const { width, height, scale, insets } = useLowPowerLayout();
   const transferLines = useTransferLines();
   const { route: estimatedRoute } = useEstimateArrivalTimes();
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
 
-  /** 設計基準(短辺360dp)に対する実機の拡大率 */
-  const scale = dim.height / LOW_POWER_BASE_HEIGHT;
-
   // 行先未選択時は路線図側に出す情報がないため、ヘッダーの取り分を減らす
-  const rootHeight = selectedBound ? (dim.height * 2) / 3 : dim.height / 3;
+  const rootHeight =
+    insets.top + (selectedBound ? (height * 2) / 3 : height / 3);
 
   const metrics = useMemo(() => {
     const gutter = 16 * scale;
     // 右カラムは基準幅を保ちつつ、4:3 のタブレットで広がりすぎないよう画面幅で頭打ちにする
-    const sideColumnWidth = Math.min(dim.width * 0.3, 190 * scale);
+    const sideColumnWidth = Math.min(width * 0.3, 190 * scale);
     return {
       gutter,
       sideColumnWidth,
       hairline: Math.max(1, scale),
       topBarHeight: 40 * scale,
-      nameAreaWidth:
-        dim.width - gutter * 4 - Math.max(1, scale) - sideColumnWidth,
+      nameAreaWidth: width - gutter * 4 - Math.max(1, scale) - sideColumnWidth,
     };
-  }, [dim.width, scale]);
+  }, [width, scale]);
 
   const stoppingState = headerState.split('_')[0];
 
@@ -155,14 +149,23 @@ const HeaderLowPower: React.FC<CommonHeaderProps> = ({
   }, [isJapaneseState, transferLines]);
 
   return (
-    <View style={{ height: rootHeight, backgroundColor: background }}>
+    <View
+      testID="low-power-header-root"
+      style={{
+        height: rootHeight,
+        paddingTop: insets.top,
+        backgroundColor: background,
+      }}
+    >
       <View
+        testID="low-power-header-top-bar"
         style={{
           height: metrics.topBarHeight,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 10 * scale,
-          paddingHorizontal: metrics.gutter,
+          paddingLeft: metrics.gutter + insets.left,
+          paddingRight: metrics.gutter + insets.right,
           borderBottomWidth: metrics.hairline,
           borderBottomColor: muted,
         }}
@@ -202,7 +205,8 @@ const HeaderLowPower: React.FC<CommonHeaderProps> = ({
           flex: 1,
           flexDirection: 'row',
           gap: metrics.gutter,
-          paddingHorizontal: metrics.gutter,
+          paddingLeft: metrics.gutter + insets.left,
+          paddingRight: metrics.gutter + insets.right,
           paddingVertical: 14 * scale,
         }}
       >

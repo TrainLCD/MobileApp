@@ -2,8 +2,15 @@ import { render } from '@testing-library/react-native';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderLowPower from './HeaderLowPower';
 
+const NO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
+
 jest.mock('~/hooks', () => ({
-  useLandscapeWindowDimensions: jest.fn(() => ({ width: 720, height: 360 })),
+  useLowPowerLayout: jest.fn(() => ({
+    width: 720,
+    height: 360,
+    scale: 1,
+    insets: { top: 0, right: 0, bottom: 0, left: 0 },
+  })),
   useTransferLines: jest.fn(() => []),
   useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
   useEstimatedMinutesByStationId: jest.fn(() => new Map()),
@@ -27,11 +34,24 @@ jest.mock('~/translation', () => ({
   }),
 }));
 
-const { useEstimatedMinutesByStationId, useTransferLines } = require('~/hooks');
+const {
+  useEstimatedMinutesByStationId,
+  useLowPowerLayout,
+  useTransferLines,
+} = require('~/hooks');
 
 describe('HeaderLowPower', () => {
   const props = createMockHeaderProps();
   const nextStationId = props.nextStation?.id as number;
+
+  beforeEach(() => {
+    useLowPowerLayout.mockReturnValue({
+      width: 720,
+      height: 360,
+      scale: 1,
+      insets: NO_INSETS,
+    });
+  });
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -147,5 +167,36 @@ describe('HeaderLowPower', () => {
     );
 
     expect(getByText('A線・B線・C線 他2')).toBeTruthy();
+  });
+
+  it('セーフエリアぶんを外周の余白として確保する', () => {
+    setEstimatedMinutes(2);
+    useLowPowerLayout.mockReturnValue({
+      width: 660,
+      height: 326,
+      scale: 326 / 360,
+      insets: { top: 34, right: 21, bottom: 0, left: 39 },
+    });
+
+    const { getByTestId } = render(
+      <HeaderLowPower {...createMockHeaderProps({ headerState: 'NEXT' })} />
+    );
+
+    const root = getByTestId('low-power-header-root');
+    expect(root.props.style).toEqual(
+      expect.objectContaining({ paddingTop: 34 })
+    );
+    // 行先未選択なので実効高さ 326 の 1/3 に、上端のセーフエリアぶんが乗る
+    expect(root.props.style).toEqual(
+      expect.objectContaining({ height: 34 + 326 / 3 })
+    );
+
+    const gutter = 16 * (326 / 360);
+    expect(getByTestId('low-power-header-top-bar').props.style).toEqual(
+      expect.objectContaining({
+        paddingLeft: gutter + 39,
+        paddingRight: gutter + 21,
+      })
+    );
   });
 });

@@ -8,8 +8,15 @@ jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
 }));
 
+const NO_INSETS = { top: 0, right: 0, bottom: 0, left: 0 };
+
 jest.mock('~/hooks', () => ({
-  useLandscapeWindowDimensions: jest.fn(() => ({ width: 720, height: 360 })),
+  useLowPowerLayout: jest.fn(() => ({
+    width: 720,
+    height: 360,
+    scale: 1,
+    insets: { top: 0, right: 0, bottom: 0, left: 0 },
+  })),
   useDisplayCurrentStation: jest.fn(),
   useEstimateArrivalTimes: jest.fn(() => ({ route: null })),
   useEstimatedMinutesByStationId: jest.fn(() => new Map()),
@@ -20,6 +27,7 @@ const { useAtomValue } = require('jotai');
 const {
   useDisplayCurrentStation,
   useEstimatedMinutesByStationId,
+  useLowPowerLayout,
   useTransferLinesFromStation,
 } = require('~/hooks');
 const { headerStateAtom } = require('~/store/atoms/navigation');
@@ -67,6 +75,12 @@ const markerLeft = (element: { props: { style?: unknown } }) => {
 describe('LineBoardLowPower', () => {
   beforeEach(() => {
     setAtomValues();
+    useLowPowerLayout.mockReturnValue({
+      width: 720,
+      height: 360,
+      scale: 1,
+      insets: NO_INSETS,
+    });
     useDisplayCurrentStation.mockReturnValue(STATIONS[0]);
     useEstimatedMinutesByStationId.mockReturnValue(new Map());
     useTransferLinesFromStation.mockReturnValue([]);
@@ -196,5 +210,25 @@ describe('LineBoardLowPower', () => {
 
   it('駅が空でも落ちない', () => {
     expect(() => render(<LineBoardLowPower stations={[]} />)).not.toThrow();
+  });
+
+  it('セーフエリアぶんを下端と左右の余白として確保する', () => {
+    useLowPowerLayout.mockReturnValue({
+      width: 660,
+      height: 326,
+      scale: 326 / 360,
+      insets: { top: 0, right: 21, bottom: 21, left: 39 },
+    });
+
+    const { getByTestId } = render(<LineBoardLowPower stations={STATIONS} />);
+
+    const scale = 326 / 360;
+    expect(getByTestId('low-power-line-board-root').props.style).toEqual(
+      expect.objectContaining({
+        paddingBottom: 4 * scale + 21,
+        paddingLeft: 16 * scale + 39,
+        paddingRight: 16 * scale + 21,
+      })
+    );
   });
 });
