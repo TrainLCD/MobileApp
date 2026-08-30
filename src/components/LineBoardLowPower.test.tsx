@@ -213,11 +213,13 @@ describe('LineBoardLowPower', () => {
   });
 
   it('セーフエリアぶんを下端と左右の余白として確保する', () => {
+    // 上端が非ゼロの端末を想定する。ストリップの上端は画面上端ではなく
+    // ヘッダーの直下なので、insets.top を足さないことも併せて確かめる
     useLowPowerLayout.mockReturnValue({
       width: 660,
       height: 326,
       scale: 326 / 360,
-      insets: { top: 0, right: 21, bottom: 21, left: 39 },
+      insets: { top: 34, right: 21, bottom: 21, left: 39 },
     });
 
     const { getByTestId } = render(<LineBoardLowPower stations={STATIONS} />);
@@ -225,6 +227,8 @@ describe('LineBoardLowPower', () => {
     const scale = 326 / 360;
     expect(getByTestId('low-power-line-board-root').props.style).toEqual(
       expect.objectContaining({
+        // 上端のセーフエリアはヘッダーが引き受けるため、ここでは足さない
+        paddingTop: 6 * scale,
         paddingBottom: 4 * scale + 21,
         paddingLeft: 16 * scale + 39,
         paddingRight: 16 * scale + 21,
