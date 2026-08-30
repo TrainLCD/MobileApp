@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   trainTypeBadge: {
     marginLeft: 8,
     paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingVertical: 3,
     borderRadius: 2,
   },
   trainTypeText: {
