@@ -29,7 +29,11 @@ import DevOverlay from '~/components/DevOverlay';
 import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import { IS_LIVE_UPDATE_ELIGIBLE_PLATFORM, STORAGE_KEYS } from '~/constants';
+import {
+  IS_LIVE_UPDATE_ELIGIBLE_PLATFORM,
+  LOW_POWER_THEME_COLORS,
+  STORAGE_KEYS,
+} from '~/constants';
 import {
   useAndroidPictureInPicture,
   useConsoleTelemetry,
@@ -803,6 +807,29 @@ const MainScreen: React.FC = () => {
           <Header />
           <LineBoard hasTerminus={hasTerminus} />
         </View>
+      </>
+    );
+  }
+
+  // ライトウェイト(コードネーム: 低消費電力)テーマは乗換路線と到着予測を
+  // ヘッダーと停車駅ストリップ自身が持つため、タップでの下段切り替えを行わない。
+  // 画面の再描画を増やさないという狙いのほか、下段に差し込まれる乗換案内・
+  // 種別変更通知が白地前提の配色で、純黒の上では読めないという事情もある。
+  if (theme === APP_THEME.LOW_POWER) {
+    return (
+      <>
+        <MainScreenEffects />
+        <View
+          style={[
+            landscapeKeepStyle,
+            { backgroundColor: LOW_POWER_THEME_COLORS.background },
+          ]}
+        >
+          <Header />
+          <LineBoard hasTerminus={hasTerminus} />
+        </View>
+
+        {isDevApp && devOverlayEnabled && <DevOverlay />}
       </>
     );
   }

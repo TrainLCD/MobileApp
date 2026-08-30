@@ -79,4 +79,10 @@ export const getSettingsThemes = (): SettingsTheme[] =>
       value: APP_THEME.E231,
       devOnly: false,
     },
+    {
+      label: translate('lowPowerTheme'),
+      value: APP_THEME.LOW_POWER,
+      // コードネームは低消費電力テーマ(#3697)。まずカナリア版だけで様子を見る
+      devOnly: true,
+    },
   ].filter((t) => (isClip() ? t.value !== APP_THEME.LED : t)); // App Clip では LED テーマを非表示
