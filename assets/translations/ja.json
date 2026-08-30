@@ -323,5 +323,13 @@
   "destinationAgentResetShort": "リセット",
   "destinationAgentResetConfirm": "会話履歴を消去しますか？",
   "destinationAgentSuggestionsError": "候補の取得に失敗しました",
-  "destinationAgentRetry": "再試行"
+  "destinationAgentRetry": "再試行",
+  "lowPowerTheme": "ライトウェイト",
+  "themeDescriptionLowPower": "アニメーションを使わず、明度の差だけで情報を分ける独自テーマです。小さい画面やモノクロ表示でも読めます。",
+  "arrivingIn": "到着まで",
+  "arrivingInEn": "Arriving in",
+  "stopped": "停車中",
+  "stoppedEn": "Stopped",
+  "transferShort": "のりかえ",
+  "transferShortEn": "Transfer"
 }

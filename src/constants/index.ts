@@ -7,6 +7,7 @@ export * from './ident';
 export * from './languages';
 export * from './line';
 export * from './location';
+export * from './lowPowerTheme';
 export * from './native';
 export * from './numbering';
 export * from './province';
