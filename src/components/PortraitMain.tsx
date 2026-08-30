@@ -9,7 +9,15 @@ import {
   setLightness,
 } from 'polished';
 import type React from 'react';
-import { memo, useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   type LayoutChangeEvent,
   type NativeSyntheticEvent,
@@ -215,6 +223,10 @@ const STOP_LIST_PADDING_V = 12;
 
 // のりかえ一覧の行。路線マーク(35)と2〜3行のテキストが収まる高さ
 const TRANSFER_ROW_MIN_HEIGHT = isTablet ? 66 : 46;
+
+// 路線と路線の間隔。間隔が無いと路線名と次の路線名が地続きに見えて、
+// どこまでが1つの路線の情報なのか読み取れないため、行間で区切りを作る
+const TRANSFER_ROW_GAP = isTablet ? 16 : 12;
 
 // のりかえ一覧に添える駅ナンバリングの枠。アイコン自体は実寸で組まれているので
 // この枠に合わせて縮小する
@@ -524,6 +536,7 @@ const styles = StyleSheet.create({
   transferListContent: {
     paddingTop: 10,
     paddingBottom: STOP_LIST_PADDING_V,
+    rowGap: TRANSFER_ROW_GAP,
   },
   transferRow: {
     flexDirection: 'row',
@@ -1016,6 +1029,7 @@ const PortraitTransfers = ({
   accentColor,
   bottomInset,
   onPress,
+  onScrollBeginDrag,
 }: {
   lines: Line[];
   transferStation: Station | null;
@@ -1023,6 +1037,7 @@ const PortraitTransfers = ({
   accentColor: string;
   bottomInset: number;
   onPress?: (station?: Station) => void;
+  onScrollBeginDrag?: () => void;
 }) => {
   const getLineMarkFunc = useGetLineMark();
   const stationNumbers = useTransferStationNumbers(lines);
@@ -1038,7 +1053,11 @@ const PortraitTransfers = ({
   return (
     <View style={styles.transferPane}>
       {/* 見出しは現在駅カードの頭と同じ組み方にして、画面内の調子を揃える */}
-      <View style={styles.cardHeadRow}>
+      <Pressable
+        testID="portrait-transfer-heading-tap"
+        style={styles.cardHeadRow}
+        onPress={() => onPress?.()}
+      >
         <Typography
           numberOfLines={1}
           style={[styles.stateText, { color: accentColor }]}
@@ -1057,7 +1076,7 @@ const PortraitTransfers = ({
             {stationLabel(transferStation)}
           </Typography>
         ) : null}
-      </View>
+      </Pressable>
 
       <ScrollView
         testID="portrait-transfer-list"
@@ -1071,117 +1090,133 @@ const PortraitTransfers = ({
           },
         ]}
         showsVerticalScrollIndicator={false}
+        onScrollBeginDrag={onScrollBeginDrag}
       >
-        {lines.map((line, index) => {
-          const lineMark = getLineMarkFunc({
-            line,
-            stationNumbers: line.station?.stationNumbers,
-          });
-          const numbering = stationNumbers[index];
+        {/* 停車駅リストと同じ理由で、タップ領域は ScrollView の中に置く */}
+        <Pressable
+          testID="portrait-transfer-list-tap"
+          onPress={() => onPress?.()}
+        >
+          {lines.map((line, index) => {
+            const lineMark = getLineMarkFunc({
+              line,
+              stationNumbers: line.station?.stationNumbers,
+            });
+            const numbering = stationNumbers[index];
 
-          // 乗換先が案内中の駅と別の駅のときだけ駅名を添える(新線新宿など)。
-          // 幅の狭い縦画面で同じ駅名を全行に並べても情報が増えないため。
-          const showStationName =
-            !!line.station && line.station.groupId !== transferStation?.groupId;
+            // 乗換先が案内中の駅と別の駅のときだけ駅名を添える(新線新宿など)。
+            // 幅の狭い縦画面で同じ駅名を全行に並べても情報が増えないため。
+            const showStationName =
+              !!line.station &&
+              line.station.groupId !== transferStation?.groupId;
 
-          const cjkLineName = [
-            isZhEnabled ? line.nameChinese : null,
-            isKoEnabled ? line.nameKorean : null,
-          ]
-            .filter((t): t is string => !!t?.length)
-            .map((t) => t.replace(parenthesisRegexp, ''))
-            .join(' / ');
+            const cjkLineName = [
+              isZhEnabled ? line.nameChinese : null,
+              isKoEnabled ? line.nameKorean : null,
+            ]
+              .filter((t): t is string => !!t?.length)
+              .map((t) => t.replace(parenthesisRegexp, ''))
+              .join(' / ');
 
-          return (
-            <TouchableOpacity
-              key={line.id}
-              activeOpacity={1}
-              testID={`portrait-transfer-row-${line.id}`}
-              style={styles.transferRow}
-              onPress={() => {
-                if (!line.station) {
-                  return;
-                }
-                onPress?.({
-                  ...line.station,
-                  __typename: 'Station',
-                  line,
-                  lines,
-                } as Station);
-              }}
-            >
-              {lineMark ? (
-                <TransferLineMark
-                  line={line}
-                  mark={lineMark}
-                  size={NUMBERING_ICON_SIZE.MEDIUM}
-                />
-              ) : (
-                <TransferLineDot line={line} />
-              )}
+            return (
+              <TouchableOpacity
+                key={line.id}
+                activeOpacity={1}
+                testID={`portrait-transfer-row-${line.id}`}
+                style={styles.transferRow}
+                onPress={() => {
+                  if (!line.station) {
+                    return;
+                  }
+                  onPress?.({
+                    ...line.station,
+                    __typename: 'Station',
+                    line,
+                    lines,
+                  } as Station);
+                }}
+              >
+                {lineMark ? (
+                  <TransferLineMark
+                    line={line}
+                    mark={lineMark}
+                    size={NUMBERING_ICON_SIZE.MEDIUM}
+                  />
+                ) : (
+                  <TransferLineDot line={line} />
+                )}
 
-              <View style={styles.transferBody}>
-                <View style={styles.transferNameRow}>
-                  {isJaEnabled && line.nameShort ? (
-                    <Typography
-                      numberOfLines={1}
-                      style={[styles.transferLineName, { color: colors.text }]}
-                    >
-                      {line.nameShort.replace(parenthesisRegexp, '')}
-                    </Typography>
-                  ) : null}
-                  {showStationName ? (
-                    <Typography
-                      numberOfLines={1}
-                      style={[styles.transferStationName, { color: passColor }]}
-                    >
-                      {stationLabel(line.station)}
-                    </Typography>
-                  ) : null}
-                </View>
-                {isEnEnabled && line.nameRoman ? (
-                  <Typography
-                    numberOfLines={1}
-                    style={[
-                      isJaEnabled
-                        ? styles.transferSubName
-                        : styles.transferLineName,
-                      {
-                        color: isJaEnabled ? colors.secondaryText : colors.text,
-                      },
-                    ]}
-                  >
-                    {line.nameRoman.replace(parenthesisRegexp, '')}
-                  </Typography>
-                ) : null}
-                {cjkLineName ? (
-                  <Typography
-                    numberOfLines={1}
-                    style={[
-                      styles.transferSubName,
-                      { color: colors.secondaryText },
-                    ]}
-                  >
-                    {cjkLineName}
-                  </Typography>
-                ) : null}
-              </View>
-
-              {numbering?.stationNumber ? (
-                <View style={styles.transferNumberingBox}>
-                  <View style={styles.transferNumbering}>
-                    <NumberingIcon
-                      shape={numbering.lineSymbolShape ?? 'NOOP'}
-                      lineColor={numbering.lineSymbolColor ?? '#000000'}
-                      stationNumber={numbering.stationNumber}
-                      allowScaling={false}
-                    />
+                <View style={styles.transferBody}>
+                  <View style={styles.transferNameRow}>
+                    {isJaEnabled && line.nameShort ? (
+                      <Typography
+                        numberOfLines={1}
+                        style={[
+                          styles.transferLineName,
+                          { color: colors.text },
+                        ]}
+                      >
+                        {line.nameShort.replace(parenthesisRegexp, '')}
+                      </Typography>
+                    ) : null}
+                    {showStationName ? (
+                      <Typography
+                        numberOfLines={1}
+                        style={[
+                          styles.transferStationName,
+                          { color: passColor },
+                        ]}
+                      >
+                        {stationLabel(line.station)}
+                      </Typography>
+                    ) : null}
                   </View>
+                  {isEnEnabled && line.nameRoman ? (
+                    <Typography
+                      numberOfLines={1}
+                      style={[
+                        isJaEnabled
+                          ? styles.transferSubName
+                          : styles.transferLineName,
+                        {
+                          color: isJaEnabled
+                            ? colors.secondaryText
+                            : colors.text,
+                        },
+                      ]}
+                    >
+                      {line.nameRoman.replace(parenthesisRegexp, '')}
+                    </Typography>
+                  ) : null}
+                  {cjkLineName ? (
+                    <Typography
+                      numberOfLines={1}
+                      style={[
+                        styles.transferSubName,
+                        { color: colors.secondaryText },
+                      ]}
+                    >
+                      {cjkLineName}
+                    </Typography>
+                  ) : null}
                 </View>
-              ) : null}
-            </TouchableOpacity>
-          );
-        })}
+
+                {numbering?.stationNumber ? (
+                  <View style={styles.transferNumberingBox}>
+                    <View style={styles.transferNumbering}>
+                      <NumberingIcon
+                        shape={numbering.lineSymbolShape ?? 'NOOP'}
+                        lineColor={numbering.lineSymbolColor ?? '#000000'}
+                        stationNumber={numbering.stationNumber}
+                        allowScaling={false}
+                      />
+                    </View>
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -1361,6 +1396,34 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
     transform: [{ translateY: transferShift.value }],
   }));
 
+  // スクロールで指を離したときの press をタップと誤認しないようにする。
+  // 1回のジェスチャの間にスクロールが始まったかどうかだけを覚えておき、
+  // 指を置いた時点で倒す。ScrollView がドラッグを始めたら立てる。
+  // (TouchableOpacity 側の取り消しはリスト内の行にしか効かず、画面全体の
+  //  Pressable には届かないため、ここで明示的に区別する)
+  const draggedRef = useRef(false);
+  const handleTouchStart = useCallback(() => {
+    draggedRef.current = false;
+  }, []);
+  const handleScrollBeginDrag = useCallback(() => {
+    draggedRef.current = true;
+  }, []);
+  const handlePress = useCallback(() => {
+    if (draggedRef.current) {
+      return;
+    }
+    onPress?.();
+  }, [onPress]);
+  const handleTransferPress = useCallback(
+    (station?: Station) => {
+      if (draggedRef.current) {
+        return;
+      }
+      onTransferPress?.(station);
+    },
+    [onTransferPress]
+  );
+
   // rowYs は各行の上端 y を記録する(onLayout は行のレイアウト時にしか発火しないので、
   // currentIndex 変更でコールバックが別行に移っても再取得できない。全行を記録して
   // index で引く)。
@@ -1401,9 +1464,9 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
     // ステータスバーは非表示のため SafeAreaView は使わず素の View を使う。
     // 上端は Dynamic Island / ノッチと路線情報が被らないよう、
     // セーフエリア上端ぶんの padding を確保する。
-    <Pressable
+    <View
       testID="portrait-root"
-      onPress={onPress}
+      onTouchStart={handleTouchStart}
       style={[
         styles.root,
         { backgroundColor: colors.background, paddingTop: insets.top },
@@ -1414,108 +1477,117 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
         opacity={colors.isDark ? WASH_OPACITY_DARK : WASH_OPACITY_LIGHT}
       />
 
-      {/* 路線・種別・行き先 */}
-      <View style={styles.metaRow}>
-        <View style={[styles.lineColorBar, { backgroundColor: accentColor }]} />
-        <Typography
-          numberOfLines={1}
-          style={[styles.lineName, { color: colors.text }]}
-        >
-          {lineName}
-        </Typography>
-        {trainTypeName ? (
+      {/* 上部はスクロールしない領域なので、そのままタップ領域にしてよい */}
+      <Pressable testID="portrait-header-tap" onPress={handlePress}>
+        {/* 路線・種別・行き先 */}
+        <View style={styles.metaRow}>
           <View
-            style={[styles.trainTypeBadge, { backgroundColor: trainTypeColor }]}
-          >
-            <Typography
-              style={[styles.trainTypeText, { color: trainTypeTextColor }]}
-            >
-              {trainTypeName}
-            </Typography>
-          </View>
-        ) : null}
-        <View style={styles.metaSpacer} />
-        <Typography
-          numberOfLines={1}
-          style={[styles.boundText, { color: colors.secondaryText }]}
-        >
-          {boundText}
-        </Typography>
-      </View>
-
-      {/* 現在駅カード */}
-      <View
-        testID="portrait-station-card"
-        style={[
-          styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        <View style={styles.cardHeadRow}>
+            style={[styles.lineColorBar, { backgroundColor: accentColor }]}
+          />
           <Typography
             numberOfLines={1}
-            style={[styles.stateText, { color: accentColor }]}
+            style={[styles.lineName, { color: colors.text }]}
           >
-            {displayStateText}
+            {lineName}
           </Typography>
-          <View
-            style={[styles.cardHeadRule, { backgroundColor: colors.border }]}
-          />
-          {cardMetaText ? (
-            // 起点と次駅の駅名が両方入るため、長い駅名同士だと1行に収まらない
-            // ことがある。末尾を削ると肝心の次駅が消えるので先頭側を省略する。
-            <Typography
-              numberOfLines={1}
-              ellipsizeMode="head"
-              testID="portrait-card-meta"
-              style={[styles.cardHeadMeta, { color: passTextColor(colors) }]}
+          {trainTypeName ? (
+            <View
+              style={[
+                styles.trainTypeBadge,
+                { backgroundColor: trainTypeColor },
+              ]}
             >
-              {cardMetaText}
-            </Typography>
-          ) : null}
-        </View>
-
-        <View style={styles.stationNameRow}>
-          {currentStationNumber ? (
-            <View style={styles.numberingColumn} testID="numbering-column">
-              <NumberingIcon
-                shape={currentStationNumber.lineSymbolShape || ''}
-                lineColor={accentColorFor(numberingColor, colors.isDark)}
-                stationNumber={currentStationNumber.stationNumber || ''}
-                threeLetterCode={commonData.threeLetterCode}
-              />
+              <Typography
+                style={[styles.trainTypeText, { color: trainTypeTextColor }]}
+              >
+                {trainTypeName}
+              </Typography>
             </View>
           ) : null}
-          <StationName
-            text={stationText}
-            color={colors.text}
-            withNumbering={!!currentStationNumber}
-          />
+          <View style={styles.metaSpacer} />
+          <Typography
+            numberOfLines={1}
+            style={[styles.boundText, { color: colors.secondaryText }]}
+          >
+            {boundText}
+          </Typography>
         </View>
 
-        {/* 駅間の進み具合。到着すると満ちる */}
+        {/* 現在駅カード */}
         <View
-          testID="portrait-progress-track"
-          style={[styles.progressTrack, { backgroundColor: colors.border }]}
+          testID="portrait-station-card"
+          style={[
+            styles.card,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
         >
+          <View style={styles.cardHeadRow}>
+            <Typography
+              numberOfLines={1}
+              style={[styles.stateText, { color: accentColor }]}
+            >
+              {displayStateText}
+            </Typography>
+            <View
+              style={[styles.cardHeadRule, { backgroundColor: colors.border }]}
+            />
+            {cardMetaText ? (
+              // 起点と次駅の駅名が両方入るため、長い駅名同士だと1行に収まらない
+              // ことがある。末尾を削ると肝心の次駅が消えるので先頭側を省略する。
+              <Typography
+                numberOfLines={1}
+                ellipsizeMode="head"
+                testID="portrait-card-meta"
+                style={[styles.cardHeadMeta, { color: passTextColor(colors) }]}
+              >
+                {cardMetaText}
+              </Typography>
+            ) : null}
+          </View>
+
+          <View style={styles.stationNameRow}>
+            {currentStationNumber ? (
+              <View style={styles.numberingColumn} testID="numbering-column">
+                <NumberingIcon
+                  shape={currentStationNumber.lineSymbolShape || ''}
+                  lineColor={accentColorFor(numberingColor, colors.isDark)}
+                  stationNumber={currentStationNumber.stationNumber || ''}
+                  threeLetterCode={commonData.threeLetterCode}
+                />
+              </View>
+            ) : null}
+            <StationName
+              text={stationText}
+              color={colors.text}
+              withNumbering={!!currentStationNumber}
+            />
+          </View>
+
+          {/* 駅間の進み具合。到着すると満ちる */}
           <View
-            testID="portrait-progress-fill"
-            style={[
-              styles.progressFill,
-              {
-                width: `${progress * 100}%`,
-                backgroundColor: accentColor,
-              },
-            ]}
-          />
+            testID="portrait-progress-track"
+            style={[styles.progressTrack, { backgroundColor: colors.border }]}
+          >
+            <View
+              testID="portrait-progress-fill"
+              style={[
+                styles.progressFill,
+                {
+                  width: `${progress * 100}%`,
+                  backgroundColor: accentColor,
+                },
+              ]}
+            />
+          </View>
         </View>
-      </View>
+      </Pressable>
 
       {/* 停車駅リスト */}
       <View style={styles.stopList}>
         <ScrollView
           ref={scrollRef}
           testID="portrait-stop-list"
+          onScrollBeginDrag={handleScrollBeginDrag}
           contentContainerStyle={[
             styles.stopListContent,
             // スクロール末尾でも最終駅がホームインジケータに被って
@@ -1523,31 +1595,36 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
             { paddingBottom: STOP_LIST_PADDING_V + insets.bottom },
           ]}
         >
-          {stops.map((station, index) => {
-            // 列車位置のピンより前の行(過ぎた線路)を淡色にする。停車中・
-            // 走行中とも、ピンの行とそれ以降は通常色のまま。
-            const departed = index < markerRowIndex;
-            return (
-              <StopRow
-                key={station.id}
-                station={station}
-                colors={colors}
-                isFirst={index === 0}
-                isLast={index === stops.length - 1}
-                isFocused={index === currentStopIndex}
-                departed={departed}
-                marker={index === markerRowIndex ? markerPosition : null}
-                markerMoving={markerMoving}
-                fallbackLineColor={lineColor}
-                elevated={index === markerRowIndex}
-                onLayoutTop={(y) =>
-                  setRowYs((prev) =>
-                    prev[index] === y ? prev : { ...prev, [index]: y }
-                  )
-                }
-              />
-            );
-          })}
+          {/* タップ領域は ScrollView の中に置く。こうするとスクロールが
+              始まった時点で RN 側が press を取り消すので、スクロールと
+              タップが競合しない。 */}
+          <Pressable testID="portrait-stop-list-tap" onPress={handlePress}>
+            {stops.map((station, index) => {
+              // 列車位置のピンより前の行(過ぎた線路)を淡色にする。停車中・
+              // 走行中とも、ピンの行とそれ以降は通常色のまま。
+              const departed = index < markerRowIndex;
+              return (
+                <StopRow
+                  key={station.id}
+                  station={station}
+                  colors={colors}
+                  isFirst={index === 0}
+                  isLast={index === stops.length - 1}
+                  isFocused={index === currentStopIndex}
+                  departed={departed}
+                  marker={index === markerRowIndex ? markerPosition : null}
+                  markerMoving={markerMoving}
+                  fallbackLineColor={lineColor}
+                  elevated={index === markerRowIndex}
+                  onLayoutTop={(y) =>
+                    setRowYs((prev) =>
+                      prev[index] === y ? prev : { ...prev, [index]: y }
+                    )
+                  }
+                />
+              );
+            })}
+          </Pressable>
         </ScrollView>
         {showTransfer ? (
           <Animated.View
@@ -1564,7 +1641,8 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
               colors={colors}
               accentColor={accentColor}
               bottomInset={insets.bottom}
-              onPress={onTransferPress}
+              onPress={handleTransferPress}
+              onScrollBeginDrag={handleScrollBeginDrag}
             />
           </Animated.View>
         ) : null}
@@ -1576,7 +1654,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
           style={styles.listFade}
         />
       </View>
-    </Pressable>
+    </View>
   );
 };
 
