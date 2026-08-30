@@ -18,12 +18,13 @@ import {
   selectedDirectionAtom,
   stationsAtom,
 } from '~/store/atoms/station';
+import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import PortraitMain from './PortraitMain';
 
 jest.mock('~/translation', () => ({
   isJapanese: true,
-  translate: (key: string) => key,
+  translate: jest.fn((key: string) => key),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -499,14 +500,19 @@ describe('PortraitMain', () => {
     expect(current).toBe(100);
   });
 
-  it('停車中はカードの脇に次の停車駅を出す。次がなければ出さない', () => {
+  it('停車中はカードの脇に起点の駅と次の停車駅を出す。次がなければ出さない', () => {
     const { getByText } = renderWithStations([
       buildStation(1, '品川', StopCondition.All, 'JY-25'),
       buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
       buildStation(3, '田町', StopCondition.All, 'JY-27'),
     ]);
-    // 通過駅の新橋は飛ばして田町が次の停車駅になる
-    expect(getByText('portraitNextStop')).toBeTruthy();
+    // 通過駅の新橋は飛ばして田町が次の停車駅になる。どの駅を起点にした「つぎ」
+    // なのかが読み取れるよう、現在駅(品川)も添えて出す。
+    expect(getByText('portraitNextStopFrom')).toBeTruthy();
+    expect(translate).toHaveBeenCalledWith('portraitNextStopFrom', {
+      current: '品川',
+      station: '田町',
+    });
 
     const { queryByTestId } = renderWithStations([
       buildStation(1, '品川', StopCondition.All, 'JY-25'),
@@ -514,18 +520,24 @@ describe('PortraitMain', () => {
     expect(queryByTestId('portrait-card-meta')).toBeNull();
   });
 
-  it('走行中はカードが出している次の停車駅を繰り返さず、そこまでの通過駅を出す', () => {
+  it('通過駅を最寄りにしている間はその駅を通過中として出す', () => {
     const { getByText } = renderWithStations(
       [
         buildStation(1, '品川', StopCondition.All, 'JY-25'),
         buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
         buildStation(3, '田町', StopCondition.All, 'JY-27'),
       ],
-      { arrived: false }
+      {
+        arrived: false,
+        currentStation: buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
+      }
     );
 
-    // カードは田町を出しているので「つぎ 田町」とは書かず、通過する新橋を出す
+    // カードは次の停車駅(田町)を出しているので、通過駅の名前はここにしか出ない
     expect(getByText('portraitPassThrough')).toBeTruthy();
+    expect(translate).toHaveBeenCalledWith('portraitPassThrough', {
+      station: '新橋',
+    });
   });
 
   it('最終駅を発車済み扱いのまま留まってもピンが消えず全行が淡色にならない', () => {
@@ -553,11 +565,14 @@ describe('PortraitMain', () => {
     ).toBeUndefined();
   });
 
-  it('通過駅のない路線では走行中の注記を出さない', () => {
+  it('停車駅を発車して次の停車駅へ向かっている間は注記を出さない', () => {
+    // まだ通過していない駅を「通過中」と予告してしまわないよう、最寄りが停車駅の
+    // 間は先の通過駅(新橋)には触れない。
     const { queryByTestId } = renderWithStations(
       [
         buildStation(1, '品川', StopCondition.All, 'JY-25'),
-        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+        buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
+        buildStation(3, '田町', StopCondition.All, 'JY-27'),
       ],
       { arrived: false }
     );
