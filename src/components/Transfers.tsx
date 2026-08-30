@@ -1,9 +1,13 @@
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
-import { useGetLineMark, useTransferLines } from '../hooks';
+import {
+  useGetLineMark,
+  useTransferLines,
+  useTransferStationNumbers,
+} from '../hooks';
 import type { AppTheme } from '../models/Theme';
 import { enabledLanguagesAtom } from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -76,49 +80,7 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
   const isZhEnabled = enabledLanguages.includes('ZH');
   const isKoEnabled = enabledLanguages.includes('KO');
 
-  const stationNumbers = useMemo(
-    () =>
-      lines?.map((l) => {
-        const stationNumberData = l.station?.stationNumbers?.find((sn) =>
-          l.lineSymbols?.some((sym) => sym.symbol === sn.lineSymbol)
-        );
-        const lineSymbol = stationNumberData?.lineSymbol ?? '';
-        const lineSymbolColor = stationNumberData?.lineSymbolColor ?? '';
-        const stationNumber = stationNumberData?.stationNumber ?? '';
-        const lineSymbolShape = stationNumberData?.lineSymbolShape ?? 'NOOP';
-
-        if (!lineSymbol.length || !stationNumber.length) {
-          const stationNumberWhenEmptySymbol =
-            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-              ?.stationNumber ?? '';
-          const lineSymbolWhenEmptySymbol = l.lineSymbols?.[0]?.symbol ?? '';
-          const lineSymbolColorWhenEmptySymbol =
-            l.station?.stationNumbers?.find((sn) => !sn.lineSymbol?.length)
-              ?.lineSymbolColor ?? '#000000';
-          const lineSymbolShapeWhenEmptySymbol =
-            l.station?.stationNumbers?.find(
-              (sn) => !sn.lineSymbol?.length
-            )?.lineSymbolShape;
-
-          return {
-            __typename: 'StationNumber' as const,
-            lineSymbol: lineSymbolWhenEmptySymbol,
-            lineSymbolColor: lineSymbolColorWhenEmptySymbol,
-            stationNumber: stationNumberWhenEmptySymbol,
-            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
-          };
-        }
-
-        return {
-          __typename: 'StationNumber' as const,
-          lineSymbol,
-          lineSymbolColor,
-          stationNumber,
-          lineSymbolShape,
-        };
-      }),
-    [lines]
-  );
+  const stationNumbers = useTransferStationNumbers(lines);
 
   const renderTransferLine = useCallback(
     ({ item: line, index }: { item: Line; index: number }) => {

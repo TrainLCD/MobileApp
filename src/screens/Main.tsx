@@ -793,7 +793,10 @@ const MainScreen: React.FC = () => {
     return (
       <>
         <MainScreenEffects />
-        <PortraitMain />
+        <PortraitMain
+          onPress={updateBottomState}
+          onTransferPress={handleTransferPress}
+        />
         {isDevApp && devOverlayEnabled && <DevOverlay />}
       </>
     );

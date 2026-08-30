@@ -2,17 +2,20 @@ import { fireEvent, render, within } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { getLuminance } from 'polished';
 import { StyleSheet } from 'react-native';
-import { type Station, StopCondition } from '~/@types/graphql';
+import { type Line, type Station, StopCondition } from '~/@types/graphql';
 import { DARK_APP_COLORS, LIGHT_APP_COLORS } from '~/constants/colorScheme';
 import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
   useHeaderCommonData,
+  useTransferLines,
   useTransferLinesFromStation,
+  useTransferTargetStation,
 } from '~/hooks';
 import { COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
 import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
+import { bottomStateAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
   selectedDirectionAtom,
@@ -43,9 +46,13 @@ jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
   useCurrentTrainType: jest.fn(),
+  useGetLineMark: jest.fn(() => () => null),
   useHeaderCommonData: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => () => 0),
+  useTransferLines: jest.fn(() => []),
   useTransferLinesFromStation: jest.fn(() => []),
+  useTransferStationNumbers: jest.fn((lines: Line[]) => lines.map(() => null)),
+  useTransferTargetStation: jest.fn(() => undefined),
 }));
 
 const mockedUseHeaderCommonData = useHeaderCommonData as jest.Mock;
@@ -54,6 +61,8 @@ const mockedUseCurrentStation = useCurrentStation as jest.Mock;
 const mockedUseCurrentTrainType = useCurrentTrainType as jest.Mock;
 const mockedUseTransferLinesFromStation =
   useTransferLinesFromStation as jest.Mock;
+const mockedUseTransferLines = useTransferLines as jest.Mock;
+const mockedUseTransferTargetStation = useTransferTargetStation as jest.Mock;
 
 const yamanoteLine = {
   id: 11302,
@@ -101,10 +110,18 @@ const renderWithStations = (
     arrived = true,
     currentStation = stations[0],
     colorScheme = COLOR_SCHEME_PREFERENCE.LIGHT,
+    bottomState = 'LINE' as const,
+    transferStation,
+    onPress,
+    onTransferPress,
   }: {
     arrived?: boolean;
     currentStation?: Station;
     colorScheme?: (typeof COLOR_SCHEME_PREFERENCE)[keyof typeof COLOR_SCHEME_PREFERENCE];
+    bottomState?: 'LINE' | 'TRANSFER' | 'TYPE_CHANGE';
+    transferStation?: Station;
+    onPress?: () => void;
+    onTransferPress?: (station?: Station) => void;
   } = {}
 ) => {
   const store = createStore();
@@ -114,11 +131,13 @@ const renderWithStations = (
   store.set(stationsAtom, stations);
   store.set(selectedDirectionAtom, 'INBOUND');
   store.set(arrivedAtom, arrived);
+  store.set(bottomStateAtom, bottomState);
   mockedUseCurrentStation.mockReturnValue(currentStation);
+  mockedUseTransferTargetStation.mockReturnValue(transferStation);
 
   return render(
     <Provider store={store}>
-      <PortraitMain />
+      <PortraitMain onPress={onPress} onTransferPress={onTransferPress} />
     </Provider>
   );
 };
@@ -133,6 +152,8 @@ describe('PortraitMain', () => {
       color: '#123456',
     });
     mockedUseTransferLinesFromStation.mockReturnValue([]);
+    mockedUseTransferLines.mockReturnValue([]);
+    mockedUseTransferTargetStation.mockReturnValue(undefined);
   });
 
   afterEach(() => {
@@ -578,5 +599,119 @@ describe('PortraitMain', () => {
     );
 
     expect(queryByTestId('portrait-card-meta')).toBeNull();
+  });
+
+  describe('のりかえ案内', () => {
+    const shinjuku = buildStation(100, '新宿', StopCondition.All, 'JC-05');
+    const shinsenShinjuku = buildStation(200, '新線新宿', StopCondition.All);
+
+    const buildTransferLine = (
+      id: number,
+      nameShort: string,
+      color: string,
+      station: Station
+    ): Line =>
+      ({
+        id,
+        nameShort,
+        nameRoman: `${nameShort}-roman`,
+        color,
+        lineSymbols: [],
+        station,
+      }) as unknown as Line;
+
+    const yamanote = buildTransferLine(11302, '山手線', '#80C241', shinjuku);
+    const keioNew = buildTransferLine(
+      99310,
+      '京王新線',
+      '#CA0073',
+      shinsenShinjuku
+    );
+
+    it('下部の表示が TRANSFER のときは停車駅リストに重ねてのりかえ案内を出す', () => {
+      mockedUseTransferLines.mockReturnValue([yamanote]);
+
+      const { getByTestId, getByText } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+        transferStation: shinjuku,
+      });
+
+      expect(getByTestId('portrait-transfers')).toBeTruthy();
+      // 見出しは translate('transfer') をそのまま使う
+      expect(getByText('transfer')).toBeTruthy();
+      // メタ行にも運転中の路線名が出るので、行に絞って確かめる
+      expect(
+        within(getByTestId('portrait-transfer-row-11302')).getByText('山手線')
+      ).toBeTruthy();
+      // 案内対象の駅は見出しの脇に出す
+      expect(getByTestId('portrait-transfer-station').props.children).toBe(
+        '新宿駅'
+      );
+      // リストは外さずに重ねるだけなので、下のスクロール位置は保たれる
+      expect(getByTestId('portrait-stop-list')).toBeTruthy();
+    });
+
+    it('乗換路線が無いときは TRANSFER でものりかえ案内を出さない', () => {
+      mockedUseTransferLines.mockReturnValue([]);
+
+      const { queryByTestId } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+      });
+
+      expect(queryByTestId('portrait-transfers')).toBeNull();
+    });
+
+    it('乗換先が案内中の駅と同じなら駅名を添えず、別の駅のときだけ添える', () => {
+      mockedUseTransferLines.mockReturnValue([yamanote, keioNew]);
+
+      const { getByTestId, getAllByText } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+        transferStation: shinjuku,
+      });
+
+      // 同じ新宿駅なので、山手線の行には駅名を出さない
+      expect(
+        within(getByTestId('portrait-transfer-row-11302')).queryByText('新宿駅')
+      ).toBeNull();
+      // 新線新宿は別の駅なので添える
+      expect(
+        within(getByTestId('portrait-transfer-row-99310')).getByText(
+          '新線新宿駅'
+        )
+      ).toBeTruthy();
+      // 「新宿駅」は見出しの脇だけ。行に同じ駅名が重ねて出ていないこと
+      expect(getAllByText('新宿駅')).toHaveLength(1);
+    });
+
+    it('画面タップで下部の表示を進める', () => {
+      const onPress = jest.fn();
+      const { getByTestId } = renderWithStations([shinjuku], { onPress });
+
+      fireEvent.press(getByTestId('portrait-root'));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
+    it('のりかえ行タップでは路線と駅を渡し、表示は進めない', () => {
+      mockedUseTransferLines.mockReturnValue([yamanote]);
+      const onPress = jest.fn();
+      const onTransferPress = jest.fn();
+
+      const { getByTestId } = renderWithStations([shinjuku], {
+        bottomState: 'TRANSFER',
+        transferStation: shinjuku,
+        onPress,
+        onTransferPress,
+      });
+
+      fireEvent.press(getByTestId('portrait-transfer-row-11302'));
+
+      expect(onTransferPress).toHaveBeenCalledTimes(1);
+      expect(onTransferPress.mock.calls[0][0]).toMatchObject({
+        groupId: shinjuku.groupId,
+        line: yamanote,
+      });
+      expect(onPress).not.toHaveBeenCalled();
+    });
   });
 });
