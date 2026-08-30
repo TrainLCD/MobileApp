@@ -63,6 +63,7 @@ describe('useUpdateBottomState', () => {
   });
 
   afterEach(() => {
+    jest.clearAllMocks();
     jest.useRealTimers();
     mockLayout.isPortrait = false;
   });

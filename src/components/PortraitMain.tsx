@@ -1014,12 +1014,14 @@ const PortraitTransfers = ({
   transferStation,
   colors,
   accentColor,
+  bottomInset,
   onPress,
 }: {
   lines: Line[];
   transferStation: Station | null;
   colors: AppColors;
   accentColor: string;
+  bottomInset: number;
   onPress?: (station?: Station) => void;
 }) => {
   const getLineMarkFunc = useGetLineMark();
@@ -1059,7 +1061,15 @@ const PortraitTransfers = ({
 
       <ScrollView
         testID="portrait-transfer-list"
-        contentContainerStyle={styles.transferListContent}
+        contentContainerStyle={[
+          styles.transferListContent,
+          // 停車駅リストと同じ領域を占めるので下端のセーフエリアを足す。
+          // さらに下端のぼかし(listFade)がこのオーバーレイの上に描かれるため、
+          // 最終行がぼかしへ潜らないようその分も空ける。
+          {
+            paddingBottom: STOP_LIST_PADDING_V + LIST_FADE_HEIGHT + bottomInset,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {lines.map((line, index) => {
@@ -1341,6 +1351,10 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
       duration: TRANSFER_FADE_DURATION,
     });
     transferShift.value = withTiming(0, { duration: TRANSFER_FADE_DURATION });
+    return () => {
+      cancelAnimation(transferOpacity);
+      cancelAnimation(transferShift);
+    };
   }, [showTransfer, transferOpacity, transferShift]);
   const transferStyle = useAnimatedStyle(() => ({
     opacity: transferOpacity.value,
@@ -1549,6 +1563,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
               transferStation={transferStation}
               colors={colors}
               accentColor={accentColor}
+              bottomInset={insets.bottom}
               onPress={onTransferPress}
             />
           </Animated.View>

@@ -7,6 +7,7 @@ import type { Line } from '~/@types/graphql';
  * 駅側の stationNumbers に路線のシンボルと一致するものが無い場合は、
  * シンボルを持たない駅ナンバリングと路線側の先頭シンボルを組み合わせて
  * フォールバックする(シンボル未設定の路線でもナンバリングを出すため)。
+ * どちらの経路でも lineSymbolShape は 'NOOP' で埋めて型を揃える。
  */
 export const useTransferStationNumbers = (lines: Line[]) =>
   useMemo(
@@ -38,7 +39,7 @@ export const useTransferStationNumbers = (lines: Line[]) =>
             lineSymbol: lineSymbolWhenEmptySymbol,
             lineSymbolColor: lineSymbolColorWhenEmptySymbol,
             stationNumber: stationNumberWhenEmptySymbol,
-            lineSymbolShape: lineSymbolShapeWhenEmptySymbol,
+            lineSymbolShape: lineSymbolShapeWhenEmptySymbol ?? 'NOOP',
           };
         }
 
