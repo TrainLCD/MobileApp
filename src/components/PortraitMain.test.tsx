@@ -1,7 +1,9 @@
 import { fireEvent, render, within } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import { getLuminance } from 'polished';
 import { StyleSheet } from 'react-native';
 import { type Station, StopCondition } from '~/@types/graphql';
+import { DARK_APP_COLORS, LIGHT_APP_COLORS } from '~/constants/colorScheme';
 import {
   useCurrentLine,
   useCurrentStation,
@@ -9,6 +11,8 @@ import {
   useHeaderCommonData,
   useTransferLinesFromStation,
 } from '~/hooks';
+import { COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
+import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
 import {
   arrivedAtom,
   selectedDirectionAtom,
@@ -69,6 +73,7 @@ const commonData = {
   },
   threeLetterCode: undefined,
   numberingColor: '#80C241',
+  headerState: 'NEXT_KANA',
 };
 
 const buildStation = (
@@ -94,9 +99,16 @@ const renderWithStations = (
   {
     arrived = true,
     currentStation = stations[0],
-  }: { arrived?: boolean; currentStation?: Station } = {}
+    colorScheme = COLOR_SCHEME_PREFERENCE.LIGHT,
+  }: {
+    arrived?: boolean;
+    currentStation?: Station;
+    colorScheme?: (typeof COLOR_SCHEME_PREFERENCE)[keyof typeof COLOR_SCHEME_PREFERENCE];
+  } = {}
 ) => {
   const store = createStore();
+  // 端末のダークモード状態に左右されないよう、配色は常に明示して固定する
+  store.set(colorSchemePreferenceAtom, colorScheme);
   // 全駅表示。INBOUND は反転しないので渡した順がそのまま表示順になる。
   store.set(stationsAtom, stations);
   store.set(selectedDirectionAtom, 'INBOUND');
@@ -186,7 +198,7 @@ describe('PortraitMain', () => {
   });
 
   it('停車駅リストに通過駅も含めて駅名とナンバリングを表示する', () => {
-    const { getByText, queryByText } = renderWithStations([
+    const { getByText } = renderWithStations([
       buildStation(1, '品川', StopCondition.All, 'JY-25'),
       buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
       buildStation(3, '田町', StopCondition.All, 'JY-27'),
@@ -197,8 +209,8 @@ describe('PortraitMain', () => {
     expect(getByText('田町')).toBeTruthy();
     expect(getByText('JY-25')).toBeTruthy();
     expect(getByText('JY-27')).toBeTruthy();
-    // 「通過」ラベルは表示しない
-    expect(queryByText('passStationLabel')).toBeNull();
+    // 通過駅であることは行内の「通過」ラベルでも示す
+    expect(getByText('portraitPassLabel')).toBeTruthy();
   });
 
   it('発車後は先頭駅の行が半透明になり強調が次の停車駅へ移る', () => {
@@ -220,10 +232,10 @@ describe('PortraitMain', () => {
     ).toBe(yamanoteLine.color);
     // 強調(フォント拡大)は発車済みの品川ではなく次の停車駅の田町に付く
     expect(StyleSheet.flatten(getByText('田町').props.style).fontSize).toBe(
-      RFValue(18)
+      RFValue(15)
     );
     expect(StyleSheet.flatten(getByText('品川').props.style).fontSize).toBe(
-      RFValue(16)
+      RFValue(14)
     );
     // 列車位置の三角は現在駅と次駅の間(次駅行の上側セグメント)に出る
     expect(
@@ -247,9 +259,9 @@ describe('PortraitMain', () => {
       StyleSheet.flatten(getByTestId('stop-row-1').props.style).opacity
     ).toBeUndefined();
     expect(StyleSheet.flatten(getByText('品川').props.style).fontSize).toBe(
-      RFValue(18)
+      RFValue(15)
     );
-    // 列車位置の三角は現在駅の行に出る
+    // 列車位置のピンは現在駅の行に出る
     expect(
       within(getByTestId('stop-row-1')).getByTestId('train-chevron')
     ).toBeTruthy();
@@ -397,5 +409,159 @@ describe('PortraitMain', () => {
 
     expect(queryByText('山手線')).toBeNull();
     expect(queryByText('品川')).toBeNull();
+  });
+  it('通過駅の行は停車駅の行より低く、同じ画面高でより多くの駅を見せる', () => {
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
+    ]);
+
+    const stopHeight = StyleSheet.flatten(getByTestId('stop-row-1').props.style)
+      .minHeight as number;
+    const passHeight = StyleSheet.flatten(getByTestId('stop-row-2').props.style)
+      .minHeight as number;
+    expect(passHeight).toBeLessThan(stopHeight);
+  });
+
+  it('ライト設定では地・カード・本文にライトのトークンを使う', () => {
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-root').props.style)
+        .backgroundColor
+    ).toBe(LIGHT_APP_COLORS.background);
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-card').props.style)
+        .backgroundColor
+    ).toBe(LIGHT_APP_COLORS.card);
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-name').props.style).color
+    ).toBe(LIGHT_APP_COLORS.text);
+  });
+
+  it('ダーク設定では地・カード・本文がダークのトークンへ切り替わる', () => {
+    const { getByTestId } = renderWithStations(
+      [buildStation(1, '品川', StopCondition.All, 'JY-25')],
+      { colorScheme: COLOR_SCHEME_PREFERENCE.DARK }
+    );
+
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-root').props.style)
+        .backgroundColor
+    ).toBe(DARK_APP_COLORS.background);
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-card').props.style)
+        .backgroundColor
+    ).toBe(DARK_APP_COLORS.card);
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-name').props.style).color
+    ).toBe(DARK_APP_COLORS.text);
+  });
+
+  it('ダークでは沈まないよう路線色の明度を上げた色で線路を描く', () => {
+    const { getByTestId } = renderWithStations(
+      [buildStation(1, '品川', StopCondition.All, 'JY-25')],
+      { colorScheme: COLOR_SCHEME_PREFERENCE.DARK }
+    );
+
+    const trackColor = StyleSheet.flatten(
+      getByTestId('track-bottom-1').props.style
+    ).backgroundColor as string;
+
+    expect(trackColor).not.toBe(yamanoteLine.color);
+    // 暗い地から浮くよう、元の路線色より明るい色になっている
+    expect(getLuminance(trackColor)).toBeGreaterThan(
+      getLuminance(yamanoteLine.color)
+    );
+  });
+
+  it('進捗バーは走行→接近→停車の順に伸び、停車で満ちる', () => {
+    const widthFor = (headerState: string) => {
+      mockedUseHeaderCommonData.mockReturnValue({ ...commonData, headerState });
+      const { getByTestId, unmount } = renderWithStations([
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      ]);
+      const width = StyleSheet.flatten(
+        getByTestId('portrait-progress-fill').props.style
+      ).width as string;
+      unmount();
+      return Number.parseFloat(width);
+    };
+
+    const next = widthFor('NEXT_KANA');
+    const arriving = widthFor('ARRIVING_KANA');
+    const current = widthFor('CURRENT_KANA');
+
+    expect(next).toBeLessThan(arriving);
+    expect(arriving).toBeLessThan(current);
+    expect(current).toBe(100);
+  });
+
+  it('停車中はカードの脇に次の停車駅を出す。次がなければ出さない', () => {
+    const { getByText } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
+      buildStation(3, '田町', StopCondition.All, 'JY-27'),
+    ]);
+    // 通過駅の新橋は飛ばして田町が次の停車駅になる
+    expect(getByText('portraitNextStop')).toBeTruthy();
+
+    const { queryByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+    expect(queryByTestId('portrait-card-meta')).toBeNull();
+  });
+
+  it('走行中はカードが出している次の停車駅を繰り返さず、そこまでの通過駅を出す', () => {
+    const { getByText } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
+        buildStation(3, '田町', StopCondition.All, 'JY-27'),
+      ],
+      { arrived: false }
+    );
+
+    // カードは田町を出しているので「つぎ 田町」とは書かず、通過する新橋を出す
+    expect(getByText('portraitPassThrough')).toBeTruthy();
+  });
+
+  it('最終駅を発車済み扱いのまま留まってもピンが消えず全行が淡色にならない', () => {
+    // arrived が false の間 useRefreshStation は現在駅を進めないため、終点に着いた
+    // あと到着判定が外れると「最終駅にいて未到着」という状態が続く。素直に次駅へ
+    // 進めるとピンが範囲外へ出て、全行が発車済みの淡色になってしまう。
+    const { getByTestId } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+      ],
+      {
+        arrived: false,
+        currentStation: buildStation(2, '田町', StopCondition.All),
+      }
+    );
+
+    // 列車ピンは最終駅の行に残る
+    expect(
+      within(getByTestId('stop-row-2')).getByTestId('train-chevron')
+    ).toBeTruthy();
+    // 最終駅の行は発車済みの淡色にしない
+    expect(
+      StyleSheet.flatten(getByTestId('stop-body-2').props.style).opacity
+    ).toBeUndefined();
+  });
+
+  it('通過駅のない路線では走行中の注記を出さない', () => {
+    const { queryByTestId } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+      ],
+      { arrived: false }
+    );
+
+    expect(queryByTestId('portrait-card-meta')).toBeNull();
   });
 });
