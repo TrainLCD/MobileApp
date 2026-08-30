@@ -54,6 +54,8 @@ import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useEstimateArrivalTimesAllStops,
+  useEstimatedMinutesByStationId,
   useGetLineMark,
   useHeaderCommonData,
   useStationNumberIndexFunc,
@@ -238,6 +240,16 @@ const TRANSFER_FADE_SHIFT = 10;
 
 // リスト下端のフェード。最終行がホームインジケータへ溶けるようにする
 const LIST_FADE_HEIGHT = 72;
+
+// 各駅の到着予測を出す列の幅。3桁+単位が収まる固定幅を確保し、値の桁数で
+// 右端が動かないようにして数字を縦に読める列にする。
+const ETA_COLUMN_WIDTH = isTablet ? 46 * 1.5 : 46;
+
+// 1分未満に丸まった駅。0分と出すと「もう着いた」と読めてしまうので語で出す
+const ETA_SOON_THRESHOLD_MIN = 1;
+
+// ETAが取れていない駅のプレースホルダ。値のある駅と桁位置を揃えて置く
+const ETA_PLACEHOLDER = '--';
 
 // 現在地まわりに敷く路線色のにじみ。ダークでは発光、ライトでは淡い染みに見える
 const WASH_WIDTH = 430;
@@ -520,6 +532,35 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 0.6,
   },
+  // 到着予測。数字と単位のベースラインを揃えたうえで右寄せの固定幅に置く
+  etaColumn: {
+    minWidth: ETA_COLUMN_WIDTH,
+    marginLeft: 10,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'flex-end',
+  },
+  etaValue: {
+    fontSize: RFValue(13),
+    fontWeight: 'bold',
+  },
+  etaValueFocused: {
+    fontSize: RFValue(15),
+  },
+  etaUnit: {
+    marginLeft: 2,
+    fontSize: RFValue(8),
+    fontWeight: 'bold',
+  },
+  etaUnitFocused: {
+    fontSize: RFValue(9),
+  },
+  // 「まもなく」は数字より字数が多いので一段小さくして列の幅に収める
+  etaSoon: {
+    fontSize: RFValue(10),
+    fontWeight: 'bold',
+    letterSpacing: 0.4,
+  },
   // のりかえ案内。停車駅リストと同じ領域に重ねて出す
   transferOverlay: {
     position: 'absolute',
@@ -740,6 +781,59 @@ const TrackSegment = ({
   </View>
 );
 
+// 各駅の到着予測。横画面の LineBoard と同じく「現在駅を0分とした残り分」を出す。
+// 単位を全行に添えるのは、LineBoard が最後のドットにだけ「分」を置くのは数字を
+// ドットの中へ入れる都合で場所が無いからで、縦の列には置く場所があるため。
+// スクロールで単位だけ画面外に出ることもない。
+const EtaValue = ({
+  minutes,
+  isFocused,
+  color,
+  placeholderColor,
+}: {
+  minutes?: number | null;
+  isFocused: boolean;
+  color: string;
+  placeholderColor: string;
+}) => {
+  if (minutes == null) {
+    return (
+      <Typography style={[styles.etaValue, { color: placeholderColor }]}>
+        {ETA_PLACEHOLDER}
+      </Typography>
+    );
+  }
+
+  // 0分と出すと「もう着いた」と読めてしまうので、丸めて0になる駅は語で出す
+  const rounded = Math.round(minutes);
+  if (rounded < ETA_SOON_THRESHOLD_MIN) {
+    return (
+      <Typography style={[styles.etaSoon, { color }]}>
+        {translate('portraitEtaSoon')}
+      </Typography>
+    );
+  }
+
+  return (
+    <>
+      <Typography
+        style={[
+          styles.etaValue,
+          isFocused && styles.etaValueFocused,
+          { color },
+        ]}
+      >
+        {rounded}
+      </Typography>
+      <Typography
+        style={[styles.etaUnit, isFocused && styles.etaUnitFocused, { color }]}
+      >
+        {translate('portraitEtaUnit')}
+      </Typography>
+    </>
+  );
+};
+
 const StopRow = ({
   station,
   colors,
@@ -752,6 +846,8 @@ const StopRow = ({
   fallbackLineColor,
   elevated,
   onLayoutTop,
+  showEta,
+  estimatedMinutes,
 }: {
   station: Station;
   colors: AppColors;
@@ -764,6 +860,9 @@ const StopRow = ({
   fallbackLineColor: string;
   elevated?: boolean;
   onLayoutTop?: (y: number) => void;
+  /** ETAが1駅でも取れているか。取れていない路線では列ごと出さない */
+  showEta: boolean;
+  estimatedMinutes?: number | null;
 }) => {
   const isPass = getIsPass(station);
   // 直通運転で路線が変わったら縦棒も直通先のラインカラーで塗る
@@ -885,6 +984,18 @@ const StopRow = ({
           <Typography style={[styles.stopNumber, { color: numberColor }]}>
             {stationNumber}
           </Typography>
+        ) : null}
+        {/* 通過駅は停車しないので出さない。値の無い停車駅でも列は残して、
+            取得が届いたときに行の右端が動かないようにする。 */}
+        {showEta && !isPass ? (
+          <View style={styles.etaColumn} testID={`stop-eta-${station.id}`}>
+            <EtaValue
+              minutes={estimatedMinutes}
+              isFocused={isFocused}
+              color={isFocused ? accentColor : colors.secondaryText}
+              placeholderColor={passColor}
+            />
+          </View>
         ) : null}
       </View>
     </View>
@@ -1253,6 +1364,13 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const transferStation = useTransferTargetStation() ?? null;
   // 行先は言語切り替えタイマーで多言語化せず日本語固定で表示する
   const boundText = useBoundText().JA;
+  // 全駅を出すので leftStations で絞られない方のフックを使う
+  const { route: estimatedRoute } = useEstimateArrivalTimesAllStops();
+  const estimatedMinutesByStationId =
+    useEstimatedMinutesByStationId(estimatedRoute);
+  // ETAが1駅も取れない路線(未取得・エラー・データなし)では列ごと出さない。
+  // 全行に「--」が並び続けるより、右端を今までどおり空けておく方が素直。
+  const showEta = estimatedMinutesByStationId.size > 0;
 
   const lineColor = currentLine?.color ?? FALLBACK_ACCENT;
   const accentColor = useMemo(
@@ -1621,6 +1739,12 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
                   markerMoving={markerMoving}
                   fallbackLineColor={lineColor}
                   elevated={index === markerRowIndex}
+                  showEta={showEta}
+                  estimatedMinutes={
+                    station.id != null
+                      ? estimatedMinutesByStationId.get(station.id)
+                      : null
+                  }
                   onLayoutTop={(y) =>
                     setRowYs((prev) =>
                       prev[index] === y ? prev : { ...prev, [index]: y }

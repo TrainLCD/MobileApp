@@ -8,6 +8,7 @@ import {
   useCurrentLine,
   useCurrentStation,
   useCurrentTrainType,
+  useEstimatedMinutesByStationId,
   useHeaderCommonData,
   useTransferLines,
   useTransferLinesFromStation,
@@ -46,6 +47,12 @@ jest.mock('~/hooks', () => ({
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
   useCurrentTrainType: jest.fn(),
+  useEstimateArrivalTimesAllStops: jest.fn(() => ({
+    route: null,
+    loading: false,
+    error: null,
+  })),
+  useEstimatedMinutesByStationId: jest.fn(() => new Map<number, number>()),
   useGetLineMark: jest.fn(() => () => null),
   useHeaderCommonData: jest.fn(),
   useStationNumberIndexFunc: jest.fn(() => () => 0),
@@ -63,6 +70,8 @@ const mockedUseTransferLinesFromStation =
   useTransferLinesFromStation as jest.Mock;
 const mockedUseTransferLines = useTransferLines as jest.Mock;
 const mockedUseTransferTargetStation = useTransferTargetStation as jest.Mock;
+const mockedUseEstimatedMinutesByStationId =
+  useEstimatedMinutesByStationId as jest.Mock;
 
 const yamanoteLine = {
   id: 11302,
@@ -154,6 +163,9 @@ describe('PortraitMain', () => {
     mockedUseTransferLinesFromStation.mockReturnValue([]);
     mockedUseTransferLines.mockReturnValue([]);
     mockedUseTransferTargetStation.mockReturnValue(undefined);
+    mockedUseEstimatedMinutesByStationId.mockReturnValue(
+      new Map<number, number>()
+    );
   });
 
   afterEach(() => {
@@ -599,6 +611,113 @@ describe('PortraitMain', () => {
     );
 
     expect(queryByTestId('portrait-card-meta')).toBeNull();
+  });
+
+  describe('各駅のETA', () => {
+    // 品川(現在駅) → 新橋(通過) → 田町 → 浜松町
+    const etaStations = () => [
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      buildStation(2, '新橋', StopCondition.Not, 'JY-26'),
+      buildStation(3, '田町', StopCondition.All, 'JY-27'),
+      buildStation(4, '浜松町', StopCondition.All, 'JY-28'),
+    ];
+
+    it('ETAのある停車駅に残り分と単位を出す', () => {
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(
+        new Map([
+          [3, 4],
+          [4, 11],
+        ])
+      );
+
+      const { getByTestId } = renderWithStations(etaStations());
+
+      expect(within(getByTestId('stop-eta-3')).getByText('4')).toBeTruthy();
+      expect(within(getByTestId('stop-eta-4')).getByText('11')).toBeTruthy();
+      // 単位は全行に添える
+      expect(
+        within(getByTestId('stop-eta-3')).getByText('portraitEtaUnit')
+      ).toBeTruthy();
+      expect(
+        within(getByTestId('stop-eta-4')).getByText('portraitEtaUnit')
+      ).toBeTruthy();
+    });
+
+    it('小数のETAは分に丸めて出す', () => {
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(new Map([[3, 4.6]]));
+
+      const { getByTestId } = renderWithStations(etaStations());
+
+      expect(within(getByTestId('stop-eta-3')).getByText('5')).toBeTruthy();
+    });
+
+    it('丸めて0分になる駅は数字ではなく「まもなく」を出す', () => {
+      // 0分と出すと「もう着いた」と読めてしまうため
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(new Map([[3, 0.4]]));
+
+      const { getByTestId } = renderWithStations(etaStations());
+
+      expect(
+        within(getByTestId('stop-eta-3')).getByText('portraitEtaSoon')
+      ).toBeTruthy();
+      expect(
+        within(getByTestId('stop-eta-3')).queryByText('portraitEtaUnit')
+      ).toBeNull();
+    });
+
+    it('ETAが取れている路線では、値の無い停車駅にもプレースホルダを出して桁位置を揃える', () => {
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(new Map([[3, 4]]));
+
+      const { getByTestId } = renderWithStations(etaStations());
+
+      expect(within(getByTestId('stop-eta-4')).getByText('--')).toBeTruthy();
+    });
+
+    it('通過駅にはETAを出さない', () => {
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(new Map([[3, 4]]));
+
+      const { queryByTestId } = renderWithStations(etaStations());
+
+      expect(queryByTestId('stop-eta-2')).toBeNull();
+    });
+
+    it('ETAが1駅も取れないときは列ごと出さない', () => {
+      // 全行に「--」が並び続けるより、右端を今までどおり空けておく
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(
+        new Map<number, number>()
+      );
+
+      const { queryByTestId } = renderWithStations(etaStations());
+
+      expect(queryByTestId('stop-eta-3')).toBeNull();
+      expect(queryByTestId('stop-eta-4')).toBeNull();
+    });
+
+    it('次の停車駅のETAだけ路線色で一回り大きく出す', () => {
+      mockedUseEstimatedMinutesByStationId.mockReturnValue(
+        new Map([
+          [3, 4],
+          [4, 11],
+        ])
+      );
+
+      // 品川を発車済みなので、次の停車駅は通過駅の新橋を挟んだ田町になる
+      const { getByTestId } = renderWithStations(etaStations(), {
+        arrived: false,
+      });
+
+      const focused = StyleSheet.flatten(
+        within(getByTestId('stop-eta-3')).getByText('4').props.style
+      );
+      expect(focused.fontSize).toBe(RFValue(15));
+      expect(focused.color).toBe('#80C241');
+
+      const rest = StyleSheet.flatten(
+        within(getByTestId('stop-eta-4')).getByText('11').props.style
+      );
+      expect(rest.fontSize).toBe(RFValue(13));
+      expect(rest.color).toBe(LIGHT_APP_COLORS.secondaryText);
+    });
   });
 
   describe('のりかえ案内', () => {

@@ -23,6 +23,7 @@ export { useDisplayNextStation } from './useDisplayNextStation';
 export { useDistanceToNextStation } from './useDistanceToNextStation';
 export { useEnsureSelectLineInHistory } from './useEnsureSelectLineInHistory';
 export { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
+export { useEstimateArrivalTimesAllStops } from './useEstimateArrivalTimesAllStops';
 export { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 export { useEstimatedMinutesByStationId } from './useEstimatedMinutesByStationId';
 export { useEtaAnchor } from './useEtaAnchor';
