@@ -157,6 +157,7 @@ Command mapping — the skills under `.claude/skills/` follow this table:
   - Commands executed locally (e.g., `npm run lint && npm test && npm run typecheck`).
   - Linked issues or tickets.
   - Visual evidence for UI/UX deltas, each labeled with where the image came from. Any method is acceptable — a device or simulator capture (label it with the device name, e.g., Pixel 8, iPhone 15 Pro), a React Native Web rendering (`npm run web`), or a mockup / generated image. An image that is not a rendering of the implementation must say so in its label, so a reviewer never mistakes an illustration for observed behavior. If no image is attached, state the reason in that section instead of leaving it blank.
+- Mockups and illustrations of existing UI must reproduce whatever the real screen branches on. A mockup is read as the spec, so an inaccurate one manufactures a wrong agreement even when the implementation is correct. Before drawing an element that varies by line, theme, or train type — station numbering shape, palette, train-type badge, pass/stop treatment — trace what decides it and take the value for the case you are depicting, instead of reusing the appearance of whichever component file you happened to read for its dimensions. Station numbering shape comes from the API's `lineSymbolShape`, and `src/__fixtures__/station.ts` lists the symbol-to-shape pairs (JR East `JA` / `JB` / `JC` / `JO` / `JS` / `JY` are `SQUARE`; Tokyo Metro and Toei lines are `ROUND`). If you cannot confirm a value, choose a case that does not include that element.
 - If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
 - **Keep PR metadata in sync with the bookmark state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
   - **Title**: re-evaluate whether the current title still describes the full scope of the bookmark. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
@@ -178,6 +179,7 @@ Command mapping — the skills under `.claude/skills/` follow this table:
 - [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
 - [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
 - [ ] Attach visual evidence for UI changes, each labeled with its source (device name, React Native Web, or an explicit 'not a rendering of the implementation' note for mockups); when no image is attached, state why instead of leaving the section blank.
+- [ ] For a mockup or illustration of existing UI, confirm the depicted case's real values for anything that branches by line, theme, or train type (e.g., `lineSymbolShape`) rather than reusing another component's appearance.
 
 **For documentation-only tasks**
 
