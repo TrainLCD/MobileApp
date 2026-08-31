@@ -265,6 +265,11 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const capturedURI = await viewShotCapture();
       const file = new File(capturedURI);
       const base64 = await file.base64();
+      // ViewShot が書き出した一時ファイルは base64 へ読み出した時点で用済み。
+      // 消さないとフルスクリーン画像がキャッシュ領域に溜まり続ける
+      try {
+        file.delete();
+      } catch {}
       setScreenShotBase64(base64);
       setReportModalShow(true);
     } catch (err) {
@@ -290,7 +295,13 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       const capturedURI = await viewShotCapture();
       const file = new File(capturedURI);
       const base64 = await file.base64();
-      const urlString = `data:image/jpeg;base64,${base64}`;
+      // 読み出し済みの一時ファイルを残さない(フィードバック送信側と同様)
+      try {
+        file.delete();
+      } catch {}
+      // ViewShot の出力は PNG (options.format)。下の type と合わせて image/png で統一する。
+      // 以前は jpeg を名乗っており、実データと MIME が食い違っていた
+      const urlString = `data:image/png;base64,${base64}`;
 
       const message = isJapanese
         ? `${currentLine.nameShort?.replace(
