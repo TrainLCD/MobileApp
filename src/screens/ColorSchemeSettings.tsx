@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { lighten } from 'polished';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
@@ -21,6 +21,7 @@ import {
 } from '~/models/ColorScheme';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
+import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
@@ -49,6 +50,10 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 16,
     lineHeight: 21,
+  },
+  // 配色グループと画面レイアウトグループの区切りを視覚的に分かるようにする
+  toggleSpacer: {
+    marginTop: 32,
   },
   okButton: {
     width: 128,
@@ -122,6 +127,40 @@ const SettingsItem = ({
   );
 };
 
+const ToggleItem = ({
+  title,
+  state,
+  onToggle,
+}: {
+  title: string;
+  state: boolean;
+  onToggle: () => void;
+}) => {
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
+
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={title}
+      accessibilityState={{ checked: state }}
+      onPress={onToggle}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
+        borderRadius: isLEDTheme ? 0 : 12,
+      }}
+    >
+      <Typography style={styles.title}>{title}</Typography>
+
+      <StatePanel state={state} />
+    </Pressable>
+  );
+};
+
 const ColorSchemeSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -131,6 +170,9 @@ const ColorSchemeSettingsScreen: React.FC = () => {
   const colors = useAppColors();
   const currentPreference = useAtomValue(colorSchemePreferenceAtom);
   const setColorSchemePreference = useSetAtom(colorSchemePreferenceAtom);
+  const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
+    portraitModeEnabledAtom
+  );
 
   const navigation = useNavigation();
 
@@ -178,6 +220,20 @@ const ColorSchemeSettingsScreen: React.FC = () => {
     [currentPreference, setColorSchemePreference]
   );
 
+  const handleTogglePortraitMode = useCallback(() => {
+    const flag = !portraitModeEnabled;
+    setPortraitModeEnabled(flag);
+    try {
+      storage.set(STORAGE_KEYS.PORTRAIT_MODE_ENABLED, flag ? 'true' : 'false');
+    } catch (error) {
+      // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
+      // UIと永続値の不整合を防ぐべくatom状態をロールバックする
+      setPortraitModeEnabled(!flag);
+      console.error('Failed to save portrait mode setting', error);
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  }, [portraitModeEnabled, setPortraitModeEnabled]);
+
   const handleScroll = useRef(
     RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
       useNativeDriver: true,
@@ -215,6 +271,18 @@ const ColorSchemeSettingsScreen: React.FC = () => {
             style={[styles.description, { color: colors.secondaryText }]}
           >
             {translate('colorSchemeDescription')}
+          </Typography>
+          <View style={styles.toggleSpacer}>
+            <ToggleItem
+              title={translate('portraitModeTitle')}
+              state={portraitModeEnabled}
+              onToggle={handleTogglePortraitMode}
+            />
+          </View>
+          <Typography
+            style={[styles.description, { color: colors.secondaryText }]}
+          >
+            {translate('portraitModeDescription')}
           </Typography>
           <Button
             style={styles.okButton}

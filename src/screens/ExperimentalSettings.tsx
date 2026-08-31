@@ -13,7 +13,6 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
@@ -92,26 +91,9 @@ const ExperimentalSettingsScreen: React.FC = () => {
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
-  const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
-    portraitModeEnabledAtom
-  );
   const [tuning, setTuning] = useAtom(tuningState);
 
   const navigation = useNavigation();
-
-  const handleTogglePortraitMode = useCallback(() => {
-    const flag = !portraitModeEnabled;
-    setPortraitModeEnabled(flag);
-    try {
-      storage.set(STORAGE_KEYS.PORTRAIT_MODE_ENABLED, flag ? 'true' : 'false');
-    } catch (error) {
-      // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
-      // UIと永続値の不整合を防ぐべくatom状態をロールバックする
-      setPortraitModeEnabled(!flag);
-      console.error('Failed to save portrait mode setting', error);
-      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
-    }
-  }, [portraitModeEnabled, setPortraitModeEnabled]);
 
   const handleToggleUntouchableMode = useCallback(() => {
     const flag = !tuning.untouchableModeEnabled;
@@ -163,22 +145,10 @@ const ExperimentalSettingsScreen: React.FC = () => {
           scrollEventThrottle={16}
         >
           <ToggleItem
-            title={translate('portraitModeTitle')}
-            state={portraitModeEnabled}
-            onToggle={handleTogglePortraitMode}
+            title={translate('optInTelemetryTitle')}
+            state={tuning.telemetryEnabled}
+            onToggle={handleToggleTelemetry}
           />
-          <Typography
-            style={[styles.description, { color: colors.secondaryText }]}
-          >
-            {translate('portraitModeDescription')}
-          </Typography>
-          <View style={styles.toggleSpacer}>
-            <ToggleItem
-              title={translate('optInTelemetryTitle')}
-              state={tuning.telemetryEnabled}
-              onToggle={handleToggleTelemetry}
-            />
-          </View>
           <Typography
             style={[styles.description, { color: colors.secondaryText }]}
           >
