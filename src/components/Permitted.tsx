@@ -46,7 +46,7 @@ import {
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
-import { portraitModeEnabledAtom } from '../store/atoms/experimental';
+import { portraitModeEnabledAtom } from '../store/atoms/display';
 import navigationState, {
   autoModeEnabledAtom,
   isAppLatestAtom,

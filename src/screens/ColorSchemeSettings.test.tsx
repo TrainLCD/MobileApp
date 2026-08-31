@@ -4,6 +4,7 @@ import { STORAGE_KEYS } from '~/constants';
 import { storage } from '~/lib/storage';
 import { COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
 import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
+import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import {
   getDialogPresentationSnapshot,
   resetDialogPresentationForTests,
@@ -26,10 +27,12 @@ jest.mock('~/translation', () => ({
 }));
 
 const renderWithStore = (
-  preference = COLOR_SCHEME_PREFERENCE.AUTO as (typeof COLOR_SCHEME_PREFERENCE)[keyof typeof COLOR_SCHEME_PREFERENCE]
+  preference = COLOR_SCHEME_PREFERENCE.AUTO as (typeof COLOR_SCHEME_PREFERENCE)[keyof typeof COLOR_SCHEME_PREFERENCE],
+  portraitModeEnabled = false
 ) => {
   const store = createStore();
   store.set(colorSchemePreferenceAtom, preference);
+  store.set(portraitModeEnabledAtom, portraitModeEnabled);
 
   const screen = render(
     <Provider store={store}>
@@ -76,6 +79,52 @@ describe('ColorSchemeSettingsScreen', () => {
     expect(storage.getString(STORAGE_KEYS.COLOR_SCHEME_PREFERENCE)).toBe(
       COLOR_SCHEME_PREFERENCE.DARK
     );
+  });
+
+  it('ポートレートモードをONにするとatomとストレージへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore();
+
+    fireEvent.press(getByLabelText('portraitModeTitle'));
+
+    expect(store.get(portraitModeEnabledAtom)).toBe(true);
+    expect(storage.getString(STORAGE_KEYS.PORTRAIT_MODE_ENABLED)).toBe('true');
+  });
+
+  it('ポートレートモードをOFFにするとatomとストレージへ保存される', () => {
+    const { getByLabelText, store } = renderWithStore(
+      COLOR_SCHEME_PREFERENCE.AUTO,
+      true
+    );
+
+    fireEvent.press(getByLabelText('portraitModeTitle'));
+
+    expect(store.get(portraitModeEnabledAtom)).toBe(false);
+    expect(storage.getString(STORAGE_KEYS.PORTRAIT_MODE_ENABLED)).toBe('false');
+  });
+
+  it('ポートレートモードの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
+    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw new Error('storage failure');
+    });
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    const { getByLabelText, store } = renderWithStore();
+
+    fireEvent.press(getByLabelText('portraitModeTitle'));
+
+    expect(store.get(portraitModeEnabledAtom)).toBe(false);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to save portrait mode setting',
+      expect.any(Error)
+    );
+    expect(getDialogPresentationSnapshot().request).toMatchObject({
+      title: 'errorTitle',
+      message: 'failedToSavePreference',
+    });
+
+    setSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
   it('ストレージへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {

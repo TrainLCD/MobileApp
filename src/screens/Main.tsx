@@ -71,7 +71,7 @@ import {
 import { storage } from '~/lib/storage';
 import { getLineSymbolImage } from '~/lineSymbolImage';
 import { APP_THEME } from '~/models/Theme';
-import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
+import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import lineState from '~/store/atoms/line';
 import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
