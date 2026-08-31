@@ -58,6 +58,7 @@ import {
   useEstimatedMinutesByStationId,
   useGetLineMark,
   useHeaderCommonData,
+  useLoopLine,
   useStationNumberIndexFunc,
   useTransferLines,
   useTransferLinesFromStation,
@@ -1358,6 +1359,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const arrived = useAtomValue(arrivedAtom);
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
+  const { isLoopLine } = useLoopLine();
   const bottomState = useAtomValue(bottomStateAtom);
   const transferLines = useTransferLines();
   // 案内する乗換路線と対象駅がずれないよう、路線側と同じフックから引く
@@ -1408,13 +1410,19 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
 
   // ポートレートでは路線の全駅を進行方向順(上から下)に表示する。
   // 2路線の接続駅の重複を dropEitherJunctionStation で除いたうえで、
-  // INBOUND は index 増加方向へ進むので昇順のまま、OUTBOUND は index 減少
-  // 方向へ進むので反転する(useRefreshLeftStations と同じ向き)。
+  // 進行方向が index 減少方向のときだけ反転する。
+  // 通常の路線は INBOUND が index 増加方向だが、環状線(山手線・大阪環状線の
+  // 各駅停車・名城線・ディズニーリゾートライン)は向きが逆で、INBOUND が index
+  // 減少方向、OUTBOUND が増加方向になる(useSlicedStations / useNextStation /
+  // useRefreshLeftStations のループ線分岐と同じ向き)。
   const stops = useMemo(() => {
     const list = allStations.filter((s): s is Station => !!s);
     const dropped = dropEitherJunctionStation(list, selectedDirection);
-    return selectedDirection === 'OUTBOUND' ? [...dropped].reverse() : dropped;
-  }, [allStations, selectedDirection]);
+    const shouldReverse = isLoopLine
+      ? selectedDirection === 'INBOUND'
+      : selectedDirection === 'OUTBOUND';
+    return shouldReverse ? [...dropped].reverse() : dropped;
+  }, [allStations, selectedDirection, isLoopLine]);
 
   // 現在の最寄り駅(列車位置)の index。
   const currentIndex = useMemo(
