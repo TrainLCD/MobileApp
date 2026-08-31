@@ -116,6 +116,9 @@ export const ThemeConfirmModal: React.FC<Props> = ({
               source={previewImage}
               style={styles.previewImage}
               contentFit="contain"
+              // モーダル表示中しか見えない大判プレビュー(タブレットで1枚8MB超のデコード
+              // サイズ)をメモリキャッシュに残さない。ディスクキャッシュのみで再表示する
+              cachePolicy="disk"
             />
           )}
         </View>
