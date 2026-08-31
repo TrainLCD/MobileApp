@@ -324,7 +324,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: RFValue(11),
     fontWeight: 'bold',
-    letterSpacing: 1.4,
     height: RFValue(17),
     lineHeight: RFValue(17),
   },
@@ -514,7 +513,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: RFValue(8),
     fontWeight: 'bold',
-    letterSpacing: 0.8,
   },
   transferDots: {
     flexDirection: 'row',
@@ -531,7 +529,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: RFValue(10),
     fontWeight: 'bold',
-    letterSpacing: 0.6,
   },
   // 到着予測。数字と単位のベースラインを揃えたうえで右寄せの固定幅に置く
   etaColumn: {
@@ -560,7 +557,6 @@ const styles = StyleSheet.create({
   etaSoon: {
     fontSize: RFValue(10),
     fontWeight: 'bold',
-    letterSpacing: 0.4,
   },
   // のりかえ案内。停車駅リストと同じ領域に重ねて出す
   transferOverlay: {
