@@ -153,7 +153,7 @@ describe('HeaderLowPower', () => {
     expect(getByText('東急大井町線')).toBeTruthy();
   });
 
-  it('乗換路線が上限を超えたら残りを「他N線」に畳む', () => {
+  it('2行に収まる乗換路線はすべて並べる', () => {
     setEstimatedMinutes(2);
     useTransferLines.mockReturnValue(
       ['A線', 'B線', 'C線', 'D線', 'E線'].map((nameShort) => ({
@@ -166,7 +166,28 @@ describe('HeaderLowPower', () => {
       <HeaderLowPower {...createMockHeaderProps({ headerState: 'NEXT' })} />
     );
 
-    expect(getByText('A線・B線・C線 他2線')).toBeTruthy();
+    expect(getByText('A線・B線・C線・D線・E線')).toBeTruthy();
+  });
+
+  it('2行に収まらない乗換路線は収まる件数まで減らして「他N線」に畳む', () => {
+    setEstimatedMinutes(2);
+    useTransferLines.mockReturnValue(
+      [
+        '東京メトロ丸ノ内線',
+        '東京メトロ千代田線',
+        '東京メトロ半蔵門線',
+        '東京メトロ東西線',
+        '都営三田線',
+      ].map((nameShort) => ({ nameShort, nameRoman: nameShort }))
+    );
+
+    const { getByText } = render(
+      <HeaderLowPower {...createMockHeaderProps({ headerState: 'NEXT' })} />
+    );
+
+    expect(
+      getByText('東京メトロ丸ノ内線・東京メトロ千代田線 他3線')
+    ).toBeTruthy();
   });
 
   it('セーフエリアぶんを外周の余白として確保する', () => {
