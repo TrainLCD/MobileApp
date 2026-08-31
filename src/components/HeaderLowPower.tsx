@@ -145,7 +145,7 @@ const HeaderLowPower: React.FC<CommonHeaderProps> = ({
     if (!rest) {
       return joined;
     }
-    return isJapaneseState ? `${joined} 他${rest}` : `${joined} +${rest}`;
+    return isJapaneseState ? `${joined} 他${rest}線` : `${joined} +${rest}`;
   }, [isJapaneseState, transferLines]);
 
   return (

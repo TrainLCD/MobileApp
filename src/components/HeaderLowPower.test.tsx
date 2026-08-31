@@ -153,7 +153,7 @@ describe('HeaderLowPower', () => {
     expect(getByText('東急大井町線')).toBeTruthy();
   });
 
-  it('乗換路線が上限を超えたら残りを「他N」に畳む', () => {
+  it('乗換路線が上限を超えたら残りを「他N線」に畳む', () => {
     setEstimatedMinutes(2);
     useTransferLines.mockReturnValue(
       ['A線', 'B線', 'C線', 'D線', 'E線'].map((nameShort) => ({
@@ -166,7 +166,7 @@ describe('HeaderLowPower', () => {
       <HeaderLowPower {...createMockHeaderProps({ headerState: 'NEXT' })} />
     );
 
-    expect(getByText('A線・B線・C線 他2')).toBeTruthy();
+    expect(getByText('A線・B線・C線 他2線')).toBeTruthy();
   });
 
   it('セーフエリアぶんを外周の余白として確保する', () => {
