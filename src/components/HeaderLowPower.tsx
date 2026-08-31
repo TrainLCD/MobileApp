@@ -14,8 +14,23 @@ import Typography from './Typography';
 const { background, primary, secondary, muted, accent } =
   LOW_POWER_THEME_COLORS;
 
-/** 乗換路線名を並べる上限。これを超えた分は「他N」に畳む */
-const MAX_TRANSFER_LINE_NAMES = 3;
+/** 乗換路線名に割ける行数。ヘッダー右カラムの取り分がこれで決まる */
+const TRANSFER_TEXT_LINES = 2;
+/** 乗換路線名のフォントサイズ(拡大率を掛ける前)。表示と文字数見積もりで共有する */
+const TRANSFER_TEXT_FONT_SIZE = 15;
+
+/**
+ * 全角1文字ぶんを1カラムとして数える。ASCII は半角なので 0.5 で見積もる。
+ * 行送りを実測せずに「何件まで並べられるか」を決めるための近似で、
+ * 日本語は任意位置で折り返せるため合計カラム数がそのまま行数の目安になる。
+ */
+const measureColumns = (text: string): number => {
+  let columns = 0;
+  for (const char of text) {
+    columns += (char.codePointAt(0) ?? 0) < 0x100 ? 0.5 : 1;
+  }
+  return columns;
+};
 
 /**
  * 低消費電力テーマ(#3697)のヘッダー。
@@ -132,7 +147,6 @@ const HeaderLowPower: React.FC<CommonHeaderProps> = ({
       return '';
     }
     const names = transferLines
-      .slice(0, MAX_TRANSFER_LINE_NAMES)
       .map((line) =>
         ((isJapaneseState ? line.nameShort : line.nameRoman) ?? '').replace(
           parenthesisRegexp,
@@ -140,13 +154,34 @@ const HeaderLowPower: React.FC<CommonHeaderProps> = ({
         )
       )
       .filter((name) => name.length);
-    const rest = transferLines.length - names.length;
-    const joined = names.join(isJapaneseState ? '・' : ', ');
-    if (!rest) {
-      return joined;
+    if (!names.length) {
+      return '';
     }
-    return isJapaneseState ? `${joined} 他${rest}` : `${joined} +${rest}`;
-  }, [isJapaneseState, transferLines]);
+
+    const separator = isJapaneseState ? '・' : ', ';
+    const buildText = (count: number) => {
+      const joined = names.slice(0, count).join(separator);
+      const rest = names.length - count;
+      if (!rest) {
+        return joined;
+      }
+      return isJapaneseState ? `${joined} 他${rest}線` : `${joined} +${rest}`;
+    };
+
+    // 並べる件数は固定せず、右カラム2行に収まる文字数から決める。あふれた分は
+    // 必ず「他N線」へ畳まれるので、末尾が三点リーダーで切れることがない
+    const budget =
+      (metrics.sideColumnWidth / (TRANSFER_TEXT_FONT_SIZE * scale)) *
+      TRANSFER_TEXT_LINES;
+    for (let count = names.length; count > 1; count--) {
+      const text = buildText(count);
+      if (measureColumns(text) <= budget) {
+        return text;
+      }
+    }
+    // 1件でも溢れる駅はこれ以上畳みようがないので、そのまま返して省略に委ねる
+    return buildText(1);
+  }, [isJapaneseState, metrics.sideColumnWidth, scale, transferLines]);
 
   return (
     <View
@@ -337,10 +372,10 @@ const HeaderLowPower: React.FC<CommonHeaderProps> = ({
                 )}
               </Typography>
               <Typography
-                numberOfLines={2}
+                numberOfLines={TRANSFER_TEXT_LINES}
                 style={{
                   color: primary,
-                  fontSize: 15 * scale,
+                  fontSize: TRANSFER_TEXT_FONT_SIZE * scale,
                   lineHeight: 19 * scale,
                   fontWeight: 'bold',
                 }}
