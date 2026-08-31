@@ -129,7 +129,11 @@ android {
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // proguard-android.txt は -dontoptimize を含むため R8 の最適化パスが動かず、
+            // 収縮と難読化しか効かない。Google Play の技術品質要件 (2027年2月施行) は
+            // DEX に最適化・圧縮・難読化で最低25%のカバレッジを求めるため、最適化を有効にする。
+            // wearable モジュールは元から optimize 版を使っており、そちらへ揃える形になる
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             def enablePngCrunchInRelease = findProperty('android.enablePngCrunchInReleaseBuilds') ?: 'true'
             crunchPngs enablePngCrunchInRelease.toBoolean()
         }
@@ -150,12 +154,12 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000683
+            versionCode 100000685
             versionName "10.14.0"
         }
         prod {
             dimension "environment"
-            versionCode 100000683
+            versionCode 100000685
             versionName "10.14.0"
         }
     }
