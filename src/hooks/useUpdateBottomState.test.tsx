@@ -3,7 +3,7 @@ import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import { DEFAULT_BOTTOM_TRANSITION_INTERVAL } from '~/constants';
 import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
-import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
+import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import { bottomStateAtom } from '~/store/atoms/navigation';
 import { themePreferenceAtom } from '~/store/atoms/theme';
 import { useUpdateBottomState } from './useUpdateBottomState';

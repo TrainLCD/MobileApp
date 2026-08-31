@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
-import { portraitModeEnabledAtom } from '../store/atoms/experimental';
+import { portraitModeEnabledAtom } from '../store/atoms/display';
 import navigationState, { bottomStateAtom } from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
