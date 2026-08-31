@@ -9,6 +9,11 @@ import {
 import isTablet from '../utils/isTablet';
 import Typography from './Typography';
 
+const ICON_SIZE = isTablet ? 72 * 1.5 : 72;
+// 楕円の白フチ。withOutline のときは同じフチを太らせて代用する
+const STROKE_WIDTH = 1;
+const OUTLINE_STROKE_WIDTH = isTablet ? 3 : 2;
+
 type Props = {
   stationNumber: string;
   lineColor: string;
@@ -17,18 +22,21 @@ type Props = {
 };
 
 const styles = StyleSheet.create({
-  optionalBorder: {
-    borderRadius: (isTablet ? 72 * 1.5 : 72) / 2,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
   root: {
     position: 'relative',
+    width: ICON_SIZE,
+    height: ICON_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // インセットを指定しない絶対配置だと文字の折り返し幅が楕円の幅として解決されず、
+  // 記号が途中で改行されてしまうため SVG と同じ矩形をぴったり覆わせる
   texts: {
     position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -85,24 +93,33 @@ const NumberingIconNankai: React.FC<Props> = ({
     );
   }
 
+  // 白フチは View のボーダーで囲うと真円になり楕円のシンボルと形が合わないため、
+  // 楕円自身のストロークを太らせて表現する
+  const strokeWidth = withOutline ? OUTLINE_STROKE_WIDTH : STROKE_WIDTH;
+  // ストロークはパスの中心から外側にも半分伸びるので、その分だけ半径を詰めないと
+  // 楕円の左右端でフチが SVG の描画領域からはみ出して欠ける
+  const strokeInset = strokeWidth / 2;
+
   return (
-    <View style={withOutline ? styles.optionalBorder : undefined}>
-      <View style={styles.root}>
-        <Svg height={isTablet ? 72 * 1.5 : 72} width={isTablet ? 72 * 1.5 : 72}>
-          <Ellipse
-            cx={(isTablet ? 72 * 1.5 : 72) / 2}
-            cy={(isTablet ? 72 * 1.5 : 72) / 2}
-            rx={(isTablet ? 72 * 1.5 : 72) / 2}
-            ry={(isTablet ? 72 * 1.5 : 72) / 2.5}
-            stroke="white"
-            strokeWidth={1}
-            fill={lineColor}
-          />
-        </Svg>
-        <View style={styles.texts}>
-          <Typography style={styles.lineSymbol}>{lineSymbol}</Typography>
-          <Typography style={styles.stationNumber}>{stationNumber}</Typography>
-        </View>
+    <View style={styles.root}>
+      <Svg height={ICON_SIZE} width={ICON_SIZE}>
+        <Ellipse
+          cx={ICON_SIZE / 2}
+          cy={ICON_SIZE / 2}
+          rx={ICON_SIZE / 2 - strokeInset}
+          ry={ICON_SIZE / 2.5 - strokeInset}
+          stroke="white"
+          strokeWidth={strokeWidth}
+          fill={lineColor}
+        />
+      </Svg>
+      <View style={styles.texts}>
+        <Typography numberOfLines={1} style={styles.lineSymbol}>
+          {lineSymbol}
+        </Typography>
+        <Typography numberOfLines={1} style={styles.stationNumber}>
+          {stationNumber}
+        </Typography>
       </View>
     </View>
   );
