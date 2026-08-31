@@ -10,6 +10,7 @@ import {
   useCurrentTrainType,
   useEstimatedMinutesByStationId,
   useHeaderCommonData,
+  useLoopLine,
   useTransferLines,
   useTransferLinesFromStation,
   useTransferTargetStation,
@@ -59,6 +60,7 @@ jest.mock('~/hooks', () => ({
   useEstimatedMinutesByStationId: jest.fn(() => new Map<number, number>()),
   useGetLineMark: jest.fn(() => () => null),
   useHeaderCommonData: jest.fn(),
+  useLoopLine: jest.fn(() => ({ isLoopLine: false })),
   useStationNumberIndexFunc: jest.fn(() => () => 0),
   useTransferLines: jest.fn(() => []),
   useTransferLinesFromStation: jest.fn(() => []),
@@ -70,6 +72,7 @@ const mockedUseHeaderCommonData = useHeaderCommonData as jest.Mock;
 const mockedUseCurrentLine = useCurrentLine as jest.Mock;
 const mockedUseCurrentStation = useCurrentStation as jest.Mock;
 const mockedUseCurrentTrainType = useCurrentTrainType as jest.Mock;
+const mockedUseLoopLine = useLoopLine as unknown as jest.Mock;
 const mockedUseTransferLinesFromStation =
   useTransferLinesFromStation as jest.Mock;
 const mockedUseTransferLines = useTransferLines as jest.Mock;
@@ -124,6 +127,7 @@ const renderWithStations = (
     currentStation = stations[0],
     colorScheme = COLOR_SCHEME_PREFERENCE.LIGHT,
     bottomState = 'LINE' as const,
+    direction = 'INBOUND' as const,
     transferStation,
     onPress,
     onTransferPress,
@@ -132,6 +136,7 @@ const renderWithStations = (
     currentStation?: Station;
     colorScheme?: (typeof COLOR_SCHEME_PREFERENCE)[keyof typeof COLOR_SCHEME_PREFERENCE];
     bottomState?: 'LINE' | 'TRANSFER' | 'TYPE_CHANGE';
+    direction?: 'INBOUND' | 'OUTBOUND';
     transferStation?: Station;
     onPress?: () => void;
     onTransferPress?: (station?: Station) => void;
@@ -140,9 +145,9 @@ const renderWithStations = (
   const store = createStore();
   // 端末のダークモード状態に左右されないよう、配色は常に明示して固定する
   store.set(colorSchemePreferenceAtom, colorScheme);
-  // 全駅表示。INBOUND は反転しないので渡した順がそのまま表示順になる。
+  // 全駅表示。非環状線の INBOUND は反転しないので渡した順がそのまま表示順になる。
   store.set(stationsAtom, stations);
-  store.set(selectedDirectionAtom, 'INBOUND');
+  store.set(selectedDirectionAtom, direction);
   store.set(arrivedAtom, arrived);
   store.set(bottomStateAtom, bottomState);
   mockedUseCurrentStation.mockReturnValue(currentStation);
@@ -164,6 +169,7 @@ describe('PortraitMain', () => {
       nameRoman: 'Local',
       color: '#123456',
     });
+    mockedUseLoopLine.mockReturnValue({ isLoopLine: false });
     mockedUseTransferLinesFromStation.mockReturnValue([]);
     mockedUseTransferLines.mockReturnValue([]);
     mockedUseTransferTargetStation.mockReturnValue(undefined);
@@ -324,6 +330,56 @@ describe('PortraitMain', () => {
     ).not.toBe(yamanoteLine.color);
     expect(
       StyleSheet.flatten(getByTestId('stop-dot-2').props.style).borderColor
+    ).toBe(yamanoteLine.color);
+  });
+
+  it('環状線のOUTBOUNDは駅順が進行方向なので反転しない', () => {
+    mockedUseLoopLine.mockReturnValue({ isLoopLine: true });
+
+    const { getByTestId } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+        buildStation(3, '浜松町', StopCondition.All, 'JY-28'),
+      ],
+      {
+        arrived: true,
+        currentStation: buildStation(2, '田町', StopCondition.All),
+        direction: 'OUTBOUND',
+      }
+    );
+
+    // 進行方向は index 増加方向。現在駅より手前の品川が淡色、先の浜松町は通常色
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-1').props.style).borderColor
+    ).not.toBe(yamanoteLine.color);
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-3').props.style).borderColor
+    ).toBe(yamanoteLine.color);
+  });
+
+  it('環状線のINBOUNDは駅順と進行方向が逆なので反転する', () => {
+    mockedUseLoopLine.mockReturnValue({ isLoopLine: true });
+
+    const { getByTestId } = renderWithStations(
+      [
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+        buildStation(2, '田町', StopCondition.All, 'JY-27'),
+        buildStation(3, '浜松町', StopCondition.All, 'JY-28'),
+      ],
+      {
+        arrived: true,
+        currentStation: buildStation(2, '田町', StopCondition.All),
+        direction: 'INBOUND',
+      }
+    );
+
+    // 進行方向は index 減少方向。現在駅より手前の浜松町が淡色、先の品川は通常色
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-3').props.style).borderColor
+    ).not.toBe(yamanoteLine.color);
+    expect(
+      StyleSheet.flatten(getByTestId('stop-dot-1').props.style).borderColor
     ).toBe(yamanoteLine.color);
   });
 
