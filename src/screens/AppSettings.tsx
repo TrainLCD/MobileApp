@@ -21,9 +21,11 @@ import { isClip } from 'react-native-app-clip';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardChevron } from '~/components/CardChevron';
 import { Heading } from '~/components/Heading';
+import NewFeatureDot from '~/components/NewFeatureDot';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
+import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isBetaBuild } from '~/utils/isBetaBuild';
@@ -91,11 +93,14 @@ const SettingsItem = ({
   isFirst,
   isLast,
   onPress,
+  showNewFeatureDot,
 }: {
   item: SettingsSectionData;
   isFirst: boolean;
   isLast: boolean;
   onPress?: () => void;
+  /** 新機能の在り処を示す印。シェブロンの手前に置く */
+  showNewFeatureDot?: boolean;
 }) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
@@ -172,6 +177,12 @@ const SettingsItem = ({
         </Typography>
       </View>
 
+      {showNewFeatureDot ? (
+        <View style={{ marginRight: 12 }}>
+          <NewFeatureDot color={colors.accent} />
+        </View>
+      ) : null}
+
       <CardChevron stroke={isLEDTheme || colors.isDark ? 'white' : 'black'} />
     </TouchableOpacity>
   );
@@ -192,6 +203,7 @@ const AppSettingsScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
   const navigation = useNavigation();
+  const showPortraitPromoHint = usePortraitPromoAppearanceHint();
 
   const themeRef = useRef<View>(null);
   const ttsRef = useRef<View>(null);
@@ -404,6 +416,10 @@ const AppSettingsScreen: React.FC = () => {
                   isFirst={index === 0}
                   isLast={index === personalizeItems.length - 1}
                   onPress={item.onPress}
+                  showNewFeatureDot={
+                    showPortraitPromoHint &&
+                    item.id === SETTING_ITEM_ID_MAP.personalize_color_scheme
+                  }
                 />
               );
               // ウォークスルーのスポットライト対象はレイアウト計測用のViewで包む

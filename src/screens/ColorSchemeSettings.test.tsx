@@ -103,8 +103,11 @@ describe('ColorSchemeSettingsScreen', () => {
   });
 
   it('ポートレートモードの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
-    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
-      throw new Error('storage failure');
+    // 画面はマウント時にも訴求フラグを書くため、対象キーの書き込みだけを落とす
+    const setSpy = jest.spyOn(storage, 'set').mockImplementation((key) => {
+      if (key === STORAGE_KEYS.PORTRAIT_MODE_ENABLED) {
+        throw new Error('storage failure');
+      }
     });
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
@@ -128,8 +131,10 @@ describe('ColorSchemeSettingsScreen', () => {
   });
 
   it('ストレージへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
-    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
-      throw new Error('storage failure');
+    const setSpy = jest.spyOn(storage, 'set').mockImplementation((key) => {
+      if (key === STORAGE_KEYS.COLOR_SCHEME_PREFERENCE) {
+        throw new Error('storage failure');
+      }
     });
     const consoleErrorSpy = jest
       .spyOn(console, 'error')

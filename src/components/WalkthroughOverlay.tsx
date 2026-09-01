@@ -45,7 +45,8 @@ export type WalkthroughStepId =
   | 'settingsWelcome'
   | 'settingsTheme'
   | 'settingsTts'
-  | 'settingsLanguages';
+  | 'settingsLanguages'
+  | 'portraitMode';
 
 export type WalkthroughStep = {
   id: WalkthroughStepId;
@@ -63,6 +64,10 @@ type Props = {
   onNext: () => void;
   onGoToStep: (index: number) => void;
   onSkip: () => void;
+  /** 主ボタンのラベル。1ステップだけのスポットライトで文言を変えるために使う */
+  primaryLabel?: string;
+  /** 左下のラベル。既定は「スキップ」 */
+  dismissLabel?: string;
 };
 
 const ANIMATION_DURATION = 300;
@@ -148,6 +153,8 @@ const WalkthroughOverlay: React.FC<Props> = ({
   onNext,
   onGoToStep,
   onSkip,
+  primaryLabel,
+  dismissLabel,
 }) => {
   const insets = useSafeAreaInsets();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
@@ -158,6 +165,12 @@ const WalkthroughOverlay: React.FC<Props> = ({
   const [overlayOffset, setOverlayOffset] = useState({ x: 0, y: 0 });
 
   const { spotlightArea, tooltipPosition = 'bottom' } = step;
+  const skipText = dismissLabel ?? translate('walkthroughSkip');
+  const nextText =
+    primaryLabel ??
+    (currentStepIndex === totalSteps - 1
+      ? translate('walkthroughStart')
+      : translate('walkthroughNext'));
   // spotlightArea は measureInWindow() 由来の画面全体を基準にした座標。
   // WalkthroughOverlay は共通ダイアログより手前に出ないよう Portal ではなく通常ツリー内に描画しているため、
   // SVG とツールチップの座標基準はオーバーレイ自身の左上になる。
@@ -306,55 +319,49 @@ const WalkthroughOverlay: React.FC<Props> = ({
           <Pressable
             onPress={onSkip}
             accessibilityRole="button"
-            accessibilityLabel={translate('walkthroughSkip')}
+            accessibilityLabel={skipText}
             accessibilityHint={translate('walkthroughSkipHint')}
           >
             <Typography style={[styles.skipText, { color: colors.mutedText }]}>
-              {translate('walkthroughSkip')}
+              {skipText}
             </Typography>
           </Pressable>
 
-          <View style={styles.pagination}>
-            {Array.from({ length: totalSteps }).map((_, index) => (
-              <Pressable
-                key={`dot-${
-                  // biome-ignore lint/suspicious/noArrayIndexKey: stable array
-                  index
-                }`}
-                onPress={() => onGoToStep(index)}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                accessibilityRole="button"
-                accessibilityLabel={`${index + 1} / ${totalSteps}`}
-                accessibilityHint={translate('walkthroughGoToStepHint')}
-              >
-                <View
-                  style={[
-                    styles.dot,
-                    { backgroundColor: colors.border },
-                    index === currentStepIndex && styles.dotActive,
-                    isLEDTheme && styles.squareCorners,
-                  ]}
-                />
-              </Pressable>
-            ))}
-          </View>
+          {totalSteps > 1 ? (
+            <View style={styles.pagination}>
+              {Array.from({ length: totalSteps }).map((_, index) => (
+                <Pressable
+                  key={`dot-${
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable array
+                    index
+                  }`}
+                  onPress={() => onGoToStep(index)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${index + 1} / ${totalSteps}`}
+                  accessibilityHint={translate('walkthroughGoToStepHint')}
+                >
+                  <View
+                    style={[
+                      styles.dot,
+                      { backgroundColor: colors.border },
+                      index === currentStepIndex && styles.dotActive,
+                      isLEDTheme && styles.squareCorners,
+                    ]}
+                  />
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
 
           <Pressable
             style={[styles.nextButton, isLEDTheme && styles.squareCorners]}
             onPress={onNext}
             accessibilityRole="button"
-            accessibilityLabel={
-              currentStepIndex === totalSteps - 1
-                ? translate('walkthroughStart')
-                : translate('walkthroughNext')
-            }
+            accessibilityLabel={nextText}
             accessibilityHint={translate('walkthroughNextHint')}
           >
-            <Typography style={styles.nextButtonText}>
-              {currentStepIndex === totalSteps - 1
-                ? translate('walkthroughStart')
-                : translate('walkthroughNext')}
-            </Typography>
+            <Typography style={styles.nextButtonText}>{nextText}</Typography>
           </Pressable>
         </View>
       </RNAnimated.View>
