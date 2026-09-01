@@ -8,6 +8,7 @@ import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayNextStation } from './useDisplayNextStation';
+import { useLoopLine } from './useLoopLine';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
 export const useNumbering = (
@@ -24,6 +25,7 @@ export const useNumbering = (
 
   const currentLine = useCurrentLine();
   const currentStation = useCurrentStation();
+  const { isLoopLine } = useLoopLine();
   // まもなく表示時は現在地基準で接近している駅の番号を表示する
   const nextStation = useDisplayNextStation();
 
@@ -68,6 +70,14 @@ export const useNumbering = (
 
   useEffect(() => {
     if (!selectedBound || !targetStation) {
+      return;
+    }
+
+    // 環状線の乗車直後は行先が単一の終着駅ではなく方面(複数駅)なので、
+    // そのうち1駅の番号を添えるとその駅ゆきに見えてしまう。番号ごと出さない。
+    if (firstStop && isLoopLine) {
+      setStationNumber(undefined);
+      setThreeLetterCode(undefined);
       return;
     }
 
@@ -125,7 +135,9 @@ export const useNumbering = (
     arrived,
     currentStation,
     currentStationNumberIndex,
+    firstStop,
     isJobanLineRapid,
+    isLoopLine,
     nextStation?.stationNumbers,
     nextStation?.threeLetterCode,
     nextStationNumberIndex,

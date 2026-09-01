@@ -6,6 +6,7 @@ import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { selectedBoundAtom } from '../store/atoms/station';
 import { translate } from '../translation';
+import { useLoopLine } from './useLoopLine';
 
 type UseHeaderStateTextOptions = {
   isLast: boolean;
@@ -26,6 +27,7 @@ export const useHeaderStateText = ({
   const headerState = useAtomValue(headerStateAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
   const currentTheme = useAtomValue(themeAtom);
+  const { isLoopLine } = useLoopLine();
 
   const stateText = useMemo<string>(() => {
     if (firstStop && selectedBound) {
@@ -79,18 +81,20 @@ export const useHeaderStateText = ({
 
   const stateTextRight = useMemo<string>(() => {
     if (firstStop && selectedBound) {
+      // 環状線は行先が単一の終着駅ではなく方面(例: 新宿・池袋)なので、
+      // 駅名に続く語も「ゆき」ではなく「方面」にする。
       switch (headerLangState) {
         case 'JA':
         case 'KANA':
-          return 'ゆき';
+          return isLoopLine ? '方面' : 'ゆき';
         case 'KO':
-          return '행';
+          return isLoopLine ? '방면' : '행';
         default:
           return '';
       }
     }
     return '';
-  }, [firstStop, selectedBound, headerLangState]);
+  }, [firstStop, selectedBound, headerLangState, isLoopLine]);
 
   if (
     currentTheme === APP_THEME.YAMANOTE ||
