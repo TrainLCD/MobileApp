@@ -44,6 +44,7 @@ export type WalkthroughStepId =
   | 'routeSearchResults'
   | 'settingsWelcome'
   | 'settingsTheme'
+  | 'settingsColorScheme'
   | 'settingsTts'
   | 'settingsLanguages'
   | 'portraitMode';

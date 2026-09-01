@@ -274,6 +274,8 @@
   "settingsWalkthroughDescription1": "ここでは、TrainLCDをあなた好みにカスタマイズできます。テーマの変更、自動アナウンスの設定、表示言語の選択が行えます。",
   "settingsWalkthroughTitle2": "テーマ設定",
   "settingsWalkthroughDescription2": "ここからテーマを変更できます。東京メトロ風、山手線風、電光掲示板風など、様々なスタイルから選べます。",
+  "settingsWalkthroughColorSchemeTitle": "外観",
+  "settingsWalkthroughColorSchemeDescription": "操作画面の配色をライト・ダークで切り替えられます。端末を縦に持っている間だけ縦画面用の表示にするポートレートモードも、ここにあります。",
   "settingsWalkthroughTitle3": "自動アナウンス",
   "settingsWalkthroughDescription3": "自動アナウンス機能の設定ができます。駅到着時に音声で案内を受け取ることができます。",
   "settingsWalkthroughTitle4": "表示言語",

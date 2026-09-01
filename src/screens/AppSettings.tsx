@@ -193,6 +193,8 @@ const AppSettingsScreen: React.FC = () => {
   const [themeItemLayout, setThemeItemLayout] = useState<ItemLayout | null>(
     null
   );
+  const [colorSchemeItemLayout, setColorSchemeItemLayout] =
+    useState<ItemLayout | null>(null);
   const [ttsItemLayout, setTtsItemLayout] = useState<ItemLayout | null>(null);
   const [languagesItemLayout, setLanguagesItemLayout] =
     useState<ItemLayout | null>(null);
@@ -206,6 +208,7 @@ const AppSettingsScreen: React.FC = () => {
   const showPortraitPromoHint = usePortraitPromoAppearanceHint();
 
   const themeRef = useRef<View>(null);
+  const colorSchemeRef = useRef<View>(null);
   const ttsRef = useRef<View>(null);
   const languagesRef = useRef<View>(null);
 
@@ -226,6 +229,16 @@ const AppSettingsScreen: React.FC = () => {
       themeRef.current.measureInWindow(
         (x: number, y: number, width: number, height: number) => {
           setThemeItemLayout({ x, y, width, height });
+        }
+      );
+    }
+  }, []);
+
+  const handleColorSchemeLayout = useCallback(() => {
+    if (colorSchemeRef.current) {
+      colorSchemeRef.current.measureInWindow(
+        (x: number, y: number, width: number, height: number) => {
+          setColorSchemeItemLayout({ x, y, width, height });
         }
       );
     }
@@ -257,11 +270,18 @@ const AppSettingsScreen: React.FC = () => {
       // Use requestAnimationFrame to ensure layout has been applied
       requestAnimationFrame(() => {
         handleThemeLayout();
+        handleColorSchemeLayout();
         handleTtsLayout();
         handleLanguagesLayout();
       });
     }
-  }, [headerHeight, handleThemeLayout, handleTtsLayout, handleLanguagesLayout]);
+  }, [
+    headerHeight,
+    handleThemeLayout,
+    handleColorSchemeLayout,
+    handleTtsLayout,
+    handleLanguagesLayout,
+  ]);
 
   useEffect(() => {
     if (currentStepId === 'settingsTheme' && themeItemLayout) {
@@ -274,6 +294,18 @@ const AppSettingsScreen: React.FC = () => {
       });
     }
   }, [currentStepId, themeItemLayout, setSpotlightArea]);
+
+  useEffect(() => {
+    if (currentStepId === 'settingsColorScheme' && colorSchemeItemLayout) {
+      setSpotlightArea({
+        x: colorSchemeItemLayout.x,
+        y: colorSchemeItemLayout.y,
+        width: colorSchemeItemLayout.width,
+        height: colorSchemeItemLayout.height,
+        borderRadius: SPOTLIGHT_BORDER_RADIUS,
+      });
+    }
+  }, [currentStepId, colorSchemeItemLayout, setSpotlightArea]);
 
   useEffect(() => {
     if (currentStepId === 'settingsTts' && ttsItemLayout) {
@@ -430,6 +462,16 @@ const AppSettingsScreen: React.FC = () => {
                       key={item.id}
                       ref={themeRef}
                       onLayout={handleThemeLayout}
+                    >
+                      {row}
+                    </View>
+                  );
+                case 'personalize_color_scheme':
+                  return (
+                    <View
+                      key={item.id}
+                      ref={colorSchemeRef}
+                      onLayout={handleColorSchemeLayout}
                     >
                       {row}
                     </View>
