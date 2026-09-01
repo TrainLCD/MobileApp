@@ -33,6 +33,7 @@ import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
 import {
   portraitModeEnabledAtom,
   portraitPromoAppearanceSeenAtom,
+  portraitPromoFinishedAtom,
 } from '~/store/atoms/display';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -198,6 +199,7 @@ const ColorSchemeSettingsScreen: React.FC = () => {
     portraitModeEnabledAtom
   );
   const setAppearanceSeen = useSetAtom(portraitPromoAppearanceSeenAtom);
+  const setPromoFinished = useSetAtom(portraitPromoFinishedAtom);
 
   const navigation = useNavigation();
 
@@ -311,6 +313,7 @@ const ColorSchemeSettingsScreen: React.FC = () => {
       // 一度でもオンにしたら、以降はオフに戻されても訴求しない
       if (flag) {
         finishPortraitPromo();
+        setPromoFinished(true);
       }
     } catch (error) {
       // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
@@ -319,7 +322,7 @@ const ColorSchemeSettingsScreen: React.FC = () => {
       console.error('Failed to save portrait mode setting', error);
       showDialog(translate('errorTitle'), translate('failedToSavePreference'));
     }
-  }, [portraitModeEnabled, setPortraitModeEnabled]);
+  }, [portraitModeEnabled, setPortraitModeEnabled, setPromoFinished]);
 
   const handleDismissSpotlight = useCallback(() => {
     setSpotlightDismissed(true);

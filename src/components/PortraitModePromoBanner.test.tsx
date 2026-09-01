@@ -1,8 +1,12 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import { StrictMode } from 'react';
 import { STORAGE_KEYS } from '~/constants/storage';
 import { storage } from '~/lib/storage';
-import { portraitModeEnabledAtom } from '~/store/atoms/display';
+import {
+  portraitModeEnabledAtom,
+  portraitPromoFinishedAtom,
+} from '~/store/atoms/display';
 import {
   canShowPortraitBanner,
   finishPortraitPromo,
@@ -81,19 +85,42 @@ describe('PortraitModePromoBanner', () => {
     expect(canShowPortraitBanner()).toBe(false);
   });
 
-  it('1回の表示につき1回しか数えない（StrictModeのeffect二重実行対策）', () => {
-    const { rerender } = renderBanner();
+  it('StrictModeでeffectが二重に走っても1回しか数えない', () => {
+    const store = createStore();
+    store.set(portraitModeEnabledAtom, false);
 
-    // StrictMode 相当の再実行や、親の再レンダーで effect が再評価されても増えない
-    rerender(
-      <Provider store={createStore()}>
-        <PortraitModePromoBanner />
-      </Provider>
+    render(
+      <StrictMode>
+        <Provider store={store}>
+          <PortraitModePromoBanner />
+        </Provider>
+      </StrictMode>
     );
 
     expect(storage.getString(STORAGE_KEYS.PORTRAIT_PROMO_BANNER_COUNT)).toBe(
       '1'
     );
+  });
+
+  it('一度オンにしたあとオフに戻されても復活しない', () => {
+    const store = createStore();
+    store.set(portraitModeEnabledAtom, true);
+    store.set(portraitPromoFinishedAtom, true);
+
+    const { queryByTestId } = render(
+      <Provider store={store}>
+        <PortraitModePromoBanner />
+      </Provider>
+    );
+
+    expect(queryByTestId('portrait-mode-promo-banner')).toBeNull();
+
+    // 外観設定からオフに戻す
+    act(() => {
+      store.set(portraitModeEnabledAtom, false);
+    });
+
+    expect(queryByTestId('portrait-mode-promo-banner')).toBeNull();
   });
 
   it('タップすると外観設定へ遷移する', () => {

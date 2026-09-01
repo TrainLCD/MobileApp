@@ -14,3 +14,11 @@ export const portraitModeEnabledAtom = atom(false);
 export const portraitPromoAppearanceSeenAtom = atom(
   storage.getString(STORAGE_KEYS.PORTRAIT_PROMO_APPEARANCE_SEEN) === 'true'
 );
+
+// 訴求を打ち切ったか。ポートレートモードを一度オンにすると立ち、以降は
+// オフに戻されても復活させない。オン→オフを同一セッション中にされても
+// バナーやプロンプトが戻ってこないよう、マウント時の値ではなくatomで購読する。
+// 初期値の確定方法は上と同じ。
+export const portraitPromoFinishedAtom = atom(
+  storage.getString(STORAGE_KEYS.PORTRAIT_PROMO_FINISHED) === 'true'
+);

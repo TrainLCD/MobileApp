@@ -3,7 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { STORAGE_KEYS } from '~/constants/storage';
 import { storage } from '~/lib/storage';
-import { portraitModeEnabledAtom } from '~/store/atoms/display';
+import {
+  portraitModeEnabledAtom,
+  portraitPromoFinishedAtom,
+} from '~/store/atoms/display';
 import { arrivedAtom, selectedBoundAtom } from '~/store/atoms/station';
 import { untouchableModeEnabledAtom } from '~/store/atoms/tuning';
 import { translate } from '~/translation';
@@ -39,6 +42,7 @@ export const usePortraitModePromo = (): UsePortraitModePromoResult => {
   const arrived = useAtomValue(arrivedAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
   const untouchableModeEnabled = useAtomValue(untouchableModeEnabledAtom);
+  const [promoFinished, setPromoFinished] = useAtom(portraitPromoFinishedAtom);
   const { width, height } = useWindowDimensions();
 
   // MMKV は同期 API なので初回レンダー時に提示可否が確定する
@@ -49,6 +53,7 @@ export const usePortraitModePromo = (): UsePortraitModePromoResult => {
   const isPortrait = height > width;
   const conditionsMet =
     eligible &&
+    !promoFinished &&
     !closed &&
     !portraitModeEnabled &&
     !untouchableModeEnabled &&
@@ -74,6 +79,7 @@ export const usePortraitModePromo = (): UsePortraitModePromoResult => {
     try {
       storage.set(STORAGE_KEYS.PORTRAIT_MODE_ENABLED, 'true');
       finishPortraitPromo();
+      setPromoFinished(true);
     } catch (error) {
       // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
       // UIと永続値の不整合を防ぐべくatom状態をロールバックする
@@ -81,7 +87,7 @@ export const usePortraitModePromo = (): UsePortraitModePromoResult => {
       console.error('Failed to save portrait mode setting', error);
       showDialog(translate('errorTitle'), translate('failedToSavePreference'));
     }
-  }, [setPortraitModeEnabled]);
+  }, [setPortraitModeEnabled, setPromoFinished]);
 
   const dismiss = useCallback(() => {
     setClosed(true);

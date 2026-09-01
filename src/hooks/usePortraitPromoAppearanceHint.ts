@@ -1,10 +1,9 @@
 import { useAtomValue } from 'jotai';
-import { useState } from 'react';
 import {
   portraitModeEnabledAtom,
   portraitPromoAppearanceSeenAtom,
+  portraitPromoFinishedAtom,
 } from '~/store/atoms/display';
-import { isPortraitPromoFinished } from '~/utils/portraitPromo';
 
 /**
  * 設定リストの印とフッタータブのドット(案C)を出すかどうか。
@@ -18,11 +17,9 @@ import { isPortraitPromoFinished } from '~/utils/portraitPromo';
  * canShowPortraitAppearanceHint() でマウント時のスナップショットを取る。
  */
 export const usePortraitPromoAppearanceHint = (): boolean => {
-  // 訴求の打ち切りは起動中に他画面から変わらない(オンにすると
-  // portraitModeEnabled も同時に立つ)ので、初回に確定させてよい
-  const [notFinished] = useState(() => !isPortraitPromoFinished());
+  const finished = useAtomValue(portraitPromoFinishedAtom);
   const appearanceSeen = useAtomValue(portraitPromoAppearanceSeenAtom);
   const portraitModeEnabled = useAtomValue(portraitModeEnabledAtom);
 
-  return notFinished && !appearanceSeen && !portraitModeEnabled;
+  return !finished && !appearanceSeen && !portraitModeEnabled;
 };

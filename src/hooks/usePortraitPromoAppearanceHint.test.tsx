@@ -5,8 +5,8 @@ import { storage } from '~/lib/storage';
 import {
   portraitModeEnabledAtom,
   portraitPromoAppearanceSeenAtom,
+  portraitPromoFinishedAtom,
 } from '~/store/atoms/display';
-import { finishPortraitPromo } from '~/utils/portraitPromo';
 import { usePortraitPromoAppearanceHint } from './usePortraitPromoAppearanceHint';
 
 const renderHint = (store: ReturnType<typeof createStore>) =>
@@ -19,10 +19,12 @@ const renderHint = (store: ReturnType<typeof createStore>) =>
 const buildStore = ({
   appearanceSeen = false,
   portraitModeEnabled = false,
+  finished = false,
 } = {}) => {
   const store = createStore();
   store.set(portraitPromoAppearanceSeenAtom, appearanceSeen);
   store.set(portraitModeEnabledAtom, portraitModeEnabled);
+  store.set(portraitPromoFinishedAtom, finished);
   return store;
 };
 
@@ -66,9 +68,20 @@ describe('usePortraitPromoAppearanceHint', () => {
   });
 
   it('訴求を打ち切ったあとは印を出さない', () => {
-    finishPortraitPromo();
+    const { result } = renderHint(buildStore({ finished: true }));
 
-    const { result } = renderHint(buildStore());
+    expect(result.current).toBe(false);
+  });
+
+  it('一度オンにしたあとオフに戻されても印は復活しない', () => {
+    const store = buildStore({ finished: true, portraitModeEnabled: true });
+    const { result } = renderHint(store);
+
+    expect(result.current).toBe(false);
+
+    act(() => {
+      store.set(portraitModeEnabledAtom, false);
+    });
 
     expect(result.current).toBe(false);
   });

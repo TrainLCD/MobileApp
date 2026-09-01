@@ -13,7 +13,10 @@ import {
 import { CardChevron } from '~/components/CardChevron';
 import Typography from '~/components/Typography';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import { portraitModeEnabledAtom } from '~/store/atoms/display';
+import {
+  portraitModeEnabledAtom,
+  portraitPromoFinishedAtom,
+} from '~/store/atoms/display';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import {
@@ -69,10 +72,13 @@ export const PortraitModePromoBanner: React.FC<Props> = ({ style }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
   const portraitModeEnabled = useAtomValue(portraitModeEnabledAtom);
+  // オンにしたあと同じセッション中にオフへ戻されてもバナーを復活させないため、
+  // 打ち切り状態はマウント時の値ではなく atom で購読する
+  const promoFinished = useAtomValue(portraitPromoFinishedAtom);
 
-  // MMKV は同期 API なので初回レンダー時に表示可否が確定する
-  const [eligible] = useState(() => canShowPortraitBanner());
-  const visible = eligible && !portraitModeEnabled;
+  // 表示回数の上限判定は MMKV の同期 API で初回レンダー時に確定させる
+  const [countAllows] = useState(() => canShowPortraitBanner());
+  const visible = countAllows && !promoFinished && !portraitModeEnabled;
 
   // StrictMode は初回マウントで effect を二度走らせる。素直に数えると
   // 1回の表示で2回分減り、3回出すつもりが2回で打ち止めになる。
