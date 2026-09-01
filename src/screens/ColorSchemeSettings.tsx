@@ -24,19 +24,22 @@ import Typography from '~/components/Typography';
 import WalkthroughOverlay, {
   type WalkthroughStep,
 } from '~/components/WalkthroughOverlay';
-import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
 import {
   COLOR_SCHEME_PREFERENCE,
   type ColorSchemePreference,
 } from '~/models/ColorScheme';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
-import { portraitModeEnabledAtom } from '~/store/atoms/display';
+import {
+  portraitModeEnabledAtom,
+  portraitPromoAppearanceSeenAtom,
+} from '~/store/atoms/display';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
 import {
+  canShowPortraitAppearanceHint,
   finishPortraitPromo,
   markPortraitAppearanceSeen,
 } from '~/utils/portraitPromo';
@@ -194,11 +197,14 @@ const ColorSchemeSettingsScreen: React.FC = () => {
   const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
     portraitModeEnabledAtom
   );
+  const setAppearanceSeen = useSetAtom(portraitPromoAppearanceSeenAtom);
 
   const navigation = useNavigation();
 
-  // 案C: 外観画面を開いた初回だけ、ポートレートモードのトグルをスポットライトで指す
-  const canShowSpotlight = usePortraitPromoAppearanceHint();
+  // 案C: 外観画面を開いた初回だけ、ポートレートモードのトグルをスポットライトで指す。
+  // 開いた時点で既読にする以上、可否はマウント時のスナップショットで持つ
+  // (リアクティブに読むと自分自身を即座に閉じてしまう)
+  const [canShowSpotlight] = useState(() => canShowPortraitAppearanceHint());
   const [spotlightDismissed, setSpotlightDismissed] = useState(false);
   const [toggleLayout, setToggleLayout] = useState<{
     x: number;
@@ -208,10 +214,13 @@ const ColorSchemeSettingsScreen: React.FC = () => {
   } | null>(null);
   const toggleRef = useRef<View>(null);
 
-  // 画面を開いた時点で印を消す。次からはスポットライトも出さない
+  // 画面を開いた時点で印を消す。次からはスポットライトも出さない。
+  // 印を出している画面はここから戻っても再マウントされないので、
+  // 永続化と合わせて atom も更新する
   useEffect(() => {
     markPortraitAppearanceSeen();
-  }, []);
+    setAppearanceSeen(true);
+  }, [setAppearanceSeen]);
 
   const measureToggle = useCallback(() => {
     toggleRef.current?.measureInWindow((x, y, width, height) => {
@@ -384,13 +393,18 @@ const ColorSchemeSettingsScreen: React.FC = () => {
       <FooterTabBar active="settings" />
       {spotlightStep ? (
         <WalkthroughOverlay
-          visible={canShowSpotlight && !spotlightDismissed}
+          visible={
+            canShowSpotlight && !spotlightDismissed && !portraitModeEnabled
+          }
           step={spotlightStep}
           currentStepIndex={0}
           totalSteps={1}
           onNext={handleTogglePortraitMode}
           onGoToStep={noop}
           onSkip={handleDismissSpotlight}
+          // 背景の誤タップでポートレートモードが入らないよう、
+          // 有効化は主ボタンだけに限る
+          onBackgroundPress={handleDismissSpotlight}
           primaryLabel={translate('portraitPromoPromptEnable')}
           dismissLabel={translate('portraitPromoSpotlightDismiss')}
         />

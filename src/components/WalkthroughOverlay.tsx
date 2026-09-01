@@ -69,6 +69,12 @@ type Props = {
   primaryLabel?: string;
   /** 左下のラベル。既定は「スキップ」 */
   dismissLabel?: string;
+  /**
+   * 背景(スポットライト以外)をタップしたときの動作。既定は onNext。
+   * 主ボタンが設定変更などの副作用を持つステップでは、誤タップで実行されないよう
+   * 明示的に別のハンドラを渡すこと。
+   */
+  onBackgroundPress?: () => void;
 };
 
 const ANIMATION_DURATION = 300;
@@ -156,6 +162,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
   onSkip,
   primaryLabel,
   dismissLabel,
+  onBackgroundPress,
 }) => {
   const insets = useSafeAreaInsets();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
@@ -278,7 +285,11 @@ const WalkthroughOverlay: React.FC<Props> = ({
       pointerEvents="box-none"
       onLayout={handleOverlayLayout}
     >
-      <Pressable style={styles.pressableOverlay} onPress={onNext}>
+      <Pressable
+        testID="walkthrough-backdrop"
+        style={styles.pressableOverlay}
+        onPress={onBackgroundPress ?? onNext}
+      >
         <Svg width={screenWidth} height={screenHeight}>
           <Defs>
             <Mask id={maskId}>

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { Path } from 'react-native-svg';
 import { THEME_PREFERENCE } from '~/models/Theme';
@@ -176,5 +176,50 @@ describe('WalkthroughOverlay', () => {
     const nextButton = getByLabelText('walkthroughNext');
 
     expect(nextButton).toHaveStyle({ borderRadius: 0 });
+  });
+});
+
+describe('背景タップ', () => {
+  const renderWithHandlers = (props: {
+    onNext: () => void;
+    onBackgroundPress?: () => void;
+  }) => {
+    const store = createStore();
+    store.set(themePreferenceAtom, THEME_PREFERENCE.TOKYO_METRO);
+
+    return render(
+      <Provider store={store}>
+        <WalkthroughOverlay
+          visible
+          step={step}
+          currentStepIndex={0}
+          totalSteps={1}
+          onGoToStep={jest.fn()}
+          onSkip={jest.fn()}
+          {...props}
+        />
+      </Provider>
+    );
+  };
+
+  // オーバーレイ全面のPressable。ツールチップは別のViewなので含まれない
+  const pressBackground = (screen: ReturnType<typeof renderWithHandlers>) => {
+    fireEvent.press(screen.getByTestId('walkthrough-backdrop'));
+  };
+
+  it('既定では背景タップで onNext が呼ばれる', () => {
+    const onNext = jest.fn();
+    pressBackground(renderWithHandlers({ onNext }));
+
+    expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it('onBackgroundPress を渡すと背景タップで onNext は呼ばれない', () => {
+    const onNext = jest.fn();
+    const onBackgroundPress = jest.fn();
+    pressBackground(renderWithHandlers({ onNext, onBackgroundPress }));
+
+    expect(onBackgroundPress).toHaveBeenCalledTimes(1);
+    expect(onNext).not.toHaveBeenCalled();
   });
 });

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   type StyleProp,
   StyleSheet,
@@ -74,13 +74,17 @@ export const PortraitModePromoBanner: React.FC<Props> = ({ style }: Props) => {
   const [eligible] = useState(() => canShowPortraitBanner());
   const visible = eligible && !portraitModeEnabled;
 
+  // StrictMode は初回マウントで effect を二度走らせる。素直に数えると
+  // 1回の表示で2回分減り、3回出すつもりが2回で打ち止めになる。
+  // ref はマウントを跨いで保たれるので、1マウント1回に抑えられる
+  const recordedRef = useRef(false);
+
   useEffect(() => {
-    if (!visible) {
+    if (!visible || recordedRef.current) {
       return;
     }
+    recordedRef.current = true;
     recordPortraitBannerShown();
-    // StrictMode の二重実行で1回分多く数えても、上限に達するのが早まるだけで
-    // 実害が無いため、フラグでの抑止はしない
   }, [visible]);
 
   const handlePress = useCallback(() => {

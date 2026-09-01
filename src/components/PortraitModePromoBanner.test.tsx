@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import { STORAGE_KEYS } from '~/constants/storage';
 import { storage } from '~/lib/storage';
 import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import {
@@ -72,12 +73,27 @@ describe('PortraitModePromoBanner', () => {
   it('表示したら回数を記録する', () => {
     renderBanner();
 
-    // 1回表示した分が減るので、上限が1のときは次から出せなくなる
+    // 1回表示した分が減るので、残りは上限-1回
     for (let i = 1; i < PORTRAIT_BANNER_MAX_COUNT; i++) {
       expect(canShowPortraitBanner()).toBe(true);
       recordPortraitBannerShown();
     }
     expect(canShowPortraitBanner()).toBe(false);
+  });
+
+  it('1回の表示につき1回しか数えない（StrictModeのeffect二重実行対策）', () => {
+    const { rerender } = renderBanner();
+
+    // StrictMode 相当の再実行や、親の再レンダーで effect が再評価されても増えない
+    rerender(
+      <Provider store={createStore()}>
+        <PortraitModePromoBanner />
+      </Provider>
+    );
+
+    expect(storage.getString(STORAGE_KEYS.PORTRAIT_PROMO_BANNER_COUNT)).toBe(
+      '1'
+    );
   });
 
   it('タップすると外観設定へ遷移する', () => {
