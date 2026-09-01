@@ -4,9 +4,13 @@ import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '~/constants';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { headerStateAtom } from '../store/atoms/navigation';
-import { selectedBoundAtom } from '../store/atoms/station';
+import {
+  selectedBoundAtom,
+  selectedDirectionAtom,
+} from '../store/atoms/station';
 import katakanaToHiragana from '../utils/kanaToHiragana';
 import { isBusLine } from '../utils/line';
+import { useLoopLine } from './useLoopLine';
 
 type UseHeaderStationTextOptions = {
   currentStation: Station | undefined;
@@ -23,8 +27,30 @@ export const useHeaderStationText = ({
 }: UseHeaderStationTextOptions): string => {
   const headerState = useAtomValue(headerStateAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const {
+    isLoopLine,
+    inboundStationsForLoopLine,
+    outboundStationsForLoopLine,
+  } = useLoopLine();
 
   const isBus = isBusLine(currentStation?.line);
+
+  // 環状線は一周して起点に戻るため、終着駅を出しても行先の案内にならない。
+  // 行先表示(useBoundText)と同じ主要駅を使い「新宿・池袋」のような方面で見せる。
+  const loopLineBoundStations = useMemo<Station[]>(() => {
+    if (!isLoopLine) {
+      return [];
+    }
+    return selectedDirection === 'INBOUND'
+      ? inboundStationsForLoopLine
+      : outboundStationsForLoopLine;
+  }, [
+    inboundStationsForLoopLine,
+    isLoopLine,
+    outboundStationsForLoopLine,
+    selectedDirection,
+  ]);
 
   const rawText = useMemo<string>(() => {
     if (!selectedBound) {
@@ -32,6 +58,23 @@ export const useHeaderStationText = ({
     }
 
     if (firstStop) {
+      if (loopLineBoundStations.length) {
+        switch (headerLangState) {
+          case 'KANA':
+            return loopLineBoundStations
+              .map((s) => katakanaToHiragana(s.nameKatakana))
+              .join('・');
+          case 'EN':
+            return loopLineBoundStations.map((s) => s.nameRoman).join(' & ');
+          case 'ZH':
+            return loopLineBoundStations.map((s) => s.nameChinese).join('・');
+          case 'KO':
+            return loopLineBoundStations.map((s) => s.nameKorean).join('・');
+          default:
+            return loopLineBoundStations.map((s) => s.name).join('・');
+        }
+      }
+
       switch (headerLangState) {
         case 'JA':
           return selectedBound.name ?? '';
@@ -104,6 +147,7 @@ export const useHeaderStationText = ({
     selectedBound,
     firstStop,
     headerLangState,
+    loopLineBoundStations,
   ]);
 
   return isBus ? rawText.replace(parenthesisRegexp, '') : rawText;

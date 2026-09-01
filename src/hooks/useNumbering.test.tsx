@@ -15,6 +15,7 @@ import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayNextStation } from './useDisplayNextStation';
+import { useLoopLine } from './useLoopLine';
 import { useNumbering } from './useNumbering';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
@@ -47,6 +48,11 @@ jest.mock('./useDisplayNextStation', () => ({
 jest.mock('./useStationNumberIndexFunc', () => ({
   __esModule: true,
   useStationNumberIndexFunc: jest.fn(),
+}));
+
+jest.mock('./useLoopLine', () => ({
+  __esModule: true,
+  useLoopLine: jest.fn(),
 }));
 
 const TestComponent: React.FC<{
@@ -92,6 +98,23 @@ describe('useNumbering', () => {
     useStationNumberIndexFunc as jest.MockedFunction<
       typeof useStationNumberIndexFunc
     >;
+  const mockUseLoopLine = useLoopLine as jest.MockedFunction<
+    typeof useLoopLine
+  >;
+
+  const mockLoopLine = (isLoopLine: boolean) => {
+    mockUseLoopLine.mockReturnValue({
+      isLoopLine,
+      isYamanoteLine: isLoopLine,
+      isOsakaLoopLine: false,
+      isMeijoLine: false,
+      isOedoLine: false,
+      isDisneyResortLine: false,
+      isPartiallyLoopLine: false,
+      inboundStationsForLoopLine: [],
+      outboundStationsForLoopLine: [],
+    });
+  };
 
   const mockAtomValues = ({
     arrived,
@@ -115,6 +138,7 @@ describe('useNumbering', () => {
     mockUseStationNumberIndexFunc.mockReturnValue(() => 0);
     mockUseCurrentLine.mockReturnValue(createLine(1));
     mockUseCurrentTrainType.mockReturnValue(null);
+    mockLoopLine(false);
   });
 
   afterEach(() => {
@@ -391,6 +415,53 @@ describe('useNumbering', () => {
 
     await waitFor(() => {
       expect(getByTestId('stationNumber').props.children).toBe('undefined');
+    });
+  });
+
+  describe('環状線の乗車直後(firstStop)', () => {
+    // 行先が方面(複数駅)になるため、そのうち1駅の番号を添えると
+    // その駅ゆきに見えてしまう。番号もスリーレターコードも出さない。
+    const buildLoopLineScenario = () => {
+      const bound = createStation(24, {
+        stationNumbers: [createStationNumber('JY', '24')],
+        stopCondition: StopCondition.All,
+        threeLetterCode: 'OSK',
+      });
+      const currentStation = createStation(20, {
+        stationNumbers: [createStationNumber('JY', '20')],
+        stopCondition: StopCondition.All,
+        threeLetterCode: 'SBY',
+      });
+
+      mockAtomValues({ arrived: true, selectedBound: bound });
+      mockUseCurrentStation.mockReturnValue(currentStation);
+      mockUseNextStation.mockReturnValue(undefined);
+    };
+
+    it('番号もスリーレターコードも出さない', async () => {
+      mockLoopLine(true);
+      buildLoopLineScenario();
+
+      const { getByTestId } = render(<TestComponent firstStop={true} />);
+
+      await waitFor(() => {
+        expect(getByTestId('stationNumber').props.children).toBe('undefined');
+        expect(getByTestId('threeLetterCode').props.children).toBe('undefined');
+      });
+    });
+
+    it('環状線でなければ従来どおり行先の番号を出す', async () => {
+      mockLoopLine(false);
+      buildLoopLineScenario();
+
+      const { getByTestId } = render(<TestComponent firstStop={true} />);
+
+      await waitFor(() => {
+        expect(getByTestId('stationNumber').props.children).toBe(
+          JSON.stringify({ lineSymbol: 'JY', stationNumber: '24' })
+        );
+        expect(getByTestId('threeLetterCode').props.children).toBe('OSK');
+      });
     });
   });
 });
