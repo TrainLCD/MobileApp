@@ -52,6 +52,12 @@ jest.mock("react-native-reanimated", () => {
     runOnJS: jest.fn((fn) => fn),
     Easing: {
       ease: jest.fn(),
+      linear: jest.fn(),
+      quad: jest.fn(),
+      in: jest.fn((fn) => fn),
+      out: jest.fn((fn) => fn),
+      inOut: jest.fn((fn) => fn),
+      bezier: jest.fn(() => jest.fn()),
     },
   };
 });

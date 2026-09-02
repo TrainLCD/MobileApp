@@ -82,6 +82,7 @@ import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android
 import { getIsLocal } from '~/utils/trainTypeString';
 import LineBoard from '../components/LineBoard';
 import PortraitMain from '../components/PortraitMain';
+import PortraitModePrompt from '../components/PortraitModePrompt';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
@@ -810,6 +811,8 @@ const MainScreen: React.FC = () => {
           <Header />
           <LineBoard hasTerminus={hasTerminus} />
         </View>
+        {/* 回転しているビューの外に置いて正立させる(案A) */}
+        <PortraitModePrompt />
       </>
     );
   }
@@ -833,6 +836,8 @@ const MainScreen: React.FC = () => {
         </View>
 
         {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {/* 回転しているビューの外に置いて正立させる(案A) */}
+        <PortraitModePrompt />
       </>
     );
   }
@@ -854,6 +859,9 @@ const MainScreen: React.FC = () => {
 
         {isDevApp && devOverlayEnabled && <DevOverlay />}
       </View>
+
+      {/* 回転しているビューの外に置いて正立させる(案A) */}
+      <PortraitModePrompt />
 
       <SelectBoundModal
         visible={isSelectBoundModalOpen}
