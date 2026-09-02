@@ -1347,6 +1347,12 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   // Dynamic Island / ノッチやホームインジケータと表示が被らないよう、
   // 上下のセーフエリア分を padding として確保する。
   const insets = useSafeAreaInsets();
+  // タブレットはノッチもホームインジケータもないぶんセーフエリアがほぼ 0 になり、
+  // 上端だけ余白が消えて路線情報が画面の縁に貼り付いて見える。下端に確保している
+  // 余白と同じ量を最低限敷いて、上下の重さを揃える。
+  const topInset = isTablet
+    ? Math.max(insets.top, STOP_LIST_PADDING_V + insets.bottom)
+    : insets.top;
   const colors = useAtomValue(appColorsAtom);
   const commonData = useHeaderCommonData();
   const allStations = useAtomValue(stationsAtom);
@@ -1596,13 +1602,13 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   return (
     // ステータスバーは非表示のため SafeAreaView は使わず素の View を使う。
     // 上端は Dynamic Island / ノッチと路線情報が被らないよう、
-    // セーフエリア上端ぶんの padding を確保する。
+    // セーフエリア上端ぶん(タブレットでは下端の余白と同量)の padding を確保する。
     <View
       testID="portrait-root"
       onTouchStart={handleTouchStart}
       style={[
         styles.root,
-        { backgroundColor: colors.background, paddingTop: insets.top },
+        { backgroundColor: colors.background, paddingTop: topInset },
       ]}
     >
       <AccentWash
