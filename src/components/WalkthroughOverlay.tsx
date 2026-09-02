@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Path, Rect } from 'react-native-svg';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
@@ -82,6 +83,12 @@ const ANIMATION_DURATION = 300;
 // spotlightArea.borderRadius が指定されていない場合の切り抜き半径
 const DEFAULT_SPOTLIGHT_BORDER_RADIUS = 8;
 
+// LEDテーマは appColorsAtom がライト配色を返すため colors.* をそのまま使うと白いカードになる。
+// 他のダイアログ(DialogModalLayout / Button)と同じ黒地・白枠・白文字の規則をここで持つ
+const LED_TEXT_COLOR = '#fff';
+const LED_MUTED_TEXT_COLOR = '#CCCCCC';
+const LED_INACTIVE_DOT_COLOR = '#444';
+
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
@@ -148,6 +155,24 @@ const styles = StyleSheet.create({
   },
   // LEDテーマは角丸を使わないため、角丸を持つ要素すべてに重ねて直角化する
   squareCorners: {
+    borderRadius: 0,
+  },
+  tooltipContainerLED: {
+    backgroundColor: LED_THEME_BG_COLOR,
+    borderWidth: 1,
+    borderColor: LED_TEXT_COLOR,
+    borderRadius: 0,
+  },
+  titleLED: {
+    color: LED_TEXT_COLOR,
+  },
+  dotActiveLED: {
+    backgroundColor: LED_TEXT_COLOR,
+  },
+  nextButtonLED: {
+    backgroundColor: LED_THEME_BG_COLOR,
+    borderWidth: 1,
+    borderColor: LED_TEXT_COLOR,
     borderRadius: 0,
   },
 });
@@ -315,15 +340,23 @@ const WalkthroughOverlay: React.FC<Props> = ({
       </Pressable>
 
       <RNAnimated.View
+        testID="walkthrough-tooltip"
         style={[
           styles.tooltipContainer,
           { backgroundColor: colors.card },
           animatedTooltipStyle,
-          isLEDTheme && styles.squareCorners,
+          isLEDTheme && styles.tooltipContainerLED,
         ]}
       >
-        <Typography style={styles.title}>{translate(step.titleKey)}</Typography>
-        <Typography style={[styles.description, { color: colors.text }]}>
+        <Typography style={[styles.title, isLEDTheme && styles.titleLED]}>
+          {translate(step.titleKey)}
+        </Typography>
+        <Typography
+          style={[
+            styles.description,
+            { color: isLEDTheme ? LED_TEXT_COLOR : colors.text },
+          ]}
+        >
           {translate(step.descriptionKey)}
         </Typography>
 
@@ -334,7 +367,14 @@ const WalkthroughOverlay: React.FC<Props> = ({
             accessibilityLabel={skipText}
             accessibilityHint={translate('walkthroughSkipHint')}
           >
-            <Typography style={[styles.skipText, { color: colors.mutedText }]}>
+            <Typography
+              style={[
+                styles.skipText,
+                {
+                  color: isLEDTheme ? LED_MUTED_TEXT_COLOR : colors.mutedText,
+                },
+              ]}
+            >
               {skipText}
             </Typography>
           </Pressable>
@@ -354,10 +394,16 @@ const WalkthroughOverlay: React.FC<Props> = ({
                   accessibilityHint={translate('walkthroughGoToStepHint')}
                 >
                   <View
+                    testID={`walkthrough-dot-${index}`}
                     style={[
                       styles.dot,
-                      { backgroundColor: colors.border },
-                      index === currentStepIndex && styles.dotActive,
+                      {
+                        backgroundColor: isLEDTheme
+                          ? LED_INACTIVE_DOT_COLOR
+                          : colors.border,
+                      },
+                      index === currentStepIndex &&
+                        (isLEDTheme ? styles.dotActiveLED : styles.dotActive),
                       isLEDTheme && styles.squareCorners,
                     ]}
                   />
@@ -367,7 +413,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
           ) : null}
 
           <Pressable
-            style={[styles.nextButton, isLEDTheme && styles.squareCorners]}
+            style={[styles.nextButton, isLEDTheme && styles.nextButtonLED]}
             onPress={onNext}
             accessibilityRole="button"
             accessibilityLabel={nextText}
