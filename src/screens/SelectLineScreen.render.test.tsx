@@ -95,6 +95,13 @@ jest.mock('~/components/CommonCard', () => ({
   },
 }));
 
+jest.mock('~/components/PortraitModePromoBanner', () => ({
+  PortraitModePromoBanner: () => {
+    const { View } = require('react-native');
+    return <View testID="portrait-mode-promo-banner" />;
+  },
+}));
+
 jest.mock('~/components/NowHeader', () => ({
   NowHeader: ({ station }: { station: Station | null }) => {
     const { View, Text } = require('react-native');

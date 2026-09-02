@@ -69,7 +69,7 @@ jest.mock('~/hooks/useSettingsWalkthrough', () => ({
     currentStepIndex: 0,
     currentStepId: mockCurrentStepId,
     currentStep: null,
-    totalSteps: 4,
+    totalSteps: 5,
     nextStep: jest.fn(),
     goToStep: jest.fn(),
     skipWalkthrough: jest.fn(),
@@ -87,6 +87,7 @@ const lastSpotlightArea = (): WalkthroughStep['spotlightArea'] => {
 // スポットライト対象の項目を持つステップ
 const SPOTLIGHT_STEP_IDS: WalkthroughStepId[] = [
   'settingsTheme',
+  'settingsColorScheme',
   'settingsTts',
   'settingsLanguages',
 ];

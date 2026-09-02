@@ -20,6 +20,12 @@ const SETTINGS_WALKTHROUGH_STEPS: WalkthroughStep[] = [
     tooltipPosition: 'bottom',
   },
   {
+    id: 'settingsColorScheme',
+    titleKey: 'settingsWalkthroughColorSchemeTitle',
+    descriptionKey: 'settingsWalkthroughColorSchemeDescription',
+    tooltipPosition: 'bottom',
+  },
+  {
     id: 'settingsTts',
     titleKey: 'settingsWalkthroughTitle3',
     descriptionKey: 'settingsWalkthroughDescription3',

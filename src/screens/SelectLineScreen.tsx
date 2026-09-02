@@ -20,6 +20,7 @@ import type { Line, LineNested } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
+import { PortraitModePromoBanner } from '~/components/PortraitModePromoBanner';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
@@ -59,6 +60,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 32,
     marginBottom: 16,
+  },
+  portraitPromoBanner: {
+    marginBottom: 24,
   },
 });
 
@@ -347,6 +351,9 @@ const SelectLineScreen = () => {
             <NearbyStationLoader />
           ) : (
             <>
+              {/* 案B: ポートレートモードの追加を知らせるバナー。
+                  条件を満たさないときは自身で null を返す */}
+              <PortraitModePromoBanner style={styles.portraitPromoBanner} />
               <View ref={presetsRef} onLayout={handlePresetsLayout}>
                 <SelectLineScreenPresets
                   carouselData={carouselData}

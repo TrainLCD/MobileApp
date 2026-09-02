@@ -36,6 +36,7 @@ const ReanimatedMock = {
   useAnimatedRef: () => ({ current: null }),
   useAnimatedScrollHandler: () => jest.fn(),
   useAnimatedGestureHandler: () => jest.fn(),
+  useReducedMotion: () => false,
   LinearTransition: linearTransition,
   FadeIn: animationBuilder,
   FadeInDown: animationBuilder,
