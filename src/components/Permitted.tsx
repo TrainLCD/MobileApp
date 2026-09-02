@@ -15,7 +15,7 @@ import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
-import { overlayAppColorsAtom } from '~/store/atoms/colorScheme';
+import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
 import { getActionSheetColorOptions } from '~/utils/actionSheetColors';
@@ -139,7 +139,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   // アクションシートは車内再現(走行画面)とは別レイヤーの一時的なUIなので、
   // 走行画面から開いた場合も配色設定に追従させる。走行画面はProviderの
   // 外側にあるため、モーダル本体と同じくatomを直接購読する。
-  const actionSheetColors = useAtomValue(overlayAppColorsAtom);
+  const actionSheetColors = useAtomValue(resolvedAppColorsAtom);
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
   const {

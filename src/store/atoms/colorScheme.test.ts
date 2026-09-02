@@ -7,7 +7,7 @@ import {
   appColorsAtom,
   colorSchemePreferenceAtom,
   isDarkColorSchemeAtom,
-  overlayAppColorsAtom,
+  resolvedAppColorsAtom,
   resolvedColorSchemeAtom,
   systemColorSchemeAtom,
 } from './colorScheme';
@@ -60,17 +60,17 @@ describe('colorScheme atoms', () => {
 
   // アクションシートなどOS側のレイヤーに描かれるUIは、電光掲示板風テーマの
   // 配色を持ちようがないため設定値をそのまま反映する
-  it('overlayAppColorsAtomは電光掲示板風テーマでも配色設定に追従する', () => {
+  it('resolvedAppColorsAtomは電光掲示板風テーマでも配色設定に追従する', () => {
     const store = createStore();
     store.set(themePreferenceAtom, THEME_PREFERENCE.LED);
 
     store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.DARK);
-    expect(store.get(overlayAppColorsAtom)).toBe(DARK_APP_COLORS);
+    expect(store.get(resolvedAppColorsAtom)).toBe(DARK_APP_COLORS);
     // 画面本体側は従来どおりライトのまま
     expect(store.get(appColorsAtom)).toBe(LIGHT_APP_COLORS);
 
     store.set(colorSchemePreferenceAtom, COLOR_SCHEME_PREFERENCE.LIGHT);
-    expect(store.get(overlayAppColorsAtom)).toBe(LIGHT_APP_COLORS);
+    expect(store.get(resolvedAppColorsAtom)).toBe(LIGHT_APP_COLORS);
   });
 
   it('電光掲示板風テーマ選択中は端末がダークでもライトのパレットを返す', () => {
