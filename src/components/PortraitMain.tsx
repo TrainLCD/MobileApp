@@ -65,7 +65,7 @@ import {
   useTransferStationNumbers,
   useTransferTargetStation,
 } from '~/hooks';
-import { appColorsAtom } from '~/store/atoms/colorScheme';
+import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import {
   bottomStateAtom,
   enabledLanguagesAtom,
@@ -91,8 +91,9 @@ import Typography from './Typography';
 
 // 走行画面は AppColorsProvider の外側で描画されるため useAppColors() は常に
 // ライトの値を返す。ポートレートは配色設定に追従させたいので atom を直接読む。
-// 電光掲示板風テーマ選択中は appColorsAtom がライトを返すので、従来どおりの
-// 見た目のまま保たれる。
+// appColorsAtom は電光掲示板風テーマ選択中にライトを返すが、この画面は路線テーマに
+// 依存しないレイアウトで電光掲示板風の配色を持たないため、そちらではなく
+// 上書きを受けない resolvedAppColorsAtom を読む。
 const FALLBACK_ACCENT = '#888888';
 
 // 通過駅の駅名・記号用。停車駅(secondaryText)よりさらに弱くして
@@ -1353,7 +1354,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const topInset = isTablet
     ? Math.max(insets.top, STOP_LIST_PADDING_V + insets.bottom)
     : insets.top;
-  const colors = useAtomValue(appColorsAtom);
+  const colors = useAtomValue(resolvedAppColorsAtom);
   const commonData = useHeaderCommonData();
   const allStations = useAtomValue(stationsAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);

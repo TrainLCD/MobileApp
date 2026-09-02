@@ -15,7 +15,7 @@ import type { AppColors } from '~/constants/colorScheme';
  *
  * アクションシートは OS 側のレイヤーに描かれ電光掲示板風テーマの配色を持ち
  * ようがないため、ここだけは電光掲示板風テーマでも配色設定に追従させる
- * (`overlayAppColorsAtom` を渡す)。追従しないと他がダークなのにシートだけ
+ * (`resolvedAppColorsAtom` を渡す)。追従しないと他がダークなのにシートだけ
  * 明るいという不具合に見えてしまう。
  */
 export const getActionSheetColorOptions = (
