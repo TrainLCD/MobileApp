@@ -170,12 +170,69 @@ describe('WalkthroughOverlay', () => {
     );
   });
 
-  it('LEDテーマではツールチップも角丸なしになる', () => {
-    const { getByLabelText } = renderOverlay(true);
+  it('通常テーマではツールチップがライト配色のカードになる', () => {
+    const { getByTestId, getByText, getByLabelText } = renderOverlay(false);
 
-    const nextButton = getByLabelText('walkthroughNext');
+    expect(getByTestId('walkthrough-tooltip')).toHaveStyle({
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+    });
+    expect(getByText('settingsWalkthroughTitle2')).toHaveStyle({
+      color: '#03a9f4',
+    });
+    expect(getByText('settingsWalkthroughDescription2')).toHaveStyle({
+      color: '#333333',
+    });
+    expect(getByText('walkthroughSkip')).toHaveStyle({ color: '#666666' });
+    expect(getByTestId('walkthrough-dot-0')).toHaveStyle({
+      backgroundColor: '#03a9f4',
+      borderRadius: 4,
+    });
+    expect(getByTestId('walkthrough-dot-1')).toHaveStyle({
+      backgroundColor: '#DDDDDD',
+    });
+    expect(getByLabelText('walkthroughNext')).toHaveStyle({
+      backgroundColor: '#03a9f4',
+      borderRadius: 6,
+    });
+  });
 
-    expect(nextButton).toHaveStyle({ borderRadius: 0 });
+  it('LEDテーマではツールチップが黒地・白枠・角丸なしになる', () => {
+    const { getByTestId, getByLabelText } = renderOverlay(true);
+
+    expect(getByTestId('walkthrough-tooltip')).toHaveStyle({
+      backgroundColor: '#212121',
+      borderColor: '#fff',
+      borderWidth: 1,
+      borderRadius: 0,
+    });
+    expect(getByLabelText('walkthroughNext')).toHaveStyle({
+      backgroundColor: '#212121',
+      borderColor: '#fff',
+      borderWidth: 1,
+      borderRadius: 0,
+    });
+  });
+
+  it('LEDテーマでは文字とドットも白系の配色になる', () => {
+    const { getByTestId, getByText } = renderOverlay(true);
+
+    expect(getByText('settingsWalkthroughTitle2')).toHaveStyle({
+      color: '#fff',
+    });
+    expect(getByText('settingsWalkthroughDescription2')).toHaveStyle({
+      color: '#fff',
+    });
+    expect(getByText('walkthroughSkip')).toHaveStyle({ color: '#CCCCCC' });
+    expect(getByText('walkthroughNext')).toHaveStyle({ color: '#fff' });
+    expect(getByTestId('walkthrough-dot-0')).toHaveStyle({
+      backgroundColor: '#fff',
+      borderRadius: 0,
+    });
+    expect(getByTestId('walkthrough-dot-1')).toHaveStyle({
+      backgroundColor: '#444',
+      borderRadius: 0,
+    });
   });
 });
 
