@@ -67,13 +67,17 @@ export const appColorsAtom = atom<AppColors>((get) => {
 });
 
 /**
- * 電光掲示板風テーマの有無を無視した配色。
+ * 電光掲示板風テーマの上書きを受けない配色。
  *
- * アクションシートのように OS 側のレイヤーへ描かれ、電光掲示板風テーマの配色を
- * 持ちようがない UI で使う。ここだけ配色設定に追従しないと、他がダークなのに
- * シートだけ明るいという不具合に見えるため、テーマではなく設定値をそのまま反映する。
+ * 電光掲示板風テーマの配色を持ちようがない UI で使う。次の 2 種類がある。
+ *
+ * - アクションシートのように OS 側のレイヤーへ描かれるもの
+ * - ポートレートモードの走行画面のように、路線テーマに依存しないレイアウト
+ *
+ * ここまで `appColorsAtom` に合わせてしまうと、他がダークなのにその部分だけ
+ * 明るいという不具合に見えるため、テーマではなく設定値をそのまま反映する。
  */
-export const overlayAppColorsAtom = atom<AppColors>(
+export const resolvedAppColorsAtom = atom<AppColors>(
   (get) => APP_COLORS[get(resolvedColorSchemeAtom)]
 );
 

@@ -16,6 +16,7 @@ import {
   useTransferTargetStation,
 } from '~/hooks';
 import { COLOR_SCHEME_PREFERENCE } from '~/models/ColorScheme';
+import { THEME_PREFERENCE, type ThemePreference } from '~/models/Theme';
 import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
 import { bottomStateAtom } from '~/store/atoms/navigation';
 import {
@@ -23,6 +24,7 @@ import {
   selectedDirectionAtom,
   stationsAtom,
 } from '~/store/atoms/station';
+import { themePreferenceAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
 import PortraitMain from './PortraitMain';
@@ -48,7 +50,10 @@ jest.mock('./NumberingIcon', () => (props: { lineColor: string }) => {
 });
 
 jest.mock('~/hooks', () => ({
-  useBoundText: jest.fn(() => ({ JA: '品川・大崎方面' })),
+  useBoundText: jest.fn(() => ({
+    JA: '品川・大崎方面',
+    EN: 'for Shinagawa & Osaki',
+  })),
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
   useCurrentTrainType: jest.fn(),
@@ -126,6 +131,7 @@ const renderWithStations = (
     arrived = true,
     currentStation = stations[0],
     colorScheme = COLOR_SCHEME_PREFERENCE.LIGHT,
+    themePreference,
     bottomState = 'LINE' as const,
     direction = 'INBOUND' as const,
     transferStation,
@@ -135,6 +141,7 @@ const renderWithStations = (
     arrived?: boolean;
     currentStation?: Station;
     colorScheme?: (typeof COLOR_SCHEME_PREFERENCE)[keyof typeof COLOR_SCHEME_PREFERENCE];
+    themePreference?: ThemePreference;
     bottomState?: 'LINE' | 'TRANSFER' | 'TYPE_CHANGE';
     direction?: 'INBOUND' | 'OUTBOUND';
     transferStation?: Station;
@@ -145,6 +152,9 @@ const renderWithStations = (
   const store = createStore();
   // 端末のダークモード状態に左右されないよう、配色は常に明示して固定する
   store.set(colorSchemePreferenceAtom, colorScheme);
+  if (themePreference) {
+    store.set(themePreferenceAtom, themePreference);
+  }
   // 全駅表示。非環状線の INBOUND は反転しないので渡した順がそのまま表示順になる。
   store.set(stationsAtom, stations);
   store.set(selectedDirectionAtom, direction);
@@ -195,6 +205,26 @@ describe('PortraitMain', () => {
     expect(getByTestId('portrait-station-name').props.children).toBe(
       '高輪ゲートウェイ'
     );
+  });
+
+  it('英語環境では行き先を英語表記で表示する', () => {
+    // isJapanese はモジュールスコープの定数なので、モック済みモジュールの
+    // プロパティを差し替えて英語環境を再現する
+    const translationMock = jest.requireMock('~/translation') as {
+      isJapanese: boolean;
+    };
+    translationMock.isJapanese = false;
+
+    try {
+      const { getByText, queryByText } = renderWithStations([
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      ]);
+
+      expect(getByText('for Shinagawa & Osaki')).toBeTruthy();
+      expect(queryByText('品川・大崎方面')).toBeNull();
+    } finally {
+      translationMock.isJapanese = true;
+    }
   });
 
   it('駅名がスロットに収まるときは末尾欠け防止のバッファ分だけ余白を取り横圧縮しない', () => {
@@ -550,6 +580,30 @@ describe('PortraitMain', () => {
     const { getByTestId } = renderWithStations(
       [buildStation(1, '品川', StopCondition.All, 'JY-25')],
       { colorScheme: COLOR_SCHEME_PREFERENCE.DARK }
+    );
+
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-root').props.style)
+        .backgroundColor
+    ).toBe(DARK_APP_COLORS.background);
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-card').props.style)
+        .backgroundColor
+    ).toBe(DARK_APP_COLORS.card);
+    expect(
+      StyleSheet.flatten(getByTestId('portrait-station-name').props.style).color
+    ).toBe(DARK_APP_COLORS.text);
+  });
+
+  // ポートレートは路線テーマに依存しないレイアウトで電光掲示板風の配色を持たないため、
+  // 電光掲示板風テーマ選択中でも配色設定のダークがそのまま効く
+  it('電光掲示板風テーマ選択中でもダーク設定ならダークのトークンを使う', () => {
+    const { getByTestId } = renderWithStations(
+      [buildStation(1, '品川', StopCondition.All, 'JY-25')],
+      {
+        colorScheme: COLOR_SCHEME_PREFERENCE.DARK,
+        themePreference: THEME_PREFERENCE.LED,
+      }
     );
 
     expect(

@@ -65,7 +65,7 @@ import {
   useTransferStationNumbers,
   useTransferTargetStation,
 } from '~/hooks';
-import { appColorsAtom } from '~/store/atoms/colorScheme';
+import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import {
   bottomStateAtom,
   enabledLanguagesAtom,
@@ -91,8 +91,9 @@ import Typography from './Typography';
 
 // 走行画面は AppColorsProvider の外側で描画されるため useAppColors() は常に
 // ライトの値を返す。ポートレートは配色設定に追従させたいので atom を直接読む。
-// 電光掲示板風テーマ選択中は appColorsAtom がライトを返すので、従来どおりの
-// 見た目のまま保たれる。
+// appColorsAtom は電光掲示板風テーマ選択中にライトを返すが、この画面は路線テーマに
+// 依存しないレイアウトで電光掲示板風の配色を持たないため、そちらではなく
+// 上書きを受けない resolvedAppColorsAtom を読む。
 const FALLBACK_ACCENT = '#888888';
 
 // 通過駅の駅名・記号用。停車駅(secondaryText)よりさらに弱くして
@@ -298,8 +299,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 8,
   },
-  // 行き先は言語切り替えタイマーで内容が変わる。和文と欧文でフォントメトリクスが
-  // 異なり行の高さが変動するため、高さと lineHeight を固定して行がガタつかないようにする。
+  // 行き先は表示言語によって和文・欧文が入れ替わる。フォントメトリクスが異なり
+  // 行の高さが変動するため、高さと lineHeight を固定して行がガタつかないようにする。
   boundText: {
     flexShrink: 1,
     fontSize: RFValue(10),
@@ -1353,7 +1354,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const topInset = isTablet
     ? Math.max(insets.top, STOP_LIST_PADDING_V + insets.bottom)
     : insets.top;
-  const colors = useAtomValue(appColorsAtom);
+  const colors = useAtomValue(resolvedAppColorsAtom);
   const commonData = useHeaderCommonData();
   const allStations = useAtomValue(stationsAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
@@ -1366,8 +1367,10 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const transferLines = useTransferLines();
   // 案内する乗換路線と対象駅がずれないよう、路線側と同じフックから引く
   const transferStation = useTransferTargetStation() ?? null;
-  // 行先は言語切り替えタイマーで多言語化せず日本語固定で表示する
-  const boundText = useBoundText().JA;
+  // 行先はヘッダーの言語切り替えタイマーには追従させず、路線名・種別と同じく
+  // アプリの表示言語に合わせて固定表示する
+  const boundTextMap = useBoundText();
+  const boundText = isJapanese ? boundTextMap.JA : boundTextMap.EN;
   // 全駅を出すので leftStations で絞られない方のフックを使う
   const { route: estimatedRoute } = useEstimateArrivalTimesAllStops();
   const estimatedMinutesByStationId =

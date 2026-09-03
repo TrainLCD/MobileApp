@@ -36,7 +36,10 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('./NumberingIcon', () => () => null);
 
 jest.mock('~/hooks', () => ({
-  useBoundText: jest.fn(() => ({ JA: '品川・大崎方面' })),
+  useBoundText: jest.fn(() => ({
+    JA: '品川・大崎方面',
+    EN: 'for Shinagawa & Osaki',
+  })),
   useCurrentLine: jest.fn(() => ({
     id: 11302,
     color: '#80C241',
