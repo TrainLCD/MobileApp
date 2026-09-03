@@ -50,7 +50,10 @@ jest.mock('./NumberingIcon', () => (props: { lineColor: string }) => {
 });
 
 jest.mock('~/hooks', () => ({
-  useBoundText: jest.fn(() => ({ JA: '品川・大崎方面' })),
+  useBoundText: jest.fn(() => ({
+    JA: '品川・大崎方面',
+    EN: 'for Shinagawa & Osaki',
+  })),
   useCurrentLine: jest.fn(),
   useCurrentStation: jest.fn(),
   useCurrentTrainType: jest.fn(),
@@ -202,6 +205,26 @@ describe('PortraitMain', () => {
     expect(getByTestId('portrait-station-name').props.children).toBe(
       '高輪ゲートウェイ'
     );
+  });
+
+  it('英語環境では行き先を英語表記で表示する', () => {
+    // isJapanese はモジュールスコープの定数なので、モック済みモジュールの
+    // プロパティを差し替えて英語環境を再現する
+    const translationMock = jest.requireMock('~/translation') as {
+      isJapanese: boolean;
+    };
+    translationMock.isJapanese = false;
+
+    try {
+      const { getByText, queryByText } = renderWithStations([
+        buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      ]);
+
+      expect(getByText('for Shinagawa & Osaki')).toBeTruthy();
+      expect(queryByText('品川・大崎方面')).toBeNull();
+    } finally {
+      translationMock.isJapanese = true;
+    }
   });
 
   it('駅名がスロットに収まるときは末尾欠け防止のバッファ分だけ余白を取り横圧縮しない', () => {
