@@ -5,6 +5,7 @@ import {
   type ThemePreference,
 } from '~/models/Theme';
 import { translate } from '~/translation';
+import { isDevApp } from './isDevApp';
 
 export interface SettingsTheme {
   label: string;
@@ -85,4 +86,12 @@ export const getSettingsThemes = (): SettingsTheme[] =>
       // コードネームは低消費電力テーマ(#3697)。まずカナリア版だけで様子を見る
       devOnly: true,
     },
-  ].filter((t) => (isClip() ? t.value !== APP_THEME.LED : t)); // App Clip では LED テーマを非表示
+  ].filter((t) => {
+    // App Clip では LED テーマを非表示
+    if (isClip() && t.value === APP_THEME.LED) {
+      return false;
+    }
+    // 未公開テーマはカナリア版でのみ選べるようにする。
+    // 呼び出し側ごとに除外すると片方だけ漏れるため、一覧を組み立てるここで一元的に落とす
+    return isDevApp || !t.devOnly;
+  });
