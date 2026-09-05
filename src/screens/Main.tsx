@@ -778,6 +778,29 @@ const MainScreen: React.FC = () => {
     }
   }, [bottomState, handleTransferPress, hasTerminus, theme, transferStation]);
 
+  // 運転路線の切り替え確認で OK を押すと pendingLine/pendingStations が積まれ、
+  // 方面選択のモーダルで確定させる。どのレイアウトを返しても切り替えが完了する
+  // よう、レイアウトごとの return すべてでこの要素を描画する。
+  const selectBoundModal = (
+    <SelectBoundModal
+      visible={isSelectBoundModalOpen}
+      onClose={handleCloseSelectBoundModal}
+      onBoundSelect={handleCloseSelectBoundModal}
+      onTrainTypeSelect={handleTrainTypeSelect}
+      loading={
+        fetchStationsByLineGroupIdLoading ||
+        fetchStationsByLineIdLoading ||
+        fetchTrainTypesLoading
+      }
+      error={
+        fetchStationsByLineGroupIdError ||
+        fetchStationsByLineIdError ||
+        fetchTrainTypesError ||
+        null
+      }
+    />
+  );
+
   if (pictureInPictureActive) {
     return (
       <>
@@ -799,6 +822,7 @@ const MainScreen: React.FC = () => {
           onTransferPress={handleTransferPress}
         />
         {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {selectBoundModal}
       </>
     );
   }
@@ -863,23 +887,7 @@ const MainScreen: React.FC = () => {
       {/* 回転しているビューの外に置いて正立させる(案A) */}
       <PortraitModePrompt />
 
-      <SelectBoundModal
-        visible={isSelectBoundModalOpen}
-        onClose={handleCloseSelectBoundModal}
-        onBoundSelect={handleCloseSelectBoundModal}
-        onTrainTypeSelect={handleTrainTypeSelect}
-        loading={
-          fetchStationsByLineGroupIdLoading ||
-          fetchStationsByLineIdLoading ||
-          fetchTrainTypesLoading
-        }
-        error={
-          fetchStationsByLineGroupIdError ||
-          fetchStationsByLineIdError ||
-          fetchTrainTypesError ||
-          null
-        }
-      />
+      {selectBoundModal}
     </>
   );
 };
