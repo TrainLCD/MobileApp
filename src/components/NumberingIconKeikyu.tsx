@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { FONTS } from '~/constants';
 import isTablet from '~/utils/isTablet';
+import { numberingStackedGlyphLift } from '~/utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -9,6 +10,16 @@ type Props = {
   lineColor: string;
   withOutline?: boolean;
 };
+
+const FONT = 'FuturaLTPro';
+const SYMBOL_SIZE = isTablet ? 16 * 1.5 : 16;
+const NUMBER_SIZE = isTablet ? 26 * 1.5 : 26;
+
+// Androidのグリフ上寄り補正。記号と番号で同じ値を使わないと両者の間隔が変わる
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: FONT },
+  { fontSize: NUMBER_SIZE, font: FONT }
+);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -28,15 +39,17 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: '#00386D',
-    fontSize: isTablet ? 16 * 1.5 : 16,
-    lineHeight: isTablet ? 16 * 1.5 : 16,
+    fontSize: SYMBOL_SIZE,
+    lineHeight: SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
   stationNumber: {
     color: '#00386D',
-    fontSize: isTablet ? 26 * 1.5 : 26,
-    lineHeight: isTablet ? 26 * 1.5 : 26,
+    fontSize: NUMBER_SIZE,
+    lineHeight: NUMBER_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },

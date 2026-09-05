@@ -1,11 +1,15 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import {
+  numberingGlyphLift,
+  numberingStackedGlyphLift,
+} from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -14,6 +18,18 @@ type Props = {
   size?: NumberingIconSize;
   withOutline?: boolean;
 };
+
+const FONT = 'FrutigerNeueLTProBold';
+const SYMBOL_SIZE = isTablet ? 22 * 1.5 : 22;
+const NUMBER_SIZE = isTablet ? 26 * 1.5 : 26;
+
+// Androidのグリフ下寄り補正。記号と番号で異なる値を使うと両者の間隔まで変わるため、
+// 縦に並ぶ2行には同じ値を使い回す
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: FONT },
+  { fontSize: NUMBER_SIZE, font: FONT }
+);
+const TINY_GLYPH_LIFT = numberingGlyphLift(10, FONT);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -32,11 +48,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   lineSymbol: {
-    fontSize: isTablet ? 22 * 1.5 : 22,
-    lineHeight: isTablet ? 22 * 1.5 : 22,
+    fontSize: SYMBOL_SIZE,
+    lineHeight: SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: isTablet ? 4 : 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? (isTablet ? 4 : 2) : 0,
   },
   rootTiny: {
     width: 20,
@@ -51,13 +69,16 @@ const styles = StyleSheet.create({
   lineSymbolTiny: {
     fontSize: 10,
     lineHeight: 10,
+    transform: TINY_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   stationNumber: {
-    fontSize: isTablet ? 26 * 1.5 : 26,
-    lineHeight: isTablet ? 26 * 1.5 : 26,
+    fontSize: NUMBER_SIZE,
+    lineHeight: NUMBER_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: isTablet ? -4 : -2,

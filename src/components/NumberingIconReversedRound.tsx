@@ -1,11 +1,15 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import {
+  numberingGlyphLift,
+  numberingStackedGlyphLift,
+} from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -14,6 +18,21 @@ type Props = {
   size?: NumberingIconSize;
   withOutline?: boolean;
 };
+
+const FONT = 'FuturaLTPro';
+const SYMBOL_SIZE = isTablet ? 24 * 1.5 : 24;
+const LONG_SYMBOL_SIZE = isTablet ? 20 * 1.5 : 20;
+const NUMBER_SIZE = isTablet ? 26 * 1.5 : 26;
+
+// Androidのグリフ上寄り補正。記号と番号で異なる値を使うと両者の間隔まで変わるため、
+// 縦に並ぶ2行には同じ値を使い回す
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: FONT },
+  { fontSize: NUMBER_SIZE, font: FONT }
+);
+const MEDIUM_GLYPH_LIFT = numberingGlyphLift(isTablet ? 24 : 14, FONT);
+const TINY_GLYPH_LIFT = numberingGlyphLift(10, FONT);
+const TINY_LONG_GLYPH_LIFT = numberingGlyphLift(5, FONT);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -33,15 +52,17 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: 'white',
-    fontSize: isTablet ? 24 * 1.5 : 24,
-    lineHeight: isTablet ? 24 * 1.5 : 24,
+    fontSize: SYMBOL_SIZE,
+    lineHeight: SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
   lineSymbolLong: {
     color: 'white',
-    fontSize: isTablet ? 20 * 1.5 : 20,
-    lineHeight: isTablet ? 20 * 1.5 : 20,
+    fontSize: LONG_SYMBOL_SIZE,
+    lineHeight: LONG_SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -69,30 +90,37 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 10,
     lineHeight: 10,
+    transform: TINY_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 1,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 1 : 0,
   },
   lineSymbolTinyLong: {
     color: 'white',
     fontSize: 5,
     lineHeight: 5,
+    transform: TINY_LONG_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 1,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 1 : 0,
   },
   lineSymbolMedium: {
     color: 'white',
     fontSize: isTablet ? 24 : 14,
     lineHeight: isTablet ? 24 : 14,
+    transform: MEDIUM_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   stationNumber: {
     color: 'white',
-    fontSize: isTablet ? 26 * 1.5 : 26,
-    lineHeight: isTablet ? 26 * 1.5 : 26,
+    fontSize: NUMBER_SIZE,
+    lineHeight: NUMBER_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: isTablet ? -4 : -2,

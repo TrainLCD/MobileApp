@@ -2,12 +2,25 @@ import type React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { FONTS } from '../constants';
 import isTablet from '../utils/isTablet';
+import { numberingStackedGlyphLift } from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
   stationNumber: string;
   withOutline?: boolean;
 };
+
+const FONT = 'FrutigerNeueLTProBold';
+const SYMBOL_SIZE = isTablet ? 18 * 1.5 : 18;
+const NUMBER_SIZE = isTablet ? 28 * 1.5 : 28;
+
+// Androidのグリフ下寄り補正。記号と番号で同じ値を使わないと両者の間隔が変わる。
+// inner は上詰めで中央寄せしていないため marginTop は位置指定そのものと解釈し、
+// プラットフォーム分岐は入れずフォント由来のズレだけを打ち消す
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: FONT },
+  { fontSize: NUMBER_SIZE, font: FONT }
+);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -34,15 +47,17 @@ const styles = StyleSheet.create({
     borderRadius: isTablet ? 6 : 4,
   },
   lineSymbol: {
-    lineHeight: isTablet ? 18 * 1.5 : 18,
-    fontSize: isTablet ? 18 * 1.5 : 18,
+    lineHeight: SYMBOL_SIZE,
+    fontSize: SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: 4,
   },
   stationNumber: {
-    lineHeight: isTablet ? 28 * 1.5 : 28,
-    fontSize: isTablet ? 28 * 1.5 : 28,
+    lineHeight: NUMBER_SIZE,
+    fontSize: NUMBER_SIZE,
+    transform: GLYPH_LIFT,
     marginTop: -4,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,

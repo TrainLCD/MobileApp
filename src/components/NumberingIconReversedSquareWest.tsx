@@ -2,7 +2,7 @@ import type React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { FONTS } from '../constants';
 import isTablet from '../utils/isTablet';
-import { numberingGlyphLift } from '../utils/numberingGlyphLift';
+import { numberingStackedGlyphLift } from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -13,8 +13,14 @@ type Props = {
   withOutline?: boolean;
 };
 
+const FONT = 'FrutigerNeueLTProBold';
+const TEXT_SIZE = isTablet ? 30 * 1.5 : 30;
+
 // Androidのグリフ下寄り補正。記号と番号で同じ値を使わないと両者の間隔が変わる
-const GLYPH_LIFT = numberingGlyphLift(isTablet ? 30 * 1.5 : 30);
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: TEXT_SIZE, font: FONT },
+  { fontSize: TEXT_SIZE, font: FONT }
+);
 
 const styles = StyleSheet.create({
   optionalBorder: {

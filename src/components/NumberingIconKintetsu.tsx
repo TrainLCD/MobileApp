@@ -1,11 +1,12 @@
 import type React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import { numberingGlyphLift } from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -14,6 +15,14 @@ type Props = {
   size?: NumberingIconSize;
   withOutline?: boolean;
 };
+
+// Androidのグリフ下寄り補正。LARGE は lineHeight を指定しておらず
+// CustomLineHeightSpan を通らないため、iOS と同じ描画になり補正しない
+const MEDIUM_GLYPH_LIFT = numberingGlyphLift(
+  isTablet ? 25 * 1.5 : 25,
+  'FrutigerNeueLTProBold'
+);
+const TINY_GLYPH_LIFT = numberingGlyphLift(10, 'FrutigerNeueLTProBold');
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -65,15 +74,19 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.FrutigerNeueLTProBold,
     fontSize: isTablet ? 25 * 1.5 : 25,
     lineHeight: isTablet ? 25 * 1.5 : 25,
-    marginTop: isTablet ? 8 : 4,
+    transform: MEDIUM_GLYPH_LIFT,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? (isTablet ? 8 : 4) : 0,
   },
   lineSymbolTiny: {
     color: 'white',
     fontSize: 10,
     lineHeight: 10,
+    transform: TINY_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   stationNumber: {
     color: 'white',
