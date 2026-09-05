@@ -22,7 +22,6 @@ import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom, themePreferenceAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
-import { isDevApp } from '~/utils/isDevApp';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 import { getSettingsThemes } from '~/utils/theme';
@@ -36,7 +35,6 @@ import { storage } from '../lib/storage';
 type SettingItem = {
   id: ThemePreference;
   title: string;
-  hidden: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -147,18 +145,14 @@ const ThemeSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
-  const SETTING_ITEMS: SettingItem[] = useMemo(() => {
-    const themes = getSettingsThemes();
-    return themes.map((theme) => ({
-      id: theme.value,
-      title: theme.label,
-      hidden: !isDevApp && theme.devOnly,
-    }));
-  }, []);
-
-  const visibleItems = useMemo(
-    () => SETTING_ITEMS.filter((item) => !item.hidden),
-    [SETTING_ITEMS]
+  // getSettingsThemes() が未公開テーマを既に落としているため、ここでの再除外は不要
+  const visibleItems: SettingItem[] = useMemo(
+    () =>
+      getSettingsThemes().map((theme) => ({
+        id: theme.value,
+        title: theme.label,
+      })),
+    []
   );
 
   const handleApplyTheme = useCallback(
