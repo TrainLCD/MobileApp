@@ -29,17 +29,25 @@ const styles = StyleSheet.create({
     // paddingHorizontal を持たせて親の alignItems: 'center' で内在幅に任せると、
     // 折り返し幅が計測時と描画時でずれる余地が残る。
     alignSelf: 'stretch',
-    // NOTE: iOS で lineHeight を指定すると NSParagraphStyle の min/max lineHeight が
-    // 固定される。RN は高さ計測を高さ無制限の NSTextContainer で行い、描画は計測結果
-    // ちょうどの高さの NSTextContainer で行うため、行送りを固定して両者がわずかでも
-    // ずれると収まらない行が丸ごと捨てられ、末尾が欠ける。行送りはフォント本来の値に
-    // 任せる。
+    // NOTE: iOS の lineHeight は fontSize の 1.1719 倍(Roboto 本来の行送り)を超えて
+    // はいけない。RN は Text の高さ計測に指定フォント(Roboto)の行送りを使う一方、
+    // 描画は lineHeight と実際に使われるフォント(和文はフォールバックされ 1.0em)に
+    // 従うため、これを超えると枠に収まらない行が丸ごと捨てられて末尾が欠ける。
+    // RFValue(16)/RFValue(14) は端末サイズによらず 1.11〜1.16em に収まる。
+    lineHeight: Platform.select({
+      ios: RFValue(16),
+    }),
   },
   headingText: {
     color: '#03a9f4',
     fontSize: RFValue(21),
     fontWeight: 'bold',
     textAlign: 'center',
+    // NOTE: RFValue(24)/RFValue(21) は 1.14〜1.15em で上記の上限内。見出しが元から
+    // 欠けていなかったのはこのため。
+    lineHeight: Platform.select({
+      ios: RFValue(24),
+    }),
   },
   buttons: {
     flexDirection: 'row',
