@@ -20,11 +20,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
   text: {
     fontSize: RFValue(14),
     marginBottom: 12,
-    paddingHorizontal: 24,
+    // NOTE: Text 自身に paddingHorizontal を持たせたまま親の alignItems: 'center' で
+    // 内在幅に任せると、iOS では高さ計測時の折り返し幅が描画時より広くなり、
+    // 末尾の行が欠ける。余白は root 側へ移し、幅は親いっぱいに固定する。
+    alignSelf: 'stretch',
     lineHeight: Platform.select({
       ios: RFValue(18),
     }),
@@ -33,7 +37,6 @@ const styles = StyleSheet.create({
     color: '#03a9f4',
     fontSize: RFValue(21),
     fontWeight: 'bold',
-    width: '100%',
     textAlign: 'center',
     lineHeight: Platform.select({
       ios: RFValue(24),
