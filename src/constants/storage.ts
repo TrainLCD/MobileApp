@@ -35,6 +35,14 @@ export const STORAGE_KEYS = {
   PICTURE_IN_PICTURE_ENABLED: '@TrainLCD:pictureInPictureEnabled',
   PORTRAIT_MODE_ENABLED: '@TrainLCD:portraitModeEnabled',
   POWER_SAVING_LOCATION_ENABLED: '@TrainLCD:powerSavingLocationEnabled',
+  // ポートレートモードの訴求導線。オンにした時点で PROMO_FINISHED を立て、
+  // 以降はオフに戻されても再訴求しない(一度判断した機能を売り込み直さない)
+  PORTRAIT_PROMO_FINISHED: '@TrainLCD:portraitPromoFinished',
+  PORTRAIT_PROMO_PROMPT_COUNT: '@TrainLCD:portraitPromoPromptCount',
+  PORTRAIT_PROMO_PROMPT_LAST_SHOWN_AT:
+    '@TrainLCD:portraitPromoPromptLastShownAt',
+  PORTRAIT_PROMO_BANNER_COUNT: '@TrainLCD:portraitPromoBannerCount',
+  PORTRAIT_PROMO_APPEARANCE_SEEN: '@TrainLCD:portraitPromoAppearanceSeen',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

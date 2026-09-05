@@ -21,9 +21,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
+import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { LIQUID_GLASS_AVAILABLE } from '~/utils/liquidGlass';
+import NewFeatureDot, { NEW_FEATURE_DOT_SIZE_SMALL } from './NewFeatureDot';
 
 type FooterTab = 'home' | 'search' | 'settings';
 
@@ -126,6 +128,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // アイコンの右肩に載せる未読ドット
+  tabBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
   // タブバー全体で 1 つだけ描画する共有ピル。translateX でアクティブタブ間をスライドする
   activePill: {
     position: 'absolute',
@@ -201,6 +209,7 @@ const FooterTabBar: React.FC<Props> = ({
   const route = useRoute();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
+  const showPortraitPromoHint = usePortraitPromoAppearanceHint();
 
   // タブ間の移動で履歴を積まないよう navigate ではなく replace で遷移する。
   // 同一画面への replace は画面の再マウントになるだけなので無視する
@@ -367,6 +376,17 @@ const FooterTabBar: React.FC<Props> = ({
             active === 'settings' ? ACTIVE_ICON_COLOR : colors.tabIconInactive
           }
         />
+        {/* 「設定のどこかに新しいものがある」という道しるべ。目的地(設定リストの
+            「外観」行)側だけを脈打たせ、こちらは静止させて視線を割らない */}
+        {showPortraitPromoHint ? (
+          <View style={styles.tabBadge} testID="footer-settings-badge">
+            <NewFeatureDot
+              color={ACTIVE_ICON_COLOR}
+              size={NEW_FEATURE_DOT_SIZE_SMALL}
+              pulse={false}
+            />
+          </View>
+        ) : null}
       </TabButton>
     </>
   );

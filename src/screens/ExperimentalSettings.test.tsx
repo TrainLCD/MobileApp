@@ -2,7 +2,6 @@ import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { STORAGE_KEYS } from '~/constants';
 import { storage } from '~/lib/storage';
-import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
 import tuningState from '~/store/atoms/tuning';
 import {
   getDialogPresentationSnapshot,
@@ -26,12 +25,10 @@ jest.mock('~/translation', () => ({
 }));
 
 const renderWithStore = (
-  portraitModeEnabled: boolean,
   telemetryEnabled = false,
   untouchableModeEnabled = false
 ) => {
   const store = createStore();
-  store.set(portraitModeEnabledAtom, portraitModeEnabled);
   store.set(tuningState, (prev) => ({
     ...prev,
     telemetryEnabled,
@@ -56,60 +53,20 @@ describe('ExperimentalSettingsScreen', () => {
     resetDialogPresentationForTests();
   });
 
-  it('ポートレートモードをONにするとatomとストレージへ保存される', () => {
-    const { getByLabelText, store } = renderWithStore(false);
+  it('ポートレートモードのトグルは外観設定へ移設され表示されない', () => {
+    const { queryByLabelText } = renderWithStore();
 
-    fireEvent.press(getByLabelText('portraitModeTitle'));
-
-    expect(store.get(portraitModeEnabledAtom)).toBe(true);
-    expect(storage.getString(STORAGE_KEYS.PORTRAIT_MODE_ENABLED)).toBe('true');
-  });
-
-  it('ポートレートモードをOFFにするとatomとストレージへ保存される', () => {
-    const { getByLabelText, store } = renderWithStore(true);
-
-    fireEvent.press(getByLabelText('portraitModeTitle'));
-
-    expect(store.get(portraitModeEnabledAtom)).toBe(false);
-    expect(storage.getString(STORAGE_KEYS.PORTRAIT_MODE_ENABLED)).toBe('false');
-  });
-
-  it('ストレージへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
-    jest.spyOn(storage, 'set').mockImplementationOnce(() => {
-      throw new Error('storage failure');
-    });
-    const consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    const { getByLabelText, store } = renderWithStore(false);
-
-    fireEvent.press(getByLabelText('portraitModeTitle'));
-
-    // 保存失敗後にロールバックされる（MMKVは同期APIのため即時）
-    expect(store.get(portraitModeEnabledAtom)).toBe(false);
-
-    // エラーログとユーザーへのダイアログ表示を検証
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to save portrait mode setting',
-      expect.any(Error)
-    );
-    expect(getDialogPresentationSnapshot()).toMatchObject({
-      visible: true,
-      request: {
-        title: 'errorTitle',
-        message: 'failedToSavePreference',
-      },
-    });
+    expect(queryByLabelText('portraitModeTitle')).toBeNull();
   });
 
   it('ETA補助トグルは廃止され表示されない(自動有効化)', () => {
-    const { queryByLabelText } = renderWithStore(false);
+    const { queryByLabelText } = renderWithStore();
 
     expect(queryByLabelText('etaAssistTitle')).toBeNull();
   });
 
   it('テレメトリをONにするとatomとストレージへ保存される', () => {
-    const { getByLabelText, store } = renderWithStore(false);
+    const { getByLabelText, store } = renderWithStore();
 
     fireEvent.press(getByLabelText('optInTelemetryTitle'));
 
@@ -118,7 +75,7 @@ describe('ExperimentalSettingsScreen', () => {
   });
 
   it('テレメトリをOFFにするとatomとストレージへ保存される', () => {
-    const { getByLabelText, store } = renderWithStore(false, true);
+    const { getByLabelText, store } = renderWithStore(true);
 
     fireEvent.press(getByLabelText('optInTelemetryTitle'));
 
@@ -133,7 +90,7 @@ describe('ExperimentalSettingsScreen', () => {
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const { getByLabelText, store } = renderWithStore(false);
+    const { getByLabelText, store } = renderWithStore();
 
     fireEvent.press(getByLabelText('optInTelemetryTitle'));
 
@@ -153,7 +110,7 @@ describe('ExperimentalSettingsScreen', () => {
   });
 
   it('タッチ不可モードをONにするとatomとストレージへ保存される', () => {
-    const { getByLabelText, store } = renderWithStore(false);
+    const { getByLabelText, store } = renderWithStore();
 
     fireEvent.press(getByLabelText('untouchableModeTitle'));
 
@@ -164,7 +121,7 @@ describe('ExperimentalSettingsScreen', () => {
   });
 
   it('タッチ不可モードをOFFにするとatomとストレージへ保存される', () => {
-    const { getByLabelText, store } = renderWithStore(false, false, true);
+    const { getByLabelText, store } = renderWithStore(false, true);
 
     fireEvent.press(getByLabelText('untouchableModeTitle'));
 
@@ -181,7 +138,7 @@ describe('ExperimentalSettingsScreen', () => {
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const { getByLabelText, store } = renderWithStore(false);
+    const { getByLabelText, store } = renderWithStore();
 
     fireEvent.press(getByLabelText('untouchableModeTitle'));
 

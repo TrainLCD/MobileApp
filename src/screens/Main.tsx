@@ -29,7 +29,11 @@ import DevOverlay from '~/components/DevOverlay';
 import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
-import { IS_LIVE_UPDATE_ELIGIBLE_PLATFORM, STORAGE_KEYS } from '~/constants';
+import {
+  IS_LIVE_UPDATE_ELIGIBLE_PLATFORM,
+  LOW_POWER_THEME_COLORS,
+  STORAGE_KEYS,
+} from '~/constants';
 import {
   useAndroidPictureInPicture,
   useConsoleTelemetry,
@@ -67,7 +71,7 @@ import {
 import { storage } from '~/lib/storage';
 import { getLineSymbolImage } from '~/lineSymbolImage';
 import { APP_THEME } from '~/models/Theme';
-import { portraitModeEnabledAtom } from '~/store/atoms/experimental';
+import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import lineState from '~/store/atoms/line';
 import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
@@ -78,6 +82,7 @@ import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android
 import { getIsLocal } from '~/utils/trainTypeString';
 import LineBoard from '../components/LineBoard';
 import PortraitMain from '../components/PortraitMain';
+import PortraitModePrompt from '../components/PortraitModePrompt';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
@@ -773,6 +778,29 @@ const MainScreen: React.FC = () => {
     }
   }, [bottomState, handleTransferPress, hasTerminus, theme, transferStation]);
 
+  // 運転路線の切り替え確認で OK を押すと pendingLine/pendingStations が積まれ、
+  // 方面選択のモーダルで確定させる。どのレイアウトを返しても切り替えが完了する
+  // よう、レイアウトごとの return すべてでこの要素を描画する。
+  const selectBoundModal = (
+    <SelectBoundModal
+      visible={isSelectBoundModalOpen}
+      onClose={handleCloseSelectBoundModal}
+      onBoundSelect={handleCloseSelectBoundModal}
+      onTrainTypeSelect={handleTrainTypeSelect}
+      loading={
+        fetchStationsByLineGroupIdLoading ||
+        fetchStationsByLineIdLoading ||
+        fetchTrainTypesLoading
+      }
+      error={
+        fetchStationsByLineGroupIdError ||
+        fetchStationsByLineIdError ||
+        fetchTrainTypesError ||
+        null
+      }
+    />
+  );
+
   if (pictureInPictureActive) {
     return (
       <>
@@ -782,14 +810,19 @@ const MainScreen: React.FC = () => {
     );
   }
 
-  // ポートレートモード有効時、端末が縦向きの間はテーマ非依存の
+  // ポートレートモード有効時、端末が縦向きの間は路線テーマに依存しない
   // 縦画面最適化レイアウトへ切り替える(横向きに戻すと通常表示)。
+  // 配色は操作系画面と同じライト/ダークの設定に追従する。
   if (portraitModeEnabled && windowHeight > windowWidth) {
     return (
       <>
         <MainScreenEffects />
-        <PortraitMain />
+        <PortraitMain
+          onPress={updateBottomState}
+          onTransferPress={handleTransferPress}
+        />
         {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {selectBoundModal}
       </>
     );
   }
@@ -802,6 +835,33 @@ const MainScreen: React.FC = () => {
           <Header />
           <LineBoard hasTerminus={hasTerminus} />
         </View>
+        {/* 回転しているビューの外に置いて正立させる(案A) */}
+        <PortraitModePrompt />
+      </>
+    );
+  }
+
+  // ライトウェイト(コードネーム: 低消費電力)テーマは乗換路線と到着予測を
+  // ヘッダーと停車駅ストリップ自身が持つため、タップでの下段切り替えを行わない。
+  // 画面の再描画を増やさないという狙いのほか、下段に差し込まれる乗換案内・
+  // 種別変更通知が白地前提の配色で、純黒の上では読めないという事情もある。
+  if (theme === APP_THEME.LOW_POWER) {
+    return (
+      <>
+        <MainScreenEffects />
+        <View
+          style={[
+            landscapeKeepStyle,
+            { backgroundColor: LOW_POWER_THEME_COLORS.background },
+          ]}
+        >
+          <Header />
+          <LineBoard hasTerminus={hasTerminus} />
+        </View>
+
+        {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {/* 回転しているビューの外に置いて正立させる(案A) */}
+        <PortraitModePrompt />
       </>
     );
   }
@@ -824,23 +884,10 @@ const MainScreen: React.FC = () => {
         {isDevApp && devOverlayEnabled && <DevOverlay />}
       </View>
 
-      <SelectBoundModal
-        visible={isSelectBoundModalOpen}
-        onClose={handleCloseSelectBoundModal}
-        onBoundSelect={handleCloseSelectBoundModal}
-        onTrainTypeSelect={handleTrainTypeSelect}
-        loading={
-          fetchStationsByLineGroupIdLoading ||
-          fetchStationsByLineIdLoading ||
-          fetchTrainTypesLoading
-        }
-        error={
-          fetchStationsByLineGroupIdError ||
-          fetchStationsByLineIdError ||
-          fetchTrainTypesError ||
-          null
-        }
-      />
+      {/* 回転しているビューの外に置いて正立させる(案A) */}
+      <PortraitModePrompt />
+
+      {selectBoundModal}
     </>
   );
 };

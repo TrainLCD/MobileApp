@@ -1,5 +1,9 @@
 import { type Voice, VoiceQuality } from 'expo-speech';
-import { scoreVoiceQuality, selectBestVoiceIdentifier } from './nativeTtsVoice';
+import {
+  type NativeVoice,
+  scoreVoiceQuality,
+  selectBestVoiceIdentifier,
+} from './nativeTtsVoice';
 
 const voice = (
   identifier: string,
@@ -7,6 +11,30 @@ const voice = (
   quality: VoiceQuality = VoiceQuality.Default,
   name = identifier
 ): Voice => ({ identifier, name, quality, language });
+
+// patch 済み expo-speech の Android が返す拡張メタデータ付きの音声。
+// 実機の Google TTS ローカル音声は quality が軒並み QUALITY_NORMAL(300) に
+// 並ぶため、識別子順以外のタイブレークが効くかどうかをここで検証する。
+const androidVoice = (
+  identifier: string,
+  language: string,
+  extras: Partial<
+    Pick<
+      NativeVoice,
+      'qualityScore' | 'isDefault' | 'networkRequired' | 'notInstalled'
+    >
+  > = {}
+): NativeVoice => ({
+  identifier,
+  name: identifier,
+  quality: VoiceQuality.Default,
+  language,
+  qualityScore: 300,
+  isDefault: false,
+  networkRequired: false,
+  notInstalled: false,
+  ...extras,
+});
 
 describe('scoreVoiceQuality', () => {
   it('premium識別子を最高スコアにする', () => {
@@ -174,6 +202,89 @@ describe('selectBestVoiceIdentifier', () => {
     ];
     expect(selectBestVoiceIdentifier(voices, 'en-US')).toBe(
       'com.apple.voice.premium.en-US.Ava'
+    );
+  });
+});
+
+describe('selectBestVoiceIdentifier (Android拡張メタデータ)', () => {
+  const options = { allowDefaultQuality: true };
+
+  it('品質が同点なら端末既定音声を選ぶ', () => {
+    // ユーザーが端末設定で選んだ音声を尊重する。識別子順では 'htm' が勝つ並び
+    const voices = [
+      androidVoice('ja-jp-x-htm-local', 'ja-JP'),
+      androidVoice('ja-jp-x-jad-local', 'ja-JP', { isDefault: true }),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'ja-JP', options)).toBe(
+      'ja-jp-x-jad-local'
+    );
+  });
+
+  it('生の品質値が高い音声を識別子順より優先する', () => {
+    const voices = [
+      androidVoice('ja-jp-x-htm-local', 'ja-JP', { qualityScore: 300 }),
+      androidVoice('ja-jp-x-jad-local', 'ja-JP', { qualityScore: 400 }),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'ja-JP', options)).toBe(
+      'ja-jp-x-jad-local'
+    );
+  });
+
+  it('端末既定音声より地域一致を優先する', () => {
+    const voices = [
+      androidVoice('en-gb-x-gba-local', 'en-GB', { isDefault: true }),
+      androidVoice('en-us-x-iob-local', 'en-US'),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'en-US', options)).toBe(
+      'en-us-x-iob-local'
+    );
+  });
+
+  it('未インストールの音声は他に候補があれば選ばない', () => {
+    // 品質値が高くても音声データが無ければ合成できない
+    const voices = [
+      androidVoice('ja-jp-x-jab-local', 'ja-JP', {
+        qualityScore: 500,
+        notInstalled: true,
+      }),
+      androidVoice('ja-jp-x-jad-local', 'ja-JP', { qualityScore: 300 }),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'ja-JP', options)).toBe(
+      'ja-jp-x-jad-local'
+    );
+  });
+
+  it('未インストールの音声しか無ければ最後の手段として選ぶ', () => {
+    // 音声未指定のまま進めると端末既定言語で合成されてしまうため、
+    // 合成できない可能性があっても明示指定する方がマシ
+    const voices = [
+      androidVoice('ja-jp-x-jad-local', 'ja-JP', { notInstalled: true }),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'ja-JP', options)).toBe(
+      'ja-jp-x-jad-local'
+    );
+  });
+
+  it('識別子にnetworkを含まなくてもnetworkRequiredでローカルを優先する', () => {
+    const voices = [
+      androidVoice('ja-jp-x-jab-cloud', 'ja-JP', {
+        qualityScore: 500,
+        networkRequired: true,
+      }),
+      androidVoice('ja-jp-x-jad-local', 'ja-JP', { qualityScore: 300 }),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'ja-JP', options)).toBe(
+      'ja-jp-x-jad-local'
+    );
+  });
+
+  it('拡張メタデータが無いiOSの音声では従来の判定を維持する', () => {
+    const voices = [
+      voice('com.apple.voice.compact.ja-JP.Kyoko', 'ja-JP'),
+      voice('com.apple.voice.premium.ja-JP.Kyoko', 'ja-JP'),
+    ];
+    expect(selectBestVoiceIdentifier(voices, 'ja-JP')).toBe(
+      'com.apple.voice.premium.ja-JP.Kyoko'
     );
   });
 });

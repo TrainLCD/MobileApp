@@ -15,7 +15,7 @@ import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
-import { overlayAppColorsAtom } from '~/store/atoms/colorScheme';
+import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
 import { getActionSheetColorOptions } from '~/utils/actionSheetColors';
@@ -46,7 +46,7 @@ import {
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
-import { portraitModeEnabledAtom } from '../store/atoms/experimental';
+import { portraitModeEnabledAtom } from '../store/atoms/display';
 import navigationState, {
   autoModeEnabledAtom,
   isAppLatestAtom,
@@ -139,7 +139,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   // アクションシートは車内再現(走行画面)とは別レイヤーの一時的なUIなので、
   // 走行画面から開いた場合も配色設定に追従させる。走行画面はProviderの
   // 外側にあるため、モーダル本体と同じくatomを直接購読する。
-  const actionSheetColors = useAtomValue(overlayAppColorsAtom);
+  const actionSheetColors = useAtomValue(resolvedAppColorsAtom);
   const { sendReport, descriptionLowerLimit } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
   const {
@@ -264,7 +264,17 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     try {
       const capturedURI = await viewShotCapture();
       const file = new File(capturedURI);
-      const base64 = await file.base64();
+      // ViewShot が書き出した一時ファイルは base64 へ読み出した時点で用済み。
+      // 消さないとフルスクリーン画像がキャッシュ領域に溜まり続ける。
+      // 読み出しに失敗した場合も残さないよう finally で消す
+      let base64: string;
+      try {
+        base64 = await file.base64();
+      } finally {
+        try {
+          file.delete();
+        } catch {}
+      }
       setScreenShotBase64(base64);
       setReportModalShow(true);
     } catch (err) {
@@ -289,8 +299,19 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     try {
       const capturedURI = await viewShotCapture();
       const file = new File(capturedURI);
-      const base64 = await file.base64();
-      const urlString = `data:image/jpeg;base64,${base64}`;
+      // 読み出し済みの一時ファイルを残さない(フィードバック送信側と同様)。
+      // 読み出しに失敗した場合も残さないよう finally で消す
+      let base64: string;
+      try {
+        base64 = await file.base64();
+      } finally {
+        try {
+          file.delete();
+        } catch {}
+      }
+      // ViewShot の出力は PNG (options.format)。下の type と合わせて image/png で統一する。
+      // 以前は jpeg を名乗っており、実データと MIME が食い違っていた
+      const urlString = `data:image/png;base64,${base64}`;
 
       const message = isJapanese
         ? `${currentLine.nameShort?.replace(

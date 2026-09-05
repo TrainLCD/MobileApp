@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import { Platform } from 'react-native';
 import { STORAGE_KEYS } from '~/constants';
 import { storage } from '~/lib/storage';
 import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
@@ -37,10 +38,36 @@ const renderWithStore = (powerSavingLocationEnabled = false) => {
   return { ...screen, store };
 };
 
+// jest-expo の既定 Platform.OS は 'ios'。プラットフォーム別の案内を検証する際は
+// 明示的に切り替え、afterEach で必ず元へ戻す。
+const originalPlatformOS = Platform.OS;
+const setPlatformOS = (os: typeof Platform.OS) => {
+  Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+};
+
 describe('BatterySettingsScreen', () => {
   afterEach(() => {
     jest.clearAllMocks();
     resetDialogPresentationForTests();
+    setPlatformOS(originalPlatformOS);
+  });
+
+  it('[iOS] 測位自動休止を含むiOS向けの説明文を表示する', () => {
+    setPlatformOS('ios');
+
+    const { getByText, queryByText } = renderWithStore();
+
+    expect(getByText('powerSavingLocationDescriptionIOS')).toBeTruthy();
+    expect(queryByText('powerSavingLocationDescriptionAndroid')).toBeNull();
+  });
+
+  it('[Android] 測位自動休止に触れないAndroid向けの説明文を表示する', () => {
+    setPlatformOS('android');
+
+    const { getByText, queryByText } = renderWithStore();
+
+    expect(getByText('powerSavingLocationDescriptionAndroid')).toBeTruthy();
+    expect(queryByText('powerSavingLocationDescriptionIOS')).toBeNull();
   });
 
   it('省電力測位モードをONにするとatomとストレージへ保存される', () => {

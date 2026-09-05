@@ -61,6 +61,59 @@ Android のダッキングはオーディオフォーカスの要求でしか起
 このモジュールはネイティブコードを含むため、反映にはネイティブビルドが必要で
 OTA アップデートでは配信されない。
 
+## 端末内蔵 TTS の音声選択
+
+端末内蔵 TTS はどの音声で合成するかで音質が大きく変わる。選択は
+`selectBestVoiceIdentifier()`（`src/utils/nativeTtsVoice.ts`）が行い、言語ごとに
+1 つの音声識別子を決めて `expo-speech` へ渡す。
+
+Android は音声の明示指定が必須である。`expo-speech` の Android 実装は `speak` の
+`language` を `Locale` へ渡すが、音声データが端末に無い言語では `setLanguage` が
+`LANG_MISSING_DATA` となり端末既定言語へフォールバックし、英語文が日本語音声で
+合成されてしまう。`voice` を指定すれば `setVoice` が言語設定ごと上書きするため、
+この不備の影響を受けない。そのため Android では高品質音声が無くても既定品質の
+ローカル音声を明示指定する（`allowDefaultQuality`）。iOS はユーザーが OS 設定で
+選んだ既定音声を尊重し、拡張（Enhanced）/ プレミアム（Premium）音声がある場合だけ
+明示指定する。
+
+`expo-speech` が返す `quality` は `Enhanced` / `Default` の 2 値に丸められており、
+Google TTS の日本語ローカル音声のように `QUALITY_NORMAL` へ横並びになる端末では
+優劣を判定できない。判断材料が尽きると識別子のアルファベット順で決まってしまい、
+品質と無関係に `ja-jp-x-htm-local` が常に選ばれ、ユーザーが端末設定で選んだ音声も
+無視される。これを避けるため `patches/expo-speech+57.0.1.patch` で
+`android.speech.tts.Voice` の生の情報を JS へ渡している。
+
+| フィールド | 由来 | 用途 |
+| --- | --- | --- |
+| `qualityScore` | `Voice.getQuality()`（100〜500） | ローカル音声同士の優劣を判定する |
+| `isDefault` | `TextToSpeech.defaultVoice` と一致するか | 端末設定でのユーザーの選択を尊重する |
+| `networkRequired` | `Voice.isNetworkConnectionRequired()` | 識別子の `network` 判定より正確にローカル音声を選ぶ |
+| `notInstalled` | `Voice.getFeatures()` の `notInstalled` | 音声データ未取得で合成できない音声を避ける |
+
+いずれも iOS では返らないため、iOS では従来どおり識別子と `quality` で判定する。
+
+優先順は次のとおりで、上から順に比較して差がついた時点で決まる。
+
+1. インストール済み — 音声データが無い音声は合成できない
+1. ローカル音声 — 乗車中はトンネル等で接続が切れるため、ネットワーク音声は最後の手段
+1. 地域一致 — `en-US` 要求時に `en-GB` より `en-US` を選ぶ
+1. 端末既定音声 — ユーザーの明示的な選択を機械的な優劣より優先する
+1. `qualityScore` 降順 — Android の生の品質値
+1. 識別子ベースの品質判定 — iOS の `premium` > `enhanced` > その他
+1. 識別子の昇順 — 実行ごとに音声が変わらないようにする最後のタイブレーク
+
+最下段まで差がつかない場合にだけ識別子順に落ちる。ここへ到達するのは判断材料が
+出尽くしたときだけなので、品質と無関係な順序で音声が決まる範囲を最小化している。
+
+選択結果は起動時に 1 度だけ `[useNativeSpeechEngine] Selected voices: ...` として
+ログへ残す。端末ごとに音声のラインナップが違い、音質の問い合わせは実機でどの音声が
+選ばれたかが分からないと切り分けられないため。
+
+生メタデータの露出は `expo-speech` へのネイティブ patch なので、反映には
+ネイティブビルドが必要で OTA アップデートでは配信されない。patch が当たっていない
+バイナリでは各フィールドが `undefined` となり、従来どおり識別子順のタイブレークへ
+フォールバックする。
+
 ## テキストの前処理
 
 TTS テンプレートは SSML 断片を生成するが、Cloud TTS（`input.text`）も `expo-speech` も

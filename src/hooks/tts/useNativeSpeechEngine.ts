@@ -21,6 +21,9 @@ const EN_SPEECH_LANGUAGE = 'en-US';
 
 // expo-speech は volume 未指定時の既定値が機種・OSバージョンにより最大音量
 // より低くなることがあるため、常に最大値を明示指定して音量が下がる余地を無くす。
+// Android の KEY_PARAM_VOLUME は既定値が 1.0 なので指定しても挙動は変わらない
+// （効くのは iOS 側）。音量ではなく音質の問題は音声選択で解く。
+// src/utils/nativeTtsVoice.ts を参照。
 const MAX_SPEECH_VOLUME = 1.0;
 
 // 発話開始前に音声選択（getAvailableVoicesAsync）の完了を待つ上限（ミリ秒）。
@@ -75,6 +78,12 @@ export const useNativeSpeechEngine = (): SpeechEngine => {
         );
         if (Platform.OS === 'android' && voices.length > 0) {
           androidVoicesLoadedRef.current = true;
+          // 端末ごとに音声のラインナップが違い、音質の当たり外れもここで決まる。
+          // 実機で「どの音声が選ばれたか」を追えないと音質の切り分けができない
+          // ため、起動時の選択結果を 1 度だけ残す。
+          console.warn(
+            `[useNativeSpeechEngine] Selected voices: ja=${jaVoiceIdRef.current ?? 'none'} en=${enVoiceIdRef.current ?? 'none'} (from ${voices.length} voices)`
+          );
           if (!jaVoiceIdRef.current) {
             console.warn(
               '[useNativeSpeechEngine] No Japanese voice found on this device; Japanese announcements will be skipped'

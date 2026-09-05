@@ -6,6 +6,7 @@ import {
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import { numberingGlyphLift } from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -19,6 +20,16 @@ type Props = {
 };
 
 const TLC_SCALE = 0.7;
+
+// Androidのグリフ下寄り補正。記号と番号で異なる値を使うと両者の間隔まで変わるため、
+// アイコンごとに基準の行高から1つだけ求めて使い回す
+const GLYPH_LIFT = numberingGlyphLift(isTablet ? 24 * 1.5 : 24);
+const TLC_GLYPH_LIFT = numberingGlyphLift(
+  isTablet ? Math.round(24 * 1.5 * TLC_SCALE) : Math.round(24 * TLC_SCALE)
+);
+const TLC_COMPACT_GLYPH_LIFT = numberingGlyphLift(isTablet ? 12 : 8);
+const MEDIUM_GLYPH_LIFT = numberingGlyphLift(isTablet ? 32 : 20);
+const SMALL_GLYPH_LIFT = numberingGlyphLift(10);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -68,14 +79,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet
       ? Math.round(24 * 1.5 * TLC_SCALE)
       : Math.round(24 * TLC_SCALE),
-    // Androidはグリフが行ボックス下寄りに描画されTLCが下がって見えるため
-    // 上方向に補正して上下中央に揃える(iOSは補正不要)。
-    // 負マージンだと下のアイコンごと動いてバッジ全体が縮むため、
-    // レイアウトに影響しないtransformで文字だけを持ち上げる
-    transform:
-      Platform.OS === 'android'
-        ? [{ translateY: Math.round(-6 * TLC_SCALE) }]
-        : [],
+    transform: TLC_GLYPH_LIFT,
   },
   tlcIconRoot: {
     width: isTablet
@@ -99,6 +103,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet
       ? Math.round(24 * 1.5 * TLC_SCALE)
       : Math.round(24 * TLC_SCALE),
+    transform: TLC_GLYPH_LIFT,
     fontSize: isTablet
       ? Math.round(24 * 1.5 * TLC_SCALE)
       : Math.round(24 * TLC_SCALE),
@@ -111,6 +116,7 @@ const styles = StyleSheet.create({
     lineHeight: isTablet
       ? Math.round(32 * 1.5 * TLC_SCALE)
       : Math.round(32 * TLC_SCALE),
+    transform: TLC_GLYPH_LIFT,
     fontSize: isTablet
       ? Math.round(32 * 1.5 * TLC_SCALE)
       : Math.round(32 * TLC_SCALE),
@@ -129,6 +135,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: isTablet ? 2 : 1,
   },
   tlcTextCompact: {
+    transform: TLC_COMPACT_GLYPH_LIFT,
     color: 'white',
     textAlign: 'center',
     fontSize: isTablet ? 12 : 8,
@@ -148,6 +155,7 @@ const styles = StyleSheet.create({
   },
   tlcLineSymbolCompact: {
     lineHeight: isTablet ? 12 : 8,
+    transform: TLC_COMPACT_GLYPH_LIFT,
     fontSize: isTablet ? 12 : 8,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
@@ -156,6 +164,7 @@ const styles = StyleSheet.create({
   },
   tlcStationNumberCompact: {
     lineHeight: isTablet ? 15 : 10,
+    transform: TLC_COMPACT_GLYPH_LIFT,
     fontSize: isTablet ? 15 : 10,
     marginTop: isTablet ? -2 : -1,
     textAlign: 'center',
@@ -174,6 +183,7 @@ const styles = StyleSheet.create({
   },
   lineSymbolMedium: {
     lineHeight: isTablet ? 32 : 20,
+    transform: MEDIUM_GLYPH_LIFT,
     fontSize: isTablet ? 32 : 20,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
@@ -195,14 +205,17 @@ const styles = StyleSheet.create({
   },
   lineSymbolSmall: {
     fontSize: 10,
+    transform: SMALL_GLYPH_LIFT,
     lineHeight: 10,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: 2,
+    // 他のサイズと同様、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
     color: '#231e1f',
   },
   lineSymbol: {
     lineHeight: isTablet ? 24 * 1.5 : 24,
+    transform: GLYPH_LIFT,
     fontSize: isTablet ? 24 * 1.5 : 24,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
@@ -211,6 +224,7 @@ const styles = StyleSheet.create({
   },
   stationNumber: {
     lineHeight: isTablet ? 32 * 1.5 : 32,
+    transform: GLYPH_LIFT,
     fontSize: isTablet ? 32 * 1.5 : 32,
     marginTop: -4,
     textAlign: 'center',

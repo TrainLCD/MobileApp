@@ -21,6 +21,9 @@ jest.mock('react-native-app-clip', () => ({
   isClip: jest.fn(() => false),
 }));
 
+// 本番ビルド相当。未公開テーマがこのモーダルから選べないことを担保する
+jest.mock('~/utils/isDevApp', () => ({ isDevApp: false }));
+
 jest.mock('../translation', () => ({
   translate: (key: string) => key,
   isJapanese: false,
@@ -71,6 +74,11 @@ describe('ThemeListModal', () => {
     fireEvent.press(getByText('tokyoMetroLike'));
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith(THEME_PREFERENCE.TOKYO_METRO);
+  });
+
+  it('本番ビルドでは devOnly なテーマが一覧に表示されない', () => {
+    const { queryByText } = render(<ThemeListModal {...defaultProps} />);
+    expect(queryByText('lowPowerTheme')).toBeNull();
   });
 
   it('閉じるボタンを押すと onClose が呼ばれる', () => {

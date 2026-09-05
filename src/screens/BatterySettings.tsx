@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
+  Platform,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -133,7 +134,13 @@ const BatterySettingsScreen: React.FC = () => {
           <Typography
             style={[styles.description, { color: colors.secondaryText }]}
           >
-            {translate('powerSavingLocationDescription')}
+            {translate(
+              // 停車中の測位自動休止(pausesUpdatesAutomatically)はiOS専用の挙動で、
+              // Android・webでは効かないため案内文からも外す
+              Platform.OS === 'ios'
+                ? 'powerSavingLocationDescriptionIOS'
+                : 'powerSavingLocationDescriptionAndroid'
+            )}
           </Typography>
           <Button
             style={styles.okButton}

@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CommonDialogPresenter from './components/CommonDialogPresenter';
 import CustomErrorBoundary from './components/CustomErrorBoundary';
 import FxSystemColorScheme from './components/FxSystemColorScheme';
+import FxTrimMemoryOnBackground from './components/FxTrimMemoryOnBackground';
 import { GlobalToast } from './components/GlobalToast';
 import { queryClient } from './lib/gql';
 import { migrateFromAsyncStorage } from './lib/storage';
@@ -155,6 +156,8 @@ const App: React.FC = () => {
             <PortalProvider>
               {/* 端末のダークモード設定を購読して atom へ反映する */}
               <FxSystemColorScheme />
+              {/* バックグラウンド遷移時に画像のメモリキャッシュを破棄する */}
+              <FxTrimMemoryOnBackground />
               {/* 画面をまたいで呼ばれる showDialog を一つの共通モーダルとして描画する。 */}
               <CommonDialogPresenter />
               <CustomErrorBoundary>

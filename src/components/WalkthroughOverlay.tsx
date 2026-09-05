@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, Mask, Path, Rect } from 'react-native-svg';
+import { LED_THEME_BG_COLOR } from '~/constants';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { translate } from '../translation';
@@ -44,8 +45,10 @@ export type WalkthroughStepId =
   | 'routeSearchResults'
   | 'settingsWelcome'
   | 'settingsTheme'
+  | 'settingsColorScheme'
   | 'settingsTts'
-  | 'settingsLanguages';
+  | 'settingsLanguages'
+  | 'portraitMode';
 
 export type WalkthroughStep = {
   id: WalkthroughStepId;
@@ -63,12 +66,28 @@ type Props = {
   onNext: () => void;
   onGoToStep: (index: number) => void;
   onSkip: () => void;
+  /** 主ボタンのラベル。1ステップだけのスポットライトで文言を変えるために使う */
+  primaryLabel?: string;
+  /** 左下のラベル。既定は「スキップ」 */
+  dismissLabel?: string;
+  /**
+   * 背景(スポットライト以外)をタップしたときの動作。既定は onNext。
+   * 主ボタンが設定変更などの副作用を持つステップでは、誤タップで実行されないよう
+   * 明示的に別のハンドラを渡すこと。
+   */
+  onBackgroundPress?: () => void;
 };
 
 const ANIMATION_DURATION = 300;
 
 // spotlightArea.borderRadius が指定されていない場合の切り抜き半径
 const DEFAULT_SPOTLIGHT_BORDER_RADIUS = 8;
+
+// LEDテーマは appColorsAtom がライト配色を返すため colors.* をそのまま使うと白いカードになる。
+// 他のダイアログ(DialogModalLayout / Button)と同じ黒地・白枠・白文字の規則をここで持つ
+const LED_TEXT_COLOR = '#fff';
+const LED_MUTED_TEXT_COLOR = '#CCCCCC';
+const LED_INACTIVE_DOT_COLOR = '#444';
 
 const styles = StyleSheet.create({
   overlay: {
@@ -138,6 +157,24 @@ const styles = StyleSheet.create({
   squareCorners: {
     borderRadius: 0,
   },
+  tooltipContainerLED: {
+    backgroundColor: LED_THEME_BG_COLOR,
+    borderWidth: 1,
+    borderColor: LED_TEXT_COLOR,
+    borderRadius: 0,
+  },
+  titleLED: {
+    color: LED_TEXT_COLOR,
+  },
+  dotActiveLED: {
+    backgroundColor: LED_TEXT_COLOR,
+  },
+  nextButtonLED: {
+    backgroundColor: LED_THEME_BG_COLOR,
+    borderWidth: 1,
+    borderColor: LED_TEXT_COLOR,
+    borderRadius: 0,
+  },
 });
 
 const WalkthroughOverlay: React.FC<Props> = ({
@@ -148,6 +185,9 @@ const WalkthroughOverlay: React.FC<Props> = ({
   onNext,
   onGoToStep,
   onSkip,
+  primaryLabel,
+  dismissLabel,
+  onBackgroundPress,
 }) => {
   const insets = useSafeAreaInsets();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
@@ -158,6 +198,12 @@ const WalkthroughOverlay: React.FC<Props> = ({
   const [overlayOffset, setOverlayOffset] = useState({ x: 0, y: 0 });
 
   const { spotlightArea, tooltipPosition = 'bottom' } = step;
+  const skipText = dismissLabel ?? translate('walkthroughSkip');
+  const nextText =
+    primaryLabel ??
+    (currentStepIndex === totalSteps - 1
+      ? translate('walkthroughStart')
+      : translate('walkthroughNext'));
   // spotlightArea は measureInWindow() 由来の画面全体を基準にした座標。
   // WalkthroughOverlay は共通ダイアログより手前に出ないよう Portal ではなく通常ツリー内に描画しているため、
   // SVG とツールチップの座標基準はオーバーレイ自身の左上になる。
@@ -264,7 +310,11 @@ const WalkthroughOverlay: React.FC<Props> = ({
       pointerEvents="box-none"
       onLayout={handleOverlayLayout}
     >
-      <Pressable style={styles.pressableOverlay} onPress={onNext}>
+      <Pressable
+        testID="walkthrough-backdrop"
+        style={styles.pressableOverlay}
+        onPress={onBackgroundPress ?? onNext}
+      >
         <Svg width={screenWidth} height={screenHeight}>
           <Defs>
             <Mask id={maskId}>
@@ -290,15 +340,23 @@ const WalkthroughOverlay: React.FC<Props> = ({
       </Pressable>
 
       <RNAnimated.View
+        testID="walkthrough-tooltip"
         style={[
           styles.tooltipContainer,
           { backgroundColor: colors.card },
           animatedTooltipStyle,
-          isLEDTheme && styles.squareCorners,
+          isLEDTheme && styles.tooltipContainerLED,
         ]}
       >
-        <Typography style={styles.title}>{translate(step.titleKey)}</Typography>
-        <Typography style={[styles.description, { color: colors.text }]}>
+        <Typography style={[styles.title, isLEDTheme && styles.titleLED]}>
+          {translate(step.titleKey)}
+        </Typography>
+        <Typography
+          style={[
+            styles.description,
+            { color: isLEDTheme ? LED_TEXT_COLOR : colors.text },
+          ]}
+        >
           {translate(step.descriptionKey)}
         </Typography>
 
@@ -306,55 +364,62 @@ const WalkthroughOverlay: React.FC<Props> = ({
           <Pressable
             onPress={onSkip}
             accessibilityRole="button"
-            accessibilityLabel={translate('walkthroughSkip')}
+            accessibilityLabel={skipText}
             accessibilityHint={translate('walkthroughSkipHint')}
           >
-            <Typography style={[styles.skipText, { color: colors.mutedText }]}>
-              {translate('walkthroughSkip')}
+            <Typography
+              style={[
+                styles.skipText,
+                {
+                  color: isLEDTheme ? LED_MUTED_TEXT_COLOR : colors.mutedText,
+                },
+              ]}
+            >
+              {skipText}
             </Typography>
           </Pressable>
 
-          <View style={styles.pagination}>
-            {Array.from({ length: totalSteps }).map((_, index) => (
-              <Pressable
-                key={`dot-${
-                  // biome-ignore lint/suspicious/noArrayIndexKey: stable array
-                  index
-                }`}
-                onPress={() => onGoToStep(index)}
-                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-                accessibilityRole="button"
-                accessibilityLabel={`${index + 1} / ${totalSteps}`}
-                accessibilityHint={translate('walkthroughGoToStepHint')}
-              >
-                <View
-                  style={[
-                    styles.dot,
-                    { backgroundColor: colors.border },
-                    index === currentStepIndex && styles.dotActive,
-                    isLEDTheme && styles.squareCorners,
-                  ]}
-                />
-              </Pressable>
-            ))}
-          </View>
+          {totalSteps > 1 ? (
+            <View style={styles.pagination}>
+              {Array.from({ length: totalSteps }).map((_, index) => (
+                <Pressable
+                  key={`dot-${
+                    // biome-ignore lint/suspicious/noArrayIndexKey: stable array
+                    index
+                  }`}
+                  onPress={() => onGoToStep(index)}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${index + 1} / ${totalSteps}`}
+                  accessibilityHint={translate('walkthroughGoToStepHint')}
+                >
+                  <View
+                    testID={`walkthrough-dot-${index}`}
+                    style={[
+                      styles.dot,
+                      {
+                        backgroundColor: isLEDTheme
+                          ? LED_INACTIVE_DOT_COLOR
+                          : colors.border,
+                      },
+                      index === currentStepIndex &&
+                        (isLEDTheme ? styles.dotActiveLED : styles.dotActive),
+                      isLEDTheme && styles.squareCorners,
+                    ]}
+                  />
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
 
           <Pressable
-            style={[styles.nextButton, isLEDTheme && styles.squareCorners]}
+            style={[styles.nextButton, isLEDTheme && styles.nextButtonLED]}
             onPress={onNext}
             accessibilityRole="button"
-            accessibilityLabel={
-              currentStepIndex === totalSteps - 1
-                ? translate('walkthroughStart')
-                : translate('walkthroughNext')
-            }
+            accessibilityLabel={nextText}
             accessibilityHint={translate('walkthroughNextHint')}
           >
-            <Typography style={styles.nextButtonText}>
-              {currentStepIndex === totalSteps - 1
-                ? translate('walkthroughStart')
-                : translate('walkthroughNext')}
-            </Typography>
+            <Typography style={styles.nextButtonText}>{nextText}</Typography>
           </Pressable>
         </View>
       </RNAnimated.View>

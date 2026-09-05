@@ -1,9 +1,11 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
+import { portraitModeEnabledAtom } from '../store/atoms/display';
 import navigationState, { bottomStateAtom } from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import { useInterval } from './useInterval';
+import { useLandscapeWindowDimensions } from './useLandscapeWindowDimensions';
 import { useShouldHideTypeChange } from './useShouldHideTypeChange';
 import { useTransferLines } from './useTransferLines';
 import { useTypeWillChange } from './useTypeWillChange';
@@ -15,11 +17,18 @@ export const useUpdateBottomState = () => {
   const { bottomTransitionInterval } = useAtomValue(tuningState);
   const bottomStateRef = useValueRef(bottomState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const portraitModeEnabled = useAtomValue(portraitModeEnabledAtom);
+  const { isPortrait } = useLandscapeWindowDimensions();
+  // ポートレートレイアウトは路線テーマに依存しない独自の画面なので、電光掲示板風
+  // テーマを選んでいても下部の表示は切り替える。横画面の電光掲示板風テーマは
+  // 下部の領域自体を持たないため、そちらは従来どおり止めたままにする。
+  const isPortraitLayout = portraitModeEnabled && isPortrait;
 
   const isTypeWillChange = useTypeWillChange();
   const isTypeWillChangeRef = useValueRef(isTypeWillChange);
   const transferLines = useTransferLines();
   const isLEDThemeRef = useValueRef(isLEDTheme);
+  const isPortraitLayoutRef = useValueRef(isPortraitLayout);
   const shouldHideTypeChange = useShouldHideTypeChange();
   const shouldHideTypeChangeRef = useValueRef(shouldHideTypeChange);
 
@@ -31,7 +40,7 @@ export const useUpdateBottomState = () => {
 
   const { pause } = useInterval(
     useCallback(() => {
-      if (isLEDThemeRef.current) {
+      if (isLEDThemeRef.current && !isPortraitLayoutRef.current) {
         return;
       }
 
@@ -75,6 +84,7 @@ export const useUpdateBottomState = () => {
       bottomStateRef,
       isTypeWillChangeRef,
       isLEDThemeRef,
+      isPortraitLayoutRef,
       shouldHideTypeChangeRef,
       setNavigation,
       transferLines.length,

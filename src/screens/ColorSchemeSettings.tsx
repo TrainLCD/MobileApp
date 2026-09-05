@@ -1,9 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { lighten } from 'polished';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Pressable,
   Animated as RNAnimated,
@@ -15,19 +21,36 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
+import WalkthroughOverlay, {
+  type WalkthroughStep,
+} from '~/components/WalkthroughOverlay';
 import {
   COLOR_SCHEME_PREFERENCE,
   type ColorSchemePreference,
 } from '~/models/ColorScheme';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
+import {
+  portraitModeEnabledAtom,
+  portraitPromoAppearanceSeenAtom,
+  portraitPromoFinishedAtom,
+} from '~/store/atoms/display';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
+import {
+  canShowPortraitAppearanceHint,
+  finishPortraitPromo,
+  markPortraitAppearanceSeen,
+} from '~/utils/portraitPromo';
 import { RFValue } from '~/utils/rfValue';
 import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
+
+// WalkthroughOverlay はステップ移動のコールバックを必須にしているが、
+// 1ステップだけのスポットライトでは移動先が無い
+const noop = () => undefined;
 
 type SettingItem = {
   id: ColorSchemePreference;
@@ -49,6 +72,10 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 16,
     lineHeight: 21,
+  },
+  // 配色グループと画面レイアウトグループの区切りを視覚的に分かるようにする
+  toggleSpacer: {
+    marginTop: 32,
   },
   okButton: {
     width: 128,
@@ -122,6 +149,43 @@ const SettingsItem = ({
   );
 };
 
+const ToggleItem = ({
+  title,
+  state,
+  onToggle,
+  onLayout,
+}: {
+  title: string;
+  state: boolean;
+  onToggle: () => void;
+  onLayout?: () => void;
+}) => {
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
+
+  return (
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={title}
+      accessibilityState={{ checked: state }}
+      onPress={onToggle}
+      onLayout={onLayout}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: isLEDTheme ? '#333' : colors.card,
+        borderRadius: isLEDTheme ? 0 : 12,
+      }}
+    >
+      <Typography style={styles.title}>{title}</Typography>
+
+      <StatePanel state={state} />
+    </Pressable>
+  );
+};
+
 const ColorSchemeSettingsScreen: React.FC = () => {
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -131,8 +195,71 @@ const ColorSchemeSettingsScreen: React.FC = () => {
   const colors = useAppColors();
   const currentPreference = useAtomValue(colorSchemePreferenceAtom);
   const setColorSchemePreference = useSetAtom(colorSchemePreferenceAtom);
+  const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
+    portraitModeEnabledAtom
+  );
+  const setAppearanceSeen = useSetAtom(portraitPromoAppearanceSeenAtom);
+  const setPromoFinished = useSetAtom(portraitPromoFinishedAtom);
 
   const navigation = useNavigation();
+
+  // 案C: 外観画面を開いた初回だけ、ポートレートモードのトグルをスポットライトで指す。
+  // 開いた時点で既読にする以上、可否はマウント時のスナップショットで持つ
+  // (リアクティブに読むと自分自身を即座に閉じてしまう)
+  const [canShowSpotlight] = useState(() => canShowPortraitAppearanceHint());
+  const [spotlightDismissed, setSpotlightDismissed] = useState(false);
+  const [toggleLayout, setToggleLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const toggleRef = useRef<View>(null);
+
+  // 画面を開いた時点で印を消す。次からはスポットライトも出さない。
+  // 印を出している画面はここから戻っても再マウントされないので、
+  // 永続化と合わせて atom も更新する
+  useEffect(() => {
+    markPortraitAppearanceSeen();
+    setAppearanceSeen(true);
+  }, [setAppearanceSeen]);
+
+  const measureToggle = useCallback(() => {
+    toggleRef.current?.measureInWindow((x, y, width, height) => {
+      setToggleLayout((prev) =>
+        prev?.x === x &&
+        prev?.y === y &&
+        prev?.width === width &&
+        prev?.height === height
+          ? prev
+          : { x, y, width, height }
+      );
+    });
+  }, []);
+
+  // ヘッダー高さが決まるとコンテンツ位置がずれるため、確定後に測り直す
+  useEffect(() => {
+    if (!headerHeight) {
+      return;
+    }
+    const frameId = requestAnimationFrame(measureToggle);
+    return () => cancelAnimationFrame(frameId);
+  }, [headerHeight, measureToggle]);
+
+  const spotlightStep = useMemo<WalkthroughStep | null>(
+    () =>
+      toggleLayout
+        ? {
+            id: 'portraitMode',
+            titleKey: 'portraitModeTitle',
+            descriptionKey: 'portraitPromoSpotlightDescription',
+            // トグルは画面下部にあるので、ツールチップは必ず上側に出す
+            tooltipPosition: 'top',
+            spotlightArea: { ...toggleLayout, borderRadius: 12 },
+          }
+        : null,
+    [toggleLayout]
+  );
 
   const settingItems: SettingItem[] = useMemo(
     () => [
@@ -178,6 +305,29 @@ const ColorSchemeSettingsScreen: React.FC = () => {
     [currentPreference, setColorSchemePreference]
   );
 
+  const handleTogglePortraitMode = useCallback(() => {
+    const flag = !portraitModeEnabled;
+    setPortraitModeEnabled(flag);
+    try {
+      storage.set(STORAGE_KEYS.PORTRAIT_MODE_ENABLED, flag ? 'true' : 'false');
+      // 一度でもオンにしたら、以降はオフに戻されても訴求しない
+      if (flag) {
+        finishPortraitPromo();
+        setPromoFinished(true);
+      }
+    } catch (error) {
+      // 保存に失敗したままだと次回起動時に設定が巻き戻るため、
+      // UIと永続値の不整合を防ぐべくatom状態をロールバックする
+      setPortraitModeEnabled(!flag);
+      console.error('Failed to save portrait mode setting', error);
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  }, [portraitModeEnabled, setPortraitModeEnabled, setPromoFinished]);
+
+  const handleDismissSpotlight = useCallback(() => {
+    setSpotlightDismissed(true);
+  }, []);
+
   const handleScroll = useRef(
     RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
       useNativeDriver: true,
@@ -216,6 +366,19 @@ const ColorSchemeSettingsScreen: React.FC = () => {
           >
             {translate('colorSchemeDescription')}
           </Typography>
+          <View style={styles.toggleSpacer} ref={toggleRef}>
+            <ToggleItem
+              title={translate('portraitModeTitle')}
+              state={portraitModeEnabled}
+              onToggle={handleTogglePortraitMode}
+              onLayout={measureToggle}
+            />
+          </View>
+          <Typography
+            style={[styles.description, { color: colors.secondaryText }]}
+          >
+            {translate('portraitModeDescription')}
+          </Typography>
           <Button
             style={styles.okButton}
             textStyle={{ fontWeight: 'bold' }}
@@ -231,6 +394,24 @@ const ColorSchemeSettingsScreen: React.FC = () => {
         scrollY={scrollY}
       />
       <FooterTabBar active="settings" />
+      {spotlightStep ? (
+        <WalkthroughOverlay
+          visible={
+            canShowSpotlight && !spotlightDismissed && !portraitModeEnabled
+          }
+          step={spotlightStep}
+          currentStepIndex={0}
+          totalSteps={1}
+          onNext={handleTogglePortraitMode}
+          onGoToStep={noop}
+          onSkip={handleDismissSpotlight}
+          // 背景の誤タップでポートレートモードが入らないよう、
+          // 有効化は主ボタンだけに限る
+          onBackgroundPress={handleDismissSpotlight}
+          primaryLabel={translate('portraitPromoPromptEnable')}
+          dismissLabel={translate('portraitPromoSpotlightDismiss')}
+        />
+      ) : null}
     </>
   );
 };
