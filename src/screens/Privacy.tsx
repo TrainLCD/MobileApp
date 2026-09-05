@@ -25,22 +25,21 @@ const styles = StyleSheet.create({
   text: {
     fontSize: RFValue(14),
     marginBottom: 12,
-    // NOTE: Text 自身に paddingHorizontal を持たせたまま親の alignItems: 'center' で
-    // 内在幅に任せると、iOS では高さ計測時の折り返し幅が描画時より広くなり、
-    // 末尾の行が欠ける。余白は root 側へ移し、幅は親いっぱいに固定する。
+    // NOTE: 余白は root 側へ持たせ、Text の幅は親いっぱいに固定する。Text 自身に
+    // paddingHorizontal を持たせて親の alignItems: 'center' で内在幅に任せると、
+    // 折り返し幅が計測時と描画時でずれる余地が残る。
     alignSelf: 'stretch',
-    lineHeight: Platform.select({
-      ios: RFValue(18),
-    }),
+    // NOTE: iOS で lineHeight を指定すると NSParagraphStyle の min/max lineHeight が
+    // 固定される。RN は高さ計測を高さ無制限の NSTextContainer で行い、描画は計測結果
+    // ちょうどの高さの NSTextContainer で行うため、行送りを固定して両者がわずかでも
+    // ずれると収まらない行が丸ごと捨てられ、末尾が欠ける。行送りはフォント本来の値に
+    // 任せる。
   },
   headingText: {
     color: '#03a9f4',
     fontSize: RFValue(21),
     fontWeight: 'bold',
     textAlign: 'center',
-    lineHeight: Platform.select({
-      ios: RFValue(24),
-    }),
   },
   buttons: {
     flexDirection: 'row',
