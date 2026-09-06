@@ -20,41 +20,49 @@ const FONT_METRICS = {
 
 export type NumberingGlyphFont = keyof typeof FONT_METRICS;
 
-/** ナンバリングの1行分。`lineHeight === fontSize` であることが前提 */
+/** ナンバリングの1行分 */
 export type NumberingGlyphLine = {
   fontSize: number;
+  /**
+   * 省略時は `fontSize` と同値。`longStationNumberAdditional` のように
+   * `fontSize` だけを上書きするスタイルでは、実際に効く `lineHeight` を明示する。
+   */
+  lineHeight?: number;
   font: NumberingGlyphFont;
 };
 
 /**
- * 行ボックスの上端からベースラインまでの距離(fontSize に対する比率)。
+ * 行ボックスの上端からベースラインまでの距離。
  *
  * RN Android の CustomLineHeightSpan は lineHeight とフォントの ascent+descent の差
  * (leading) を上下へ等分するため、ベースラインは行ボックスの中心から
- * (ascent - descent) / 2 だけ下に来る。lineHeight === fontSize なので上端からは
- * 0.5 + (ascent - descent) / 2 の位置になる。
+ * fontSize × (ascent - descent) / 2 だけ下に来る。
  *
  * 端末やOSではなくフォントに依存する値である点に注意: フォントは APK 同梱で
  * `Typography` も allowFontScaling={false} のため、端末やフォントサイズ設定では
  * 変わらない。React Native 0.86.2 の CustomLineHeightSpan を前提にしているので、
  * RN のメジャーアップグレード時は実機で見た目を確認すること。
  */
-const baselineRatio = (font: NumberingGlyphFont) => {
+const baselineOffset = ({
+  fontSize,
+  lineHeight = fontSize,
+  font,
+}: NumberingGlyphLine) => {
   const { ascent, descent } = FONT_METRICS[font];
-  return 0.5 + (ascent - descent) / 2;
+  return lineHeight / 2 + (fontSize * (ascent - descent)) / 2;
 };
 
 /** 行ボックスの上端から、大文字・数字の上端(= ベースライン - capHeight)までの距離 */
-const inkTopOffset = ({ fontSize, font }: NumberingGlyphLine) =>
-  fontSize * (baselineRatio(font) - FONT_METRICS[font].capHeight);
+const inkTopOffset = (line: NumberingGlyphLine) =>
+  baselineOffset(line) - line.fontSize * FONT_METRICS[line.font].capHeight;
 
 /**
  * 行ボックスの下端から ink の下端までの距離。
  * ナンバリングの記号と番号は大文字と数字だけでディセンダを持たないので、
  * ink の下端はベースラインそのものになる。
  */
-const inkBottomOffset = ({ fontSize, font }: NumberingGlyphLine) =>
-  fontSize * (1 - baselineRatio(font));
+const inkBottomOffset = (line: NumberingGlyphLine) =>
+  (line.lineHeight ?? line.fontSize) - baselineOffset(line);
 
 /**
  * translateY はレイアウトに影響しないぶん端数がそのまま描画位置になるので、
