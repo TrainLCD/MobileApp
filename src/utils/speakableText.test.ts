@@ -38,6 +38,19 @@ describe('toSpeakableText', () => {
     expect(toSpeakableText('the JR Kobe Line', 'EN')).toBe('the J-R Kobe Line');
   });
 
+  it('英語文の「Keisei」を英語 TTS が「けいせい」と読む表記へ置換する', () => {
+    expect(
+      toSpeakableText(
+        'The next station is Keisei-Ueno,<break time="200ms"/> KS 1.',
+        'EN'
+      )
+    ).toBe('The next station is Kay-say-Ueno, KS 1.');
+    // 日本語文はカタカナ読み (sub alias) がそのまま使われるので対象外
+    expect(
+      toSpeakableText('<sub alias="ケイセイウエノ">京成上野</sub>', 'JA')
+    ).toBe('ケイセイウエノ');
+  });
+
   it('英語文に混入した日本語を除去する', () => {
     // nameRoman 欠落データ等で英語文に日本語が残ると、エンジンが言語を誤判定して
     // 全文を日本語音声で読んでしまうため最終防衛線として除去する
