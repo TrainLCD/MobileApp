@@ -1,3 +1,4 @@
+import { fixEnglishReading } from './englishReading';
 import { fixJrReading } from './jrReading';
 import { containsJapaneseCharacters, stripJapaneseCharacters } from './phoneme';
 import { ssmlToPlainText } from './ssmlToPlainText';
@@ -15,6 +16,8 @@ import getStringBytes from './stringBytes';
  *   含まれるため半角スペースへ置き換える。
  * - 「JR」は TTS エンジンが "Jr."（ジュニア）と誤読するため、読み方が確定する
  *   表記へ置換する。
+ * - 英語文では「Keisei」など英語 TTS が誤読する固有名詞も、読み方が確定する
+ *   英単語の綴りへ置換する。
  * - 英語文に日本語が残っている場合は除去する。nameRoman が欠落した駅データ等では
  *   wrapPhoneme のローマ字フォールバックが効かず英語文に日本語が混ざることがあり、
  *   その場合エンジンが言語を誤判定して全文を日本語音声で合成してしまうため。
@@ -30,15 +33,17 @@ export const toSpeakableText = (
     language
   );
 
-  if (language === 'EN' && containsJapaneseCharacters(plain)) {
+  if (language === 'JA') {
+    return plain;
+  }
+
+  if (containsJapaneseCharacters(plain)) {
     console.warn(
       '[speakableText] English text contains Japanese characters, stripping:',
       plain
     );
-    return stripJapaneseCharacters(plain);
   }
-
-  return plain;
+  return fixEnglishReading(stripJapaneseCharacters(plain));
 };
 
 /**
