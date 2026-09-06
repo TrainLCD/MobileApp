@@ -16,15 +16,22 @@ import getStringBytes from './stringBytes';
  *   含まれるため半角スペースへ置き換える。
  * - 「JR」は TTS エンジンが "Jr."（ジュニア）と誤読するため、読み方が確定する
  *   表記へ置換する。
- * - 英語文では「Keisei」など英語 TTS が誤読する固有名詞も、読み方が確定する
- *   英単語の綴りへ置換する。
+ * - 端末内蔵 TTS 向け (`engine: 'native'`) の英語文では、「Keisei」など英語 TTS が
+ *   誤読する固有名詞も読み方が確定する英単語の綴りへ置換する。リモート TTS
+ *   (`engine: 'remote'`) では同じ置換を TrainLCD/functions の `normalizeRomanText`
+ *   が合成前に行うため、アプリ側では適用せず原文の表記のまま送る。二重に置換
+ *   しても結果は変わらないが、サーバー側の正規化とキャッシュキーを単一の入力に
+ *   揃えるため、置換の責務をサーバーに寄せる。
  * - 英語文に日本語が残っている場合は除去する。nameRoman が欠落した駅データ等では
  *   wrapPhoneme のローマ字フォールバックが効かず英語文に日本語が混ざることがあり、
  *   その場合エンジンが言語を誤判定して全文を日本語音声で合成してしまうため。
  */
+export type SpeechEngineKind = 'native' | 'remote';
+
 export const toSpeakableText = (
   ssml: string,
-  language: 'JA' | 'EN'
+  language: 'JA' | 'EN',
+  engine: SpeechEngineKind
 ): string => {
   const plain = fixJrReading(
     ssmlToPlainText(ssml, {
@@ -43,7 +50,8 @@ export const toSpeakableText = (
       plain
     );
   }
-  return fixEnglishReading(stripJapaneseCharacters(plain));
+  const english = stripJapaneseCharacters(plain);
+  return engine === 'native' ? fixEnglishReading(english) : english;
 };
 
 /**
