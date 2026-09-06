@@ -1,5 +1,5 @@
 import type React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Svg, { Ellipse } from 'react-native-svg';
 import {
   FONTS,
@@ -7,6 +7,10 @@ import {
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import {
+  numberingGlyphLift,
+  numberingStackedGlyphLift,
+} from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 const ICON_SIZE = isTablet ? 72 * 1.5 : 72;
@@ -20,6 +24,17 @@ type Props = {
   size?: NumberingIconSize;
   withOutline?: boolean;
 };
+
+const SYMBOL_SIZE = isTablet ? 18 * 1.5 : 18;
+const NUMBER_SIZE = isTablet ? 32 * 1.5 : 32;
+
+// Androidのグリフ上寄り補正。記号と番号でフォントが違うので両方のメトリクスから求める。
+// 記号と番号で異なる値を使うと両者の間隔まで変わるため同じ値を使い回す
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: 'FuturaLTPro' },
+  { fontSize: NUMBER_SIZE, font: 'MyriadPro' }
+);
+const TINY_GLYPH_LIFT = numberingGlyphLift(10, 'FuturaLTPro');
 
 const styles = StyleSheet.create({
   root: {
@@ -42,11 +57,13 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: 'white',
-    fontSize: isTablet ? 18 * 1.5 : 18,
-    lineHeight: isTablet ? 18 * 1.5 : 18,
+    fontSize: SYMBOL_SIZE,
+    lineHeight: SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: isTablet ? 8 : 4,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? (isTablet ? 8 : 4) : 0,
   },
   rootTiny: {
     width: 20,
@@ -62,14 +79,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 10,
     lineHeight: 10,
+    transform: TINY_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   stationNumber: {
     color: 'white',
-    fontSize: isTablet ? 32 * 1.5 : 32,
-    lineHeight: isTablet ? 32 * 1.5 : 32,
+    fontSize: NUMBER_SIZE,
+    lineHeight: NUMBER_SIZE,
+    transform: GLYPH_LIFT,
     marginTop: isTablet ? -4 * 1.2 : -4,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,

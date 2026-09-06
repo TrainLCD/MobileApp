@@ -1,11 +1,15 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import {
+  numberingGlyphLift,
+  numberingStackedGlyphLift,
+} from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -14,6 +18,43 @@ type Props = {
   size?: NumberingIconSize;
   withOutline?: boolean;
 };
+
+const FONT = 'FuturaLTPro';
+const SYMBOL_SIZE = isTablet ? 24 * 1.5 : 24;
+const LONG_SYMBOL_SIZE = isTablet ? 20 * 1.5 : 20;
+const NUMBER_SIZE = isTablet ? 26 * 1.5 : 26;
+
+const SYMBOL_LINE = { fontSize: SYMBOL_SIZE, font: FONT } as const;
+const LONG_SYMBOL_LINE = { fontSize: LONG_SYMBOL_SIZE, font: FONT } as const;
+const NUMBER_LINE = { fontSize: NUMBER_SIZE, font: FONT } as const;
+// longStationNumberAdditional は fontSize だけを縮め lineHeight は据え置くので、
+// 行の高さは NUMBER_SIZE のまま
+const LONG_NUMBER_LINE = {
+  fontSize: isTablet ? 20 * 1.5 : 20,
+  lineHeight: NUMBER_SIZE,
+  font: FONT,
+} as const;
+
+// Androidのグリフ上寄り補正。記号と番号で異なる値を使うと両者の間隔まで変わるため、
+// 縦に並ぶ2行には同じ値を使い回す。記号・番号のどちらにも縮小版があり、実際に使う
+// 組み合わせでズレ量が変わるので4通り用意する
+const glyphLiftStyles = StyleSheet.create({
+  normal: { transform: numberingStackedGlyphLift(SYMBOL_LINE, NUMBER_LINE) },
+  longSymbol: {
+    transform: numberingStackedGlyphLift(LONG_SYMBOL_LINE, NUMBER_LINE),
+  },
+  longNumber: {
+    transform: numberingStackedGlyphLift(SYMBOL_LINE, LONG_NUMBER_LINE),
+  },
+  longBoth: {
+    transform: numberingStackedGlyphLift(LONG_SYMBOL_LINE, LONG_NUMBER_LINE),
+  },
+});
+
+const MEDIUM_GLYPH_LIFT = numberingGlyphLift(isTablet ? 24 : 14, FONT);
+const MEDIUM_LONG_GLYPH_LIFT = numberingGlyphLift(isTablet ? 16 : 11, FONT);
+const TINY_GLYPH_LIFT = numberingGlyphLift(10, FONT);
+const TINY_LONG_GLYPH_LIFT = numberingGlyphLift(5, FONT);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -33,15 +74,15 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: '#221714',
-    fontSize: isTablet ? 24 * 1.5 : 24,
-    lineHeight: isTablet ? 24 * 1.5 : 24,
+    fontSize: SYMBOL_SIZE,
+    lineHeight: SYMBOL_SIZE,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
   lineSymbolLong: {
     color: '#221714',
-    fontSize: isTablet ? 20 * 1.5 : 20,
-    lineHeight: isTablet ? 20 * 1.5 : 20,
+    fontSize: LONG_SYMBOL_SIZE,
+    lineHeight: LONG_SYMBOL_SIZE,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -69,39 +110,47 @@ const styles = StyleSheet.create({
     color: '#221714',
     fontSize: 10,
     lineHeight: 10,
+    transform: TINY_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 1,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 1 : 0,
   },
   lineSymbolTinyLong: {
     color: '#221714',
     fontSize: 5,
     lineHeight: 5,
+    transform: TINY_LONG_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 1,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 1 : 0,
   },
   lineSymbolMedium: {
     color: '#221714',
     fontSize: isTablet ? 24 : 14,
     lineHeight: isTablet ? 24 : 14,
+    transform: MEDIUM_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   lineSymbolMediumLong: {
     color: '#221714',
     fontSize: isTablet ? 16 : 11,
     lineHeight: isTablet ? 16 : 11,
+    transform: MEDIUM_LONG_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
     alignSelf: 'center',
   },
   stationNumber: {
     color: '#221714',
-    fontSize: isTablet ? 26 * 1.5 : 26,
-    lineHeight: isTablet ? 26 * 1.5 : 26,
+    fontSize: NUMBER_SIZE,
+    lineHeight: NUMBER_SIZE,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
     marginTop: isTablet ? -4 : -2,
@@ -121,12 +170,28 @@ const NumberingIconRound: React.FC<Props> = ({
   const [lineSymbol, ...stationNumberRest] = stationNumberRaw.split('-');
   const stationNumber = stationNumberRest.join('-');
   const isIncludesSubNumber = stationNumber.includes('-');
+  const isLongSymbol = lineSymbol.length === 2;
+  // 記号と番号で同じ値を当てないと両者の間隔が変わるので、1つ選んで両方に渡す
+  const glyphLift = useMemo(() => {
+    if (isLongSymbol) {
+      return isIncludesSubNumber
+        ? glyphLiftStyles.longBoth
+        : glyphLiftStyles.longSymbol;
+    }
+    return isIncludesSubNumber
+      ? glyphLiftStyles.longNumber
+      : glyphLiftStyles.normal;
+  }, [isLongSymbol, isIncludesSubNumber]);
   const stationNumberTextStyles = useMemo(() => {
     if (isIncludesSubNumber) {
-      return [styles.stationNumber, styles.longStationNumberAdditional];
+      return [
+        styles.stationNumber,
+        styles.longStationNumberAdditional,
+        glyphLift,
+      ];
     }
-    return styles.stationNumber;
-  }, [isIncludesSubNumber]);
+    return [styles.stationNumber, glyphLift];
+  }, [isIncludesSubNumber, glyphLift]);
 
   if (size === NUMBERING_ICON_SIZE.SMALL) {
     return (
@@ -164,9 +229,10 @@ const NumberingIconRound: React.FC<Props> = ({
     <View style={withOutline ? styles.optionalBorder : undefined}>
       <View style={[styles.root, { borderColor: lineColor }]}>
         <Typography
-          style={
-            lineSymbol.length === 2 ? styles.lineSymbolLong : styles.lineSymbol
-          }
+          style={[
+            isLongSymbol ? styles.lineSymbolLong : styles.lineSymbol,
+            glyphLift,
+          ]}
         >
           {lineSymbol}
         </Typography>

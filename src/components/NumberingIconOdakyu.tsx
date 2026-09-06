@@ -2,6 +2,7 @@ import type React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { FONTS } from '../constants';
 import isTablet from '../utils/isTablet';
+import { numberingStackedGlyphLift } from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -10,6 +11,16 @@ type Props = {
   withOutline?: boolean;
   shouldGrayscale?: boolean;
 };
+
+const FONT = 'FrutigerNeueLTProBold';
+const SYMBOL_SIZE = isTablet ? 22 * 1.5 : 22;
+const NUMBER_SIZE = isTablet ? 32 * 1.5 : 32;
+
+// Androidのグリフ下寄り補正。記号と番号で同じ値を使わないと両者の間隔が変わる
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: FONT },
+  { fontSize: NUMBER_SIZE, font: FONT }
+);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -29,17 +40,20 @@ const styles = StyleSheet.create({
   },
   lineSymbol: {
     color: '#221714',
-    fontSize: isTablet ? 22 * 1.5 : 22,
-    lineHeight: isTablet ? 22 * 1.5 : 22,
+    fontSize: SYMBOL_SIZE,
+    lineHeight: SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
-    marginTop: Platform.select({ android: -2, ios: 8 }),
+    // Androidの下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.select({ android: 0, ios: 8 }),
     letterSpacing: -1,
   },
   stationNumber: {
     color: '#221714',
-    fontSize: isTablet ? 32 * 1.5 : 32,
-    lineHeight: isTablet ? 32 * 1.5 : 32,
+    fontSize: NUMBER_SIZE,
+    lineHeight: NUMBER_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
     marginTop: isTablet ? -4 : -2,
