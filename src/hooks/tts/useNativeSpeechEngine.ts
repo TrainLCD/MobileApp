@@ -159,14 +159,14 @@ export const useNativeSpeechEngine = (): SpeechEngine => {
         const plainJa =
           request.speakJa && canSpeakJa
             ? truncateToSpeechLimit(
-                toSpeakableText(request.ssmlJa, 'JA'),
+                toSpeakableText(request.ssmlJa, 'JA', 'native'),
                 limit
               )
             : '';
         const plainEn =
           request.speakEn && canSpeakEn
             ? truncateToSpeechLimit(
-                toSpeakableText(request.ssmlEn, 'EN'),
+                toSpeakableText(request.ssmlEn, 'EN', 'native'),
                 limit
               )
             : '';
