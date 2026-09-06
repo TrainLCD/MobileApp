@@ -17,6 +17,9 @@ const ENGLISH_READING_RULES: readonly EnglishReadingRule[] = [
   // 「Keisei (京成)」は英語 TTS が "ei" を /aɪ/ と推定して「かいせい」と読む
   // ため、英単語 "Kay" + "say" で /keɪ.seɪ/ (けいせい) を確定させる。
   { pattern: /\bKeisei\b/gi, reading: 'Kay-say' },
+  // 「Seibu (西武)」も同じく "ei" を /aɪ/ と推定して「さいぶ」と読むため、
+  // "Say" + "boo" で /seɪ.buː/ (せいぶ) を確定させる。
+  { pattern: /\bSeibu\b/gi, reading: 'Say-boo' },
 ];
 
 /**
