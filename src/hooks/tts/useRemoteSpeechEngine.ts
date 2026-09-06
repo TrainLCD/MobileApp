@@ -176,13 +176,13 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
           // 合成は文字数課金のため、無効な言語のテキストは送らない
           const textJa = request.speakJa
             ? truncateToByteLimit(
-                toSpeakableText(request.ssmlJa, 'JA'),
+                toSpeakableText(request.ssmlJa, 'JA', 'remote'),
                 REMOTE_TTS_MAX_INPUT_BYTES
               )
             : '';
           const textEn = request.speakEn
             ? truncateToByteLimit(
-                toSpeakableText(request.ssmlEn, 'EN'),
+                toSpeakableText(request.ssmlEn, 'EN', 'remote'),
                 REMOTE_TTS_MAX_INPUT_BYTES
               )
             : '';
