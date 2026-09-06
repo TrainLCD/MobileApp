@@ -128,3 +128,38 @@ Both modules build with R8 enabled
 each upload step passes its own module's `mapping.txt`. Keep the `mappingFile`
 path aligned with the module of that step — a mismatched mapping silently
 corrupts crash deobfuscation for the affected bundle.
+
+## Build memory
+
+A release build compiles Kotlin for every native module under `node_modules`
+plus `:app` and `:wearable` in a single Gradle invocation. All of those
+compilations share one Kotlin compile daemon, so its Metaspace grows across the
+whole run.
+
+The Kotlin daemon inherits `org.gradle.jvmargs` when `kotlin.daemon.jvmargs` is
+not set. With the previous `-XX:MaxMetaspaceSize=512m` the daemon ran out of
+Metaspace part-way through the build:
+
+```text
+Exception in thread "RMI TCP Connection(idle)" java.lang.OutOfMemoryError: Metaspace
+> Task :wearable:compileDevReleaseKotlin FAILED
+```
+
+The daemon then kept thrashing instead of exiting, so the job burned the rest of
+its `timeout-minutes: 45` budget and surfaced only as
+`The operation was canceled.` — read the log above the cancellation to see the
+real cause.
+
+`android/gradle.properties` therefore raises both limits and pins the Kotlin
+daemon explicitly rather than letting it inherit:
+
+| Property | Value |
+| --- | --- |
+| `org.gradle.jvmargs` | `-Xmx4096m -XX:MaxMetaspaceSize=1024m` |
+| `kotlin.daemon.jvmargs` | `-Xmx3072m -XX:MaxMetaspaceSize=2048m` |
+
+A JVM only reserves `-Xmx` and `-XX:MaxMetaspaceSize`; it commits what it
+actually uses. Generous ceilings therefore cost nothing on an idle build and
+still turn a runaway allocation into a clear error rather than an OOM-killed
+runner. Keep `kotlin.daemon.jvmargs` set whenever `org.gradle.jvmargs` changes,
+otherwise the daemon silently picks up the Gradle value again.
