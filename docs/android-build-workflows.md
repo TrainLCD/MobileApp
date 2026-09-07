@@ -150,16 +150,31 @@ its `timeout-minutes: 45` budget and surfaced only as
 `The operation was canceled.` — read the log above the cancellation to see the
 real cause.
 
-`android/gradle.properties` therefore raises both limits and pins the Kotlin
-daemon explicitly rather than letting it inherit:
+`android/gradle.properties` therefore raises the Metaspace ceiling and pins the
+Kotlin daemon explicitly rather than letting it inherit:
 
-| Property | Value |
-| --- | --- |
-| `org.gradle.jvmargs` | `-Xmx4096m -XX:MaxMetaspaceSize=1024m` |
-| `kotlin.daemon.jvmargs` | `-Xmx3072m -XX:MaxMetaspaceSize=2048m` |
+| Property | Heap | Metaspace (before → after) |
+| --- | --- | --- |
+| `org.gradle.jvmargs` | `-Xmx2048m` | `512m` → `1024m` |
+| `kotlin.daemon.jvmargs` | `-Xmx2048m` | inherited `512m` → `1024m` |
 
-A JVM only reserves `-Xmx` and `-XX:MaxMetaspaceSize`; it commits what it
-actually uses. Generous ceilings therefore cost nothing on an idle build and
-still turn a runaway allocation into a clear error rather than an OOM-killed
-runner. Keep `kotlin.daemon.jvmargs` set whenever `org.gradle.jvmargs` changes,
+**Only the Metaspace ceiling changes.** Both heap ceilings stay at the `2048m`
+the build already ran with — it compiled every native module, `:app`, and R8
+without a heap OOM, so raising `-Xmx` would treat a symptom the build never had.
+
+Do not read a heap ceiling as free headroom. Metaspace is committed lazily, so
+its ceiling mostly just converts a runaway allocation into a clear error. A heap
+ceiling is different: the JVM defers full GCs and lets the heap grow toward
+`-Xmx`, so a larger value raises real resident memory. Two JVMs run
+concurrently here, and Gradle worker processes, R8, and Node sit alongside them,
+so budget the *sum* of the ceilings against the runner rather than each one on
+its own.
+
+This repository is public, so its jobs get the 4-vCPU / 16 GB standard runner
+(the 2-vCPU / 8 GB tier applies to private repositories). The ceilings above
+total 4 GB of heap and 2 GB of Metaspace, which fits either tier with room for
+the rest of the job. Re-check that sum before raising any of these values, and
+prefer a larger runner over ceilings the runner cannot back.
+
+Keep `kotlin.daemon.jvmargs` set whenever `org.gradle.jvmargs` changes,
 otherwise the daemon silently picks up the Gradle value again.
