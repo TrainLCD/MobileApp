@@ -172,9 +172,14 @@ its own.
 
 This repository is public, so its jobs get the 4-vCPU / 16 GB standard runner
 (the 2-vCPU / 8 GB tier applies to private repositories). The ceilings above
-total 4 GB of heap and 2 GB of Metaspace, which fits either tier with room for
-the rest of the job. Re-check that sum before raising any of these values, and
-prefer a larger runner over ceilings the runner cannot back.
+total 4 GB of heap and 2 GB of Metaspace — but a ceiling is not a memory
+budget. Gradle worker processes, R8, Node, and each JVM's own native memory
+(thread stacks, code cache, direct buffers) all sit on top of those numbers,
+and none of that has been measured here. So do not read the difference between
+the ceilings and the runner's RAM as available headroom, least of all on the
+8 GB tier. Before raising any of these values, measure peak RSS across the
+whole build on the runner you actually target, and prefer a larger runner over
+ceilings the runner cannot back.
 
 Keep `kotlin.daemon.jvmargs` set whenever `org.gradle.jvmargs` changes,
 otherwise the daemon silently picks up the Gradle value again.
