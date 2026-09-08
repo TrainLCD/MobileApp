@@ -225,6 +225,7 @@
   "odptGtfs": "GTFS (Public Transportation Open Data Center)",
   "odptDisclaimer": "The public transportation data used in this application is provided by the Public Transportation Open Data Center. The data is based on information provided by public transportation operators, and its accuracy and completeness are not guaranteed. Please do not contact the public transportation operators directly regarding the content of this application.",
   "otherOss": "Other Open Source Software",
+  "voicevoxNo7Terms": "No.7 Terms of Use (VOICEVOX voice library)",
   "linesNearbyAtStation": "Lines at %{stationName} Station",
   "busStopsNearby": "Nearby bus routes",
   "themeConfirmApply": "Apply",

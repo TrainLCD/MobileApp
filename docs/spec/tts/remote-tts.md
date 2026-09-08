@@ -13,16 +13,19 @@
 課金が発生するため、`remote_tts_enabled_android` を `true` で配信したときにだけ `/tts` を
 参照する。
 
-リモート合成に失敗した回は、その放送だけ端末内蔵 TTS で読み上げる。圏外・トンネル・
+リモート合成に失敗した回は、その放送だけ端末内で読み上げる。圏外・トンネル・
 API 障害でアナウンスが丸ごと欠落しないようにするためのフォールバックで、恒久的な
-切り替えではない（次の放送では再びリモート合成を試みる）。
+切り替えではない（次の放送では再びリモート合成を試みる）。iOS 本体アプリでは、この
+フォールバックの日本語を VOICEVOX（端末内合成）で読ませることができる。詳細は
+[オンデバイス TTS (VOICEVOX) 設計書](./on-device-tts-ios.md)。
 
 ## 構成
 
 ```text
 useTTS ────────────────── 放送タイミング・抑止判定・音声セッション・保留キュー
-  ├─ useRemoteSpeechEngine  /tts へ合成要求 → expo-audio で再生
-  └─ useNativeSpeechEngine  リモートを使わない構成の常用経路 / リモートのフォールバック
+  ├─ useRemoteSpeechEngine   /tts へ合成要求 → expo-audio で再生
+  ├─ useVoicevoxSpeechEngine iOS 本体アプリのフォールバック (日本語のみ VOICEVOX、英語は委譲)
+  └─ useNativeSpeechEngine   リモートを使わない構成の常用経路 / 最終フォールバック
 ```
 
 エンジンの選択は放送直前に `isRemoteTTSEnabled()`（`src/lib/remoteConfig.ts`）を引いて
