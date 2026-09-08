@@ -87,6 +87,15 @@ VOICEVOX CORE の C API はスレッドセーフを保証していないため�
 （voicevox_core Issue #715）問題は現行の配布物では起きない。バージョンを上げるときは JSON の
 `url` と `sha256` を両方更新すること。
 
+`voicevox_onnxruntime` 1.23.2 の iOS スライスは `CFBundleIdentifier` が
+`jp.hiroshiba.voicevox.voicevox_onnxruntime` とアンダースコアを含んでおり、Apple の規則
+（英数字・ハイフン・ピリオドのみ）に反するため Xcode の archive 時検証で
+`had an invalid CFBundleIdentifier in its Info.plist` として失敗する。取得スクリプトは展開後に
+各スライスの `Info.plist` を走査してアンダースコアをハイフンへ置き換える（`voicevox_core` は
+元から `voicevox-core` なので対象外）。配布物は未署名で Xcode が埋め込み時に署名し直すため、
+この書き換えで署名は壊れない。取得を省略した場合も毎回走る冪等な処理なので、展開済みの
+ローカル環境でも `npm run ios:frameworks` を一度実行すれば反映される。
+
 ### App Clip には含めない
 
 App Clip（`ProdAppClip` / `CanaryAppClip`）は deployment target が 16.4 のため非圧縮
