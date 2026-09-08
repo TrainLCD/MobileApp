@@ -145,18 +145,23 @@ Remote Config `voicevox_tts_manifest_url_ios` が指す JSON。形式は
 生成する。
 
 ```bash
+set -euo pipefail   # 取得・展開・生成のどこかで失敗したら、そこで止める
+
 # 配信ディレクトリをリポジトリの外に用意する
 # (リポジトリ直下の assets/ は画像・フォント置き場なので流用しない)
 WORK=~/voicevox-assets
 mkdir -p "$WORK/2026-09-08" && cd "$WORK/2026-09-08"
-curl -LO https://github.com/r9y9/open_jtalk/releases/download/v1.11.1/open_jtalk_dic_utf_8-1.11.tar.gz
+# --fail: HTTP エラーを成功扱いにしない / --retry: 一時的な通信エラーは再試行する
+curl -LO --fail --retry 3 https://github.com/r9y9/open_jtalk/releases/download/v1.11.1/open_jtalk_dic_utf_8-1.11.tar.gz
 tar xzf open_jtalk_dic_utf_8-1.11.tar.gz && rm open_jtalk_dic_utf_8-1.11.tar.gz
-curl -LO https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/6.vvm
+curl -LO --fail --retry 3 https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/6.vvm
 cd -   # リポジトリへ戻る
 
 # マニフェストを生成する (version は省略時に今日の日付)。
 # 出力先は資産ディレクトリの外にする (中に書くと manifest.json 自身が配信対象に混ざる)
 node scripts/build-voicevox-manifest.mjs "$WORK/2026-09-08" https://example.invalid/voicevox/2026-09-08 2026-09-08 > "$WORK/manifest.json"
+# 生成に失敗するとリダイレクト先に空ファイルだけが残るので、中身があることを確かめる
+test -s "$WORK/manifest.json"
 ```
 
 できあがる `$WORK` は次の構成で、これをそのまま配信先（例では `https://example.invalid/voicevox/`）へ置く。
@@ -172,9 +177,10 @@ voicevox/
         └── COPYING
 ```
 
-資産は `base-url` 配下に同じ相対パスで置く必要があるが、`manifest.json` はどの URL に置いてもよい。
-その URL を Remote Config `voicevox_tts_manifest_url_ios` で配信する。取得は認証なしの GET なので、
-公開の静的ホスティングであれば何でもよい。ファイルサイズの目安は辞書が 107MB（`sys.dic` が 103MB）、
+資産は `base-url` 配下に同じ相対パスで置く必要があるが、`manifest.json` は `base-url` の外でもよい。
+ただし Remote Config `voicevox_tts_manifest_url_ios` に入れる URL は **https 必須**
+（`http://` はアプリ側の検証で弾かれ、資産を取得しない）。取得は認証なしの GET なので、
+https で公開できる静的ホスティングであれば何でもよい。ファイルサイズの目安は辞書が 107MB（`sys.dic` が 103MB）、
 VVM が 55〜63MB。
 
 配信先が Cloudflare R2（バケット `trainlcd-assets`、独自ドメイン `assets.trainlcd.app`）なら、
