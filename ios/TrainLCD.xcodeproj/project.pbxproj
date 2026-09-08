@@ -175,6 +175,18 @@
 		E17316B63D0F7567C6320AB8 /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 18AD948BDA8B985185BF581E /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */; };
 		F0FA9708AB0E5181C6C5B9AC /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA0010B0125192EABD3451C0 /* Pods_TrainLCD_CanaryTrainLCD.framework */; };
 		F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB98D2CD9F0AA772720FE54 /* ExpoModulesProvider.swift */; };
+		034E18274969DF7BE2882EB8 /* voicevox_core.xcframework in Embed VOICEVOX Frameworks */ = {isa = PBXBuildFile; fileRef = 66444D136EDFC2C78EAC0E6B /* voicevox_core.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		0FF39F5D0A49E41EB1EA32A5 /* voicevox_core.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66444D136EDFC2C78EAC0E6B /* voicevox_core.xcframework */; };
+		2BED474610B48FAB66889596 /* VoicevoxTTSModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 16E59D17B873F7E1EE2CC414 /* VoicevoxTTSModuleBridge.m */; };
+		5854D94B7C45A24B772F4C26 /* voicevox_onnxruntime.xcframework in Embed VOICEVOX Frameworks */ = {isa = PBXBuildFile; fileRef = C65F93A55BA37FD75F5BD2A6 /* voicevox_onnxruntime.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		773F187C31E9F7D99FD20229 /* voicevox_onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C65F93A55BA37FD75F5BD2A6 /* voicevox_onnxruntime.xcframework */; };
+		7BAD79A2AC0CE13A0DDAEC7D /* voicevox_onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C65F93A55BA37FD75F5BD2A6 /* voicevox_onnxruntime.xcframework */; };
+		84AD78F7990C555F08E40A8F /* VoicevoxTTSModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 16E59D17B873F7E1EE2CC414 /* VoicevoxTTSModuleBridge.m */; };
+		8D91FEA5C8557E145B38FCAB /* VoicevoxTTSModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7A8A674239EDADCFF81C01 /* VoicevoxTTSModule.swift */; };
+		909BE60BF04DB25F49754147 /* voicevox_onnxruntime.xcframework in Embed VOICEVOX Frameworks */ = {isa = PBXBuildFile; fileRef = C65F93A55BA37FD75F5BD2A6 /* voicevox_onnxruntime.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A137FA0A4654D23ABD7CB0CB /* voicevox_core.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66444D136EDFC2C78EAC0E6B /* voicevox_core.xcframework */; };
+		BF2246691D825AB3690F41A3 /* VoicevoxTTSModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B7A8A674239EDADCFF81C01 /* VoicevoxTTSModule.swift */; };
+		F2FB547263AC27839E2BA748 /* voicevox_core.xcframework in Embed VOICEVOX Frameworks */ = {isa = PBXBuildFile; fileRef = 66444D136EDFC2C78EAC0E6B /* voicevox_core.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -361,6 +373,30 @@
 			name = "Embed App Clips";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		56DF8F6A854B1D6F2EDA35E6 /* Embed VOICEVOX Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				034E18274969DF7BE2882EB8 /* voicevox_core.xcframework in Embed VOICEVOX Frameworks */,
+				909BE60BF04DB25F49754147 /* voicevox_onnxruntime.xcframework in Embed VOICEVOX Frameworks */,
+			);
+			name = "Embed VOICEVOX Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EC086E96C00B7F575BA7DFE8 /* Embed VOICEVOX Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				F2FB547263AC27839E2BA748 /* voicevox_core.xcframework in Embed VOICEVOX Frameworks */,
+				5854D94B7C45A24B772F4C26 /* voicevox_onnxruntime.xcframework in Embed VOICEVOX Frameworks */,
+			);
+			name = "Embed VOICEVOX Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -477,6 +513,10 @@
 		ED55A77FA788DF3A9157FF17 /* Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD/Pods-TrainLCD-CanaryTrainLCD.debug.xcconfig"; sourceTree = "<group>"; };
 		F6451AE21C3A0B2B656DFA0A /* Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; path = "Target Support Files/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip/Pods-TrainLCD-CanaryTrainLCD-CanaryAppClip.release.xcconfig"; sourceTree = "<group>"; };
 		FE868CC1D7400801A4A21956 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-CanaryAppClip/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		16E59D17B873F7E1EE2CC414 /* VoicevoxTTSModuleBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VoicevoxTTSModuleBridge.m; path = Modules/VoicevoxTTS/VoicevoxTTSModuleBridge.m; sourceTree = SOURCE_ROOT; };
+		66444D136EDFC2C78EAC0E6B /* voicevox_core.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = voicevox_core.xcframework; path = Frameworks/voicevox_core.xcframework; sourceTree = SOURCE_ROOT; };
+		8B7A8A674239EDADCFF81C01 /* VoicevoxTTSModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VoicevoxTTSModule.swift; path = Modules/VoicevoxTTS/VoicevoxTTSModule.swift; sourceTree = SOURCE_ROOT; };
+		C65F93A55BA37FD75F5BD2A6 /* voicevox_onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = voicevox_onnxruntime.xcframework; path = Frameworks/voicevox_onnxruntime.xcframework; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -529,6 +569,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				2667437868F4ECAB42F4D2D5 /* Pods_TrainLCD_ProdTrainLCD.framework in Frameworks */,
+				A137FA0A4654D23ABD7CB0CB /* voicevox_core.xcframework in Frameworks */,
+				7BAD79A2AC0CE13A0DDAEC7D /* voicevox_onnxruntime.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -537,6 +579,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F0FA9708AB0E5181C6C5B9AC /* Pods_TrainLCD_CanaryTrainLCD.framework in Frameworks */,
+				0FF39F5D0A49E41EB1EA32A5 /* voicevox_core.xcframework in Frameworks */,
+				773F187C31E9F7D99FD20229 /* voicevox_onnxruntime.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -682,6 +726,8 @@
 				DDBDDB801B0581BB480C71FA /* Pods_TrainLCD_CanaryTrainLCD_CanaryAppClip.framework */,
 				2A1E102603F9A5547B14502E /* Pods_TrainLCD_ProdTrainLCD.framework */,
 				18AD948BDA8B985185BF581E /* Pods_TrainLCD_ProdTrainLCD_ProdAppClip.framework */,
+				66444D136EDFC2C78EAC0E6B /* voicevox_core.xcframework */,
+				C65F93A55BA37FD75F5BD2A6 /* voicevox_onnxruntime.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -864,6 +910,7 @@
 				94C1657C29B99DC2007329A6 /* LiveActivity */,
 				94D3F4792E40A00800000000 /* PresetsWidget */,
 				94C1657B29B99D9F007329A6 /* SensitiveNotification */,
+				C8F56C4760CAD93134A68299 /* VoicevoxTTS */,
 			);
 			name = Modules;
 			sourceTree = "<group>";
@@ -963,6 +1010,15 @@
 			name = ProdTrainLCD;
 			sourceTree = "<group>";
 		};
+		C8F56C4760CAD93134A68299 /* VoicevoxTTS */ = {
+			isa = PBXGroup;
+			children = (
+				8B7A8A674239EDADCFF81C01 /* VoicevoxTTSModule.swift */,
+				16E59D17B873F7E1EE2CC414 /* VoicevoxTTSModuleBridge.m */,
+			);
+			path = VoicevoxTTS;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -975,6 +1031,7 @@
 				73378AEDEDDF9B3778E232F0 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
+				EC086E96C00B7F575BA7DFE8 /* Embed VOICEVOX Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				94CB9CE22588EC950030FBE2 /* Embed Watch Content */,
@@ -1005,6 +1062,7 @@
 				CB5CF8F4812BA85EC2C7AFDC /* [Expo] Configure project */,
 				942CB5B72A32AA96008339D2 /* Sources */,
 				942CB5C12A32AA96008339D2 /* Frameworks */,
+				56DF8F6A854B1D6F2EDA35E6 /* Embed VOICEVOX Frameworks */,
 				942CB5C32A32AA96008339D2 /* Resources */,
 				942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */,
 				942CB5D02A32AA96008339D2 /* Embed Watch Content */,
@@ -2219,6 +2277,8 @@
 				94D3F4662E40A00300000001 /* OpenTrainLCDIntent.swift in Sources */,
 				94C1658629B99E0A007329A6 /* SensitiveNotificationModuleBridge.m in Sources */,
 				94C1658029B99DEB007329A6 /* LiveActivityModuleBridge.m in Sources */,
+				8D91FEA5C8557E145B38FCAB /* VoicevoxTTSModule.swift in Sources */,
+				2BED474610B48FAB66889596 /* VoicevoxTTSModuleBridge.m in Sources */,
 				94D3F4742E40A00600000001 /* PresetsWidgetModule.swift in Sources */,
 				94D3F4772E40A00700000001 /* PresetsWidgetModuleBridge.m in Sources */,
 				9DB892EB978E1EA030B325CF /* ExpoModulesProvider.swift in Sources */,
@@ -2236,6 +2296,8 @@
 				94D3F4672E40A00300000002 /* OpenTrainLCDIntent.swift in Sources */,
 				942CB5BF2A32AA96008339D2 /* SensitiveNotificationModuleBridge.m in Sources */,
 				942CB5C02A32AA96008339D2 /* LiveActivityModuleBridge.m in Sources */,
+				BF2246691D825AB3690F41A3 /* VoicevoxTTSModule.swift in Sources */,
+				84AD78F7990C555F08E40A8F /* VoicevoxTTSModuleBridge.m in Sources */,
 				94D3F4752E40A00600000002 /* PresetsWidgetModule.swift in Sources */,
 				94D3F4782E40A00700000002 /* PresetsWidgetModuleBridge.m in Sources */,
 				F4B63ECCFF1E13D682E1521B /* ExpoModulesProvider.swift in Sources */,
@@ -2462,7 +2524,7 @@
 				CODE_SIGN_ENTITLEMENTS = ProdTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
@@ -2502,7 +2564,7 @@
 				CODE_SIGN_ENTITLEMENTS = ProdTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
@@ -2561,7 +2623,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				CXX = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang++.sh";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -2667,7 +2729,7 @@
 				CODE_SIGN_ENTITLEMENTS = TrainLCD/trainlcd.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				CXX = "$(REACT_NATIVE_PATH)/scripts/xcode/ccache-clang++.sh";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2747,7 +2809,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -2787,7 +2849,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryTrainLCD.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Dev/Info.plist;
@@ -2999,7 +3061,7 @@
 				CODE_SIGN_ENTITLEMENTS = RideSessionActivity/CanaryRideSessionActivity.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3051,7 +3113,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3102,7 +3164,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchWidget/ProdWatchWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3160,7 +3222,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3211,7 +3273,7 @@
 				CODE_SIGN_ENTITLEMENTS = WatchWidget/CanaryWatchWidget.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3268,7 +3330,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -3317,7 +3379,7 @@
 				CODE_SIGN_ENTITLEMENTS = RideSessionActivity/ProdRideSessionActivity.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3369,7 +3431,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -3588,7 +3650,7 @@
 				CODE_SIGN_ENTITLEMENTS = ProdAppClip/ProdAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3644,7 +3706,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3694,7 +3756,7 @@
 				CODE_SIGN_ENTITLEMENTS = CanaryAppClip/CanaryAppClip.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -3752,7 +3814,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2890;
+				CURRENT_PROJECT_VERSION = 2891;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;

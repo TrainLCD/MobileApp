@@ -158,3 +158,6 @@ dist/
 # jj は未追跡ファイルも自動スナップショットするため、trap が走らない終了に備えて無視する
 ruleset_backup.json
 ruleset_relaxed.json
+
+# VOICEVOX CORE の xcframework は scripts/fetch-voicevox-frameworks.mjs が取得する
+/ios/Frameworks/*.xcframework/

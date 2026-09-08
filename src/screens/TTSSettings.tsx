@@ -18,6 +18,14 @@ import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { useRemoteTTSEnabled } from '~/hooks/useRemoteTTSEnabled';
 import { useTTSFeatureEnabled } from '~/hooks/useTTSFeatureEnabled';
+import { useVoicevoxAssetsStatus } from '~/hooks/useVoicevoxAssetsStatus';
+import {
+  cancelVoicevoxAssetsDownload,
+  deleteVoicevoxAssets,
+  getVoicevoxAssetsStatus,
+  requestVoicevoxAssetsDownload,
+  type VoicevoxAssetsStatus,
+} from '~/lib/voicevox/assets';
 import {
   TTS_SPEED_PREFERENCE,
   type TTSSpeedPreference,
@@ -27,7 +35,11 @@ import speechState, { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
-import { STATUS_URL, STORAGE_KEYS } from '../constants';
+import {
+  STATUS_URL,
+  STORAGE_KEYS,
+  VOICEVOX_ASSET_APPROX_MB,
+} from '../constants';
 import { storage } from '../lib/storage';
 
 type SettingItem = {
@@ -161,6 +173,145 @@ const SpeedSettingsItem = ({
   );
 };
 
+const formatMegabytes = (bytes: number): string =>
+  `${Math.max(1, Math.round(bytes / 1_000_000))}MB`;
+
+// iOS のオフライン用日本語音声 (VOICEVOX) のダウンロード状況。取得はユーザーの
+// 同意で始まるため、状態ごとに「ダウンロード / キャンセル / 再試行 / 削除」を出す。
+// 詳細は docs/spec/tts/on-device-tts-ios.md
+const VoicevoxAssetsPanel = ({
+  status,
+  onPressDownload,
+  onPressCancel,
+  onPressDelete,
+}: {
+  status: VoicevoxAssetsStatus;
+  onPressDownload: () => void;
+  onPressCancel: () => void;
+  onPressDelete: () => void;
+}) => {
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const colors = useAppColors();
+
+  const percent =
+    status.totalBytes > 0
+      ? Math.min(
+          100,
+          Math.floor((status.downloadedBytes / status.totalBytes) * 100)
+        )
+      : 0;
+
+  const actionStyle = {
+    marginTop: 12,
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: colors.accent,
+  };
+
+  return (
+    <>
+      <Typography
+        style={{
+          marginTop: 24,
+          marginBottom: 8,
+          fontSize: 18,
+          fontWeight: 'bold',
+        }}
+      >
+        {translate('voicevoxDownloadTitle')}
+      </Typography>
+      <View
+        style={{
+          paddingHorizontal: 24,
+          paddingVertical: 16,
+          backgroundColor: isLEDTheme ? '#333' : colors.card,
+          borderRadius: isLEDTheme ? 0 : 12,
+        }}
+      >
+        {status.phase === 'downloading' ? (
+          <>
+            <Typography style={{ fontSize: 18, fontWeight: 'bold' }}>
+              {`${translate('voicevoxDownloading')} ${percent}%`}
+            </Typography>
+            <View
+              accessible
+              accessibilityRole="progressbar"
+              accessibilityValue={{ min: 0, max: 100, now: percent }}
+              testID="voicevox-progressbar"
+              style={{
+                marginTop: 12,
+                height: 6,
+                borderRadius: 3,
+                overflow: 'hidden',
+                backgroundColor: isLEDTheme ? '#666' : colors.background,
+              }}
+            >
+              <View
+                style={{
+                  width: `${percent}%`,
+                  height: '100%',
+                  backgroundColor: colors.accent,
+                }}
+              />
+            </View>
+            <Typography style={{ marginTop: 8, color: colors.secondaryText }}>
+              {`${formatMegabytes(status.downloadedBytes)} / ${formatMegabytes(status.totalBytes)}`}
+            </Typography>
+            <Typography
+              accessibilityRole="button"
+              onPress={onPressCancel}
+              style={actionStyle}
+            >
+              {translate('cancel')}
+            </Typography>
+          </>
+        ) : null}
+        {status.phase === 'installed' ? (
+          <>
+            <Typography style={{ fontSize: 18, fontWeight: 'bold' }}>
+              {translate('voicevoxInstalled', {
+                size: formatMegabytes(status.totalBytes),
+              })}
+            </Typography>
+            <Typography style={{ marginTop: 8, color: colors.secondaryText }}>
+              {translate('voicevoxInstalledDescription')}
+            </Typography>
+            <Typography
+              accessibilityRole="button"
+              onPress={onPressDelete}
+              style={actionStyle}
+            >
+              {translate('voicevoxDelete')}
+            </Typography>
+          </>
+        ) : null}
+        {status.phase === 'not_downloaded' || status.phase === 'error' ? (
+          <>
+            <Typography style={{ color: colors.secondaryText }}>
+              {status.phase === 'error'
+                ? translate('voicevoxDownloadFailed')
+                : translate('voicevoxNotDownloadedDescription', {
+                    size: VOICEVOX_ASSET_APPROX_MB,
+                  })}
+            </Typography>
+            <Typography
+              accessibilityRole="button"
+              onPress={onPressDownload}
+              style={actionStyle}
+            >
+              {status.phase === 'error'
+                ? translate('retry')
+                : translate('voicevoxDownloadAction', {
+                    size: VOICEVOX_ASSET_APPROX_MB,
+                  })}
+            </Typography>
+          </>
+        ) : null}
+      </View>
+    </>
+  );
+};
+
 const ListFooter = ({
   ttsLanguageItems,
   ttsEnabledLanguages,
@@ -169,9 +320,13 @@ const ListFooter = ({
   remoteTTSEnabled,
   speechEnabled,
   ttsFeatureEnabled,
+  voicevoxStatus,
   onToggleTTSLanguage,
   onSelectTTSSpeed,
   onPressServiceStatus,
+  onPressVoicevoxDownload,
+  onPressVoicevoxCancel,
+  onPressVoicevoxDelete,
   onPressOK,
 }: {
   ttsLanguageItems: TTSLanguageSettingItem[];
@@ -181,9 +336,13 @@ const ListFooter = ({
   remoteTTSEnabled: boolean;
   speechEnabled: boolean;
   ttsFeatureEnabled: boolean;
+  voicevoxStatus: VoicevoxAssetsStatus;
   onToggleTTSLanguage: (language: TTSLanguage) => void;
   onSelectTTSSpeed: (preference: TTSSpeedPreference) => void;
   onPressServiceStatus: () => void;
+  onPressVoicevoxDownload: () => void;
+  onPressVoicevoxCancel: () => void;
+  onPressVoicevoxDelete: () => void;
   onPressOK: () => void;
 }) => {
   const colors = useAppColors();
@@ -258,6 +417,17 @@ const ListFooter = ({
           </Typography>
         </>
       ) : null}
+      {/* オフライン用の日本語音声 (VOICEVOX)。ネイティブモジュールを持つ iOS 本体
+        アプリで Remote Config により有効化されているときだけ表示する (App Clip・
+        Android・未配信時は unsupported) */}
+      {Platform.OS === 'ios' && voicevoxStatus.phase !== 'unsupported' ? (
+        <VoicevoxAssetsPanel
+          status={voicevoxStatus}
+          onPressDownload={onPressVoicevoxDownload}
+          onPressCancel={onPressVoicevoxCancel}
+          onPressDelete={onPressVoicevoxDelete}
+        />
+      ) : null}
       {/* iOSはリモート合成のため品質案内は不要。案内文はAndroidのTTSエンジン設定を
         指す内容なので、該当する設定を持たないweb等でも出さない */}
       {Platform.OS === 'android' ? (
@@ -329,6 +499,8 @@ const TTSSettingsScreen: React.FC = () => {
   const ttsFeatureEnabled = useTTSFeatureEnabled();
   // 速度設定はリモート合成でのみ効くため、同じく購読して表示を切り替える。
   const remoteTTSEnabled = useRemoteTTSEnabled();
+  // オフライン用日本語音声 (VOICEVOX) の取得状況。進捗表示と操作に使う。
+  const voicevoxStatus = useVoicevoxAssetsStatus();
 
   const SETTING_ITEMS: SettingItem[] = [
     {
@@ -411,6 +583,34 @@ const TTSSettingsScreen: React.FC = () => {
           ]);
         }
 
+        // 有効化したタイミングで、オフライン用の日本語音声 (約 160MB) を取得するか
+        // 尋ねる。取得はこの同意で始まり、進捗は下のパネルに出る。同意しなくても
+        // 自動アナウンスは使え、通信できない回だけ端末の読み上げ音声になる。
+        // 注意ダイアログが先に出る場合はその後に続けて表示される (キュー)。
+        // 日本語を読まない設定では日本語専用の資産を勧める意味が無いので尋ねない。
+        if (
+          flag &&
+          Platform.OS === 'ios' &&
+          ttsEnabledLanguages.includes('JA') &&
+          getVoicevoxAssetsStatus().phase === 'not_downloaded'
+        ) {
+          showDialog(
+            translate('voicevoxDownloadTitle'),
+            translate('voicevoxDownloadPrompt', {
+              size: VOICEVOX_ASSET_APPROX_MB,
+            }),
+            [
+              { text: translate('later'), style: 'cancel' },
+              {
+                text: translate('download'),
+                onPress: (): void => {
+                  void requestVoicevoxAssetsDownload();
+                },
+              },
+            ]
+          );
+        }
+
         storage.set(STORAGE_KEYS.SPEECH_ENABLED, flag ? 'true' : 'false');
         setSpeechState((prev) => ({
           ...prev,
@@ -424,7 +624,7 @@ const TTSSettingsScreen: React.FC = () => {
         );
       }
     },
-    [setSpeechState, ttsFeatureEnabled]
+    [setSpeechState, ttsEnabledLanguages, ttsFeatureEnabled]
   );
 
   const handleToggleBgTTS = useCallback(
@@ -594,6 +794,31 @@ const TTSSettingsScreen: React.FC = () => {
     ]
   );
 
+  const handleVoicevoxDownloadPress = useCallback(() => {
+    void requestVoicevoxAssetsDownload();
+  }, []);
+
+  const handleVoicevoxCancelPress = useCallback(() => {
+    cancelVoicevoxAssetsDownload();
+  }, []);
+
+  const handleVoicevoxDeletePress = useCallback(() => {
+    showDialog(
+      translate('voicevoxDeleteConfirmTitle'),
+      translate('voicevoxDeleteConfirmMessage'),
+      [
+        { text: translate('cancel'), style: 'cancel' },
+        {
+          text: translate('voicevoxDelete'),
+          style: 'destructive',
+          onPress: (): void => {
+            void deleteVoicevoxAssets();
+          },
+        },
+      ]
+    );
+  }, []);
+
   const handleServiceStatusPress = useCallback(() => {
     Linking.openURL(STATUS_URL).catch((error) => {
       console.error('Failed to open service status page', error);
@@ -635,9 +860,13 @@ const TTSSettingsScreen: React.FC = () => {
               remoteTTSEnabled={remoteTTSEnabled}
               speechEnabled={effectiveSpeechEnabled}
               ttsFeatureEnabled={ttsFeatureEnabled}
+              voicevoxStatus={voicevoxStatus}
               onToggleTTSLanguage={handleToggleTTSLanguage}
               onSelectTTSSpeed={handleSelectTTSSpeed}
               onPressServiceStatus={handleServiceStatusPress}
+              onPressVoicevoxDownload={handleVoicevoxDownloadPress}
+              onPressVoicevoxCancel={handleVoicevoxCancelPress}
+              onPressVoicevoxDelete={handleVoicevoxDeletePress}
               onPressOK={() => navigation.goBack()}
             />
           }

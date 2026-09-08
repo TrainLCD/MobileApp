@@ -9,6 +9,7 @@ import { computeSuppressionDecision } from '../utils/computeSuppressionDecision'
 import type { SpeechEngineRequest } from './tts/speechEngine';
 import { useNativeSpeechEngine } from './tts/useNativeSpeechEngine';
 import { useRemoteSpeechEngine } from './tts/useRemoteSpeechEngine';
+import { useVoicevoxSpeechEngine } from './tts/useVoicevoxSpeechEngine';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
 import { useStoppingState } from './useStoppingState';
@@ -67,11 +68,17 @@ export const useTTS = (): void => {
   // 使えないときのフォールバックも担うため、どちらのプラットフォームでも用意しておく。
   const nativeEngine = useNativeSpeechEngine();
   const remoteEngine = useRemoteSpeechEngine();
+  // iOS でリモート合成が使えない回の日本語を VOICEVOX (端末内合成) で読み上げる。
+  // 英語は端末内蔵 TTS へ委譲する。Remote Config (voicevox_tts_enabled_ios) で
+  // 有効化され、辞書・音声モデルの取得が済んでいるときだけ使われ、それ以外は
+  // onUnavailable を返すので端末内蔵 TTS に倒れる。
+  const voicevoxEngine = useVoicevoxSpeechEngine(nativeEngine);
 
   const stopAllEngines = useCallback(() => {
     remoteEngine.stop();
+    voicevoxEngine.stop();
     nativeEngine.stop();
-  }, [nativeEngine, remoteEngine]);
+  }, [nativeEngine, remoteEngine, voicevoxEngine]);
 
   // アンマウント時のクリーンアップから参照する。エンジンの識別子を effect の
   // 依存に入れると、識別子が変わっただけでクリーンアップが走って発話中の
@@ -225,11 +232,26 @@ export const useTTS = (): void => {
           return;
         }
 
+        // 端末内で読み上げる経路。まず VOICEVOX (日本語のみ・iOS 本体アプリで
+        // 有効化済みのときだけ) を試し、使えなければ端末内蔵 TTS で日英とも読む。
+        const speakOnDevice = () => {
+          voicevoxEngine.speak(request, {
+            onSpeechStarted,
+            onSettled,
+            onUnavailable: () => {
+              if (isStaleRun()) {
+                return;
+              }
+              nativeEngine.speak(request, { onSpeechStarted, onSettled });
+            },
+          });
+        };
+
         // 読み上げ直前に Remote Config を引き、リモート合成(Worker 経由の
-        // Google Cloud TTS)と端末内蔵 TTS のどちらで読み上げるかを決める。起動後に
+        // Google Cloud TTS)と端末内合成のどちらで読み上げるかを決める。起動後に
         // 設定が届いた場合も次の放送から反映される。
         if (!isRemoteTTSEnabled()) {
-          nativeEngine.speak(request, { onSpeechStarted, onSettled });
+          speakOnDevice();
           return;
         }
 
@@ -237,7 +259,7 @@ export const useTTS = (): void => {
           onSpeechStarted,
           onSettled,
           // 圏外・トンネル・API 障害で合成できなかった回は、その放送だけ
-          // 端末内蔵 TTS で読み上げてアナウンスの欠落を防ぐ
+          // 端末内で読み上げてアナウンスの欠落を防ぐ
           onUnavailable: () => {
             if (isStaleRun()) {
               return;
@@ -245,7 +267,7 @@ export const useTTS = (): void => {
             console.warn(
               '[useTTS] Remote TTS unavailable, falling back to on-device TTS'
             );
-            nativeEngine.speak(request, { onSpeechStarted, onSettled });
+            speakOnDevice();
           },
         });
       })();
@@ -258,6 +280,7 @@ export const useTTS = (): void => {
       setDuckingActiveAsync,
       shouldSpeakEnglish,
       shouldSpeakJapanese,
+      voicevoxEngine,
     ]
   );
 

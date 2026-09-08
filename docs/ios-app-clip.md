@@ -61,6 +61,16 @@ App Clip ターゲットは Xcode の同期グループ
 エントリポイントは `AppDelegate.swift` の `@UIApplicationMain` が生成するので、
 `main.m` / `AppDelegate.h` / `AppDelegate.m` は置かないこと。
 
+## VOICEVOX（オンデバイス TTS）は App Clip に含めない
+
+`ios/Modules/VoicevoxTTS` と `ios/Frameworks/voicevox_*.xcframework` は本体ターゲット
+（`ProdTrainLCD` / `CanaryTrainLCD`）にだけ追加してある。App Clip は deployment target
+16.4 のため非圧縮バイナリの上限が 15MB で、2 つのフレームワーク（約 18MB）を埋め込めない。
+JS 側は `NativeModules.VoicevoxTTSModule` の有無で判定するため、Clip では従来どおり
+「リモート TTS → 端末内蔵 TTS」で読み上げる。Xcode でファイルを追加し直すときも
+Clip ターゲットへ入れないこと。詳細は
+[オンデバイス TTS (VOICEVOX) 設計書](./spec/tts/on-device-tts-ios.md)。
+
 ## 起動直後クラッシュの切り分け記録（2026-08-12）
 
 PR #6672（白画面修正）と #6675（アーカイブ修正）を取り込んだ canary

@@ -63,6 +63,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fetch VOICEVOX CORE frameworks
+        run: npm run ios:frameworks
+
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: pod install --repo-update

@@ -13,22 +13,30 @@
 課金が発生するため、`remote_tts_enabled_android` を `true` で配信したときにだけ `/tts` を
 参照する。
 
-リモート合成に失敗した回は、その放送だけ端末内蔵 TTS で読み上げる。圏外・トンネル・
+リモート合成に失敗した回は、その放送だけ端末内で読み上げる。圏外・トンネル・
 API 障害でアナウンスが丸ごと欠落しないようにするためのフォールバックで、恒久的な
-切り替えではない（次の放送では再びリモート合成を試みる）。
+切り替えではない（次の放送では再びリモート合成を試みる）。iOS 本体アプリでは、この
+フォールバックの日本語を VOICEVOX（端末内合成）で読ませることができる。詳細は
+[オンデバイス TTS (VOICEVOX) 設計書](./on-device-tts-ios.md)。
 
 ## 構成
 
 ```text
 useTTS ────────────────── 放送タイミング・抑止判定・音声セッション・保留キュー
-  ├─ useRemoteSpeechEngine  /tts へ合成要求 → expo-audio で再生
-  └─ useNativeSpeechEngine  リモートを使わない構成の常用経路 / リモートのフォールバック
+  ├─ useRemoteSpeechEngine   /tts へ合成要求 → expo-audio で再生
+  ├─ useVoicevoxSpeechEngine iOS 本体アプリのフォールバック (日本語のみ VOICEVOX、英語は委譲)
+  └─ useNativeSpeechEngine   リモートを使わない構成の常用経路 / 最終フォールバック
 ```
 
 エンジンの選択は放送直前に `isRemoteTTSEnabled()`（`src/lib/remoteConfig.ts`）を引いて
 決めるため、起動後に Remote Config が届いた場合も次の放送から反映される。
+`isRemoteTTSEnabled()` が決めるのは「リモート合成を試すか、最初から端末内で読むか」だけで、
+端末内で読む側はまず `useVoicevoxSpeechEngine` を試し、VOICEVOX が使える条件（iOS 本体アプリの
+ネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・音声モデル内のスタイル ID）が
+そろわなければ `useNativeSpeechEngine` へ倒れる。条件の詳細は
+[オンデバイス TTS (VOICEVOX) 設計書](./on-device-tts-ios.md) を参照。
 
-両エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
+各エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
 
 - `speak(request, callbacks)` — `onSettled` か `onUnavailable` のどちらかが
   ちょうど 1 回だけ呼ばれる。
@@ -212,7 +220,8 @@ Remote Config のキーは 2 系統あり、役割が異なる。
   （`useTTSFeatureEnabled`）。`false` のときは読み上げを行わず、設定画面のトグルも
   無効化する。フォールバックは `true`（提供する）。
 - `remote_tts_enabled_ios` / `remote_tts_enabled_android` — 読み上げエンジンの選択
-  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内蔵 TTS。
+  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内合成
+  （iOS 本体アプリは VOICEVOX を試してから端末内蔵 TTS、それ以外は端末内蔵 TTS）。
   フォールバックは iOS が `true`、Android が `false`。
 
 両者は独立しているため、次のような運用ができる。
@@ -220,8 +229,8 @@ Remote Config のキーは 2 系統あり、役割が異なる。
 - **Android でもリモート合成を使う**: `remote_tts_enabled_android` を `true` にする。
   段階的に開放したい場合はこのキーだけで切り戻せる。
 - **リモート合成のコスト・障害から退避する**: `remote_tts_enabled_*` を `false` にすると、
-  TTS 機能は維持したまま端末内蔵 TTS へ倒れる。読み上げごと止めたい場合のみ
-  `tts_enabled_*` を `false` にする。
+  TTS 機能は維持したまま端末内合成（VOICEVOX → 端末内蔵 TTS の順）へ倒れる。
+  読み上げごと止めたい場合のみ `tts_enabled_*` を `false` にする。
 
 iOS / Android 以外（web など）はリモート再生経路を持たないため、`isRemoteTTSEnabled()`
 は常に `false` を返す。
