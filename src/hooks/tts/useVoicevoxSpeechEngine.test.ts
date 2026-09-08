@@ -25,10 +25,13 @@ jest.mock('~/utils/native/ios/voicevoxTtsModule', () => ({
 
 let mockEnabled = true;
 let mockStyleId = 30;
+// 既定は 1 にして、速度設定の倍率がそのまま speedScale になる前提で検証する
+let mockSpeedScale = 1;
 const mockRemoteConfigListeners = new Set<() => void>();
 jest.mock('~/lib/remoteConfig', () => ({
   isVoicevoxTTSEnabled: () => mockEnabled,
   getVoicevoxTTSStyleId: () => mockStyleId,
+  getVoicevoxTTSSpeedScale: () => mockSpeedScale,
   subscribeRemoteConfig: (listener: () => void) => {
     mockRemoteConfigListeners.add(listener);
     return () => {
@@ -129,6 +132,7 @@ describe('useVoicevoxSpeechEngine', () => {
     mockModuleAvailable = true;
     mockEnabled = true;
     mockStyleId = 30;
+    mockSpeedScale = 1;
     mockInstalled = installedAssets;
     mockRemoteConfigListeners.clear();
     mockSetup.mockResolvedValue({ coreVersion: '0.17.0', styleIds: [29, 30] });
@@ -155,6 +159,19 @@ describe('useVoicevoxSpeechEngine', () => {
       }
     });
     expect(mockEnsureAssets).toHaveBeenCalledTimes(1);
+  });
+
+  it('Remote Config の基準倍率を速度設定の倍率に掛けて 3 桁に丸めた speedScale で合成する', async () => {
+    mockSpeedScale = 0.9;
+    const { result } = renderEngine('FAST');
+
+    result.current.speak(defaultRequest, callbacks());
+    await flushAsync();
+
+    // 1.15 × 0.9 = 1.0349999… をそのまま渡さず 1.035 にする
+    expect(mockSynthesize).toHaveBeenCalledWith(
+      expect.objectContaining({ speedScale: 1.035 })
+    );
   });
 
   it('日本語を VOICEVOX で合成して再生し、英語は委譲する', async () => {

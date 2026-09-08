@@ -47,8 +47,11 @@ Open JTalk がカタカナから読みとアクセントを推定するため、
 
 ### 速度
 
-アナウンス速度設定（`ttsSpeedPreferenceAtom`）を `VOICEVOX_SPEED_SCALES` で
-`AudioQuery.speedScale` へ写像する。倍率はリモート TTS の `REMOTE_TTS_SPEED_RATES` と同じ。
+アナウンス速度設定（`ttsSpeedPreferenceAtom`）を `VOICEVOX_SPEED_SCALES` で倍率
+（0.85 / 1.0 / 1.15。リモート TTS の `REMOTE_TTS_SPEED_RATES` と同じ）にし、Remote Config
+`voicevox_tts_speed_scale_ios` の基準倍率（既定 0.9）を掛けた値を `AudioQuery.speedScale`
+にする。No.7「アナウンス」は `speedScale` 1.0 でも Google Cloud TTS の 1.0 より速く聞こえる
+ため、基準倍率で揃える。声色を変えたときの再調整は KV の値だけで済み、再ビルドは要らない。
 ネイティブ側は `voicevox_synthesizer_tts` ではなく `create_audio_query` → `speedScale`
 書き換え → `synthesis` の 2 段で合成する。
 
@@ -233,6 +236,7 @@ Remote Config の値は変えなくてよい。
 | `voicevox_tts_enabled_ios` | boolean | `false` | VOICEVOX フォールバックの有効化 |
 | `voicevox_tts_manifest_url_ios` | string (https) | 未設定 | マニフェスト JSON の URL。未設定なら有効でも資産を取得できない |
 | `voicevox_tts_style_id_ios` | integer ≥ 0 | `30` | スタイル ID。配信した VVM に含まれる ID を指定する |
+| `voicevox_tts_speed_scale_ios` | number (0.5〜2.0) | `0.9` | 話速の基準倍率。速度設定の倍率に掛けて `speedScale` にする。範囲外はフォールバック |
 
 `remote_tts_enabled_ios` とは独立している。リモート合成を主経路のまま「フォールバック先だけ」を
 差し替える設計で、`voicevox_tts_enabled_ios` を `false` にすれば取得済みの資産があっても

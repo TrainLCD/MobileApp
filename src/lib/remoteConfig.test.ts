@@ -5,6 +5,7 @@ import {
   getEtaFallbackMaxDurationMin,
   getMaxPermitAccuracy,
   getVoicevoxTTSManifestUrl,
+  getVoicevoxTTSSpeedScale,
   getVoicevoxTTSStyleId,
   isAIAgentFeatureEnabled,
   isEtaAssistEnabled,
@@ -518,6 +519,34 @@ describe('VOICEVOX フォールバック（voicevox_tts_*_ios）', () => {
     await setupRemoteConfig();
     expect(getVoicevoxTTSStyleId()).toBe(0);
   });
+
+  it('話速の基準倍率は未配信なら 0.9 で、配信値を受理する', async () => {
+    expect(getVoicevoxTTSSpeedScale()).toBe(0.9);
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      voicevox_tts_speed_scale_ios: 0.8,
+    });
+    await setupRemoteConfig();
+    expect(getVoicevoxTTSSpeedScale()).toBe(0.8);
+  });
+
+  it.each([
+    ['範囲外(小)', 0.4],
+    ['範囲外(大)', 2.5],
+    ['0', 0],
+    ['負値', -1],
+    ['文字列', '0.9'],
+  ])(
+    '話速の基準倍率が %s のときはフォールバックする',
+    async (_label, value) => {
+      mockRemoteConfig({
+        max_permit_accuracy: 1500,
+        voicevox_tts_speed_scale_ios: value as number,
+      });
+      await setupRemoteConfig();
+      expect(getVoicevoxTTSSpeedScale()).toBe(0.9);
+    }
+  );
 });
 
 describe('isAIAgentFeatureEnabled（サーバー側キルスイッチ）', () => {

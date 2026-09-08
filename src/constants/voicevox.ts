@@ -12,9 +12,20 @@ import {
 // (https://voiceseven.com/#j0200)。ライセンス画面のクレジットと対応させること。
 export const VOICEVOX_DEFAULT_STYLE_ID = 30;
 
+// 話速の基準倍率の既定値。No.7「アナウンス」は speedScale 1.0 でも Google Cloud TTS の
+// 1.0 より速く聞こえるため、リモート TTS と同じ倍率 (VOICEVOX_SPEED_SCALES) に
+// この基準倍率を掛けて揃える。Remote Config (voicevox_tts_speed_scale_ios) で上書きできる。
+export const VOICEVOX_DEFAULT_SPEED_SCALE = 0.9;
+
+// Remote Config で受理する基準倍率の範囲。ネイティブ側 (VoicevoxTTSModule.applySpeedScale)
+// が AudioQuery.speedScale を 0.5〜2.0 に丸めるので、その範囲に収まる値だけ受け付ける。
+export const VOICEVOX_SPEED_SCALE_MIN = 0.5;
+export const VOICEVOX_SPEED_SCALE_MAX = 2.0;
+
 // アナウンス速度設定を VOICEVOX の AudioQuery.speedScale へ写像する。
 // リモート TTS の speakingRate (REMOTE_TTS_SPEED_RATES) と同じ倍率にして、
-// フォールバック時も設定どおりの速さで読ませる。
+// フォールバック時も設定どおりの速さで読ませる。実際の speedScale はこれに
+// 基準倍率 (getVoicevoxTTSSpeedScale) を掛けた値。
 export const VOICEVOX_SPEED_SCALES: Record<TTSSpeedPreference, number> = {
   [TTS_SPEED_PREFERENCE.SLOW]: 0.85,
   [TTS_SPEED_PREFERENCE.NORMAL]: 1.0,

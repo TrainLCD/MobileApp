@@ -1,6 +1,11 @@
 import { Platform } from 'react-native';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
-import { VOICEVOX_DEFAULT_STYLE_ID } from '~/constants/voicevox';
+import {
+  VOICEVOX_DEFAULT_SPEED_SCALE,
+  VOICEVOX_DEFAULT_STYLE_ID,
+  VOICEVOX_SPEED_SCALE_MAX,
+  VOICEVOX_SPEED_SCALE_MIN,
+} from '~/constants/voicevox';
 import { workerUrl } from './workerApi';
 
 // Cloudflare Worker(/config/remote) 配信の設定キー。Worker 側のレスポンスキーと一致させる。
@@ -45,6 +50,10 @@ export const REMOTE_CONFIG_KEYS = {
   // VOICEVOX のスタイル ID (話者と声色)。配信した音声モデルに含まれる ID を指定する。
   // 未配信時は VOICEVOX_DEFAULT_STYLE_ID (No.7 アナウンス)。
   VOICEVOX_TTS_STYLE_ID_IOS: 'voicevox_tts_style_id_ios',
+  // VOICEVOX の話速の基準倍率。アナウンス速度設定の倍率 (VOICEVOX_SPEED_SCALES) に掛けて
+  // AudioQuery.speedScale にする。声色ごとの素の話速の違いを再ビルドなしに吸収するためのもので、
+  // 未配信時は VOICEVOX_DEFAULT_SPEED_SCALE。
+  VOICEVOX_TTS_SPEED_SCALE_IOS: 'voicevox_tts_speed_scale_ios',
   // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
   // エントリポイントごと機能を止められるようにするキルスイッチ。
   AI_AGENT_ENABLED: 'ai_agent_enabled',
@@ -65,6 +74,7 @@ type RemoteConfigResponse = {
   voicevox_tts_enabled_ios?: boolean;
   voicevox_tts_manifest_url_ios?: string;
   voicevox_tts_style_id_ios?: number;
+  voicevox_tts_speed_scale_ios?: number;
   ai_agent_enabled?: boolean;
 };
 
@@ -120,6 +130,20 @@ const parseHttpsUrl = (value: unknown): string | null => {
   return trimmed;
 };
 
+// 話速の基準倍率はネイティブ側が丸める範囲 (0.5〜2.0) に収まる有限の数値のみ受理する。
+// 範囲外は「設定ミス」とみなしてフォールバックへ倒し、極端な速さで読ませない。
+const parseSpeedScale = (value: unknown): number | null => {
+  const parsed = parsePositiveFiniteNumber(value);
+  if (
+    parsed == null ||
+    parsed < VOICEVOX_SPEED_SCALE_MIN ||
+    parsed > VOICEVOX_SPEED_SCALE_MAX
+  ) {
+    return null;
+  }
+  return parsed;
+};
+
 // スタイル ID は 0 以上の整数のみ受理する(0 は四国めたん あまあま)。
 const parseNonNegativeInteger = (value: unknown): number | null => {
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
@@ -144,6 +168,7 @@ let cachedAIAgentEnabled: boolean | null = null;
 let cachedVoicevoxTTSEnabledIOS: boolean | null = null;
 let cachedVoicevoxTTSManifestUrlIOS: string | null = null;
 let cachedVoicevoxTTSStyleIdIOS: number | null = null;
+let cachedVoicevoxTTSSpeedScaleIOS: number | null = null;
 
 // setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
 // 更新されても React は再レンダーしない。UI(FxTTS・設定画面)が useSyncExternalStore
@@ -179,6 +204,7 @@ export const resetRemoteConfigCache = (): void => {
   cachedVoicevoxTTSEnabledIOS = null;
   cachedVoicevoxTTSManifestUrlIOS = null;
   cachedVoicevoxTTSStyleIdIOS = null;
+  cachedVoicevoxTTSSpeedScaleIOS = null;
   notifyRemoteConfigListeners();
 };
 
@@ -241,6 +267,10 @@ export const setupRemoteConfig = async (): Promise<void> => {
   const styleId = parseNonNegativeInteger(data.voicevox_tts_style_id_ios);
   if (styleId != null) {
     cachedVoicevoxTTSStyleIdIOS = styleId;
+  }
+  const speedScale = parseSpeedScale(data.voicevox_tts_speed_scale_ios);
+  if (speedScale != null) {
+    cachedVoicevoxTTSSpeedScaleIOS = speedScale;
   }
   notifyRemoteConfigListeners();
 };
@@ -375,3 +405,10 @@ export const getVoicevoxTTSManifestUrl = (): string | null =>
  */
 export const getVoicevoxTTSStyleId = (): number =>
   cachedVoicevoxTTSStyleIdIOS ?? VOICEVOX_DEFAULT_STYLE_ID;
+
+/**
+ * VOICEVOX の話速の基準倍率。アナウンス速度設定の倍率に掛けて AudioQuery.speedScale にする。
+ * 未配信・不正値(0.5〜2.0 の範囲外)ならフォールバック(VOICEVOX_DEFAULT_SPEED_SCALE)。
+ */
+export const getVoicevoxTTSSpeedScale = (): number =>
+  cachedVoicevoxTTSSpeedScaleIOS ?? VOICEVOX_DEFAULT_SPEED_SCALE;

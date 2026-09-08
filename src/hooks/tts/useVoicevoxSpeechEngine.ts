@@ -6,6 +6,7 @@ import {
   VOICEVOX_SPEED_SCALES,
 } from '~/constants/voicevox';
 import {
+  getVoicevoxTTSSpeedScale,
   getVoicevoxTTSStyleId,
   isVoicevoxTTSEnabled,
   subscribeRemoteConfig,
@@ -184,7 +185,14 @@ export const useVoicevoxSpeechEngine = (
           await module.synthesize({
             text,
             styleId: getVoicevoxTTSStyleId(),
-            speedScale: VOICEVOX_SPEED_SCALES[speedRef.current],
+            // 速度設定の倍率 × Remote Config の基準倍率。浮動小数の端数 (1.15 × 0.9 =
+            // 1.0349999…) がそのまま AudioQuery に載らないよう 3 桁に丸める
+            speedScale:
+              Math.round(
+                VOICEVOX_SPEED_SCALES[speedRef.current] *
+                  getVoicevoxTTSSpeedScale() *
+                  1000
+              ) / 1000,
             outputPath: fileUriToPath(file.uri),
           });
         } catch (e) {
