@@ -208,7 +208,7 @@ export const setLocation = (location: Location.LocationObject) => {
   // スムージングせず生の座標へスナップして基準を張り直す。長く途切れたあとに
   // EMAで混ぜると新しい測位のα割しか反映されず、残った遅れが次回の変位へ乗って
   // 再棄却…という復帰不能ループの原因になる。
-  if (location.timestamp - rawPrev.timestamp > STALE_REFERENCE_MS) {
+  if (location.timestamp - rawPrev.timestamp >= STALE_REFERENCE_MS) {
     resyncLocationReference(location, updatedHistory);
     return;
   }

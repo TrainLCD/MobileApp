@@ -301,6 +301,18 @@ describe('高速走行時の追従', () => {
     expect(store.get(locationAtom)?.coords.latitude).toBeCloseTo(resumedLat, 6);
   });
 
+  // 回帰: STALE_REFERENCE_MS は「これ以上古い」基準なので、境界値ちょうどでも
+  // スナップする（比較が > だと境界でEMAが掛かり生座標へ張り付かない）
+  it('途切れがSTALE_REFERENCE_MSちょうど(30秒)でも生座標へスナップする', () => {
+    setLocation(makeLocation(38.9, 140.9, 30, 1_000));
+
+    // ちょうど30秒後、速度としては妥当な範囲(約1.6km先 ≒ 53m/s)で測位が再開する
+    const resumedLat = 38.9 - 1_600 / METERS_PER_DEG_LAT;
+    setLocation(makeLocation(resumedLat, 140.9, 100, 1_000 + 30_000));
+
+    expect(store.get(locationAtom)?.coords.latitude).toBeCloseTo(resumedLat, 9);
+  });
+
   it('連続棄却が上限に達したら基準を張り直して凍結から復帰する', () => {
     setLocation(makeLocation(38.9, 140.9, 30, 1_000));
 
