@@ -70,7 +70,7 @@ npm run gpx:generate -- \
 経路上の 8 駅すべてに `ARRIVED_MAX_THRESHOLD` (200m) 以内まで接近するので、
 各駅の到着判定・通過判定をそのまま観測できる。
 
-## シミュレータで再生する
+## iOS シミュレータで再生する
 
 1. Xcode でワークスペースを開く。
 1. メニューの Debug > Simulate Location > Add GPX File to Workspace… で GPX を選ぶ。
@@ -78,15 +78,45 @@ npm run gpx:generate -- \
 
 Xcode は `<time>` の間隔どおりに測位を配信するので、GPX 側で速度を制御できる。
 
+## Android 実機・エミュレータで再生する
+
+`scripts/replay-location-gpx.mjs` が GPX を Android のテストプロバイダへ流し込む。
+`adb shell cmd location providers` を使うので、実機でも仮の現在地アプリを別途
+入れる必要はない。手順の全体は `.claude/skills/replay-gpx/SKILL.md` にある。
+
+```bash
+npm run gpx:replay -- --gpx ios/SampleTohokuShinkansen.gpx --serial <serial>
+```
+
+主なオプションは次のとおり。`--help` で全件を表示できる。
+
+| オプション | 説明 |
+| ---- | ---- |
+| `--gpx` | 再生する GPX (必須) |
+| `--serial` | adb シリアル。接続が 1 台だけなら省略可 |
+| `--speed` | 再生倍率。既定 `1` |
+| `--accuracy` | 水平精度 (m)。既定 `8`。カンマ区切りで区間ごとに巡回 |
+| `--start` | GPX 先頭からのスキップ秒数 |
+| `--provider` | テストプロバイダ名。既定 `gps,network,fused` |
+
+Xcode と違い精度を指定できるので、`--accuracy 100,300` のように渡せば
+`getSmoothingAlpha` の低精度分岐も実機で観測できる。一方で `coords.speed` を
+渡す手段が無いため、DEV OVERLAY の `CURRENT SPEED` は常に 0km/h を表示する。
+
+`MAX_PLAUSIBLE_SPEED` は 100m/s (360km/h) なので、320km/h の GPX を `--speed 2`
+以上で流すと速度フィルタが全点を棄却して現在地が凍る。倍速で見たいときは
+`--max-speed` を下げた GPX を作り直す。
+
 ## 検証できること・できないこと
 
-| 条件 | GPX | 実乗車 |
-| ---- | ---- | ---- |
-| 320km/h・精度良好 (α=0.8、実効しきい値 288km/h) | ✅ | ✅ |
-| 精度 100m / 300m (α=0.6 / 0.3) | ❌ シミュレータは常に良好な精度を返す | ✅ |
-| トンネルでの測位途絶からの復帰 | ❌ | ✅ |
-| 車体による GPS 減衰 | ❌ | ✅ |
+| 条件 | GPX (iOS シミュレータ) | GPX (Android) | 実乗車 |
+| ---- | ---- | ---- | ---- |
+| 320km/h・精度良好 (α=0.8、実効しきい値 288km/h) | ✅ | ✅ | ✅ |
+| 精度 100m / 300m (α=0.6 / 0.3) | ❌ 常に良好な精度を返す | ✅ `--accuracy` で指定 | ✅ |
+| トンネルでの測位途絶からの復帰 | ❌ | ❌ | ✅ |
+| 車体による GPS 減衰 | ❌ | ❌ | ✅ |
+| `coords.speed` を使う表示 | ✅ | ❌ 常に 0 | ✅ |
 
-精度を落とした状態や測位途絶の挙動は GPX では再現できない。
+測位途絶や車体による減衰は GPX では再現できない。
 これらは `src/store/atoms/location.test.ts` のユニットテストで代替するか、
 dev ビルドの `DevOverlay` (精度履歴・生座標を表示) を出したまま実際に乗車して確認する。
