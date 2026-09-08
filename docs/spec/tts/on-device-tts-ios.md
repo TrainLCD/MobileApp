@@ -185,16 +185,22 @@ VVM が 55〜63MB。
 
 配信先が Cloudflare R2（バケット `trainlcd-assets`、独自ドメイン `assets.trainlcd.app`）なら、
 バケット作成・ドメイン紐付け・アップロード・マニフェスト生成と配置・到達確認を
-`scripts/publish-voicevox-assets.mjs` が一括で行う。何度実行しても同じ結果になる。
+`scripts/publish-voicevox-assets.mjs` が一括で行う。Cloudflare API を `curl` で直接呼ぶだけなので
+wrangler のインストールは不要で、何度実行しても同じ結果になる。
 
 ```bash
-CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… CLOUDFLARE_ZONE_ID=… \
-  node scripts/publish-voicevox-assets.mjs "$WORK/2026-09-08" 2026-09-08
+# 手元の Mac で実行する場合。トークンはシェルの環境変数で渡す
+export CLOUDFLARE_ACCOUNT_ID=… CLOUDFLARE_ZONE_ID=… CLOUDFLARE_API_TOKEN=…
+node scripts/publish-voicevox-assets.mjs "$WORK/2026-09-08" 2026-09-08
 # → Remote Config: voicevox_tts_manifest_url_ios = https://assets.trainlcd.app/voicevox/manifest.json
 ```
 
 トークンに必要な権限は「Workers R2 Storage: Edit」と、`trainlcd.app` ゾーンの「DNS: Edit」
 （独自ドメインの紐付けが DNS レコードを作る）だけでよい。作業後は失効させて構わない。
+Claude Code のクラウド環境から実行する場合は、トークンを環境変数に入れず、環境設定の
+「API credentials」に `api.cloudflare.com` 向けの Bearer トークンとして登録する（プロキシが
+Authorization ヘッダーを付けるので、セッションからはトークンが見えない）。アカウント ID と
+ゾーン ID は秘密ではないので環境変数でよい。
 マニフェストは `voicevox/manifest.json` の固定 URL に 5 分キャッシュで置くので、資産を差し替えても
 Remote Config の値は変えなくてよい。
 
