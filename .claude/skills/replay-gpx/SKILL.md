@@ -65,11 +65,11 @@ npm run gpx:replay -- --gpx ios/SampleTohokuShinkansen.gpx --serial <serial>
 
 | オプション | 説明 |
 | ---- | ---- |
-| `--gpx <path>` | 再生する GPX (必須) |
+| `--gpx <path>` | 再生する GPX (必須)。`<wpt>` と `<trkpt>` のどちらでも読む |
 | `--serial <serial>` | adb シリアル。接続が 1 台だけなら省略可 |
 | `--speed <n>` | 再生倍率。既定 1 |
 | `--accuracy <m>` | 水平精度 (m)。既定 8。カンマ区切りで区間ごとに巡回 |
-| `--start <sec>` | GPX 先頭からのスキップ秒数 |
+| `--start <sec>` | GPX 先頭からのスキップ秒数。`--loop` 時は初回の再生にだけ効く |
 | `--provider <names>` | テストプロバイダ名。既定 `gps,network,fused` |
 | `--loop` | 終端で先頭に戻る |
 | `--keep` | 終了時にテストプロバイダを残す |
@@ -86,7 +86,8 @@ screenshot udid=<serial> scale=0.35
 ### 5. 後始末
 
 `Ctrl+C` (または `SIGTERM`) でテストプロバイダと `mock_location` の appop を元に戻す。
-`kill -9` すると後始末が走らないので、その場合は手動で戻す。
+1 回目のシグナルは停止を要求するだけで、進行中の投入が終わってから後始末が 1 回だけ走る。
+**2 回目を送るか `kill -9` すると後始末を待たずに落ちる**ので、その場合は下を手動で実行する。
 
 ```bash
 adb -s <serial> shell cmd location providers remove-test-provider gps
@@ -112,6 +113,8 @@ adb -s <serial> shell appops set 2000 android:mock_location default
 - **`CURRENT SPEED` は常に 0km/h になる。** `cmd location providers` に速度を渡す
   引数が無く、`coords.speed` が埋まらないため。アプリ内の速度フィルタは座標差分から
   算出するので影響しないが、DEV OVERLAY の速度表示は当てにならない。
+- **中断は 1 回で待つ。** 2 回目の `Ctrl+C` は後始末を飛ばすため、テストプロバイダと
+  `mock_location` の appop が端末に残る。私物端末では特に、1 回で待って後始末を通す。
 - **ユーザーの私物端末では MMKV を書き換えない。** テーマやウォークスルーの状態を
   変更する検証は避ける。
 
