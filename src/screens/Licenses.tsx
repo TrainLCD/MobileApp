@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -35,6 +36,7 @@ type LicenseId =
   | 'tokyu_bus'
   | 'hakodate_city'
   | 'roboto'
+  | 'voicevox_no7'
   | 'other_oss';
 
 type LicenseItem = {
@@ -43,6 +45,9 @@ type LicenseItem = {
   icon: string;
   href: string;
   devOnly: boolean;
+  // iOS 本体アプリだけが使う素材 (VOICEVOX など) のクレジット。App Clip も
+  // Platform.OS は 'ios' だがネイティブモジュールを持たないため対象外
+  iosOnly?: boolean;
 } & (
   | { license?: undefined; licenseUrl?: undefined }
   | { license: string; licenseUrl: string }
@@ -143,6 +148,10 @@ const ListFooter = ({
 const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/';
 const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 const MIT_URL = 'https://opensource.org/licenses/MIT';
+// VOICEVOX 音声ライブラリ「No.7」の利用規約。iOS のオンデバイス TTS フォールバック
+// (docs/spec/tts/on-device-tts-ios.md) で使う音声で、クレジット表記が利用条件
+const VOICEVOX_URL = 'https://voicevox.hiroshiba.jp/';
+const VOICEVOX_NO7_TERMS_URL = 'https://voiceseven.com/#j0200';
 const ODPT_BASIC_LICENSE_URL =
   'https://developer.odpt.org/terms/data_basic_license.html';
 // 公共交通オープンデータセンターのGTFSデータ利用規約 (ckan.odpt.org の函館市電データセットが指定するライセンス)
@@ -282,6 +291,17 @@ const Licenses: React.FC = () => {
             devOnly: false,
           },
           {
+            // クレジット表記「VOICEVOX:No.7」は規約で定められた文言のため翻訳しない
+            id: 'voicevox_no7',
+            title: 'VOICEVOX:No.7',
+            icon: '🗣️',
+            href: VOICEVOX_URL,
+            license: translate('voicevoxNo7Terms'),
+            licenseUrl: VOICEVOX_NO7_TERMS_URL,
+            devOnly: false,
+            iosOnly: true,
+          },
+          {
             id: 'other_oss',
             title: translate('otherOss'),
             icon: '📦',
@@ -291,7 +311,12 @@ const Licenses: React.FC = () => {
             devOnly: false,
           },
         ] as const
-      ).filter((it) => (isDevApp ? true : !it.devOnly)),
+      ).filter(
+        (it) =>
+          (isDevApp ? true : !it.devOnly) &&
+          (!('iosOnly' in it && it.iosOnly) ||
+            (Platform.OS === 'ios' && !isClip()))
+      ),
     []
   );
 

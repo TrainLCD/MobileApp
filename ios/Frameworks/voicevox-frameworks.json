@@ -1,0 +1,17 @@
+{
+  "//": "iOS 本体アプリにだけ埋め込む VOICEVOX CORE の動的フレームワーク。scripts/fetch-voicevox-frameworks.mjs がこの定義どおりに取得・検証し、同じディレクトリへ展開する（展開物は .gitignore 済み）。バージョンを上げるときは url と sha256 を両方更新すること。",
+  "frameworks": [
+    {
+      "name": "voicevox_core",
+      "version": "0.17.0",
+      "url": "https://github.com/VOICEVOX/voicevox_core/releases/download/0.17.0/voicevox_core-xcframework-0.17.0.zip",
+      "sha256": "e634b0fd7e09924a4c9c4f6e8b5c0da0790a7649d89f289cbcad1b97976212be"
+    },
+    {
+      "name": "voicevox_onnxruntime",
+      "version": "1.23.2",
+      "url": "https://github.com/VOICEVOX/onnxruntime-builder/releases/download/voicevox_onnxruntime-1.23.2/voicevox_onnxruntime-ios-xcframework-1.23.2.zip",
+      "sha256": "c9c33b2653125441d6a2475194ed7971a908687c0d99d8944337b0ca85ea646d"
+    }
+  ]
+}

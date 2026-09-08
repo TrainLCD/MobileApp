@@ -20,3 +20,4 @@ export * from './theme';
 export * from './threshold';
 export * from './tts';
 export * from './url';
+export * from './voicevox';
