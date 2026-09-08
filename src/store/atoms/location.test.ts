@@ -190,3 +190,134 @@ describe('setLocation', () => {
     });
   });
 });
+
+// 東北新幹線の一ノ関〜仙台に相当する南北方向の直線を走らせる。
+// 緯度1度 ≒ 111,320m として、速度から1サンプルあたりの緯度差を求める。
+const METERS_PER_DEG_LAT = 111_320;
+
+const runConstantSpeed = ({
+  speedKmh,
+  accuracy,
+  sampleIntervalMs,
+  samples,
+  startLat = 38.9,
+  startTimestamp = 1_000,
+}: {
+  speedKmh: number;
+  accuracy: number;
+  sampleIntervalMs: number;
+  samples: number;
+  startLat?: number;
+  startTimestamp?: number;
+}) => {
+  const degPerSample =
+    ((speedKmh / 3.6) * (sampleIntervalMs / 1000)) / METERS_PER_DEG_LAT;
+
+  let maxLagMeters = 0;
+  let lastLagMeters = 0;
+  for (let i = 0; i < samples; i++) {
+    const trueLat = startLat - degPerSample * i;
+    setLocation(
+      makeLocation(
+        trueLat,
+        140.9,
+        accuracy,
+        startTimestamp + sampleIntervalMs * i
+      )
+    );
+    const shownLat = store.get(locationAtom)?.coords.latitude ?? trueLat;
+    lastLagMeters = Math.abs(shownLat - trueLat) * METERS_PER_DEG_LAT;
+    maxLagMeters = Math.max(maxLagMeters, lastLagMeters);
+  }
+  return { maxLagMeters, lastLagMeters };
+};
+
+// 定速走行時にEMAが構造的に持つ追従遅れ ((1-α)/α)·v·dt。
+// 速度フィルタが正常に受理し続けている限り、ズレはこの値付近で頭打ちになる。
+// 逆にこれを大きく超える場合は棄却ループで位置が凍結していることを意味する。
+const expectedEmaLagMeters = (
+  speedKmh: number,
+  alpha: number,
+  sampleIntervalMs: number
+) => ((1 - alpha) / alpha) * (speedKmh / 3.6) * (sampleIntervalMs / 1000);
+
+describe('高速走行時の追従', () => {
+  beforeEach(() => {
+    resetLocationState();
+    setStationLineType(LineType.Normal);
+  });
+
+  // 回帰: 速度フィルタの基準にEMA後の座標を使うと、EMAの追従遅れが変位へ上乗せされ
+  // 算出速度が実速度の1/α倍に膨らむ。実効しきい値がα×360km/hまで下がり、
+  // 新幹線の320km/h走行が丸ごと棄却されて位置が数十km手前で凍結していた。
+  it.each([
+    // alphaはgetSmoothingAlphaの区分に対応する
+    { accuracy: 30, alpha: 0.8, label: '精度良好' },
+    { accuracy: 100, alpha: 0.6, label: '精度中' },
+    { accuracy: 300, alpha: 0.3, label: '精度不良' },
+  ])(
+    '320km/hで5分走り続けても位置が凍結しない（$label）',
+    ({ accuracy, alpha }) => {
+      const speedKmh = 320;
+      const sampleIntervalMs = 1000;
+      const { maxLagMeters, lastLagMeters } = runConstantSpeed({
+        speedKmh,
+        accuracy,
+        sampleIntervalMs,
+        samples: 300,
+      });
+
+      // 修正前はこの条件で98%以上の測位が棄却され、5分間で10km以上ズレていた。
+      // ズレがEMA固有の追従遅れの範囲に収まっていれば受理し続けられている。
+      const emaLag = expectedEmaLagMeters(speedKmh, alpha, sampleIntervalMs);
+      expect(maxLagMeters).toBeLessThan(emaLag * 1.1);
+      // 時間が経ってもズレが増えない（凍結して開き続けない）こと
+      expect(lastLagMeters).toBeLessThan(emaLag * 1.1);
+    }
+  );
+
+  it('130km/hの在来線速度でも追従する', () => {
+    const { maxLagMeters } = runConstantSpeed({
+      speedKmh: 130,
+      accuracy: 100,
+      sampleIntervalMs: 1000,
+      samples: 300,
+    });
+
+    // 到着判定圏(ARRIVED_MAX_THRESHOLD=200m)に十分収まること
+    expect(maxLagMeters).toBeLessThan(50);
+  });
+
+  // 回帰: 測位が長時間途切れたあとEMAで混ぜると新しい測位のα割しか反映されず、
+  // 残った遅れが次の変位へ乗って再棄却され、復帰できなくなっていた。
+  it('測位が30分途切れたあと最初の測位で現在地へ復帰する', () => {
+    setLocation(makeLocation(38.9, 140.9, 30, 1_000));
+
+    // 30分後、約160km南下した地点で測位が再開する
+    const resumedLat = 38.9 - 160_000 / METERS_PER_DEG_LAT;
+    setLocation(makeLocation(resumedLat, 140.9, 100, 1_000 + 30 * 60 * 1000));
+
+    // スムージングを挟まず生の座標へスナップすること
+    expect(store.get(locationAtom)?.coords.latitude).toBeCloseTo(resumedLat, 6);
+  });
+
+  it('連続棄却が上限に達したら基準を張り直して凍結から復帰する', () => {
+    setLocation(makeLocation(38.9, 140.9, 30, 1_000));
+
+    // 1秒間隔で物理的にありえない距離のジャンプを送り続ける
+    const jumpLat = 36.0;
+    for (let i = 1; i <= 5; i++) {
+      setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + i * 1000));
+    }
+
+    // 5回目(MAX_CONSECUTIVE_SPEED_REJECTIONS)で基準を張り直し、座標が反映される
+    expect(store.get(locationAtom)?.coords.latitude).toBe(jumpLat);
+  });
+
+  it('単発のジャンプは従来どおり棄却する', () => {
+    setLocation(makeLocation(38.9, 140.9, 30, 1_000));
+    setLocation(makeLocation(36.0, 140.9, 30, 2_000));
+
+    expect(store.get(locationAtom)?.coords.latitude).toBe(38.9);
+  });
+});
