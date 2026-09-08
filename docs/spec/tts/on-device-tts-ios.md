@@ -87,14 +87,24 @@ VOICEVOX CORE の C API はスレッドセーフを保証していないため�
 （voicevox_core Issue #715）問題は現行の配布物では起きない。バージョンを上げるときは JSON の
 `url` と `sha256` を両方更新すること。
 
-`voicevox_onnxruntime` 1.23.2 の iOS スライスは `CFBundleIdentifier` が
-`jp.hiroshiba.voicevox.voicevox_onnxruntime` とアンダースコアを含んでおり、Apple の規則
-（英数字・ハイフン・ピリオドのみ）に反するため Xcode の archive 時検証で
-`had an invalid CFBundleIdentifier in its Info.plist` として失敗する。取得スクリプトは展開後に
-各スライスの `Info.plist` を走査してアンダースコアをハイフンへ置き換える（`voicevox_core` は
-元から `voicevox-core` なので対象外）。配布物は未署名で Xcode が埋め込み時に署名し直すため、
-この書き換えで署名は壊れない。取得を省略した場合も毎回走る冪等な処理なので、展開済みの
-ローカル環境でも `npm run ios:frameworks` を一度実行すれば反映される。
+`voicevox_onnxruntime` 1.23.2 の配布物はそのまま埋め込むと App Store 向けの検証に 2 段階で
+弾かれるため、取得スクリプトが展開後に次の 2 つを補正する。取得を省略した場合も毎回走る冪等な
+処理なので、展開済みのローカル環境でも `npm run ios:frameworks` を一度実行すれば反映される。
+
+1. **`CFBundleIdentifier` の正規化**: iOS スライスの識別子が
+   `jp.hiroshiba.voicevox.voicevox_onnxruntime` とアンダースコアを含んでおり、Apple の規則
+   （英数字・ハイフン・ピリオドのみ）に反するため Xcode の archive 時検証で
+   `had an invalid CFBundleIdentifier in its Info.plist` として失敗する。各スライスの
+   `Info.plist` を走査してアンダースコアをハイフンへ置き換える（`voicevox_core` は元から
+   `voicevox-core` なので対象外）。
+1. **ad-hoc での署名し直し**: `voicevox_onnxruntime` のバイナリには識別子
+   `libvoicevox_onnxruntime.1` の ad-hoc 署名が埋め込まれている。Xcode は埋め込み時に
+   `--preserve-metadata=identifier` で既存の識別子を引き継ぐため、App Store Connect への
+   アップロードが `Invalid Code Signature Identifier ... must match its Bundle Identifier` で
+   失敗する。`codesign --force --sign - --identifier <CFBundleIdentifier>` で各スライスの
+   framework を署名し直し、識別子をバンドル識別子に揃える（未署名の `voicevox_core` は Xcode が
+   `CFBundleIdentifier` から識別子を導出するので元々問題無いが、配布物の署名状態に依存しないよう
+   一律に署名し直す）。`codesign` は macOS にしか無いので、それ以外の環境では省略する。
 
 ### App Clip には含めない
 

@@ -57,11 +57,29 @@ const setupFrameworksDir = ({ name, version, identifiers }) => {
   return { dir, xcframework, slicePlists };
 };
 
-const runScript = (frameworksDir) =>
+// VOICEVOX_CODESIGN を空にして署名し直しを省略する（テスト用の framework にはバイナリが無く、
+// macOS 上で本物の codesign を呼ぶと失敗する）。署名し直しの検証は fakeCodesign で行う
+const runScript = (frameworksDir, { codesign = '' } = {}) =>
   execFileSync(process.execPath, [scriptPath], {
     encoding: 'utf8',
-    env: { ...process.env, VOICEVOX_FRAMEWORKS_DIR: frameworksDir },
+    env: {
+      ...process.env,
+      VOICEVOX_FRAMEWORKS_DIR: frameworksDir,
+      VOICEVOX_CODESIGN: codesign,
+    },
   });
+
+// 受け取った引数を 1 呼び出し 1 行で記録するだけの偽 codesign
+const fakeCodesign = (dir) => {
+  const logPath = path.join(dir, 'codesign.log');
+  const scriptPath = path.join(dir, 'codesign');
+  fs.writeFileSync(
+    scriptPath,
+    `#!/bin/sh\nprintf '%s\\n' "$*" >> "${logPath}"\n`,
+    { mode: 0o755 }
+  );
+  return { scriptPath, logPath };
+};
 
 const readIdentifier = (plistPath) =>
   fs
@@ -129,6 +147,47 @@ describe('fetch-voicevox-frameworks', () => {
       'jp.hiroshiba.voicevox.voicevox-core'
     );
     expect(fs.statSync(plistPath).mtimeMs).toBe(before);
+  });
+
+  it('各スライスの framework を CFBundleIdentifier を識別子にして ad-hoc で署名し直す', () => {
+    const { dir, xcframework } = setupFrameworksDir({
+      name: 'voicevox_onnxruntime',
+      version: '1.23.2',
+      identifiers: {
+        'ios-arm64': 'jp.hiroshiba.voicevox.voicevox_onnxruntime',
+        'ios-arm64_x86_64-simulator':
+          'jp.hiroshiba.voicevox.voicevox_onnxruntime',
+      },
+    });
+    tempDirs.push(dir);
+    const codesign = fakeCodesign(dir);
+
+    const stdout = runScript(dir, { codesign: codesign.scriptPath });
+
+    const calls = fs.readFileSync(codesign.logPath, 'utf8').trim().split('\n');
+    expect(calls.sort()).toEqual(
+      [
+        `--force --sign - --identifier jp.hiroshiba.voicevox.voicevox-onnxruntime ${path.join(xcframework, 'ios-arm64', 'voicevox_onnxruntime.framework')}`,
+        `--force --sign - --identifier jp.hiroshiba.voicevox.voicevox-onnxruntime ${path.join(xcframework, 'ios-arm64_x86_64-simulator', 'voicevox_onnxruntime.framework')}`,
+      ].sort()
+    );
+    expect(stdout).toContain(
+      'with identifier jp.hiroshiba.voicevox.voicevox-onnxruntime'
+    );
+    expect(stdout).not.toContain('skipped re-signing');
+  });
+
+  it('codesign が無い環境では署名し直しを省略して続行する', () => {
+    const { dir } = setupFrameworksDir({
+      name: 'voicevox_core',
+      version: '0.17.0',
+      identifiers: { 'ios-arm64': 'jp.hiroshiba.voicevox.voicevox-core' },
+    });
+    tempDirs.push(dir);
+
+    const stdout = runScript(dir, { codesign: '' });
+
+    expect(stdout).toContain('skipped re-signing voicevox_core');
   });
 
   it('バイナリ plist は黙って素通しせずエラーにする', () => {
