@@ -34,3 +34,7 @@ export const VOICEVOX_MANIFEST_FETCH_TIMEOUT_MS = 15_000;
 // 資産の取得に失敗したあと、次に再試行するまでの最短間隔(ミリ秒)。
 // 圏外で毎回の放送ごとにマニフェスト取得を試みて電池を消費しないようにする。
 export const VOICEVOX_ASSET_RETRY_INTERVAL_MS = 5 * 60_000;
+
+// 同意ダイアログに出す資産サイズの目安 (MB)。実サイズはマニフェスト取得後に分かるため、
+// ダイアログでは概算だけを示す (Open JTalk 辞書 約 107MB + VVM 約 55MB)。
+export const VOICEVOX_ASSET_APPROX_MB = 160;

@@ -1,10 +1,16 @@
 import { STORAGE_KEYS } from '~/constants/storage';
 import { storage } from '~/lib/storage';
 import {
+  cancelVoicevoxAssetsDownload,
+  deleteVoicevoxAssets,
   ensureVoicevoxAssets,
   fileUriToPath,
   getInstalledVoicevoxAssets,
+  getVoicevoxAssetsStatus,
+  hasVoicevoxDownloadConsent,
+  requestVoicevoxAssetsDownload,
   resetVoicevoxAssetsStateForTest,
+  subscribeVoicevoxAssets,
 } from './assets';
 
 // --- expo-file-system をインメモリで模倣する -------------------------------
@@ -26,7 +32,9 @@ jest.mock('expo-file-system', () => {
       return this.uri.split('/').filter(Boolean).pop() ?? '';
     }
     get exists() {
-      return true;
+      return [...mockFiles.keys()].some((key) =>
+        key.startsWith(`${this.uri}/`)
+      );
     }
     create() {}
     delete() {
@@ -68,8 +76,11 @@ jest.mock('expo-file-system', () => {
     delete() {
       mockFiles.delete(this.uri);
     }
-    static downloadFileAsync = (url: string, destination: MockFile) =>
-      mockDownload(url, destination);
+    static downloadFileAsync = (
+      url: string,
+      destination: MockFile,
+      options?: unknown
+    ) => mockDownload(url, destination, options);
   }
   return {
     Paths: { document: new MockDirectory('file:///docs') },
@@ -81,6 +92,7 @@ jest.mock('expo-file-system', () => {
 // --- ネイティブモジュール ------------------------------------------------------
 const mockSha256 = jest.fn();
 const mockSetExcludedFromBackup = jest.fn();
+const mockRelease = jest.fn(async () => undefined);
 let mockModuleAvailable = true;
 jest.mock('~/utils/native/ios/voicevoxTtsModule', () => ({
   getVoicevoxTtsModule: () =>
@@ -89,14 +101,17 @@ jest.mock('~/utils/native/ios/voicevoxTtsModule', () => ({
           sha256: (path: string) => mockSha256(path),
           setExcludedFromBackup: (path: string) =>
             mockSetExcludedFromBackup(path),
+          release: () => mockRelease(),
         }
       : null,
 }));
 
 // --- Remote Config / fetch ----------------------------------------------------
 let mockManifestUrl: string | null = 'https://cfg.example.com/manifest.json';
+let mockEnabled = true;
 jest.mock('~/lib/remoteConfig', () => ({
   getVoicevoxTTSManifestUrl: () => mockManifestUrl,
+  isVoicevoxTTSEnabled: () => mockEnabled,
 }));
 
 const mockFetch = jest.fn();
@@ -143,8 +158,11 @@ describe('voicevox/assets', () => {
     jest.clearAllMocks();
     mockFiles.clear();
     storage.remove(STORAGE_KEYS.VOICEVOX_ASSETS);
+    // 既定は同意済みとして、取得の流れ自体を検証する。同意ゲートは個別に検証する
+    storage.set(STORAGE_KEYS.VOICEVOX_DOWNLOAD_CONSENTED, 'true');
     resetVoicevoxAssetsStateForTest();
     mockModuleAvailable = true;
+    mockEnabled = true;
     mockManifestUrl = 'https://cfg.example.com/manifest.json';
     // ダウンロードは宛先にマニフェストどおりのサイズのファイルを作る
     mockDownload.mockImplementation(
@@ -177,6 +195,7 @@ describe('voicevox/assets', () => {
       version: 'v1',
       openJtalkDicDir: '/docs/voicevox/v1/dic',
       voiceModelPaths: ['/docs/voicevox/v1/6.vvm'],
+      totalBytes: 150,
     });
     expect(mockDownload).toHaveBeenCalledTimes(2);
     expect(mockSha256).toHaveBeenCalledWith('/docs/voicevox/v1/dic/sys.dic');
@@ -220,6 +239,7 @@ describe('voicevox/assets', () => {
       version: 'v1',
       openJtalkDicDir: '/docs/voicevox/v1/dic',
       voiceModelPaths: ['/docs/voicevox/v1/6.vvm'],
+      totalBytes: 150,
     });
     expect(mockSha256).not.toHaveBeenCalled();
   });
@@ -302,5 +322,161 @@ describe('voicevox/assets', () => {
     mockManifestResponse({ ...manifest, files: [] });
     expect(await ensureVoicevoxAssets()).toBeNull();
     expect(mockDownload).not.toHaveBeenCalled();
+  });
+  describe('同意ゲート', () => {
+    it('未同意なら ensureVoicevoxAssets は何もしない', async () => {
+      storage.remove(STORAGE_KEYS.VOICEVOX_DOWNLOAD_CONSENTED);
+
+      expect(await ensureVoicevoxAssets()).toBeNull();
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(getVoicevoxAssetsStatus().phase).toBe('not_downloaded');
+    });
+
+    it('requestVoicevoxAssetsDownload は同意を記録して直ちに取得する', async () => {
+      storage.remove(STORAGE_KEYS.VOICEVOX_DOWNLOAD_CONSENTED);
+      mockManifestResponse(manifest);
+
+      const result = await requestVoicevoxAssetsDownload();
+
+      expect(result?.version).toBe('v1');
+      expect(hasVoicevoxDownloadConsent()).toBe(true);
+    });
+
+    it('失敗直後でも requestVoicevoxAssetsDownload は待機せず再試行する', async () => {
+      mockManifestResponse({}, false);
+      expect(await ensureVoicevoxAssets()).toBeNull();
+      expect(getVoicevoxAssetsStatus()).toMatchObject({
+        phase: 'error',
+        errorMessage: 'manifest fetch failed: 500',
+      });
+
+      mockManifestResponse(manifest);
+      expect((await requestVoicevoxAssetsDownload())?.version).toBe('v1');
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('Remote Config で無効なら取得しない', async () => {
+      mockEnabled = false;
+      expect(await ensureVoicevoxAssets()).toBeNull();
+      expect(await requestVoicevoxAssetsDownload()).toBeNull();
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(getVoicevoxAssetsStatus().phase).toBe('unsupported');
+    });
+  });
+
+  describe('進捗と状態', () => {
+    it('取得中はファイルごとの進捗を合計バイト数に対して通知する', async () => {
+      const seen: Array<[string, number, number]> = [];
+      subscribeVoicevoxAssets(() => {
+        const status = getVoicevoxAssetsStatus();
+        seen.push([status.phase, status.downloadedBytes, status.totalBytes]);
+      });
+      mockDownload.mockImplementation(
+        async (
+          url: string,
+          destination: { uri: string },
+          options: { onProgress: (p: { bytesWritten: number }) => void }
+        ) => {
+          const entry = manifest.files.find((f) => f.url === url);
+          options.onProgress({
+            bytesWritten: Math.floor((entry?.bytes ?? 0) / 2),
+          });
+          mockFiles.set(destination.uri, entry?.bytes ?? 0);
+          return destination;
+        }
+      );
+      mockManifestResponse(manifest);
+
+      await ensureVoicevoxAssets();
+
+      expect(seen).toEqual(
+        expect.arrayContaining([
+          ['downloading', 0, 150],
+          ['downloading', 50, 150],
+          ['downloading', 100, 150],
+          ['downloading', 125, 150],
+          ['downloading', 150, 150],
+          ['installed', 150, 150],
+        ])
+      );
+      expect(getVoicevoxAssetsStatus()).toMatchObject({
+        phase: 'installed',
+        version: 'v1',
+        totalBytes: 150,
+      });
+    });
+
+    it('検証済みで飛ばしたファイルも進捗に含める', async () => {
+      mockFiles.set('file:///docs/voicevox/v1/dic/sys.dic', 100);
+      const seen: number[] = [];
+      subscribeVoicevoxAssets(() => {
+        seen.push(getVoicevoxAssetsStatus().downloadedBytes);
+      });
+      mockManifestResponse(manifest);
+
+      await ensureVoicevoxAssets();
+
+      expect(seen).toContain(100);
+      expect(mockDownload).toHaveBeenCalledTimes(1);
+    });
+
+    it('状態が変わらない限り同じスナップショットを返す', () => {
+      const a = getVoicevoxAssetsStatus();
+      const b = getVoicevoxAssetsStatus();
+      expect(a).toBe(b);
+      expect(a.phase).toBe('not_downloaded');
+    });
+  });
+
+  describe('キャンセルと削除', () => {
+    it('キャンセルすると取得を中断し同意を取り消す', async () => {
+      let abortSignal: AbortSignal | null = null;
+      mockDownload.mockImplementation(
+        (
+          _url: string,
+          _destination: { uri: string },
+          options: { signal: AbortSignal }
+        ) =>
+          new Promise((_resolve, reject) => {
+            abortSignal = options.signal;
+            options.signal.addEventListener('abort', () =>
+              reject(new DOMException('aborted', 'AbortError'))
+            );
+          })
+      );
+      mockManifestResponse(manifest);
+
+      const pending = ensureVoicevoxAssets();
+      // マニフェスト取得と最初のダウンロード開始まで進める
+      for (let i = 0; i < 10; i += 1) {
+        await Promise.resolve();
+      }
+      expect(getVoicevoxAssetsStatus().phase).toBe('downloading');
+      expect(abortSignal).not.toBeNull();
+
+      cancelVoicevoxAssetsDownload();
+      expect(await pending).toBeNull();
+
+      expect(hasVoicevoxDownloadConsent()).toBe(false);
+      expect(getVoicevoxAssetsStatus()).toMatchObject({
+        phase: 'not_downloaded',
+        errorMessage: null,
+      });
+    });
+
+    it('削除すると合成器を解放し、ファイルと記録と同意を消す', async () => {
+      mockManifestResponse(manifest);
+      await ensureVoicevoxAssets();
+      expect(getVoicevoxAssetsStatus().phase).toBe('installed');
+
+      await deleteVoicevoxAssets();
+
+      expect(mockRelease).toHaveBeenCalledTimes(1);
+      expect(mockFiles.size).toBe(0);
+      expect(storage.getString(STORAGE_KEYS.VOICEVOX_ASSETS)).toBeUndefined();
+      expect(hasVoicevoxDownloadConsent()).toBe(false);
+      expect(getInstalledVoicevoxAssets()).toBeNull();
+      expect(getVoicevoxAssetsStatus().phase).toBe('not_downloaded');
+    });
   });
 });

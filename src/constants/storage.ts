@@ -45,6 +45,9 @@ export const STORAGE_KEYS = {
   PORTRAIT_PROMO_APPEARANCE_SEEN: '@TrainLCD:portraitPromoAppearanceSeen',
   // 取得済みの VOICEVOX 辞書・音声モデル(iOS)。src/lib/voicevox/assets.ts が管理する
   VOICEVOX_ASSETS: '@TrainLCD:voicevoxAssets',
+  // ユーザーが VOICEVOX 資産 (約 160MB) のダウンロードに同意したか。同意後は
+  // 中断した取得や更新版の取得を自動で再開する
+  VOICEVOX_DOWNLOAD_CONSENTED: '@TrainLCD:voicevoxDownloadConsented',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

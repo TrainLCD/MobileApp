@@ -107,8 +107,36 @@ App Clip（`ProdAppClip` / `CanaryAppClip`）は deployment target が 16.4 の�
 - 各ファイルはサイズと SHA-256 で検証する。検証済みの状態は MMKV（`VOICEVOX_ASSETS`）に記録し、
   次回起動以降はファイルの存在とサイズだけを確認して再ハッシュしない。
 - 取得は同時に 1 本だけ走らせ、失敗後は `VOICEVOX_ASSET_RETRY_INTERVAL_MS` の間再試行しない。
-- 取得開始のトリガーは `useVoicevoxSpeechEngine` のマウント（= TTS が有効）と Remote Config の
-  更新。発話時点で未取得なら、その回は端末内蔵 TTS で読み、取得は裏で続ける。
+- 約 160MB の通信になるため、**ユーザーの同意なしには取得しない**（[同意と進捗表示](#同意と進捗表示)）。
+  同意後は `useVoicevoxSpeechEngine` のマウント（= TTS が有効）と Remote Config の更新を
+  トリガーに、中断した取得や更新版の取得を自動で再開する。発話時点で未取得なら、その回は
+  端末内蔵 TTS で読み、取得は裏で続ける。
+
+### 同意と進捗表示
+
+設定画面（`src/screens/TTSSettings.tsx`）が担う。
+
+- **同意ダイアログ**: 自動アナウンスを有効化した瞬間に、VOICEVOX が使える構成
+  （`phase !== 'unsupported'`）で未取得なら「オフライン用の日本語音声（約 160MB）を
+  ダウンロードしますか？」を出す。既存の注意ダイアログが先に出る場合はキューで続けて表示
+  される。「ダウンロード」で `requestVoicevoxAssetsDownload()`（同意を MMKV
+  `VOICEVOX_DOWNLOAD_CONSENTED` に記録して直ちに取得）、「あとで」なら何もしない。
+  自動アナウンス自体はどちらでも有効になる。
+- **パネル**: 設定画面の速度設定の下に「オフライン用の日本語音声」の枠を出し、状態ごとに
+  操作を変える。状態は `useVoicevoxAssetsStatus()`（`getVoicevoxAssetsStatus()` の
+  `useSyncExternalStore` 版）で購読する。
+
+  | phase | 表示 | 操作 |
+  | --- | --- | --- |
+  | `not_downloaded` | 説明と概算サイズ | ダウンロード |
+  | `downloading` | 進捗バーと `%`・取得済み / 合計 MB | キャンセル（同意も取り消す。取得済みファイルは残り、次回は続きから） |
+  | `installed` | 取得済みサイズ | 削除（確認ダイアログ → 合成器を解放してディレクトリごと削除・同意も取り消す） |
+  | `error` | 失敗の案内 | 再試行（失敗後の待機時間を無視して取得） |
+  | `unsupported` | 出さない | — |
+
+  進捗は `File.downloadFileAsync` の `onProgress` をファイル横断で合算し、検証済みで
+  飛ばしたファイル分も取得済みに含める。通知は全体の 0.5% ごとに間引き、設定画面の
+  再描画を抑える。
 
 ### マニフェスト
 
