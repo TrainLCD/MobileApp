@@ -27,7 +27,7 @@
 // オブジェクトの PUT は wrangler `r2 object put` と同じエンドポイントと
 // ヘッダー (content-type / cache-control) を使う。
 // 何度実行しても同じ結果になる (バケット・ドメインは存在すれば作らない、
-// オブジェクトは同じ内容で上書き)。
+// 公開済みの version は内容が同一なら再アップロードせず、内容が違えば拒否する)。
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   mkdtempSync,
@@ -85,7 +85,11 @@ if (hasLocalToken) {
  * Cloudflare API を呼び、レスポンス JSON を返す。HTTP エラーはメッセージ付きで投げる。
  * body は JSON (json) かファイル (file) のどちらか。
  */
-const cf = (method, path, { json, file, headers = {} } = {}) => {
+const cf = (
+  method,
+  path,
+  { json, file, headers = {}, allow404 = false } = {}
+) => {
   const args = [
     '-sS',
     '-X',
@@ -128,13 +132,17 @@ const cf = (method, path, { json, file, headers = {} } = {}) => {
   } catch {
     // オブジェクト系エンドポイントは JSON 以外を返すことがある
   }
+  if (status === 404 && allow404) {
+    return null;
+  }
   if (status < 200 || status >= 300 || (parsed && parsed.success === false)) {
     const detail =
       parsed?.errors?.map((e) => `${e.code}: ${e.message}`).join('; ') ??
       text.slice(0, 300);
     throw new Error(`${method} ${path} -> HTTP ${status}: ${detail}`);
   }
-  return parsed;
+  // オブジェクトの GET は本文そのもの (JSON とは限らない) を返す
+  return parsed ?? text;
 };
 const readResponse = () => readFileSync(join(workDir, 'response.json'), 'utf8');
 
@@ -195,37 +203,24 @@ const contentTypeOf = (path) =>
     ? 'text/plain'
     : 'application/octet-stream';
 
-const putObject = (key, file, contentType, cacheControl) =>
-  cf(
-    'PUT',
-    `/accounts/${accountId}/r2/buckets/${bucket}/objects/${key
-      .split('/')
-      .map(encodeURIComponent)
-      .join('/')}`,
-    {
-      file,
-      headers: { 'content-type': contentType, 'cache-control': cacheControl },
-    }
-  );
+const objectPath = (key) =>
+  `/accounts/${accountId}/r2/buckets/${bucket}/objects/${key
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/')}`;
 
-step(`upload ${prefix}/`);
+const putObject = (key, file, contentType, cacheControl) =>
+  cf('PUT', objectPath(key), {
+    file,
+    headers: { 'content-type': contentType, 'cache-control': cacheControl },
+  });
+
+step('manifest');
 const files = walk(assetsDir).sort();
 if (files.some((full) => full.endsWith('manifest.json'))) {
   console.error('assets-dir must not contain manifest.json');
   process.exit(1);
 }
-for (const full of files) {
-  const path = relative(assetsDir, full).split(sep).join('/');
-  console.log(`put ${path} (${statSync(full).size} bytes)`);
-  putObject(
-    `${prefix}/${path}`,
-    full,
-    contentTypeOf(path),
-    'public, max-age=31536000, immutable'
-  );
-}
-
-step('manifest');
 const manifest = execFileSync(
   process.execPath,
   [
@@ -238,6 +233,59 @@ const manifest = execFileSync(
 );
 const manifestPath = join(workDir, 'manifest.json');
 writeFileSync(manifestPath, manifest);
+console.log(`${JSON.parse(manifest).files.length} files, version ${version}`);
+
+// 資産は 1 年間 immutable としてキャッシュされるので、同じ version を別の内容で
+// 上書きすると、キャッシュ済みの旧ファイルと新しいマニフェストの SHA-256 が食い違い、
+// アプリ側の検証が失敗する。公開済みの version は、内容が同一 (再実行) の場合だけ通す。
+// 公開の完了印として version 配下にもマニフェストを置き、それを検査に使う
+// (全ファイルのアップロード後に置くので、途中で失敗した実行は未完了として再開できる)。
+step(`existing version check ${prefix}/`);
+const versionedManifestKey = `${prefix}/manifest.json`;
+const published = cf('GET', objectPath(versionedManifestKey), {
+  allow404: true,
+});
+// cf() は JSON として解釈できた本文をオブジェクトで返すので、文字列とオブジェクトの両方を受ける
+const fingerprint = (data) =>
+  JSON.stringify(
+    (typeof data === 'string' ? JSON.parse(data) : data).files
+      .map(({ path, sha256, bytes }) => [path, sha256, bytes])
+      .sort()
+  );
+let alreadyPublished = false;
+if (published === null) {
+  console.log('not published yet');
+} else if (fingerprint(published) === fingerprint(manifest)) {
+  alreadyPublished = true;
+  console.log('already published with identical content; skipping upload');
+} else {
+  throw new Error(
+    `version ${version} は既に別の内容で公開済み。資産を変えるときは新しい version を指定する`
+  );
+}
+
+if (!alreadyPublished) {
+  step(`upload ${prefix}/`);
+  for (const full of files) {
+    const path = relative(assetsDir, full).split(sep).join('/');
+    console.log(`put ${path} (${statSync(full).size} bytes)`);
+    putObject(
+      `${prefix}/${path}`,
+      full,
+      contentTypeOf(path),
+      'public, max-age=31536000, immutable'
+    );
+  }
+  // 完了印。これが置かれるまで、この version は「未公開」として扱われる
+  putObject(
+    versionedManifestKey,
+    manifestPath,
+    'application/json',
+    'public, max-age=31536000, immutable'
+  );
+}
+
+step(`publish ${manifestKey}`);
 putObject(manifestKey, manifestPath, 'application/json', 'public, max-age=300');
 
 step('verify');
