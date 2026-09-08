@@ -145,20 +145,40 @@ Remote Config `voicevox_tts_manifest_url_ios` が指す JSON。形式は
 生成する。
 
 ```bash
-# 配信ディレクトリを用意する
-mkdir -p assets && cd assets
+# 配信ディレクトリをリポジトリの外に用意する
+# (リポジトリ直下の assets/ は画像・フォント置き場なので流用しない)
+WORK=~/voicevox-assets
+mkdir -p "$WORK/2026-09-08" && cd "$WORK/2026-09-08"
 curl -LO https://github.com/r9y9/open_jtalk/releases/download/v1.11.1/open_jtalk_dic_utf_8-1.11.tar.gz
 tar xzf open_jtalk_dic_utf_8-1.11.tar.gz && rm open_jtalk_dic_utf_8-1.11.tar.gz
 curl -LO https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/6.vvm
-cd ..
+cd -   # リポジトリへ戻る
 
-# マニフェストを生成する (version は省略時に今日の日付)
-node scripts/build-voicevox-manifest.mjs assets https://example.invalid/voicevox/2026-09-08 2026-09-08 > manifest.json
+# マニフェストを生成する (version は省略時に今日の日付)。
+# 出力先は資産ディレクトリの外にする (中に書くと manifest.json 自身が配信対象に混ざる)
+node scripts/build-voicevox-manifest.mjs "$WORK/2026-09-08" https://example.invalid/voicevox/2026-09-08 2026-09-08 > "$WORK/manifest.json"
 ```
 
-`assets/` を同じ相対パスで配信先（例では `https://example.invalid/voicevox/2026-09-08/`）配下へ、
-`manifest.json` を任意の URL へ置き、その URL を Remote Config で配信する。ファイルサイズの目安は辞書が 107MB
-（`sys.dic` が 103MB）、VVM が 55〜63MB。
+できあがる `$WORK` は次の構成で、これをそのまま配信先（例では `https://example.invalid/voicevox/`）へ置く。
+
+```text
+voicevox/
+├── manifest.json
+└── 2026-09-08/                        … base-url に対応するディレクトリ
+    ├── 6.vvm                          … VOICEVOX:No.7 (style 29/30/31)
+    └── open_jtalk_dic_utf_8-1.11/
+        ├── sys.dic  unk.dic  char.bin  matrix.bin
+        ├── left-id.def  right-id.def  pos-id.def  rewrite.def
+        └── COPYING
+```
+
+資産は `base-url` 配下に同じ相対パスで置く必要があるが、`manifest.json` はどの URL に置いてもよい。
+その URL を Remote Config `voicevox_tts_manifest_url_ios` で配信する。取得は認証なしの GET なので、
+公開の静的ホスティングであれば何でもよい。ファイルサイズの目安は辞書が 107MB（`sys.dic` が 103MB）、
+VVM が 55〜63MB。
+
+資産を差し替えるときは新しい `version`（別ディレクトリ）で配信し直し、マニフェスト URL を切り替える。
+アプリは `version` の変化で全ファイルを取り直し、旧ディレクトリを消す。
 
 ## Remote Config
 
