@@ -286,6 +286,25 @@ const main = async () => {
     throw new Error('--from と --to は必須です');
   }
 
+  // 数値オプションは Number() の結果をそのまま使うため、ここで弾かないと
+  // NaN や 0 が速度プロファイル・停車ループへ流れ込み、列車が一切進まない
+  // GPX が終了コード 0 で出力されてしまう（壊れていることに気付けない）
+  if (!Number.isFinite(args.maxSpeed) || args.maxSpeed <= 0) {
+    throw new Error(
+      `--max-speed には正の数値を指定してください: ${args.maxSpeed}`
+    );
+  }
+  if (!Number.isFinite(args.dwell) || args.dwell < 0) {
+    throw new Error(
+      `--dwell には 0 以上の数値を指定してください: ${args.dwell}`
+    );
+  }
+  if (args.start !== undefined && Number.isNaN(Date.parse(args.start))) {
+    throw new Error(
+      `--start には ISO8601 の日時を指定してください: ${args.start}`
+    );
+  }
+
   const fromIndex = allStations.findIndex((s) => s.id === args.from);
   const toIndex = allStations.findIndex((s) => s.id === args.to);
   if (fromIndex === -1) {
