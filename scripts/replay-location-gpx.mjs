@@ -133,6 +133,15 @@ if (timed.length === 0) {
   }
 }
 
+// --start が GPX の長さを超えていたら、黙って先頭へ戻さずエラーにする。
+// 戻すと「指定位置から再生した」と誤認したまま全区間が流れる。
+const totalMs = points[points.length - 1].offset;
+if (startSec * 1000 > totalMs) {
+  fail(
+    `--start が GPX の長さ (${(totalMs / 1000).toFixed(0)}秒) を超えています: ${startSec}`
+  );
+}
+
 // --- テストプロバイダの準備 ----------------------------------------------
 const loc = (...rest) => adb('shell', 'cmd', 'location', 'providers', ...rest);
 
@@ -257,8 +266,9 @@ async function push(point, acc, retry = true) {
 
 // --- 再生 -----------------------------------------------------------------
 async function play(skipSec) {
-  const first = points.findIndex((p) => p.offset >= skipSec * 1000);
-  const from = first === -1 ? 0 : first;
+  // startSec は上で GPX の長さ以下だと検証済みで、offset は 0 始まりの非減少列
+  // なので、この findIndex は必ず一致する。
+  const from = points.findIndex((p) => p.offset >= skipSec * 1000);
   const originOffset = points[from].offset;
   const wallStart = Date.now();
 
