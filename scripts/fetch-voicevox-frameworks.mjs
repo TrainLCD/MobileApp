@@ -3,19 +3,23 @@
 // ios/Frameworks/voicevox-frameworks.json に固定したバージョン・URL・SHA-256 の
 // とおりに zip を取得し、検証してから ios/Frameworks/<name>.xcframework へ展開する。
 // 展開物はリポジトリに含めない（数十 MB のバイナリで、GitHub Releases から
-// 再現可能に取得できるため）。既に同じバージョンが展開済みなら何もしない。
+// 再現可能に取得できるため）。既に同じバージョンが展開済みなら取得はしない。
 //
 // 実行タイミング:
 //   - ローカル: `npm run ios` の前段（package.json の ios スクリプト）
 //   - CI: .github/workflows/build_ios_*.yml の pod install 前
 //
 // Android ビルドや Jest には不要なので postinstall には繋いでいない。
+//
+// 環境変数 VOICEVOX_FRAMEWORKS_DIR で取得先ディレクトリ（定義 JSON の置き場所）を
+// 差し替えられる。テストが一時ディレクトリで実行するためのもので、通常は指定しない。
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   existsSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -25,7 +29,9 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const frameworksDir = resolve(scriptDir, '..', 'ios', 'Frameworks');
+const frameworksDir = process.env.VOICEVOX_FRAMEWORKS_DIR
+  ? resolve(process.env.VOICEVOX_FRAMEWORKS_DIR)
+  : resolve(scriptDir, '..', 'ios', 'Frameworks');
 const manifestPath = join(frameworksDir, 'voicevox-frameworks.json');
 
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
@@ -40,6 +46,65 @@ const download = async (url) => {
   return Buffer.from(await response.arrayBuffer());
 };
 
+// xcframework 配下の各スライス (<slice>/<name>.framework/Info.plist) を列挙する。
+// macOS スライスは Versions/ 配下にシンボリックリンクを張っているので辿らない
+// （iOS アプリには埋め込まれず、リンク先の実体は Versions/A 側で列挙される）。
+const listFrameworkInfoPlists = (dir, found = []) => {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isSymbolicLink()) {
+      continue;
+    }
+    if (entry.isDirectory()) {
+      listFrameworkInfoPlists(path, found);
+    } else if (
+      entry.name === 'Info.plist' &&
+      /\.framework$|[\\/]Resources$/.test(dirname(path))
+    ) {
+      found.push(path);
+    }
+  }
+  return found;
+};
+
+// CFBundleIdentifier に使える文字は英数字・ハイフン・ピリオドだけで、アンダースコアは不可。
+// voicevox_onnxruntime 1.23.2 の iOS スライスは `jp.hiroshiba.voicevox.voicevox_onnxruntime`
+// を名乗っており、Xcode の archive 時検証 (-validate-for-store) が
+// "had an invalid CFBundleIdentifier in its Info.plist" で失敗する。展開後にアンダースコアを
+// ハイフンへ置き換える。配布物は未署名 (_CodeSignature 無し) で、Xcode が埋め込み時に
+// 署名し直すため Info.plist の書き換えは署名を壊さない。
+// 既に展開済みの環境にも効くよう、取得を省略した場合にも毎回呼ぶ（冪等）。
+const normalizeBundleIdentifiers = (xcframeworkDir) => {
+  const rewritten = [];
+  for (const plistPath of listFrameworkInfoPlists(xcframeworkDir)) {
+    const source = readFileSync(plistPath, 'utf8');
+    // 配布物の Info.plist は XML 形式。バイナリ plist だと下の置換が効かないので明示的に止める
+    if (source.startsWith('bplist')) {
+      throw new Error(
+        `[voicevox] ${plistPath} is a binary plist; convert it to XML before normalizing CFBundleIdentifier`
+      );
+    }
+    const pattern =
+      /(<key>CFBundleIdentifier<\/key>\s*<string>)([^<]*)(<\/string>)/;
+    const match = source.match(pattern);
+    if (!match) {
+      continue;
+    }
+    const identifier = match[2];
+    if (!identifier.includes('_')) {
+      continue;
+    }
+    const normalized = identifier.replaceAll('_', '-');
+    writeFileSync(
+      plistPath,
+      source.replace(pattern, `$1${normalized}$3`),
+      'utf8'
+    );
+    rewritten.push({ plistPath, from: identifier, to: normalized });
+  }
+  return rewritten;
+};
+
 for (const framework of manifest.frameworks) {
   const { name, version, url, sha256 } = framework;
   const destination = join(frameworksDir, `${name}.xcframework`);
@@ -48,45 +113,53 @@ for (const framework of manifest.frameworks) {
 
   // マーカーだけでなく xcframework の実体 (Info.plist) も確認する。中身が消えた
   // 不完全な展開物にマーカーだけ残っていると、ここで飛ばした後の Xcode ビルドが失敗する
-  if (
+  const installed =
     existsSync(versionMarker) &&
     existsSync(join(destination, 'Info.plist')) &&
-    readFileSync(versionMarker, 'utf8').trim() === version
-  ) {
+    readFileSync(versionMarker, 'utf8').trim() === version;
+
+  if (installed) {
     console.log(`[voicevox] ${name} ${version} is already installed`);
-    continue;
-  }
-
-  console.log(`[voicevox] downloading ${name} ${version}`);
-  const zip = await download(url);
-  const actual = sha256Hex(zip);
-  if (actual !== sha256) {
-    throw new Error(
-      `[voicevox] SHA-256 mismatch for ${name}: expected ${sha256}, got ${actual}`
-    );
-  }
-
-  const tempDir = mkdtempSync(join(tmpdir(), 'voicevox-'));
-  try {
-    const zipPath = join(tempDir, `${name}.zip`);
-    writeFileSync(zipPath, zip);
-    // zip のトップレベルが <name>.xcframework/ なので、展開先の親へそのまま展開する
-    rmSync(destination, { recursive: true, force: true });
-    execFileSync(
-      'unzip',
-      ['-q', '-o', zipPath, `${name}.xcframework/*`, '-d', frameworksDir],
-      {
-        stdio: 'inherit',
-      }
-    );
-    if (!existsSync(join(destination, 'Info.plist'))) {
+  } else {
+    console.log(`[voicevox] downloading ${name} ${version}`);
+    const zip = await download(url);
+    const actual = sha256Hex(zip);
+    if (actual !== sha256) {
       throw new Error(
-        `[voicevox] ${name}.xcframework was not found in the archive`
+        `[voicevox] SHA-256 mismatch for ${name}: expected ${sha256}, got ${actual}`
       );
     }
-    writeFileSync(versionMarker, `${version}\n`);
-    console.log(`[voicevox] installed ${name} ${version} -> ${destination}`);
-  } finally {
-    rmSync(tempDir, { recursive: true, force: true });
+
+    const tempDir = mkdtempSync(join(tmpdir(), 'voicevox-'));
+    try {
+      const zipPath = join(tempDir, `${name}.zip`);
+      writeFileSync(zipPath, zip);
+      // zip のトップレベルが <name>.xcframework/ なので、展開先の親へそのまま展開する
+      rmSync(destination, { recursive: true, force: true });
+      execFileSync(
+        'unzip',
+        ['-q', '-o', zipPath, `${name}.xcframework/*`, '-d', frameworksDir],
+        {
+          stdio: 'inherit',
+        }
+      );
+      if (!existsSync(join(destination, 'Info.plist'))) {
+        throw new Error(
+          `[voicevox] ${name}.xcframework was not found in the archive`
+        );
+      }
+      writeFileSync(versionMarker, `${version}\n`);
+      console.log(`[voicevox] installed ${name} ${version} -> ${destination}`);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  }
+
+  for (const { plistPath, from, to } of normalizeBundleIdentifiers(
+    destination
+  )) {
+    console.log(
+      `[voicevox] normalized CFBundleIdentifier ${from} -> ${to} (${plistPath})`
+    );
   }
 }
