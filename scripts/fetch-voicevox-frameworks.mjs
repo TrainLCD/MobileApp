@@ -10,9 +10,16 @@
 //   - CI: .github/workflows/build_ios_*.yml の pod install 前
 //
 // Android ビルドや Jest には不要なので postinstall には繋いでいない。
-import { createHash } from 'node:crypto';
+
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,11 +72,17 @@ for (const framework of manifest.frameworks) {
     writeFileSync(zipPath, zip);
     // zip のトップレベルが <name>.xcframework/ なので、展開先の親へそのまま展開する
     rmSync(destination, { recursive: true, force: true });
-    execFileSync('unzip', ['-q', '-o', zipPath, `${name}.xcframework/*`, '-d', frameworksDir], {
-      stdio: 'inherit',
-    });
+    execFileSync(
+      'unzip',
+      ['-q', '-o', zipPath, `${name}.xcframework/*`, '-d', frameworksDir],
+      {
+        stdio: 'inherit',
+      }
+    );
     if (!existsSync(join(destination, 'Info.plist'))) {
-      throw new Error(`[voicevox] ${name}.xcframework was not found in the archive`);
+      throw new Error(
+        `[voicevox] ${name}.xcframework was not found in the archive`
+      );
     }
     writeFileSync(versionMarker, `${version}\n`);
     console.log(`[voicevox] installed ${name} ${version} -> ${destination}`);

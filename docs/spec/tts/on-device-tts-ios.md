@@ -177,7 +177,22 @@ voicevox/
 公開の静的ホスティングであれば何でもよい。ファイルサイズの目安は辞書が 107MB（`sys.dic` が 103MB）、
 VVM が 55〜63MB。
 
-資産を差し替えるときは新しい `version`（別ディレクトリ）で配信し直し、マニフェスト URL を切り替える。
+配信先が Cloudflare R2（バケット `trainlcd-assets`、独自ドメイン `assets.trainlcd.app`）なら、
+バケット作成・ドメイン紐付け・アップロード・マニフェスト生成と配置・到達確認を
+`scripts/publish-voicevox-assets.mjs` が一括で行う。何度実行しても同じ結果になる。
+
+```bash
+CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… CLOUDFLARE_ZONE_ID=… \
+  node scripts/publish-voicevox-assets.mjs "$WORK/2026-09-08" 2026-09-08
+# → Remote Config: voicevox_tts_manifest_url_ios = https://assets.trainlcd.app/voicevox/manifest.json
+```
+
+トークンに必要な権限は「Workers R2 Storage: Edit」と、`trainlcd.app` ゾーンの「DNS: Edit」
+（独自ドメインの紐付けが DNS レコードを作る）だけでよい。作業後は失効させて構わない。
+マニフェストは `voicevox/manifest.json` の固定 URL に 5 分キャッシュで置くので、資産を差し替えても
+Remote Config の値は変えなくてよい。
+
+資産を差し替えるときは新しい `version`（別ディレクトリ）で同じ手順を繰り返す。
 アプリは `version` の変化で全ファイルを取り直し、旧ディレクトリを消す。
 
 ## Remote Config

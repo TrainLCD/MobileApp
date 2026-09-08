@@ -73,7 +73,9 @@ if (voiceModels.length === 0) {
   process.exit(1);
 }
 if (dicDirs.length !== 1) {
-  console.error(`expected exactly one Open JTalk dictionary, found ${dicDirs.length}`);
+  console.error(
+    `expected exactly one Open JTalk dictionary, found ${dicDirs.length}`
+  );
   process.exit(1);
 }
 
