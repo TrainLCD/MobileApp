@@ -11,8 +11,9 @@
 //
 // Android ビルドや Jest には不要なので postinstall には繋いでいない。
 //
-// 環境変数 VOICEVOX_FRAMEWORKS_DIR で取得先ディレクトリ（定義 JSON の置き場所）を
-// 差し替えられる。テストが一時ディレクトリで実行するためのもので、通常は指定しない。
+// 環境変数（いずれもテスト用で、通常は指定しない）:
+//   - VOICEVOX_FRAMEWORKS_DIR: 取得先ディレクトリ（定義 JSON の置き場所）を差し替える
+//   - VOICEVOX_CODESIGN: 署名し直しに使う codesign コマンドを差し替える。空文字なら署名し直しを省略する
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -35,6 +36,15 @@ const frameworksDir = process.env.VOICEVOX_FRAMEWORKS_DIR
 const manifestPath = join(frameworksDir, 'voicevox-frameworks.json');
 
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+
+// 署名し直しに使う codesign。macOS 以外には無いので、そこでは省略する
+// （iOS ビルドは macOS でしか行わないため実害は無い）。
+const codesignCommand =
+  process.env.VOICEVOX_CODESIGN !== undefined
+    ? process.env.VOICEVOX_CODESIGN
+    : process.platform === 'darwin'
+      ? 'codesign'
+      : '';
 
 const sha256Hex = (buffer) => createHash('sha256').update(buffer).digest('hex');
 
@@ -105,6 +115,38 @@ const normalizeBundleIdentifiers = (xcframeworkDir) => {
   return rewritten;
 };
 
+// 各スライスの framework を ad-hoc で署名し直し、署名の識別子を CFBundleIdentifier に揃える。
+// voicevox_onnxruntime 1.23.2 のバイナリには識別子 `libvoicevox_onnxruntime.1` の ad-hoc 署名が
+// 埋め込まれており、Xcode は埋め込み時に `--preserve-metadata=identifier` で既存の識別子を
+// 引き継ぐため、App Store Connect のアップロード検証が
+// "Invalid Code Signature Identifier ... must match its Bundle Identifier" で失敗する。
+// 未署名の voicevox_core は Xcode が CFBundleIdentifier から識別子を導出するので問題無いが、
+// 配布物の署名状態に依存しないよう全スライスを一律に署名し直す（冪等）。
+const resignFrameworks = (xcframeworkDir) => {
+  const resigned = [];
+  for (const plistPath of listFrameworkInfoPlists(xcframeworkDir)) {
+    const frameworkDir = dirname(plistPath);
+    // macOS スライス (Versions/A/Resources/Info.plist) は iOS アプリに埋め込まれないので対象外
+    if (!frameworkDir.endsWith('.framework')) {
+      continue;
+    }
+    const match = readFileSync(plistPath, 'utf8').match(
+      /<key>CFBundleIdentifier<\/key>\s*<string>([^<]*)<\/string>/
+    );
+    if (!match) {
+      continue;
+    }
+    const identifier = match[1];
+    execFileSync(
+      codesignCommand,
+      ['--force', '--sign', '-', '--identifier', identifier, frameworkDir],
+      { stdio: 'inherit' }
+    );
+    resigned.push({ frameworkDir, identifier });
+  }
+  return resigned;
+};
+
 for (const framework of manifest.frameworks) {
   const { name, version, url, sha256 } = framework;
   const destination = join(frameworksDir, `${name}.xcframework`);
@@ -161,5 +203,17 @@ for (const framework of manifest.frameworks) {
     console.log(
       `[voicevox] normalized CFBundleIdentifier ${from} -> ${to} (${plistPath})`
     );
+  }
+
+  if (codesignCommand === '') {
+    console.log(
+      `[voicevox] skipped re-signing ${name} (codesign is unavailable on this platform)`
+    );
+  } else {
+    for (const { frameworkDir, identifier } of resignFrameworks(destination)) {
+      console.log(
+        `[voicevox] re-signed ${frameworkDir} with identifier ${identifier}`
+      );
+    }
   }
 }
