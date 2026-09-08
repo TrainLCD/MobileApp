@@ -30,8 +30,13 @@ useTTS ────────────────── 放送タイミン
 
 エンジンの選択は放送直前に `isRemoteTTSEnabled()`（`src/lib/remoteConfig.ts`）を引いて
 決めるため、起動後に Remote Config が届いた場合も次の放送から反映される。
+`isRemoteTTSEnabled()` が決めるのは「リモート合成を試すか、最初から端末内で読むか」だけで、
+端末内で読む側はまず `useVoicevoxSpeechEngine` を試し、VOICEVOX が使える条件（iOS 本体アプリの
+ネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・音声モデル内のスタイル ID）が
+そろわなければ `useNativeSpeechEngine` へ倒れる。条件の詳細は
+[オンデバイス TTS (VOICEVOX) 設計書](./on-device-tts-ios.md) を参照。
 
-両エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
+各エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
 
 - `speak(request, callbacks)` — `onSettled` か `onUnavailable` のどちらかが
   ちょうど 1 回だけ呼ばれる。

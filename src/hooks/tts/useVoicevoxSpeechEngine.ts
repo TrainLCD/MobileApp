@@ -31,18 +31,20 @@ import type {
   SpeechEngineRequest,
 } from './speechEngine';
 
-// iOS でリモート TTS が使えない回に、日本語だけを VOICEVOX CORE (端末内合成) で
-// 読み上げるエンジン。英語は VOICEVOX が話せないため、引数で受け取った
-// エンジン (端末内蔵 TTS) へ委譲する。
-//
-// 使える条件が 1 つでも欠けると onUnavailable を返し、呼び出し側 (useTTS) が
-// その回だけ端末内蔵 TTS で日英とも読み上げる。
-//   - ネイティブモジュールがある (本体アプリの iOS のみ。App Clip / Android は無い)
-//   - Remote Config (voicevox_tts_enabled_ios) で有効化されている
-//   - 辞書と音声モデルの取得・検証が完了している
-//
-// 合成器の初期化 (VVM の展開) は初回の発話まで遅らせる。常駐メモリを増やしたく
-// ないためで、リモート TTS が使える通常時は VOICEVOX を一切メモリへ載せない。
+/**
+ * iOS でリモート TTS が使えない回に、日本語だけを VOICEVOX CORE (端末内合成) で
+ * 読み上げるエンジン。英語は VOICEVOX が話せないため、引数で受け取った
+ * エンジン (端末内蔵 TTS) へ委譲する。
+ *
+ * 使える条件が 1 つでも欠けると onUnavailable を返し、呼び出し側 (useTTS) が
+ * その回だけ端末内蔵 TTS で日英とも読み上げる。
+ * - ネイティブモジュールがある (本体アプリの iOS のみ。App Clip / Android は無い)
+ * - Remote Config (voicevox_tts_enabled_ios) で有効化されている
+ * - 辞書と音声モデルの取得・検証が完了している
+ *
+ * 合成器の初期化 (VVM の展開) は初回の発話まで遅らせる。常駐メモリを増やしたく
+ * ないためで、リモート TTS が使える通常時は VOICEVOX を一切メモリへ載せない。
+ */
 export const useVoicevoxSpeechEngine = (
   englishEngine: SpeechEngine
 ): SpeechEngine => {

@@ -39,8 +39,11 @@ for (const framework of manifest.frameworks) {
   // 展開済みバージョンの目印。zip の中身と同じディレクトリに置いて一緒に消えるようにする
   const versionMarker = join(destination, '.trainlcd-version');
 
+  // マーカーだけでなく xcframework の実体 (Info.plist) も確認する。中身が消えた
+  // 不完全な展開物にマーカーだけ残っていると、ここで飛ばした後の Xcode ビルドが失敗する
   if (
     existsSync(versionMarker) &&
+    existsSync(join(destination, 'Info.plist')) &&
     readFileSync(versionMarker, 'utf8').trim() === version
   ) {
     console.log(`[voicevox] ${name} ${version} is already installed`);

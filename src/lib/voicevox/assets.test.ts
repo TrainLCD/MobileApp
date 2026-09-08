@@ -464,6 +464,41 @@ describe('voicevox/assets', () => {
       });
     });
 
+    it('キャンセル直後の再要求は、中断した取得が片付いてから取り直す', async () => {
+      let rejectDownload: ((e: unknown) => void) | null = null;
+      mockDownload.mockImplementationOnce(
+        (
+          _url: string,
+          _destination: { uri: string },
+          options: { signal: AbortSignal }
+        ) =>
+          new Promise((_resolve, reject) => {
+            rejectDownload = reject;
+            options.signal.addEventListener('abort', () =>
+              reject(new DOMException('aborted', 'AbortError'))
+            );
+          })
+      );
+      mockManifestResponse(manifest);
+      const first = ensureVoicevoxAssets();
+      for (let i = 0; i < 10; i += 1) {
+        await Promise.resolve();
+      }
+      expect(getVoicevoxAssetsStatus().phase).toBe('downloading');
+
+      cancelVoicevoxAssetsDownload();
+      // 中断が片付く前に「ダウンロード」を押し直した
+      mockManifestResponse(manifest);
+      const second = requestVoicevoxAssetsDownload();
+      expect(rejectDownload).not.toBeNull();
+
+      expect(await first).toBeNull();
+      expect((await second)?.version).toBe('v1');
+      expect(hasVoicevoxDownloadConsent()).toBe(true);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(getVoicevoxAssetsStatus().phase).toBe('installed');
+    });
+
     it('削除すると合成器を解放し、ファイルと記録と同意を消す', async () => {
       mockManifestResponse(manifest);
       await ensureVoicevoxAssets();

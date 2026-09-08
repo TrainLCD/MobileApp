@@ -89,5 +89,6 @@ export const voicevoxManifestSchema = z
 export type VoicevoxManifest = z.infer<typeof voicevoxManifestSchema>;
 export type VoicevoxManifestFile = z.infer<typeof voicevoxManifestFileSchema>;
 
+/** マニフェスト JSON を検証して返す。不正なら zod のエラーを投げる。 */
 export const parseVoicevoxManifest = (json: unknown): VoicevoxManifest =>
   voicevoxManifestSchema.parse(json);

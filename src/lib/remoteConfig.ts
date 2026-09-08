@@ -349,11 +349,13 @@ export const isAIAgentFeatureEnabled = (): boolean => {
   return AI_AGENT_ENABLED_FALLBACK;
 };
 
-// iOS でリモート TTS が使えない回の日本語フォールバックを VOICEVOX (端末内合成) で
-// 読み上げるかどうかを同期的に取得する。isRemoteTTSEnabled とは独立しており、
-// リモート合成を使う構成のまま「フォールバック先だけ」を差し替える。有効でも
-// 辞書・音声モデルが未取得の間や App Clip では従来どおり端末内蔵 TTS が使われる。
-// Android は対象外(ネイティブモジュールを持たない)のため常に false。
+/**
+ * iOS でリモート TTS が使えない回の日本語フォールバックを VOICEVOX (端末内合成) で
+ * 読み上げるかどうかを同期的に取得する。isRemoteTTSEnabled とは独立しており、
+ * リモート合成を使う構成のまま「フォールバック先だけ」を差し替える。有効でも
+ * 辞書・音声モデルが未取得の間や App Clip では従来どおり端末内蔵 TTS が使われる。
+ * Android は対象外(ネイティブモジュールを持たない)のため常に false。
+ */
 export const isVoicevoxTTSEnabled = (): boolean => {
   if (Platform.OS !== 'ios') {
     return false;
@@ -361,11 +363,15 @@ export const isVoicevoxTTSEnabled = (): boolean => {
   return cachedVoicevoxTTSEnabledIOS ?? VOICEVOX_TTS_ENABLED_IOS_FALLBACK;
 };
 
-// VOICEVOX の辞書・音声モデルを列挙したマニフェスト JSON の URL。未配信なら null で、
-// その場合は有効化されていても資産を取得できないため VOICEVOX は使われない。
+/**
+ * VOICEVOX の辞書・音声モデルを列挙したマニフェスト JSON の URL。未配信なら null で、
+ * その場合は有効化されていても資産を取得できないため VOICEVOX は使われない。
+ */
 export const getVoicevoxTTSManifestUrl = (): string | null =>
   cachedVoicevoxTTSManifestUrlIOS;
 
-// VOICEVOX のスタイル ID。未配信・不正値ならフォールバック(No.7 アナウンス)。
+/**
+ * VOICEVOX のスタイル ID。未配信・不正値ならフォールバック(No.7 アナウンス)。
+ */
 export const getVoicevoxTTSStyleId = (): number =>
   cachedVoicevoxTTSStyleIdIOS ?? VOICEVOX_DEFAULT_STYLE_ID;

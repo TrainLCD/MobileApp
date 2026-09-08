@@ -153,11 +153,11 @@ curl -LO https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/6.vvm
 cd ..
 
 # マニフェストを生成する (version は省略時に今日の日付)
-node scripts/build-voicevox-manifest.mjs assets https://<配信先>/voicevox/2026-09-08 2026-09-08 > manifest.json
+node scripts/build-voicevox-manifest.mjs assets https://example.invalid/voicevox/2026-09-08 2026-09-08 > manifest.json
 ```
 
-`assets/` を同じ相対パスで `<配信先>/voicevox/2026-09-08/` 配下へ、`manifest.json` を任意の
-URL へ置き、その URL を Remote Config で配信する。ファイルサイズの目安は辞書が 107MB
+`assets/` を同じ相対パスで配信先（例では `https://example.invalid/voicevox/2026-09-08/`）配下へ、
+`manifest.json` を任意の URL へ置き、その URL を Remote Config で配信する。ファイルサイズの目安は辞書が 107MB
 （`sys.dic` が 103MB）、VVM が 55〜63MB。
 
 ## Remote Config

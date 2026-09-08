@@ -40,12 +40,17 @@ describe('parseVoicevoxManifest', () => {
       'dic//sys.dic',
       'dic/./sys.dic',
     ]) {
+      // 辞書と音声モデルは残し、パス検証だけで弾かれることを確かめる
       expect(() =>
         parseVoicevoxManifest({
           ...validManifest,
-          files: [{ ...validManifest.files[0], path }],
+          files: [
+            { ...validManifest.files[0], path },
+            validManifest.files[0],
+            validManifest.files[1],
+          ],
         })
-      ).toThrow();
+      ).toThrow(/unsafe relative path/);
     }
   });
 

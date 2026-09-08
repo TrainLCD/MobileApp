@@ -442,6 +442,22 @@ describe('TTSSettingsScreen', () => {
       expect(store.get(speechState).enabled).toBe(true);
     });
 
+    it('[iOS] 日本語を読まない設定 (英語のみ) では尋ねない', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'not_downloaded' });
+      storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
+
+      const { getByLabelText, store } = renderWithSpeechState({
+        enabled: false,
+        ttsEnabledLanguages: ['EN'],
+      });
+      fireEvent.press(getByLabelText('toEnabled'));
+
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+      expect(mockRequestVoicevoxAssetsDownload).not.toHaveBeenCalled();
+      expect(store.get(speechState).enabled).toBe(true);
+    });
+
     it('[iOS] 取得済みなら有効化時に尋ねない', () => {
       setPlatformOS('ios');
       setStatus({ phase: 'installed', totalBytes: 160_000_000, version: 'v1' });

@@ -26,6 +26,9 @@ final class VoicevoxTTSModule: NSObject {
 
   private let queue = DispatchQueue(
     label: "me.tinykitten.trainlcd.voicevox", qos: .userInitiated)
+  // queue 上で実行中かを判定するためのキー。queue.async のクロージャが self の最後の
+  // 所有者になると deinit が queue 上で走るため、そこで queue.sync するとデッドロックする
+  private let queueSpecificKey = DispatchSpecificKey<Bool>()
 
   // 以下は queue 上でのみ触る
   private var config: Config?
@@ -37,6 +40,7 @@ final class VoicevoxTTSModule: NSObject {
 
   override init() {
     super.init()
+    queue.setSpecific(key: queueSpecificKey, value: true)
     memoryWarningObserver = NotificationCenter.default.addObserver(
       forName: UIApplication.didReceiveMemoryWarningNotification,
       object: nil,
@@ -54,8 +58,12 @@ final class VoicevoxTTSModule: NSObject {
     if let observer = memoryWarningObserver {
       NotificationCenter.default.removeObserver(observer)
     }
-    queue.sync {
+    if DispatchQueue.getSpecific(key: queueSpecificKey) != nil {
       teardownSynthesizer()
+    } else {
+      queue.sync {
+        teardownSynthesizer()
+      }
     }
   }
 
@@ -160,7 +168,14 @@ final class VoicevoxTTSModule: NSObject {
     var styleIds: [UInt32] = []
     for path in config.voiceModelPaths {
       var model: OpaquePointer?
-      try check(voicevox_voice_model_file_open(path, &model), "voicevox_voice_model_file_open")
+      do {
+        try check(
+          voicevox_voice_model_file_open(path, &model), "voicevox_voice_model_file_open")
+      } catch {
+        // 失敗した合成器を残すと ensureSynthesizer が再構築を省略してしまう
+        teardownSynthesizer()
+        throw error
+      }
       defer {
         if let model = model {
           voicevox_voice_model_file_delete(model)

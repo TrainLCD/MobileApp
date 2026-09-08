@@ -93,8 +93,10 @@ const notify = (): void => {
   }
 };
 
-// 状態変化の購読 (useSyncExternalStore 互換)。Remote Config の変化は含まないので、
-// 表示側は subscribeRemoteConfig も合わせて購読する
+/**
+ * 状態変化の購読 (useSyncExternalStore 互換)。Remote Config の変化は含まないので、
+ * 表示側は subscribeRemoteConfig も合わせて購読する
+ */
 export const subscribeVoicevoxAssets = (listener: () => void): (() => void) => {
   listeners.add(listener);
   return () => {
@@ -102,7 +104,9 @@ export const subscribeVoicevoxAssets = (listener: () => void): (() => void) => {
   };
 };
 
-// テスト用。モジュール内の状態を初期化する
+/**
+ * テスト用。モジュール内の状態を初期化する
+ */
 export const resetVoicevoxAssetsStateForTest = (): void => {
   installedCache = null;
   inFlight = null;
@@ -114,7 +118,9 @@ export const resetVoicevoxAssetsStateForTest = (): void => {
   listeners.clear();
 };
 
-// expo-file-system の file:// URI をネイティブ API に渡せるパスへ変換する
+/**
+ * expo-file-system の file:// URI をネイティブ API に渡せるパスへ変換する
+ */
 export const fileUriToPath = (uri: string): string =>
   decodeURIComponent(uri.replace(/^file:\/\//, ''));
 
@@ -132,7 +138,9 @@ const isSupported = (): boolean =>
   isVoicevoxTTSEnabled() &&
   getVoicevoxTTSManifestUrl() !== null;
 
-// ユーザーが取得に同意済みか。同意はダウンロードのキャンセルか資産の削除で取り消す
+/**
+ * ユーザーが取得に同意済みか。同意はダウンロードのキャンセルか資産の削除で取り消す
+ */
 export const hasVoicevoxDownloadConsent = (): boolean =>
   storage.getString(STORAGE_KEYS.VOICEVOX_DOWNLOAD_CONSENTED) === 'true';
 
@@ -505,15 +513,25 @@ export const ensureVoicevoxAssets =
  */
 export const requestVoicevoxAssetsDownload =
   (): Promise<VoicevoxInstalledAssets | null> => {
-    if (inFlight) {
-      return inFlight;
-    }
     const manifestUrl = getVoicevoxTTSManifestUrl();
     if (!isSupported() || !manifestUrl) {
       return Promise.resolve(getInstalledVoicevoxAssets());
     }
     setDownloadConsent(true);
     lastFailureAt = 0;
+    const current = inFlight;
+    if (current) {
+      if (!abortController?.signal.aborted) {
+        return current;
+      }
+      // キャンセル直後で中断中の取得が片付くのを待ち、その間に再びキャンセルされて
+      // いなければ取り直す (中断した取得は再開されないため)
+      return current.then(() =>
+        hasVoicevoxDownloadConsent()
+          ? ensureVoicevoxAssets()
+          : getInstalledVoicevoxAssets()
+      );
+    }
     return runEnsure(manifestUrl);
   };
 

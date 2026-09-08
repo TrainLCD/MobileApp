@@ -587,9 +587,11 @@ const TTSSettingsScreen: React.FC = () => {
         // 尋ねる。取得はこの同意で始まり、進捗は下のパネルに出る。同意しなくても
         // 自動アナウンスは使え、通信できない回だけ端末の読み上げ音声になる。
         // 注意ダイアログが先に出る場合はその後に続けて表示される (キュー)。
+        // 日本語を読まない設定では日本語専用の資産を勧める意味が無いので尋ねない。
         if (
           flag &&
           Platform.OS === 'ios' &&
+          ttsEnabledLanguages.includes('JA') &&
           getVoicevoxAssetsStatus().phase === 'not_downloaded'
         ) {
           showDialog(
@@ -622,7 +624,7 @@ const TTSSettingsScreen: React.FC = () => {
         );
       }
     },
-    [setSpeechState, ttsFeatureEnabled]
+    [setSpeechState, ttsEnabledLanguages, ttsFeatureEnabled]
   );
 
   const handleToggleBgTTS = useCallback(

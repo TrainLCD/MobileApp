@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -44,7 +45,8 @@ type LicenseItem = {
   icon: string;
   href: string;
   devOnly: boolean;
-  // iOS 本体アプリだけが使う素材 (VOICEVOX など) のクレジット
+  // iOS 本体アプリだけが使う素材 (VOICEVOX など) のクレジット。App Clip も
+  // Platform.OS は 'ios' だがネイティブモジュールを持たないため対象外
   iosOnly?: boolean;
 } & (
   | { license?: undefined; licenseUrl?: undefined }
@@ -312,7 +314,8 @@ const Licenses: React.FC = () => {
       ).filter(
         (it) =>
           (isDevApp ? true : !it.devOnly) &&
-          (!('iosOnly' in it && it.iosOnly) || Platform.OS === 'ios')
+          (!('iosOnly' in it && it.iosOnly) ||
+            (Platform.OS === 'ios' && !isClip()))
       ),
     []
   );

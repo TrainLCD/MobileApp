@@ -51,6 +51,10 @@ const { VoicevoxTTSModule } = NativeModules as {
   VoicevoxTTSModule?: VoicevoxTtsNativeModule;
 };
 
+/**
+ * VOICEVOX のネイティブモジュールを返す。iOS 本体アプリ以外 (Android・App Clip・web) や
+ * モジュールが登録されていないビルドでは null で、呼び出し側は VOICEVOX を使わない。
+ */
 export const getVoicevoxTtsModule = (): VoicevoxTtsNativeModule | null => {
   if (Platform.OS !== 'ios') {
     return null;
