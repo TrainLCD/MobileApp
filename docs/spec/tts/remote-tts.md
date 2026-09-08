@@ -220,7 +220,8 @@ Remote Config のキーは 2 系統あり、役割が異なる。
   （`useTTSFeatureEnabled`）。`false` のときは読み上げを行わず、設定画面のトグルも
   無効化する。フォールバックは `true`（提供する）。
 - `remote_tts_enabled_ios` / `remote_tts_enabled_android` — 読み上げエンジンの選択
-  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内蔵 TTS。
+  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内合成
+  （iOS 本体アプリは VOICEVOX を試してから端末内蔵 TTS、それ以外は端末内蔵 TTS）。
   フォールバックは iOS が `true`、Android が `false`。
 
 両者は独立しているため、次のような運用ができる。
@@ -228,8 +229,8 @@ Remote Config のキーは 2 系統あり、役割が異なる。
 - **Android でもリモート合成を使う**: `remote_tts_enabled_android` を `true` にする。
   段階的に開放したい場合はこのキーだけで切り戻せる。
 - **リモート合成のコスト・障害から退避する**: `remote_tts_enabled_*` を `false` にすると、
-  TTS 機能は維持したまま端末内蔵 TTS へ倒れる。読み上げごと止めたい場合のみ
-  `tts_enabled_*` を `false` にする。
+  TTS 機能は維持したまま端末内合成（VOICEVOX → 端末内蔵 TTS の順）へ倒れる。
+  読み上げごと止めたい場合のみ `tts_enabled_*` を `false` にする。
 
 iOS / Android 以外（web など）はリモート再生経路を持たないため、`isRemoteTTSEnabled()`
 は常に `false` を返す。
