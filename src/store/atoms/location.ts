@@ -17,8 +17,8 @@ const MAX_PLAUSIBLE_SPEED = 100;
 // 測位で基準を張り直す。
 const MAX_CONSECUTIVE_SPEED_REJECTIONS = 5;
 
-// 基準座標がこれ以上古い場合、EMAの基準としても速度判定の基準としても意味を
-// 持たないため、スムージングせず新しい測位へスナップして基準を張り直す。
+// 基準座標がこれ以上古い場合、EMAの基準としては意味を持たないため、速度フィルタを
+// 通過したうえでスムージングせず新しい測位へスナップし、基準を張り直す。
 // バックグラウンド測位の抑止(「常に許可」未設定)やトンネルで測位が数十分途切れた
 // あと、EMAで混ぜると新しい測位のα割しか反映されず、残った遅れがそのまま次の
 // 変位へ乗って再び速度超過になる、という復帰不能ループを防ぐ。
@@ -167,16 +167,13 @@ export const setLocation = (location: Location.LocationObject) => {
     return;
   }
 
-  // 基準が古すぎる場合は判定にもスムージングにも使えないため張り直す。
-  // 測位が長く途切れたあとにEMAで混ぜると新しい測位のα割しか反映されず、
-  // 残った遅れが次回の変位へ乗って再棄却…という復帰不能ループの原因になる。
-  if (location.timestamp - rawPrev.timestamp > STALE_REFERENCE_MS) {
-    resyncLocationReference(location, updatedHistory);
-    return;
-  }
-
   // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用する。
   // 基準は「生の前回座標」であってEMA後の座標ではない（lastRawLocationAtom参照）。
+  //
+  // 測位が長く途切れたあとでも、このフィルタは先に必ず通す。意味を失うのはEMAの方
+  // (下のSTALE_REFERENCE_MS判定)だけで、変位÷経過時間という速度の妥当性検査は
+  // 経過時間が延びても成立するため。ここを飛ばすと、間隔が空いた直後の1点に限って
+  // ワープ対策が無効になる。
   const dt = (location.timestamp - rawPrev.timestamp) / 1000; // 秒
   if (dt > 0) {
     const dist = getDistance(
@@ -206,6 +203,15 @@ export const setLocation = (location: Location.LocationObject) => {
   }
 
   consecutiveSpeedRejections = 0;
+
+  // 速度としては妥当だが基準が古すぎる場合、EMAの基準としては使えないため
+  // スムージングせず生の座標へスナップして基準を張り直す。長く途切れたあとに
+  // EMAで混ぜると新しい測位のα割しか反映されず、残った遅れが次回の変位へ乗って
+  // 再棄却…という復帰不能ループの原因になる。
+  if (location.timestamp - rawPrev.timestamp > STALE_REFERENCE_MS) {
+    resyncLocationReference(location, updatedHistory);
+    return;
+  }
 
   // EMA(指数移動平均)で座標をスムージングする
   // 精度が良いほどαが大きくなり、新しい測位値をより信頼する

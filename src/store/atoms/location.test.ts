@@ -314,6 +314,18 @@ describe('高速走行時の追従', () => {
     expect(store.get(locationAtom)?.coords.latitude).toBe(jumpLat);
   });
 
+  // 回帰: 「基準が古い」判定が速度フィルタより先に return していると、
+  // 測位間隔が空いた直後の1点に限ってワープ対策が無効になる
+  it('30秒以上途切れたあとでも物理的にありえないジャンプは棄却する', () => {
+    setLocation(makeLocation(38.9, 140.9, 30, 1_000));
+
+    // 60秒後に約500km離れた地点（≒8300m/s）へ飛ぶ測位が届く
+    const warpLat = 38.9 - 500_000 / METERS_PER_DEG_LAT;
+    setLocation(makeLocation(warpLat, 140.9, 30, 1_000 + 60_000));
+
+    expect(store.get(locationAtom)?.coords.latitude).toBe(38.9);
+  });
+
   it('単発のジャンプは従来どおり棄却する', () => {
     setLocation(makeLocation(38.9, 140.9, 30, 1_000));
     setLocation(makeLocation(36.0, 140.9, 30, 2_000));
