@@ -76,7 +76,9 @@ final class VoicevoxTTSModule: NSObject {
 
   private enum VoicevoxError: Error, CustomStringConvertible {
     case invalidArgument(String)
-    case core(String, VoicevoxResultCode)
+    // C API の戻り値型。ヘッダーが `enum VoicevoxResultCode` と `typedef int32_t VoicevoxResultCode`
+    // の両方を定義するため Swift では型名 `VoicevoxResultCode` の参照が曖昧になる。typedef の実体である Int32 で扱う
+    case core(String, Int32)
     case notInitialized
     case io(String)
 
@@ -104,12 +106,17 @@ final class VoicevoxTTSModule: NSObject {
     }
   }
 
-  // C API の戻り値 VoicevoxResultCode は Swift では Int32 の typealias として
-  // 取り込まれ、VOICEVOX_RESULT_OK などの定数は rawValue を持つ列挙として取り込まれる
-  // (cbindgen 生成ヘッダーの `enum X {…}; typedef int32_t X;` パターン)。
-  private static let resultOK = VoicevoxResultCode(VOICEVOX_RESULT_OK.rawValue)
+  // cbindgen 生成ヘッダーは `enum X {…}; typedef int32_t X;` の形で、Swift には列挙と
+  // Int32 の typealias が同名で取り込まれる。型名 `VoicevoxResultCode` /
+  // `VoicevoxAccelerationMode` を Swift 側で書くと "ambiguous for type lookup" になるため、
+  // typedef の実体 Int32 で扱い、定数はヘッダーの値をそのまま書く (フレームワークの版は
+  // ios/Frameworks/voicevox-frameworks.json で固定している)。
+  // voicevox_core.h: VOICEVOX_RESULT_OK = 0
+  private static let resultOK: Int32 = 0
+  // voicevox_core.h: VOICEVOX_ACCELERATION_MODE_CPU = 1
+  private static let accelerationModeCPU: Int32 = 1
 
-  private func check(_ result: VoicevoxResultCode, _ operation: String) throws {
+  private func check(_ result: Int32, _ operation: String) throws {
     if result != Self.resultOK {
       throw VoicevoxError.core(operation, result)
     }
@@ -150,8 +157,7 @@ final class VoicevoxTTSModule: NSObject {
     self.openJtalk = openJtalk
 
     var options = voicevox_make_default_initialize_options()
-    options.acceleration_mode = VoicevoxAccelerationMode(
-      VOICEVOX_ACCELERATION_MODE_CPU.rawValue)
+    options.acceleration_mode = Self.accelerationModeCPU
     options.cpu_num_threads = config.cpuNumThreads
 
     var synthesizer: OpaquePointer?
