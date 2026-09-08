@@ -4,11 +4,14 @@ import {
   getEtaFallbackArrivalConfirmMarginSec,
   getEtaFallbackMaxDurationMin,
   getMaxPermitAccuracy,
+  getVoicevoxTTSManifestUrl,
+  getVoicevoxTTSStyleId,
   isAIAgentFeatureEnabled,
   isEtaAssistEnabled,
   isForceNotArrivedOnLowAccuracyEnabled,
   isRemoteTTSEnabled,
   isTTSFeatureEnabled,
+  isVoicevoxTTSEnabled,
   resetRemoteConfigCache,
   setupRemoteConfig,
   subscribeRemoteConfig,
@@ -461,6 +464,59 @@ describe('isRemoteTTSEnabled（リモートTTS切替スイッチ）', () => {
 
     resetRemoteConfigCache();
     expect(isRemoteTTSEnabled()).toBe(false);
+  });
+});
+
+describe('VOICEVOX フォールバック（voicevox_tts_*_ios）', () => {
+  it('未配信時は無効で、配信 URL は null、スタイル ID は No.7 アナウンス', () => {
+    setPlatformOS('ios');
+    expect(isVoicevoxTTSEnabled()).toBe(false);
+    expect(getVoicevoxTTSManifestUrl()).toBeNull();
+    expect(getVoicevoxTTSStyleId()).toBe(30);
+  });
+
+  it('Remote Config で有効化すると iOS だけ有効になる', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      voicevox_tts_enabled_ios: true,
+      voicevox_tts_manifest_url_ios: 'https://assets.example.com/m.json',
+      voicevox_tts_style_id_ios: 14,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isVoicevoxTTSEnabled()).toBe(true);
+    expect(getVoicevoxTTSManifestUrl()).toBe(
+      'https://assets.example.com/m.json'
+    );
+    expect(getVoicevoxTTSStyleId()).toBe(14);
+    // Android はネイティブモジュールを持たないため常に無効
+    setPlatformOS('android');
+    expect(isVoicevoxTTSEnabled()).toBe(false);
+  });
+
+  it('https 以外の URL・負のスタイル ID・型違いは無視してフォールバックする', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      voicevox_tts_enabled_ios: 'true',
+      voicevox_tts_manifest_url_ios: 'http://assets.example.com/m.json',
+      voicevox_tts_style_id_ios: -1,
+    });
+    await setupRemoteConfig();
+
+    setPlatformOS('ios');
+    expect(isVoicevoxTTSEnabled()).toBe(false);
+    expect(getVoicevoxTTSManifestUrl()).toBeNull();
+    expect(getVoicevoxTTSStyleId()).toBe(30);
+  });
+
+  it('スタイル ID 0 (四国めたん あまあま) も受理する', async () => {
+    mockRemoteConfig({
+      max_permit_accuracy: 1500,
+      voicevox_tts_style_id_ios: 0,
+    });
+    await setupRemoteConfig();
+    expect(getVoicevoxTTSStyleId()).toBe(0);
   });
 });
 

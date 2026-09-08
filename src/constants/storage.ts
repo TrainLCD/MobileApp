@@ -43,6 +43,8 @@ export const STORAGE_KEYS = {
     '@TrainLCD:portraitPromoPromptLastShownAt',
   PORTRAIT_PROMO_BANNER_COUNT: '@TrainLCD:portraitPromoBannerCount',
   PORTRAIT_PROMO_APPEARANCE_SEEN: '@TrainLCD:portraitPromoAppearanceSeen',
+  // 取得済みの VOICEVOX 辞書・音声モデル(iOS)。src/lib/voicevox/assets.ts が管理する
+  VOICEVOX_ASSETS: '@TrainLCD:voicevoxAssets',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
