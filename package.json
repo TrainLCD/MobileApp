@@ -2,7 +2,8 @@
   "scripts": {
     "start": "expo start",
     "android": "cross-env APP_VARIANT=dev expo run:android -- --variant devDebug --app-id me.tinykitten.trainlcd.dev",
-    "ios": "cross-env APP_VARIANT=dev expo run:ios",
+    "ios": "npm run ios:frameworks && cross-env APP_VARIANT=dev expo run:ios",
+    "ios:frameworks": "node scripts/fetch-voicevox-frameworks.mjs",
     "web": "expo start --web",
     "lint": "biome check ./src",
     "format": "biome format ./src --write",
