@@ -35,11 +35,40 @@ const usage = `使い方: node scripts/generate-location-gpx.mjs [options]
   --max-speed <km/h>  最高速度 (既定: 320)
   --dwell <sec>       各停車駅での停車時間 (既定: ${DEFAULT_DWELL_SEC})
   --skip <ids>        通過駅の ID をカンマ区切りで指定 (停車せず素通りする)
-  --start <ISO8601>   先頭 waypoint の時刻 (既定: 2026-01-01T00:00:00Z)
+  --start <ISO8601>   先頭 waypoint の時刻。タイムゾーン(Z または ±HH:MM)必須
+                      (既定: 2026-01-01T00:00:00Z)
   --out <path>        出力先 (既定: 標準出力)
   --api <url>         StationAPI の URL (既定: $GQL_API_URL または ${DEFAULT_API_URL})
   --list              路線の駅一覧を表示して終了する
 `;
+
+// タイムゾーン(Z または ±HH:MM)付きの ISO 8601 日時のみを受理する。
+// Date.parse は 'May 1, 2026' のような非 ISO 形式も受理し、さらに
+// '2026-05-01T09:00:00' のようなオフセット無しの日時を「ローカル時刻」として
+// 解釈するため、同じ引数でも実行環境の TZ 次第で出力の <time> が変わる。
+// 生成物を再現可能にするうえで致命的なので、形式と暦日の両方を検証する。
+// 各フィールドの取りうる範囲まで正規表現で縛る。\d{2} のままだと 25 時や
+// 13 月が素通りする。
+const ISO8601_WITH_TIMEZONE =
+  /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d{1,3})?)?(Z|[+-]([01]\d|2[0-3]):[0-5]\d)$/;
+
+const isValidIso8601WithTimezone = (value) => {
+  const matched = ISO8601_WITH_TIMEZONE.exec(value);
+  if (!matched) {
+    return false;
+  }
+  // 暦日の妥当性は正規表現では表せない。Date.parse も 2026-02-30 を 3/2 へ
+  // 繰り上げて受理してしまうため、UTC で往復させて桁が保たれるかを見る。
+  const [, year, month, day] = matched;
+  const roundTripped = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day))
+  );
+  return (
+    roundTripped.getUTCFullYear() === Number(year) &&
+    roundTripped.getUTCMonth() === Number(month) - 1 &&
+    roundTripped.getUTCDate() === Number(day)
+  );
+};
 
 const parseArgs = (argv) => {
   const args = { maxSpeed: 320, dwell: DEFAULT_DWELL_SEC, skip: [] };
@@ -299,9 +328,9 @@ const main = async () => {
       `--dwell には 0 以上の数値を指定してください: ${args.dwell}`
     );
   }
-  if (args.start !== undefined && Number.isNaN(Date.parse(args.start))) {
+  if (args.start !== undefined && !isValidIso8601WithTimezone(args.start)) {
     throw new Error(
-      `--start には ISO8601 の日時を指定してください: ${args.start}`
+      `--start にはタイムゾーン付きの ISO8601 日時を指定してください(例: 2026-01-01T00:00:00Z): ${args.start}`
     );
   }
 
