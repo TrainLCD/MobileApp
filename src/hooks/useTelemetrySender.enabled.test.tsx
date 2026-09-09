@@ -379,6 +379,9 @@ describe('useTelemetrySender', () => {
         const input = body.variables.input;
         expect(input.sessionId).toBe('test-session-id');
         expect(input.device).toBe('MockDevice');
+        expect(input.appVersion).toBe('1.0.0(42)');
+        expect(input.platform).toBe('ios');
+        expect(input.channel).toBe('production');
         // useAtomValueのモックが全atomに同じtruthyな値を返すためarrivedになる
         expect(input.state).toBe('arrived');
         expect(input.lineId).toBe(11302);

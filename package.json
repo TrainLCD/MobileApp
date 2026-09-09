@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "watch:test": "cross-env TZ=UTC jest --watch",
     "gql:codegen": "graphql-codegen --config utils/codegen.ts",
+    "gpx:generate": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-location-gpx.mjs",
+    "gpx:replay": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/replay-location-gpx.mjs",
     "version:bump": "node scripts/bump-version.js",
     "postinstall": "patch-package"
   },
