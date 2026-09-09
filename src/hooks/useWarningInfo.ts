@@ -23,8 +23,38 @@ const WARNING_PANEL_LEVEL = {
   INFO: 'INFO',
 } as const;
 
+// タップして閉じた警告を種別ごとに記録するためのキー。
+// 単一の真偽値で「閉じた」を管理していると、別の警告を出すためのリセットが
+// 閉じたはずの警告まで復活させてしまう(例: 一時的なオフライン検知のたびに
+// オートモード中の常設通知が再表示される)ため、種別単位で保持する。
+const WARNING_KIND = {
+  ALWAYS_PERMISSION_NOT_GRANTED: 'ALWAYS_PERMISSION_NOT_GRANTED',
+  LONG_PRESS_NOTICE: 'LONG_PRESS_NOTICE',
+  AUTO_MODE: 'AUTO_MODE',
+  OFFLINE: 'OFFLINE',
+  WRONG_DIRECTION: 'WRONG_DIRECTION',
+  WRONG_DIRECTION_LOOP_LINE: 'WRONG_DIRECTION_LOOP_LINE',
+  BAD_ACCURACY: 'BAD_ACCURACY',
+  PARTIALLY_PASS: 'PARTIALLY_PASS',
+  SHARE_NOTICE: 'SHARE_NOTICE',
+  UNTOUCHABLE_MODE: 'UNTOUCHABLE_MODE',
+} as const;
+
+type WarningKind = (typeof WARNING_KIND)[keyof typeof WARNING_KIND];
+type WarningLevel =
+  (typeof WARNING_PANEL_LEVEL)[keyof typeof WARNING_PANEL_LEVEL];
+
+type WarningCandidate = {
+  kind: WarningKind;
+  level: WarningLevel;
+  // 表示対象に選ばれた1件だけ翻訳を引くための遅延評価
+  getText: () => string;
+};
+
 export const useWarningInfo = () => {
-  const [warningDismissed, setWarningDismissed] = useState(false);
+  const [dismissedKinds, setDismissedKinds] = useState<readonly WarningKind[]>(
+    []
+  );
   const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(
     () => storage.getString(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED) === 'true'
   );
@@ -61,102 +91,104 @@ export const useWarningInfo = () => {
     [leftStations]
   );
 
-  useEffect(() => {
-    if (autoModeEnabled) {
-      setWarningDismissed(false);
-    }
-  }, [autoModeEnabled]);
-
-  useEffect(() => {
-    if (!isInternetAvailable) {
-      setWarningDismissed(false);
-    }
-  }, [isInternetAvailable]);
-
-  const warningInfo = useMemo(() => {
-    if (warningDismissed) {
-      return null;
-    }
+  // 現在成立している警告を優先度順に並べる。表示するのはこの中で
+  // まだ閉じられていない先頭の1件。
+  const candidates = useMemo<readonly WarningCandidate[]>(() => {
+    const list: WarningCandidate[] = [];
 
     // NOTE: フォアグラウンドも許可しない設定の場合はそもそもオートモード前提で使われていると思うので警告は不要
-    if (fgPermStatus?.granted) {
-      if (
-        !bgPermGranted &&
-        !isAlwaysPermissionNotGrantedDismissed &&
-        !!selectedBound &&
-        !isClip()
-      ) {
-        return {
-          level: WARNING_PANEL_LEVEL.WARNING,
-          text: translate('alwaysPermissionNotGrantedPanelText'),
-        };
-      }
+    if (
+      fgPermStatus?.granted &&
+      !bgPermGranted &&
+      !isAlwaysPermissionNotGrantedDismissed &&
+      !!selectedBound &&
+      !isClip()
+    ) {
+      list.push({
+        kind: WARNING_KIND.ALWAYS_PERMISSION_NOT_GRANTED,
+        level: WARNING_PANEL_LEVEL.WARNING,
+        getText: () => translate('alwaysPermissionNotGrantedPanelText'),
+      });
     }
 
     if (!longPressNoticeDismissed && selectedBound) {
-      return {
+      list.push({
+        kind: WARNING_KIND.LONG_PRESS_NOTICE,
         level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('longPressNotice'),
-      };
+        getText: () => translate('longPressNotice'),
+      });
     }
 
     if (autoModeEnabled) {
-      return {
+      list.push({
+        kind: WARNING_KIND.AUTO_MODE,
         level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('autoModeInProgress'),
-      };
+        getText: () => translate('autoModeInProgress'),
+      });
     }
 
     if (!isInternetAvailable && selectedBound) {
-      return {
+      list.push({
+        kind: WARNING_KIND.OFFLINE,
         level: WARNING_PANEL_LEVEL.WARNING,
-        text: translate('offlineWarningText'),
-      };
+        getText: () => translate('offlineWarningText'),
+      });
     }
 
     if (isWrongDirection) {
-      return {
+      list.push({
+        kind: WARNING_KIND.WRONG_DIRECTION,
         level: WARNING_PANEL_LEVEL.URGENT,
-        text: translate('wrongDirectionWarning'),
-      };
+        getText: () => translate('wrongDirectionWarning'),
+      });
     }
+
     if (isLoopLineWrongDirection) {
-      return {
+      list.push({
+        kind: WARNING_KIND.WRONG_DIRECTION_LOOP_LINE,
         level: WARNING_PANEL_LEVEL.WARNING,
-        text: translate('wrongDirectionLoopLineWarning'),
-      };
+        getText: () => translate('wrongDirectionLoopLineWarning'),
+      });
     }
+
     if (badAccuracy) {
-      return {
+      list.push({
+        kind: WARNING_KIND.BAD_ACCURACY,
         level: WARNING_PANEL_LEVEL.URGENT,
-        text: translate('badAccuracy'),
-      };
+        getText: () => translate('badAccuracy'),
+      });
     }
+
     if (passStations.length > 0 && selectedBound) {
-      return {
+      list.push({
+        kind: WARNING_KIND.PARTIALLY_PASS,
         level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('partiallyPassPanelNotice', {
-          stations: isJapanese
-            ? passStations.map((s) => s.name).join('、')
-            : ` ${passStations.map((s) => s.nameRoman).join(', ')}`,
-        }),
-      };
+        getText: () =>
+          translate('partiallyPassPanelNotice', {
+            stations: isJapanese
+              ? passStations.map((s) => s.name).join('、')
+              : ` ${passStations.map((s) => s.nameRoman).join(', ')}`,
+          }),
+      });
     }
 
     if (screenshotTaken) {
-      return {
+      list.push({
+        kind: WARNING_KIND.SHARE_NOTICE,
         level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('shareNotice'),
-      };
+        getText: () => translate('shareNotice'),
+      });
     }
 
     if (untouchableModeEnabled) {
-      return {
+      list.push({
+        kind: WARNING_KIND.UNTOUCHABLE_MODE,
         level: WARNING_PANEL_LEVEL.INFO,
-        text: translate('untouchableModeEnabledNotice'),
-      };
+        getText: () => translate('untouchableModeEnabledNotice'),
+      });
     }
-    return null;
+
+    return list;
   }, [
     autoModeEnabled,
     badAccuracy,
@@ -169,20 +201,52 @@ export const useWarningInfo = () => {
     longPressNoticeDismissed,
     screenshotTaken,
     selectedBound,
-    warningDismissed,
     untouchableModeEnabled,
     passStations,
   ]);
 
+  // 条件が解消された警告は「閉じた」記録を捨て、再発時に改めて表示できるようにする。
+  // オートモードのように条件が継続する通知は記録が残り続けるため、一度閉じたら
+  // オートモードを切り替え直すまで再表示されない。
+  useEffect(() => {
+    setDismissedKinds((prev) => {
+      const next = prev.filter((kind) =>
+        candidates.some((candidate) => candidate.kind === kind)
+      );
+      return next.length === prev.length ? prev : next;
+    });
+  }, [candidates]);
+
+  const currentWarning = useMemo(
+    () =>
+      candidates.find(
+        (candidate) => !dismissedKinds.includes(candidate.kind)
+      ) ?? null,
+    [candidates, dismissedKinds]
+  );
+
+  const warningInfo = useMemo(
+    () =>
+      currentWarning
+        ? { level: currentWarning.level, text: currentWarning.getText() }
+        : null,
+    [currentWarning]
+  );
+
   const clearWarningInfo = useCallback(() => {
-    setWarningDismissed(true);
+    const dismissedKind = currentWarning?.kind;
+    if (dismissedKind) {
+      setDismissedKinds((prev) =>
+        prev.includes(dismissedKind) ? prev : [...prev, dismissedKind]
+      );
+    }
     setScreenshotTaken(false);
 
     if (!longPressNoticeDismissed) {
       setLongPressNoticeDismissed(true);
       storage.set(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED, 'true');
     }
-  }, [longPressNoticeDismissed]);
+  }, [currentWarning, longPressNoticeDismissed]);
 
   return { warningInfo, clearWarningInfo };
 };
