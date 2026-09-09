@@ -91,8 +91,10 @@ export const useWarningInfo = () => {
     [leftStations]
   );
 
-  // 現在成立している警告を優先度順に並べる。表示するのはこの中で
-  // まだ閉じられていない先頭の1件。
+  // 現在成立している警告を表示優先度順(=登録順)に並べる。表示するのはこの中で
+  // まだ閉じられていない先頭の1件。順序は従来の if チェーンと同一で、
+  // level とは独立している(例: オートモード通知(INFO)は逆走警告(URGENT)より前)。
+  // 逆走・低精度はオートモード中は成立しないため、この順序で問題にならない。
   const candidates = useMemo<readonly WarningCandidate[]>(() => {
     const list: WarningCandidate[] = [];
 
@@ -233,16 +235,26 @@ export const useWarningInfo = () => {
     [currentWarning]
   );
 
+  // 副作用は閉じた種別に対応するものだけに限定する。どの警告を閉じても
+  // 長押し案内を既読にしていると、一度も表示しないまま永続的に既読化してしまう。
   const clearWarningInfo = useCallback(() => {
     const dismissedKind = currentWarning?.kind;
-    if (dismissedKind) {
-      setDismissedKinds((prev) =>
-        prev.includes(dismissedKind) ? prev : [...prev, dismissedKind]
-      );
+    if (!dismissedKind) {
+      return;
     }
-    setScreenshotTaken(false);
 
-    if (!longPressNoticeDismissed) {
+    setDismissedKinds((prev) =>
+      prev.includes(dismissedKind) ? prev : [...prev, dismissedKind]
+    );
+
+    if (dismissedKind === WARNING_KIND.SHARE_NOTICE) {
+      setScreenshotTaken(false);
+    }
+
+    if (
+      dismissedKind === WARNING_KIND.LONG_PRESS_NOTICE &&
+      !longPressNoticeDismissed
+    ) {
       setLongPressNoticeDismissed(true);
       storage.set(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED, 'true');
     }
