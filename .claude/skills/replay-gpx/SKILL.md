@@ -31,6 +31,7 @@ Argent の MCP ツールには位置情報を注入するものが無いため�
 | ---- | ---- |
 | `ios/SampleJY.gpx` | 山手線。実走行ログ |
 | `ios/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h |
+| `ios/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。種別グループから生成 |
 
 新しい経路は `npm run gpx:generate` で作る。詳細は `docs/location-simulation.md`。
 
@@ -38,6 +39,15 @@ Argent の MCP ツールには位置情報を注入するものが無いため�
 npm run gpx:generate -- --line 1004 --list
 npm run gpx:generate -- --line 1004 --from 100418 --to 100411 --max-speed 320 \
   --skip 100417,100416,100415,100413,100412 --out ios/SampleTohokuShinkansen.gpx
+```
+
+列車種別の停車パターンをそのまま走らせたいときは `--line-group` を使う。通過駅は
+`stopCondition` から自動判定されるので `--skip` を手で並べなくてよく、直通で複数
+路線にまたがる経路もそのまま扱える。`lineGroupId` は駅から辿る。
+
+```bash
+npm run gpx:generate -- --list-train-types 2400101
+npm run gpx:generate -- --line-group 71 --max-speed 110 --out ios/KeioSpecialExpress.gpx
 ```
 
 ### 2. アプリを対象の路線に入れる
@@ -54,6 +64,9 @@ adb -s <serial> shell "am start -a android.intent.action.VIEW -d \
 ```
 
 上の例は盛岡→仙台で、一ノ関だけ停車・残り 5 駅は通過になる。
+
+`--out` 付きで生成すると、この `sids` / `skips` が標準エラーにそのまま出力される。
+`--line-group` では通過駅を自動判定するため、index を手で数え直さずこれを使う。
 
 ### 3. GPX を流す
 

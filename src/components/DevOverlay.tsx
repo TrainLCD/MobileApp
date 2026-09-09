@@ -1,5 +1,6 @@
 import * as Application from 'expo-application';
 import { LinearGradient } from 'expo-linear-gradient';
+import type * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -28,6 +29,10 @@ import {
   rawLocationAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import {
+  getDisplacementSpeed,
+  hasMeasuredSpeed,
+} from '~/utils/displacementSpeed';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
@@ -345,6 +350,57 @@ const DevOverlay: React.FC = () => {
   const location = autoModeEnabled ? simulatedLocation : rawLocation;
   const speed = location?.coords?.speed;
   const accuracy = location?.coords?.accuracy;
+
+  // Androidのテストプロバイダ経由の測位はcoords.speedを運んでこない。
+  // cmd location providersに速度を渡す引数が無く、expo-locationがLocation#getSpeed()を
+  // 素通しするため、欠測はnullではなく0として届く（=値だけでは停車と区別できない）。
+  // そこで「正の速度を一度でも観測したか」で実測の有無を判定し、観測できたなら以降は
+  // 0（停車）も含めて実測を使い続ける。観測できない間だけ変位からの算出値へ落とす。
+  const [hasEverMeasuredSpeed, setHasEverMeasuredSpeed] = useState(false);
+  const [displacementSpeed, setDisplacementSpeed] = useState<number | null>(
+    null
+  );
+  const prevSpeedSampleRef = useRef<Location.LocationObject | null>(null);
+  // 直近に読んでいた測位ソース。オートモードの切り替えで参照元がlocationAtomと
+  // rawLocationAtomの間を移るため、ソースをまたいだサンプルで速度を出さないよう見張る。
+  const prevSpeedSourceRef = useRef<'simulated' | 'raw' | null>(null);
+
+  useEffect(() => {
+    // 測位ソースが変わったら基準も判定もやり直す。オートモードのシミュレーションと
+    // GPSの継続測位ではタイムスタンプの系列も速度の有無も異なり、両者をまたいで
+    // 変位を取ると無意味な速度になる。実測の有無もソースごとに判断し直す
+    // （シミュレーションは常に速度を持つため、そのフラグをGPS側へ持ち越すと
+    // 速度を運んでこない測位でも実測扱いのまま0km/hに固定されてしまう）。
+    const speedSource = autoModeEnabled ? 'simulated' : 'raw';
+    const isSourceChanged = prevSpeedSourceRef.current !== speedSource;
+    prevSpeedSourceRef.current = speedSource;
+
+    if (isSourceChanged) {
+      prevSpeedSampleRef.current = null;
+      setDisplacementSpeed(null);
+      setHasEverMeasuredSpeed(false);
+    }
+
+    if (!location) {
+      // 測位が途切れたときも同様。復帰後の1点目を古い基準と突き合わせると、
+      // 途切れていた時間ぶんならした速度が出てしまう。
+      prevSpeedSampleRef.current = null;
+      setDisplacementSpeed(null);
+      setHasEverMeasuredSpeed(false);
+      return;
+    }
+
+    if (hasMeasuredSpeed(location.coords.speed)) {
+      setHasEverMeasuredSpeed(true);
+    }
+
+    const derived = getDisplacementSpeed(prevSpeedSampleRef.current, location);
+    prevSpeedSampleRef.current = location;
+    // 算出不能（同一タイムスタンプの再配信など）のときは前回値を残す
+    if (derived != null) {
+      setDisplacementSpeed(derived);
+    }
+  }, [location, autoModeEnabled]);
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
@@ -358,7 +414,9 @@ const DevOverlay: React.FC = () => {
   const etaPhase = useMemo(() => getEtaPhaseNow(nowTick), [nowTick]);
   const etaAnchor = useAtomValue(etaAnchorAtom);
 
-  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
+  const effectiveSpeed = hasEverMeasuredSpeed
+    ? Math.max(0, speed ?? 0)
+    : (displacementSpeed ?? 0);
   const accuracyMeters =
     accuracy != null ? Math.max(0, Math.floor(accuracy)) : null;
   // 最大許容精度のフィルタに関係なく生の精度を判定し、許容値を超えたら赤字で警告する。
@@ -373,13 +431,14 @@ const DevOverlay: React.FC = () => {
     accuracy <= maxPermitAccuracy;
 
   const speedKMH = useMemo(
-    () =>
-      (
-        (speed && Math.round((coordsSpeed * 3600) / 1000)) ??
-        0
-      ).toLocaleString(),
-    [coordsSpeed, speed]
+    () => Math.round((effectiveSpeed * 3600) / 1000).toLocaleString(),
+    [effectiveSpeed]
   );
+  // 算出値は停車中の測位ゆらぎでも値が立つため、実測と読み違えないよう出所を添える
+  const speedMeta =
+    !hasEverMeasuredSpeed && displacementSpeed != null
+      ? '変位から算出'
+      : undefined;
 
   // 最新の測位精度を ref で保持し、setInterval から常に最新値を参照できるようにする
   const latestAccuracyRef = useRef<number | null | undefined>(accuracy);
@@ -815,6 +874,8 @@ const DevOverlay: React.FC = () => {
                     label="CURRENT SPEED"
                     value={speedKMH}
                     suffix="km/h"
+                    meta={speedMeta}
+                    metaTestID="dev-overlay-speed-meta"
                     style={[{ width: leftMetricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-speed-value"
                     labelStyle={metricLabelStyle}
@@ -900,6 +961,8 @@ const DevOverlay: React.FC = () => {
                     label="CURRENT SPEED"
                     value={speedKMH}
                     suffix="km/h"
+                    meta={speedMeta}
+                    metaTestID="dev-overlay-speed-meta"
                     style={[{ width: metricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-speed-value"
                     labelStyle={metricLabelStyle}

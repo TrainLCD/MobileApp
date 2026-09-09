@@ -16,8 +16,14 @@
 //     --max-speed 320 --out ios/SampleTohokuShinkansen.gpx
 //
 // 駅 ID は StationAPI の lineStations が返す値。--list で一覧を確認できる。
+//
+// --line-group を使うと列車種別グループ (lineGroupId) の経路をそのまま走らせる。
+// lineGroupStations は駅ごとの stopCondition を返すので、通過駅を --skip で
+// 手で並べる必要が無くなり、直通で複数路線にまたがる経路もそのまま扱える。
+// アプリ側の判定 (src/utils/isPass.ts) と同じ規則で停車・通過を決める。
 
-import { writeFileSync } from 'node:fs';
+import { realpathSync, writeFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { generateTrainSpeedProfile } from '../src/utils/trainSpeed.ts';
 
 const DEFAULT_API_URL = 'https://gql.trainlcd.app/';
@@ -29,17 +35,23 @@ const EARTH_RADIUS_M = 6_371_008.8;
 
 const usage = `使い方: node scripts/generate-location-gpx.mjs [options]
 
-  --line <id>         路線 ID (必須。例: 東北新幹線 = 1004)
-  --from <stationId>  始点の駅 ID (必須)
-  --to <stationId>    終点の駅 ID (必須)
+  --line <id>         路線 ID (例: 東北新幹線 = 1004)
+  --line-group <id>   列車種別グループ ID。通過駅は stopCondition から自動判定する
+                      (--line と排他。どちらか一方が必須)
+  --from <stationId>  始点の駅 ID (--line では必須。--line-group では既定で経路の先頭)
+  --to <stationId>    終点の駅 ID (--line では必須。--line-group では既定で経路の末尾)
   --max-speed <km/h>  最高速度 (既定: 320)
   --dwell <sec>       各停車駅での停車時間 (既定: ${DEFAULT_DWELL_SEC})
   --skip <ids>        通過駅の ID をカンマ区切りで指定 (停車せず素通りする)
+                      --line-group では stopCondition による判定に追加される
   --start <ISO8601>   先頭 waypoint の時刻。タイムゾーン(Z または ±HH:MM)必須
                       (既定: 2026-01-01T00:00:00Z)
+                      平日/休日運転の stopCondition はこの日付(JST)で判定する
   --out <path>        出力先 (既定: 標準出力)
   --api <url>         StationAPI の URL (既定: $GQL_API_URL または ${DEFAULT_API_URL})
-  --list              路線の駅一覧を表示して終了する
+  --list              路線 / 種別グループの駅一覧を表示して終了する
+  --list-train-types <stationId>
+                      その駅を通る列車種別と lineGroupId を表示して終了する
 `;
 
 // タイムゾーン(Z または ±HH:MM)付きの ISO 8601 日時のみを受理する。
@@ -52,7 +64,7 @@ const usage = `使い方: node scripts/generate-location-gpx.mjs [options]
 const ISO8601_WITH_TIMEZONE =
   /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d{1,3})?)?(Z|[+-]([01]\d|2[0-3]):[0-5]\d)$/;
 
-const isValidIso8601WithTimezone = (value) => {
+export const isValidIso8601WithTimezone = (value) => {
   const matched = ISO8601_WITH_TIMEZONE.exec(value);
   if (!matched) {
     return false;
@@ -70,7 +82,7 @@ const isValidIso8601WithTimezone = (value) => {
   );
 };
 
-const parseArgs = (argv) => {
+export const parseArgs = (argv) => {
   const args = { maxSpeed: 320, dwell: DEFAULT_DWELL_SEC, skip: [] };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
@@ -84,6 +96,9 @@ const parseArgs = (argv) => {
     switch (key) {
       case '--line':
         args.line = Number(next());
+        break;
+      case '--line-group':
+        args.lineGroup = Number(next());
         break;
       case '--from':
         args.from = Number(next());
@@ -115,6 +130,9 @@ const parseArgs = (argv) => {
       case '--list':
         args.list = true;
         break;
+      case '--list-train-types':
+        args.listTrainTypes = Number(next());
+        break;
       case '--help':
       case '-h':
         args.help = true;
@@ -126,22 +144,11 @@ const parseArgs = (argv) => {
   return args;
 };
 
-const fetchLineStations = async (apiUrl, lineId) => {
+const queryStationApi = async (apiUrl, query, variables) => {
   const res = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `query GenerateGpxLineStations($lineId: Int!) {
-        lineStations(lineId: $lineId) {
-          id
-          name
-          nameRoman
-          latitude
-          longitude
-        }
-      }`,
-      variables: { lineId },
-    }),
+    body: JSON.stringify({ query, variables }),
   });
   if (!res.ok) {
     throw new Error(
@@ -154,15 +161,84 @@ const fetchLineStations = async (apiUrl, lineId) => {
       `StationAPI がエラーを返しました: ${json.errors.map((e) => e.message).join(', ')}`
     );
   }
-  const stations = json.data?.lineStations ?? [];
+  return json.data ?? {};
+};
+
+const fetchLineStations = async (apiUrl, lineId) => {
+  const data = await queryStationApi(
+    apiUrl,
+    `query GenerateGpxLineStations($lineId: Int!) {
+      lineStations(lineId: $lineId) {
+        id
+        name
+        nameRoman
+        latitude
+        longitude
+      }
+    }`,
+    { lineId }
+  );
+  const stations = data.lineStations ?? [];
   if (stations.length === 0) {
     throw new Error(`路線 ${lineId} の駅が見つかりませんでした`);
   }
   return stations;
 };
 
+// 種別グループの経路。stopCondition が停車/通過を、line が直通先の路線を表す。
+const fetchLineGroupStations = async (apiUrl, lineGroupId) => {
+  const data = await queryStationApi(
+    apiUrl,
+    `query GenerateGpxLineGroupStations($lineGroupId: Int!) {
+      lineGroupStations(lineGroupId: $lineGroupId) {
+        id
+        name
+        nameRoman
+        latitude
+        longitude
+        stopCondition
+        line {
+          id
+          nameShort
+        }
+      }
+    }`,
+    { lineGroupId }
+  );
+  const stations = data.lineGroupStations ?? [];
+  if (stations.length === 0) {
+    throw new Error(`種別グループ ${lineGroupId} の駅が見つかりませんでした`);
+  }
+  return stations;
+};
+
+// lineGroupId は駅からしか辿れないため、--list-train-types の裏側で使う。
+const fetchStationTrainTypes = async (apiUrl, stationId) => {
+  const data = await queryStationApi(
+    apiUrl,
+    `query GenerateGpxStationTrainTypes($stationId: Int!) {
+      stationTrainTypes(stationId: $stationId) {
+        typeId
+        groupId
+        name
+        nameRoman
+        line {
+          id
+          nameShort
+        }
+      }
+    }`,
+    { stationId }
+  );
+  const trainTypes = data.stationTrainTypes ?? [];
+  if (trainTypes.length === 0) {
+    throw new Error(`駅 ${stationId} に列車種別がありません`);
+  }
+  return trainTypes;
+};
+
 // 大圏距離(m)。区間長は数十 km になるため平面近似だと誤差が無視できない。
-const distanceBetween = (a, b) => {
+export const distanceBetween = (a, b) => {
   const toRad = (deg) => (deg * Math.PI) / 180;
   const dLat = toRad(b.latitude - a.latitude);
   const dLon = toRad(b.longitude - a.longitude);
@@ -182,7 +258,7 @@ const interpolate = (from, to, ratio) => ({
 });
 
 // 折れ線(全駅)の始点からの累積距離を求める
-const cumulativeDistances = (polyline) => {
+export const cumulativeDistances = (polyline) => {
   const cumulative = [0];
   for (let i = 1; i < polyline.length; i++) {
     cumulative.push(
@@ -193,7 +269,7 @@ const cumulativeDistances = (polyline) => {
 };
 
 // 折れ線の始点から travelled(m) 進んだ地点の座標を返す
-const pointAtDistance = (polyline, cumulative, travelled) => {
+export const pointAtDistance = (polyline, cumulative, travelled) => {
   const total = cumulative.at(-1);
   if (travelled <= 0) {
     return { ...polyline[0] };
@@ -211,12 +287,91 @@ const pointAtDistance = (polyline, cumulative, travelled) => {
   return interpolate(polyline[i - 1], polyline[i], ratio);
 };
 
+// 停車/通過の判定はアプリ本体 (src/utils/isPass.ts) と同じ規則にする。
+// ここが食い違うと、GPX では停車しているのに画面上は通過扱い(あるいはその逆)に
+// なり、生成物が検証に使えなくなる。
+// isHoliday は「その日が休日か」。アプリは実行時の日付で判定するが、GPX は
+// --start の日付を再生時刻として持つので、こちらもその日付で判定する。
+export const isPassStopCondition = (stopCondition, isHoliday) => {
+  switch (stopCondition) {
+    case 'Not':
+      return true;
+    // 平日運転 = 休日は通過。休日運転 = 平日は通過。
+    case 'Weekday':
+      return isHoliday;
+    case 'Holiday':
+      return !isHoliday;
+    // All / Partial(一部通過) / PartialStop(一部停車) はいずれも停車扱い。
+    default:
+      return false;
+  }
+};
+
+// 日本の暦で土日・祝日かを返す。祝日判定は @holiday-jp/holiday_jp に依存するが、
+// このスクリプトは依存ゼロで動かせる必要がある(node --test のジョブは npm ci を
+// 挟まない)ため、実際に平日/休日運転の駅が現れたときだけ遅延 import する。
+export const resolveIsHoliday = async (date) => {
+  // stopCondition は日本の運転日基準なので JST の暦日で見る。
+  const shifted = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  // holiday_jp は渡された Date を getFullYear/getMonth/getDate、つまり実行環境の
+  // ローカル時刻で解釈する。+9h しただけの Date をそのまま渡すと、TZ=Asia/Tokyo の
+  // 環境では JST 15:00 以降で判定日が翌日へずれる(JST 1/1 19:00 が 1/2 と判定され、
+  // 元日を取りこぼす)。JST の年月日をローカル時刻の Date として組み直して渡す。
+  const jstCalendarDate = new Date(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth(),
+    shifted.getUTCDate()
+  );
+  const day = jstCalendarDate.getDay();
+  if (day === 0 || day === 6) {
+    return true;
+  }
+  const holidayJp = await import('@holiday-jp/holiday_jp').catch(() => {
+    throw new Error(
+      '平日/休日運転の駅を含む経路の判定には @holiday-jp/holiday_jp が必要です。npm install を実行してください'
+    );
+  });
+  return (holidayJp.default ?? holidayJp).isHoliday(jstCalendarDate);
+};
+
+// route 上で実際に停車する駅の index を返す。始点と終点は必ず停車する
+// (その駅から発車し、その駅で終着するため)。
+export const resolveStopIndices = ({ route, skippedIds, isHoliday }) =>
+  route
+    .map((station, i) => {
+      if (i === 0 || i === route.length - 1) {
+        return i;
+      }
+      if (skippedIds.has(station.id)) {
+        return -1;
+      }
+      return isPassStopCondition(station.stopCondition, isHoliday) ? -1 : i;
+    })
+    .filter((i) => i !== -1);
+
+// 同じ経路をアプリで開くためのディープリンクのクエリ部を組み立てる。
+// skips は sids 配列に対する 0 起点の通過駅 index (src/hooks/useDeepLink.ts)。
+// 種別グループでは通過駅を自動判定するため、手で数え直せるようにここで出す。
+export const buildDeepLinkQuery = (route, stopIndices) => {
+  const stops = new Set(stopIndices);
+  const skips = route
+    .map((_, i) => (stops.has(i) ? -1 : i))
+    .filter((i) => i !== -1);
+  const sids = `sids=${route.map((s) => s.id).join(',')}`;
+  return skips.length > 0 ? `${sids}&skips=${skips.join(',')}` : sids;
+};
+
 // route: 経路上の全駅(通過駅を含む折れ線の節点)
 // stopIndices: そのうち実際に停車する駅の index(始点と終点を必ず含む)
 //
 // 通過駅で停車しないよう、速度プロファイルは「停車駅から停車駅まで」を 1 本の
 // 走行として生成する。通過駅を区切りにすると駅ごとに減速・停止してしまう。
-const buildWaypoints = ({ route, stopIndices, maxSpeedKmh, dwellSec }) => {
+export const buildWaypoints = ({
+  route,
+  stopIndices,
+  maxSpeedKmh,
+  dwellSec,
+}) => {
   const maxSpeed = maxSpeedKmh / 3.6; // m/s
   const waypoints = [{ ...route[0], elapsed: 0 }];
   let elapsed = 0;
@@ -262,7 +417,7 @@ const buildWaypoints = ({ route, stopIndices, maxSpeedKmh, dwellSec }) => {
   return waypoints;
 };
 
-const toGpx = (waypoints, startTime) => {
+export const toGpx = (waypoints, startTime) => {
   const startMs = Date.parse(startTime);
   const body = waypoints
     .map((wp) => {
@@ -294,23 +449,64 @@ const main = async () => {
 
   const apiUrl = args.api ?? process.env.GQL_API_URL ?? DEFAULT_API_URL;
 
-  if (!Number.isFinite(args.line)) {
-    process.stderr.write(usage);
-    throw new Error('--line は必須です');
-  }
-
-  const allStations = await fetchLineStations(apiUrl, args.line);
-
-  if (args.list) {
-    for (const s of allStations) {
+  if (args.listTrainTypes !== undefined) {
+    if (!Number.isFinite(args.listTrainTypes)) {
+      throw new Error('--list-train-types には駅 ID を指定してください');
+    }
+    const trainTypes = await fetchStationTrainTypes(
+      apiUrl,
+      args.listTrainTypes
+    );
+    for (const t of trainTypes) {
       process.stdout.write(
-        `${s.id}\t${s.name}\t${s.nameRoman}\t${s.latitude}, ${s.longitude}\n`
+        `${t.groupId}\t${t.name}\t${t.nameRoman ?? ''}\t${t.line?.nameShort ?? ''}\n`
       );
     }
     return;
   }
 
-  if (!Number.isFinite(args.from) || !Number.isFinite(args.to)) {
+  const useLineGroup = args.lineGroup !== undefined;
+  if (useLineGroup && args.line !== undefined) {
+    process.stderr.write(usage);
+    throw new Error('--line と --line-group は同時に指定できません');
+  }
+  if (!useLineGroup && !Number.isFinite(args.line)) {
+    process.stderr.write(usage);
+    throw new Error('--line または --line-group が必要です');
+  }
+  if (useLineGroup && !Number.isFinite(args.lineGroup)) {
+    throw new Error('--line-group には種別グループ ID を指定してください');
+  }
+
+  const allStations = useLineGroup
+    ? await fetchLineGroupStations(apiUrl, args.lineGroup)
+    : await fetchLineStations(apiUrl, args.line);
+
+  if (args.list) {
+    for (const s of allStations) {
+      const extra = useLineGroup
+        ? `\t${s.stopCondition ?? ''}\t${s.line?.nameShort ?? ''}`
+        : '';
+      process.stdout.write(
+        `${s.id}\t${s.name}\t${s.nameRoman}\t${s.latitude}, ${s.longitude}${extra}\n`
+      );
+    }
+    return;
+  }
+
+  // 種別グループは経路そのものが答えなので、区間指定が無ければ全区間を走らせる。
+  const from = Number.isFinite(args.from)
+    ? args.from
+    : useLineGroup
+      ? allStations[0].id
+      : Number.NaN;
+  const to = Number.isFinite(args.to)
+    ? args.to
+    : useLineGroup
+      ? allStations.at(-1).id
+      : Number.NaN;
+
+  if (!Number.isFinite(from) || !Number.isFinite(to)) {
     process.stderr.write(usage);
     throw new Error('--from と --to は必須です');
   }
@@ -334,13 +530,16 @@ const main = async () => {
     );
   }
 
-  const fromIndex = allStations.findIndex((s) => s.id === args.from);
-  const toIndex = allStations.findIndex((s) => s.id === args.to);
+  const scopeLabel = useLineGroup
+    ? `種別グループ ${args.lineGroup}`
+    : `路線 ${args.line}`;
+  const fromIndex = allStations.findIndex((s) => s.id === from);
+  const toIndex = allStations.findIndex((s) => s.id === to);
   if (fromIndex === -1) {
-    throw new Error(`始点の駅 ${args.from} が路線 ${args.line} にありません`);
+    throw new Error(`始点の駅 ${from} が${scopeLabel}にありません`);
   }
   if (toIndex === -1) {
-    throw new Error(`終点の駅 ${args.to} が路線 ${args.line} にありません`);
+    throw new Error(`終点の駅 ${to} が${scopeLabel}にありません`);
   }
   if (fromIndex === toIndex) {
     throw new Error('--from と --to が同じ駅です');
@@ -364,11 +563,20 @@ const main = async () => {
   // 通過駅も経路の折れ点としては残す。除外すると経路が直線に化けて、
   // 通過駅の近傍を通らなくなってしまう
   const skipped = new Set(args.skip);
-  const stopIndices = ordered
-    .map((s, i) =>
-      i === 0 || i === ordered.length - 1 || !skipped.has(s.id) ? i : -1
-    )
-    .filter((i) => i !== -1);
+  const startTime = args.start ?? '2026-01-01T00:00:00Z';
+  const needsHolidayCheck =
+    useLineGroup &&
+    ordered.some(
+      (s) => s.stopCondition === 'Weekday' || s.stopCondition === 'Holiday'
+    );
+  const isHoliday = needsHolidayCheck
+    ? await resolveIsHoliday(new Date(Date.parse(startTime)))
+    : false;
+  const stopIndices = resolveStopIndices({
+    route: ordered,
+    skippedIds: skipped,
+    isHoliday,
+  });
 
   const waypoints = buildWaypoints({
     route: ordered,
@@ -376,7 +584,7 @@ const main = async () => {
     maxSpeedKmh: args.maxSpeed,
     dwellSec: args.dwell,
   });
-  const gpx = toGpx(waypoints, args.start ?? '2026-01-01T00:00:00Z');
+  const gpx = toGpx(waypoints, startTime);
 
   if (args.out) {
     writeFileSync(args.out, gpx, 'utf8');
@@ -384,12 +592,34 @@ const main = async () => {
     process.stderr.write(
       `${args.out} を出力しました (経路 ${ordered.length} 駅 / うち停車 ${stopIndices.length} 駅 / ${waypoints.length} 点 / 約 ${minutes} 分 / 最高 ${args.maxSpeed}km/h)\n`
     );
+    // 再生時はアプリを同じ経路に入れておく必要がある。通過駅の index を手で
+    // 数え直さずに済むよう、ディープリンクのクエリ部をそのまま出す。
+    process.stderr.write(
+      `アプリを同じ経路で開くディープリンク: ?${buildDeepLinkQuery(ordered, stopIndices)}\n`
+    );
   } else {
     process.stdout.write(gpx);
   }
 };
 
-main().catch((error) => {
-  process.stderr.write(`${error.message}\n`);
-  process.exit(1);
-});
+// テストから純粋関数を import できるよう、直接起動されたときだけ main() を走らせる。
+// import.meta.main は Node のバージョンによっては undefined になるため、
+// どのバージョンでも成立する比較を使う。
+const isDirectRun = () => {
+  const entry = process.argv[1];
+  if (!entry) {
+    return false;
+  }
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(entry)).href;
+  } catch {
+    return false;
+  }
+};
+
+if (isDirectRun()) {
+  main().catch((error) => {
+    process.stderr.write(`${error.message}\n`);
+    process.exit(1);
+  });
+}
