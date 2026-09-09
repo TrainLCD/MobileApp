@@ -657,4 +657,94 @@ describe('DevOverlay', () => {
       );
     });
   });
+
+  // Androidのテストプロバイダ経由の測位(GPX再生)はcoords.speedを運んでこず、
+  // 欠測がnullではなく0として届く。実測が取れない間だけ変位から算出した値へ落とす。
+  describe('実測速度が得られない場合のフォールバック', () => {
+    const movingSample = (latitude: number, timestamp: number) => ({
+      coords: { latitude, longitude: 139, speed: 0, accuracy: 8 },
+      timestamp,
+    });
+
+    // DevOverlayはReact.memoでpropsを持たないため、rerender()では再描画されない。
+    // 常駐の1秒ティック(nowTick)を進めて、モックし直したatom値を読ませる。
+    const advanceOneTick = () => {
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+    };
+
+    it('coords.speedが0のまま動いている場合は変位から算出した速度を表示する', () => {
+      jest.useFakeTimers();
+      try {
+        setupAtomValues({ rawLocation: movingSample(35, 1000) });
+        const { getByTestId } = render(<DevOverlay />);
+        expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+          '0km/h'
+        );
+
+        // 緯度0.0009度 ≒ 100m を1秒。100m/s = 360km/h
+        setupAtomValues({ rawLocation: movingSample(35.0009, 2000) });
+        advanceOneTick();
+
+        expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+          '360km/h'
+        );
+        expect(getByTestId('dev-overlay-speed-meta')).toHaveTextContent(
+          '変位から算出'
+        );
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('実測速度を一度でも観測したら以降は実測値を使い続ける', () => {
+      jest.useFakeTimers();
+      try {
+        setupAtomValues({
+          rawLocation: {
+            coords: { latitude: 35, longitude: 139, speed: 10, accuracy: 8 },
+            timestamp: 1000,
+          },
+        });
+        const { getByTestId, queryByTestId } = render(<DevOverlay />);
+        expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+          '36km/h'
+        );
+
+        // 停車して速度が0になっても、変位由来の値では上書きしない
+        setupAtomValues({
+          rawLocation: {
+            coords: {
+              latitude: 35.0009,
+              longitude: 139,
+              speed: 0,
+              accuracy: 8,
+            },
+            timestamp: 2000,
+          },
+        });
+        advanceOneTick();
+
+        expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+          '0km/h'
+        );
+        expect(queryByTestId('dev-overlay-speed-meta')).toBeNull();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('実測が無く算出もできない間は出所ラベルを出さない', () => {
+      setupAtomValues({
+        rawLocation: {
+          coords: { latitude: 35, longitude: 139, speed: 0, accuracy: 8 },
+          timestamp: 1000,
+        },
+      });
+      const { getByTestId, queryByTestId } = render(<DevOverlay />);
+      expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent('0km/h');
+      expect(queryByTestId('dev-overlay-speed-meta')).toBeNull();
+    });
+  });
 });
