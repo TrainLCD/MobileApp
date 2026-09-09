@@ -735,6 +735,54 @@ describe('DevOverlay', () => {
       }
     });
 
+    it('オートモードの切り替えで測位ソースが変わったら判定と基準をやり直す', () => {
+      jest.useFakeTimers();
+      try {
+        // オートモード中はシミュレーションが必ず速度を持つため実測扱いになる
+        setupAtomValues({
+          location: {
+            coords: { latitude: 35, longitude: 139, speed: 25, accuracy: 0 },
+            timestamp: 1000,
+          },
+          autoModeEnabled: true,
+        });
+        const { getByTestId, queryByTestId } = render(<DevOverlay />);
+        expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+          '90km/h'
+        );
+
+        // オートモードを抜けるとrawLocationAtomへ参照が移る。シミュレーション由来の
+        // 実測フラグを持ち越すと、速度を運んでこない測位でも0km/hに固定されてしまう。
+        // ソースが変わった直後は基準も無いため、変位からの算出値も出さない
+        setupAtomValues({
+          rawLocation: movingSample(35.05, 2000),
+          autoModeEnabled: false,
+        });
+        advanceOneTick();
+
+        expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+          '0km/h'
+        );
+        expect(queryByTestId('dev-overlay-speed-meta')).toBeNull();
+
+        // 同じソースで2点そろってから算出値へ落ちる
+        setupAtomValues({
+          rawLocation: movingSample(35.0509, 3000),
+          autoModeEnabled: false,
+        });
+        advanceOneTick();
+
+        expect(getByTestId('dev-overlay-speed-value')).toHaveTextContent(
+          '360km/h'
+        );
+        expect(getByTestId('dev-overlay-speed-meta')).toHaveTextContent(
+          '変位から算出'
+        );
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
     it('実測が無く算出もできない間は出所ラベルを出さない', () => {
       setupAtomValues({
         rawLocation: {

@@ -361,10 +361,28 @@ const DevOverlay: React.FC = () => {
     null
   );
   const prevSpeedSampleRef = useRef<Location.LocationObject | null>(null);
+  // 直近に読んでいた測位ソース。オートモードの切り替えで参照元がlocationAtomと
+  // rawLocationAtomの間を移るため、ソースをまたいだサンプルで速度を出さないよう見張る。
+  const prevSpeedSourceRef = useRef<'simulated' | 'raw' | null>(null);
 
   useEffect(() => {
+    // 測位ソースが変わったら基準も判定もやり直す。オートモードのシミュレーションと
+    // GPSの継続測位ではタイムスタンプの系列も速度の有無も異なり、両者をまたいで
+    // 変位を取ると無意味な速度になる。実測の有無もソースごとに判断し直す
+    // （シミュレーションは常に速度を持つため、そのフラグをGPS側へ持ち越すと
+    // 速度を運んでこない測位でも実測扱いのまま0km/hに固定されてしまう）。
+    const speedSource = autoModeEnabled ? 'simulated' : 'raw';
+    const isSourceChanged = prevSpeedSourceRef.current !== speedSource;
+    prevSpeedSourceRef.current = speedSource;
+
+    if (isSourceChanged) {
+      prevSpeedSampleRef.current = null;
+      setDisplacementSpeed(null);
+      setHasEverMeasuredSpeed(false);
+    }
+
     if (!location) {
-      // 測位が途切れたら基準も判定もやり直す。復帰後の1点目を古い基準と突き合わせると、
+      // 測位が途切れたときも同様。復帰後の1点目を古い基準と突き合わせると、
       // 途切れていた時間ぶんならした速度が出てしまう。
       prevSpeedSampleRef.current = null;
       setDisplacementSpeed(null);
@@ -382,7 +400,7 @@ const DevOverlay: React.FC = () => {
     if (derived != null) {
       setDisplacementSpeed(derived);
     }
-  }, [location]);
+  }, [location, autoModeEnabled]);
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
