@@ -50,6 +50,7 @@ npm run gpx:generate -- \
 | オプション | 説明 |
 | ---- | ---- |
 | `--line` | 路線 ID。東北新幹線は `1004` |
+| `--line-group` | 列車種別グループ ID。`--line` と排他 |
 | `--from` / `--to` | 始点・終点の駅 ID。API の並び順に関わらず指定した向きで走る |
 | `--max-speed` | 最高速度 (km/h)。既定は `320` |
 | `--skip` | 通過駅の駅 ID (カンマ区切り)。停車しないだけで経路上は通過する |
@@ -59,16 +60,58 @@ npm run gpx:generate -- \
 出力は 1 秒間隔の `<wpt>` 列になる。iOS は `distanceInterval` 基準で概ね 1Hz 配信のため、
 実機の更新間隔に近い。
 
+## 列車種別グループから生成する
+
+`--line` は路線の全駅を並べるだけなので、種別ごとの通過駅を `--skip` に手で書き出す
+必要があり、直通で複数路線にまたがる経路は表現できない。`--line-group`
+(`lineGroupId`) を使うと `lineGroupStations` が返す経路をそのまま走らせられる。
+
+- 通過駅は各駅の `stopCondition` から自動判定する。規則はアプリ本体
+  (`src/utils/isPass.ts`) と同じで、`Not` は通過、`Partial` / `PartialStop` は停車扱い。
+- `Weekday` / `Holiday` は `--start` の日付 (JST) で判定する。既定の
+  `2026-01-01T00:00:00Z` は元日なので休日扱いになる。
+- 直通先の路線も 1 本の経路として繋がる。
+- `--from` / `--to` を省略すると経路の全区間を走る。
+- `--skip` は自動判定に**追加**される。臨時の通過を足すときに使う。
+
+`lineGroupId` は駅から辿る。`--list-train-types` にその駅の駅 ID を渡すと、
+`groupId` と種別名の対応が出る。
+
+```bash
+# 京王線新宿 (2400101) を通る種別と lineGroupId を出す
+npm run gpx:generate -- --list-train-types 2400101
+# → 71  特急  Special Express  京王線
+
+# 経路と stopCondition を確認する
+npm run gpx:generate -- --line-group 71 --list
+
+# 新宿→京王八王子を特急の停車パターンで生成する
+npm run gpx:generate -- --line-group 71 --max-speed 110 --out ios/KeioSpecialExpress.gpx
+```
+
+生成時、標準エラーに同じ経路をアプリで開くためのディープリンクのクエリ部を出す。
+`skips` は `sids` に対する 0 起点の通過駅 index なので、自動判定した通過駅を
+手で数え直さずにそのまま再生手順へ渡せる。
+
+```text
+アプリを同じ経路で開くディープリンク: ?sids=2400101,2400104,...&skips=2,4,5,...
+```
+
 ## 同梱している GPX
 
 | ファイル | 内容 |
 | ---- | ---- |
 | `ios/SampleJY.gpx` | 山手線。外部ツールで記録した実走行ログ |
 | `ios/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h、一ノ関に停車、通過駅 5 駅を経由 |
+| `ios/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。最高 110km/h |
 
 `SampleTohokuShinkansen.gpx` は盛岡以南の 320km/h 区間を再現するためのもの。
 経路上の 8 駅すべてに `ARRIVED_MAX_THRESHOLD` (200m) 以内まで接近するので、
 各駅の到着判定・通過判定をそのまま観測できる。
+
+`KeioSpecialExpress.gpx` は在来線側のサンプルで、種別グループの停車パターン
+(経路 32 駅 / うち停車 12 駅) をそのまま走る。同じコマンドを再実行すれば
+バイト単位で同じ内容が得られる。
 
 ## iOS シミュレータで再生する
 
