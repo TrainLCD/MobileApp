@@ -311,9 +311,18 @@ export const isPassStopCondition = (stopCondition, isHoliday) => {
 // このスクリプトは依存ゼロで動かせる必要がある(node --test のジョブは npm ci を
 // 挟まない)ため、実際に平日/休日運転の駅が現れたときだけ遅延 import する。
 export const resolveIsHoliday = async (date) => {
-  // stopCondition は日本の運転日基準なので JST の曜日で見る。
-  const jst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-  const day = jst.getUTCDay();
+  // stopCondition は日本の運転日基準なので JST の暦日で見る。
+  const shifted = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  // holiday_jp は渡された Date を getFullYear/getMonth/getDate、つまり実行環境の
+  // ローカル時刻で解釈する。+9h しただけの Date をそのまま渡すと、TZ=Asia/Tokyo の
+  // 環境では JST 15:00 以降で判定日が翌日へずれる(JST 1/1 19:00 が 1/2 と判定され、
+  // 元日を取りこぼす)。JST の年月日をローカル時刻の Date として組み直して渡す。
+  const jstCalendarDate = new Date(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth(),
+    shifted.getUTCDate()
+  );
+  const day = jstCalendarDate.getDay();
   if (day === 0 || day === 6) {
     return true;
   }
@@ -322,7 +331,7 @@ export const resolveIsHoliday = async (date) => {
       '平日/休日運転の駅を含む経路の判定には @holiday-jp/holiday_jp が必要です。npm install を実行してください'
     );
   });
-  return (holidayJp.default ?? holidayJp).isHoliday(jst);
+  return (holidayJp.default ?? holidayJp).isHoliday(jstCalendarDate);
 };
 
 // route 上で実際に停車する駅の index を返す。始点と終点は必ず停車する

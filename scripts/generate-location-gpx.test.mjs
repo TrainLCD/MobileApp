@@ -7,6 +7,7 @@
 // 一致していないと生成物が検証に使えなくなるので、ここで独立して押さえる。
 
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { test } from 'node:test';
 
 import {
@@ -119,7 +120,7 @@ test('休日判定は JST の曜日で行う', async () => {
   // 2026-01-03 は土曜。UTC では 1/2 15:00 が JST の 1/3 00:00 にあたる。
   // UTC の曜日で見ると金曜になり、平日と誤判定してしまう。
   assert.equal(await resolveIsHoliday(new Date('2026-01-02T15:00:00Z')), true);
-  // その 1 分前は JST でも 1/2 (金) なのでまだ休日ではない。祝日判定へ進む。
+  // 2026-01-04 は日曜。UTC の 1/4 14:59 は JST の 1/4 23:59 で、まだ日曜のうち。
   assert.equal(await resolveIsHoliday(new Date('2026-01-04T14:59:00Z')), true);
 });
 
@@ -148,5 +149,36 @@ test(
       await resolveIsHoliday(new Date('2026-01-05T00:00:00Z')),
       false
     );
+    // JST の 1/2 23:59。週末でも祝日でもないので平日として抜ける。
+    assert.equal(
+      await resolveIsHoliday(new Date('2026-01-02T14:59:00Z')),
+      false
+    );
+  }
+);
+
+test(
+  '祝日判定は実行環境のタイムゾーンに依存しない',
+  {
+    skip: holidayJpAvailable
+      ? false
+      : '@holiday-jp/holiday_jp が未インストール',
+  },
+  () => {
+    // holiday_jp は Date をローカル時刻で解釈するため、JST の暦日を UTC 側の
+    // フィールドに載せた Date をそのまま渡すと TZ=Asia/Tokyo で判定日がずれる。
+    // 2026-01-01T10:00:00Z は JST 1/1 19:00 (元日・木) で、ずれると 1/2 を見て
+    // false になる。TZ を変えて別プロセスで走らせないと再現しない。
+    const moduleUrl = new URL('./generate-location-gpx.mjs', import.meta.url)
+      .href;
+    const probe = `import(${JSON.stringify(moduleUrl)}).then((m) => m.resolveIsHoliday(new Date('2026-01-01T10:00:00Z'))).then((v) => process.stdout.write(String(v)))`;
+
+    for (const tz of ['UTC', 'Asia/Tokyo', 'America/Los_Angeles']) {
+      const out = execFileSync(process.execPath, ['-e', probe], {
+        env: { ...process.env, TZ: tz },
+        encoding: 'utf8',
+      });
+      assert.equal(out.trim(), 'true', `TZ=${tz} で元日を取りこぼしている`);
+    }
   }
 );
