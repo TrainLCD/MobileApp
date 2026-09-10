@@ -13,7 +13,7 @@
 //
 // 使い方:
 //   node scripts/generate-location-gpx.mjs --line 1004 --from 100418 --to 100411 \
-//     --max-speed 320 --out gpx/SampleTohokuShinkansen.gpx
+//     --max-speed 320 --out assets/gpx/SampleTohokuShinkansen.gpx
 //
 // 駅 ID は StationAPI の lineStations が返す値。--list で一覧を確認できる。
 //

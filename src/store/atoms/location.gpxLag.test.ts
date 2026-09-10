@@ -256,13 +256,16 @@ const ACCURACIES = [30, 60, 250];
 const TRACKS = [
   {
     name: '片町線(学研都市線) 快速 京田辺→木津 / 最高95km/h',
-    path: 'gpx/KatamachiRapid.gpx',
+    path: 'assets/gpx/KatamachiRapid.gpx',
   },
-  { name: '山手線 実走ログ', path: 'gpx/SampleJY.gpx' },
-  { name: '京王線特急 / 最高110km/h', path: 'gpx/KeioSpecialExpress.gpx' },
+  { name: '山手線 実走ログ', path: 'assets/gpx/SampleJY.gpx' },
+  {
+    name: '京王線特急 / 最高110km/h',
+    path: 'assets/gpx/KeioSpecialExpress.gpx',
+  },
   {
     name: '総武快速線 錦糸町→津田沼 / 最高120km/h',
-    path: 'gpx/SobuRapid.gpx',
+    path: 'assets/gpx/SobuRapid.gpx',
   },
 ];
 
@@ -307,7 +310,7 @@ describe('GPX を実パイプラインへ流したときの表示切り替わり
   // 到着判定(=LineBoardの区間進行)が駅の直前まで遅れる(#6916)。
   // 片町線快速は駅間2.3km・95km/hで、到着圏が最小クランプに張り付く最も不利な条件。
   it('片町線快速で到着判定が配信間隔に依存しない', () => {
-    const track = parseGpx('gpx/KatamachiRapid.gpx');
+    const track = parseGpx('assets/gpx/KatamachiRapid.gpx');
     const stops = findStops(track);
     const accuracy = 60;
 
@@ -338,7 +341,7 @@ describe('GPX を実パイプラインへ流したときの表示切り替わり
   it.each([30, 60, 250])(
     '精度%dmのノイズを乗せても到着判定が区間内で複数回立たない',
     (accuracy) => {
-      const track = parseGpx('gpx/KatamachiRapid.gpx');
+      const track = parseGpx('assets/gpx/KatamachiRapid.gpx');
       const stops = findStops(track);
       const samples = runPipeline(track, 10000, accuracy, accuracy);
       expect(countArrivalChatter(stops, samples, accuracy)).toBe(1);

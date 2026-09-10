@@ -1,8 +1,9 @@
 # 位置情報シミュレーション (GPX)
 
 測位まわりの変更を検証するための GPX を生成し、iOS シミュレータや Android 実機へ
-流し込む手順。GPX は `gpx/` に置く。Xcode・adb・Jest の 3 経路から参照するため、
-プラットフォーム別ディレクトリではなくリポジトリ直下に集約している。
+流し込む手順。GPX は `assets/gpx/` に置く。Xcode・adb・Jest の 3 経路から参照するため、
+プラットフォーム別ディレクトリ (`ios/`) ではなく静的資材へ集約している。アプリのコードから
+`require()` しないので、Metro のバンドルには含まれない (`gpx` は `assetExts` に無い)。
 
 ## なぜオートモードでは検証できないか
 
@@ -44,7 +45,7 @@ npm run gpx:generate -- --line 1004 --list
 npm run gpx:generate -- \
   --line 1004 --from 100418 --to 100411 --max-speed 320 \
   --skip 100417,100416,100415,100413,100412 \
-  --out gpx/SampleTohokuShinkansen.gpx
+  --out assets/gpx/SampleTohokuShinkansen.gpx
 ```
 
 主なオプションは次のとおり。`--help` で全件を表示できる。
@@ -88,7 +89,7 @@ npm run gpx:generate -- --list-train-types 2400101
 npm run gpx:generate -- --line-group 71 --list
 
 # 新宿→京王八王子を特急の停車パターンで生成する
-npm run gpx:generate -- --line-group 71 --max-speed 110 --out gpx/KeioSpecialExpress.gpx
+npm run gpx:generate -- --line-group 71 --max-speed 110 --out assets/gpx/KeioSpecialExpress.gpx
 ```
 
 生成時、標準エラーに同じ経路をアプリで開くためのディープリンクのクエリ部を出す。
@@ -103,11 +104,11 @@ npm run gpx:generate -- --line-group 71 --max-speed 110 --out gpx/KeioSpecialExp
 
 | ファイル | 内容 |
 | ---- | ---- |
-| `gpx/SampleJY.gpx` | 山手線。外部ツールで記録した実走行ログ |
-| `gpx/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h、一ノ関に停車、通過駅 5 駅を経由 |
-| `gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。最高 110km/h |
-| `gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km・最高 95km/h |
-| `gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。駅間 3.4〜7.5km・最高 120km/h |
+| `assets/gpx/SampleJY.gpx` | 山手線。外部ツールで記録した実走行ログ |
+| `assets/gpx/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h、一ノ関に停車、通過駅 5 駅を経由 |
+| `assets/gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。最高 110km/h |
+| `assets/gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km・最高 95km/h |
+| `assets/gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。駅間 3.4〜7.5km・最高 120km/h |
 
 `SampleTohokuShinkansen.gpx` は盛岡以南の 320km/h 区間を再現するためのもの。
 経路上の 8 駅すべてに `ARRIVED_MAX_THRESHOLD` (200m) 以内まで接近するので、
@@ -138,7 +139,7 @@ Xcode は `<time>` の間隔どおりに測位を配信するので、GPX 側で
 入れる必要はない。手順の全体は `.claude/skills/replay-gpx/SKILL.md` にある。
 
 ```bash
-npm run gpx:replay -- --gpx gpx/SampleTohokuShinkansen.gpx --serial <serial>
+npm run gpx:replay -- --gpx assets/gpx/SampleTohokuShinkansen.gpx --serial <serial>
 ```
 
 主なオプションは次のとおり。`--help` で全件を表示できる。
@@ -176,7 +177,7 @@ T は旧実装の固定 α が 1 秒間隔で持っていた遅れ時間なの�
 10 秒間隔・σ=250m では許容遅れをどこに置いても両立しない。
 
 この挙動は `src/store/atoms/location.gpxLag.test.ts` が GPX を実パイプラインへ
-流して検証している (`gpx/KatamachiRapid.gpx` は駅間 2.3km・95km/h と、到着圏が
+流して検証している (`assets/gpx/KatamachiRapid.gpx` は駅間 2.3km・95km/h と、到着圏が
 最小クランプに張り付く最も不利な条件)。
 
 ## 検証できること・できないこと

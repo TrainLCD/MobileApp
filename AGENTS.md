@@ -40,7 +40,7 @@ This handbook defines how automation agents collaborate safely and effectively o
   - `src/lib/`, `src/providers/`, `src/config/`: integrations, context providers, configuration utilities.
   - `src/constants/`, `src/utils/`, `src/translation.ts`, `src/lineSymbolImage.ts`: constants, helpers, localization maps, and asset selectors.
   - `@types/`, `src/__mocks__/`, `src/__fixtures__/`, `test/`: global typings, reusable mocks, fixtures, and test helpers.
-- `assets/`: static media (images, fonts, icons).
+- `assets/`: static media (images, fonts, icons) and `assets/gpx/` for the location-simulation GPX fixtures (developer-only; not `require()`d by app code, so Metro does not bundle them).
 - `docs/`: human-facing documentation including changelog and incident notes.
 - `utils/`: developer tooling scripts such as GraphQL codegen config.
 - `android/`, `ios/`: native projects.

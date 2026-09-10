@@ -29,18 +29,18 @@ Argent の MCP ツールには位置情報を注入するものが無いため�
 
 | ファイル | 内容 |
 | ---- | ---- |
-| `gpx/SampleJY.gpx` | 山手線。実走行ログ |
-| `gpx/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h |
-| `gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。種別グループから生成 |
-| `gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km・最高 95km/h |
-| `gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。最高 120km/h |
+| `assets/gpx/SampleJY.gpx` | 山手線。実走行ログ |
+| `assets/gpx/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h |
+| `assets/gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。種別グループから生成 |
+| `assets/gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km・最高 95km/h |
+| `assets/gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。最高 120km/h |
 
 新しい経路は `npm run gpx:generate` で作る。詳細は `docs/location-simulation.md`。
 
 ```bash
 npm run gpx:generate -- --line 1004 --list
 npm run gpx:generate -- --line 1004 --from 100418 --to 100411 --max-speed 320 \
-  --skip 100417,100416,100415,100413,100412 --out gpx/SampleTohokuShinkansen.gpx
+  --skip 100417,100416,100415,100413,100412 --out assets/gpx/SampleTohokuShinkansen.gpx
 ```
 
 列車種別の停車パターンをそのまま走らせたいときは `--line-group` を使う。通過駅は
@@ -49,7 +49,7 @@ npm run gpx:generate -- --line 1004 --from 100418 --to 100411 --max-speed 320 \
 
 ```bash
 npm run gpx:generate -- --list-train-types 2400101
-npm run gpx:generate -- --line-group 71 --max-speed 110 --out gpx/KeioSpecialExpress.gpx
+npm run gpx:generate -- --line-group 71 --max-speed 110 --out assets/gpx/KeioSpecialExpress.gpx
 ```
 
 ### 2. アプリを対象の路線に入れる
@@ -73,7 +73,7 @@ adb -s <serial> shell "am start -a android.intent.action.VIEW -d \
 ### 3. GPX を流す
 
 ```bash
-npm run gpx:replay -- --gpx gpx/SampleTohokuShinkansen.gpx --serial <serial>
+npm run gpx:replay -- --gpx assets/gpx/SampleTohokuShinkansen.gpx --serial <serial>
 ```
 
 長時間になるのでバックグラウンドで走らせ、進捗はログで見る。
