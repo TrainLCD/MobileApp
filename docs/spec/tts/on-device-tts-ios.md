@@ -283,9 +283,15 @@ Remote Config は dev 側の `voicevox_tts_manifest_url_ios` を staging の URL
 `assets.trainlcd.app` のまま据え置く。資産を差し替えるときは staging へ先に出して canary で
 確かめ、そのあと同じ資産セットを本番バケットへ公開する。
 
-スタイル ID を変える差し替えでは、dev 側の `voicevox_tts_style_id_ios` も staging に置いた VVM に
-含まれる ID へ揃える。ここがずれると、canary は資産を取得できてもスタイルが見つからず
-端末内蔵 TTS へ落ちる。
+スタイル ID を変える差し替えでは、`voicevox_tts_style_id_ios` を**配信先ごとに**、そこへ置いた VVM に
+含まれる ID へ揃える。staging へ出すときは dev 側を、本番へ昇格するときは production 側を、それぞれ
+公開と同じタイミングで更新する。ここがずれると、端末は資産を取得できてもスタイルが見つからず
+オフライン時に端末内蔵 TTS へ落ちる。canary で確かめたのは dev 側の組み合わせだけなので、
+production 側の更新漏れは canary では検出できない。
+
+production 側でキーを設定していない場合は、コード既定値の `VOICEVOX_DEFAULT_STYLE_ID`
+（`src/constants/voicevox.ts`）が使われる。この場合は、その既定値が新しい VVM に含まれているかを
+公開前に確かめる。含まれていなければ、キーを明示設定するか、既定値を含む VVM を配る。
 
 ## Remote Config
 
