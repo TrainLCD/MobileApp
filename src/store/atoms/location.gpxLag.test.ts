@@ -100,18 +100,85 @@ const findStops = (track: Point[]): Stop[] => {
   return stops;
 };
 
-/** 指定した更新間隔・精度でパイプラインへ流し、平滑後の軌跡を返す */
-const runPipeline = (track: Point[], intervalMs: number, accuracy: number) => {
+/** 再現性のある擬似乱数（測位ノイズの注入に使う） */
+const makeNoise = (seed: number) => {
+  let state = seed >>> 0;
+  const next = () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+  // Box-Muller法で標準正規分布へ変換する
+  return () => {
+    const u = Math.max(next(), Number.EPSILON);
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * next());
+  };
+};
+
+const METERS_PER_DEG_LAT = 111_132;
+
+/**
+ * 指定した更新間隔・精度でパイプラインへ流し、平滑後の軌跡を返す。
+ * noiseSigmaMeters を渡すと入力座標へ正規分布のノイズを乗せる。Androidの
+ * accuracy は68%信頼半径なので、σ=accuracy が素直なモデルになる。
+ */
+const runPipeline = (
+  track: Point[],
+  intervalMs: number,
+  accuracy: number,
+  noiseSigmaMeters = 0
+) => {
   resetLocationState();
+  const noise = makeNoise(0x5eed);
   const samples: Point[] = [];
   for (let t = track[0].t; t <= track[track.length - 1].t; t += intervalMs) {
-    setLocation(makeLocation(truthAt(track, t), accuracy));
+    const truth = truthAt(track, t);
+    const input =
+      noiseSigmaMeters > 0
+        ? {
+            t,
+            lat: truth.lat + (noise() * noiseSigmaMeters) / METERS_PER_DEG_LAT,
+            lon:
+              truth.lon +
+              (noise() * noiseSigmaMeters) /
+                (METERS_PER_DEG_LAT * Math.cos((truth.lat * Math.PI) / 180)),
+          }
+        : truth;
+    setLocation(makeLocation(input, accuracy));
     const cur = store.get(locationAtom);
     if (cur) {
       samples.push({ t, lat: cur.coords.latitude, lon: cur.coords.longitude });
     }
   }
   return samples;
+};
+
+/**
+ * 区間ごとに、次駅の到着圏へ入る判定が false→true へ何回変化するかを数える。
+ * ノイズで平滑後の座標が判定圏を出入りすると1区間で複数回立ち、到着表示が
+ * ばたつく。正常なら区間あたり1回。
+ */
+const countArrivalChatter = (
+  stops: Stop[],
+  samples: Point[],
+  accuracy: number
+) => {
+  const bonus = Math.min(accuracy * 0.5, 150);
+  let worst = 0;
+  for (let i = 0; i + 1 < stops.length; i += 1) {
+    const from = stops[i];
+    const to = stops[i + 1];
+    const arrivedTh = clamp(dist(from.anchor, to.anchor) / 4, 75, 200) + bonus;
+    let prev = false;
+    let rises = 0;
+    for (const s of samples) {
+      if (s.t <= from.departAt || s.t > to.departAt) continue;
+      const inside = dist(s, to.anchor) <= arrivedTh;
+      if (inside && !prev) rises += 1;
+      prev = inside;
+    }
+    worst = Math.max(worst, rises);
+  }
+  return worst;
 };
 
 const clamp = (v: number, min: number, max: number) =>
@@ -231,4 +298,46 @@ describe('GPX を実パイプラインへ流したときの表示切り替わり
       console.log(lines.join('\n'));
     });
   }
+
+  // 回帰: αを配信間隔で正規化していないと、Δtが倍になると追従遅れも倍になり、
+  // 到着判定(=LineBoardの区間進行)が駅の直前まで遅れる(#6916)。
+  // 片町線快速は駅間2.3km・95km/hで、到着圏が最小クランプに張り付く最も不利な条件。
+  it('片町線快速で到着判定が配信間隔に依存しない', () => {
+    const track = parseGpx('ios/KatamachiRapid.gpx');
+    const stops = findStops(track);
+    const accuracy = 60;
+
+    const at5s = measureTransitions(
+      track,
+      stops,
+      runPipeline(track, 5000, accuracy),
+      accuracy
+    );
+    const at10s = measureTransitions(
+      track,
+      stops,
+      runPipeline(track, 10000, accuracy),
+      accuracy
+    );
+
+    // 正規化前は10秒間隔で2m手前まで落ち込んでいた
+    expect(at10s.arrived).toBeGreaterThan(150);
+    // 5秒と10秒で到着位置がほとんど変わらないこと
+    expect(Math.abs(at10s.arrived - at5s.arrived)).toBeLessThan(50);
+    // 「まもなく」も同様に間隔へ依存しないこと
+    expect(at10s.approaching).toBeGreaterThan(800);
+    expect(Math.abs(at10s.approaching - at5s.approaching)).toBeLessThan(100);
+  });
+
+  // 間隔で正規化するとΔtが大きいときのαが上がり、スムージングは弱くなる。
+  // 測位ノイズが素通りして到着判定がばたつかないことを確かめる。
+  it.each([30, 60, 250])(
+    '精度%dmのノイズを乗せても到着判定が区間内で複数回立たない',
+    (accuracy) => {
+      const track = parseGpx('ios/KatamachiRapid.gpx');
+      const stops = findStops(track);
+      const samples = runPipeline(track, 10000, accuracy, accuracy);
+      expect(countArrivalChatter(stops, samples, accuracy)).toBe(1);
+    }
+  );
 });
