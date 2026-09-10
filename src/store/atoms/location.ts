@@ -21,18 +21,22 @@ const MAX_PLAUSIBLE_SUBWAY_SPEED = 33;
 
 // 速度フィルタが連続して棄却できる回数の上限。棄却しても基準座標は更新しないため、
 // 基準側が実際の現在地から乖離している場合は正常な測位が延々と弾かれ、位置が
-// 永久に凍結する。この回数に達し、かつMIN_SPEED_REJECTION_STREAK_MSぶんの時間が
-// 経っていれば「基準の方が誤っている」と判断し、届いた測位で基準を張り直す。
+// 永久に凍結する。この回数に達したら「基準の方が誤っている」と判断し、届いた
+// 測位で基準を張り直す(スキップ経路のみMIN_SPEED_REJECTION_STREAK_MSも課す)。
 const MAX_CONSECUTIVE_SPEED_REJECTIONS = 5;
 
-// 連続棄却で基準を張り直すまでに最低限必要な経過時間(ms)。
-// 回数だけを条件にすると、ワープ対策の粘り強さが測位の配信間隔に依存してしまう。
+// スムージングスキップ経路(地下鉄)で基準を張り直すまでに最低限必要な経過時間(ms)。
+// この経路は回数だけを条件にすると、ワープ耐性が測位の配信間隔に反比例してしまう。
 // iOSはtimeIntervalが効かずdistanceInterval基準で概ね1Hz配信されるため5回=約5秒で
 // 基準を明け渡すのに対し、Androidは10秒間隔なので約50秒粘る。同じ「配信間隔で
-// 保護の強さが変わる」問題はEMAのα側では正規化済み(LEGACY_ALPHA_INTERVAL_SEC)で、
-// ここも回数と経過時間の両方を満たしたときだけ張り直すことで間隔に依存させない。
-// 誤測位が数秒だけ固まって届くケース(地下鉄のWi-Fi/基地局測位)で基準を奪われない
-// 程度に長く、基準側が本当に誤っていたときの凍結が長引かない程度に短い値を採る。
+// 保護の強さが変わる」問題はEMAのα側では正規化済み(LEGACY_ALPHA_INTERVAL_SEC)。
+//
+// 本線経路にはこの条件を掛けない。あちらの閾値は360km/hで、超えるのは基準側が
+// 誤っているときだけなので、#6898 は「5サンプルで即座に張り直す」ことで新幹線速度
+// での現在地凍結を解消している。ここに経過時間を足すと凍結時間が配信の速い端末ほど
+// 延び(1Hzなら5秒→20秒 ≒ 320km/hで1.8km)、その修正を打ち消してしまう。
+// スキップ経路の閾値は120km/hで、誤測位のクラスタが数秒続く程度では基準を
+// 明け渡さないことのほうが重要なため、こちらにだけ課す。
 const MIN_SPEED_REJECTION_STREAK_MS = 20_000;
 
 // 基準座標がこれ以上古い場合、EMAの基準としては意味を持たないため、速度フィルタを
@@ -200,8 +204,12 @@ const resetSpeedRejectionStreak = () => {
 };
 
 // 速度フィルタによる棄却を記録し、基準を張り直すべきか(=基準側が誤っていると
-// 判断すべきか)を返す。棄却が規定回数かつ規定時間続いたときにだけ真を返す。
-const registerSpeedRejection = (timestampMs: number): boolean => {
+// 判断すべきか)を返す。棄却が規定回数に達し、かつ経過時間の下限(minStreakMs、
+// 本線経路は0)を満たしたときにだけ真を返す。
+const registerSpeedRejection = (
+  timestampMs: number,
+  minStreakMs: number
+): boolean => {
   // 連続棄却の開始時、および時計の巻き戻りで経過時間が測れなくなった場合は数え直す
   if (
     consecutiveSpeedRejections === 0 ||
@@ -214,8 +222,7 @@ const registerSpeedRejection = (timestampMs: number): boolean => {
 
   return (
     consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS &&
-    timestampMs - speedRejectionStreakStartedAtMs >=
-      MIN_SPEED_REJECTION_STREAK_MS
+    timestampMs - speedRejectionStreakStartedAtMs >= minStreakMs
   );
 };
 
@@ -277,7 +284,7 @@ export const setLocation = (location: Location.LocationObject) => {
       isImplausibleJump(skipPrev, location, MAX_PLAUSIBLE_SUBWAY_SPEED) &&
       // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま復帰
       // できなくなるのを避けるため、上限に達したら棄却せず基準を張り直す。
-      !registerSpeedRejection(location.timestamp)
+      !registerSpeedRejection(location.timestamp, MIN_SPEED_REJECTION_STREAK_MS)
     ) {
       store.set(accuracyHistoryAtom, updatedHistory);
       return;
@@ -306,8 +313,9 @@ export const setLocation = (location: Location.LocationObject) => {
   // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
   if (isImplausibleJump(rawPrev, location, MAX_PLAUSIBLE_SPEED)) {
     // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま
-    // 復帰できなくなるのを避けるため、上限に達したら基準を張り直す。
-    if (registerSpeedRejection(location.timestamp)) {
+    // 復帰できなくなるのを避けるため、上限に達したら即座に基準を張り直す
+    // (#6898: 新幹線速度での現在地凍結の解消。経過時間の条件は課さない)。
+    if (registerSpeedRejection(location.timestamp, 0)) {
       resyncLocationReference(location, updatedHistory);
       return;
     }

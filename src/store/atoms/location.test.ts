@@ -478,31 +478,35 @@ describe('高速走行時の追従', () => {
   it('連続棄却が上限に達したら基準を張り直して凍結から復帰する', () => {
     setLocation(makeLocation(38.9, 140.9, 30, 1_000));
 
-    // Androidの配信間隔(10秒)で物理的にありえない距離のジャンプを送り続ける
+    // 1秒間隔で物理的にありえない距離のジャンプを送り続ける
     const jumpLat = 36.0;
     for (let i = 1; i <= 5; i++) {
-      setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + i * 10_000));
+      setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + i * 1000));
     }
 
-    // 回数(5回)と経過時間(20秒)の双方を満たした時点で基準を張り直す
+    // 5回目(MAX_CONSECUTIVE_SPEED_REJECTIONS)で基準を張り直し、座標が反映される
     expect(store.get(locationAtom)?.coords.latitude).toBe(jumpLat);
   });
 
-  // 回帰: 張り直しの条件が回数だけだと、ワープ対策の粘り強さが配信間隔に反比例する。
-  // iOSは概ね1Hz配信なので5回=5秒で基準を明け渡し、10秒間隔のAndroidより
-  // 桁違いにワープしやすくなっていた。
-  it('基準を張り直すまでの粘り強さが配信間隔に依存しない', () => {
+  // 回帰: 本線経路の張り直しに経過時間の条件を足すと、凍結時間が配信の速い端末ほど
+  // 延びて #6898(新幹線速度での現在地凍結の解消)を打ち消す。1Hz配信でも凍結が
+  // MAX_CONSECUTIVE_SPEED_REJECTIONSぶん(=5サンプル)で終わることを固定する。
+  it('1Hz配信でも凍結が5サンプルを超えて続かない', () => {
     setLocation(makeLocation(38.9, 140.9, 30, 1_000));
 
+    // 誤った基準から見て棄却され続ける座標が1秒間隔(iOS相当)で届き続ける
     const jumpLat = 36.0;
-    // iOS相当の1秒間隔。最初の棄却はt=2000なので、20秒経過するのはt=22000。
-    for (let i = 1; i <= 20; i++) {
+    let frozenSamples = 0;
+    for (let i = 1; i <= 10; i++) {
       setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + i * 1_000));
+      if (store.get(locationAtom)?.coords.latitude !== jumpLat) {
+        frozenSamples += 1;
+      }
     }
-    expect(store.get(locationAtom)?.coords.latitude).toBe(38.9);
 
-    setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + 21 * 1_000));
-    expect(store.get(locationAtom)?.coords.latitude).toBe(jumpLat);
+    // 5サンプル目で張り直されるので、凍結したままなのは4サンプル(=4秒)まで。
+    // 320km/h(≒89m/s)なら凍結中の走行距離は約355mで、到着判定圏を大きくは超えない。
+    expect(frozenSamples).toBe(4);
   });
 
   // 回帰: 「基準が古い」判定が速度フィルタより先に return していると、
