@@ -2,7 +2,7 @@
 // GPX を Android のテストプロバイダ経由で流し込む。
 // 実機・エミュレータのどちらでも動く (adb shell cmd location providers)。
 // 使い方:
-//   npm run gpx:replay -- --gpx ios/SampleTohokuShinkansen.gpx [options]
+//   npm run gpx:replay -- --gpx gpx/SampleTohokuShinkansen.gpx [options]
 import { execFile } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
