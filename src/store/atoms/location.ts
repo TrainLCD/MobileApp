@@ -11,13 +11,19 @@ const MAX_ACCURACY_HISTORY = 12;
 // 物理的にありえない速度でのジャンプを棄却する閾値(m/s ≒ 360km/h)
 const MAX_PLAUSIBLE_SPEED = 100;
 
-// スムージングスキップ経路(地下鉄かつ精度が不安定)で使う閾値(m/s ≒ 120km/h)。
-// 判定対象は2点間の平均速度なので、営業最高速度(地下鉄はおおむね110km/h以下)を
-// 上回ることは測位が途切れた区間を跨いでもあり得ない。新幹線を通せるよう緩めてある
-// 既定値(360km/h)をこの経路にも当てると、隣駅程度の距離(500m〜1km)のワープが
-// 数秒で通ってしまう——GPSが届かずWi-Fi/基地局測位へ落ちる区間ではその距離こそが
-// 典型的な誤りなので、路線種別から言える範囲まで絞る。
-const MAX_PLAUSIBLE_SUBWAY_SPEED = 33;
+// スムージングスキップ経路(地下鉄かつ精度が不安定)で使う閾値(m/s ≒ 180km/h)。
+// 新幹線を通すために緩めてある既定値(360km/h)をこの経路にも当てると、隣駅程度の
+// 距離(500m〜1km)のワープが数秒で通ってしまう。GPSが届かずWi-Fi/基地局測位へ落ちる
+// 区間ではその距離こそが典型的な誤りなので、棄却を保てる時間(距離÷この閾値)を
+// 稼ぐために絞る。
+//
+// 値の根拠は「地下鉄の営業最高速度」ではなく「在来線の営業最高速度」に採る。
+// 判定に使うlineTypeはstationState.station、すなわち最後に“到着した”駅のもので、
+// 次駅へ到着するまで更新されない(useRefreshStation)。地下鉄から直通先へ抜けた
+// 区間はまだSubway扱いのままこの経路を通るため、直通先の速度域を外すと正常な
+// 走行を誤棄却する。在来線最速は京成成田スカイアクセス線の160km/hなので、
+// それを上回る180km/hを採る。新幹線はlineTypeがBulletTrainでこの経路に入らない。
+const MAX_PLAUSIBLE_SKIP_SMOOTHING_SPEED = 50;
 
 // 速度フィルタが連続して棄却できる回数の上限。棄却しても基準座標は更新しないため、
 // 基準側が実際の現在地から乖離している場合は正常な測位が延々と弾かれ、位置が
@@ -281,7 +287,11 @@ export const setLocation = (location: Location.LocationObject) => {
     const skipPrev = store.get(lastSkipSmoothingLocationAtom);
     if (
       skipPrev != null &&
-      isImplausibleJump(skipPrev, location, MAX_PLAUSIBLE_SUBWAY_SPEED) &&
+      isImplausibleJump(
+        skipPrev,
+        location,
+        MAX_PLAUSIBLE_SKIP_SMOOTHING_SPEED
+      ) &&
       // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま復帰
       // できなくなるのを避けるため、上限に達したら棄却せず基準を張り直す。
       !registerSpeedRejection(location.timestamp, MIN_SPEED_REJECTION_STREAK_MS)

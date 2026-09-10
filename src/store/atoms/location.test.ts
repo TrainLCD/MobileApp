@@ -222,8 +222,9 @@ describe('setLocation', () => {
     });
 
     // 隣駅程度の距離(500m〜1km)のワープは、既定の閾値(360km/h)だと数秒で通ってしまう。
-    // 地下鉄ではその距離こそが典型的な誤測位なので路線種別に見合う閾値まで絞っている。
-    it('隣駅程度の距離のワープも数秒では受理しない', () => {
+    // 地下鉄ではその距離こそが典型的な誤測位なので、この経路だけ閾値を絞っている。
+    // 棄却を保てる時間は「距離÷閾値」なので、500mなら10秒。
+    it('隣駅程度の距離のワープは既定の閾値より長く棄却し続ける', () => {
       setStationLineType(LineType.Subway);
       store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
 
@@ -231,11 +232,28 @@ describe('setLocation', () => {
 
       // 1秒間隔で500m先の駅付近の座標が届き続ける(既定の閾値なら5秒目で受理される)
       const warpLat = 35.0 + 500 / METERS_PER_DEG_LAT;
-      for (let i = 1; i <= 10; i++) {
+      for (let i = 1; i <= 9; i++) {
         setLocation(makeLocation(warpLat, 139.0, 500, 1_000 + i * 1_000));
       }
 
       expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+    });
+
+    // 回帰: この経路のlineTypeは「最後に到着した駅」のもので、地下鉄から直通先へ
+    // 抜けた区間もSubway扱いのままここを通る(useRefreshStationはisArrivedのときしか
+    // stationを進めない)。閾値を地下鉄の営業最高速度(110km/h)基準で置くと、
+    // 直通先の在来線速度域(最速は京成成田スカイアクセス線の160km/h)を誤棄却する。
+    it('地下鉄直通先の在来線速度(160km/h)でも誤棄却しない', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1_000));
+
+      // 60秒で約2.67km(=160km/h)進む
+      const movedLat = 35.0 + ((160 / 3.6) * 60) / METERS_PER_DEG_LAT;
+      setLocation(makeLocation(movedLat, 139.0, 500, 61_000));
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(movedLat);
     });
 
     // 回帰: 基準の張り直しが回数だけの条件だと、配信の速いiOS(概ね1Hz)では
