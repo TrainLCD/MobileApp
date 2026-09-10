@@ -235,7 +235,7 @@ Remote Config の値は変えなくてよい。
 | --- | --- | --- | --- |
 | `voicevox_tts_enabled_ios` | boolean | `false` | VOICEVOX フォールバックの有効化 |
 | `voicevox_tts_manifest_url_ios` | string (https) | 未設定 | マニフェスト JSON の URL。未設定なら有効でも資産を取得できない |
-| `voicevox_tts_style_id_ios` | integer ≥ 0 | `30` | スタイル ID。配信した VVM に含まれる ID を指定する |
+| `voicevox_tts_style_id_ios` | integer ≥ 0 | `119` | スタイル ID。配信した VVM に含まれる ID を指定する |
 
 `remote_tts_enabled_ios` とは独立している。リモート合成を主経路のまま「フォールバック先だけ」を
 差し替える設計で、`voicevox_tts_enabled_ios` を `false` にすれば取得済みの資産があっても
