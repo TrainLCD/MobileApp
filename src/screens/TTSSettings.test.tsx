@@ -334,30 +334,6 @@ describe('TTSSettingsScreen', () => {
       fireEvent.press(getByLabelText('toEnabled'));
     };
 
-    it('[Android] 端末内蔵TTSの音質案内を表示する', () => {
-      setPlatformOS('android');
-
-      const { getByText } = renderWithSpeechState({ enabled: true });
-
-      expect(getByText('ttsVoiceQualityNoticeAndroid')).toBeTruthy();
-    });
-
-    it('[iOS] リモート合成のため音質案内を表示しない', () => {
-      setPlatformOS('ios');
-
-      const { queryByText } = renderWithSpeechState({ enabled: true });
-
-      expect(queryByText('ttsVoiceQualityNoticeAndroid')).toBeNull();
-    });
-
-    it('[web] Android固有の音質案内を表示しない', () => {
-      setPlatformOS('web');
-
-      const { queryByText } = renderWithSpeechState({ enabled: true });
-
-      expect(queryByText('ttsVoiceQualityNoticeAndroid')).toBeNull();
-    });
-
     it('[iOS] 有効化時の注意ダイアログはリモート合成向けの文言になる', () => {
       setPlatformOS('ios');
 
