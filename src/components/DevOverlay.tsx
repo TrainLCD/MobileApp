@@ -56,6 +56,34 @@ const AURORA_COLORS = [
   'rgba(217, 70, 239, 0.2)',
 ] as const;
 
+// パネルを画面内に収める。screen は「実際に描画されている座標系」の寸法で、
+// 回転ラッパー配下なら長辺=width の正規化寸法、ラッパーの外なら画面の実寸。
+export const getDevOverlayClampedPosition = (
+  rightOffset: number,
+  y: number,
+  size: { width: number; height: number },
+  screen: { width: number; height: number },
+  margin: number
+) => ({
+  x: Math.min(
+    Math.max(rightOffset, margin),
+    Math.max(margin, screen.width - size.width - margin)
+  ),
+  y: Math.min(
+    Math.max(y, margin),
+    Math.max(margin, screen.height - size.height - margin)
+  ),
+});
+
+// ドラッグ量の座標変換が要るのは Main の 90deg 回転ラッパーの内側にいるときだけ。
+// ラッパーの外に描画されている場合は、端末が物理的に縦向きでも変換してはいけない
+// (縦ドラッグで横に動く等の逆転になる)。
+export const isDevOverlayRotatedToLandscape = (
+  unrotated: boolean,
+  physicalWidth: number,
+  physicalHeight: number
+) => !unrotated && physicalHeight > physicalWidth;
+
 export const getDevOverlayDragTranslation = (
   dx: number,
   dy: number,
@@ -327,7 +355,14 @@ const MetricCard: React.FC<MetricCardProps> = ({
   </View>
 );
 
-const DevOverlay: React.FC = () => {
+type Props = {
+  // Main の 90deg 回転ラッパーの外に置かれる場合に true(ポートレートモードの
+  // レイアウト配下と低消費電力テーマ)。パネルが実際に描画される座標系が画面の
+  // 実寸そのものになるため、位置のクランプとドラッグ量の変換をそちらに合わせる。
+  unrotated?: boolean;
+};
+
+const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedHeight, setExpandedHeight] = useState(0);
   // アンカーの経過秒表示用の現在時刻。レンダー中に Date.now() を直接呼ぶと純粋性違反に
@@ -503,9 +538,18 @@ const DevOverlay: React.FC = () => {
 
   const dim = useLandscapeWindowDimensions();
   const physicalDim = useWindowDimensions();
+  // パネルの寸法は従来どおり長辺=width の正規化寸法から決める。一方で位置の
+  // クランプとドラッグ量の変換は「実際に描画されている座標系」で行う必要があり、
+  // 回転ラッパーの外に出る場合は画面の実寸が正しい基準になる。
+  const screenWidth = unrotated ? physicalDim.width : dim.width;
+  const screenHeight = unrotated ? physicalDim.height : dim.height;
   const [basePosition, setBasePosition] = useState({ x: 0, y: 0 });
   const isLandscape = dim.width > dim.height;
-  const isRotatedToLandscape = physicalDim.height > physicalDim.width;
+  const isRotatedToLandscape = isDevOverlayRotatedToLandscape(
+    unrotated,
+    physicalDim.width,
+    physicalDim.height
+  );
   const panelWidth = isLandscape
     ? Math.min(Math.max(dim.width * 0.29, 360), 520)
     : Math.min(Math.max(dim.width * 0.34, 280), 430);
@@ -616,17 +660,15 @@ const DevOverlay: React.FC = () => {
   }, [isExpanded, animatedProgress]);
 
   const clampPosition = useMemo(
-    () => (rightOffset: number, y: number, width: number, height: number) => {
-      const margin = isLandscape ? 8 : 12;
-      const maxRight = Math.max(margin, dim.width - width - margin);
-      const maxY = Math.max(margin, dim.height - height - margin);
-
-      return {
-        x: Math.min(Math.max(rightOffset, margin), maxRight),
-        y: Math.min(Math.max(y, margin), maxY),
-      };
-    },
-    [dim.height, dim.width, isLandscape]
+    () => (rightOffset: number, y: number, width: number, height: number) =>
+      getDevOverlayClampedPosition(
+        rightOffset,
+        y,
+        { width, height },
+        { width: screenWidth, height: screenHeight },
+        isLandscape ? 8 : 12
+      ),
+    [screenWidth, screenHeight, isLandscape]
   );
 
   useEffect(() => {
