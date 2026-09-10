@@ -15,7 +15,11 @@ import {
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
-import DevOverlay, { getDevOverlayDragTranslation } from './DevOverlay';
+import DevOverlay, {
+  getDevOverlayClampedPosition,
+  getDevOverlayDragTranslation,
+  isDevOverlayRotatedToLandscape,
+} from './DevOverlay';
 
 jest.mock('jotai', () => {
   const actual = jest.requireActual('jotai');
@@ -300,6 +304,61 @@ describe('DevOverlay', () => {
         x: -10,
         y: -24,
       });
+    });
+
+    it('回転ラッパー配下では物理縦向きのときだけ座標変換が要る', () => {
+      expect(isDevOverlayRotatedToLandscape(false, 393, 852)).toBe(true);
+      expect(isDevOverlayRotatedToLandscape(false, 852, 393)).toBe(false);
+    });
+
+    it('ポートレートモードでは物理縦向きでも座標変換しない', () => {
+      expect(isDevOverlayRotatedToLandscape(true, 393, 852)).toBe(false);
+    });
+  });
+
+  describe('位置のクランプ', () => {
+    const size = { width: 160, height: 44 };
+
+    it('パネルが画面内に収まるようマージン込みで丸める', () => {
+      expect(
+        getDevOverlayClampedPosition(
+          -50,
+          -50,
+          size,
+          { width: 360, height: 780 },
+          12
+        )
+      ).toEqual({ x: 12, y: 12 });
+      expect(
+        getDevOverlayClampedPosition(
+          9999,
+          9999,
+          size,
+          { width: 360, height: 780 },
+          12
+        )
+      ).toEqual({ x: 188, y: 724 });
+    });
+
+    // ポートレートモードでは回転ラッパーの外に出るので、長辺=width に正規化した
+    // 寸法でクランプすると横は画面外まで許し、縦は画面の半分までしか動かせなくなる
+    it('縦画面の実寸と長辺正規化寸法とでクランプ範囲が変わる', () => {
+      const portrait = getDevOverlayClampedPosition(
+        9999,
+        9999,
+        size,
+        { width: 360, height: 780 },
+        12
+      );
+      const normalized = getDevOverlayClampedPosition(
+        9999,
+        9999,
+        size,
+        { width: 780, height: 360 },
+        12
+      );
+      expect(portrait).toEqual({ x: 188, y: 724 });
+      expect(normalized).toEqual({ x: 608, y: 304 });
     });
   });
 

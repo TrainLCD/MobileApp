@@ -821,7 +821,8 @@ const MainScreen: React.FC = () => {
           onPress={updateBottomState}
           onTransferPress={handleTransferPress}
         />
-        {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {/* 回転ラッパーの外＝縦向きのまま描画されるので portrait を渡す */}
+        {isDevApp && devOverlayEnabled && <DevOverlay portrait />}
         {selectBoundModal}
       </>
     );
