@@ -9,6 +9,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 - **Favor minimal, auditable diffs:** prefer additive edits, keep formatting deterministic, and annotate non-obvious changes with concise comments.
 - **Document reproducibility:** record every manual command you execute and note any local assumptions about environment variables or credentials.
 - **Validate assumptions proactively:** confirm tool versions, workflow expectations, and environment needs instead of relying on cached knowledge.
+- **Verify what a branch actually claims, not just its shape:** before changing or removing a conditional — a platform branch, a feature gate, a piece of guidance copy — confirm that the thing it points at really exists on each side. When a platform-paired construct loses one side, re-validate the side you keep: the remaining branch was written under an assumption that may no longer hold, and nothing else will catch it. Copy that names a device setting, a screen, or a menu path is a factual claim about that platform and must be checked the same way as code.
 - **Clarify uncertainty:** request guidance or leave TODO notes rather than guessing at intent.
 - **Prioritize quality and performance over speed:** prefer well-structured, performant implementations over quick solutions. Take extra time to consider edge cases, optimize hot paths, and ensure code correctness rather than rushing to deliver.
 
@@ -17,7 +18,7 @@ This handbook defines how automation agents collaborate safely and effectively o
 1. **Intake:** read the full issue, PR discussion, or prompt; restate deliverables and constraints before coding.
 2. **Reconnaissance:** map relevant files with `rg`, `ls`, or `find`; review interfaces and existing patterns to plan compatible changes.
 3. **Plan:** outline discrete steps, keep the plan updated as you progress, and expose blockers early.
-4. **Implement:** use `apply_patch` for targeted edits, commit in small logical units, and avoid regenerating large files unless required.
+4. **Implement:** use `apply_patch` for targeted edits, commit in small logical units, and avoid regenerating large files unless required. Stay inside what was actually approved: an approval covers the change that was described, not the wording, naming, structure, or history around it. Adjacent cleanups that look obviously right are still a separate proposal — raise them and wait, rather than folding them into the approved edit.
 5. **Validate:** run only the necessary commands (`npm run lint`, `npm test`, `npm run typecheck`, etc.) and capture summarized output.
 6. **Document & Handoff:** update READMEs or docs when behavior changes, summarize modifications, list executed commands, and attach artifacts (logs, screenshots) before opening PRs.
 
@@ -196,5 +197,6 @@ Command mapping — the skills under `.claude/skills/` follow this table:
 ## Communication & Incident Reporting
 
 - Surface blockers or ambiguities in the task thread; do not proceed on assumptions.
+- When a review comment or correction can be read more than one way, ask which reading is meant before implementing one. Terse feedback usually points at a defect the author already understands, so a plausible-sounding reinterpretation is likely to fix the wrong thing while looking responsive. Quote the reading you would act on and confirm it.
 - When discovering regressions or flaky tests, open an issue with reproduction steps and assign the relevant code owner.
 - After incidents or hot fixes, append learnings to `docs/changelog.md` and notify maintainers for follow-up.
