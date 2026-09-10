@@ -284,14 +284,34 @@ Remote Config は dev 側の `voicevox_tts_manifest_url_ios` を staging の URL
 確かめ、そのあと同じ資産セットを本番バケットへ公開する。
 
 スタイル ID を変える差し替えでは、`voicevox_tts_style_id_ios` を**配信先ごとに**、そこへ置いた VVM に
-含まれる ID へ揃える。staging へ出すときは dev 側を、本番へ昇格するときは production 側を、それぞれ
-公開と同じタイミングで更新する。ここがずれると、端末は資産を取得できてもスタイルが見つからず
-オフライン時に端末内蔵 TTS へ落ちる。canary で確かめたのは dev 側の組み合わせだけなので、
-production 側の更新漏れは canary では検出できない。
+含まれる ID へ揃える。staging へ出すときは dev 側を、本番へ昇格するときは production 側を確認する。
+ここがずれると、端末は資産を取得できてもスタイルが見つからず、オフライン時に端末内蔵 TTS へ落ちる
+（`useVoicevoxSpeechEngine` は `setup` が返した `styleIds` に無い ID を弾く）。canary で確かめたのは
+dev 側の組み合わせだけなので、production 側の更新漏れは canary では検出できない。
 
-production 側でキーを設定していない場合は、コード既定値の `VOICEVOX_DEFAULT_STYLE_ID`
-（`src/constants/voicevox.ts`）が使われる。この場合は、その既定値が新しい VVM に含まれているかを
-公開前に確かめる。含まれていなければ、キーを明示設定するか、既定値を含む VVM を配る。
+確認するのは「Remote Config のキー値、**キー未設定ならコード既定値の `VOICEVOX_DEFAULT_STYLE_ID`**
+（`src/constants/voicevox.ts`）」で、これはどの配信先でも同じ契約である。dev 側が未設定のまま既定 ID を
+含まない VVM を staging へ置けば、canary も同じように落ちる。
+
+#### R2 と Remote Config の更新は原子的ではない
+
+`scripts/publish-voicevox-assets.mjs` が更新するのは R2 だけで、Remote Config は設定すべき値を表示する
+だけである。しかも両者は端末への届き方が違う。
+
+- **マニフェスト**: 固定 URL のキャッシュは 5 分。実行中でも `useVoicevoxSpeechEngine` のマウントで取りに行く。
+- **Remote Config**: 端末が読むのは**起動時の 1 回だけ**（`index.js` の `setupRemoteConfig()`。実行中の
+  再取得は無い。Worker 側のエッジキャッシュは 60 秒）。新しいスタイル ID が効くのは各端末の次回起動時。
+
+つまりスタイル ID を変える差し替えでは、「資産は新しい VVM に入れ替わったが、スタイル ID は古いまま」の
+期間が端末ごとに生じる。その間、その端末はオフライン時に端末内蔵 TTS で読む。
+
+これを避けるには、**旧 ID と新 ID の両方を含む資産セットを先に公開する**。マニフェストの `voiceModels` は
+配列で、`setup` が返す `styleIds` は読み込んだ全 VVM の和集合になるため、旧 VVM と新 VVM を並べれば
+どちらのスタイル ID でも合成できる。Remote Config を新 ID へ変え、全端末が起動し終えたと見なせるように
+なってから、次の差し替えで旧 VVM を落とす。
+
+容量の都合などで両方を置けない場合は、不一致期間に端末内蔵 TTS へ落ちることを承知で進める。切り戻しは
+旧 `version` のマニフェストを固定 URL へ置き直す（`version` が変わるので端末は資産を取り直す）。
 
 ## Remote Config
 
