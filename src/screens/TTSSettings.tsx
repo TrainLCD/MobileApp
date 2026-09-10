@@ -428,19 +428,6 @@ const ListFooter = ({
           onPressDelete={onPressVoicevoxDelete}
         />
       ) : null}
-      {/* iOSはリモート合成のため品質案内は不要。案内文はAndroidのTTSエンジン設定を
-        指す内容なので、該当する設定を持たないweb等でも出さない */}
-      {Platform.OS === 'android' ? (
-        <Typography
-          style={{
-            marginTop: 8,
-            textAlign: 'center',
-            color: colors.secondaryText,
-          }}
-        >
-          {translate('ttsVoiceQualityNoticeAndroid')}
-        </Typography>
-      ) : null}
       {!ttsFeatureEnabled ? (
         <>
           <Typography
