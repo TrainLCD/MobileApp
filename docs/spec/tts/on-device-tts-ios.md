@@ -229,6 +229,102 @@ Remote Config の値は変えなくてよい。
 資産を差し替えるときは新しい `version`（別ディレクトリ）で同じ手順を繰り返す。
 アプリは `version` の変化で全ファイルを取り直し、旧ディレクトリを消す。
 
+### staging 配信先
+
+マニフェストは `voicevox/manifest.json` の固定パスに置くので、資産を差し替えると次の経路で
+その配信先を見ている端末へ広がる。段階的に配る仕組みも、配ったあとに取り消す仕組みも無い。
+
+- 端末がマニフェストを取りに行くのは、`useVoicevoxSpeechEngine` のマウント時と、Remote Config の
+  キャッシュが更新されたとき（`kick()` と `subscribeRemoteConfig(kick)` の 2 経路。どちらも
+  `ensureVoicevoxAssets`）。後者が走るのは起動時の取得が完了した瞬間だけで、これはマウントより後に
+  なることがある。サーバ側で Remote Config を書き換えても、走っているアプリには届かない（後述）。
+  固定 URL のキャッシュは 5 分なので、公開してから最大 5 分は古いマニフェストが返りうる。アプリを
+  起動していない端末・圏外の端末には、その取得が起きるまで届かない。
+- `manifest.version` が手元の資産と違えば、`installFromManifest` が**全ファイル（約 160MB）を
+  ダウンロードし直し**、`pruneOtherVersions` が旧 `version` のディレクトリを削除する
+  （`src/lib/voicevox/assets.ts`）。差分更新ではないので、VVM を 1 つ替えるだけでも辞書ごと再取得になる。
+- 新しい VVM に Remote Config のスタイル ID が含まれていなければ、資産の取得に成功しても合成できず、
+  その端末はオフライン時に端末内蔵 TTS へ落ちる。
+- 影響を受けるのは、機能が有効かつ資産のダウンロードに同意済みの端末に限られる
+  （`ensureVoicevoxAssets` が `hasVoicevoxDownloadConsent()` で門番をしている）。未同意の端末は
+  マニフェストを取りに行かない。
+
+canary で先に確かめられるよう、配信先ごと分けてある。
+
+| 環境 | R2 バケット | ホスト | 参照する `CONFIG_KV` |
+| --- | --- | --- | --- |
+| 本番 | `trainlcd-assets` | `assets.trainlcd.app` | production（`trainlcd-worker`） |
+| staging | `trainlcd-assets-dev` | `assets-stg.trainlcd.app` | dev（`trainlcd-worker-dev`。canary アプリはこちらを向く） |
+
+バケットが `-dev`、ホストが `-stg` で揃っていないのは、既存の命名の混在
+（`trainlcd-uploads-dev` ↔ `uploads-dev.trainlcd.app` / `stationapi-stg` ↔ `gql-stg.trainlcd.app`）に
+合わせた結果で、ここだけ直しても全体は揃わないため意図的にこの組み合わせにしている。
+
+両者には同じ資産セットを置く。マニフェスト JSON 全体は一致しない（`files[].url` に配信ホストが
+埋まるため）ので、同一性は **`version`・`files[].path`・`files[].sha256` の 3 点**で判定する。
+staging へ出すときもマニフェストは本番のものをコピーせず、staging の base-url で生成し直す。
+
+本番へ昇格するときは、公開前にこの 3 点を staging のマニフェストと突き合わせ、1 つでも食い違えば
+公開しない。同じ `version` のまま中身の違う資産を本番へ出すと、canary で確かめた対象と別物を配ることになり、
+`version` が変わらないぶん端末は取り直しもしない。`publish-voicevox-assets.mjs` は公開済みの `version` を
+別の内容で上書きしようとすると拒否するが、この検査は**同じバケットの中でしか効かない**。staging と本番は
+別バケットなので、両者の突き合わせはこの手順で担保するしかない。
+
+`scripts/publish-voicevox-assets.mjs` は配信先を環境変数で切り替えられるので、staging でも同じ
+スクリプトを使う。バケット作成と独自ドメインの紐付けも、存在しなければ作る形で同じ実行に含まれる。
+
+認証情報の渡し方は本番と同じ（上記のとおり、手元のシェルで実行するときだけ
+`CLOUDFLARE_API_TOKEN` を環境変数に置き、Claude Code のクラウド環境では「API credentials」に登録する）。
+配信先の切り替えに要るのは次の 2 つだけで、これらは秘密ではない。
+
+```bash
+export VOICEVOX_R2_BUCKET=trainlcd-assets-dev
+export VOICEVOX_ASSETS_HOST=assets-stg.trainlcd.app
+node scripts/publish-voicevox-assets.mjs "$WORK/2026-09-08" 2026-09-08
+```
+
+Remote Config は dev 側の `voicevox_tts_manifest_url_ios` を staging の URL
+（`https://assets-stg.trainlcd.app/voicevox/manifest.json`）に向け、production 側は
+`assets.trainlcd.app` のまま据え置く。資産を差し替えるときは staging へ先に出して canary で
+確かめ、そのあと同じ資産セットを本番バケットへ公開する。
+
+スタイル ID を変える差し替えでは、`voicevox_tts_style_id_ios` を**配信先ごとに**、そこへ置いた VVM に
+含まれる ID へ揃える。staging へ出すときは dev 側を、本番へ昇格するときは production 側を確認する。
+ここがずれると、端末は資産を取得できてもスタイルが見つからず、オフライン時に端末内蔵 TTS へ落ちる
+（`useVoicevoxSpeechEngine` は `setup` が返した `styleIds` に無い ID を弾く）。canary で確かめたのは
+dev 側の組み合わせだけなので、production 側の更新漏れは canary では検出できない。
+
+確認するのは「Remote Config のキー値、**キー未設定ならコード既定値の `VOICEVOX_DEFAULT_STYLE_ID`**
+（`src/constants/voicevox.ts`）」で、これはどの配信先でも同じ契約である。dev 側が未設定のまま既定 ID を
+含まない VVM を staging へ置けば、canary も同じように落ちる。
+
+#### R2 と Remote Config の更新は原子的ではない
+
+`scripts/publish-voicevox-assets.mjs` が更新するのは R2 だけで、Remote Config は設定すべき値を表示する
+だけである。しかも両者は端末への届き方が違う。
+
+- **マニフェスト**: 固定 URL のキャッシュは 5 分。実行中でも `useVoicevoxSpeechEngine` のマウントで取りに行く。
+- **Remote Config**: 端末が Worker から取得するのは**起動時の 1 回だけ**（`index.js` の
+  `setupRemoteConfig()`。これ以外に呼び出し元は無く、`subscribeRemoteConfig` の通知もこの 1 回の取得に
+  伴って走るだけ。Worker 側のエッジキャッシュは 60 秒）。したがってサーバ側で値を変えても走っている
+  アプリには反映されず、新しいスタイル ID が効くのは各端末の次回起動時。
+
+つまりスタイル ID を変える差し替えでは、「資産は新しい VVM に入れ替わったが、スタイル ID は古いまま」の
+期間が端末ごとに生じる。その間、その端末はオフライン時に端末内蔵 TTS で読む。
+
+これを避けるには、**旧 ID と新 ID の両方を含む資産セットを先に公開する**。マニフェストの `voiceModels` は
+配列で、`setup` が返す `styleIds` は読み込んだ全 VVM の和集合になるため、旧 VVM と新 VVM を並べれば
+どちらのスタイル ID でも合成できる。Remote Config を新 ID へ変え、全端末が起動し終えたと見なせるように
+なってから、次の差し替えで旧 VVM を落とす。
+
+容量の都合などで両方を置けない場合は、不一致期間に端末内蔵 TTS へ落ちることを承知で進める。
+
+切り戻すときは、資産とスタイル ID の**両方**を戻す。旧 `version` のマニフェストを固定 URL へ置き直し
+（`version` が変わるので端末は資産を取り直す）、あわせて実効スタイル ID（Remote Config のキー値、
+未設定ならコード既定値）を旧 VVM に含まれる ID へ戻す。資産だけ戻すと、新しいスタイル ID が残った端末は
+旧 VVM でそれを解決できず、やはり端末内蔵 TTS へ落ちる。スタイル ID の反映は各端末の次回起動時なので、
+戻したあとも不一致の期間は残る。
+
 ## Remote Config
 
 | キー | 型 | フォールバック | 役割 |
