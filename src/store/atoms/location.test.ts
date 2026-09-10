@@ -276,6 +276,57 @@ describe('高速走行時の追従', () => {
     }
   );
 
+  // 回帰: αを配信間隔で正規化していないと、追従遅れ ((1-α)/α)·v·Δt が Δt に比例する。
+  // #6395でAndroidの更新間隔が5秒→10秒になった際、遅れがそのまま倍増して到着判定が
+  // 駅の直前までずれ込んだ(#6916)。精度が良い帯では間隔が変わっても遅れが変わらないこと。
+  it.each([
+    { accuracy: 30, label: '精度良好' },
+    { accuracy: 100, label: '精度中' },
+  ])('追従遅れが配信間隔に依存しない（$label）', ({ accuracy }) => {
+    const speedKmh = 95;
+    const run = (sampleIntervalMs: number) => {
+      resetLocationState();
+      setStationLineType(LineType.Normal);
+      return runConstantSpeed({
+        speedKmh,
+        accuracy,
+        sampleIntervalMs,
+        samples: Math.ceil(300_000 / sampleIntervalMs),
+      }).lastLagMeters;
+    };
+
+    const at1s = run(1000);
+    const at5s = run(5000);
+    const at10s = run(10000);
+
+    // 1秒間隔では旧実装のαと一致するため、そこを基準に間隔を延ばしても増えないこと
+    expect(at5s).toBeLessThan(at1s + 20);
+    expect(at10s).toBeLessThan(at1s + 20);
+  });
+
+  // 精度がBAD_ACCURACY_THRESHOLDを超える帯は、測位ノイズが到着圏に対して大きく
+  // スムージングが判定の安定性を担うため、意図的に正規化から外して固定αを保つ。
+  it('精度不良帯は固定αのまま（正規化の対象外）', () => {
+    const speedKmh = 95;
+    const lagAt = (sampleIntervalMs: number) => {
+      resetLocationState();
+      setStationLineType(LineType.Normal);
+      return runConstantSpeed({
+        speedKmh,
+        accuracy: 300,
+        sampleIntervalMs,
+        samples: Math.ceil(300_000 / sampleIntervalMs),
+      }).lastLagMeters;
+    };
+
+    // 固定α=0.3のまま。遅れは ((1-α)/α)·v·Δt で間隔に比例して増える
+    expect(lagAt(10000)).toBeGreaterThan(lagAt(1000) * 5);
+    expect(lagAt(1000)).toBeCloseTo(
+      expectedEmaLagMeters(speedKmh, 0.3, 1000),
+      0
+    );
+  });
+
   it('130km/hの在来線速度でも追従する', () => {
     const { maxLagMeters } = runConstantSpeed({
       speedKmh: 130,
