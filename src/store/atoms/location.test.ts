@@ -176,6 +176,117 @@ describe('setLocation', () => {
       expect(result?.coords.longitude).toBe(139.0);
     });
 
+    // 回帰: スムージングをスキップする経路がワープ対策の速度フィルタごと素通しに
+    // なっていたため、GPSが届かずWi-Fi/基地局測位へ落ちる地下鉄で、もっともらしい
+    // 精度のまま届く遠方の座標がそのまま反映され無関係な駅へ飛んでいた。
+    it('スムージングをスキップしてもありえない速度のワープは棄却する', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1_000));
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+
+      // 1秒後に約1km離れた別の駅付近の座標が届く(≒1000m/s)
+      const warpLat = 35.0 + 1_000 / METERS_PER_DEG_LAT;
+      setLocation(makeLocation(warpLat, 139.0, 500, 2_000));
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+    });
+
+    it('妥当な速度の移動はスムージングせず生の座標のまま反映する', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1_000));
+
+      // 1秒で約20m(=72km/h)進む
+      const movedLat = 35.0 + 20 / METERS_PER_DEG_LAT;
+      setLocation(makeLocation(movedLat, 139.0, 500, 2_000));
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(movedLat);
+    });
+
+    // 測位が途切れた区間を跨いでも判定対象は平均速度なので、地下鉄の営業最高速度
+    // (おおむね110km/h以下)を超えない限り受理する
+    it('測位が途切れたあとの妥当な平均速度の移動は受理する', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1_000));
+
+      // 60秒で1.5km(=90km/h)先の次駅付近へ進む
+      const movedLat = 35.0 + 1_500 / METERS_PER_DEG_LAT;
+      setLocation(makeLocation(movedLat, 139.0, 500, 61_000));
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(movedLat);
+    });
+
+    // 隣駅程度の距離(500m〜1km)のワープは、既定の閾値(360km/h)だと数秒で通ってしまう。
+    // 地下鉄ではその距離こそが典型的な誤測位なので路線種別に見合う閾値まで絞っている。
+    it('隣駅程度の距離のワープも数秒では受理しない', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1_000));
+
+      // 1秒間隔で500m先の駅付近の座標が届き続ける(既定の閾値なら5秒目で受理される)
+      const warpLat = 35.0 + 500 / METERS_PER_DEG_LAT;
+      for (let i = 1; i <= 10; i++) {
+        setLocation(makeLocation(warpLat, 139.0, 500, 1_000 + i * 1_000));
+      }
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+    });
+
+    // 回帰: 基準の張り直しが回数だけの条件だと、配信の速いiOS(概ね1Hz)では
+    // 5秒でワープを受け入れてしまい、10秒間隔のAndroidとの差が「iPhoneだけ
+    // ワープしがち」として表面化する。
+    it('高頻度配信では棄却が数秒続いた程度で基準を明け渡さない', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1_000));
+
+      // 1秒間隔で同じ誤測位が届き続ける(MAX_CONSECUTIVE_SPEED_REJECTIONSは超える)。
+      // 基準が古くなるほど見かけの速度は下がるため、棄却され続ける距離を選ぶ。
+      const warpLat = 35.0 + 3_000 / METERS_PER_DEG_LAT;
+      for (let i = 1; i <= 10; i++) {
+        setLocation(makeLocation(warpLat, 139.0, 500, 1_000 + i * 1_000));
+      }
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+    });
+
+    it('棄却が規定時間続いたら基準を張り直して凍結から復帰する', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1_000));
+
+      // 最初の棄却(t=2000)からMIN_SPEED_REJECTION_STREAK_MS(20秒)経過するまで送り続ける
+      const warpLat = 35.0 + 3_000 / METERS_PER_DEG_LAT;
+      for (let i = 1; i <= 21; i++) {
+        setLocation(makeLocation(warpLat, 139.0, 500, 1_000 + i * 1_000));
+      }
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(warpLat);
+    });
+
+    // 地上→地下鉄の切り替わり直後は、スキップ経路の基準がまだ一度も更新されていない。
+    // 本線経路の受理時に基準を揃えておかないと、この1点目だけ無防備になる。
+    it('地上から地下鉄へ切り替わった直後の1点にもワープ対策が効く', () => {
+      setStationLineType(LineType.Normal);
+      setLocation(makeLocation(35.0, 139.0, 30, 1_000));
+
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      const warpLat = 35.0 + 1_000 / METERS_PER_DEG_LAT;
+      setLocation(makeLocation(warpLat, 139.0, 500, 2_000));
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+    });
+
     it('平均精度がちょうど200mの境界値の場合はスムージングをスキップする', () => {
       setStationLineType(LineType.Subway);
       // 平均がちょうど200m（mean >= BAD_ACCURACY_THRESHOLD で不安定扱い）
@@ -367,13 +478,30 @@ describe('高速走行時の追従', () => {
   it('連続棄却が上限に達したら基準を張り直して凍結から復帰する', () => {
     setLocation(makeLocation(38.9, 140.9, 30, 1_000));
 
-    // 1秒間隔で物理的にありえない距離のジャンプを送り続ける
+    // Androidの配信間隔(10秒)で物理的にありえない距離のジャンプを送り続ける
     const jumpLat = 36.0;
     for (let i = 1; i <= 5; i++) {
-      setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + i * 1000));
+      setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + i * 10_000));
     }
 
-    // 5回目(MAX_CONSECUTIVE_SPEED_REJECTIONS)で基準を張り直し、座標が反映される
+    // 回数(5回)と経過時間(20秒)の双方を満たした時点で基準を張り直す
+    expect(store.get(locationAtom)?.coords.latitude).toBe(jumpLat);
+  });
+
+  // 回帰: 張り直しの条件が回数だけだと、ワープ対策の粘り強さが配信間隔に反比例する。
+  // iOSは概ね1Hz配信なので5回=5秒で基準を明け渡し、10秒間隔のAndroidより
+  // 桁違いにワープしやすくなっていた。
+  it('基準を張り直すまでの粘り強さが配信間隔に依存しない', () => {
+    setLocation(makeLocation(38.9, 140.9, 30, 1_000));
+
+    const jumpLat = 36.0;
+    // iOS相当の1秒間隔。最初の棄却はt=2000なので、20秒経過するのはt=22000。
+    for (let i = 1; i <= 20; i++) {
+      setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + i * 1_000));
+    }
+    expect(store.get(locationAtom)?.coords.latitude).toBe(38.9);
+
+    setLocation(makeLocation(jumpLat, 140.9, 30, 1_000 + 21 * 1_000));
     expect(store.get(locationAtom)?.coords.latitude).toBe(jumpLat);
   });
 

@@ -11,11 +11,29 @@ const MAX_ACCURACY_HISTORY = 12;
 // 物理的にありえない速度でのジャンプを棄却する閾値(m/s ≒ 360km/h)
 const MAX_PLAUSIBLE_SPEED = 100;
 
+// スムージングスキップ経路(地下鉄かつ精度が不安定)で使う閾値(m/s ≒ 120km/h)。
+// 判定対象は2点間の平均速度なので、営業最高速度(地下鉄はおおむね110km/h以下)を
+// 上回ることは測位が途切れた区間を跨いでもあり得ない。新幹線を通せるよう緩めてある
+// 既定値(360km/h)をこの経路にも当てると、隣駅程度の距離(500m〜1km)のワープが
+// 数秒で通ってしまう——GPSが届かずWi-Fi/基地局測位へ落ちる区間ではその距離こそが
+// 典型的な誤りなので、路線種別から言える範囲まで絞る。
+const MAX_PLAUSIBLE_SUBWAY_SPEED = 33;
+
 // 速度フィルタが連続して棄却できる回数の上限。棄却しても基準座標は更新しないため、
 // 基準側が実際の現在地から乖離している場合は正常な測位が延々と弾かれ、位置が
-// 永久に凍結する。この回数に達したら「基準の方が誤っている」と判断し、届いた
-// 測位で基準を張り直す。
+// 永久に凍結する。この回数に達し、かつMIN_SPEED_REJECTION_STREAK_MSぶんの時間が
+// 経っていれば「基準の方が誤っている」と判断し、届いた測位で基準を張り直す。
 const MAX_CONSECUTIVE_SPEED_REJECTIONS = 5;
+
+// 連続棄却で基準を張り直すまでに最低限必要な経過時間(ms)。
+// 回数だけを条件にすると、ワープ対策の粘り強さが測位の配信間隔に依存してしまう。
+// iOSはtimeIntervalが効かずdistanceInterval基準で概ね1Hz配信されるため5回=約5秒で
+// 基準を明け渡すのに対し、Androidは10秒間隔なので約50秒粘る。同じ「配信間隔で
+// 保護の強さが変わる」問題はEMAのα側では正規化済み(LEGACY_ALPHA_INTERVAL_SEC)で、
+// ここも回数と経過時間の両方を満たしたときだけ張り直すことで間隔に依存させない。
+// 誤測位が数秒だけ固まって届くケース(地下鉄のWi-Fi/基地局測位)で基準を奪われない
+// 程度に長く、基準側が本当に誤っていたときの凍結が長引かない程度に短い値を採る。
+const MIN_SPEED_REJECTION_STREAK_MS = 20_000;
 
 // 基準座標がこれ以上古い場合、EMAの基準としては意味を持たないため、速度フィルタを
 // 通過したうえでスムージングせず新しい測位へスナップし、基準を張り直す。
@@ -114,8 +132,21 @@ const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 // 走行が丸ごと弾かれて位置が凍結していた。速度判定は生座標同士で行う。
 const lastRawLocationAtom = atom<Location.LocationObject | null>(null);
 
+// スムージングスキップ経路(地下鉄)専用の速度フィルタ基準。
+// この経路はEMAを通さず生の座標をそのままUIへ反映するが、ワープ対策の速度フィルタまで
+// 一緒に外すと、GPSが届かずWi-Fi/基地局測位へ落ちる地下鉄区間——もっともワープしやすい
+// 場所——が無防備になる。EMA用の基準(lastFilteredLocationAtom / lastRawLocationAtom)は
+// 地上復帰時にSTALE_REFERENCE_MSで張り直させるため据え置く必要があるので、
+// 速度判定にだけ使う基準を別に持つ。
+const lastSkipSmoothingLocationAtom = atom<Location.LocationObject | null>(
+  null
+);
+
 // 速度フィルタが連続で棄却した回数。MAX_CONSECUTIVE_SPEED_REJECTIONSの判定に使う。
 let consecutiveSpeedRejections = 0;
+// 現在の連続棄却が始まった測位のタイムスタンプ(ms)。
+// MIN_SPEED_REJECTION_STREAK_MSの判定に使う。
+let speedRejectionStreakStartedAtMs = 0;
 
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
@@ -124,8 +155,10 @@ export const resetLocationState = () => {
   store.set(accuracyHistoryAtom, []);
   store.set(lastFilteredLocationAtom, null);
   store.set(lastRawLocationAtom, null);
+  store.set(lastSkipSmoothingLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
   consecutiveSpeedRejections = 0;
+  speedRejectionStreakStartedAtMs = 0;
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -142,6 +175,50 @@ export const setRawLocation = (location: Location.LocationObject) => {
   store.set(rawLocationAtom, location);
 };
 
+// 2点間の見かけの速度が物理的にありえない水準かを判定する。
+// 経過時間が延びても「変位÷経過時間」の妥当性検査は成立するため、測位が長く途切れた
+// 直後の1点にも適用できる。
+const isImplausibleJump = (
+  prev: Location.LocationObject,
+  next: Location.LocationObject,
+  maxSpeed: number
+): boolean => {
+  const dtSec = (next.timestamp - prev.timestamp) / 1000;
+  if (!(dtSec > 0)) {
+    return false;
+  }
+  const dist = getDistance(
+    { latitude: prev.coords.latitude, longitude: prev.coords.longitude },
+    { latitude: next.coords.latitude, longitude: next.coords.longitude }
+  );
+  return dist / dtSec > maxSpeed;
+};
+
+const resetSpeedRejectionStreak = () => {
+  consecutiveSpeedRejections = 0;
+  speedRejectionStreakStartedAtMs = 0;
+};
+
+// 速度フィルタによる棄却を記録し、基準を張り直すべきか(=基準側が誤っていると
+// 判断すべきか)を返す。棄却が規定回数かつ規定時間続いたときにだけ真を返す。
+const registerSpeedRejection = (timestampMs: number): boolean => {
+  // 連続棄却の開始時、および時計の巻き戻りで経過時間が測れなくなった場合は数え直す
+  if (
+    consecutiveSpeedRejections === 0 ||
+    timestampMs < speedRejectionStreakStartedAtMs
+  ) {
+    consecutiveSpeedRejections = 0;
+    speedRejectionStreakStartedAtMs = timestampMs;
+  }
+  consecutiveSpeedRejections += 1;
+
+  return (
+    consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS &&
+    timestampMs - speedRejectionStreakStartedAtMs >=
+      MIN_SPEED_REJECTION_STREAK_MS
+  );
+};
+
 // スムージングせず測位をそのまま反映し、EMA基準・速度フィルタ基準の双方を張り直す。
 // 基準が無い(初回起動・地下鉄からの復帰)、基準が古すぎる、基準が誤っていると判断した
 // 場合に使う。基準を両方とも生の測位へ揃えるのが要点で、片方だけ残すと次回の変位に
@@ -153,8 +230,9 @@ const resyncLocationReference = (
   store.set(locationAtom, location);
   store.set(lastFilteredLocationAtom, location);
   store.set(lastRawLocationAtom, location);
+  store.set(lastSkipSmoothingLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
-  consecutiveSpeedRejections = 0;
+  resetSpeedRejectionStreak();
 };
 
 // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
@@ -183,12 +261,31 @@ export const setLocation = (location: Location.LocationObject) => {
   const skipSmoothing =
     currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
 
-  // スムージングスキップ時はフィルタ・スムージングを全てスキップする
-  // UIには生の座標を反映するが、EMA基準(lastFilteredLocationAtom)も速度フィルタ基準
-  // (lastRawLocationAtom)も更新しない。地上復帰時は基準が古いためSTALE_REFERENCE_MSの
-  // 判定に掛かり、そこで張り直される
+  // スムージングスキップ時はEMAを掛けず生の座標をUIへ反映するが、ワープ対策の
+  // 速度フィルタだけは通す。地下鉄ではGPSが届かずWi-Fi/基地局測位へ落ちるため、
+  // もっともらしい精度のまま数百m〜数km離れた別の駅付近の座標が届くことがあり、
+  // ここを素通しにすると届いた瞬間に無関係な駅へ飛ぶ。iOSはtimeIntervalが効かず
+  // 配信が速いぶん、この素通しがそのままワープの多さとして表面化する。
+  //
+  // EMA基準(lastFilteredLocationAtom)と速度フィルタ基準(lastRawLocationAtom)は
+  // 従来どおり更新しない。地上復帰時に基準が古いままSTALE_REFERENCE_MSの判定へ
+  // 掛かって張り直される流れを保つため。速度判定にはこの経路専用の基準を使う。
   if (skipSmoothing) {
+    const skipPrev = store.get(lastSkipSmoothingLocationAtom);
+    if (
+      skipPrev != null &&
+      isImplausibleJump(skipPrev, location, MAX_PLAUSIBLE_SUBWAY_SPEED) &&
+      // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま復帰
+      // できなくなるのを避けるため、上限に達したら棄却せず基準を張り直す。
+      !registerSpeedRejection(location.timestamp)
+    ) {
+      store.set(accuracyHistoryAtom, updatedHistory);
+      return;
+    }
+
+    resetSpeedRejectionStreak();
     store.set(locationAtom, location);
+    store.set(lastSkipSmoothingLocationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
     return;
   }
@@ -206,35 +303,19 @@ export const setLocation = (location: Location.LocationObject) => {
   // (下のSTALE_REFERENCE_MS判定)だけで、変位÷経過時間という速度の妥当性検査は
   // 経過時間が延びても成立するため。ここを飛ばすと、間隔が空いた直後の1点に限って
   // ワープ対策が無効になる。
-  const dt = (location.timestamp - rawPrev.timestamp) / 1000; // 秒
-  if (dt > 0) {
-    const dist = getDistance(
-      {
-        latitude: rawPrev.coords.latitude,
-        longitude: rawPrev.coords.longitude,
-      },
-      {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      }
-    );
-    const speed = dist / dt;
-
-    // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
-    if (speed > MAX_PLAUSIBLE_SPEED) {
-      consecutiveSpeedRejections += 1;
-      // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま
-      // 復帰できなくなるのを避けるため、上限に達したら基準を張り直す。
-      if (consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS) {
-        resyncLocationReference(location, updatedHistory);
-        return;
-      }
-      store.set(accuracyHistoryAtom, updatedHistory);
+  // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
+  if (isImplausibleJump(rawPrev, location, MAX_PLAUSIBLE_SPEED)) {
+    // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま
+    // 復帰できなくなるのを避けるため、上限に達したら基準を張り直す。
+    if (registerSpeedRejection(location.timestamp)) {
+      resyncLocationReference(location, updatedHistory);
       return;
     }
+    store.set(accuracyHistoryAtom, updatedHistory);
+    return;
   }
 
-  consecutiveSpeedRejections = 0;
+  resetSpeedRejectionStreak();
 
   // 速度としては妥当だが基準が古すぎる場合、EMAの基準としては使えないため
   // スムージングせず生の座標へスナップして基準を張り直す。長く途切れたあとに
@@ -272,5 +353,8 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(lastFilteredLocationAtom, smoothedLocation);
   // 速度フィルタの基準はスムージング前の生座標を保持する
   store.set(lastRawLocationAtom, location);
+  // 地上→地下鉄の切り替わり直後の1点にもワープ対策が効くよう、スキップ経路の
+  // 基準もここで揃えておく
+  store.set(lastSkipSmoothingLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
 };
