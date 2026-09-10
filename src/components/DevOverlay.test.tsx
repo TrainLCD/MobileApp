@@ -311,7 +311,7 @@ describe('DevOverlay', () => {
       expect(isDevOverlayRotatedToLandscape(false, 852, 393)).toBe(false);
     });
 
-    it('ポートレートモードでは物理縦向きでも座標変換しない', () => {
+    it('回転ラッパーの外なら物理縦向きでも座標変換しない', () => {
       expect(isDevOverlayRotatedToLandscape(true, 393, 852)).toBe(false);
     });
   });
@@ -340,8 +340,8 @@ describe('DevOverlay', () => {
       ).toEqual({ x: 188, y: 724 });
     });
 
-    // ポートレートモードでは回転ラッパーの外に出るので、長辺=width に正規化した
-    // 寸法でクランプすると横は画面外まで許し、縦は画面の半分までしか動かせなくなる
+    // 回転ラッパーの外に描画される場合、長辺=width に正規化した寸法でクランプすると
+    // 横は画面外まで許し、縦は画面の半分までしか動かせなくなる
     it('縦画面の実寸と長辺正規化寸法とでクランプ範囲が変わる', () => {
       const portrait = getDevOverlayClampedPosition(
         9999,
