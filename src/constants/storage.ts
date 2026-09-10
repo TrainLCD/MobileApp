@@ -48,6 +48,9 @@ export const STORAGE_KEYS = {
   // ユーザーが VOICEVOX 資産 (約 160MB) のダウンロードに同意したか。同意後は
   // 中断した取得や更新版の取得を自動で再開する
   VOICEVOX_DOWNLOAD_CONSENTED: '@TrainLCD:voicevoxDownloadConsented',
+  // 試験的機能: リモートTTSの有効判定を Remote Config より優先して固定する
+  // ('auto' | 'on' | 'off')。src/lib/remoteTTSOverride.ts が管理する
+  REMOTE_TTS_OVERRIDE: '@TrainLCD:remoteTTSOverride',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

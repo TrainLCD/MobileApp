@@ -16,6 +16,11 @@ import {
   setupRemoteConfig,
   subscribeRemoteConfig,
 } from './remoteConfig';
+import {
+  REMOTE_TTS_OVERRIDE,
+  resetRemoteTTSOverrideForTests,
+  setRemoteTTSOverride,
+} from './remoteTTSOverride';
 
 jest.mock('./workerApi', () => ({
   workerUrl: (path: string) => `https://worker.test${path}`,
@@ -464,6 +469,67 @@ describe('isRemoteTTSEnabled（リモートTTS切替スイッチ）', () => {
 
     resetRemoteConfigCache();
     expect(isRemoteTTSEnabled()).toBe(false);
+  });
+
+  // 試験的機能「リモートTTSの強制切替」。配信値より端末側の上書きを優先する。
+  describe('試験的機能の強制切替（remoteTTSOverride）', () => {
+    afterEach(() => {
+      resetRemoteTTSOverrideForTests();
+    });
+
+    it('強制的に有効にすると配信値が false でもリモートTTSを使う', async () => {
+      mockRemoteConfig({
+        max_permit_accuracy: 1500,
+        remote_tts_enabled_ios: false,
+        remote_tts_enabled_android: false,
+      });
+      await setupRemoteConfig();
+
+      setRemoteTTSOverride(REMOTE_TTS_OVERRIDE.ON);
+
+      setPlatformOS('ios');
+      expect(isRemoteTTSEnabled()).toBe(true);
+      setPlatformOS('android');
+      expect(isRemoteTTSEnabled()).toBe(true);
+    });
+
+    it('強制的に無効にすると配信値が true でも端末内蔵TTSへ倒す', async () => {
+      mockRemoteConfig({
+        max_permit_accuracy: 1500,
+        remote_tts_enabled_ios: true,
+        remote_tts_enabled_android: true,
+      });
+      await setupRemoteConfig();
+
+      setRemoteTTSOverride(REMOTE_TTS_OVERRIDE.OFF);
+
+      setPlatformOS('ios');
+      expect(isRemoteTTSEnabled()).toBe(false);
+      setPlatformOS('android');
+      expect(isRemoteTTSEnabled()).toBe(false);
+    });
+
+    it('auto へ戻すと配信値の判定に復帰する', async () => {
+      mockRemoteConfig({
+        max_permit_accuracy: 1500,
+        remote_tts_enabled_android: true,
+      });
+      await setupRemoteConfig();
+
+      setPlatformOS('android');
+      setRemoteTTSOverride(REMOTE_TTS_OVERRIDE.OFF);
+      expect(isRemoteTTSEnabled()).toBe(false);
+
+      setRemoteTTSOverride(REMOTE_TTS_OVERRIDE.AUTO);
+      expect(isRemoteTTSEnabled()).toBe(true);
+    });
+
+    it('リモート再生経路を持たないプラットフォームでは強制的に有効にしても無効', () => {
+      setRemoteTTSOverride(REMOTE_TTS_OVERRIDE.ON);
+
+      setPlatformOS('web');
+      expect(isRemoteTTSEnabled()).toBe(false);
+    });
   });
 });
 

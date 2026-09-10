@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { VOICEVOX_DEFAULT_STYLE_ID } from '~/constants/voicevox';
+import { getRemoteTTSOverride, REMOTE_TTS_OVERRIDE } from './remoteTTSOverride';
 import { workerUrl } from './workerApi';
 
 // Cloudflare Worker(/config/remote) 配信の設定キー。Worker 側のレスポンスキーと一致させる。
@@ -326,17 +327,21 @@ export const isTTSFeatureEnabled = (): boolean => {
 //   - 障害・コスト超過時に iOS を端末内蔵 TTS へ退避: remote_tts_enabled_ios=false
 // 未配信・取得失敗時は既存挙動を維持するフォールバック(iOS=true / Android=false)を返す。
 // iOS/Android 以外(web など)はリモート再生経路を持たないため常に false。
+// 試験的機能の上書き設定(remoteTTSOverride)が 'on' / 'off' のときは配信値より優先する。
+// 実機でエンジンの切り替えを検証するための導線で、dev アプリ以外では常に 'auto' になる。
 export const isRemoteTTSEnabled = (): boolean => {
-  switch (Platform.OS) {
-    case 'ios':
-      return cachedRemoteTTSEnabledIOS ?? REMOTE_TTS_ENABLED_IOS_FALLBACK;
-    case 'android':
-      return (
-        cachedRemoteTTSEnabledAndroid ?? REMOTE_TTS_ENABLED_ANDROID_FALLBACK
-      );
-    default:
-      return false;
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+    return false;
   }
+
+  const override = getRemoteTTSOverride();
+  if (override !== REMOTE_TTS_OVERRIDE.AUTO) {
+    return override === REMOTE_TTS_OVERRIDE.ON;
+  }
+
+  return Platform.OS === 'ios'
+    ? (cachedRemoteTTSEnabledIOS ?? REMOTE_TTS_ENABLED_IOS_FALLBACK)
+    : (cachedRemoteTTSEnabledAndroid ?? REMOTE_TTS_ENABLED_ANDROID_FALLBACK);
 };
 
 // AIエージェント(行き先相談)機能の有効/無効を同期的に取得する。setupRemoteConfig 完了後は
