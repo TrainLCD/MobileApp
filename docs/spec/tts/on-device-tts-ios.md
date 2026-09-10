@@ -231,8 +231,21 @@ Remote Config の値は変えなくてよい。
 
 ### staging 配信先
 
-マニフェストは `voicevox/manifest.json` の固定パスに置くので、本番バケットの資産を差し替えると
-公開した瞬間に全端末へ効く。canary で先に確かめられるよう、配信先ごと分けてある。
+マニフェストは `voicevox/manifest.json` の固定パスに置くので、資産を差し替えると次の経路で
+配信先を共有する全端末へ届く。段階的に配る仕組みも、配ったあとに取り消す仕組みも無い。
+
+- 端末は `useVoicevoxSpeechEngine` のマウントと Remote Config の更新のたびにマニフェストを取得する。
+  固定 URL のキャッシュは 5 分なので、差し替えは概ね 5 分以内に全端末が見る。
+- `manifest.version` が手元の資産と違えば、`installFromManifest` が**全ファイル（約 160MB）を
+  ダウンロードし直し**、`pruneOtherVersions` が旧 `version` のディレクトリを削除する
+  （`src/lib/voicevox/assets.ts`）。差分更新ではないので、VVM を 1 つ替えるだけでも辞書ごと再取得になる。
+- 新しい VVM に Remote Config のスタイル ID が含まれていなければ、資産の取得に成功しても合成できず、
+  その端末はオフライン時に端末内蔵 TTS へ落ちる。
+- 影響を受けるのは、機能が有効かつ資産のダウンロードに同意済みの端末に限られる
+  （`ensureVoicevoxAssets` が `hasVoicevoxDownloadConsent()` で門番をしている）。未同意の端末は
+  マニフェストを取りに行かない。
+
+canary で先に確かめられるよう、配信先ごと分けてある。
 
 | 環境 | R2 バケット | ホスト | 参照する `CONFIG_KV` |
 | --- | --- | --- | --- |
