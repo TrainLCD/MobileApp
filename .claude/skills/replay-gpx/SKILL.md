@@ -5,7 +5,7 @@ description: Replay a GPX track as mock locations on a connected Android device 
 
 # replay-gpx
 
-`ios/*.gpx` を Android の**テストプロバイダ**経由で流し込み、実機・エミュレータの
+`assets/gpx/*.gpx` を Android の**テストプロバイダ**経由で流し込み、実機・エミュレータの
 測位パイプラインを実際に通す。オートモード (`useSimulationMode`) と違い
 `locationAtom` へ直書きしないので、`src/store/atoms/location.ts` の速度フィルタ・
 EMA スムージング・精度フィルタがすべて効いた状態を観測できる。
