@@ -7,10 +7,10 @@ import {
 // 有効化・配信 URL・スタイル ID は Remote Config (voicevox_tts_*_ios) が決める。
 // 設計は docs/spec/tts/on-device-tts-ios.md を参照。
 
-// 既定のスタイル ID。No.7「アナウンス」(voicevox_vvm の 6.vvm / スタイル ID 30)。
-// 車内放送に最も近い声色で、個人の非商用利用はクレジット表記のみで可
-// (https://voiceseven.com/#j0200)。ライセンス画面のクレジットと対応させること。
-export const VOICEVOX_DEFAULT_STYLE_ID = 30;
+// 既定のスタイル ID。夜語トバリ「明るい」(voicevox_vvm の 24.vvm / スタイル ID 119)。
+// 「VOICEVOX:夜語トバリ」とクレジットを表記すれば商用・非商用ともに利用可
+// (https://yogataritobari.studio.site/#rules)。ライセンス画面のクレジットと対応させること。
+export const VOICEVOX_DEFAULT_STYLE_ID = 119;
 
 // アナウンス速度設定を VOICEVOX の AudioQuery.speedScale へ写像する。
 // リモート TTS の speakingRate (REMOTE_TTS_SPEED_RATES) と同じ倍率にして、
@@ -36,5 +36,5 @@ export const VOICEVOX_MANIFEST_FETCH_TIMEOUT_MS = 15_000;
 export const VOICEVOX_ASSET_RETRY_INTERVAL_MS = 5 * 60_000;
 
 // 同意ダイアログに出す資産サイズの目安 (MB)。実サイズはマニフェスト取得後に分かるため、
-// ダイアログでは概算だけを示す (Open JTalk 辞書 約 107MB + VVM 約 55MB)。
+// ダイアログでは概算だけを示す (Open JTalk 辞書 約 107MB + VVM 約 57MB)。
 export const VOICEVOX_ASSET_APPROX_MB = 160;

@@ -138,7 +138,7 @@ App Clip（`ProdAppClip` / `CanaryAppClip`）は deployment target が 16.4 の�
 - **同意ダイアログ**: 自動アナウンスを有効化した瞬間に、VOICEVOX が使える構成
   （`phase !== 'unsupported'`）で未取得なら「オフライン用の日本語音声」の同意ダイアログを
   出す。文言は「ダウンロードしなくても通信できないときは端末内蔵の読み上げ音声で流れる」
-  「ダウンロードすると圏外・トンネルでもより自然な音声（VOICEVOX:No.7）で読める」の
+  「ダウンロードすると圏外・トンネルでもより自然な音声（VOICEVOX:夜語トバリ）で読める」の
   2 点を明示し、取得が再生の前提だと読めないようにする（パネルの未取得時の説明・削除確認も
   同じ趣旨）。既存の注意ダイアログが先に出る場合はキューで続けて表示される。
   「ダウンロード」で `requestVoicevoxAssetsDownload()`（同意を MMKV
@@ -176,7 +176,7 @@ mkdir -p "$WORK/2026-09-08" && cd "$WORK/2026-09-08"
 # --fail: HTTP エラーを成功扱いにしない / --retry: 一時的な通信エラーは再試行する
 curl -LO --fail --retry 3 https://github.com/r9y9/open_jtalk/releases/download/v1.11.1/open_jtalk_dic_utf_8-1.11.tar.gz
 tar xzf open_jtalk_dic_utf_8-1.11.tar.gz && rm open_jtalk_dic_utf_8-1.11.tar.gz
-curl -LO --fail --retry 3 https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/6.vvm
+curl -LO --fail --retry 3 https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/24.vvm
 cd -   # リポジトリへ戻る
 
 # マニフェストを生成する (version は省略時に今日の日付)。
@@ -192,7 +192,7 @@ test -s "$WORK/manifest.json"
 voicevox/
 ├── manifest.json
 └── 2026-09-08/                        … base-url に対応するディレクトリ
-    ├── 6.vvm                          … VOICEVOX:No.7 (style 29/30/31)
+    ├── 24.vvm                         … VOICEVOX:夜語トバリ (style 118〜121)
     └── open_jtalk_dic_utf_8-1.11/
         ├── sys.dic  unk.dic  char.bin  matrix.bin
         ├── left-id.def  right-id.def  pos-id.def  rewrite.def
@@ -243,13 +243,13 @@ Remote Config の値は変えなくてよい。
 
 ## 音声とクレジット
 
-既定は **No.7「アナウンス」**（`6.vvm` / スタイル ID 30）。No.7 の規約は個人の非商用利用を
-クレジット表記のみで許諾している（商用利用は事前確認が必要）。本アプリは課金・広告を持たない
-個人開発のため非商用利用に当たるが、**課金や広告を将来入れる場合は再確認が必要**。
+既定は **夜語トバリ「明るい」**（`24.vvm` / スタイル ID 119）。規約は「VOICEVOX:夜語トバリ」の
+クレジット表記のみを条件に商用・非商用の利用を許諾しているため、課金や広告を将来入れる場合も
+クレジット表記だけで足りる。
 
 VOICEVOX 音声モデルの利用規約（[voicevox_vvm README](https://github.com/VOICEVOX/voicevox_vvm)）は
 「VOICEVOX を利用したことがわかるクレジット表記」を求める。ライセンス画面
-（`src/screens/Licenses.tsx`）に `VOICEVOX:No.7` を iOS でのみ表示している。スタイル ID を
+（`src/screens/Licenses.tsx`）に `VOICEVOX:夜語トバリ` を iOS でのみ表示している。スタイル ID を
 別キャラクターへ変えるときは、そのキャラクターの規約とクレジット表記も合わせて変えること。
 
 ## 未計測の項目
