@@ -229,6 +229,35 @@ Remote Config の値は変えなくてよい。
 資産を差し替えるときは新しい `version`（別ディレクトリ）で同じ手順を繰り返す。
 アプリは `version` の変化で全ファイルを取り直し、旧ディレクトリを消す。
 
+### staging 配信先
+
+マニフェストは `voicevox/manifest.json` の固定パスに置くので、本番バケットの資産を差し替えると
+公開した瞬間に全端末へ効く。canary で先に確かめられるよう、配信先ごと分けてある。
+
+| 環境 | R2 バケット | ホスト | 参照する `CONFIG_KV` |
+| --- | --- | --- | --- |
+| 本番 | `trainlcd-assets` | `assets.trainlcd.app` | production（`trainlcd-worker`） |
+| staging | `trainlcd-assets-dev` | `assets-stg.trainlcd.app` | dev（`trainlcd-worker-dev`。canary アプリはこちらを向く） |
+
+バケットが `-dev`、ホストが `-stg` で揃っていないのは、既存の命名の混在
+（`trainlcd-uploads-dev` ↔ `uploads-dev.trainlcd.app` / `stationapi-stg` ↔ `gql-stg.trainlcd.app`）に
+合わせた結果で、ここだけ直しても全体は揃わないため意図的にこの組み合わせにしている。
+
+`scripts/publish-voicevox-assets.mjs` は配信先を環境変数で切り替えられるので、staging でも同じ
+スクリプトを使う。バケット作成と独自ドメインの紐付けも、存在しなければ作る形で同じ実行に含まれる。
+
+```bash
+export CLOUDFLARE_ACCOUNT_ID=… CLOUDFLARE_ZONE_ID=… CLOUDFLARE_API_TOKEN=…
+export VOICEVOX_R2_BUCKET=trainlcd-assets-dev
+export VOICEVOX_ASSETS_HOST=assets-stg.trainlcd.app
+node scripts/publish-voicevox-assets.mjs "$WORK/2026-09-10" 2026-09-10
+# → dev の Remote Config: voicevox_tts_manifest_url_ios = https://assets-stg.trainlcd.app/voicevox/manifest.json
+```
+
+Remote Config は dev 側の `voicevox_tts_manifest_url_ios` だけを staging の URL に向け、production 側は
+`assets.trainlcd.app` のまま据え置く。canary で確認できたら、同じ資産セット（同じ `version`）を
+本番バケットへも公開する。
+
 ## Remote Config
 
 | キー | 型 | フォールバック | 役割 |
