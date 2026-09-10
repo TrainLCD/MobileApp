@@ -24,18 +24,50 @@ const MAX_CONSECUTIVE_SPEED_REJECTIONS = 5;
 // 変位へ乗って再び速度超過になる、という復帰不能ループを防ぐ。
 const STALE_REFERENCE_MS = 30_000;
 
-// GPS精度に応じたスムージング重みを返す（精度が良いほど新しい値を信頼する）
-const getSmoothingAlpha = (accuracy: number | null): number => {
-  if (accuracy == null || accuracy <= 0) {
-    return 0.6;
+// 固定αのEMAの追従遅れは、定速・一定間隔のとき ((1-α)/α)·v·Δt で、配信間隔Δtに比例する。
+// 旧実装は精度ごとに固定のαを返していたため、Δtが変わると遅れも比例して変わった。
+// 実際 #6395 でAndroidの更新間隔を5秒→10秒へ緩めた際、遅れがそのまま倍増し、
+// 到着判定と「まもなく」表示が駅の直前までずれ込んだ（#6916）。
+//
+// 固定αは iOS の配信間隔(distanceInterval基準で概ね1Hz)を前提に調整された値なので、
+// その前提を「追従遅れ時間(秒)」として取り出し、Δtからαを毎回組み立て直す。
+// α = Δt / (Δt + T) とすると定速時の追従遅れは常にT秒ぶんの距離に収まり、
+// 配信間隔が変わっても遅れが変わらない。Δt=1秒では旧実装のαと完全に一致する。
+const LEGACY_ALPHA_INTERVAL_SEC = 1;
+
+// 旧実装のαが1秒間隔で持っていた追従遅れ時間(秒)へ変換する
+const legacyAlphaToLagSec = (alpha: number): number =>
+  ((1 - alpha) / alpha) * LEGACY_ALPHA_INTERVAL_SEC;
+
+// 精度がBAD_ACCURACY_THRESHOLDを超える帯だけは間隔正規化せず固定αを維持する。
+// この帯では測位ノイズ(σ≒accuracy)が到着圏に対して大きく、スムージングが判定の
+// 安定性そのものを担っている。正規化してαを上げると追従遅れは詰まるが、平滑後の
+// 座標が到着圏を出入りして到着表示がばたつく。片町線快速のGPXにσ=250mを乗せて
+// 10秒間隔で流すと、1区間で到着判定が3回立った(location.gpxLag.test.ts)。
+// 追従遅れと安定性の積は配信間隔で決まるため、10秒間隔・σ=250mでは許容遅れを
+// どこに置いても両立しない。精度が良い帯(σが到着圏に対して十分小さい)に限って
+// 正規化する。
+const LOW_ACCURACY_ALPHA = 0.3;
+
+// GPS精度に応じた許容追従遅れ(秒)を返す（精度が良いほど新しい値を信頼して遅れを詰める）
+const getSmoothingLagSec = (accuracy: number | null): number => {
+  if (accuracy != null && accuracy > 0 && accuracy < 50) {
+    return legacyAlphaToLagSec(0.8);
   }
-  if (accuracy < 50) {
-    return 0.8;
+  return legacyAlphaToLagSec(0.6);
+};
+
+// GPS精度と配信間隔に応じたスムージング重みを返す
+const getSmoothingAlpha = (accuracy: number | null, dtSec: number): number => {
+  // 間隔が測れない場合はスムージングせず新しい測位へスナップする。
+  // 遅れを持たせる根拠が無いのに古い座標を混ぜると、位置が理由なく後ろへ引かれる。
+  if (!Number.isFinite(dtSec) || dtSec <= 0) {
+    return 1;
   }
-  if (accuracy < 200) {
-    return 0.6;
+  if (accuracy != null && accuracy >= BAD_ACCURACY_THRESHOLD) {
+    return LOW_ACCURACY_ALPHA;
   }
-  return 0.3;
+  return dtSec / (dtSec + getSmoothingLagSec(accuracy));
 };
 
 // 精度履歴の安定性を変動係数(CV)で判定する
@@ -214,8 +246,12 @@ export const setLocation = (location: Location.LocationObject) => {
   }
 
   // EMA(指数移動平均)で座標をスムージングする
-  // 精度が良いほどαが大きくなり、新しい測位値をより信頼する
-  const alpha = getSmoothingAlpha(newAccuracy);
+  // 精度が良いほど、また配信間隔が空くほどαが大きくなり、新しい測位値をより信頼する。
+  // 間隔で正規化することで、追従遅れが配信間隔に依存しなくなる。
+  const alpha = getSmoothingAlpha(
+    newAccuracy,
+    (location.timestamp - rawPrev.timestamp) / 1000
+  );
   const smoothedLat =
     alpha * location.coords.latitude +
     (1 - alpha) * filteredPrev.coords.latitude;
