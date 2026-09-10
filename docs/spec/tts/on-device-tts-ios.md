@@ -232,10 +232,11 @@ Remote Config の値は変えなくてよい。
 ### staging 配信先
 
 マニフェストは `voicevox/manifest.json` の固定パスに置くので、資産を差し替えると次の経路で
-配信先を共有する全端末へ届く。段階的に配る仕組みも、配ったあとに取り消す仕組みも無い。
+その配信先を見ている端末へ広がる。段階的に配る仕組みも、配ったあとに取り消す仕組みも無い。
 
 - 端末は `useVoicevoxSpeechEngine` のマウントと Remote Config の更新のたびにマニフェストを取得する。
-  固定 URL のキャッシュは 5 分なので、差し替えは概ね 5 分以内に全端末が見る。
+  固定 URL のキャッシュは 5 分なので、次に取得しにきた端末はキャッシュが切れてからおおむね 5 分以内に
+  新しいマニフェストを見る。アプリを起動していない端末・圏外の端末には、その取得が起きるまで届かない。
 - `manifest.version` が手元の資産と違えば、`installFromManifest` が**全ファイル（約 160MB）を
   ダウンロードし直し**、`pruneOtherVersions` が旧 `version` のディレクトリを削除する
   （`src/lib/voicevox/assets.ts`）。差分更新ではないので、VVM を 1 つ替えるだけでも辞書ごと再取得になる。
@@ -256,15 +257,22 @@ canary で先に確かめられるよう、配信先ごと分けてある。
 （`trainlcd-uploads-dev` ↔ `uploads-dev.trainlcd.app` / `stationapi-stg` ↔ `gql-stg.trainlcd.app`）に
 合わせた結果で、ここだけ直しても全体は揃わないため意図的にこの組み合わせにしている。
 
-両者は同じ資産セット（同じ `version`・同じ SHA-256）を置く。違うのは `files[].url` に埋まる
-配信ホストだけなので、staging へ出すときもマニフェストは本番のものをコピーせず、
-staging の base-url で生成し直す。
+両者には同じ資産セットを置く。マニフェスト JSON 全体は一致しない（`files[].url` に配信ホストが
+埋まるため）ので、同一性は **`version`・`files[].path`・`files[].sha256` の 3 点**で判定する。
+staging へ出すときもマニフェストは本番のものをコピーせず、staging の base-url で生成し直す。
+
+本番へ昇格するときは、公開前にこの 3 点を staging のマニフェストと突き合わせ、1 つでも食い違えば
+公開しない。同じ `version` のまま中身の違う資産を本番へ出すと、canary で確かめた対象と別物を配ることになり、
+`version` が変わらないぶん端末は取り直しもしない。
 
 `scripts/publish-voicevox-assets.mjs` は配信先を環境変数で切り替えられるので、staging でも同じ
 スクリプトを使う。バケット作成と独自ドメインの紐付けも、存在しなければ作る形で同じ実行に含まれる。
 
+認証情報の渡し方は本番と同じ（上記のとおり、手元のシェルで実行するときだけ
+`CLOUDFLARE_API_TOKEN` を環境変数に置き、Claude Code のクラウド環境では「API credentials」に登録する）。
+配信先の切り替えに要るのは次の 2 つだけで、これらは秘密ではない。
+
 ```bash
-export CLOUDFLARE_ACCOUNT_ID=… CLOUDFLARE_ZONE_ID=… CLOUDFLARE_API_TOKEN=…
 export VOICEVOX_R2_BUCKET=trainlcd-assets-dev
 export VOICEVOX_ASSETS_HOST=assets-stg.trainlcd.app
 node scripts/publish-voicevox-assets.mjs "$WORK/2026-09-08" 2026-09-08
