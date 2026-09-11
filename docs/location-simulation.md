@@ -186,10 +186,10 @@ GPX は Xcode / adb だけでなく Jest からも参照する。`src/store/atom
 `setLocation` へ直接流し込めるので、速度フィルタ・EMA・基準の張り直しまで含んだ
 測位パイプライン全体を CI で回帰させられる。
 
-| テスト | 対象 | 使う GPX |
+| テスト (`src/store/atoms/`) | 対象 | 使う GPX |
 | ---- | ---- | ---- |
-| `src/store/atoms/location.gpxLag.test.ts` | EMA の追従遅れが「次は」「まもなく」「到着」の切り替わり位置をどれだけ後ろへずらすか | 4 本 (新幹線を除く) |
-| `src/store/atoms/location.gpxEtaAssist.test.ts` | `eta_assist_enabled = true` のときに ETA 補助が走行結果を変えないこと | `assets/gpx` 配下の全 GPX |
+| `location.gpxLag.test.ts` | EMA の追従遅れが表示の切り替わり位置をどれだけ後ろへずらすか | 4 本 (新幹線を除く) |
+| `location.gpxEtaAssist.test.ts` | ETA 補助を有効にしても走行結果が変わらないこと | 全 GPX |
 
 ETA 補助 (`eta_assist_enabled`) がパイプラインへ介入する経路は 2 つある。
 
