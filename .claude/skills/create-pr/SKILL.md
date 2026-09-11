@@ -14,7 +14,7 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 | 項目 | 既定値 / 推論元 |
 | ---- | ---- |
 | `base` | リポジトリの既定ブランチ（`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`） |
-| `head` | カレントブランチ（`git rev-parse --abbrev-ref HEAD`） |
+| `head` | カレントブランチ（`git symbolic-ref --quiet --short HEAD`）。**detached HEAD では取得できないので中断し、`head` の明示指定を求める**。`git rev-parse --abbrev-ref HEAD` は detached 時に文字列 `HEAD` を返し、それがそのまま `git fetch` / `origin/<head>` / `gh pr create --head` へ流れて失敗するので使わない |
 | `title` | 下の「タイトル推論ルール」参照 |
 | `summary` | 空なら「概要」「変更内容」本文はテンプレのコメントのみ残す |
 | `related_issue` | **ユーザー入力を最優先**。指定が `#N`（数値のみ）なら `Closes #N`、`Closes #N` / `Fixes #N` / `Refs #N` 形式ならその接頭語を保って出力。`related_issue` が空のときに限り、コミット件名から `Closes #N` / `Fixes #N` / `Refs #N` を抽出（接頭語を維持。`#N` 単体表記なら `Closes` を補う）。両方とも見つからなければ節のコメントのみ |
@@ -38,7 +38,7 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 
 ### タイトル推論ルール
 
-`origin/<base>..origin/<head>` のコミット件名を対象に、以下を順に試す:
+**先に `git fetch origin <base> <head>` を実行してから**（手順 2 の fetch より前に推論するため、ここで更新しないと古い remote-tracking ref を読む）、`origin/<base>..origin/<head>` のコミット件名を対象に、以下を順に試す:
 
 1. **コミット 1 件のみ**: その件名をそのまま使う。
 2. **コミット複数・共通プレフィックスあり**（例: 全て `fix: ...`）: 最新コミットの件名を使う。
@@ -164,7 +164,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    git-flow の命名規則（`feature/*` / `fix/*` 等）は作業ブランチ向けのルールなので、この資材ブランチは対象外。**`dev` / `master` には絶対にマージしない**。
 
-サーバー側への直接書き込みは、**AGENTS.md「Version Control (Git)」に明記された正式な例外**として運用する（下位のスキル文書だけで独自の例外を作らない）。例外が成立する条件は AGENTS.md 側に書いたとおりで、資材専用ブランチであること・`dev` / `master` へマージしないこと・公開パスが内容アドレスで不変であること・事前にユーザー承認を得ることの 4 点すべてを満たす場合に限る。
+   サーバー側への直接書き込みは、**AGENTS.md「Version Control (Git)」に明記された正式な例外**として運用する（下位のスキル文書だけで独自の例外を作らない）。例外が成立する条件は AGENTS.md 側に書いたとおりで、資材専用ブランチであること・`dev` / `master` へマージしないこと・公開パスが内容アドレスで不変であること・事前にユーザー承認を得ることの 4 点すべてを満たす場合に限る。
 
    1. **入力の正規化と検証**
 

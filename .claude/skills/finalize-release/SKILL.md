@@ -36,10 +36,10 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 1. **共通前処理（フェッチと version 解決）**
 
    ```bash
-   git fetch origin dev master --tags
+   git fetch origin --prune --tags
    ```
 
-   `--tags` を付けるのでリモートのタグもここで取り込まれ、タグ用に別途 fetch する必要は無い。
+   ブランチを絞らず全 ref を取るのは、プレフライトが `origin/chore/dev-from-master` とも比較するため。`dev` / `master` だけを fetch すると同期ブランチの remote-tracking が古いまま残り、再利用できる PR を「古い master 由来」と誤判定する。`--prune` で origin から消えた枝の残骸も落ちる。`--tags` を付けるのでタグもここで取り込まれ、別途 fetch する必要は無い。
 
    `version` が未指定なら:
 

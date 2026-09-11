@@ -29,7 +29,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 1. **差分確認（無ければ中断）**
 
    ```bash
-   git fetch origin dev master --tags
+   git fetch origin --prune --tags   # 手順 3 が origin/chore/dev-from-master とも比較するので全 ref を取る
    git log --oneline origin/dev..origin/master
    ```
 
@@ -60,8 +60,8 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    - **ケース A: どこにも存在しない** → そのまま手順 4 へ。
    - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、実行可否を承認取り。承認後の手順は以下の順で行う:
 
-     1. 現在ブランチを `git rev-parse --abbrev-ref HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。
-     2. `git push origin --delete chore/dev-from-master` でリモートを削除。
+     1. 現在ブランチを `git symbolic-ref --quiet --short HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。
+     2. **リモートに在る場合のみ** `git push origin --delete chore/dev-from-master` でリモートを削除する。ケース B はローカルにだけ残っている状態でも成立するので、無条件に実行すると push が失敗して 3. のローカル削除まで到達しない。存在判定は上の `git ls-remote --heads origin chore/dev-from-master` の出力で行い、**`ls-remote` 自体が非 0 で終わった場合（通信・権限エラー）は「無い」とみなさず中断する**。
      3. ローカルにも存在する場合は `git branch -D chore/dev-from-master` で削除。
    - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
    - **ケース D: ケース B または C で、かつ枝に `master` / `dev` のどちらにも入っていない固有コミットが有る**: 下の出力が空でなければ削除せず中断しユーザーに確認する。
@@ -74,13 +74,15 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
 4. **ブランチを origin/master から切り出して push**
 
-   > **⚠ 実行前ゲート**: 下のブロックは origin に波及する push を含む。対象 SHA（`git rev-parse origin/master`）・取り込まれるコミット件数・本文に入れる version をユーザーに提示し、**承認を得てから**実行する。
+   > **⚠ 実行前ゲート**: 下のブロックは origin に波及する push を含む。**fetch・SHA の確定・コミット件数の算出はゲートより前に済ませる**（手順 1 の fetch で取得済み。`MASTER_SHA=$(git rev-parse origin/master)`）。その `MASTER_SHA`・取り込まれるコミット件数・本文に入れる version をユーザーに提示し、**承認を得てから**実行する。
 
    ```bash
-   git fetch origin master
-   git switch -c chore/dev-from-master origin/master
+   git switch -c chore/dev-from-master "$MASTER_SHA"   # 承認した SHA を直接指定する
+   test "$(git rev-parse HEAD)" = "$MASTER_SHA"        # 先端が承認済み SHA であることを確認
    git push -u origin chore/dev-from-master
    ```
+
+   - **承認後に fetch し直さない。** `origin/master` を再取得すると、承認した SHA より後のコミットが入った状態で枝が作られる。ブランチ名ではなく記録した SHA から切り、push 前に先端を照合する。
 
    - 何もコミットは積まない（master 先端そのまま）。biome 等のフォーマッタも走らせない（新規コミット無し）。
    - 承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
@@ -197,7 +199,16 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    git status   # コンフリクトしているファイルを確認
    ```
 
-2. 衝突した版数 3 ファイルを master 側（`--ours`）で確定してから、ビルド番号だけ `dev` 側の最大値へ引き上げる（下は master=530/2743・dev=531/2744 の例）:
+2. 衝突した版数 3 ファイルを master 側（`--ours`）で確定してから、ビルド番号だけ `max(dev, master)` へ引き上げる。**下の `sed` は master=530/2743・dev=531/2744 だった場合の例なので、数値をそのまま使わない。** 先に両側の実値を読み、大きい方を採ってから置換する:
+
+   ```bash
+   for ref in origin/master origin/dev; do
+     echo "$ref  versionCode=$(git show $ref:android/app/build.gradle | sed -nE 's/.*versionCode ([0-9]+).*/\1/p')" \
+       "CURRENT_PROJECT_VERSION=$(git show $ref:ios/TrainLCD.xcodeproj/project.pbxproj | sed -nE 's/.*CURRENT_PROJECT_VERSION = ([0-9]+);.*/\1/p' | sort -u | tr '\n' ' ')"
+   done
+   ```
+
+   読み取った値で `max(dev, master)` を決めてから:
 
    ```bash
    git checkout --ours android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
@@ -214,12 +225,14 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    ```bash
    # (a) 版数 3 ファイル: semver だけが動き、ビルド番号は据え置きなのが正
-   git diff origin/dev HEAD -- \
+   git diff --cached origin/dev -- \
      android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
 
    # (b) それ以外を含む全体: master にだけ在ったアプリコードが出る。これは同期すべき正当な差分
-   git diff --stat origin/dev HEAD
+   git diff --stat --cached origin/dev
    ```
+
+   **`--cached` を外さない。** `git merge --no-commit` の途中では `HEAD` がマージ前の master 先端のままなので、`git diff origin/dev HEAD` は解決結果ではなく古いコミット同士を比べてしまい、版数の解決が検証できない。
 
    - **(a) の「semver だけ」判定はこの 3 ファイルに限定する。** semver（例 10.9.0 -> 10.9.1）が上がり、`versionCode` / `CURRENT_PROJECT_VERSION` / `buildNumber` が `dev` 側の値のままであることを確認する。ここに想定外の差分があれば中断。
    - **(b) に「semver だけ」を要求しない。** cherry-pick / hotfix リリースでは master 側で直接入った修正が残っているのが正常であり、それを `dev` へ運ぶことがこの PR の目的。全体差分に semver 以外が出ること自体は正しい。ただし身に覚えの無い差分が混ざっていないかは目視し、内容をユーザーに提示して確認を取る。
@@ -231,7 +244,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    git push origin chore/dev-from-master
    ```
 
-4. 以降は通常どおり merge commit でマージする（`finalize-release` が Ruleset 一時緩和つきで実行する）。マージ後は dev HEAD が 2 親の merge commit になり、`git rev-list --count origin/dev..origin/master` が `0`（dev が master を完全包含）になることを検証する。
+4. 以降は通常どおり merge commit でマージする（`finalize-release` が Ruleset 一時緩和つきで実行する）。マージ後は dev HEAD が 2 親の merge commit になり、`git fetch origin dev master` で remote-tracking を更新したうえで `git rev-list --count origin/dev..origin/master` が `0`（dev が master を完全包含）になることを検証する。**fetch を省くと、GitHub 上でマージ済みでもローカルの `origin/dev` がマージ前のままなので、成功した同期を失敗と誤判定する。**
 
 **semver をリリース版数へ更新する判断とビルド番号の採用値は本番の版数に関わるため、自動で確定せずユーザーに確認する。**
 
