@@ -53,10 +53,10 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    # ローカル・リモートの存在確認（手順 1 の fetch 済みが前提）
    git show-ref --verify --quiet refs/heads/chore/dev-from-master && LOCAL_EXISTS=1 || LOCAL_EXISTS=0
    # 終了コードは ls-remote の直後に退避する（後続の gh pr list で $? が上書きされるため）
-   git ls-remote --exit-code --heads origin chore/dev-from-master; REMOTE_RC=$?
+   REMOTE_LINE="$(git ls-remote --exit-code --heads origin refs/heads/chore/dev-from-master)"; REMOTE_RC=$?
    case "$REMOTE_RC" in
-     0) REMOTE_EXISTS=1 ;;
-     2) REMOTE_EXISTS=0 ;;
+     0) REMOTE_EXISTS=1; REMOTE_SHA="${REMOTE_LINE%%$'\t'*}" ;;   # 先端 SHA も控える
+     2) REMOTE_EXISTS=0; REMOTE_SHA="" ;;
      *) echo "リモート参照の確認に失敗（終了コード $REMOTE_RC）" >&2; exit 1 ;;   # 判定不能なので中断
    esac
    # 直近の dev 宛 PR の状態
@@ -67,7 +67,18 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、実行可否を承認取り。承認後の手順は以下の順で行う:
 
      1. 現在ブランチを `git symbolic-ref --quiet --short HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。**退避の直前に `git status --porcelain` が空であることを再確認し、出力があれば切り替えずに中断する**（前提条件で確認済みでも、`npm install` などで差分が生じていることがある。未コミット変更は切り替え先へ持ち越され、push にも乗らないまま別の枝に残る）。
-     2. **リモートに在る場合のみ** `git push origin --delete chore/dev-from-master` でリモートを削除する。ケース B はローカルにだけ残っている状態でも成立するので、無条件に実行すると push が失敗して 3. のローカル削除まで到達しない。存在判定は上で退避した `REMOTE_EXISTS` を使う（`ls-remote` の終了コードは取得直後に分岐済みで、通信・認証エラーならそこで中断している）。
+     2. **リモートに在る場合のみ**（`REMOTE_EXISTS` が `1`）、**承認時点の先端 SHA を条件にして**リモートを削除する。ケース B はローカルにだけ残っている状態でも成立するので、無条件に実行すると push が失敗して 3. のローカル削除まで到達しない。
+
+        ```bash
+        # 承認から実行までの間に誰かが push していないかを取り直して確かめる
+        NOW="$(git ls-remote --exit-code --heads origin refs/heads/chore/dev-from-master | cut -f1)"
+        [ "$NOW" = "$REMOTE_SHA" ] || { echo "承認後にリモート枝が進んでいます。削除を中止します" >&2; exit 1; }
+        # 削除自体も expected SHA を条件にする（ここで動いていれば push が弾かれる）
+        git push origin --force-with-lease="refs/heads/chore/dev-from-master:$REMOTE_SHA" \
+          :refs/heads/chore/dev-from-master
+        ```
+
+        `REMOTE_SHA` は上の存在確認で控えた値。**プレフライトの `ls-remote` は存在の有無しか見ておらず、`origin/chore/dev-from-master` は手順 1 の fetch 時点で止まっている**ので、承認までの間に枝が進むと未確認のコミットごと消しうる。ここでの `--force-with-lease` は履歴を押し切るためではなく、**想定した SHA でなければ削除を失敗させるためのガード**（AGENTS.md の force push 禁止は押し切り目的の使用を指す。この削除自体はケース B の承認に含まれている）。
      3. ローカルにも存在する場合は `git branch -D chore/dev-from-master` で削除。
    - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
    - **ケース D: ケース B または C で、かつ枝に `master` / `dev` のどちらにも入っていない固有コミットが有る**: 下の出力が空でなければ削除せず中断しユーザーに確認する。
@@ -213,11 +224,19 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 2. 衝突した版数 3 ファイルを master 側（`--ours`）で確定してから、ビルド番号だけ `max(dev, master)` へ引き上げる。**下の `sed` は master=530/2743・dev=531/2744 だった場合の例なので、数値をそのまま使わない。** 先に両側の実値を読み、大きい方を採ってから置換する:
 
    ```bash
+   # 版数ファイルには同じキーが複数回出る（build.gradle の versionCode はフレーバーごとに 3 箇所）。
+   # sort -u で畳み、値が 1 つに定まらない ref があればそこで中断する
+   pick() { git show "$1:$2" | sed -nE "$3" | sort -u | tr '\n' ' '; }
    for ref in origin/master origin/dev; do
-     echo "$ref  versionCode=$(git show $ref:android/app/build.gradle | sed -nE 's/.*versionCode ([0-9]+).*/\1/p')" \
-       "CURRENT_PROJECT_VERSION=$(git show $ref:ios/TrainLCD.xcodeproj/project.pbxproj | sed -nE 's/.*CURRENT_PROJECT_VERSION = ([0-9]+);.*/\1/p' | sort -u | tr '\n' ' ')"
+     echo "$ref" \
+       "gradle.versionCode=$(pick "$ref" android/app/build.gradle 's/.*versionCode ([0-9]+).*/\1/p')" \
+       "app.buildNumber=$(pick "$ref" app.config.ts "s/.*buildNumber: '([0-9]+)'.*/\\1/p")" \
+       "app.versionCode=$(pick "$ref" app.config.ts 's/.*versionCode: ([0-9]+).*/\1/p')" \
+       "ios.CURRENT_PROJECT_VERSION=$(pick "$ref" ios/TrainLCD.xcodeproj/project.pbxproj 's/.*CURRENT_PROJECT_VERSION = ([0-9]+);.*/\1/p')"
    done
    ```
+
+   **`app.config.ts` の `buildNumber` / `versionCode` も必ず読む。** Android の `versionCode` と iOS の `CURRENT_PROJECT_VERSION` だけを見て決めると、`app.config.ts` 側が別の値だったときに `max` へ反映されない。ビルド番号は **フィールドごとに** `max(dev, master)` を取る（通常は 4 つとも同じ世代だが、一致を前提にせず値で判断する）。
 
    読み取った値で `max(dev, master)` を決める。
 
@@ -229,6 +248,15 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    出力が `android/app/build.gradle` / `app.config.ts` / `ios/TrainLCD.xcodeproj/project.pbxproj` の部分集合であることを確かめる。**先に `--ours` を流すと、アプリコードの衝突まで master 側で潰したあとに中断判定へ到達することになり、マージ結果が既に書き換わっている。** 想定外のパスが出たら `git merge --abort` してユーザーに報告する。
 
+   **続けて、版数ファイルに数値以外の差分が無いことも `--ours` の前に確認する。**
+
+   ```bash
+   git diff origin/dev origin/master -- \
+     android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+   ```
+
+   出てくるのが版数・ビルド番号の数値だけであることが `--ours` で master 側を採れる前提。`dev` 側にしか無い設定変更（新しい Gradle 設定、`app.config.ts` のプラグイン追加など）が含まれていたら、`--ours` はそれを捨てるので **実行せず中断してユーザーに報告する**。
+
    確認後、実際に衝突したファイルだけを解決する（未衝突のパスに `--ours` を渡すとエラーになるため、固定のパス列ではなく未解決リストを使う）:
 
    ```bash
@@ -239,8 +267,6 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    git add android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
    git status   # コンフリクトが 1 件も残っていないことを確認する
    ```
-
-   これらの版数ファイルは master↔dev で数値以外の差分が無い（`git diff origin/dev origin/master -- <path>` で確認できる）ため、`--ours` で master を採ってもコンテンツは失われない。
 
 3. 差分を **版数 3 ファイル** と **それ以外** に分けて確認してから、マージコミットを作成して push する:
 
@@ -265,7 +291,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    git push origin chore/dev-from-master
    ```
 
-4. 以降は通常どおり merge commit でマージする（`finalize-release` が Ruleset 一時緩和つきで実行する）。マージ後は dev HEAD が 2 親の merge commit になり、`git fetch origin dev master` で remote-tracking を更新したうえで `git rev-list --count origin/dev..origin/master` が `0`（dev が master を完全包含）になることを検証する。**fetch を省くと、GitHub 上でマージ済みでもローカルの `origin/dev` がマージ前のままなので、成功した同期を失敗と誤判定する。**
+4. 以降は通常どおり merge commit でマージする（`finalize-release` が Ruleset 一時緩和つきで実行する）。マージ後は dev HEAD が 2 親の merge commit になり、`git fetch origin dev master` で remote-tracking を更新したうえで `git rev-list --count origin/dev.."$MASTER_SHA"` が `0`（この同期の対象だった master が dev に完全に入った）になることを検証する。**fetch を省くと、GitHub 上でマージ済みでもローカルの `origin/dev` がマージ前のままなので、成功した同期を失敗と誤判定する。** また **比較相手は手順 4 で記録した `MASTER_SHA` にする**。動いている `origin/master` と比べると、同期作業中に master が進んだ場合に、この PR の対象外のコミットまで「未同期」と数えて成功を失敗と報告してしまう。
 
 **semver をリリース版数へ更新する判断とビルド番号の採用値は本番の版数に関わるため、自動で確定せずユーザーに確認する。**
 

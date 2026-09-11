@@ -267,7 +267,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
       - 復元後の値は `gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で元の値（例 `["squash"]`）に戻ったことを読み取り専用で確認する。
    4. **検証**（手順 6-3 が `0` で終了した場合のみ実施）: `git fetch origin dev master` 後、
       - dev HEAD が **2 親を持つ merge commit**（squash されていない）であること: `git rev-list --parents -n 1 origin/dev` の出力が 3 つの SHA（自身 + 親 2 つ）になる。
-      - `git rev-list --count origin/dev..origin/master` が `0`（dev が master を完全包含）。
+      - `git rev-list --count origin/dev..<プレフライトで記録した origin/master SHA>` が `0`（この同期の対象だった master が dev に完全に入った）。**動いている `origin/master` と比べない** — 検証中に master が進むと、対象外のコミットを「未同期」と数えて成功を失敗と報告してしまう。
    5. 一時ファイル（`ruleset_backup.json` / `ruleset_relaxed.json`）は手順 6-3 の trap が削除済み。**`.gitignore` の無視対象なので `git status` には現れない**。ファイルシステムを直接確認する:
 
       ```bash

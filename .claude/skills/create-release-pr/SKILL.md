@@ -30,7 +30,10 @@ description: Cut a production release branch, bump the app version, run quality 
    - 同名のブランチ（ローカル or origin）がすでに存在する場合は中断して、既存ブランチでの進行可否をユーザーに確認する。
 
      ```bash
-     git branch --list 'release/v<version>'                                    # ローカル側
+     # ローカル側は表示ではなく終了コードで判定する（--list は在っても非 0 にならない）
+     if git show-ref --verify --quiet 'refs/heads/release/v<version>'; then
+       echo "ローカルに同名ブランチが存在します" >&2; exit 1     # 中断してユーザーに確認
+     fi
      git ls-remote --exit-code --heads origin 'refs/heads/release/v<version>'; RC=$?
      case "$RC" in
        0) echo "origin に同名ブランチが存在します" >&2; exit 1 ;;               # 中断してユーザーに確認
