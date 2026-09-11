@@ -152,11 +152,25 @@ const lastSkipSmoothingLocationAtom = atom<Location.LocationObject | null>(
   null
 );
 
-// 速度フィルタが連続で棄却した回数。MAX_CONSECUTIVE_SPEED_REJECTIONSの判定に使う。
-let consecutiveSpeedRejections = 0;
-// 現在の連続棄却が始まった測位のタイムスタンプ(ms)。
-// MIN_SPEED_REJECTION_STREAK_MSの判定に使う。
-let speedRejectionStreakStartedAtMs = 0;
+// 速度フィルタの連続棄却の記録。countはMAX_CONSECUTIVE_SPEED_REJECTIONSの、
+// startedAtMsはMIN_SPEED_REJECTION_STREAK_MSの判定に使う。
+type SpeedRejectionStreak = {
+  count: number;
+  startedAtMs: number;
+};
+
+// 棄却の記録は「どの基準に対して連続で棄却したか」を表すので、基準ごとに独立させる。
+// 共有すると、地下鉄経路が20秒条件で抑え込んでいる最中に精度が安定して本線経路へ
+// 切り替わったとき、持ち越された回数だけで本線経路(経過時間の条件なし)の上限に達し、
+// 抑え込んでいたワープがその1点目で受理されてしまう。
+const mainSpeedRejectionStreak: SpeedRejectionStreak = {
+  count: 0,
+  startedAtMs: 0,
+};
+const skipSpeedRejectionStreak: SpeedRejectionStreak = {
+  count: 0,
+  startedAtMs: 0,
+};
 
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
@@ -167,8 +181,8 @@ export const resetLocationState = () => {
   store.set(lastRawLocationAtom, null);
   store.set(lastSkipSmoothingLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
-  consecutiveSpeedRejections = 0;
-  speedRejectionStreakStartedAtMs = 0;
+  resetSpeedRejectionStreak(mainSpeedRejectionStreak);
+  resetSpeedRejectionStreak(skipSpeedRejectionStreak);
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -204,31 +218,29 @@ const isImplausibleJump = (
   return dist / dtSec > maxSpeed;
 };
 
-const resetSpeedRejectionStreak = () => {
-  consecutiveSpeedRejections = 0;
-  speedRejectionStreakStartedAtMs = 0;
+const resetSpeedRejectionStreak = (streak: SpeedRejectionStreak) => {
+  streak.count = 0;
+  streak.startedAtMs = 0;
 };
 
 // 速度フィルタによる棄却を記録し、基準を張り直すべきか(=基準側が誤っていると
 // 判断すべきか)を返す。棄却が規定回数に達し、かつ経過時間の下限(minStreakMs、
 // 本線経路は0)を満たしたときにだけ真を返す。
 const registerSpeedRejection = (
+  streak: SpeedRejectionStreak,
   timestampMs: number,
   minStreakMs: number
 ): boolean => {
   // 連続棄却の開始時、および時計の巻き戻りで経過時間が測れなくなった場合は数え直す
-  if (
-    consecutiveSpeedRejections === 0 ||
-    timestampMs < speedRejectionStreakStartedAtMs
-  ) {
-    consecutiveSpeedRejections = 0;
-    speedRejectionStreakStartedAtMs = timestampMs;
+  if (streak.count === 0 || timestampMs < streak.startedAtMs) {
+    streak.count = 0;
+    streak.startedAtMs = timestampMs;
   }
-  consecutiveSpeedRejections += 1;
+  streak.count += 1;
 
   return (
-    consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS &&
-    timestampMs - speedRejectionStreakStartedAtMs >= minStreakMs
+    streak.count >= MAX_CONSECUTIVE_SPEED_REJECTIONS &&
+    timestampMs - streak.startedAtMs >= minStreakMs
   );
 };
 
@@ -245,7 +257,8 @@ const resyncLocationReference = (
   store.set(lastRawLocationAtom, location);
   store.set(lastSkipSmoothingLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
-  resetSpeedRejectionStreak();
+  resetSpeedRejectionStreak(mainSpeedRejectionStreak);
+  resetSpeedRejectionStreak(skipSpeedRejectionStreak);
 };
 
 // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
@@ -294,13 +307,18 @@ export const setLocation = (location: Location.LocationObject) => {
       ) &&
       // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま復帰
       // できなくなるのを避けるため、上限に達したら棄却せず基準を張り直す。
-      !registerSpeedRejection(location.timestamp, MIN_SPEED_REJECTION_STREAK_MS)
+      !registerSpeedRejection(
+        skipSpeedRejectionStreak,
+        location.timestamp,
+        MIN_SPEED_REJECTION_STREAK_MS
+      )
     ) {
       store.set(accuracyHistoryAtom, updatedHistory);
       return;
     }
 
-    resetSpeedRejectionStreak();
+    // 更新するのはスキップ経路の基準だけなので、本線経路の記録はそのまま残す
+    resetSpeedRejectionStreak(skipSpeedRejectionStreak);
     store.set(locationAtom, location);
     store.set(lastSkipSmoothingLocationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
@@ -325,7 +343,9 @@ export const setLocation = (location: Location.LocationObject) => {
     // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま
     // 復帰できなくなるのを避けるため、上限に達したら即座に基準を張り直す
     // (#6898: 新幹線速度での現在地凍結の解消。経過時間の条件は課さない)。
-    if (registerSpeedRejection(location.timestamp, 0)) {
+    if (
+      registerSpeedRejection(mainSpeedRejectionStreak, location.timestamp, 0)
+    ) {
       resyncLocationReference(location, updatedHistory);
       return;
     }
@@ -333,7 +353,7 @@ export const setLocation = (location: Location.LocationObject) => {
     return;
   }
 
-  resetSpeedRejectionStreak();
+  resetSpeedRejectionStreak(mainSpeedRejectionStreak);
 
   // 速度としては妥当だが基準が古すぎる場合、EMAの基準としては使えないため
   // スムージングせず生の座標へスナップして基準を張り直す。長く途切れたあとに
@@ -374,5 +394,6 @@ export const setLocation = (location: Location.LocationObject) => {
   // 地上→地下鉄の切り替わり直後の1点にもワープ対策が効くよう、スキップ経路の
   // 基準もここで揃えておく
   store.set(lastSkipSmoothingLocationAtom, location);
+  resetSpeedRejectionStreak(skipSpeedRejectionStreak);
   store.set(accuracyHistoryAtom, updatedHistory);
 };

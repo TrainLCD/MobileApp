@@ -290,6 +290,31 @@ describe('setLocation', () => {
       expect(store.get(locationAtom)?.coords.latitude).toBe(warpLat);
     });
 
+    // 回帰: 棄却回数と開始時刻を両経路で共有していると、地下鉄経路が抑え込んでいた
+    // ワープが、精度が安定して本線経路へ切り替わった最初の1点で受理される。
+    // 本線経路は経過時間の条件を課さないため、持ち越された回数だけで上限に達してしまう。
+    it('地下鉄経路の棄却回数が本線経路へ引き継がれない', () => {
+      // 地上で基準を作る(本線経路の基準と、スキップ経路の基準の両方が張られる)
+      setStationLineType(LineType.Normal);
+      setLocation(makeLocation(35.0, 139.0, 30, 1_000));
+
+      // 地下鉄・精度不安定へ移り、1秒間隔で3km先へのワープが届き続ける
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      const warpLat = 35.0 + 3_000 / METERS_PER_DEG_LAT;
+      for (let i = 1; i <= 4; i++) {
+        setLocation(makeLocation(warpLat, 139.0, 500, 1_000 + i * 1_000));
+      }
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+
+      // 精度が安定して本線経路へ切り替わる。同じワープ座標が届いても、
+      // 本線経路の棄却回数は1回目なので棄却され続けること
+      store.set(accuracyHistoryAtom, [30, 35, 28, 32]);
+      setLocation(makeLocation(warpLat, 139.0, 30, 6_000));
+
+      expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
+    });
+
     // 地上→地下鉄の切り替わり直後は、スキップ経路の基準がまだ一度も更新されていない。
     // 本線経路の受理時に基準を揃えておかないと、この1点目だけ無防備になる。
     it('地上から地下鉄へ切り替わった直後の1点にもワープ対策が効く', () => {
