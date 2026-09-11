@@ -95,6 +95,18 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    - コミット前に `npx biome check --unsafe --fix ./src` を実行（メモのルール）。
    - push は新規ブランチなので安全だが、承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
 
+   **`base != head` でも、`head` が origin に追いついていなければ手順 2 へ進まない。** ブランチ切り出しが要らないケースでも、`head` が未 push なら手順 2 の `git fetch origin <base> <head>` は `origin/<head>` を解決できずに失敗し、`origin/<head>` が古ければローカルにしか無いコミットが比較から丸ごと漏れる。次で判定する:
+
+   ```bash
+   git ls-remote --exit-code --heads origin <head>   # 非 0 なら未 push（通信・権限エラーとの区別のため終了コードを見る）
+   git status --porcelain                            # 未コミットの変更が無いこと
+   git log --oneline origin/<head>..<head>           # remote-tracking がある場合の未 push コミット
+   ```
+
+   - 未 push、または未 push コミットが残っている場合は、**ブランチ名・送るコミット件名・`git status` の結果をユーザーに提示して承認を得てから** `git push -u origin <head>` を実行する（前提条件の「勝手に push しない」に従う）。**force push は使わない** — push が弾かれたら `git fetch origin <head>` して状態を見直し、ユーザーに報告する。
+   - push が成功した場合にのみ手順 2 へ進む。承認が得られなければ fetch も比較も行わず、未 push である旨を報告して中断する。
+   - 未コミットの変更が残っている場合は、PR に含めるかをユーザーに確認する（黙って置き去りにしない）。
+
    以降の手順では推論後の head を使う。
 
 2. **状態確認とモード決定（新規作成 / 更新）**
