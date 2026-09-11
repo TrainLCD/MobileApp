@@ -34,6 +34,7 @@ Configure these GitHub Actions secrets:
 | `EXPERIMENTAL_TELEMETRY_ENDPOINT_URL` | Telemetry endpoint |
 | `EXPERIMENTAL_TELEMETRY_TOKEN` | Telemetry authentication token |
 | `FONTS_SSH_KEY` | Fonts submodule SSH private key |
+| `SENTRY_DSN` | Sentry runtime DSN (required; the build fails when unset) |
 | `SENTRY_PROPERTIES_BASE64` | Base64-encoded `sentry.properties` |
 | `APP_STORE_CONNECT_API_ISSUER_ID` | App Store Connect API issuer ID |
 | `APP_STORE_CONNECT_API_KEY_ID` | App Store Connect API key ID |
