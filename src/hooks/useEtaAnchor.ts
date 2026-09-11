@@ -16,7 +16,7 @@ const AT_STATION_REFRESH_INTERVAL_MS = 5_000;
 /**
  * GPSで最後に確定した駅イベント(到着中/発車)を etaAnchorAtom へ記録するフック。
  * このアンカーは ETA 推定フェーズ(getEtaPhaseNow)の仮想時計の起点として使われ、
- * 精度劣化時の到着しきい値緩和(R1)の対象駅判定に用いられる。
+ * ETAが許す進行量を超えた測位の棄却(#6939)で、進行量を測る基準駅として用いられる。
  *
  * 通過駅(getIsPass)は記録対象外とする。ETAのstops(useEtaFallback)は
  * stopsHere === true の停車駅のみを持つため、通過駅IDでアンカーを記録しても
@@ -62,8 +62,8 @@ export const useEtaAnchor = (): void => {
       !getIsPass(prevStation)
     ) {
       // 到着中→非到着への遷移(=発車)を検出した瞬間にだけ一発記録する。ETAは位置を
-      // 駆動せず到着しきい値の緩和(R1)にしか使わないため、仮に静止中の強制未到着で
-      // 記録されても、R1は最寄り駅とETA停車駅が一致するときだけ効き、GPS復帰で自己修復する。
+      // 駆動せず測位の棄却にしか使わないため、仮に静止中の強制未到着で記録されても、
+      // 棄却は上限時間(ETA_BOUND_MAX_HOLD_MS)で必ず打ち切られ、GPS復帰で自己修復する。
       setAnchor({
         stationId: prevStation.id,
         kind: 'DEPARTED',

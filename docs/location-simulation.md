@@ -191,12 +191,12 @@ GPX は Xcode / adb だけでなく Jest からも参照する。`src/store/atom
 | `location.gpxLag.test.ts` | EMA の追従遅れが表示の切り替わり位置をどれだけ後ろへずらすか | 4 本 (新幹線を除く) |
 | `location.gpxEtaAssist.test.ts` | ETA 補助を有効にしても走行結果が変わらないこと | 全 GPX |
 
-ETA 補助 (`eta_assist_enabled`) がパイプラインへ介入する経路は 2 つある。
+ETA 補助 (`eta_assist_enabled`) がパイプラインへ介入する経路は、ETA が許す進行量を
+超えた測位の棄却 (`store/atoms/location.ts`) だけである。精度劣化時に到着圏を緩和する
+R1 (`hooks/useRefreshStation.ts`) も持っていたが、有効化して実走させたところ到着判定が
+悪化したため廃止した。
 
-- ETA が許す進行量を超えた測位の棄却 (`store/atoms/location.ts`)
-- 精度劣化時に ETA が同じ駅の停車を示すときだけ到着圏を緩和する R1 (`hooks/useRefreshStation.ts`)
-
-どちらもサーバー配信のフラグ 1 つで全ユーザーへ有効化されるため、有効化の前提は
+サーバー配信のフラグ 1 つで全ユーザーへ有効化されるため、有効化の前提は
 「正常な走行では何も変えない」ことになる。`location.gpxEtaAssist.test.ts` は各 GPX を
 フラグ ON / OFF で 2 回流し、平滑後の軌跡・位置を据え置いた回数・到着検知位置が
 一致することを確かめる。ETA の停車時刻は GPX 自身の時刻表から作るので、ETA どおりに
