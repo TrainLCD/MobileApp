@@ -128,15 +128,23 @@ describe('NewReportModal', () => {
       .spyOn(Linking, 'openURL')
       .mockRejectedValue(new Error('cannot open'));
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const { getByText } = renderModal();
+    const onSubmit = jest.fn();
+    const { getByText, input } = renderModal({ onSubmit });
 
-    fireEvent.press(getByText('reportFaqNotice'));
+    fireEvent.press(getByText('reportFaqLink'));
     await act(async () => {
       await Promise.resolve();
     });
 
     expect(openURL).toHaveBeenCalledWith(FAQ_URL);
     expect(warn).toHaveBeenCalled();
+
+    // 警告が出たことだけでは「送信を妨げない」の保証にならないため、
+    // 失敗後に実際へ送信まで通すことを確かめる
+    fireEvent.changeText(input, 'FAQを開けなくても送信できること');
+    fireEvent.press(getByText('reportSend'));
+
+    expect(onSubmit).toHaveBeenCalledWith('FAQを開けなくても送信できること');
   });
 
   it('下限未満の入力では残り文字数を表示し、送信してもonSubmitが呼ばれない', () => {
