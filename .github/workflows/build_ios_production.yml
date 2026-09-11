@@ -7,6 +7,7 @@ env:
   PRODUCTION_WORKER_API_URL: "${{ secrets.PRODUCTION_WORKER_API_URL }}"
   ENABLE_EXPERIMENTAL_TELEMETRY: "${{ secrets.ENABLE_EXPERIMENTAL_TELEMETRY }}"
   EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}"
+  SENTRY_DSN: "${{ secrets.SENTRY_DSN }}"
 
 on:
   push:
@@ -89,6 +90,7 @@ jobs:
             PRODUCTION_API_URL
             PRODUCTION_ROUTE_RESOLVER_API_URL
             PRODUCTION_WORKER_API_URL
+            SENTRY_DSN
           )
 
           required_variables+=(
