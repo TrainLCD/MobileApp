@@ -129,7 +129,7 @@ export const resetLocationState = () => {
   store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
   consecutiveSpeedRejections = 0;
-  etaBoundHoldStartedAtMs = 0;
+  resetEtaBoundHold();
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -170,6 +170,17 @@ const ETA_BOUND_MAX_HOLD_MS = 90_000;
 
 let etaBoundHoldStartedAtMs = 0;
 
+// 上限時間に達して「ETA側が誤っている」と判断した状態。値は判断した時点のETAの文脈
+// (アンカー駅・種別・対象駅)で、同じ文脈が続くあいだは棄却を再開しない。
+// 1件だけ受理して棄却を再開すると、範囲外の測位が上限時間ごとに1件しか通らず、
+// 位置が実質凍結したままになる(=保険が機能しない)。
+let etaBoundBypassedContext: string | null = null;
+
+const resetEtaBoundHold = () => {
+  etaBoundHoldStartedAtMs = 0;
+  etaBoundBypassedContext = null;
+};
+
 /**
  * ETAが許す進行量を超えた測位か。超えていれば受理せず、位置を据え置く。
  * ETAは位置を進めない(#6369の方針)ので、棄却にのみ使う。
@@ -178,11 +189,19 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
   const anchor = store.get(etaAnchorAtom);
   const phase = getEtaPhaseNow(location.timestamp);
   if (!anchor || !phase) {
-    etaBoundHoldStartedAtMs = 0;
+    resetEtaBoundHold();
     return false;
   }
   const targetStationId =
     phase.kind === 'DWELLING' ? phase.stationId : phase.targetStationId;
+
+  // アンカーが張り直された(次駅へ到着した等)ならETAは新しい観測に基づくので、
+  // 打ち切り状態を解除して再び信用する。
+  const context = `${anchor.stationId}:${anchor.kind}:${targetStationId}`;
+  if (etaBoundBypassedContext !== null && etaBoundBypassedContext !== context) {
+    resetEtaBoundHold();
+  }
+
   const beyond = isBeyondEtaProgress({
     stations: store.get(stationState).stations,
     anchorStationId: anchor.stationId,
@@ -192,7 +211,11 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
     toleranceStations: ETA_BOUND_TOLERANCE_STATIONS,
   });
   if (!beyond) {
-    etaBoundHoldStartedAtMs = 0;
+    // 範囲内の測位が届いた＝ETAと実測が再び噛み合った
+    resetEtaBoundHold();
+    return false;
+  }
+  if (etaBoundBypassedContext === context) {
     return false;
   }
   if (
@@ -202,6 +225,7 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
     etaBoundHoldStartedAtMs = location.timestamp;
   }
   if (location.timestamp - etaBoundHoldStartedAtMs >= ETA_BOUND_MAX_HOLD_MS) {
+    etaBoundBypassedContext = context;
     etaBoundHoldStartedAtMs = 0;
     return false;
   }
