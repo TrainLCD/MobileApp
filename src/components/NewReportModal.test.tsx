@@ -73,15 +73,54 @@ describe('NewReportModal', () => {
 
   // 「動かない」系の報告は原因が非対応環境であることがあり、その判定はアプリ側では
   // 行えないため、送信前にFAQへ誘導できることを固定する
-  it('FAQの案内をタップするとよくある質問を開く', () => {
+  it('FAQリンクをタップするとよくある質問を開く', () => {
     const openURL = jest
       .spyOn(Linking, 'openURL')
       .mockResolvedValue(undefined as never);
     const { getByText } = renderModal();
 
-    fireEvent.press(getByText('reportFaqNotice'));
+    fireEvent.press(getByText('reportFaqLink'));
 
     expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+  });
+
+  // 押せることがリンク語自体から分かる必要があるため、下線とアクセント色を固定する
+  it('FAQリンクは下線付きで表示される', () => {
+    const { getByText } = renderModal();
+
+    const link = getByText('reportFaqLink');
+    const style = StyleSheet.flatten(link.props.style);
+
+    expect(style.textDecorationLine).toBe('underline');
+  });
+
+  // 長文を書いたあとで初めて知らせる形を避けつつ、入力欄への動線も塞がないため、
+  // 導線は入力欄より後・注意書きより前に固定する
+  it('FAQの案内は入力欄より後、注意書きより前に描画される', () => {
+    const { toJSON } = renderModal();
+
+    const texts: string[] = [];
+    const walk = (node: unknown): void => {
+      if (node == null) return;
+      if (typeof node === 'string') {
+        texts.push(node);
+        return;
+      }
+      if (Array.isArray(node)) {
+        for (const child of node) walk(child);
+        return;
+      }
+      walk((node as { children?: unknown }).children);
+    };
+    walk(toJSON());
+
+    expect(texts.indexOf('reportBodyTitle')).toBeGreaterThanOrEqual(0);
+    expect(texts.indexOf('reportBodyTitle')).toBeLessThan(
+      texts.indexOf('reportFaqNotice')
+    );
+    expect(texts.indexOf('reportFaqNotice')).toBeLessThan(
+      texts.indexOf('reportCaution')
+    );
   });
 
   it('よくある質問を開けなくても送信フローを妨げない', async () => {
