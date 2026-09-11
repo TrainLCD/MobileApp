@@ -11,6 +11,7 @@ import React, {
   useState,
 } from 'react';
 import {
+  Linking,
   Platform,
   Animated as RNAnimated,
   StyleSheet,
@@ -25,6 +26,7 @@ import NewFeatureDot from '~/components/NewFeatureDot';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
+import { FAQ_URL } from '~/constants';
 import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { useAppColors } from '~/providers/AppColorsProvider';
@@ -44,6 +46,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_battery: 'personalize_battery',
   personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
+  about_app_faq: 'about_app_faq',
   about_app_licenses: 'about_app_licenses',
 } as const;
 
@@ -123,6 +126,8 @@ const SettingsItem = ({
         return 'flask';
       case 'personalize_android':
         return 'phone-portrait';
+      case 'about_app_faq':
+        return 'help-circle';
       case 'about_app_licenses':
         return 'key';
       default:
@@ -401,6 +406,16 @@ const AppSettingsScreen: React.FC = () => {
 
   const aboutAppItems: SettingsSectionData[] = useMemo(
     () => [
+      {
+        id: SETTING_ITEM_ID_MAP.about_app_faq,
+        title: translate('faq'),
+        color: '#5AC8FA',
+        onPress: () => {
+          Linking.openURL(FAQ_URL).catch((error) => {
+            console.warn('よくある質問を開けませんでした:', error);
+          });
+        },
+      },
       {
         id: SETTING_ITEM_ID_MAP.about_app_licenses,
         title: translate('license'),

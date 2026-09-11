@@ -1,6 +1,7 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
-import { StyleSheet } from 'react-native';
+import { Linking, StyleSheet } from 'react-native';
+import { FAQ_URL } from '~/constants';
 import NewReportModal from './NewReportModal';
 
 // 実体はフォント読み込みで非同期 setState するため、act 警告を避けて素の View に差し替える
@@ -68,6 +69,82 @@ describe('NewReportModal', () => {
     expect(getByText('reportModalTitle')).toBeTruthy();
     expect(getByText('reportBodyTitle')).toBeTruthy();
     expect(getByText('reportCaution')).toBeTruthy();
+  });
+
+  // 「動かない」系の報告は原因が非対応環境であることがあり、その判定はアプリ側では
+  // 行えないため、送信前にFAQへ誘導できることを固定する
+  it('FAQリンクをタップするとよくある質問を開く', () => {
+    const openURL = jest
+      .spyOn(Linking, 'openURL')
+      .mockResolvedValue(undefined as never);
+    const { getByText } = renderModal();
+
+    fireEvent.press(getByText('reportFaqLink'));
+
+    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+  });
+
+  // 押せることがリンク語自体から分かる必要があるため、下線とアクセント色を固定する
+  it('FAQリンクは下線付きで表示される', () => {
+    const { getByText } = renderModal();
+
+    const link = getByText('reportFaqLink');
+    const style = StyleSheet.flatten(link.props.style);
+
+    expect(style.textDecorationLine).toBe('underline');
+  });
+
+  // 長文を書いたあとで初めて知らせる形を避けつつ、入力欄への動線も塞がないため、
+  // 導線は入力欄より後・注意書きより前に固定する
+  it('FAQの案内は入力欄より後、注意書きより前に描画される', () => {
+    const { toJSON } = renderModal();
+
+    const texts: string[] = [];
+    const walk = (node: unknown): void => {
+      if (node == null) return;
+      if (typeof node === 'string') {
+        texts.push(node);
+        return;
+      }
+      if (Array.isArray(node)) {
+        for (const child of node) walk(child);
+        return;
+      }
+      walk((node as { children?: unknown }).children);
+    };
+    walk(toJSON());
+
+    expect(texts.indexOf('reportBodyTitle')).toBeGreaterThanOrEqual(0);
+    expect(texts.indexOf('reportBodyTitle')).toBeLessThan(
+      texts.indexOf('reportFaqNotice')
+    );
+    expect(texts.indexOf('reportFaqNotice')).toBeLessThan(
+      texts.indexOf('reportCaution')
+    );
+  });
+
+  it('よくある質問を開けなくても送信フローを妨げない', async () => {
+    const openURL = jest
+      .spyOn(Linking, 'openURL')
+      .mockRejectedValue(new Error('cannot open'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const onSubmit = jest.fn();
+    const { getByText, input } = renderModal({ onSubmit });
+
+    fireEvent.press(getByText('reportFaqLink'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+    expect(warn).toHaveBeenCalled();
+
+    // 警告が出たことだけでは「送信を妨げない」の保証にならないため、
+    // 失敗後に実際へ送信まで通すことを確かめる
+    fireEvent.changeText(input, 'FAQを開けなくても送信できること');
+    fireEvent.press(getByText('reportSend'));
+
+    expect(onSubmit).toHaveBeenCalledWith('FAQを開けなくても送信できること');
   });
 
   it('下限未満の入力では残り文字数を表示し、送信してもonSubmitが呼ばれない', () => {

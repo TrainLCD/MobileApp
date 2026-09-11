@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Keyboard,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -12,7 +13,7 @@ import {
   type TextInput as TextInputType,
   View,
 } from 'react-native';
-import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
+import { FAQ_URL, FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -129,7 +130,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginTop: 20,
+    // FAQ導線と注意書きを「送信前に目を通す補足」として一つのまとまりに見せるため、
+    // 上の進捗表示との間(20)より狭くしている。等間隔にするとFAQ導線が独立した
+    // 3つ目のブロックとして読まれ、視線の着地点が分散する。
+    marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderRadius: 12,
@@ -144,6 +148,27 @@ const styles = StyleSheet.create({
   cautionText: {
     flex: 1,
     fontSize: RFValue(10),
+  },
+  // 注意書きと同じ箱にすると、押させたいリンクが読み飛ばしてよい断り書きと同じ重さになる。
+  // 背景を持たせず1行に収め、リンク語自身の色と下線で押せることを示す。
+  faqRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    marginTop: 20,
+  },
+  faqLead: {
+    fontSize: RFValue(10),
+  },
+  // 外部リンクアイコンはリンク語の直後に置く。行末へ寄せると、押せると分かるのが
+  // 読み順の最後になる。
+  faqLink: {
+    fontSize: RFValue(10),
+    textDecorationLine: 'underline',
+  },
+  faqRowPressed: {
+    opacity: 0.6,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -210,6 +235,15 @@ const NewReportModal: React.FC<Props> = ({
 
   const handleFocus = useCallback(() => setInputFocused(true), []);
   const handleBlur = useCallback(() => setInputFocused(false), []);
+
+  // 「動かない」系の報告は原因が非対応環境(GNSS非搭載端末など)であることがあり、
+  // その判定はアプリ側では行えないため、FAQへ誘導する。導線は進捗表示と注意書きの間に
+  // 置き、書き終えて送信を判断する位置で注意書きと一緒に目に入るようにしている。
+  const handleOpenFaq = useCallback(() => {
+    Linking.openURL(FAQ_URL).catch((error) => {
+      console.warn('よくある質問を開けませんでした:', error);
+    });
+  }, []);
 
   const handleClose = useCallback(() => {
     const hasInput = textRef.current.trim().length > 0;
@@ -370,6 +404,29 @@ const NewReportModal: React.FC<Props> = ({
               )}
             </View>
           </View>
+
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={translate('faq')}
+            onPress={handleOpenFaq}
+            style={({ pressed }) => [
+              styles.faqRow,
+              pressed && styles.faqRowPressed,
+            ]}
+          >
+            <Typography
+              style={[
+                styles.faqLead,
+                { color: isLEDTheme ? '#fff' : reportColors.cautionText },
+              ]}
+            >
+              {translate('reportFaqNotice')}
+            </Typography>
+            <Typography style={[styles.faqLink, { color: accentColor }]}>
+              {translate('reportFaqLink')}
+            </Typography>
+            <Ionicons name="open-outline" size={14} color={accentColor} />
+          </Pressable>
 
           <View style={[styles.cautionBox, isLEDTheme && styles.cautionBoxLED]}>
             <Ionicons
