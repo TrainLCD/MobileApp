@@ -51,9 +51,14 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    ```bash
    # ローカル・リモートの存在確認（手順 1 の fetch 済みが前提）
-   git show-ref --verify --quiet refs/heads/chore/dev-from-master && echo LOCAL_EXISTS
-   # 終了コードは 0=存在 / 2=無し / それ以外=通信・認証エラー。2 以外の非 0 は「無い」とみなさず中断する
-   git ls-remote --exit-code --heads origin chore/dev-from-master
+   git show-ref --verify --quiet refs/heads/chore/dev-from-master && LOCAL_EXISTS=1 || LOCAL_EXISTS=0
+   # 終了コードは ls-remote の直後に退避する（後続の gh pr list で $? が上書きされるため）
+   git ls-remote --exit-code --heads origin chore/dev-from-master; REMOTE_RC=$?
+   case "$REMOTE_RC" in
+     0) REMOTE_EXISTS=1 ;;
+     2) REMOTE_EXISTS=0 ;;
+     *) echo "リモート参照の確認に失敗（終了コード $REMOTE_RC）" >&2; exit 1 ;;   # 判定不能なので中断
+   esac
    # 直近の dev 宛 PR の状態
    gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url
    ```
@@ -62,7 +67,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、実行可否を承認取り。承認後の手順は以下の順で行う:
 
      1. 現在ブランチを `git symbolic-ref --quiet --short HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。**退避の直前に `git status --porcelain` が空であることを再確認し、出力があれば切り替えずに中断する**（前提条件で確認済みでも、`npm install` などで差分が生じていることがある。未コミット変更は切り替え先へ持ち越され、push にも乗らないまま別の枝に残る）。
-     2. **リモートに在る場合のみ** `git push origin --delete chore/dev-from-master` でリモートを削除する。ケース B はローカルにだけ残っている状態でも成立するので、無条件に実行すると push が失敗して 3. のローカル削除まで到達しない。存在判定は上の `git ls-remote --heads origin chore/dev-from-master` の出力で行い、**`ls-remote` 自体が非 0 で終わった場合（通信・権限エラー）は「無い」とみなさず中断する**。
+     2. **リモートに在る場合のみ** `git push origin --delete chore/dev-from-master` でリモートを削除する。ケース B はローカルにだけ残っている状態でも成立するので、無条件に実行すると push が失敗して 3. のローカル削除まで到達しない。存在判定は上で退避した `REMOTE_EXISTS` を使う（`ls-remote` の終了コードは取得直後に分岐済みで、通信・認証エラーならそこで中断している）。
      3. ローカルにも存在する場合は `git branch -D chore/dev-from-master` で削除。
    - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
    - **ケース D: ケース B または C で、かつ枝に `master` / `dev` のどちらにも入っていない固有コミットが有る**: 下の出力が空でなければ削除せず中断しユーザーに確認する。
@@ -214,11 +219,19 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    done
    ```
 
-   読み取った値で `max(dev, master)` を決めてから:
+   読み取った値で `max(dev, master)` を決める。
+
+   **まず未解決パスを確認し、版数 3 ファイル以外が含まれていたら `git checkout --ours` も `sed` も `git add` も実行せずに中断する。**
 
    ```bash
-   git diff --name-only --diff-filter=U   # 衝突しているファイルを確認（版数 3 ファイル以外が出たら中断）
-   # 実際に衝突したファイルだけを対象にする（未衝突のパスに --ours を渡すとエラーになる）
+   git diff --name-only --diff-filter=U
+   ```
+
+   出力が `android/app/build.gradle` / `app.config.ts` / `ios/TrainLCD.xcodeproj/project.pbxproj` の部分集合であることを確かめる。**先に `--ours` を流すと、アプリコードの衝突まで master 側で潰したあとに中断判定へ到達することになり、マージ結果が既に書き換わっている。** 想定外のパスが出たら `git merge --abort` してユーザーに報告する。
+
+   確認後、実際に衝突したファイルだけを解決する（未衝突のパスに `--ours` を渡すとエラーになるため、固定のパス列ではなく未解決リストを使う）:
+
+   ```bash
    git diff -z --name-only --diff-filter=U | xargs -0 -r git checkout --ours --
    sed -i 's/versionCode 100000530/versionCode 100000531/g' android/app/build.gradle
    sed -i "s/buildNumber: '2743'/buildNumber: '2744'/g; s/versionCode: 100000530/versionCode: 100000531/g" app.config.ts
@@ -227,7 +240,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    git status   # コンフリクトが 1 件も残っていないことを確認する
    ```
 
-   衝突するのは上の 3 ファイルのはずなので、`git diff --name-only --diff-filter=U` の出力がそれ以外を含んでいたら**そこで中断してユーザーに確認する**（アプリコードの衝突は想定外）。これらの版数ファイルは master↔dev で数値以外の差分が無い（`git diff origin/dev origin/master -- <path>` で確認できる）ため、`--ours` で master を採ってもコンテンツは失われない。
+   これらの版数ファイルは master↔dev で数値以外の差分が無い（`git diff origin/dev origin/master -- <path>` で確認できる）ため、`--ours` で master を採ってもコンテンツは失われない。
 
 3. 差分を **版数 3 ファイル** と **それ以外** に分けて確認してから、マージコミットを作成して push する:
 

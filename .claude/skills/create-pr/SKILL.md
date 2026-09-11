@@ -111,10 +111,15 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    - **`git ls-remote` の終了コードは 3 通りに分ける。** 非 0 をまとめて「未 push」とみなすと、通信・認証エラーのときに未 push と誤認して push 分岐へ落ちる。`2` 以外の非 0 は判定不能として中断する。
    - **`git ls-remote` は `origin/<head>` を更新しない**ので、この段階で `git log origin/<head>..<head>` を使わない（remote-tracking が無ければ失敗し、古ければ誤判定する）。比較は上で取った `REMOTE_SHA` と `LOCAL_SHA` の直接比較で行う。
-   - 判定と対応:
-     - `REMOTE_SHA` が空（未 push）、または `REMOTE_SHA` != `LOCAL_SHA` → **ブランチ名・送るコミット件名・`git status` の結果をユーザーに提示して承認を得てから** `git push -u origin <head>` を実行する（前提条件の「勝手に push しない」に従う）。**force push は使わない**。
-     - 不一致のときは push の前に `git fetch origin <head>` し、`git log --oneline origin/<head>..<head>`（ローカル先行）と `git log --oneline <head>..origin/<head>`（リモート先行）の両方を見る。**リモート先行または分岐している場合は push せず中断してユーザーに報告する**（取り込み方の判断はユーザーのもの）。
-     - `REMOTE_SHA` == `LOCAL_SHA` → そのまま手順 2 へ。
+   - 判定と対応（**3 つの状態に分ける**）:
+
+     | 状態 | 判定 | 対応 |
+     | ---- | ---- | ---- |
+     | 未 push | `REMOTE_SHA` が空 | **`git fetch` は実行しない**（リモートに ref が無いのでブランチ指定の fetch は失敗する）。ブランチ名・送るコミット件名・`git status` の結果を提示し、承認を得てから `git push -u origin <head>` |
+     | 一致 | `REMOTE_SHA` == `LOCAL_SHA` | そのまま手順 2 へ |
+     | 不一致 | `REMOTE_SHA` != `LOCAL_SHA` | `git fetch origin <head>` してから `git log --oneline origin/<head>..<head>`（ローカル先行）と `git log --oneline <head>..origin/<head>`（リモート先行）の両方を見る。**ローカル先行のみ**なら上と同じ承認を取って `git push -u origin <head>`。**リモート先行または分岐**なら push せず中断してユーザーに報告する（取り込み方の判断はユーザーのもの） |
+
+     いずれの push でも **force push は使わない**。
    - push が成功した場合にのみ手順 2 へ進む。承認が得られなければ fetch も比較も行わず、未 push である旨を報告して中断する。
    - 未コミットの変更が残っている場合は、PR に含めるかをユーザーに確認する（黙って置き去りにしない）。
 

@@ -27,7 +27,19 @@ description: Cut a production release branch, bump the app version, run quality 
 1. **バージョン正規化と検証**
 
    - 入力の先頭 `v` / `V` を取り除き、`MAJOR.MINOR.PATCH` 形式かを検証。
-   - `git branch --list 'release/v<version>'` と `git ls-remote --exit-code --heads origin 'refs/heads/release/v<version>'` を実行し、同名のブランチ（ローカル or origin）がすでに存在する場合は中断して、既存ブランチでの進行可否をユーザーに確認する。**`ls-remote` の終了コードは 0=存在 / 2=無し / それ以外=通信・認証エラーの 3 通りに分け、`2` 以外の非 0 は「無い」とみなさず中断する**（判定不能のまま重複作成へ進まないため）。
+   - 同名のブランチ（ローカル or origin）がすでに存在する場合は中断して、既存ブランチでの進行可否をユーザーに確認する。
+
+     ```bash
+     git branch --list 'release/v<version>'                                    # ローカル側
+     git ls-remote --exit-code --heads origin 'refs/heads/release/v<version>'; RC=$?
+     case "$RC" in
+       0) echo "origin に同名ブランチが存在します" >&2; exit 1 ;;               # 中断してユーザーに確認
+       2) : ;;                                                                 # 存在しない。手順 2 へ
+       *) echo "リモート参照の確認に失敗（終了コード $RC）" >&2; exit 1 ;;      # 判定不能なので中断
+     esac
+     ```
+
+     **終了コードは `ls-remote` の直後に `RC` へ退避する。** 後続のコマンドで `$?` が上書きされるうえ、`2`（不存在）と通信・認証エラーを区別せずに進むと、エラー時に「存在しない」と誤認して `git switch -c 'release/v<version>' origin/dev` まで走ってしまう。
 
 2. **dev から切り出し**
 

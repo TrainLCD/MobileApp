@@ -88,7 +88,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      - **両方に差分がある** → sync PR は版数ファイルで衝突する。`sync-dev-from-master`「解決方針: semver はリリース版、ビルド番号は最大値」に従った採用値を算出し、**プランに明記して手順 3 の 1 回の承認に含める**。
      - 片方だけ（通常は canary bump による dev 側のみ）→ 衝突しない。プランへの記載は不要。
    - 既存 `chore/dev-from-master` の状態（open PR が無い前提で）:
-     - `git branch --list 'chore/dev-from-master'` / `git ls-remote --exit-code --heads origin chore/dev-from-master`（終了コード 0=存在 / 2=無し / それ以外=通信・認証エラーで中断）と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
+     - `git branch --list 'chore/dev-from-master'` / `git ls-remote --exit-code --heads origin chore/dev-from-master`（終了コードは **`ls-remote` の直後に変数へ退避する**。後続の `gh pr list` で `$?` が上書きされる。0=存在 / 2=無し / それ以外=通信・認証エラーで中断）と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
      - 固有コミットの有無: 下の出力が空でなければ **中断** してユーザーに確認（自動では削除しない）。
 
        ```bash
