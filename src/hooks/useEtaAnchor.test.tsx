@@ -1,10 +1,15 @@
 import { act, renderHook } from '@testing-library/react-native';
+import type * as Location from 'expo-location';
 import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import { etaAnchorAtom } from '../store/atoms/etaFallback';
+import {
+  locationAccuracyOutlierAtom,
+  locationAtom,
+} from '../store/atoms/location';
 import {
   arrivedAtom,
   selectedBoundAtom,
@@ -100,6 +105,88 @@ describe('useEtaAnchor', () => {
       stationId: stationA.id,
       kind: 'DEPARTED',
       observedAtMs: 2_001_000,
+    });
+  });
+
+  // 回帰: 地下鉄の駅で精度が落ちると useRefreshStation が現在位置を信用できないと判断して
+  // arrived を false へ倒すため、停車したままでも「発車」として記録されていた。そこから
+  // ETA仮想時計が走り出し、以降の推定が「もう発車したはず」の側へずれる。
+  it('精度の外れ値でarrivedがfalseになった場合はDEPARTEDを記録しない', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(3_000_000);
+    const store = createStore();
+
+    renderWithStore(store, { arrived: true, station: stationA });
+    expect(store.get(etaAnchorAtom)?.kind).toBe('AT_STATION');
+
+    jest.spyOn(Date, 'now').mockReturnValue(3_001_000);
+    act(() => {
+      // 継続測位が最大許容精度超で棄却された状態
+      store.set(locationAccuracyOutlierAtom, true);
+      store.set(arrivedAtom, false);
+    });
+
+    // 発車していないのでアンカーは直前のAT_STATIONのまま
+    expect(store.get(etaAnchorAtom)).toEqual({
+      stationId: stationA.id,
+      kind: 'AT_STATION',
+      observedAtMs: 3_000_000,
+    });
+  });
+
+  it('最大許容精度を超える測位を保持している場合もDEPARTEDを記録しない', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(4_000_000);
+    const store = createStore();
+
+    renderWithStore(store, { arrived: true, station: stationA });
+
+    jest.spyOn(Date, 'now').mockReturnValue(4_001_000);
+    act(() => {
+      // ワンショット取得・手動選択で粗い精度の測位がlocationAtomへ入った状態
+      store.set(locationAtom, {
+        coords: {
+          latitude: 35,
+          longitude: 139,
+          accuracy: 5_000,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          speed: 0,
+        },
+        timestamp: 4_001_000,
+      } as Location.LocationObject);
+      store.set(arrivedAtom, false);
+    });
+
+    expect(store.get(etaAnchorAtom)?.kind).toBe('AT_STATION');
+  });
+
+  it('測位が信用できる状態での発車は従来どおりDEPARTEDを記録する', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(5_000_000);
+    const store = createStore();
+
+    renderWithStore(store, { arrived: true, station: stationA });
+
+    jest.spyOn(Date, 'now').mockReturnValue(5_001_000);
+    act(() => {
+      store.set(locationAtom, {
+        coords: {
+          latitude: 35,
+          longitude: 139,
+          accuracy: 30,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          speed: 0,
+        },
+        timestamp: 5_001_000,
+      } as Location.LocationObject);
+      store.set(arrivedAtom, false);
+    });
+
+    expect(store.get(etaAnchorAtom)).toEqual({
+      stationId: stationA.id,
+      kind: 'DEPARTED',
+      observedAtMs: 5_001_000,
     });
   });
 

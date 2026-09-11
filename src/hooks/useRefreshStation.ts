@@ -4,11 +4,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS, BAD_ACCURACY_THRESHOLD } from '~/constants';
-import {
-  getMaxPermitAccuracy,
-  isEtaAssistEnabled,
-  isForceNotArrivedOnLowAccuracyEnabled,
-} from '~/lib/remoteConfig';
+import { isEtaAssistEnabled } from '~/lib/remoteConfig';
 import { store } from '~/store';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
@@ -21,6 +17,7 @@ import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
 import { getEtaPhaseNow } from '../utils/etaPhaseNow';
 import getIsPass from '../utils/isPass';
+import { isLocationUntrustworthy } from '../utils/locationTrust';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useApproachingStation } from './useApproachingStation';
 import { useCanGoForward } from './useCanGoForward';
@@ -97,19 +94,9 @@ export const useRefreshStation = (): void => {
     }
 
     // 現在位置を信用できない状況では到着判定の信頼性が担保できないため、
-    // 強制的に未到着(=走行中)とみなす。次の2系統を区別して検査する:
-    //   1. 継続測位: handleTrackingLocationが最大許容精度超の測位を棄却して
-    //      座標を凍結するため、精度悪化はlocationAtom側には現れない。棄却の事実は
-    //      外れ値フラグ(isAccuracyOutlier)から判定する。
-    //   2. ワンショット取得・手動選択: フィルタを経由せず粗い精度の測位がlocationAtomに
-    //      入りうるため、保持している精度を直接検査する。
-    // この強制未到着はRemote Configのフィーチャートグルで無効化でき、無効時は
-    // 精度に依らず通常の到着判定を行う。
-    if (
-      isForceNotArrivedOnLowAccuracyEnabled() &&
-      (isAccuracyOutlier ||
-        (accuracy != null && accuracy > getMaxPermitAccuracy()))
-    ) {
+    // 強制的に未到着(=走行中)とみなす。判定材料とフィーチャートグルの扱いは
+    // isLocationUntrustworthy に集約している(useEtaAnchorと同じ条件を使うため)。
+    if (isLocationUntrustworthy({ isAccuracyOutlier, accuracy })) {
       return false;
     }
 
