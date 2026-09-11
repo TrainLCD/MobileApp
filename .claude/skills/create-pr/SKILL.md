@@ -14,7 +14,7 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 | 項目 | 既定値 / 推論元 |
 | ---- | ---- |
 | `base` | リポジトリの既定ブランチ（`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`） |
-| `head` | `@` から辿れる直近のブックマーク（`jj log -r 'heads(::@ & bookmarks())' --no-graph -T 'local_bookmarks'`） |
+| `head` | カレントブランチ（`git symbolic-ref --quiet --short HEAD`）。**detached HEAD では取得できないので中断し、`head` の明示指定を求める**。`git rev-parse --abbrev-ref HEAD` は detached 時に文字列 `HEAD` を返し、それがそのまま `git fetch` / `origin/<head>` / `gh pr create --head` へ流れて失敗するので使わない |
 | `title` | 下の「タイトル推論ルール」参照 |
 | `summary` | 空なら「概要」「変更内容」本文はテンプレのコメントのみ残す |
 | `related_issue` | **ユーザー入力を最優先**。指定が `#N`（数値のみ）なら `Closes #N`、`Closes #N` / `Fixes #N` / `Refs #N` 形式ならその接頭語を保って出力。`related_issue` が空のときに限り、コミット件名から `Closes #N` / `Fixes #N` / `Refs #N` を抽出（接頭語を維持。`#N` 単体表記なら `Closes` を補う）。両方とも見つからなければ節のコメントのみ |
@@ -38,11 +38,13 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 
 ### タイトル推論ルール
 
-`<base>@origin..<head>@origin` のコミット件名を対象に、以下を順に試す:
+**`<head>` が origin に push 済みであることを先に確かめ、`git fetch origin <base> <head>` を実行してから**推論する（手順 2 の fetch より前に推論するため、ここで更新しないと古い remote-tracking ref を読む）。未 push なら `origin/<head>` が無く fetch 自体が失敗し、origin 側が古ければローカルにしか無いコミットが推論から漏れるので、**その場合は fetch も比較も行わず、手順 1 の切り出し・push（実行前ゲートで承認を取る）を先に済ませてから戻ってくる**。
+
+更新済みの `origin/<base>..origin/<head>` のコミット件名を対象に、以下を順に試す:
 
 1. **コミット 1 件のみ**: その件名をそのまま使う。
 2. **コミット複数・共通プレフィックスあり**（例: 全て `fix: ...`）: 最新コミットの件名を使う。
-3. **ブックマーク名が `feature/` / `fix/` / `hotfix/` / `chore/` / `docs/` 等で始まる**: プレフィックスを取り除き、残りの `kebab-case` を日本語や自然文に整える。確信が持てないときは整形せずブックマーク名のまま使ってよい。
+3. **ブランチ名が `feature/` / `fix/` / `hotfix/` / `chore/` / `docs/` 等で始まる**: プレフィックスを取り除き、残りの `kebab-case` を日本語や自然文に整える。確信が持てないときは整形せずブランチ名のまま使ってよい。
 4. **どれでも決まらない**: 最新コミット件名を採用し、「このタイトルで作成してよいか」をユーザーに確認する。
 
 Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotfix` を含む）では、タイトル先頭に `Hotfix:` を付ける（CLAUDE.md ルール）。
@@ -51,21 +53,21 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
 ## 前提条件
 
-- カレントディレクトリが `jj workspace root` で解決できるリポジトリ内。
-- `jj` と `gh` CLI が使える（`gh` は認証済み）。このリポジトリは jj / git コロケート構成だが、**VCS 操作は jj に統一する**。直接叩いてよい git コマンドは annotated tag の作成・push（`git tag -a` / `git push origin <tag>`）だけで、それは `publish-release` / `finalize-release` の責務。**このスキルに tag 操作は無いので、git コマンドは一切使わない**（AGENTS.md「Version Control (Jujutsu)」）。
-- `head` ブックマークが origin に push 済み。未 push の場合はユーザーに push の可否を確認する（勝手に push しない）。
-- `screenshots` を使う場合のみ: `node`（このリポジトリは Node 24.x 前提）が使え、`gh` の認証トークンに当該リポジトリへの `contents:write` 権限があること。画像アップロードは `gh api` の Contents API 経由で行い、ローカルの作業コピーや jj の状態には一切触れない。
+- カレントディレクトリが `git rev-parse --show-toplevel` で解決できるリポジトリ内。
+- `git` と `gh` CLI が使える（`gh` は認証済み）。破壊的な操作（`git reset --hard` / `git clean -fd` / force push）は使わない（AGENTS.md「Version Control (Git)」）。
+- `head` ブランチが origin に push 済み。未 push の場合はユーザーに push の可否を確認する（勝手に push しない）。
+- `screenshots` を使う場合のみ: `node`（このリポジトリは Node 24.x 前提）が使え、`gh` の認証トークンに当該リポジトリへの `contents:write` 権限があること。画像アップロードは `gh api` の Contents API 経由で行い、ローカルの作業ツリーや Git の状態には一切触れない。
 
 ## 手順
 
-1. **head / base の整合性チェックと自動ブックマーク切り出し**
+1. **head / base の整合性チェックと自動ブランチ切り出し**
 
    `base == head` になるケース（例: `dev` に居てデフォルト base も `dev`）は、そのまま進めると PR が作れない。以下のいずれかで救済する:
 
-   - 作業コピー `@` に差分がある、または `<base>@origin` より先に未 push のコミットがある場合、**新しいブックマークを切ってそこに退避**してから続行する。
+   - 作業中の変更（staged / unstaged / 直近の未 push コミット）がある場合、**新しいブランチを切ってそこに退避**してから続行する。
    - 何の変更も無い場合は「PR 対象の差分が無い」と報告して中断する。
 
-   **ブックマーク名の推論**（`feature/<slug>` 形式が既定。CLAUDE.md とメモのルール: プレフィックスは `feature/` であり `feat/` ではない）:
+   **ブランチ名の推論**（`feature/<slug>` 形式が既定。CLAUDE.md とメモのルール: プレフィックスは `feature/` であり `feat/` ではない）:
 
    | プレフィックス | 採用条件 |
    | ---- | ---- |
@@ -79,36 +81,64 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    切り出し手順:
 
-   > **⚠ 実行前ゲート**: 下のブロックは origin に波及する push を含む。ブックマーク名・`jj status` で確認した含めるファイル・コミットメッセージ案の 3 点をユーザーに提示し、**承認を得てから**実行する。
+   > **⚠ 実行前ゲート**: 下のブロックは origin に波及する push を含む。ブランチ名・`git status` で確認した含めるファイル・コミットメッセージ案の 3 点をユーザーに提示し、**承認を得てから**実行する。
 
    ```bash
-   jj status                                      # @ に入っている差分を必ず目視確認する
-   jj commit -m "<日本語単文>"                     # @ を確定し、その上に新しい空の @ ができる
-   jj bookmark create <inferred-bookmark> -r @-   # 直前に確定したコミットに付ける
-   jj git push --bookmark <inferred-bookmark>     # 新規ブックマークは自動で追跡される
+   git status                                   # コミットに含める差分を必ず目視確認する
+   git switch -c <inferred-branch>
+   git add <path>...                            # 含めるパスだけを明示的に追加（`git add -A` / `.` は使わない）
+   git commit -m "<日本語単文>"
+   git push -u origin <inferred-branch>
    ```
 
-   - **`jj status` の目視確認は省略しない**。jj は `.gitignore` されていない未追跡ファイルも自動でスナップショットするため、git の `add` に相当する取捨選択の関門が無い。意図しないファイルが混ざっていたら `.gitignore` に追加するか `jj file untrack <path>` してから確定する。
-   - 一部のパスだけ確定したい場合は `jj commit <path>... -m "<日本語単文>"`。選ばなかった差分は新しい `@` に残る。
+   - **`git status` の目視確認は省略しない**。`git add -A` や `git add .` で一括投入すると、意図しない未追跡ファイルがそのままコミットに入る。不要なファイルは `.gitignore` に追加してから確定する。
    - コミット前に `npx biome check --unsafe --fix ./src` を実行（メモのルール）。
-   - push は新規ブックマークなので安全だが、承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
+   - push は新規ブランチなので安全だが、承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
+
+   **`base != head` でも、`head` が origin に追いついていなければ手順 2 へ進まない。** ブランチ切り出しが要らないケースでも、`head` が未 push なら手順 2 の `git fetch origin <base> <head>` は `origin/<head>` を解決できずに失敗し、`origin/<head>` が古ければローカルにしか無いコミットが比較から丸ごと漏れる。次で判定する:
+
+   ```bash
+   # リモートの <head> を調べる。終了コードは 0=存在 / 2=該当ref無し（未 push）/ それ以外=通信・認証エラー
+   REMOTE_LINE="$(git ls-remote --exit-code --heads origin '<head>')"; RC=$?
+   case "$RC" in
+     0) REMOTE_SHA="${REMOTE_LINE%%$'\t'*}" ;;
+     2) REMOTE_SHA="" ;;                       # 未 push
+     *) echo "リモート参照の確認に失敗（終了コード $RC）" >&2; exit 1 ;;   # 判定不能なので中断
+   esac
+   LOCAL_SHA="$(git rev-parse '<head>')"
+   git status --porcelain                      # 未コミットの変更が無いこと
+   ```
+
+   - **`git ls-remote` の終了コードは 3 通りに分ける。** 非 0 をまとめて「未 push」とみなすと、通信・認証エラーのときに未 push と誤認して push 分岐へ落ちる。`2` 以外の非 0 は判定不能として中断する。
+   - **`git ls-remote` は `origin/<head>` を更新しない**ので、この段階で `git log origin/<head>..<head>` を使わない（remote-tracking が無ければ失敗し、古ければ誤判定する）。比較は上で取った `REMOTE_SHA` と `LOCAL_SHA` の直接比較で行う。
+   - 判定と対応（**3 つの状態に分ける**）:
+
+     | 状態 | 判定 | 対応 |
+     | ---- | ---- | ---- |
+     | 未 push | `REMOTE_SHA` が空 | **`git fetch` は実行しない**（リモートに ref が無いのでブランチ指定の fetch は失敗する）。ブランチ名・送るコミット件名・`git status` の結果を提示し、承認を得てから `git push -u origin <head>` |
+     | 一致 | `REMOTE_SHA` == `LOCAL_SHA` | そのまま手順 2 へ |
+     | 不一致 | `REMOTE_SHA` != `LOCAL_SHA` | `git fetch origin <head>` してから `git log --oneline origin/<head>..<head>`（ローカル先行）と `git log --oneline <head>..origin/<head>`（リモート先行）の両方を見る。**ローカル先行のみ**なら上と同じ承認を取って `git push -u origin <head>`。**リモート先行または分岐**なら push せず中断してユーザーに報告する（取り込み方の判断はユーザーのもの） |
+
+     いずれの push でも **force push は使わない**。
+   - push が成功した場合にのみ手順 2 へ進む。承認が得られなければ fetch も比較も行わず、未 push である旨を報告して中断する。
+   - 未コミットの変更が残っている場合は、PR に含めるかをユーザーに確認する（黙って置き去りにしない）。
 
    以降の手順では推論後の head を使う。
 
 2. **状態確認とモード決定（新規作成 / 更新）**
-   - `jj git fetch` を実行。
-   - `jj log -r '<base>@origin..<head>@origin' --no-graph -T 'commit_id.short() ++ " " ++ description.first_line() ++ "\n"'` で差分があることを確認。出力が空なら中断して報告。
+   - `git fetch origin <base> <head>` を実行。
+   - `git log --oneline origin/<base>..origin/<head>` で差分があることを確認。出力が空なら中断して報告。
    - `gh pr list --base <base> --head <head> --state open --json number,url,body` で既存 open PR を確認。
      - **存在しない場合**: 新規作成モード。以降、手順 6 で `gh pr create`。
-     - **存在する場合**: 更新モード。AGENTS.md の「Keep PR metadata in sync with the bookmark state」に従い、既存本文を最新差分で再生成する。以降、手順 6 で `gh pr edit`。タイトルは既存を**原則尊重**（ユーザー推論より優先）。ただし手順 6 の整合性チェックで主題が大きくズレていると判断した場合のみ更新案を提示する。
+     - **存在する場合**: 更新モード。AGENTS.md の「Keep PR metadata in sync with the branch state」に従い、既存本文を最新差分で再生成する。以降、手順 6 で `gh pr edit`。タイトルは既存を**原則尊重**（ユーザー推論より優先）。ただし手順 6 の整合性チェックで主題が大きくズレていると判断した場合のみ更新案を提示する。
 
 3. **変更の種類を判定**
 
-   `<base>@origin..<head>@origin` のコミット件名と変更ファイルを取得:
+   `origin/<base>..origin/<head>` のコミット件名と変更ファイルを取得:
 
    ```bash
-   jj log -r '<base>@origin..<head>@origin' --no-graph -T 'description.first_line() ++ "\n"'
-   jj diff --name-only --from '<base>@origin' --to '<head>@origin'
+   git log --pretty=%s origin/<base>..origin/<head>
+   git diff --name-only origin/<base>..origin/<head>
    ```
 
    **大原則: 判定はアプリの挙動に対する変更かどうかで決める**。下の「コード本体パス」が一切変わっていない場合、「バグ修正」「新機能」「リファクタリング」は OFF（コミット件名に `fix` / `feat` / `追加` 等の語があっても）。スキル・設定・ドキュメントのメタ変更を「新機能」と誤分類しないための安全弁。
@@ -159,12 +189,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    この資材ブランチを使う理由:
 
    - アプリのコードを一切含まない root commit 起点の孤立ブランチなので、**PR の diff に画像が混ざらず** `dev` の履歴も肥大化しない。
-   - head ブックマークを削除しても画像 URL が切れない。
-   - Contents API 経由なので**ローカルの作業コピー・jj の状態・`.git` に一切触れない**（git コマンドも不要）。
+   - head ブランチを削除しても画像 URL が切れない。
+   - Contents API 経由なので**ローカルの作業ツリー・インデックス・`.git` に一切触れない**（ローカルの git コマンドも不要）。
 
-   git-flow の命名規則（`feature/*` / `fix/*` 等）は作業ブックマーク向けのルールなので、この資材ブランチは対象外。**`dev` / `master` には絶対にマージしない**。
+   git-flow の命名規則（`feature/*` / `fix/*` 等）は作業ブランチ向けのルールなので、この資材ブランチは対象外。**`dev` / `master` には絶対にマージしない**。
 
-   VCS 操作を jj に統一する規約に対しては、**AGENTS.md「Version Control (Jujutsu)」に明記された正式な例外**として運用する（下位のスキル文書だけで独自の例外を作らない）。例外が成立する条件は AGENTS.md 側に書いたとおりで、資材専用ブランチであること・`dev` / `master` へマージしないこと・公開パスが内容アドレスで不変であること・事前にユーザー承認を得ることの 4 点すべてを満たす場合に限る。
+   サーバー側への直接書き込みは、**AGENTS.md「Version Control (Git)」に明記された正式な例外**として運用する（下位のスキル文書だけで独自の例外を作らない）。例外が成立する条件は AGENTS.md 側に書いたとおりで、資材専用ブランチであること・`dev` / `master` へマージしないこと・公開パスが内容アドレスで不変であること・事前にユーザー承認を得ることの 4 点すべてを満たす場合に限る。
 
    1. **入力の正規化と検証**
 
@@ -341,8 +371,8 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
       - **存在確認では 404 だけを「無い」として扱う**。`2>/dev/null` で握り潰すと、401 / 403 / 5xx といった認証・通信エラーまで「無い」と誤認し、資材ブランチの二重作成や誤った中断を招く。
       - **空ツリーの固定 SHA (`4b825dc…`) は当てにしない**。空ツリーは「内容から決まる SHA」であってすべてのリポジトリにオブジェクトとして保存されている保証は無く、無ければ root commit 作成が無効な tree SHA で失敗する。README を 1 つ含むツリーを実際に作れば、この前提に依存せずに済むうえ、ブランチの目的がブランチ自身に書かれる。
-      - 保存先は `<REF_SLUG>-<HEAD_SHORT>/<内容ハッシュ12桁>-<安全化したファイル名>`。`REF_SLUG` は head ブックマーク名に手順 6 と同じスラッグ化規則（`A-Za-z0-9._-` 以外を `_`）を適用したもの、`HEAD_SHORT` は head コミット ID の短縮形、内容ハッシュは画像の SHA-256 先頭 12 桁。
-      - **URL は不変にする。過去に公開したパスは決して上書きしない**。`REF_SLUG` だけで決めると、(a) 同じブックマーク名を後日再利用したとき、(b) `feature/foo` と `feature_foo` がスラッグ化後に同じ文字列へ潰れたときに、過去 PR が参照している URL の中身が別の画像へ差し替わる。さらに **同じコミットのまま別の画像を指定して再実行した場合**も、コミット ID だけでは同じパスを踏む。内容ハッシュをファイル名に含めれば、内容が変われば必ず別パスになるので、既存 URL の指す画像は永久に変わらない。名前空間側のプレフィックスが将来衝突したとしても、不変性はこのハッシュが担保する。
+      - 保存先は `<REF_SLUG>-<HEAD_SHORT>/<内容ハッシュ12桁>-<安全化したファイル名>`。`REF_SLUG` は head ブランチ名に手順 6 と同じスラッグ化規則（`A-Za-z0-9._-` 以外を `_`）を適用したもの、`HEAD_SHORT` は head コミット ID の短縮形、内容ハッシュは画像の SHA-256 先頭 12 桁。
+      - **URL は不変にする。過去に公開したパスは決して上書きしない**。`REF_SLUG` だけで決めると、(a) 同じブランチ名を後日再利用したとき、(b) `feature/foo` と `feature_foo` がスラッグ化後に同じ文字列へ潰れたときに、過去 PR が参照している URL の中身が別の画像へ差し替わる。さらに **同じコミットのまま別の画像を指定して再実行した場合**も、コミット ID だけでは同じパスを踏む。内容ハッシュをファイル名に含めれば、内容が変われば必ず別パスになるので、既存 URL の指す画像は永久に変わらない。名前空間側のプレフィックスが将来衝突したとしても、不変性はこのハッシュが担保する。
       - その結果、**同じパスが既に存在する＝内容も同一**なので、上書き用の blob `sha` を扱う必要も無い。存在すれば URL を再利用し、無ければ新規作成するだけでよい。PR 番号は新規作成時点ではまだ存在しないので使わない。
       - ペイロードは **必ず JSON ファイル経由**で渡す。base64 文字列をコマンドライン引数に直接置くと Linux の `MAX_ARG_STRLEN`（1 引数 128KB）を超えて `Argument list too long` になる。JSON 組み立てとバイナリの base64 化は Node で行う（`jq` への依存を増やさない）。
 
@@ -373,9 +403,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
         OWNER_REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
         ASSET_BRANCH="assets/pr-screenshots"
         ASSET_MARKER="create-pr:asset-branch:v1"
-        HEAD_BOOKMARK="<head ブックマーク名>"
-        HEAD_SHORT="$(jj log -r "$HEAD_BOOKMARK@origin" --no-graph -T 'commit_id.short()')"
-        REF_SLUG="$(printf '%s' "$HEAD_BOOKMARK" \
+        HEAD_BRANCH="<head ブランチ名>"
+        # 手順 2 で fetch 済みの remote-tracking を使う。存在しなければ名前空間を決められないので中断する
+        HEAD_SHORT="$(git rev-parse --short --verify "refs/remotes/origin/$HEAD_BRANCH")" || {
+          echo "origin/$HEAD_BRANCH が解決できません（未 push か fetch 漏れ）" >&2; exit 1
+        }
+        REF_SLUG="$(printf '%s' "$HEAD_BRANCH" \
           | tr -d '\r\n' | tr -c 'A-Za-z0-9._-' '_' \
           | sed -E 's/_+/_/g; s/^_+//; s/_+$//' | cut -c1-100)"
         REF_SLUG="${REF_SLUG:-pr}"
@@ -386,7 +419,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
           200)
             # ブランチ名だけを信頼しない。本スキルが作った資材専用系列であることを機械的に確かめる。
             # 誤って dev 由来の同名ブランチが作られていた場合、AGENTS.md の例外条件
-            #（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになる
+            #（資材のみ・アプリコードを含まない）を満たさないブランチへ直接書き込むことになる
             [ "$(api_status "repos/$OWNER_REPO/contents/README.md?ref=$ASSET_BRANCH")" = "200" ] || {
               echo "$ASSET_BRANCH に README.md がありません。資材ブランチではない可能性があります" >&2
               exit 1
@@ -543,7 +576,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
       - 出力は `URL\t出所ラベル\tキャプション` の 1 レコード 1 行。行順への暗黙の依存をやめ、URL とメタデータを常に同じレコードとして持ち回る。
       - `gh` の成否に関わらず一時ファイル（`WORK` と `RECORDS`）が消えるよう全体をサブシェルに包んで `trap` を張り、**Bash tool の 1 呼び出し内で完結させる**（手順 6 の本文ファイルと同じ方針）。
       - URL は自分で組み立てず、レスポンスの `download_url` をそのまま使う（ブランチ名の `/` などのエスケープを間違えないため）。得られる URL は `https://raw.githubusercontent.com/<owner>/<repo>/<asset-branch>/<path>` 形式。
-      - **既存ブランチはブランチ名だけで信頼しない**。次の 3 つをすべて確認してから書き込む。誤って `dev` 由来の同名ブランチが作られていた場合、AGENTS.md に定めた例外条件（資材のみ・アプリコードを含まない）を満たさないブランチへ jj を介さず書き込むことになるため、1 つでも合わなければ中止する。
+      - **既存ブランチはブランチ名だけで信頼しない**。次の 3 つをすべて確認してから書き込む。誤って `dev` 由来の同名ブランチが作られていた場合、AGENTS.md に定めた例外条件（資材のみ・アプリコードを含まない）を満たさないブランチへ直接書き込むことになるため、1 つでも合わなければ中止する。
         1. README にマーカー `create-pr:asset-branch:v1` が含まれること。
         2. 既定ブランチと**共通祖先を持たない**こと（孤立系列であることの履歴からの裏付け）。無関係な履歴同士の compare に GitHub は 404 を返すので、それ以外なら中止する。
         3. **ツリー全体を再帰で取得し、`README.md` と規定形式の画像パス（`<名前空間>/<12桁ハッシュ>-<ファイル名>.<拡張子>`）だけが存在すること**。ルート直下の名前を拾う denylist 方式では `app/` や `lib/` の配下に置かれたコードを見落とすため、allowlist で判定する。**判定は blob だけでなく全エントリに対して行う**。`blob` を抜き出して検査すると、gitlink（`type: commit`）が検査対象から消えて素通りする。`tree` は名前空間ディレクトリのみ、`blob` は mode が `100644`（通常ファイル）のもののみ許可し、シンボリックリンク（`120000`）や実行可能ファイルも拒否する。**応答の `truncated` が `true` なら全件を検査できていないので中止する**（ツリーが上限を超えると GitHub は部分的な `.tree` を返すため、それを全件と見なすと非資材ファイルを見逃す）。
@@ -649,12 +682,12 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
 
    実装手順:
 
-   1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<slug>.md`）。ファイル名に使う ref（ブックマーク名・PR 番号など）は **ファイル名として安全な集合（`A-Za-z0-9._-`）にスラッグ化** する（手順 4 の `REF_SLUG` と同じ規則）。具体的には:
+   1. Write ツールで本文を一時ファイルに書き出す（例: `/tmp/pr-body-<slug>.md`）。ファイル名に使う ref（ブランチ名・PR 番号など）は **ファイル名として安全な集合（`A-Za-z0-9._-`）にスラッグ化** する（手順 4 の `REF_SLUG` と同じ規則）。具体的には:
       - `/`・改行・制御文字・空白・非 ASCII などを `_` に置換
       - 連続した `_` は 1 つに畳み、先頭・末尾の `_` は除去
       - 必要なら長さを 100〜200 文字程度に切り詰める
 
-      生のブックマーク名を直結するとサブディレクトリ解釈や制御文字混入で Write／削除が失敗する。バッククォートは **素のまま** 書く。escape しない。
+      生のブランチ名を直結するとサブディレクトリ解釈や制御文字混入で Write／削除が失敗する。バッククォートは **素のまま** 書く。escape しない。
    2. 下の `gh` コマンドをサブシェル内で `trap` と一緒に実行する。`gh` の成功・失敗に関わらず `EXIT` / `INT` / `TERM` のどれでも一時ファイルを確実に削除されるようにする（`&&` で `rm` を繋ぐだけだと失敗時に `/tmp` にゴミが残る）。
    3. `gh` 呼び出しと `rm`（を含む `trap`）は Bash tool の 1 呼び出し内で完結させる。別呼び出しで後片付けすると、前段の呼び出しがエラー／中断で終わった場合にクリーンアップが実行されない。
 
@@ -697,19 +730,19 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    )
    ```
 
-   - **タイトルは原則として既存を維持する**。ただし毎回スコープ整合性を再評価し（AGENTS.md「Keep PR metadata in sync with the bookmark state」）、手順 1 のタイトル推論ルールと最新のコミット群を照合する。現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていない**重大な不整合**がある場合のみ、更新案を提示してユーザー承認を取り `--title` で上書きする。整合している、または軽微な差分にとどまる場合は `--title` を付けない。
+   - **タイトルは原則として既存を維持する**。ただし毎回スコープ整合性を再評価し（AGENTS.md「Keep PR metadata in sync with the branch state」）、手順 1 のタイトル推論ルールと最新のコミット群を照合する。現タイトルが新しい主題（追加スキル・大きな機能変更など）を拾えていない**重大な不整合**がある場合のみ、更新案を提示してユーザー承認を取り `--title` で上書きする。整合している、または軽微な差分にとどまる場合は `--title` を付けない。
    - Assignee は既に付いていれば再指定しない（重複操作を避ける）。付いてなければ `--add-assignee TinyKitten`。
    - 実行後、PR URL と「タイトルを変更したか・どの節を書き換えたか・変更の種類チェック差分」を簡潔に報告する。
 
 ## 注意事項
 
 - テンプレの節構成は改変しない。追加・削除はメンテナ承認が必要。
-- `jj git push` には `--force` に相当する押し切りフラグが無く、既定で `git push --force-with-lease` 相当の安全確認が入る。安全確認で弾かれたら `jj git fetch` してから状態を見直すこと。`--ignore-immutable` などのガード解除フラグは使わない。push が必要ならユーザーに確認。
+- `git push --no-verify` や force push はしない。push が弾かれたら `git fetch` してから状態を見直すこと。push が必要ならユーザーに確認。
 - 既存 open PR を上書きしない（重複作成禁止）。
 - **スクリーンショット節を空欄のまま提出しない**。画像を貼るか、貼らない理由を明記するかのどちらかにする。
 - **画像の取得手段は問わない**。実機・シミュレータのキャプチャ、React Native Web（`npm run web`）のレンダリング、実装を動かしていない作図・生成画像のどれでもよい。**このスキルはシミュレータ／エミュレータを自前で起動しない** — 撮影や作図は呼び出し側の責務で、このスキルは渡された画像を受け取るだけ。ただし何を写した画像かは出所ラベルで必ず区別できるようにする（「出所ラベル」参照）。
 - 資材ブランチ `assets/pr-screenshots` は **削除も `dev` / `master` へのマージも禁止**。削除すると過去の PR 本文の画像がすべて壊れる。アプリのコードは絶対に置かない。
 - 動画（`.mp4` / `.mov`）は raw URL ではプレイヤー表示にならないため、このスキルでは扱わない。PR 画面へのドラッグ&ドロップをユーザーに案内する。
-- 画像アップロードは Contents API（`gh api`）だけで完結させる。`assets/pr-screenshots` をローカルにチェックアウトしたり jj のブックマークを切ったりしない（作業コピーを汚さないことがこの方式の利点）。
+- 画像アップロードは Contents API（`gh api`）だけで完結させる。`assets/pr-screenshots` をローカルにチェックアウトしたりブランチを切ったりしない（作業ツリーを汚さないことがこの方式の利点）。
 - Hot fix の場合はタイトルに `Hotfix:` プレフィックスを付けるようユーザーに確認する（CLAUDE.md）。
 - 本文は `gh pr create --body` / `gh pr edit --body` のようにインラインで渡さない。必ず `--body-file` で一時ファイル経由で渡す（バッククォートなど特殊文字の escape 事故を構造的に防ぐため）。
