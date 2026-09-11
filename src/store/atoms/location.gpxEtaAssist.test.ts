@@ -2,17 +2,17 @@
  * eta_assist_enabled = true を前提に、assets/gpx 配下の**全**GPXを setLocation の実パイプラインへ
  * 流し、ETA補助を有効化しても走行結果が変わらないことを確かめる。
  *
- * ETA補助にはパイプラインへ介入する経路が2つある。
- *   - ETAが許す進行量を超えた測位の棄却 (#6939 / store/atoms/location.ts)
- *   - 精度劣化時にETAが同じ駅の停車を示すときだけ到着圏を緩和するR1 (hooks/useRefreshStation.ts)
- * どちらもサーバー配信のマスタースイッチ一つで全ユーザーへ有効化されるため、
- * 「正常な走行では何も変えない」ことが有効化の前提条件になる。棄却が働く側の挙動は
- * 合成データで location.etaBound.test.ts が受け持つので、ここでは実トラックでの
- * 非干渉性（平滑後の軌跡と到着検知位置がフラグON/OFFで一致すること）を測る。
+ * ETA補助がパイプラインへ介入する経路は、ETAが許す進行量を超えた測位の棄却
+ * (#6939 / store/atoms/location.ts)だけである。到着圏を緩和するR1(#6366)は、有効化して
+ * 実走させたところ到着判定を悪化させたため廃止した。サーバー配信のマスタースイッチ一つで
+ * 全ユーザーへ有効化されるため、「正常な走行では何も変えない」ことが有効化の前提条件
+ * になる。棄却が働く側の挙動は合成データで location.etaBound.test.ts が受け持つので、
+ * ここでは実トラックでの非干渉性（平滑後の軌跡と到着検知位置がフラグON/OFFで一致すること）
+ * を測る。
  *
  * アンカー(etaAnchorAtom)はGPSの到着・発車検知に追従する閉ループにしている。
- * useRefreshStation の到着判定(R1の緩和を含む)と useEtaAnchor の打刻を最小構成で
- * 再現することで、ETAの仮想時計が本番と同じ経路で進む。
+ * useRefreshStation の到着判定と useEtaAnchor の打刻を最小構成で再現することで、
+ * ETAの仮想時計が本番と同じ経路で進む。
  *
  * 経路(stationState.stations)はGPXから検出した停車駅だけで構成する。本番の stations は
  * 通過駅も含むので進行量の刻みは本番のほうが細かく、同じ距離のずれでも本番は
@@ -56,10 +56,8 @@ jest.mock('~/lib/remoteConfig', () => ({
   isForceNotArrivedOnLowAccuracyEnabled: () => true,
 }));
 
-// useRefreshStation のプライベート定数と同値。到着圏へ加える精度ボーナスの上限(m)と、
-// R1が効くときだけ使う緩和上限(m)。
+// useRefreshStation のプライベート定数と同値。到着圏へ加える精度ボーナスの上限(m)。
 const MAX_ACCURACY_BONUS = 150;
-const ETA_ARRIVED_BONUS_CAP = 500;
 
 type Condition = {
   label: string;
@@ -69,11 +67,10 @@ type Condition = {
   noiseSigma: number;
 };
 
-// gpxLag と同じ精度・間隔の帯に加え、ETA補助が実際に分岐へ入る帯を含める。
-// R1は精度がBAD_ACCURACY_THRESHOLD(200m)を超える帯でしか評価されず、さらに到着圏を
-// 実際に広げるのは通常の精度ボーナス上限(150m)を超える精度、つまり300m超の帯だけ
-// (ボーナスは accuracy*0.5 で、R1の上限は500m)。600mはMAX_PERMIT_ACCURACY(1500m)の
-// 範囲内なので、フィルタを通ってsetLocationまで届く現実的な値。
+// gpxLag と同じ精度・間隔の帯に加え、精度劣化帯(BAD_ACCURACY_THRESHOLD=200m超)を含める。
+// 劣化帯ではEMAが固定αになり追従遅れが最大になるため、ETAの進行量上限から外れやすい。
+// 600mはMAX_PERMIT_ACCURACY(1500m)の範囲内なので、フィルタを通ってsetLocationまで届く
+// 現実的な値。
 const CONDITIONS: Condition[] = [
   { label: ' 30m/ 5s', accuracy: 30, intervalMs: 5_000, noiseSigma: 0 },
   { label: ' 30m/10s', accuracy: 30, intervalMs: 10_000, noiseSigma: 0 },
@@ -139,8 +136,6 @@ type ReplayResult = {
   firstDetection: (number | null)[];
   /** 測位が反映されず位置が据え置かれたサンプル数(速度フィルタ or ETA上限) */
   heldSamples: number;
-  /** R1(ETA確認による到着圏緩和)が実際に到着圏を広げたサンプル数 */
-  r1Activations: number;
   /**
    * ETA仮想時計がフェーズを返せたサンプル数。ETA補助が有効なら（アンカーと停車駅リストが
    * 揃っている＝棄却判定が実際に評価される）ほぼ全サンプルで非nullになる。ETAの配線が
@@ -161,7 +156,6 @@ const replay = (
   const samples: TrackPoint[] = [];
   const firstDetection: (number | null)[] = stops.map(() => null);
   let heldSamples = 0;
-  let r1Activations = 0;
   let etaPhaseSamples = 0;
   // 最後に到着と判定した停車駅(useRefreshStationのstation相当)。始発駅から始まる。
   let arrivedIdx = 0;
@@ -222,26 +216,9 @@ const replay = (
       ARRIVED_MIN_THRESHOLD,
       ARRIVED_MAX_THRESHOLD
     );
-    let arrivedRadius =
+    // 到着圏はGPS精度だけで決まる(ETAは到着判定へ介入しない)
+    const arrivedRadius =
       arrivedThreshold + Math.min(accuracy * 0.5, MAX_ACCURACY_BONUS);
-
-    // R1: 精度劣化時、ETAが最寄り停車駅での停車を示すときだけ到着圏を広げる
-    if (mockEtaAssistEnabled && accuracy > BAD_ACCURACY_THRESHOLD) {
-      const anchor = store.get(etaAnchorAtom);
-      if (anchor?.kind === 'DEPARTED') {
-        if (
-          phase?.kind === 'DWELLING' &&
-          phase.stationId === stationIdOf(nearestIdx)
-        ) {
-          const relaxed =
-            arrivedThreshold + Math.min(accuracy * 0.5, ETA_ARRIVED_BONUS_CAP);
-          if (relaxed > arrivedRadius) {
-            r1Activations += 1;
-          }
-          arrivedRadius = relaxed;
-        }
-      }
-    }
 
     const arrived = nearestDistance <= arrivedRadius;
     if (arrived && firstDetection[nearestIdx] === null) {
@@ -274,7 +251,6 @@ const replay = (
     samples,
     firstDetection,
     heldSamples,
-    r1Activations,
     etaPhaseSamples,
   };
 };
@@ -307,7 +283,7 @@ describe('eta_assist_enabled=true でGPXを実パイプラインへ流したと�
 
     const lines: string[] = [`\n■ ${file}  停車=${stops.length}`];
     lines.push(
-      '  精度/間隔       | 据え置き ON/OFF | R1発動 | 到着検知中央値 ON/OFF | 検知駅数 | 検知前倒し(最大)'
+      '  精度/間隔       | 据え置き ON/OFF | 到着検知中央値 ON/OFF | 検知駅数 | 検知位置の差(最大)'
     );
 
     for (const cond of CONDITIONS) {
@@ -332,14 +308,11 @@ describe('eta_assist_enabled=true でGPXを実パイプラインへ流したと�
       expect(detectedCount(on.firstDetection)).toBe(
         stops.length - undetectableTerminal
       );
-      // ETA補助は到着圏を広げる側にしか働かないため、検知が遅れてはならない
+      // ETAは到着判定へ介入しない(棄却が起きなければ入力も到着圏も同一)ため、
+      // 検知位置は一致する。R1を持っていた頃の「早まる側にだけずれる」許容ではなく、
+      // 完全一致を要求してETAが到着判定へ戻ってきたことを検出できるようにする。
       on.firstDetection.forEach((d, i) => {
-        const o = off.firstDetection[i];
-        if (o === null) {
-          return;
-        }
-        expect(d).not.toBeNull();
-        expect(d as number).toBeGreaterThanOrEqual(o - 0.5);
+        expect(d).toBe(off.firstDetection[i]);
       });
 
       const onDetections = on.firstDetection.filter(
@@ -348,21 +321,20 @@ describe('eta_assist_enabled=true でGPXを実パイプラインへ流したと�
       const offDetections = off.firstDetection.filter(
         (d): d is number => d !== null
       );
-      // ETA有効時に到着検知が何m手前へ動いたか(最大)。0なら検知位置は完全一致。
-      const maxDetectionGain = Math.max(
+      // ETA有効・無効で到着検知位置が何mずれたか(最大)。0なら完全一致。
+      const maxDetectionDiff = Math.max(
         0,
         ...on.firstDetection.map((d, i) => {
           const o = off.firstDetection[i];
-          return d === null || o === null ? 0 : d - o;
+          return d === null || o === null ? 0 : Math.abs(d - o);
         })
       );
       lines.push(
         `  ${cond.label.padEnd(15)} | ` +
           `${`${on.heldSamples}/${off.heldSamples}`.padStart(15)} | ` +
-          `${String(on.r1Activations).padStart(6)} | ` +
           `${`${median(onDetections).toFixed(0)}m/${median(offDetections).toFixed(0)}m 手前`.padStart(21)} | ` +
           `${`${detectedCount(on.firstDetection)}/${detectedCount(off.firstDetection)}`.padStart(8)} | ` +
-          `${maxDetectionGain.toFixed(1)}m`
+          `${maxDetectionDiff.toFixed(1)}m`
       );
     }
     console.log(lines.join('\n'));
