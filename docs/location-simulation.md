@@ -180,6 +180,37 @@ T は旧実装の固定 α が 1 秒間隔で持っていた遅れ時間なの�
 流して検証している (`assets/gpx/KatamachiRapid.gpx` は駅間 2.3km・95km/h と、到着圏が
 最小クランプに張り付く最も不利な条件)。
 
+## Jest から GPX を流すテスト
+
+GPX は Xcode / adb だけでなく Jest からも参照する。`src/store/atoms/location.ts` の
+`setLocation` へ直接流し込めるので、速度フィルタ・EMA・基準の張り直しまで含んだ
+測位パイプライン全体を CI で回帰させられる。
+
+| テスト (`src/store/atoms/`) | 対象 | 使う GPX |
+| ---- | ---- | ---- |
+| `location.gpxLag.test.ts` | EMA の追従遅れが表示の切り替わり位置をどれだけ後ろへずらすか | 4 本 (新幹線を除く) |
+| `location.gpxEtaAssist.test.ts` | ETA 補助を有効にしても走行結果が変わらないこと | 全 GPX |
+
+ETA 補助 (`eta_assist_enabled`) がパイプラインへ介入する経路は 2 つある。
+
+- ETA が許す進行量を超えた測位の棄却 (`store/atoms/location.ts`)
+- 精度劣化時に ETA が同じ駅の停車を示すときだけ到着圏を緩和する R1 (`hooks/useRefreshStation.ts`)
+
+どちらもサーバー配信のフラグ 1 つで全ユーザーへ有効化されるため、有効化の前提は
+「正常な走行では何も変えない」ことになる。`location.gpxEtaAssist.test.ts` は各 GPX を
+フラグ ON / OFF で 2 回流し、平滑後の軌跡・位置を据え置いた回数・到着検知位置が
+一致することを確かめる。ETA の停車時刻は GPX 自身の時刻表から作るので、ETA どおりに
+走る列車のモデルになる。棄却が実際に働く側の挙動は合成データで
+`src/store/atoms/location.etaBound.test.ts` が受け持つ。
+
+GPX の解析・停車駅の検出・真の位置の補間は `src/utils/test/gpxTrack.ts` にまとめてある。
+停車駅は速度がほぼ 0 の区間から検出するが、生成した GPX は始発駅の停車時間を書き出さず
+(1 点目から発車する)、終着駅では減速しきった時点でトラックが終わるため、停車時間の
+下限では始発駅・終着駅を拾えない。先頭・末尾で静止しているトラックはその点が
+始発駅・終着駅なので、停車時間に関わらず停車として扱う。
+`location.gpxLag.test.ts` は始発駅・終着駅を含めない検出を自前に持っており、区間長の
+中央値がこの扱いで変わるため共通化していない。
+
 ## 検証できること・できないこと
 
 | 条件 | GPX (iOS シミュレータ) | GPX (Android) | 実乗車 |
