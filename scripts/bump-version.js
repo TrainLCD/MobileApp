@@ -200,14 +200,18 @@ const replaceFlavorStringSetting = (source, flavor, key, value) => {
 const updateAndroidBuildGradle = (filePath, versionCode, versionName) => {
   let content = fs.readFileSync(filePath, 'utf8');
 
-  // productFlavors内のdev/prodのversionCodeを更新
+  // productFlavors内のdev/prod/localのversionCodeを更新。
+  // local は配信しないフレーバーだが、アプリ内のバージョン表示が dev とずれると
+  // ローカル検証で見ている版を取り違えるため、同じ値に追従させる。
   content = replaceFlavorNumericSetting(content, 'dev', 'versionCode', versionCode);
   content = replaceFlavorNumericSetting(content, 'prod', 'versionCode', versionCode);
+  content = replaceFlavorNumericSetting(content, 'local', 'versionCode', versionCode);
 
   // versionNameを更新（versionNameが指定された場合のみ）
   if (versionName) {
     content = replaceFlavorStringSetting(content, 'dev', 'versionName', versionName);
     content = replaceFlavorStringSetting(content, 'prod', 'versionName', versionName);
+    content = replaceFlavorStringSetting(content, 'local', 'versionName', versionName);
   }
 
   fs.writeFileSync(filePath, content);
@@ -241,10 +245,12 @@ const updateWearableBuildGradle = (filePath, versionCode, versionName) => {
 
   content = replaceKtsFlavorNumericSetting(content, 'dev', 'versionCode', versionCode);
   content = replaceKtsFlavorNumericSetting(content, 'prod', 'versionCode', versionCode);
+  content = replaceKtsFlavorNumericSetting(content, 'local', 'versionCode', versionCode);
 
   if (versionName) {
     content = replaceKtsFlavorStringSetting(content, 'dev', 'versionName', versionName);
     content = replaceKtsFlavorStringSetting(content, 'prod', 'versionName', versionName);
+    content = replaceKtsFlavorStringSetting(content, 'local', 'versionName', versionName);
   }
 
   fs.writeFileSync(filePath, content);

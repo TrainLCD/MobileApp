@@ -6,6 +6,56 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-09-12 — ストア版と同居できる Android の `local` ビルドバリアントを追加
+
+対象バージョン: v10.15.0
+
+### 内容
+
+- ローカル検証は `npm run android`（`dev` フレーバー）で行っていたが、`dev` の
+  applicationId `me.tinykitten.trainlcd.dev` はストア配信している Canary 版と同じため、
+  検証のたびにストアの Canary 版を削除する必要があった。
+- `android/app/build.gradle` に `local` フレーバー（applicationId
+  `me.tinykitten.trainlcd.local`、表示名 `TrainLCD Local`、スキーム `trainlcd-local`）を追加し、
+  `npm run android:local` で導入できるようにした。ストアの本番版・Canary 版と同時に
+  インストールできるため、検証のための再ビルド・再インストールが不要になる。
+- `react { debuggableVariants }` に `localDebug` / `localDebugOptimized` を追加した。ここに
+  挙げないと debug ビルドでも JS が APK へ焼き込まれ、Metro に繋がらず Fast Refresh も
+  CDP デバッガも使えなくなる（2026-08-28 のエントリを参照）。
+- アイコンとスプラッシュは `src/main` を継承し、`src/local/res` では表示名・スキームと
+  アダプティブアイコンの背景色（`#C8E6C9`）だけを上書きする。画像を追加せずに、白背景の
+  本番版・Canary 版とランチャー上で見分けられるようにするため。
+- `:wearable` にも同じ `local` フレーバーを追加した。Wear OS の Data Layer は
+  applicationId が一致する場合のみ疎通するため、`:app` だけ `.local` にすると
+  ローカルビルドでのみ Wear 連携が無反応になる。
+- 外部参照先は Canary に合わせる。`src/utils/isDevApp.ts` は `__DEV__` でも true になるが、
+  `localRelease` を焼いたときに本番 API やテレメトリーへ向かないよう、bundleId でも
+  `me.tinykitten.trainlcd.local` を dev 扱いにした。
+- `scripts/bump-version.js` が `local` フレーバーの `versionCode` / `versionName` も
+  dev・prod と同じ値へ追従させる。配信しないフレーバーだが、アプリ内のバージョン表示が
+  ずれると検証中の版を取り違えるため。
+- EAS / GitHub Actions はいずれも `bundleDevRelease` / `bundleProdRelease` を名指ししており、
+  配信ビルドはこの追加の影響を受けない。
+- 実機検証中に、非公開フォントサブモジュール（`android/app/src/main/assets/fonts`）が
+  未初期化のワークツリーではナンバリングや LED テーマのフォントが無言でシステムフォントへ
+  フォールバックすることが分かった。フレーバーとは無関係で `npm run android` でも同じように
+  起きるため、README の Installation に `git submodule update --init --recursive` の手順を追加した。
+
+### 検証結果
+
+Linux ホストで Gradle の構成と成果物を確認した（実機インストールは未実施）。
+
+- `./gradlew :app:assembleLocalDebug --dry-run` が成功し、タスクグラフに
+  `createBundleLocalDebugJsAndAssets` が現れない（`devDebug` と同じく JS は Metro から読む）。
+- `./gradlew :app:processLocalDebugManifest :app:mergeLocalDebugResources` の成果物が
+  `package="me.tinykitten.trainlcd.local"` / `android:versionName="10.15.0-local"` /
+  `app_name=TrainLCD Local` / `app_scheme=trainlcd-local` /
+  `ic_launcher_background=#C8E6C9` になっていること。
+- `./gradlew :wearable:processLocalDebugManifest` の成果物が
+  `package="me.tinykitten.trainlcd.local"` になっていること。
+- `npm run lint` / `npm test` / `npm run typecheck`。
+
+
 ## 2026-08-28 — `npm run android` がアプリ起動段階で失敗する不具合を修正
 
 対象バージョン: v10.13.1
