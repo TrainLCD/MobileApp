@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
-import { Linking, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { FAQ_URL } from '~/constants';
 import NewReportModal from './NewReportModal';
 
@@ -13,6 +13,10 @@ jest.mock('@expo/vector-icons', () => {
 jest.mock('jotai', () => ({
   useAtomValue: jest.fn(() => false),
   atom: jest.fn((initialValue) => initialValue),
+}));
+
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn(),
 }));
 
 jest.mock('@gorhom/portal', () => ({
@@ -28,6 +32,7 @@ jest.mock('~/utils/dialogPresentation', () => ({
 }));
 
 const { showDialog } = jest.requireMock('~/utils/dialogPresentation');
+const { openBrowserAsync } = jest.requireMock('expo-web-browser');
 const { useAtomValue } = jest.requireMock('jotai');
 
 const defaultProps = {
@@ -73,15 +78,15 @@ describe('NewReportModal', () => {
 
   // 「動かない」系の報告は原因が非対応環境であることがあり、その判定はアプリ側では
   // 行えないため、送信前にFAQへ誘導できることを固定する
-  it('FAQリンクをタップするとよくある質問を開く', () => {
-    const openURL = jest
-      .spyOn(Linking, 'openURL')
-      .mockResolvedValue(undefined as never);
+  // 外部ブラウザへ飛ばすと入力中の本文を残したままアプリを離れることになるため、
+  // アプリ内ブラウザで開くことも併せて固定する
+  it('FAQリンクをタップするとよくある質問をアプリ内ブラウザで開く', () => {
+    openBrowserAsync.mockResolvedValue(undefined);
     const { getByText } = renderModal();
 
     fireEvent.press(getByText('reportFaqLink'));
 
-    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+    expect(openBrowserAsync).toHaveBeenCalledWith(FAQ_URL);
   });
 
   // 押せることがリンク語自体から分かる必要があるため、下線とアクセント色を固定する
@@ -124,9 +129,7 @@ describe('NewReportModal', () => {
   });
 
   it('よくある質問を開けなくても送信フローを妨げない', async () => {
-    const openURL = jest
-      .spyOn(Linking, 'openURL')
-      .mockRejectedValue(new Error('cannot open'));
+    openBrowserAsync.mockRejectedValue(new Error('cannot open'));
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const onSubmit = jest.fn();
     const { getByText, input } = renderModal({ onSubmit });
@@ -136,7 +139,7 @@ describe('NewReportModal', () => {
       await Promise.resolve();
     });
 
-    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+    expect(openBrowserAsync).toHaveBeenCalledWith(FAQ_URL);
     expect(warn).toHaveBeenCalled();
 
     // 警告が出たことだけでは「送信を妨げない」の保証にならないため、

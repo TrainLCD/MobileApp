@@ -1,5 +1,11 @@
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
-import { Linking, View } from 'react-native';
+import {
+  fireEvent,
+  render,
+  waitFor,
+  within,
+} from '@testing-library/react-native';
+import { View } from 'react-native';
+import { CardChevron } from '~/components/CardChevron';
 import type {
   WalkthroughStep,
   WalkthroughStepId,
@@ -17,14 +23,26 @@ jest.mock('react-native-app-clip', () => ({
   isClip: () => false,
 }));
 
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn(),
+}));
+
+const { openBrowserAsync } = jest.requireMock('expo-web-browser');
+
 jest.mock('expo-linear-gradient', () => {
   const { View: RNView } = require('react-native');
   return { LinearGradient: RNView };
 });
 
-jest.mock('@expo/vector-icons', () => ({
-  Ionicons: () => null,
-}));
+// 末尾の印がシェブロンか外部リンクかをテストから判別できるよう、name を props に残す
+jest.mock('@expo/vector-icons', () => {
+  const { View: RNView } = require('react-native');
+  const ReactMock = require('react');
+  return {
+    Ionicons: (props: { name: string }) =>
+      ReactMock.createElement(RNView, props),
+  };
+});
 
 jest.mock('react-native-safe-area-context', () => {
   const { View: RNView } = require('react-native');
@@ -149,17 +167,39 @@ describe('AppSettingsScreen', () => {
     expect(new Set(radii).size).toBe(1);
   });
 
-  // 非対応環境(GNSS非搭載端末など)はアプリ側で判定できないため、FAQへの導線を常設する
-  it('「アプリについて」のFAQ項目からよくある質問を開く', async () => {
-    const openURL = jest
-      .spyOn(Linking, 'openURL')
-      .mockResolvedValue(undefined as never);
+  // 非対応環境(GNSS非搭載端末など)はアプリ側で判定できないため、FAQへの導線を常設する。
+  // 外部ブラウザへ飛ばすと設定画面から離脱するため、アプリ内ブラウザで開くことも固定する
+  it('「アプリについて」のFAQ項目からよくある質問をアプリ内ブラウザで開く', async () => {
+    openBrowserAsync.mockResolvedValue(undefined);
     const { getByText } = render(<AppSettingsScreen />);
 
     await waitFor(() => expect(getByText('faq')).toBeTruthy());
     fireEvent.press(getByText('faq'));
 
-    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+    expect(openBrowserAsync).toHaveBeenCalledWith(FAQ_URL);
+  });
+
+  // Webページを開く項目と画面遷移する項目が同じシェブロンだと、押すまで
+  // アプリ内ブラウザが開くことが分からないため、末尾の印を出し分ける
+  it('FAQ項目の末尾は外部リンクの印で、他の項目はシェブロンのままになる', async () => {
+    const { getByLabelText } = render(<AppSettingsScreen />);
+
+    await waitFor(() => expect(getByLabelText('faq')).toBeTruthy());
+
+    // UNSAFE_queryAllByProps は同じ要素をコンポジット・ホスト双方で拾うため、
+    // 件数ではなく有無で判定する
+    const faqRow = within(getByLabelText('faq'));
+    expect(
+      faqRow.UNSAFE_queryAllByProps({ name: 'open-outline' }).length
+    ).toBeGreaterThan(0);
+    expect(faqRow.UNSAFE_queryAllByType(CardChevron)).toHaveLength(0);
+
+    // 同じ「アプリについて」セクション内の画面遷移項目は従来どおりであること
+    const licenseRow = within(getByLabelText('license'));
+    expect(
+      licenseRow.UNSAFE_queryAllByProps({ name: 'open-outline' })
+    ).toHaveLength(0);
+    expect(licenseRow.UNSAFE_queryAllByType(CardChevron)).toHaveLength(1);
   });
 
   it('スポットライト対象がないステップでは切り抜きを設定しない', async () => {
