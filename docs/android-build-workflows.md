@@ -33,6 +33,7 @@ Configure these GitHub Actions secrets:
 | `EXPERIMENTAL_TELEMETRY_ENDPOINT_URL` | Telemetry endpoint |
 | `EXPERIMENTAL_TELEMETRY_TOKEN` | Telemetry authentication token |
 | `FONTS_SSH_KEY` | Fonts submodule SSH private key |
+| `SENTRY_DSN` | Sentry runtime DSN (required; the build fails when unset) |
 | `SENTRY_PROPERTIES_BASE64` | Base64-encoded `sentry.properties` |
 | `RELEASE_KEYSTORE` | Base64-encoded Android release keystore |
 | `KEYSTORE_PASSWORD` | Release keystore password |
