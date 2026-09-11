@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Keyboard,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -239,8 +239,10 @@ const NewReportModal: React.FC<Props> = ({
   // 「動かない」系の報告は原因が非対応環境(GNSS非搭載端末など)であることがあり、
   // その判定はアプリ側では行えないため、FAQへ誘導する。導線は進捗表示と注意書きの間に
   // 置き、書き終えて送信を判断する位置で注意書きと一緒に目に入るようにしている。
+  // 外部ブラウザへ遷移すると入力中の本文を残したままアプリを離れることになるため、
+  // アプリ内ブラウザで開き、閉じればそのまま書き続けられるようにする。
   const handleOpenFaq = useCallback(() => {
-    Linking.openURL(FAQ_URL).catch((error) => {
+    WebBrowser.openBrowserAsync(FAQ_URL).catch((error) => {
       console.warn('よくある質問を開けませんでした:', error);
     });
   }, []);
