@@ -38,7 +38,9 @@ description: Create a GitHub pull request for TrainLCD MobileApp that conforms t
 
 ### タイトル推論ルール
 
-**先に `git fetch origin <base> <head>` を実行してから**（手順 2 の fetch より前に推論するため、ここで更新しないと古い remote-tracking ref を読む）、`origin/<base>..origin/<head>` のコミット件名を対象に、以下を順に試す:
+**`<head>` が origin に push 済みであることを先に確かめ、`git fetch origin <base> <head>` を実行してから**推論する（手順 2 の fetch より前に推論するため、ここで更新しないと古い remote-tracking ref を読む）。未 push なら `origin/<head>` が無く fetch 自体が失敗し、origin 側が古ければローカルにしか無いコミットが推論から漏れるので、**その場合は fetch も比較も行わず、手順 1 の切り出し・push（実行前ゲートで承認を取る）を先に済ませてから戻ってくる**。
+
+更新済みの `origin/<base>..origin/<head>` のコミット件名を対象に、以下を順に試す:
 
 1. **コミット 1 件のみ**: その件名をそのまま使う。
 2. **コミット複数・共通プレフィックスあり**（例: 全て `fix: ...`）: 最新コミットの件名を使う。

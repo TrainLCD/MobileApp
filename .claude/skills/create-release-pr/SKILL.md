@@ -86,7 +86,7 @@ description: Cut a production release branch, bump the app version, run quality 
    | `base` | `master` |
    | `head` | `release/v<version>` |
    | `title` | `v<version>🎉` |
-   | `summary` | **必ず渡す**。`create-pr` がコミット件名から生成するのは「変更内容」節だけで、`summary` が空だと「概要」節はテンプレのコメントのままになる。リリースノートがあればそれを、無ければ `origin/master..origin/release/v<version>` のコミット件名を要約した 1〜2 文を渡す |
+   | `summary` | **必ず渡す**。`create-pr` がコミット件名から生成するのは「変更内容」節だけで、`summary` が空だと「概要」節はテンプレのコメントのままになる。リリースノートがあればそれを、無ければ `git fetch origin master` で更新したうえで `git log --format=%s origin/master..HEAD` のコミット件名を要約した 1〜2 文を渡す（手順 2 は `dev` しか fetch しないため、古い `origin/master` のままだと概要に余計な件名が混ざるか必要な件名が落ちる） |
    | `related_issue` | 省略 |
    | `skip_checks` | `false`（手順 4 で全 3 点緑のため ON で OK） |
 

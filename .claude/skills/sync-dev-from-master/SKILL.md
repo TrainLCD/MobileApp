@@ -60,17 +60,21 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    - **ケース A: どこにも存在しない** → そのまま手順 4 へ。
    - **ケース B: 存在し、直近 PR が `MERGED`** → 削除対象。ブランチ名・直近 PR 番号・PR URL をユーザーに提示し、実行可否を承認取り。承認後の手順は以下の順で行う:
 
-     1. 現在ブランチを `git symbolic-ref --quiet --short HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。
+     1. 現在ブランチを `git symbolic-ref --quiet --short HEAD` で確認。`chore/dev-from-master` に居るとローカル削除が失敗するため、その場合は `git switch dev`（または任意の安全な枝）に退避する。**退避の直前に `git status --porcelain` が空であることを再確認し、出力があれば切り替えずに中断する**（前提条件で確認済みでも、`npm install` などで差分が生じていることがある。未コミット変更は切り替え先へ持ち越され、push にも乗らないまま別の枝に残る）。
      2. **リモートに在る場合のみ** `git push origin --delete chore/dev-from-master` でリモートを削除する。ケース B はローカルにだけ残っている状態でも成立するので、無条件に実行すると push が失敗して 3. のローカル削除まで到達しない。存在判定は上の `git ls-remote --heads origin chore/dev-from-master` の出力で行い、**`ls-remote` 自体が非 0 で終わった場合（通信・権限エラー）は「無い」とみなさず中断する**。
      3. ローカルにも存在する場合は `git branch -D chore/dev-from-master` で削除。
    - **ケース C: 存在するが直近 PR が `MERGED` 以外（`OPEN` は手順 2 で弾かれる。残るのは `CLOSED` または PR 無し）**: 削除しないで中断してユーザーに判断を仰ぐ（未マージ作業の可能性）。
    - **ケース D: ケース B または C で、かつ枝に `master` / `dev` のどちらにも入っていない固有コミットが有る**: 下の出力が空でなければ削除せず中断しユーザーに確認する。
 
      ```bash
+     # 存在する側をすべて調べる。両方在るなら両方（ローカルとリモートで先端が違いうる）
      git log --oneline origin/chore/dev-from-master --not origin/master origin/dev
+     git log --oneline chore/dev-from-master --not origin/master origin/dev
      ```
 
-     出力が空なら「master / dev に完全に取り込まれた残骸」なので安全に削除できる。ローカルにだけ存在する場合は `origin/chore/dev-from-master` の代わりにローカルの `chore/dev-from-master` を対象にする。ケース A（どこにも存在しない）では ref が解決できずエラーになるので実行しない。
+     **ローカル枝が在るなら、リモート側が空でもローカル側を必ず確かめる。** 両方存在するとき先端が一致する保証は無く、リモートだけを見て進むと、未 push のコミットを載せたローカル枝を `git branch -D` で消してしまう。`git rev-parse chore/dev-from-master origin/chore/dev-from-master` で先端が一致しない場合も、差分の中身をユーザーに提示して判断を仰ぐ。
+
+     どちらの出力も空（かつ先端が一致）なら「master / dev に完全に取り込まれた残骸」なので安全に削除できる。存在しない側の ref は解決できずエラーになるので実行しない（ケース A ではどちらも実行しない）。
 
 4. **ブランチを origin/master から切り出して push**
 
