@@ -1,6 +1,7 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
-import { StyleSheet } from 'react-native';
+import { Linking, StyleSheet } from 'react-native';
+import { FAQ_URL } from '~/constants';
 import NewReportModal from './NewReportModal';
 
 // 実体はフォント読み込みで非同期 setState するため、act 警告を避けて素の View に差し替える
@@ -68,6 +69,35 @@ describe('NewReportModal', () => {
     expect(getByText('reportModalTitle')).toBeTruthy();
     expect(getByText('reportBodyTitle')).toBeTruthy();
     expect(getByText('reportCaution')).toBeTruthy();
+  });
+
+  // 「動かない」系の報告は原因が非対応環境であることがあり、その判定はアプリ側では
+  // 行えないため、送信前にFAQへ誘導できることを固定する
+  it('FAQの案内をタップするとよくある質問を開く', () => {
+    const openURL = jest
+      .spyOn(Linking, 'openURL')
+      .mockResolvedValue(undefined as never);
+    const { getByText } = renderModal();
+
+    fireEvent.press(getByText('reportFaqNotice'));
+
+    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+  });
+
+  it('よくある質問を開けなくても送信フローを妨げない', async () => {
+    const openURL = jest
+      .spyOn(Linking, 'openURL')
+      .mockRejectedValue(new Error('cannot open'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const { getByText } = renderModal();
+
+    fireEvent.press(getByText('reportFaqNotice'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
+    expect(warn).toHaveBeenCalled();
   });
 
   it('下限未満の入力では残り文字数を表示し、送信してもonSubmitが呼ばれない', () => {

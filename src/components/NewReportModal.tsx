@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Keyboard,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -12,7 +13,7 @@ import {
   type TextInput as TextInputType,
   View,
 } from 'react-native';
-import { FONTS, LED_THEME_BG_COLOR } from '~/constants';
+import { FAQ_URL, FONTS, LED_THEME_BG_COLOR } from '~/constants';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -145,6 +146,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: RFValue(10),
   },
+  faqBoxPressed: {
+    opacity: 0.6,
+  },
   buttonContainer: {
     flexDirection: 'row',
     marginTop: 24,
@@ -210,6 +214,14 @@ const NewReportModal: React.FC<Props> = ({
 
   const handleFocus = useCallback(() => setInputFocused(true), []);
   const handleBlur = useCallback(() => setInputFocused(false), []);
+
+  // 「動かない」系の報告は原因が非対応環境(GNSS非搭載端末など)であることがあり、
+  // その判定はアプリ側では行えない。送信直前にFAQへの導線を置いて自己解決できるようにする。
+  const handleOpenFaq = useCallback(() => {
+    Linking.openURL(FAQ_URL).catch((error) => {
+      console.warn('よくある質問を開けませんでした:', error);
+    });
+  }, []);
 
   const handleClose = useCallback(() => {
     const hasInput = textRef.current.trim().length > 0;
@@ -370,6 +382,35 @@ const NewReportModal: React.FC<Props> = ({
               )}
             </View>
           </View>
+
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={translate('faq')}
+            onPress={handleOpenFaq}
+            style={({ pressed }) => [
+              styles.cautionBox,
+              isLEDTheme && styles.cautionBoxLED,
+              pressed && styles.faqBoxPressed,
+            ]}
+          >
+            <Ionicons
+              name="help-circle-outline"
+              size={20}
+              color={accentColor}
+            />
+            <Typography
+              style={[
+                styles.cautionText,
+                {
+                  color: isLEDTheme ? '#fff' : reportColors.cautionText,
+                  lineHeight: RFValue(15),
+                },
+              ]}
+            >
+              {translate('reportFaqNotice')}
+            </Typography>
+            <Ionicons name="open-outline" size={16} color={accentColor} />
+          </Pressable>
 
           <View style={[styles.cautionBox, isLEDTheme && styles.cautionBoxLED]}>
             <Ionicons
