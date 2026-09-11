@@ -1,4 +1,9 @@
-const IS_DEV = process.env.APP_VARIANT === 'dev';
+// 'dev' はストア配信する Canary、'local' は android/app/build.gradle の local フレーバー
+// （ストアの Canary 版を消さずに同居させるローカル検証専用ビルド）。local は Android 限定で
+// iOS には対応するターゲットが無いため、iOS 側の識別子は Canary と同じものを使う。
+// 外部参照先も Canary に合わせる方針なので、判定は IS_DEV 側にまとめる（src/utils/isDevApp.ts）
+const IS_LOCAL = process.env.APP_VARIANT === 'local';
+const IS_DEV = process.env.APP_VARIANT === 'dev' || IS_LOCAL;
 
 export default {
   name: 'TrainLCD',
@@ -60,7 +65,11 @@ export default {
     supportsTablet: true,
   },
   android: {
-    package: IS_DEV ? 'me.tinykitten.trainlcd.dev' : 'me.tinykitten.trainlcd',
+    package: IS_LOCAL
+      ? 'me.tinykitten.trainlcd.local'
+      : IS_DEV
+        ? 'me.tinykitten.trainlcd.dev'
+        : 'me.tinykitten.trainlcd',
     permissions: [],
     versionCode: 100000753,
   },

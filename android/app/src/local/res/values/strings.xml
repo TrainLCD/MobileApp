@@ -1,0 +1,6 @@
+<resources>
+  <!-- ストアの Canary 版と同居させるため、表示名もディープリンクのスキームも dev と分ける。
+       ここで上書きしない文字列は main から継承する -->
+  <string name="app_name">TrainLCD Local</string>
+  <string name="app_scheme">trainlcd-local</string>
+</resources>

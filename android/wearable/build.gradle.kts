@@ -93,6 +93,16 @@ android {
       versionCode = 100000754
       versionName = "10.15.0"
     }
+    // :app の local フレーバーと対になるローカル検証専用フレーバー。Wear の Data Layer は
+    // applicationId が一致する場合しか疎通しないため、:app を .local にしたときは
+    // :wearable も同じ suffix を付けないと Wear 連携だけ無反応になる。配信には使わない
+    create("local") {
+      dimension = "environment"
+      applicationIdSuffix = ".local"
+      versionNameSuffix = "-local"
+      versionCode = 100000754
+      versionName = "10.15.0"
+    }
   }
 
   compileOptions {
