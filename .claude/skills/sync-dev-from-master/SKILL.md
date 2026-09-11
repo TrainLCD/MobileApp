@@ -50,9 +50,10 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    過去リリースの枝が残っている想定で動く。以下の判定で進める。
 
    ```bash
-   # ローカル・リモートの存在確認（git fetch 済みが前提）
+   # ローカル・リモートの存在確認（手順 1 の fetch 済みが前提）
    git show-ref --verify --quiet refs/heads/chore/dev-from-master && echo LOCAL_EXISTS
-   git ls-remote --heads origin chore/dev-from-master
+   # 終了コードは 0=存在 / 2=無し / それ以外=通信・認証エラー。2 以外の非 0 は「無い」とみなさず中断する
+   git ls-remote --exit-code --heads origin chore/dev-from-master
    # 直近の dev 宛 PR の状態
    gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url
    ```
@@ -198,7 +199,8 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 1. `chore/dev-from-master`（= master 先端）に居る状態で `origin/dev` をマージする（手順 4 の「コミットを積まない」原則の唯一の例外）:
 
    ```bash
-   git switch chore/dev-from-master
+   git status --porcelain       # 空でなければ切り替えず中断する（未コミット変更は切り替え先へ持ち越される）
+   git switch chore/dev-from-master   # すでにこの枝に居るなら不要
    git merge --no-ff --no-commit origin/dev
    git status   # コンフリクトしているファイルを確認
    ```
@@ -215,7 +217,9 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    読み取った値で `max(dev, master)` を決めてから:
 
    ```bash
-   git checkout --ours android/app/build.gradle app.config.ts ios/TrainLCD.xcodeproj/project.pbxproj
+   git diff --name-only --diff-filter=U   # 衝突しているファイルを確認（版数 3 ファイル以外が出たら中断）
+   # 実際に衝突したファイルだけを対象にする（未衝突のパスに --ours を渡すとエラーになる）
+   git diff -z --name-only --diff-filter=U | xargs -0 -r git checkout --ours --
    sed -i 's/versionCode 100000530/versionCode 100000531/g' android/app/build.gradle
    sed -i "s/buildNumber: '2743'/buildNumber: '2744'/g; s/versionCode: 100000530/versionCode: 100000531/g" app.config.ts
    sed -i 's/CURRENT_PROJECT_VERSION = 2743;/CURRENT_PROJECT_VERSION = 2744;/g' ios/TrainLCD.xcodeproj/project.pbxproj
@@ -223,7 +227,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    git status   # コンフリクトが 1 件も残っていないことを確認する
    ```
 
-   これらの版数ファイルは master↔dev で数値以外の差分が無い（`git diff origin/dev origin/master -- <path>` で確認できる）ため、`--ours` で master を採ってもコンテンツは失われない。
+   衝突するのは上の 3 ファイルのはずなので、`git diff --name-only --diff-filter=U` の出力がそれ以外を含んでいたら**そこで中断してユーザーに確認する**（アプリコードの衝突は想定外）。これらの版数ファイルは master↔dev で数値以外の差分が無い（`git diff origin/dev origin/master -- <path>` で確認できる）ため、`--ours` で master を採ってもコンテンツは失われない。
 
 3. 差分を **版数 3 ファイル** と **それ以外** に分けて確認してから、マージコミットを作成して push する:
 

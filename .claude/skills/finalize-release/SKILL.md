@@ -67,6 +67,9 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      - 既に open な場合、**流用する前にその head が現在の `origin/master` を含むかを照合する**（手順 1 の fetch 済みが前提）。前回リリース時の sync PR が未マージのまま残っていると、古い master から作られた PR をマージしてしまい、今回のリリース分が dev に入らない。
 
        ```bash
+       # 手順 1 の fetch で更新済みの remote-tracking を使う。解決できなければ中断する
+       git rev-parse --verify "refs/remotes/origin/chore/dev-from-master" >/dev/null \
+         || { echo "origin/chore/dev-from-master が解決できません（fetch 漏れ）" >&2; exit 1; }
        git log --oneline origin/master --not origin/chore/dev-from-master
        ```
 
@@ -85,7 +88,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      - **両方に差分がある** → sync PR は版数ファイルで衝突する。`sync-dev-from-master`「解決方針: semver はリリース版、ビルド番号は最大値」に従った採用値を算出し、**プランに明記して手順 3 の 1 回の承認に含める**。
      - 片方だけ（通常は canary bump による dev 側のみ）→ 衝突しない。プランへの記載は不要。
    - 既存 `chore/dev-from-master` の状態（open PR が無い前提で）:
-     - `git branch --list 'chore/dev-from-master'` / `git ls-remote --heads origin chore/dev-from-master` と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
+     - `git branch --list 'chore/dev-from-master'` / `git ls-remote --exit-code --heads origin chore/dev-from-master`（終了コード 0=存在 / 2=無し / それ以外=通信・認証エラーで中断）と `gh pr list --base dev --head chore/dev-from-master --state all --limit 1 --json number,state,url`
      - 固有コミットの有無: 下の出力が空でなければ **中断** してユーザーに確認（自動では削除しない）。
 
        ```bash
@@ -173,12 +176,15 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
      1. 必要なら既存ブランチを削除（プレフライトで承認済み前提、再承認しない）。ローカルに残っている場合は先に別の枝へ退避する:
 
         ```bash
+        git status --porcelain                              # 空でなければ枝を切り替えず中断する
         git switch dev                                      # 削除対象の枝に居る場合のみ
-        git push origin --delete chore/dev-from-master
+        git push origin --delete chore/dev-from-master      # リモートに在る場合のみ
         git branch -D chore/dev-from-master                 # ローカルにも在る場合のみ
         ```
 
-     2. `git switch -c chore/dev-from-master origin/master` → `git push -u origin chore/dev-from-master`
+        `sync-dev-from-master` 手順 3 のケース B と同じ制約が要る。**未コミットの変更があると切り替え先へ持ち越されるので先に中断する**。**`git push origin --delete` はリモートに在る場合のみ実行する**（ローカルのみ残存時に無条件で撃つと push が失敗してローカル削除まで到達しない）。存在判定はプレフライトで控えた結果を使う。
+
+     2. `git switch -c chore/dev-from-master "<プレフライトで記録した origin/master SHA>"` → 先端が記録済み SHA と一致することを確認 → `git push -u origin chore/dev-from-master`。**ブランチ名 `origin/master` から切らない**（承認からここまでの間に fetch が挟まると、承認外のコミットを載せた枝になる）。
      3. PR 本文をテンプレ準拠で組み立てて `gh pr create`（`release_version` には手順 1 の `version` を渡す）。
 
 6. **sync PR を merge commit でマージ（dev Ruleset 一時緩和つき）**
@@ -187,7 +193,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
    **マージ前にコンフリクトを確認する。** `gh pr view <n> --json mergeable,mergeStateStatus` が `CONFLICTING` を返す場合、`master` から特定コミットだけを cherry-pick したリリース（`create-release-pr` の「この変更だけ」指定など）の後に起きる **版数ファイルのねじれ** が典型。このときは Ruleset 緩和より先に `sync-dev-from-master` の「版数ファイルのコンフリクト解決」に従って版数を解決し、PR を `MERGEABLE` にしてから 6-3 以降へ進む。**プレフライトで検知して手順 3 の承認に採用値を含めていれば、その値をそのまま使い追加承認は取らない。** 検知できていなかった場合は手順 3 の「安全上の中断」に該当するため、ここで停止してユーザーに版数の判断を仰ぐ。`mergeable` はプッシュ直後に非同期で古い値を返すことがあるため、`git merge-base --is-ancestor origin/dev origin/chore/dev-from-master` が成功する（＝ `origin/dev` が `origin/chore/dev-from-master` の祖先）ことで構造的な包含も確認するとよい。
 
-   1. マージ対象 PR 番号を確定（手順 5 で新規作成 or 流用した PR）。`--delete-branch` 付きでマージするので、`chore/dev-from-master` に居る場合は事前に `git switch dev` で退避しておく。
+   1. マージ対象 PR 番号を確定（手順 5 で新規作成 or 流用した PR）。`--delete-branch` 付きでマージするので、`chore/dev-from-master` に居る場合は事前に `git switch dev` で退避しておく（**切り替え前に `git status --porcelain` が空であることを確認する**。未コミットの変更は切り替え先へ持ち越される）。
    2. `OWNER_REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)` を解決。プレフライトの「マージ方式制約」記録を使う:
       - dev が `merge` を許可済み → **緩和不要**。手順 6-3 のブロックから緩和・復元部分を外し、`gh pr merge <n> --merge --delete-branch` だけを実行する。
       - squash-only 等で `merge` 不許可 → 手順 6-3 をそのまま実行する。
@@ -270,7 +276,7 @@ sync 側の走行は **必須**。master→dev 差分が 0 件の場合のみ自
 
       **どちらかが残っていたら、削除して先へ進まずに停止して報告する。** 残存は trap が走らなかったことを意味し、その場合 **Ruleset が緩和されたままの可能性がある**。`gh api "repos/$OWNER_REPO/rulesets/$RS_ID" --jq '.rules[] | select(.type=="pull_request") | .parameters.allowed_merge_methods'` で現在値を読み、緩和されたままならユーザーに知らせて復元の判断を仰ぐ。
 
-      ローカルの `dev` を最新にしたい場合は `git switch dev && git pull --ff-only origin dev` を別途実行する（完了報告には不要）。
+      ローカルの `dev` を最新にしたい場合は、`git status --porcelain` が空であることを確認したうえで `git switch dev && git pull --ff-only origin dev` を別途実行する（完了報告には不要）。
 
 7. **完了報告**
 

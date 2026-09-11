@@ -20,20 +20,21 @@ description: Cut a production release branch, bump the app version, run quality 
 - カレントディレクトリがリポジトリルート（`git rev-parse --show-toplevel`）。
 - `gh` CLI 認証済み、`git` と `npm` が使える。
 - 作業ツリーがクリーン（`git status --porcelain` が空）。変更が残っている場合はユーザーに確認してから別ブランチへ退避する。
-- `dev` が `origin/dev` と同期済み。差分があれば `git fetch origin dev` の可否をユーザーに確認する。
+- `origin/dev` が最新であること。手順 2 の冒頭で `git fetch origin dev` してから切り出すので事前の同期作業は不要だが、**ローカル `dev` に未 push のコミットがある場合は中断する**（`dev` は protected で直接 push できず、その分はリリースに入らないため）。判定は fetch 後の `git log --oneline origin/dev..dev` で行う（ローカルに `dev` が無ければ判定不要）。
 
 ## 手順
 
 1. **バージョン正規化と検証**
 
    - 入力の先頭 `v` / `V` を取り除き、`MAJOR.MINOR.PATCH` 形式かを検証。
-   - `git branch --list 'release/v<version>'` と `git ls-remote --heads origin 'refs/heads/release/v<version>'` を実行し、同名のブランチ（ローカル or origin）がすでに存在する場合は中断して、既存ブランチでの進行可否をユーザーに確認する。
+   - `git branch --list 'release/v<version>'` と `git ls-remote --exit-code --heads origin 'refs/heads/release/v<version>'` を実行し、同名のブランチ（ローカル or origin）がすでに存在する場合は中断して、既存ブランチでの進行可否をユーザーに確認する。**`ls-remote` の終了コードは 0=存在 / 2=無し / それ以外=通信・認証エラーの 3 通りに分け、`2` 以外の非 0 は「無い」とみなさず中断する**（判定不能のまま重複作成へ進まないため）。
 
 2. **dev から切り出し**
 
    ```bash
-   git fetch origin dev
+   git fetch origin dev   # 失敗したら中断する（古い origin/dev からリリース枝を切らない）
    git switch -c 'release/v<version>' origin/dev
+   git rev-parse HEAD     # 切り出し元の SHA を記録し、手順 5 の承認提示に含める
    ```
 
    - `dev` の head が CI 的に緑であることは呼び出し側で担保する前提（このスキルでは確認しない）。
