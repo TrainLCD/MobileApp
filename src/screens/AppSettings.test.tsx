@@ -1,9 +1,10 @@
-import { render, waitFor } from '@testing-library/react-native';
-import { View } from 'react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { Linking, View } from 'react-native';
 import type {
   WalkthroughStep,
   WalkthroughStepId,
 } from '~/components/WalkthroughOverlay';
+import { FAQ_URL } from '~/constants';
 import AppSettingsScreen from './AppSettings';
 
 // --- モジュールモック ---
@@ -146,6 +147,19 @@ describe('AppSettingsScreen', () => {
     // 角丸なしのケースが混ざらないこと
     expect(radii.every((radius) => typeof radius === 'number')).toBe(true);
     expect(new Set(radii).size).toBe(1);
+  });
+
+  // 非対応環境(GNSS非搭載端末など)はアプリ側で判定できないため、FAQへの導線を常設する
+  it('「アプリについて」のFAQ項目からよくある質問を開く', async () => {
+    const openURL = jest
+      .spyOn(Linking, 'openURL')
+      .mockResolvedValue(undefined as never);
+    const { getByText } = render(<AppSettingsScreen />);
+
+    await waitFor(() => expect(getByText('faq')).toBeTruthy());
+    fireEvent.press(getByText('faq'));
+
+    expect(openURL).toHaveBeenCalledWith(FAQ_URL);
   });
 
   it('スポットライト対象がないステップでは切り抜きを設定しない', async () => {
