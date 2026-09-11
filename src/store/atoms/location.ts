@@ -3,7 +3,10 @@ import getDistance from 'geolib/es/getDistance';
 import { atom } from 'jotai';
 import { LineType } from '~/@types/graphql';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
+import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
+import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
 import { store } from '..';
+import { etaAnchorAtom } from './etaFallback';
 import stationState from './station';
 
 const MAX_ACCURACY_HISTORY = 12;
@@ -126,6 +129,7 @@ export const resetLocationState = () => {
   store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
   consecutiveSpeedRejections = 0;
+  resetEtaBoundHold();
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -157,6 +161,77 @@ const resyncLocationReference = (
   consecutiveSpeedRejections = 0;
 };
 
+// ETAの進行量上限から外れた測位を、何駅ぶんまで許容するか。
+// ETAは停車時間や加減速の見積もりぶん実際とずれるので、隣駅1つぶんの余裕を持たせる。
+const ETA_BOUND_TOLERANCE_STATIONS = 1;
+
+// ETAによる棄却を続けてよい上限(ms)。ETA側が誤っている場合に位置が凍結し続けないための保険。
+const ETA_BOUND_MAX_HOLD_MS = 90_000;
+
+let etaBoundHoldStartedAtMs = 0;
+
+// 上限時間に達して「ETA側が誤っている」と判断した状態。値は判断した時点のETAの文脈
+// (アンカー駅・種別・対象駅)で、同じ文脈が続くあいだは棄却を再開しない。
+// 1件だけ受理して棄却を再開すると、範囲外の測位が上限時間ごとに1件しか通らず、
+// 位置が実質凍結したままになる(=保険が機能しない)。
+let etaBoundBypassedContext: string | null = null;
+
+const resetEtaBoundHold = () => {
+  etaBoundHoldStartedAtMs = 0;
+  etaBoundBypassedContext = null;
+};
+
+/**
+ * ETAが許す進行量を超えた測位か。超えていれば受理せず、位置を据え置く。
+ * ETAは位置を進めない(#6369の方針)ので、棄却にのみ使う。
+ */
+const isImplausibleByEta = (location: Location.LocationObject): boolean => {
+  const anchor = store.get(etaAnchorAtom);
+  const phase = getEtaPhaseNow(location.timestamp);
+  if (!anchor || !phase) {
+    resetEtaBoundHold();
+    return false;
+  }
+  const targetStationId =
+    phase.kind === 'DWELLING' ? phase.stationId : phase.targetStationId;
+
+  // アンカーが張り直された(次駅へ到着した等)ならETAは新しい観測に基づくので、
+  // 打ち切り状態を解除して再び信用する。
+  const context = `${anchor.stationId}:${anchor.kind}:${targetStationId}`;
+  if (etaBoundBypassedContext !== null && etaBoundBypassedContext !== context) {
+    resetEtaBoundHold();
+  }
+
+  const beyond = isBeyondEtaProgress({
+    stations: store.get(stationState).stations,
+    anchorStationId: anchor.stationId,
+    targetStationId,
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    toleranceStations: ETA_BOUND_TOLERANCE_STATIONS,
+  });
+  if (!beyond) {
+    // 範囲内の測位が届いた＝ETAと実測が再び噛み合った
+    resetEtaBoundHold();
+    return false;
+  }
+  if (etaBoundBypassedContext === context) {
+    return false;
+  }
+  if (
+    etaBoundHoldStartedAtMs === 0 ||
+    location.timestamp < etaBoundHoldStartedAtMs
+  ) {
+    etaBoundHoldStartedAtMs = location.timestamp;
+  }
+  if (location.timestamp - etaBoundHoldStartedAtMs >= ETA_BOUND_MAX_HOLD_MS) {
+    etaBoundBypassedContext = context;
+    etaBoundHoldStartedAtMs = 0;
+    return false;
+  }
+  return true;
+};
+
 // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
 // 手動選択(StationSearchModal/useInitialNearbyStation/Privacy等)もここを通る。
 export const setLocation = (location: Location.LocationObject) => {
@@ -182,6 +257,12 @@ export const setLocation = (location: Location.LocationObject) => {
   const currentLineType = store.get(stationState).station?.line?.lineType;
   const skipSmoothing =
     currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
+
+  // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
+  if (isImplausibleByEta(location)) {
+    store.set(accuracyHistoryAtom, updatedHistory);
+    return;
+  }
 
   // スムージングスキップ時はフィルタ・スムージングを全てスキップする
   // UIには生の座標を反映するが、EMA基準(lastFilteredLocationAtom)も速度フィルタ基準
