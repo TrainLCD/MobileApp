@@ -5,7 +5,7 @@
 //
 //   <assets-dir> : 配信するファイルを配置したディレクトリ。次の構成を想定する。
 //                    <assets-dir>/open_jtalk_dic_utf_8-1.11/   … Open JTalk 辞書 (展開済み)
-//                    <assets-dir>/6.vvm                        … 音声モデル (VVM)
+//                    <assets-dir>/24.vvm                       … 音声モデル (VVM)
 //   <base-url>   : 各ファイルを配信する URL の接頭辞 (https://…/voicevox/<version>)
 //   [version]    : 資産セットの識別子。省略時は今日の日付 (YYYY-MM-DD)
 //

@@ -44,7 +44,7 @@ export const REMOTE_CONFIG_KEYS = {
   // 形式は src/lib/voicevox/manifest.ts を参照。
   VOICEVOX_TTS_MANIFEST_URL_IOS: 'voicevox_tts_manifest_url_ios',
   // VOICEVOX のスタイル ID (話者と声色)。配信した音声モデルに含まれる ID を指定する。
-  // 未配信時は VOICEVOX_DEFAULT_STYLE_ID (No.7 アナウンス)。
+  // 未配信時は VOICEVOX_DEFAULT_STYLE_ID (夜語トバリ 明るい)。
   VOICEVOX_TTS_STYLE_ID_IOS: 'voicevox_tts_style_id_ios',
   // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
   // エントリポイントごと機能を止められるようにするキルスイッチ。
@@ -376,7 +376,7 @@ export const getVoicevoxTTSManifestUrl = (): string | null =>
   cachedVoicevoxTTSManifestUrlIOS;
 
 /**
- * VOICEVOX のスタイル ID。未配信・不正値ならフォールバック(No.7 アナウンス)。
+ * VOICEVOX のスタイル ID。未配信・不正値ならフォールバック(夜語トバリ 明るい)。
  */
 export const getVoicevoxTTSStyleId = (): number =>
   cachedVoicevoxTTSStyleIdIOS ?? VOICEVOX_DEFAULT_STYLE_ID;
