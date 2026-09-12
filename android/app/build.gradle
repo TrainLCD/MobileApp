@@ -161,12 +161,12 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000755
+            versionCode 100000757
             versionName "10.15.0"
         }
         prod {
             dimension "environment"
-            versionCode 100000755
+            versionCode 100000757
             versionName "10.15.0"
         }
         // ストア配信する dev (Canary) と applicationId を分けた、ローカル検証専用のフレーバー。
@@ -177,7 +177,7 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.local"
             versionNameSuffix "-local"
-            versionCode 100000755
+            versionCode 100000757
             versionName "10.15.0"
         }
     }
