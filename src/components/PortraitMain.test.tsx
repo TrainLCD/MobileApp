@@ -517,6 +517,41 @@ describe('PortraitMain', () => {
     expect(getByText('nowStoppingAtEn')).toBeTruthy();
   });
 
+  it('終着駅の state は改行を空白に畳んで全文を1行で出す', () => {
+    mockedUseHeaderCommonData.mockReturnValue({
+      ...commonData,
+      // 横画面ヘッダーの2行組みをそのまま渡すと、1行表示では2行目が省略記号になる
+      stateText: 'まもなく\n終点',
+      headerState: 'ARRIVING',
+    });
+
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    expect(getByTestId('portrait-state-text').props.children).toBe(
+      'まもなく 終点'
+    );
+  });
+
+  it('state は行内で縮めず、省略記号を出さない', () => {
+    mockedUseHeaderCommonData.mockReturnValue({
+      ...commonData,
+      stateText: 'nowStoppingAtEn',
+      headerState: 'CURRENT_EN',
+    });
+
+    const { getByTestId } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    const stateText = getByTestId('portrait-state-text');
+    // 縮まなければ numberOfLines={1} でも末尾が省略されない。
+    // 長い駅名と競合したときに縮むのは隣の cardHeadMeta 側。
+    expect(StyleSheet.flatten(stateText.props.style).flexShrink).toBe(0);
+    expect(stateText.props.numberOfLines).toBe(1);
+  });
+
   it('上端は Dynamic Island、下端はホームインジケータと被らないようセーフエリア分の余白を取る', () => {
     const { getByTestId } = renderWithStations([
       buildStation(1, '品川', StopCondition.All, 'JY-25'),
