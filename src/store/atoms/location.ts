@@ -6,7 +6,7 @@ import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
 import { store } from '..';
-import { etaAnchorAtom } from './etaFallback';
+import { etaAnchorAtom, etaStopsAtom } from './etaFallback';
 import stationState from './station';
 
 const MAX_ACCURACY_HISTORY = 12;
@@ -161,8 +161,9 @@ const resyncLocationReference = (
   consecutiveSpeedRejections = 0;
 };
 
-// ETAの進行量上限から外れた測位を、何駅ぶんまで許容するか。
-// ETAは停車時間や加減速の見積もりぶん実際とずれるので、隣駅1つぶんの余裕を持たせる。
+// ETAの進行量上限から外れた測位を、何駅ぶんまで許容するか。単位は「停車駅」で、
+// 通過駅は数に入れない(isBeyondEtaProgressにstopStationIdsを渡す)。
+// ETAは停車時間や加減速の見積もりぶん実際とずれるので、隣の停車駅1つぶんの余裕を持たせる。
 const ETA_BOUND_TOLERANCE_STATIONS = 1;
 
 // ETAによる棄却を続けてよい上限(ms)。ETA側が誤っている場合に位置が凍結し続けないための保険。
@@ -209,6 +210,9 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
     latitude: location.coords.latitude,
     longitude: location.coords.longitude,
     toleranceStations: ETA_BOUND_TOLERANCE_STATIONS,
+    // 許容は停車駅単位で数える。stationsは通過駅を含むため、ETA側の停車駅リストを
+    // 渡さないと急行の通過駅ぶんだけ許容が目減りする。
+    stopStationIds: store.get(etaStopsAtom).map((s) => s.stationId),
   });
   if (!beyond) {
     // 範囲内の測位が届いた＝ETAと実測が再び噛み合った
