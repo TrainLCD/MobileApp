@@ -145,4 +145,112 @@ describe('isBeyondEtaProgress', () => {
       })
     ).toBe(false);
   });
+
+  // 通過駅を含む路線では許容を「停車駅いくつぶん」で数える。index差のまま数えると、
+  // 急行が次の停車駅まで進んだだけの正常な測位を棄却する(#6939の上限時間まで凍結する)。
+  describe('通過駅がある場合(stopStationIds)', () => {
+    // 停車駅は 1(idx0) / 5(idx4) / 7(idx6) / 9(idx8)。間は通過駅
+    const stopStationIds = [1, 5, 7, 9];
+
+    it('停車推定でも次の停車駅までは許容する(通過駅ぶんは数えない)', () => {
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds,
+          anchorStationId: 1,
+          targetStationId: 1,
+          ...near(4),
+        })
+      ).toBe(false);
+    });
+
+    it('停車推定で2つ先の停車駅は棄却する', () => {
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds,
+          anchorStationId: 1,
+          targetStationId: 1,
+          ...near(6),
+        })
+      ).toBe(true);
+    });
+
+    it('走行中は対象駅の次の停車駅までを許容する', () => {
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds,
+          anchorStationId: 1,
+          targetStationId: 5,
+          ...near(6),
+        })
+      ).toBe(false);
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds,
+          anchorStationId: 1,
+          targetStationId: 5,
+          ...near(8),
+        })
+      ).toBe(true);
+    });
+
+    it('後方側も停車駅単位で数える', () => {
+      // アンカー(idx4)の1つ前の停車駅はidx0なので、その手前まで戻った測位は棄却する
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds,
+          anchorStationId: 5,
+          targetStationId: 7,
+          ...near(0),
+        })
+      ).toBe(false);
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds,
+          anchorStationId: 7,
+          targetStationId: 9,
+          ...near(0),
+        })
+      ).toBe(true);
+    });
+
+    it('全駅停車(停車駅リストが全駅)ならindex差で数えるのと同じ結果になる', () => {
+      const allStops = stations.map((st) => st.id as number);
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds: allStops,
+          anchorStationId: 3,
+          targetStationId: 4,
+          ...near(5),
+        })
+      ).toBe(true);
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds: allStops,
+          anchorStationId: 3,
+          targetStationId: 4,
+          ...near(4),
+        })
+      ).toBe(false);
+    });
+
+    it('進行方向に停車駅が無い(終端・ETA区間の外)場合は端まで許容する', () => {
+      expect(
+        isBeyondEtaProgress({
+          ...base,
+          stopStationIds: [1, 5],
+          anchorStationId: 5,
+          targetStationId: 5,
+          ...near(9),
+        })
+      ).toBe(false);
+    });
+  });
 });
