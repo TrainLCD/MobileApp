@@ -34,6 +34,13 @@ const appBuildGradleTemplate = (versionCode, versionName) => `android {
             versionCode ${versionCode}
             versionName "${versionName}"
         }
+        local {
+            dimension "environment"
+            applicationId "me.tinykitten.trainlcd.local"
+            versionNameSuffix "-local"
+            versionCode ${versionCode}
+            versionName "${versionName}"
+        }
     }
 }
 `;
@@ -49,6 +56,13 @@ const wearableBuildGradleTemplate = (versionCode, versionName) => `android {
     }
     create("prod") {
       dimension = "environment"
+      versionCode = ${versionCode}
+      versionName = "${versionName}"
+    }
+    create("local") {
+      dimension = "environment"
+      applicationIdSuffix = ".local"
+      versionNameSuffix = "-local"
       versionCode = ${versionCode}
       versionName = "${versionName}"
     }
@@ -124,6 +138,30 @@ const readAppVersionCode = (root) => {
   return Number(/prod\s*\{[\s\S]*?versionCode\s+(\d+)/m.exec(content)[1]);
 };
 
+const readAppFlavorVersion = (root, flavor) => {
+  const content = fs.readFileSync(
+    path.join(root, 'android', 'app', 'build.gradle'),
+    'utf8'
+  );
+  const block = new RegExp(
+    `${flavor}\\s*\\{[\\s\\S]*?versionCode\\s+(\\d+)[\\s\\S]*?versionName\\s+"([^"]*)"`,
+    'm'
+  ).exec(content);
+  return { versionCode: Number(block[1]), versionName: block[2] };
+};
+
+const readWearableFlavorVersion = (root, flavor) => {
+  const content = fs.readFileSync(
+    path.join(root, 'android', 'wearable', 'build.gradle.kts'),
+    'utf8'
+  );
+  const block = new RegExp(
+    `create\\("${flavor}"\\)\\s*\\{[\\s\\S]*?versionCode\\b\\s*=\\s*(\\d+)[\\s\\S]*?versionName\\b\\s*=\\s*"([^"]*)"`,
+    'm'
+  ).exec(content);
+  return { versionCode: Number(block[1]), versionName: block[2] };
+};
+
 const readWearableVersionCode = (root) => {
   const content = fs.readFileSync(
     path.join(root, 'android', 'wearable', 'build.gradle.kts'),
@@ -186,6 +224,32 @@ describe('bump-version.js の Android versionCode 採番', () => {
       ])
     ).toThrow();
     expect(readAppVersionCode(root)).toBe(100000586);
+  });
+
+  // ローカル検証専用の local フレーバーは配信しないが、バージョン表示が dev とずれると
+  // 検証中の版を取り違えるため、bump のたびに同じ値へ追従させている。
+  it('配信しない local フレーバーも dev / prod と同じ版へ追従する', () => {
+    const root = createWorkspace({
+      version: '10.12.1',
+      appVersionCode: 100000586,
+    });
+
+    runBump(root, ['patch']);
+
+    expect(readAppFlavorVersion(root, 'local')).toEqual(
+      readAppFlavorVersion(root, 'dev')
+    );
+    expect(readAppFlavorVersion(root, 'local')).toEqual({
+      versionCode: 100000588,
+      versionName: '10.12.2',
+    });
+    expect(readWearableFlavorVersion(root, 'local')).toEqual(
+      readWearableFlavorVersion(root, 'dev')
+    );
+    expect(readWearableFlavorVersion(root, 'local')).toEqual({
+      versionCode: 100000589,
+      versionName: '10.12.2',
+    });
   });
 
   it('据え置き指定では :app < :wearable のままでも失敗しない', () => {

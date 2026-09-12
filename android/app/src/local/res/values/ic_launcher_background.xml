@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- アダプティブアイコンの前景は main (本番と同じロゴ) を継承するため、
+         ランチャー上で本番・Canary と区別できるよう背景色だけローカル版用に変える -->
+    <color name="ic_launcher_background">#C8E6C9</color>
+</resources>
