@@ -6,7 +6,10 @@ import {
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
-import { numberingGlyphLift } from '../utils/numberingGlyphLift';
+import {
+  numberingGlyphLift,
+  numberingStackedGlyphLift,
+} from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -21,15 +24,39 @@ type Props = {
 
 const TLC_SCALE = 0.7;
 
+const FONT = 'FrutigerNeueLTProBold';
+const SYMBOL_SIZE = isTablet ? 24 * 1.5 : 24;
+const NUMBER_SIZE = isTablet ? 32 * 1.5 : 32;
+const TLC_SYMBOL_SIZE = isTablet
+  ? Math.round(24 * 1.5 * TLC_SCALE)
+  : Math.round(24 * TLC_SCALE);
+const TLC_NUMBER_SIZE = isTablet
+  ? Math.round(32 * 1.5 * TLC_SCALE)
+  : Math.round(32 * TLC_SCALE);
+const TLC_COMPACT_SYMBOL_SIZE = isTablet ? 12 : 8;
+const TLC_COMPACT_NUMBER_SIZE = isTablet ? 15 : 10;
+
 // Androidのグリフ下寄り補正。記号と番号で異なる値を使うと両者の間隔まで変わるため、
-// アイコンごとに基準の行高から1つだけ求めて使い回す
-const GLYPH_LIFT = numberingGlyphLift(isTablet ? 24 * 1.5 : 24);
-const TLC_GLYPH_LIFT = numberingGlyphLift(
-  isTablet ? Math.round(24 * 1.5 * TLC_SCALE) : Math.round(24 * TLC_SCALE)
+// 縦に並ぶ2行には同じ値を使い回す
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: FONT },
+  { fontSize: NUMBER_SIZE, font: FONT }
 );
-const TLC_COMPACT_GLYPH_LIFT = numberingGlyphLift(isTablet ? 12 : 8);
-const MEDIUM_GLYPH_LIFT = numberingGlyphLift(isTablet ? 32 : 20);
-const SMALL_GLYPH_LIFT = numberingGlyphLift(10);
+const TLC_LABEL_LIFT = numberingGlyphLift(TLC_SYMBOL_SIZE, FONT);
+const TLC_ICON_LIFT = numberingStackedGlyphLift(
+  { fontSize: TLC_SYMBOL_SIZE, font: FONT },
+  { fontSize: TLC_NUMBER_SIZE, font: FONT }
+);
+const TLC_COMPACT_LABEL_LIFT = numberingGlyphLift(
+  TLC_COMPACT_SYMBOL_SIZE,
+  FONT
+);
+const TLC_COMPACT_ICON_LIFT = numberingStackedGlyphLift(
+  { fontSize: TLC_COMPACT_SYMBOL_SIZE, font: FONT },
+  { fontSize: TLC_COMPACT_NUMBER_SIZE, font: FONT }
+);
+const MEDIUM_GLYPH_LIFT = numberingGlyphLift(isTablet ? 32 : 20, FONT);
+const SMALL_GLYPH_LIFT = numberingGlyphLift(10, FONT);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -76,10 +103,8 @@ const styles = StyleSheet.create({
       : Math.round(24 * TLC_SCALE),
     fontFamily: FONTS.FrutigerNeueLTProBold,
     includeFontPadding: false,
-    lineHeight: isTablet
-      ? Math.round(24 * 1.5 * TLC_SCALE)
-      : Math.round(24 * TLC_SCALE),
-    transform: TLC_GLYPH_LIFT,
+    lineHeight: TLC_SYMBOL_SIZE,
+    transform: TLC_LABEL_LIFT,
   },
   tlcIconRoot: {
     width: isTablet
@@ -100,10 +125,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   tlcLineSymbol: {
-    lineHeight: isTablet
-      ? Math.round(24 * 1.5 * TLC_SCALE)
-      : Math.round(24 * TLC_SCALE),
-    transform: TLC_GLYPH_LIFT,
+    lineHeight: TLC_SYMBOL_SIZE,
+    transform: TLC_ICON_LIFT,
     fontSize: isTablet
       ? Math.round(24 * 1.5 * TLC_SCALE)
       : Math.round(24 * TLC_SCALE),
@@ -113,10 +136,8 @@ const styles = StyleSheet.create({
     color: '#231e1f',
   },
   tlcStationNumber: {
-    lineHeight: isTablet
-      ? Math.round(32 * 1.5 * TLC_SCALE)
-      : Math.round(32 * TLC_SCALE),
-    transform: TLC_GLYPH_LIFT,
+    lineHeight: TLC_NUMBER_SIZE,
+    transform: TLC_ICON_LIFT,
     fontSize: isTablet
       ? Math.round(32 * 1.5 * TLC_SCALE)
       : Math.round(32 * TLC_SCALE),
@@ -135,7 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: isTablet ? 2 : 1,
   },
   tlcTextCompact: {
-    transform: TLC_COMPACT_GLYPH_LIFT,
+    transform: TLC_COMPACT_LABEL_LIFT,
     color: 'white',
     textAlign: 'center',
     fontSize: isTablet ? 12 : 8,
@@ -154,8 +175,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   tlcLineSymbolCompact: {
-    lineHeight: isTablet ? 12 : 8,
-    transform: TLC_COMPACT_GLYPH_LIFT,
+    lineHeight: TLC_COMPACT_SYMBOL_SIZE,
+    transform: TLC_COMPACT_ICON_LIFT,
     fontSize: isTablet ? 12 : 8,
     textAlign: 'center',
     fontFamily: FONTS.FrutigerNeueLTProBold,
@@ -163,8 +184,8 @@ const styles = StyleSheet.create({
     color: '#231e1f',
   },
   tlcStationNumberCompact: {
-    lineHeight: isTablet ? 15 : 10,
-    transform: TLC_COMPACT_GLYPH_LIFT,
+    lineHeight: TLC_COMPACT_NUMBER_SIZE,
+    transform: TLC_COMPACT_ICON_LIFT,
     fontSize: isTablet ? 15 : 10,
     marginTop: isTablet ? -2 : -1,
     textAlign: 'center',

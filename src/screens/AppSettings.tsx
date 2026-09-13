@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as WebBrowser from 'expo-web-browser';
 import { useAtomValue } from 'jotai';
 import { lighten } from 'polished';
 import React, {
@@ -25,6 +26,7 @@ import NewFeatureDot from '~/components/NewFeatureDot';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
+import { FAQ_URL } from '~/constants';
 import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { useAppColors } from '~/providers/AppColorsProvider';
@@ -44,6 +46,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_battery: 'personalize_battery',
   personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
+  about_app_faq: 'about_app_faq',
   about_app_licenses: 'about_app_licenses',
 } as const;
 
@@ -123,6 +126,8 @@ const SettingsItem = ({
         return 'flask';
       case 'personalize_android':
         return 'phone-portrait';
+      case 'about_app_faq':
+        return 'help-circle';
       case 'about_app_licenses':
         return 'key';
       default:
@@ -183,7 +188,25 @@ const SettingsItem = ({
         </View>
       ) : null}
 
-      <CardChevron stroke={isLEDTheme || colors.isDark ? 'white' : 'black'} />
+      {/*
+        FAQ はアプリ内ブラウザで Web ページを開く項目で、アプリ内の別画面へ進む
+        他の項目とは遷移先の種類が違う。同じシェブロンのままでは押すまで区別が
+        つかないため、末尾の印を外部リンクのものに差し替えて事前に知らせる。
+      */}
+      {item.id === SETTING_ITEM_ID_MAP.about_app_faq ? (
+        // size 24 では実描画が 19.3dp になり、隣のシェブロン(実測 16.7dp)より
+        // 一回り大きく見えるため、高さが揃う 20 にしている。CardChevron は
+        // 24dp の枠内でパスが右に 8dp 余白を持つ一方こちらは枠いっぱいに描かれ、
+        // そのままだと視覚的な右端が 4dp 外へ出るため marginRight で吸収する
+        <Ionicons
+          name="open-outline"
+          size={20}
+          color={isLEDTheme || colors.isDark ? 'white' : 'black'}
+          style={{ marginRight: 4 }}
+        />
+      ) : (
+        <CardChevron stroke={isLEDTheme || colors.isDark ? 'white' : 'black'} />
+      )}
     </TouchableOpacity>
   );
 };
@@ -401,6 +424,19 @@ const AppSettingsScreen: React.FC = () => {
 
   const aboutAppItems: SettingsSectionData[] = useMemo(
     () => [
+      {
+        id: SETTING_ITEM_ID_MAP.about_app_faq,
+        title: translate('faq'),
+        color: '#5AC8FA',
+        // 外部ブラウザへ遷移すると設定画面から離脱してしまうため、
+        // プライバシーポリシー(src/screens/Privacy.tsx)と同じくアプリ内ブラウザで開き、
+        // 閉じれば元の位置に戻れるようにする。
+        onPress: () => {
+          WebBrowser.openBrowserAsync(FAQ_URL).catch((error) => {
+            console.warn('よくある質問を開けませんでした:', error);
+          });
+        },
+      },
       {
         id: SETTING_ITEM_ID_MAP.about_app_licenses,
         title: translate('license'),

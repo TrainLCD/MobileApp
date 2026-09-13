@@ -1,11 +1,12 @@
 import type React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import { numberingGlyphLift } from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -14,6 +15,16 @@ type Props = {
   size?: NumberingIconSize;
   withOutline?: boolean;
 };
+
+const FONT = 'FuturaLTPro';
+
+// Androidのグリフ上寄り補正。いずれも1行なのでサイズごとに求める
+const GLYPH_LIFT = numberingGlyphLift(isTablet ? 24 * 1.5 : 24, FONT);
+const LONG_GLYPH_LIFT = numberingGlyphLift(isTablet ? 16 * 1.5 : 16, FONT);
+const MEDIUM_GLYPH_LIFT = numberingGlyphLift(isTablet ? 24 : 14, FONT);
+const MEDIUM_LONG_GLYPH_LIFT = numberingGlyphLift(isTablet ? 16 : 11, FONT);
+const TINY_GLYPH_LIFT = numberingGlyphLift(10, FONT);
+const TINY_LONG_GLYPH_LIFT = numberingGlyphLift(5, FONT);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -35,6 +46,7 @@ const styles = StyleSheet.create({
     color: '#221714',
     fontSize: isTablet ? 24 * 1.5 : 24,
     lineHeight: isTablet ? 24 * 1.5 : 24,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -42,6 +54,7 @@ const styles = StyleSheet.create({
     color: '#221714',
     fontSize: isTablet ? 16 * 1.5 : 16,
     lineHeight: isTablet ? 16 * 1.5 : 16,
+    transform: LONG_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
   },
@@ -69,33 +82,41 @@ const styles = StyleSheet.create({
     color: '#221714',
     fontSize: 10,
     lineHeight: 10,
+    transform: TINY_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 1,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 1 : 0,
   },
   lineSymbolTinyLong: {
     color: '#221714',
     fontSize: 5,
     lineHeight: 5,
+    transform: TINY_LONG_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 1,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 1 : 0,
   },
   lineSymbolMedium: {
     color: '#221714',
     fontSize: isTablet ? 24 : 14,
     lineHeight: isTablet ? 24 : 14,
+    transform: MEDIUM_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   lineSymbolMediumLong: {
     color: '#221714',
     fontSize: isTablet ? 16 : 11,
     lineHeight: isTablet ? 16 : 11,
+    transform: MEDIUM_LONG_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.FuturaLTPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
     alignSelf: 'center',
   },
 });

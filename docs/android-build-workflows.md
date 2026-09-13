@@ -33,6 +33,7 @@ Configure these GitHub Actions secrets:
 | `EXPERIMENTAL_TELEMETRY_ENDPOINT_URL` | Telemetry endpoint |
 | `EXPERIMENTAL_TELEMETRY_TOKEN` | Telemetry authentication token |
 | `FONTS_SSH_KEY` | Fonts submodule SSH private key |
+| `SENTRY_DSN` | Sentry runtime DSN (required; the build fails when unset) |
 | `SENTRY_PROPERTIES_BASE64` | Base64-encoded `sentry.properties` |
 | `RELEASE_KEYSTORE` | Base64-encoded Android release keystore |
 | `KEYSTORE_PASSWORD` | Release keystore password |
@@ -128,3 +129,58 @@ Both modules build with R8 enabled
 each upload step passes its own module's `mapping.txt`. Keep the `mappingFile`
 path aligned with the module of that step — a mismatched mapping silently
 corrupts crash deobfuscation for the affected bundle.
+
+## Build memory
+
+A release build compiles Kotlin for every native module under `node_modules`
+plus `:app` and `:wearable` in a single Gradle invocation. All of those
+compilations share one Kotlin compile daemon, so its Metaspace grows across the
+whole run.
+
+The Kotlin daemon inherits `org.gradle.jvmargs` when `kotlin.daemon.jvmargs` is
+not set. With the previous `-XX:MaxMetaspaceSize=512m` the daemon ran out of
+Metaspace part-way through the build:
+
+```text
+Exception in thread "RMI TCP Connection(idle)" java.lang.OutOfMemoryError: Metaspace
+> Task :wearable:compileDevReleaseKotlin FAILED
+```
+
+The daemon then kept thrashing instead of exiting, so the job burned the rest of
+its `timeout-minutes: 45` budget and surfaced only as
+`The operation was canceled.` — read the log above the cancellation to see the
+real cause.
+
+`android/gradle.properties` therefore raises the Metaspace ceiling and pins the
+Kotlin daemon explicitly rather than letting it inherit:
+
+| Property | Heap | Metaspace (before → after) |
+| --- | --- | --- |
+| `org.gradle.jvmargs` | `-Xmx2048m` | `512m` → `1024m` |
+| `kotlin.daemon.jvmargs` | `-Xmx2048m` | inherited `512m` → `1024m` |
+
+**Only the Metaspace ceiling changes.** Both heap ceilings stay at the `2048m`
+the build already ran with — it compiled every native module, `:app`, and R8
+without a heap OOM, so raising `-Xmx` would treat a symptom the build never had.
+
+Do not read a heap ceiling as free headroom. Metaspace is committed lazily, so
+its ceiling mostly just converts a runaway allocation into a clear error. A heap
+ceiling is different: the JVM defers full GCs and lets the heap grow toward
+`-Xmx`, so a larger value raises real resident memory. Two JVMs run
+concurrently here, and Gradle worker processes, R8, and Node sit alongside them,
+so budget the *sum* of the ceilings against the runner rather than each one on
+its own.
+
+This repository is public, so its jobs get the 4-vCPU / 16 GB standard runner
+(the 2-vCPU / 8 GB tier applies to private repositories). The ceilings above
+total 4 GB of heap and 2 GB of Metaspace — but a ceiling is not a memory
+budget. Gradle worker processes, R8, Node, and each JVM's own native memory
+(thread stacks, code cache, direct buffers) all sit on top of those numbers,
+and none of that has been measured here. So do not read the difference between
+the ceilings and the runner's RAM as available headroom, least of all on the
+8 GB tier. Before raising any of these values, measure peak RSS across the
+whole build on the runner you actually target, and prefer a larger runner over
+ceilings the runner cannot back.
+
+Keep `kotlin.daemon.jvmargs` set whenever `org.gradle.jvmargs` changes,
+otherwise the daemon silently picks up the Gradle value again.

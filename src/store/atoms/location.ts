@@ -3,25 +3,74 @@ import getDistance from 'geolib/es/getDistance';
 import { atom } from 'jotai';
 import { LineType } from '~/@types/graphql';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
+import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
+import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
 import { store } from '..';
+import { etaAnchorAtom, etaStopsAtom } from './etaFallback';
 import stationState from './station';
 
 const MAX_ACCURACY_HISTORY = 12;
 
 // 物理的にありえない速度でのジャンプを棄却する閾値(m/s ≒ 360km/h)
 const MAX_PLAUSIBLE_SPEED = 100;
-// GPS精度に応じたスムージング重みを返す（精度が良いほど新しい値を信頼する）
-const getSmoothingAlpha = (accuracy: number | null): number => {
-  if (accuracy == null || accuracy <= 0) {
-    return 0.6;
+
+// 速度フィルタが連続して棄却できる回数の上限。棄却しても基準座標は更新しないため、
+// 基準側が実際の現在地から乖離している場合は正常な測位が延々と弾かれ、位置が
+// 永久に凍結する。この回数に達したら「基準の方が誤っている」と判断し、届いた
+// 測位で基準を張り直す。
+const MAX_CONSECUTIVE_SPEED_REJECTIONS = 5;
+
+// 基準座標がこれ以上古い場合、EMAの基準としては意味を持たないため、速度フィルタを
+// 通過したうえでスムージングせず新しい測位へスナップし、基準を張り直す。
+// バックグラウンド測位の抑止(「常に許可」未設定)やトンネルで測位が数十分途切れた
+// あと、EMAで混ぜると新しい測位のα割しか反映されず、残った遅れがそのまま次の
+// 変位へ乗って再び速度超過になる、という復帰不能ループを防ぐ。
+const STALE_REFERENCE_MS = 30_000;
+
+// 固定αのEMAの追従遅れは、定速・一定間隔のとき ((1-α)/α)·v·Δt で、配信間隔Δtに比例する。
+// 旧実装は精度ごとに固定のαを返していたため、Δtが変わると遅れも比例して変わった。
+// 実際 #6395 でAndroidの更新間隔を5秒→10秒へ緩めた際、遅れがそのまま倍増し、
+// 到着判定と「まもなく」表示が駅の直前までずれ込んだ（#6916）。
+//
+// 固定αは iOS の配信間隔(distanceInterval基準で概ね1Hz)を前提に調整された値なので、
+// その前提を「追従遅れ時間(秒)」として取り出し、Δtからαを毎回組み立て直す。
+// α = Δt / (Δt + T) とすると定速時の追従遅れは常にT秒ぶんの距離に収まり、
+// 配信間隔が変わっても遅れが変わらない。Δt=1秒では旧実装のαと完全に一致する。
+const LEGACY_ALPHA_INTERVAL_SEC = 1;
+
+// 旧実装のαが1秒間隔で持っていた追従遅れ時間(秒)へ変換する
+const legacyAlphaToLagSec = (alpha: number): number =>
+  ((1 - alpha) / alpha) * LEGACY_ALPHA_INTERVAL_SEC;
+
+// 精度がBAD_ACCURACY_THRESHOLDを超える帯だけは間隔正規化せず固定αを維持する。
+// この帯では測位ノイズ(σ≒accuracy)が到着圏に対して大きく、スムージングが判定の
+// 安定性そのものを担っている。正規化してαを上げると追従遅れは詰まるが、平滑後の
+// 座標が到着圏を出入りして到着表示がばたつく。片町線快速のGPXにσ=250mを乗せて
+// 10秒間隔で流すと、1区間で到着判定が3回立った(location.gpxLag.test.ts)。
+// 追従遅れと安定性の積は配信間隔で決まるため、10秒間隔・σ=250mでは許容遅れを
+// どこに置いても両立しない。精度が良い帯(σが到着圏に対して十分小さい)に限って
+// 正規化する。
+const LOW_ACCURACY_ALPHA = 0.3;
+
+// GPS精度に応じた許容追従遅れ(秒)を返す（精度が良いほど新しい値を信頼して遅れを詰める）
+const getSmoothingLagSec = (accuracy: number | null): number => {
+  if (accuracy != null && accuracy > 0 && accuracy < 50) {
+    return legacyAlphaToLagSec(0.8);
   }
-  if (accuracy < 50) {
-    return 0.8;
+  return legacyAlphaToLagSec(0.6);
+};
+
+// GPS精度と配信間隔に応じたスムージング重みを返す
+const getSmoothingAlpha = (accuracy: number | null, dtSec: number): number => {
+  // 間隔が測れない場合はスムージングせず新しい測位へスナップする。
+  // 遅れを持たせる根拠が無いのに古い座標を混ぜると、位置が理由なく後ろへ引かれる。
+  if (!Number.isFinite(dtSec) || dtSec <= 0) {
+    return 1;
   }
-  if (accuracy < 200) {
-    return 0.6;
+  if (accuracy != null && accuracy >= BAD_ACCURACY_THRESHOLD) {
+    return LOW_ACCURACY_ALPHA;
   }
-  return 0.3;
+  return dtSec / (dtSec + getSmoothingLagSec(accuracy));
 };
 
 // 精度履歴の安定性を変動係数(CV)で判定する
@@ -57,9 +106,19 @@ export const backgroundLocationTrackingAtom = atom(false);
 // 下流の処理が「現在位置を信用できない＝走行中」と扱えるようにする。
 export const locationAccuracyOutlierAtom = atom(false);
 
-// 速度フィルタ・EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
+// EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
+
+// 速度フィルタの基準として使う「最後に受理した“生の”座標」。
+// EMA後の座標を基準にすると、EMAの追従遅れ(定速時 ((1-α)/α)·v·dt)が変位へ上乗せ
+// され、算出速度が実速度の 1/α 倍に膨らむ。実効的なしきい値が α×360km/h まで下がり、
+// 精度が良くても288km/h、精度200m超では108km/hで棄却が始まるため、新幹線の320km/h
+// 走行が丸ごと弾かれて位置が凍結していた。速度判定は生座標同士で行う。
+const lastRawLocationAtom = atom<Location.LocationObject | null>(null);
+
+// 速度フィルタが連続で棄却した回数。MAX_CONSECUTIVE_SPEED_REJECTIONSの判定に使う。
+let consecutiveSpeedRejections = 0;
 
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
@@ -67,7 +126,10 @@ export const resetLocationState = () => {
   store.set(rawLocationAtom, null);
   store.set(accuracyHistoryAtom, []);
   store.set(lastFilteredLocationAtom, null);
+  store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
+  consecutiveSpeedRejections = 0;
+  resetEtaBoundHold();
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -84,6 +146,96 @@ export const setRawLocation = (location: Location.LocationObject) => {
   store.set(rawLocationAtom, location);
 };
 
+// スムージングせず測位をそのまま反映し、EMA基準・速度フィルタ基準の双方を張り直す。
+// 基準が無い(初回起動・地下鉄からの復帰)、基準が古すぎる、基準が誤っていると判断した
+// 場合に使う。基準を両方とも生の測位へ揃えるのが要点で、片方だけ残すと次回の変位に
+// 古い遅れが乗って誤棄却の引き金になる。
+const resyncLocationReference = (
+  location: Location.LocationObject,
+  updatedHistory: number[]
+) => {
+  store.set(locationAtom, location);
+  store.set(lastFilteredLocationAtom, location);
+  store.set(lastRawLocationAtom, location);
+  store.set(accuracyHistoryAtom, updatedHistory);
+  consecutiveSpeedRejections = 0;
+};
+
+// ETAの進行量上限から外れた測位を、何駅ぶんまで許容するか。単位は「停車駅」で、
+// 通過駅は数に入れない(isBeyondEtaProgressにstopStationIdsを渡す)。
+// ETAは停車時間や加減速の見積もりぶん実際とずれるので、隣の停車駅1つぶんの余裕を持たせる。
+const ETA_BOUND_TOLERANCE_STATIONS = 1;
+
+// ETAによる棄却を続けてよい上限(ms)。ETA側が誤っている場合に位置が凍結し続けないための保険。
+const ETA_BOUND_MAX_HOLD_MS = 90_000;
+
+let etaBoundHoldStartedAtMs = 0;
+
+// 上限時間に達して「ETA側が誤っている」と判断した状態。値は判断した時点のETAの文脈
+// (アンカー駅・種別・対象駅)で、同じ文脈が続くあいだは棄却を再開しない。
+// 1件だけ受理して棄却を再開すると、範囲外の測位が上限時間ごとに1件しか通らず、
+// 位置が実質凍結したままになる(=保険が機能しない)。
+let etaBoundBypassedContext: string | null = null;
+
+const resetEtaBoundHold = () => {
+  etaBoundHoldStartedAtMs = 0;
+  etaBoundBypassedContext = null;
+};
+
+/**
+ * ETAが許す進行量を超えた測位か。超えていれば受理せず、位置を据え置く。
+ * ETAは位置を進めない(#6369の方針)ので、棄却にのみ使う。
+ */
+const isImplausibleByEta = (location: Location.LocationObject): boolean => {
+  const anchor = store.get(etaAnchorAtom);
+  const phase = getEtaPhaseNow(location.timestamp);
+  if (!anchor || !phase) {
+    resetEtaBoundHold();
+    return false;
+  }
+  const targetStationId =
+    phase.kind === 'DWELLING' ? phase.stationId : phase.targetStationId;
+
+  // アンカーが張り直された(次駅へ到着した等)ならETAは新しい観測に基づくので、
+  // 打ち切り状態を解除して再び信用する。
+  const context = `${anchor.stationId}:${anchor.kind}:${targetStationId}`;
+  if (etaBoundBypassedContext !== null && etaBoundBypassedContext !== context) {
+    resetEtaBoundHold();
+  }
+
+  const beyond = isBeyondEtaProgress({
+    stations: store.get(stationState).stations,
+    anchorStationId: anchor.stationId,
+    targetStationId,
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    toleranceStations: ETA_BOUND_TOLERANCE_STATIONS,
+    // 許容は停車駅単位で数える。stationsは通過駅を含むため、ETA側の停車駅リストを
+    // 渡さないと急行の通過駅ぶんだけ許容が目減りする。
+    stopStationIds: store.get(etaStopsAtom).map((s) => s.stationId),
+  });
+  if (!beyond) {
+    // 範囲内の測位が届いた＝ETAと実測が再び噛み合った
+    resetEtaBoundHold();
+    return false;
+  }
+  if (etaBoundBypassedContext === context) {
+    return false;
+  }
+  if (
+    etaBoundHoldStartedAtMs === 0 ||
+    location.timestamp < etaBoundHoldStartedAtMs
+  ) {
+    etaBoundHoldStartedAtMs = location.timestamp;
+  }
+  if (location.timestamp - etaBoundHoldStartedAtMs >= ETA_BOUND_MAX_HOLD_MS) {
+    etaBoundBypassedContext = context;
+    etaBoundHoldStartedAtMs = 0;
+    return false;
+  }
+  return true;
+};
+
 // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
 // 手動選択(StationSearchModal/useInitialNearbyStation/Privacy等)もここを通る。
 export const setLocation = (location: Location.LocationObject) => {
@@ -95,6 +247,7 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(locationAccuracyOutlierAtom, false);
 
   const filteredPrev = store.get(lastFilteredLocationAtom);
+  const rawPrev = store.get(lastRawLocationAtom);
   const currentHistory = store.get(accuracyHistoryAtom);
   const newAccuracy = location.coords.accuracy;
 
@@ -109,29 +262,41 @@ export const setLocation = (location: Location.LocationObject) => {
   const skipSmoothing =
     currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
 
+  // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
+  if (isImplausibleByEta(location)) {
+    store.set(accuracyHistoryAtom, updatedHistory);
+    return;
+  }
+
   // スムージングスキップ時はフィルタ・スムージングを全てスキップする
-  // UIには生の座標を反映するが、フィルタ基準(lastFilteredLocationAtom)は更新しない
+  // UIには生の座標を反映するが、EMA基準(lastFilteredLocationAtom)も速度フィルタ基準
+  // (lastRawLocationAtom)も更新しない。地上復帰時は基準が古いためSTALE_REFERENCE_MSの
+  // 判定に掛かり、そこで張り直される
   if (skipSmoothing) {
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
     return;
   }
 
-  // フィルタ基準となるprevが無い場合（初回起動時や地下鉄→地上の復帰直後）
-  if (filteredPrev == null) {
-    store.set(locationAtom, location);
-    store.set(lastFilteredLocationAtom, location);
-    store.set(accuracyHistoryAtom, updatedHistory);
+  // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
+  if (filteredPrev == null || rawPrev == null) {
+    resyncLocationReference(location, updatedHistory);
     return;
   }
 
-  // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用
-  const dt = (location.timestamp - filteredPrev.timestamp) / 1000; // 秒
+  // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用する。
+  // 基準は「生の前回座標」であってEMA後の座標ではない（lastRawLocationAtom参照）。
+  //
+  // 測位が長く途切れたあとでも、このフィルタは先に必ず通す。意味を失うのはEMAの方
+  // (下のSTALE_REFERENCE_MS判定)だけで、変位÷経過時間という速度の妥当性検査は
+  // 経過時間が延びても成立するため。ここを飛ばすと、間隔が空いた直後の1点に限って
+  // ワープ対策が無効になる。
+  const dt = (location.timestamp - rawPrev.timestamp) / 1000; // 秒
   if (dt > 0) {
     const dist = getDistance(
       {
-        latitude: filteredPrev.coords.latitude,
-        longitude: filteredPrev.coords.longitude,
+        latitude: rawPrev.coords.latitude,
+        longitude: rawPrev.coords.longitude,
       },
       {
         latitude: location.coords.latitude,
@@ -142,14 +307,36 @@ export const setLocation = (location: Location.LocationObject) => {
 
     // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
     if (speed > MAX_PLAUSIBLE_SPEED) {
+      consecutiveSpeedRejections += 1;
+      // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま
+      // 復帰できなくなるのを避けるため、上限に達したら基準を張り直す。
+      if (consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS) {
+        resyncLocationReference(location, updatedHistory);
+        return;
+      }
       store.set(accuracyHistoryAtom, updatedHistory);
       return;
     }
   }
 
+  consecutiveSpeedRejections = 0;
+
+  // 速度としては妥当だが基準が古すぎる場合、EMAの基準としては使えないため
+  // スムージングせず生の座標へスナップして基準を張り直す。長く途切れたあとに
+  // EMAで混ぜると新しい測位のα割しか反映されず、残った遅れが次回の変位へ乗って
+  // 再棄却…という復帰不能ループの原因になる。
+  if (location.timestamp - rawPrev.timestamp >= STALE_REFERENCE_MS) {
+    resyncLocationReference(location, updatedHistory);
+    return;
+  }
+
   // EMA(指数移動平均)で座標をスムージングする
-  // 精度が良いほどαが大きくなり、新しい測位値をより信頼する
-  const alpha = getSmoothingAlpha(newAccuracy);
+  // 精度が良いほど、また配信間隔が空くほどαが大きくなり、新しい測位値をより信頼する。
+  // 間隔で正規化することで、追従遅れが配信間隔に依存しなくなる。
+  const alpha = getSmoothingAlpha(
+    newAccuracy,
+    (location.timestamp - rawPrev.timestamp) / 1000
+  );
   const smoothedLat =
     alpha * location.coords.latitude +
     (1 - alpha) * filteredPrev.coords.latitude;
@@ -168,5 +355,7 @@ export const setLocation = (location: Location.LocationObject) => {
 
   store.set(locationAtom, smoothedLocation);
   store.set(lastFilteredLocationAtom, smoothedLocation);
+  // 速度フィルタの基準はスムージング前の生座標を保持する
+  store.set(lastRawLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
 };

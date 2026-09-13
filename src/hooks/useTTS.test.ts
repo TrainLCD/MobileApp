@@ -61,6 +61,27 @@ jest.mock('./tts/useRemoteSpeechEngine', () => ({
   useRemoteSpeechEngine: () => mockRemoteEngine,
 }));
 
+// VOICEVOX (端末内合成) エンジンも同様に差し替える。実装は
+// useVoicevoxSpeechEngine.test.ts で検証する。既定は「使えない」状態にして、
+// 従来どおり端末内蔵 TTS へ倒れる経路を通す。
+const voicevoxSpeakUnavailable = (
+  _request: unknown,
+  callbacks: { onUnavailable?: () => void; onSettled: () => void }
+) => {
+  (callbacks.onUnavailable ?? callbacks.onSettled)();
+};
+const mockVoicevoxSpeak = jest.fn(voicevoxSpeakUnavailable);
+const mockVoicevoxStop = jest.fn();
+const mockVoicevoxEngine = {
+  speak: (...args: unknown[]) =>
+    (mockVoicevoxSpeak as unknown as (...a: unknown[]) => void)(...args),
+  stop: (...args: unknown[]) => mockVoicevoxStop(...args),
+};
+
+jest.mock('./tts/useVoicevoxSpeechEngine', () => ({
+  useVoicevoxSpeechEngine: () => mockVoicevoxEngine,
+}));
+
 jest.mock('./useCurrentLine', () => ({
   useCurrentLine: jest.fn(() => undefined),
 }));
@@ -137,6 +158,7 @@ describe('useTTS', () => {
     mockedIsRemoteTTSEnabled.mockImplementation(() => Platform.OS === 'ios');
     // 個別テストで差し替えたリモートエンジンの挙動を既定へ戻す
     mockRemoteSpeak.mockImplementation(remoteSpeakUnavailable);
+    mockVoicevoxSpeak.mockImplementation(voicevoxSpeakUnavailable);
     // テスト間で useTTSText の mock を復元
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
@@ -1019,6 +1041,84 @@ describe('useTTS', () => {
         'ja text',
         expect.objectContaining({ language: 'ja-JP' })
       );
+    });
+  });
+  describe('VOICEVOX (端末内合成) へのフォールバック', () => {
+    it('[iOS] リモートTTSが使えない回はまず VOICEVOX を試し、使えなければ端末内蔵TTSで読む', async () => {
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      expect(mockVoicevoxSpeak).toHaveBeenCalledTimes(1);
+      expect(mockVoicevoxSpeak).toHaveBeenCalledWith(
+        {
+          ssmlJa: 'ja text',
+          ssmlEn: 'en text',
+          speakJa: true,
+          speakEn: true,
+        },
+        expect.objectContaining({ onUnavailable: expect.any(Function) })
+      );
+      // VOICEVOX が onUnavailable を返したので端末内蔵 TTS が日英とも読む
+      expect(mockSpeak).toHaveBeenCalledTimes(2);
+    });
+
+    it('[iOS] VOICEVOX が読み上げた回は端末内蔵TTSを直接は使わない', async () => {
+      mockVoicevoxSpeak.mockImplementation(
+        (
+          _request: unknown,
+          callbacks: { onSpeechStarted?: () => void; onSettled: () => void }
+        ) => {
+          callbacks.onSpeechStarted?.();
+          callbacks.onSettled();
+        }
+      );
+
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockVoicevoxSpeak).toHaveBeenCalledTimes(1);
+      expect(mockSpeak).not.toHaveBeenCalled();
+
+      // 完了で再生パイプラインが解放される (ダッキング解除)
+      expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
+        expect.objectContaining({ interruptionMode: 'mixWithOthers' })
+      );
+    });
+
+    it('[iOS] Remote Config でリモートTTSが無効でも VOICEVOX を先に試す', async () => {
+      mockedIsRemoteTTSEnabled.mockReturnValue(false);
+
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockRemoteSpeak).not.toHaveBeenCalled();
+      expect(mockVoicevoxSpeak).toHaveBeenCalledTimes(1);
+      expect(mockSpeak).toHaveBeenCalledTimes(2);
+    });
+
+    it('アンマウント時は VOICEVOX の読み上げも停止する', async () => {
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      const { unmount } = renderHook(() => useTTS(), {
+        wrapper: createWrapper(store),
+      });
+      await flushAsync();
+      mockVoicevoxStop.mockClear();
+
+      unmount();
+
+      expect(mockVoicevoxStop).toHaveBeenCalled();
     });
   });
 });

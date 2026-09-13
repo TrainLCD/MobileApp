@@ -2,15 +2,19 @@
   "scripts": {
     "start": "expo start",
     "android": "cross-env APP_VARIANT=dev expo run:android -- --variant devDebug --app-id me.tinykitten.trainlcd.dev",
-    "ios": "cross-env APP_VARIANT=dev expo run:ios",
+    "android:local": "cross-env APP_VARIANT=local expo run:android -- --variant localDebug --app-id me.tinykitten.trainlcd.local",
+    "ios": "npm run ios:frameworks && cross-env APP_VARIANT=dev expo run:ios",
+    "ios:frameworks": "node scripts/fetch-voicevox-frameworks.mjs",
     "web": "expo start --web",
     "lint": "biome check ./src",
     "format": "biome format ./src --write",
     "test": "cross-env TZ=UTC jest",
-    "test:scripts": "node --test .github/scripts/*.test.mjs",
+    "test:scripts": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON --test .github/scripts/*.test.mjs scripts/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "watch:test": "cross-env TZ=UTC jest --watch",
     "gql:codegen": "graphql-codegen --config utils/codegen.ts",
+    "gpx:generate": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/generate-location-gpx.mjs",
+    "gpx:replay": "node --no-warnings=MODULE_TYPELESS_PACKAGE_JSON scripts/replay-location-gpx.mjs",
     "version:bump": "node scripts/bump-version.js",
     "postinstall": "patch-package"
   },
@@ -169,5 +173,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.15.0"
+  "version": "10.15.1"
 }

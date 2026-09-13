@@ -821,7 +821,8 @@ const MainScreen: React.FC = () => {
           onPress={updateBottomState}
           onTransferPress={handleTransferPress}
         />
-        {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {/* 回転ラッパーの外＝画面の向きのまま描画されるので unrotated を渡す */}
+        {isDevApp && devOverlayEnabled && <DevOverlay unrotated />}
         {selectBoundModal}
       </>
     );
@@ -859,7 +860,8 @@ const MainScreen: React.FC = () => {
           <LineBoard hasTerminus={hasTerminus} />
         </View>
 
-        {isDevApp && devOverlayEnabled && <DevOverlay />}
+        {/* 回転ラッパーの外に置いているので unrotated を渡す */}
+        {isDevApp && devOverlayEnabled && <DevOverlay unrotated />}
         {/* 回転しているビューの外に置いて正立させる(案A) */}
         <PortraitModePrompt />
       </>

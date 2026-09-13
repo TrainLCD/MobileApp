@@ -85,13 +85,23 @@ android {
       dimension = "environment"
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
-      versionCode = 100000712
-      versionName = "10.15.0"
+      versionCode = 100000756
+      versionName = "10.15.1"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 100000712
-      versionName = "10.15.0"
+      versionCode = 100000756
+      versionName = "10.15.1"
+    }
+    // :app の local フレーバーと対になるローカル検証専用フレーバー。Wear の Data Layer は
+    // applicationId が一致する場合しか疎通しないため、:app を .local にしたときは
+    // :wearable も同じ suffix を付けないと Wear 連携だけ無反応になる。配信には使わない
+    create("local") {
+      dimension = "environment"
+      applicationIdSuffix = ".local"
+      versionNameSuffix = "-local"
+      versionCode = 100000756
+      versionName = "10.15.1"
     }
   }
 

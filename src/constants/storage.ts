@@ -43,6 +43,14 @@ export const STORAGE_KEYS = {
     '@TrainLCD:portraitPromoPromptLastShownAt',
   PORTRAIT_PROMO_BANNER_COUNT: '@TrainLCD:portraitPromoBannerCount',
   PORTRAIT_PROMO_APPEARANCE_SEEN: '@TrainLCD:portraitPromoAppearanceSeen',
+  // 取得済みの VOICEVOX 辞書・音声モデル(iOS)。src/lib/voicevox/assets.ts が管理する
+  VOICEVOX_ASSETS: '@TrainLCD:voicevoxAssets',
+  // ユーザーが VOICEVOX 資産 (約 160MB) のダウンロードに同意したか。同意後は
+  // 中断した取得や更新版の取得を自動で再開する
+  VOICEVOX_DOWNLOAD_CONSENTED: '@TrainLCD:voicevoxDownloadConsented',
+  // 試験的機能: リモートTTSの有効判定を Remote Config より優先して固定する
+  // ('auto' | 'on' | 'off')。src/lib/remoteTTSOverride.ts が管理する
+  REMOTE_TTS_OVERRIDE: '@TrainLCD:remoteTTSOverride',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

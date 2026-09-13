@@ -1,5 +1,6 @@
 import * as Application from 'expo-application';
 import { LinearGradient } from 'expo-linear-gradient';
+import type * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -28,6 +29,10 @@ import {
   rawLocationAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import {
+  getDisplacementSpeed,
+  hasMeasuredSpeed,
+} from '~/utils/displacementSpeed';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
@@ -50,6 +55,34 @@ const AURORA_COLORS = [
   'rgba(56, 189, 248, 0.28)',
   'rgba(217, 70, 239, 0.2)',
 ] as const;
+
+// パネルを画面内に収める。screen は「実際に描画されている座標系」の寸法で、
+// 回転ラッパー配下なら長辺=width の正規化寸法、ラッパーの外なら画面の実寸。
+export const getDevOverlayClampedPosition = (
+  rightOffset: number,
+  y: number,
+  size: { width: number; height: number },
+  screen: { width: number; height: number },
+  margin: number
+) => ({
+  x: Math.min(
+    Math.max(rightOffset, margin),
+    Math.max(margin, screen.width - size.width - margin)
+  ),
+  y: Math.min(
+    Math.max(y, margin),
+    Math.max(margin, screen.height - size.height - margin)
+  ),
+});
+
+// ドラッグ量の座標変換が要るのは Main の 90deg 回転ラッパーの内側にいるときだけ。
+// ラッパーの外に描画されている場合は、端末が物理的に縦向きでも変換してはいけない
+// (縦ドラッグで横に動く等の逆転になる)。
+export const isDevOverlayRotatedToLandscape = (
+  unrotated: boolean,
+  physicalWidth: number,
+  physicalHeight: number
+) => !unrotated && physicalHeight > physicalWidth;
 
 export const getDevOverlayDragTranslation = (
   dx: number,
@@ -322,7 +355,14 @@ const MetricCard: React.FC<MetricCardProps> = ({
   </View>
 );
 
-const DevOverlay: React.FC = () => {
+type Props = {
+  // Main の 90deg 回転ラッパーの外に置かれる場合に true(ポートレートモードの
+  // レイアウト配下と低消費電力テーマ)。パネルが実際に描画される座標系が画面の
+  // 実寸そのものになるため、位置のクランプとドラッグ量の変換をそちらに合わせる。
+  unrotated?: boolean;
+};
+
+const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedHeight, setExpandedHeight] = useState(0);
   // アンカーの経過秒表示用の現在時刻。レンダー中に Date.now() を直接呼ぶと純粋性違反に
@@ -345,6 +385,57 @@ const DevOverlay: React.FC = () => {
   const location = autoModeEnabled ? simulatedLocation : rawLocation;
   const speed = location?.coords?.speed;
   const accuracy = location?.coords?.accuracy;
+
+  // Androidのテストプロバイダ経由の測位はcoords.speedを運んでこない。
+  // cmd location providersに速度を渡す引数が無く、expo-locationがLocation#getSpeed()を
+  // 素通しするため、欠測はnullではなく0として届く（=値だけでは停車と区別できない）。
+  // そこで「正の速度を一度でも観測したか」で実測の有無を判定し、観測できたなら以降は
+  // 0（停車）も含めて実測を使い続ける。観測できない間だけ変位からの算出値へ落とす。
+  const [hasEverMeasuredSpeed, setHasEverMeasuredSpeed] = useState(false);
+  const [displacementSpeed, setDisplacementSpeed] = useState<number | null>(
+    null
+  );
+  const prevSpeedSampleRef = useRef<Location.LocationObject | null>(null);
+  // 直近に読んでいた測位ソース。オートモードの切り替えで参照元がlocationAtomと
+  // rawLocationAtomの間を移るため、ソースをまたいだサンプルで速度を出さないよう見張る。
+  const prevSpeedSourceRef = useRef<'simulated' | 'raw' | null>(null);
+
+  useEffect(() => {
+    // 測位ソースが変わったら基準も判定もやり直す。オートモードのシミュレーションと
+    // GPSの継続測位ではタイムスタンプの系列も速度の有無も異なり、両者をまたいで
+    // 変位を取ると無意味な速度になる。実測の有無もソースごとに判断し直す
+    // （シミュレーションは常に速度を持つため、そのフラグをGPS側へ持ち越すと
+    // 速度を運んでこない測位でも実測扱いのまま0km/hに固定されてしまう）。
+    const speedSource = autoModeEnabled ? 'simulated' : 'raw';
+    const isSourceChanged = prevSpeedSourceRef.current !== speedSource;
+    prevSpeedSourceRef.current = speedSource;
+
+    if (isSourceChanged) {
+      prevSpeedSampleRef.current = null;
+      setDisplacementSpeed(null);
+      setHasEverMeasuredSpeed(false);
+    }
+
+    if (!location) {
+      // 測位が途切れたときも同様。復帰後の1点目を古い基準と突き合わせると、
+      // 途切れていた時間ぶんならした速度が出てしまう。
+      prevSpeedSampleRef.current = null;
+      setDisplacementSpeed(null);
+      setHasEverMeasuredSpeed(false);
+      return;
+    }
+
+    if (hasMeasuredSpeed(location.coords.speed)) {
+      setHasEverMeasuredSpeed(true);
+    }
+
+    const derived = getDisplacementSpeed(prevSpeedSampleRef.current, location);
+    prevSpeedSampleRef.current = location;
+    // 算出不能（同一タイムスタンプの再配信など）のときは前回値を残す
+    if (derived != null) {
+      setDisplacementSpeed(derived);
+    }
+  }, [location, autoModeEnabled]);
   const distanceToNextStation = useDistanceToNextStation();
   const nextStation = useNextStation(false);
   const isTelemetryEnabled = useTelemetryEnabled();
@@ -358,7 +449,9 @@ const DevOverlay: React.FC = () => {
   const etaPhase = useMemo(() => getEtaPhaseNow(nowTick), [nowTick]);
   const etaAnchor = useAtomValue(etaAnchorAtom);
 
-  const coordsSpeed = ((speed ?? 0) < 0 ? 0 : speed) ?? 0;
+  const effectiveSpeed = hasEverMeasuredSpeed
+    ? Math.max(0, speed ?? 0)
+    : (displacementSpeed ?? 0);
   const accuracyMeters =
     accuracy != null ? Math.max(0, Math.floor(accuracy)) : null;
   // 最大許容精度のフィルタに関係なく生の精度を判定し、許容値を超えたら赤字で警告する。
@@ -373,13 +466,14 @@ const DevOverlay: React.FC = () => {
     accuracy <= maxPermitAccuracy;
 
   const speedKMH = useMemo(
-    () =>
-      (
-        (speed && Math.round((coordsSpeed * 3600) / 1000)) ??
-        0
-      ).toLocaleString(),
-    [coordsSpeed, speed]
+    () => Math.round((effectiveSpeed * 3600) / 1000).toLocaleString(),
+    [effectiveSpeed]
   );
+  // 算出値は停車中の測位ゆらぎでも値が立つため、実測と読み違えないよう出所を添える
+  const speedMeta =
+    !hasEverMeasuredSpeed && displacementSpeed != null
+      ? '変位から算出'
+      : undefined;
 
   // 最新の測位精度を ref で保持し、setInterval から常に最新値を参照できるようにする
   const latestAccuracyRef = useRef<number | null | undefined>(accuracy);
@@ -444,9 +538,18 @@ const DevOverlay: React.FC = () => {
 
   const dim = useLandscapeWindowDimensions();
   const physicalDim = useWindowDimensions();
+  // パネルの寸法は従来どおり長辺=width の正規化寸法から決める。一方で位置の
+  // クランプとドラッグ量の変換は「実際に描画されている座標系」で行う必要があり、
+  // 回転ラッパーの外に出る場合は画面の実寸が正しい基準になる。
+  const screenWidth = unrotated ? physicalDim.width : dim.width;
+  const screenHeight = unrotated ? physicalDim.height : dim.height;
   const [basePosition, setBasePosition] = useState({ x: 0, y: 0 });
   const isLandscape = dim.width > dim.height;
-  const isRotatedToLandscape = physicalDim.height > physicalDim.width;
+  const isRotatedToLandscape = isDevOverlayRotatedToLandscape(
+    unrotated,
+    physicalDim.width,
+    physicalDim.height
+  );
   const panelWidth = isLandscape
     ? Math.min(Math.max(dim.width * 0.29, 360), 520)
     : Math.min(Math.max(dim.width * 0.34, 280), 430);
@@ -557,17 +660,15 @@ const DevOverlay: React.FC = () => {
   }, [isExpanded, animatedProgress]);
 
   const clampPosition = useMemo(
-    () => (rightOffset: number, y: number, width: number, height: number) => {
-      const margin = isLandscape ? 8 : 12;
-      const maxRight = Math.max(margin, dim.width - width - margin);
-      const maxY = Math.max(margin, dim.height - height - margin);
-
-      return {
-        x: Math.min(Math.max(rightOffset, margin), maxRight),
-        y: Math.min(Math.max(y, margin), maxY),
-      };
-    },
-    [dim.height, dim.width, isLandscape]
+    () => (rightOffset: number, y: number, width: number, height: number) =>
+      getDevOverlayClampedPosition(
+        rightOffset,
+        y,
+        { width, height },
+        { width: screenWidth, height: screenHeight },
+        isLandscape ? 8 : 12
+      ),
+    [screenWidth, screenHeight, isLandscape]
   );
 
   useEffect(() => {
@@ -815,6 +916,8 @@ const DevOverlay: React.FC = () => {
                     label="CURRENT SPEED"
                     value={speedKMH}
                     suffix="km/h"
+                    meta={speedMeta}
+                    metaTestID="dev-overlay-speed-meta"
                     style={[{ width: leftMetricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-speed-value"
                     labelStyle={metricLabelStyle}
@@ -900,6 +1003,8 @@ const DevOverlay: React.FC = () => {
                     label="CURRENT SPEED"
                     value={speedKMH}
                     suffix="km/h"
+                    meta={speedMeta}
+                    metaTestID="dev-overlay-speed-meta"
                     style={[{ width: metricWidth }, metricCardStyle]}
                     valueTestID="dev-overlay-speed-value"
                     labelStyle={metricLabelStyle}

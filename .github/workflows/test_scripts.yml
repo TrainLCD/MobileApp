@@ -1,7 +1,8 @@
-# .github/scripts/ 配下の CI 用スクリプトに対するテスト。
+# .github/scripts/ と scripts/ 配下のスクリプトに対するテスト。
 # Jest (test.yml) は jest-expo プリセットで src/** を対象にしているため、
-# この階層は拾われない。追加依存が無く Node 標準のテストランナーだけで動くので、
-# npm ci を挟まない軽量なジョブとして分けている。
+# これらの階層の .mjs は拾われない。追加依存が無く Node 標準のテストランナーだけで
+# 動くので、npm ci を挟まない軽量なジョブとして分けている。
+# node_modules が無い前提なので、対象スクリプトは npm 依存を静的 import しないこと。
 name: Scripts
 
 on:
@@ -12,6 +13,8 @@ on:
     # pull_request 側にも同じ paths を書き下す。片方だけ更新しないこと。
     paths:
       - '.github/scripts/**'
+      - 'scripts/**'
+      - 'src/utils/trainSpeed.ts'
       - '.github/workflows/test_scripts.yml'
       # 実行コマンドは package.json の test:scripts に依存している。
       # スクリプト定義だけが変わった場合も壊れを検出できるようにする。
@@ -21,6 +24,8 @@ on:
   pull_request:
     paths:
       - '.github/scripts/**'
+      - 'scripts/**'
+      - 'src/utils/trainSpeed.ts'
       - '.github/workflows/test_scripts.yml'
       - 'package.json'
 

@@ -7,6 +7,7 @@ env:
   DEV_WORKER_API_URL: "${{ secrets.DEV_WORKER_API_URL }}"
   ENABLE_EXPERIMENTAL_TELEMETRY: "${{ secrets.ENABLE_EXPERIMENTAL_TELEMETRY }}"
   EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: "${{ secrets.EXPERIMENTAL_TELEMETRY_ENDPOINT_URL }}"
+  SENTRY_DSN: "${{ secrets.SENTRY_DSN }}"
 
 on:
   push:
@@ -63,6 +64,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fetch VOICEVOX CORE frameworks
+        run: npm run ios:frameworks
+
       - name: Install CocoaPods dependencies
         working-directory: ios
         run: pod install --repo-update
@@ -86,6 +90,7 @@ jobs:
             STAGING_API_URL
             DEV_ROUTE_RESOLVER_API_URL
             DEV_WORKER_API_URL
+            SENTRY_DSN
           )
 
           required_variables+=(

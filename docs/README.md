@@ -14,3 +14,4 @@
 - [AI コードレビュー (GPT-5.6 Sol)](./ai-code-review-workflow.md)
 - [AIエージェント設計書](./spec/ai-agent/architecture.md)
 - [リモートTTS(iOS)設計書](./spec/tts/remote-tts.md)
+- [オンデバイスTTS(VOICEVOX / iOS)設計書](./spec/tts/on-device-tts-ios.md)

@@ -43,10 +43,19 @@ const BATTERY_STATE_MAP: Record<Battery.BatteryState, TelemetryBatteryState> = {
   [Battery.BatteryState.NOT_CHARGING]: 'unknown',
 };
 
+// テレメトリ基盤のGraphQL enum Platform
+const TelemetryPlatform = z.enum(['ios', 'android', 'macos', 'unknown']);
+type TelemetryPlatform = z.infer<typeof TelemetryPlatform>;
+
 // テレメトリ基盤のGraphQL LocationEventInputに対応
 const LocationEventInput = z.object({
   sessionId: z.string().min(1),
   device: z.string(),
+  // THQ側でlocation_logs自体にビルド情報を持たせ、log_events等とのjoin無しで
+  // ビルド間比較・集計ができるようにするため送る(THQ#30)
+  appVersion: z.string().min(1),
+  platform: TelemetryPlatform,
+  channel: z.enum(['production', 'canary']),
   state: MovingState,
   stationId: z.number().nullable().optional(),
   lineId: z.number(),
@@ -89,10 +98,6 @@ const SendLocationResponse = z
   .refine((res) => res.data != null || (res.errors?.length ?? 0) > 0, {
     message: 'Either data.sendLocation or non-empty errors is required',
   });
-
-// テレメトリ基盤のGraphQL enum Platform
-const TelemetryPlatform = z.enum(['ios', 'android', 'macos', 'unknown']);
-type TelemetryPlatform = z.infer<typeof TelemetryPlatform>;
 
 // テレメトリ基盤がセッション単位でイベントを紐付けるためのID。
 // フックは複数コンポーネントから使われるため、インスタンス毎ではなく
@@ -422,6 +427,9 @@ export const useTelemetrySender = (
     const payload = LocationEventInput.safeParse({
       sessionId: getOrCreateSessionId(),
       device: Device.modelName ?? 'unknown',
+      appVersion: `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`,
+      platform: getTelemetryPlatform(),
+      channel: isDevApp ? 'canary' : 'production',
       state,
       lineId: line.id,
       stationId: station?.id ?? null,

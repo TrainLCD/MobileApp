@@ -31,14 +31,21 @@ react {
     //   ここに挙げたバリアントは JS バンドルとアセットの同梱をスキップし、Metro から
     //   JS を読み込む。判定はバリアント名の完全一致（大文字小文字は無視）で行われる。
     //   RN の既定値は ["debug", "debugOptimized"] だが、本プロジェクトは
-    //   flavorDimensions "environment" を持つためバリアント名が devDebug / prodDebug
-    //   （および RN プラグインが自動生成する build type の devDebugOptimized /
-    //   prodDebugOptimized）となり、既定リストに一致しない。明示しないと debug ビルドでも
+    //   flavorDimensions "environment" を持つためバリアント名が devDebug / prodDebug /
+    //   localDebug（および RN プラグインが自動生成する build type の devDebugOptimized /
+    //   prodDebugOptimized / localDebugOptimized）となり、既定リストに一致しない。明示しないと debug ビルドでも
     //   createBundle<Variant>JsAndAssets が走って JS が APK に焼き込まれ、Metro に接続されず
     //   Fast Refresh も CDP デバッガも使えなくなる。
     //   配布ビルドは EAS / CI とも bundleDevRelease / bundleProdRelease（Release バリアント）
     //   を使うため、このリストの影響を受けない。
-    debuggableVariants = ["devDebug", "prodDebug", "devDebugOptimized", "prodDebugOptimized"]
+    debuggableVariants = [
+        "devDebug",
+        "prodDebug",
+        "localDebug",
+        "devDebugOptimized",
+        "prodDebugOptimized",
+        "localDebugOptimized",
+    ]
 
     /* Bundling */
     //   A list containing the node command and its flags. Default is just 'node'.
@@ -154,13 +161,24 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000711
-            versionName "10.15.0"
+            versionCode 100000755
+            versionName "10.15.1"
         }
         prod {
             dimension "environment"
-            versionCode 100000711
-            versionName "10.15.0"
+            versionCode 100000755
+            versionName "10.15.1"
+        }
+        // ストア配信する dev (Canary) と applicationId を分けた、ローカル検証専用のフレーバー。
+        // ストアの Canary 版を消さずに同居させるためだけに存在し、配信には使わない
+        // (EAS / CI はいずれも devRelease / prodRelease を名指しするのでここは参照されない)。
+        // アイコン・スプラッシュは main を継承し、背景色と表示名・スキームだけ src/local/res で上書きする
+        local {
+            dimension "environment"
+            applicationId "me.tinykitten.trainlcd.local"
+            versionNameSuffix "-local"
+            versionCode 100000755
+            versionName "10.15.1"
         }
     }
 }

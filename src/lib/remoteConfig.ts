@@ -1,5 +1,7 @@
 import { Platform } from 'react-native';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import { VOICEVOX_DEFAULT_STYLE_ID } from '~/constants/voicevox';
+import { getRemoteTTSOverride, REMOTE_TTS_OVERRIDE } from './remoteTTSOverride';
 import { workerUrl } from './workerApi';
 
 // Cloudflare Worker(/config/remote) 配信の設定キー。Worker 側のレスポンスキーと一致させる。
@@ -33,6 +35,17 @@ export const REMOTE_CONFIG_KEYS = {
   // 端末内蔵 TTS(expo-speech)で読み上げる。
   REMOTE_TTS_ENABLED_IOS: 'remote_tts_enabled_ios',
   REMOTE_TTS_ENABLED_ANDROID: 'remote_tts_enabled_android',
+  // iOS でリモート TTS が使えない回の日本語フォールバックを、端末内蔵 TTS の代わりに
+  // VOICEVOX CORE (端末内合成) で読み上げるかどうか。辞書と音声モデル (約 180MB) を
+  // 初回に取得するため、配信 URL とセットで有効化する。未配信・取得失敗時は無効
+  // (従来どおり端末内蔵 TTS へフォールバック)。App Clip と Android は対象外。
+  VOICEVOX_TTS_ENABLED_IOS: 'voicevox_tts_enabled_ios',
+  // VOICEVOX の辞書・音声モデルを列挙したマニフェスト JSON の URL。
+  // 形式は src/lib/voicevox/manifest.ts を参照。
+  VOICEVOX_TTS_MANIFEST_URL_IOS: 'voicevox_tts_manifest_url_ios',
+  // VOICEVOX のスタイル ID (話者と声色)。配信した音声モデルに含まれる ID を指定する。
+  // 未配信時は VOICEVOX_DEFAULT_STYLE_ID (No.7 アナウンス)。
+  VOICEVOX_TTS_STYLE_ID_IOS: 'voicevox_tts_style_id_ios',
   // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
   // エントリポイントごと機能を止められるようにするキルスイッチ。
   AI_AGENT_ENABLED: 'ai_agent_enabled',
@@ -50,6 +63,9 @@ type RemoteConfigResponse = {
   tts_enabled_android?: boolean;
   remote_tts_enabled_ios?: boolean;
   remote_tts_enabled_android?: boolean;
+  voicevox_tts_enabled_ios?: boolean;
+  voicevox_tts_manifest_url_ios?: string;
+  voicevox_tts_style_id_ios?: number;
   ai_agent_enabled?: boolean;
 };
 
@@ -79,6 +95,10 @@ const REMOTE_TTS_ENABLED_ANDROID_FALLBACK = false;
 // 未配信・取得失敗時は安全側に倒して無効とする。
 const AI_AGENT_ENABLED_FALLBACK = false;
 
+// VOICEVOX フォールバックのフォールバック既定値。約 180MB の辞書・音声モデルを
+// 端末へ取得する機能のため、Remote Config で明示的に有効化されたときだけ動かす。
+const VOICEVOX_TTS_ENABLED_IOS_FALLBACK = false;
+
 // リモート設定の数値は「有限かつ正」のみ受理する(0・負値・非数はフォールバックへ倒す)。
 // 真偽値や配列は Number() で 1 や 5 に化けるため、number 型に限定してから検証する。
 const parsePositiveFiniteNumber = (value: unknown): number | null => {
@@ -86,6 +106,27 @@ const parsePositiveFiniteNumber = (value: unknown): number | null => {
     return null;
   }
   return Number.isFinite(value) && value > 0 ? value : null;
+};
+
+// 配信 URL は https のみ受理する。辞書・音声モデルという実行に直結するバイナリを
+// 取得する先なので、平文 HTTP や不正な文字列はフォールバック(未配信)へ倒す。
+const parseHttpsUrl = (value: unknown): string | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!/^https:\/\/[^\s]+$/.test(trimmed)) {
+    return null;
+  }
+  return trimmed;
+};
+
+// スタイル ID は 0 以上の整数のみ受理する(0 は四国めたん あまあま)。
+const parseNonNegativeInteger = (value: unknown): number | null => {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    return null;
+  }
+  return value;
 };
 
 // getMaxPermitAccuracy / isForceNotArrivedOnLowAccuracyEnabled 等はGPS更新のたびに
@@ -101,6 +142,9 @@ let cachedTTSEnabledAndroid: boolean | null = null;
 let cachedRemoteTTSEnabledIOS: boolean | null = null;
 let cachedRemoteTTSEnabledAndroid: boolean | null = null;
 let cachedAIAgentEnabled: boolean | null = null;
+let cachedVoicevoxTTSEnabledIOS: boolean | null = null;
+let cachedVoicevoxTTSManifestUrlIOS: string | null = null;
+let cachedVoicevoxTTSStyleIdIOS: number | null = null;
 
 // setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
 // 更新されても React は再レンダーしない。UI(FxTTS・設定画面)が useSyncExternalStore
@@ -133,6 +177,9 @@ export const resetRemoteConfigCache = (): void => {
   cachedRemoteTTSEnabledIOS = null;
   cachedRemoteTTSEnabledAndroid = null;
   cachedAIAgentEnabled = null;
+  cachedVoicevoxTTSEnabledIOS = null;
+  cachedVoicevoxTTSManifestUrlIOS = null;
+  cachedVoicevoxTTSStyleIdIOS = null;
   notifyRemoteConfigListeners();
 };
 
@@ -184,6 +231,17 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   if (typeof data.ai_agent_enabled === 'boolean') {
     cachedAIAgentEnabled = data.ai_agent_enabled;
+  }
+  if (typeof data.voicevox_tts_enabled_ios === 'boolean') {
+    cachedVoicevoxTTSEnabledIOS = data.voicevox_tts_enabled_ios;
+  }
+  const manifestUrl = parseHttpsUrl(data.voicevox_tts_manifest_url_ios);
+  if (manifestUrl != null) {
+    cachedVoicevoxTTSManifestUrlIOS = manifestUrl;
+  }
+  const styleId = parseNonNegativeInteger(data.voicevox_tts_style_id_ios);
+  if (styleId != null) {
+    cachedVoicevoxTTSStyleIdIOS = styleId;
   }
   notifyRemoteConfigListeners();
 };
@@ -269,17 +327,21 @@ export const isTTSFeatureEnabled = (): boolean => {
 //   - 障害・コスト超過時に iOS を端末内蔵 TTS へ退避: remote_tts_enabled_ios=false
 // 未配信・取得失敗時は既存挙動を維持するフォールバック(iOS=true / Android=false)を返す。
 // iOS/Android 以外(web など)はリモート再生経路を持たないため常に false。
+// 試験的機能の上書き設定(remoteTTSOverride)が 'on' / 'off' のときは配信値より優先する。
+// 実機でエンジンの切り替えを検証するための導線で、dev アプリ以外では常に 'auto' になる。
 export const isRemoteTTSEnabled = (): boolean => {
-  switch (Platform.OS) {
-    case 'ios':
-      return cachedRemoteTTSEnabledIOS ?? REMOTE_TTS_ENABLED_IOS_FALLBACK;
-    case 'android':
-      return (
-        cachedRemoteTTSEnabledAndroid ?? REMOTE_TTS_ENABLED_ANDROID_FALLBACK
-      );
-    default:
-      return false;
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+    return false;
   }
+
+  const override = getRemoteTTSOverride();
+  if (override !== REMOTE_TTS_OVERRIDE.AUTO) {
+    return override === REMOTE_TTS_OVERRIDE.ON;
+  }
+
+  return Platform.OS === 'ios'
+    ? (cachedRemoteTTSEnabledIOS ?? REMOTE_TTS_ENABLED_IOS_FALLBACK)
+    : (cachedRemoteTTSEnabledAndroid ?? REMOTE_TTS_ENABLED_ANDROID_FALLBACK);
 };
 
 // AIエージェント(行き先相談)機能の有効/無効を同期的に取得する。setupRemoteConfig 完了後は
@@ -291,3 +353,30 @@ export const isAIAgentFeatureEnabled = (): boolean => {
   }
   return AI_AGENT_ENABLED_FALLBACK;
 };
+
+/**
+ * iOS でリモート TTS が使えない回の日本語フォールバックを VOICEVOX (端末内合成) で
+ * 読み上げるかどうかを同期的に取得する。isRemoteTTSEnabled とは独立しており、
+ * リモート合成を使う構成のまま「フォールバック先だけ」を差し替える。有効でも
+ * 辞書・音声モデルが未取得の間や App Clip では従来どおり端末内蔵 TTS が使われる。
+ * Android は対象外(ネイティブモジュールを持たない)のため常に false。
+ */
+export const isVoicevoxTTSEnabled = (): boolean => {
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  return cachedVoicevoxTTSEnabledIOS ?? VOICEVOX_TTS_ENABLED_IOS_FALLBACK;
+};
+
+/**
+ * VOICEVOX の辞書・音声モデルを列挙したマニフェスト JSON の URL。未配信なら null で、
+ * その場合は有効化されていても資産を取得できないため VOICEVOX は使われない。
+ */
+export const getVoicevoxTTSManifestUrl = (): string | null =>
+  cachedVoicevoxTTSManifestUrlIOS;
+
+/**
+ * VOICEVOX のスタイル ID。未配信・不正値ならフォールバック(No.7 アナウンス)。
+ */
+export const getVoicevoxTTSStyleId = (): number =>
+  cachedVoicevoxTTSStyleIdIOS ?? VOICEVOX_DEFAULT_STYLE_ID;

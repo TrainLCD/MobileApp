@@ -75,7 +75,19 @@ Before you begin, ensure you have met the following requirements:
    cd MobileApp
    ```
 
-2. Install dependencies:
+2. Check out the font submodule (maintainers only):
+   ```bash
+   git submodule update --init --recursive
+   ```
+
+   The station numbering icons and the LED theme use commercially licensed
+   typefaces, so they are kept in a private submodule (`android/app/src/main/assets/fonts`,
+   `ios/Fonts`) that cannot be redistributed. The app builds and runs without it —
+   those glyphs simply fall back to the system font — so outside contributors can
+   skip this step and should expect the numbering to render in a different
+   typeface than the released builds.
+
+3. Install dependencies:
    ```bash
    npm install
    ```
@@ -96,7 +108,14 @@ npm run start
 
 - **iOS**: `npm run ios`
 - **Android**: `npm run android`
+- **Android (local-only variant)**: `npm run android:local`
 - **Web**: `npm run web`
+
+`npm run android` installs the `dev` flavor (`me.tinykitten.trainlcd.dev`), which is the
+same application ID as the Canary build distributed through the stores, so it replaces an
+installed Canary build. `npm run android:local` installs the `local` flavor
+(`me.tinykitten.trainlcd.local`, shown as **TrainLCD Local**) instead, which coexists with
+both store builds. It points at the same staging backends as Canary.
 
 ## Download
 
@@ -145,6 +164,7 @@ utils/                 # Tooling scripts and codegen helpers
 
 - `npm run start` - Start the Expo development server
 - `npm run android` / `npm run ios` - Build and launch native binaries
+- `npm run android:local` - Build and launch the Android `local` flavor, which can be installed alongside the store builds
 - `npm run web` - Serve the Expo web build
 - `npm run lint` - Run Biome linter
 - `npm run format` - Format code with Biome

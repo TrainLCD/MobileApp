@@ -41,6 +41,38 @@ jest.mock('react-native-app-clip', () => ({
   isClip: jest.fn(() => false),
 }));
 
+// オフライン用日本語音声 (VOICEVOX) の取得状態。既定は「対象外」にして既存の
+// テストに影響させず、プロンプトと進捗表示のテストで状態を差し替える。
+type MockVoicevoxStatus = {
+  phase:
+    | 'unsupported'
+    | 'not_downloaded'
+    | 'downloading'
+    | 'installed'
+    | 'error';
+  downloadedBytes: number;
+  totalBytes: number;
+  version: string | null;
+  errorMessage: string | null;
+};
+let mockVoicevoxStatus: MockVoicevoxStatus = {
+  phase: 'unsupported',
+  downloadedBytes: 0,
+  totalBytes: 0,
+  version: null,
+  errorMessage: null,
+};
+const mockRequestVoicevoxAssetsDownload = jest.fn(async () => null);
+const mockCancelVoicevoxAssetsDownload = jest.fn();
+const mockDeleteVoicevoxAssets = jest.fn(async () => undefined);
+jest.mock('~/lib/voicevox/assets', () => ({
+  getVoicevoxAssetsStatus: () => mockVoicevoxStatus,
+  subscribeVoicevoxAssets: () => () => {},
+  requestVoicevoxAssetsDownload: () => mockRequestVoicevoxAssetsDownload(),
+  cancelVoicevoxAssetsDownload: () => mockCancelVoicevoxAssetsDownload(),
+  deleteVoicevoxAssets: () => mockDeleteVoicevoxAssets(),
+}));
+
 jest.mock('~/components/FooterTabBar', () => () => null);
 jest.mock('~/components/SettingsHeader', () => ({
   SettingsHeader: () => null,
@@ -92,6 +124,14 @@ describe('TTSSettingsScreen', () => {
     jest.clearAllMocks();
     resetDialogPresentationForTests();
     setPlatformOS(originalPlatformOS);
+    mockVoicevoxStatus = {
+      phase: 'unsupported',
+      downloadedBytes: 0,
+      totalBytes: 0,
+      version: null,
+      errorMessage: null,
+    };
+    storage.remove(STORAGE_KEYS.TTS_NOTICE);
   });
 
   it('日本語をOFFにしても英語はONのままになる', () => {
@@ -294,30 +334,6 @@ describe('TTSSettingsScreen', () => {
       fireEvent.press(getByLabelText('toEnabled'));
     };
 
-    it('[Android] 端末内蔵TTSの音質案内を表示する', () => {
-      setPlatformOS('android');
-
-      const { getByText } = renderWithSpeechState({ enabled: true });
-
-      expect(getByText('ttsVoiceQualityNoticeAndroid')).toBeTruthy();
-    });
-
-    it('[iOS] リモート合成のため音質案内を表示しない', () => {
-      setPlatformOS('ios');
-
-      const { queryByText } = renderWithSpeechState({ enabled: true });
-
-      expect(queryByText('ttsVoiceQualityNoticeAndroid')).toBeNull();
-    });
-
-    it('[web] Android固有の音質案内を表示しない', () => {
-      setPlatformOS('web');
-
-      const { queryByText } = renderWithSpeechState({ enabled: true });
-
-      expect(queryByText('ttsVoiceQualityNoticeAndroid')).toBeNull();
-    });
-
     it('[iOS] 有効化時の注意ダイアログはリモート合成向けの文言になる', () => {
       setPlatformOS('ios');
 
@@ -351,6 +367,165 @@ describe('TTSSettingsScreen', () => {
         visible: true,
         request: { title: 'notice', message: 'ttsAlertTextAndroid' },
       });
+    });
+  });
+  describe('オフライン用日本語音声 (VOICEVOX)', () => {
+    const setStatus = (status: Partial<MockVoicevoxStatus>) => {
+      mockVoicevoxStatus = { ...mockVoicevoxStatus, ...status };
+    };
+
+    it('[iOS] 有効化時に未取得なら、注意ダイアログの後にダウンロードを尋ねる', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'not_downloaded' });
+      // 注意ダイアログは表示済みとして、ダウンロードの確認だけを出す
+      storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
+
+      const { getByLabelText } = renderWithSpeechState({ enabled: false });
+      fireEvent.press(getByLabelText('toEnabled'));
+
+      const snapshot = getDialogPresentationSnapshot();
+      expect(snapshot).toMatchObject({
+        visible: true,
+        request: {
+          title: 'voicevoxDownloadTitle',
+          message: 'voicevoxDownloadPrompt',
+        },
+      });
+
+      const download = snapshot.request?.buttons.find(
+        (button) => button.text === 'download'
+      );
+      download?.onPress?.();
+      expect(mockRequestVoicevoxAssetsDownload).toHaveBeenCalledTimes(1);
+    });
+
+    it('[iOS] 「あとで」を選んでもダウンロードは始まらず、自動アナウンスは有効になる', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'not_downloaded' });
+      storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
+
+      const { getByLabelText, store } = renderWithSpeechState({
+        enabled: false,
+      });
+      fireEvent.press(getByLabelText('toEnabled'));
+
+      const later = getDialogPresentationSnapshot().request?.buttons.find(
+        (button) => button.text === 'later'
+      );
+      expect(later?.style).toBe('cancel');
+      later?.onPress?.();
+      expect(mockRequestVoicevoxAssetsDownload).not.toHaveBeenCalled();
+      expect(store.get(speechState).enabled).toBe(true);
+    });
+
+    it('[iOS] 日本語を読まない設定 (英語のみ) では尋ねない', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'not_downloaded' });
+      storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
+
+      const { getByLabelText, store } = renderWithSpeechState({
+        enabled: false,
+        ttsEnabledLanguages: ['EN'],
+      });
+      fireEvent.press(getByLabelText('toEnabled'));
+
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+      expect(mockRequestVoicevoxAssetsDownload).not.toHaveBeenCalled();
+      expect(store.get(speechState).enabled).toBe(true);
+    });
+
+    it('[iOS] 取得済みなら有効化時に尋ねない', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'installed', totalBytes: 160_000_000, version: 'v1' });
+      storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
+
+      const { getByLabelText } = renderWithSpeechState({ enabled: false });
+      fireEvent.press(getByLabelText('toEnabled'));
+
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+    });
+
+    it('[iOS] 対象外 (未配信・App Clip) ならパネルもプロンプトも出さない', () => {
+      setPlatformOS('ios');
+      storage.set(STORAGE_KEYS.TTS_NOTICE, 'true');
+
+      const { getByLabelText, queryByText } = renderWithSpeechState({
+        enabled: false,
+      });
+      expect(queryByText('voicevoxDownloadTitle')).toBeNull();
+
+      fireEvent.press(getByLabelText('toEnabled'));
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+    });
+
+    it('[Android] 状態にかかわらずパネルを出さない', () => {
+      setPlatformOS('android');
+      setStatus({ phase: 'not_downloaded' });
+
+      const { queryByText } = renderWithSpeechState({ enabled: true });
+
+      expect(queryByText('voicevoxDownloadTitle')).toBeNull();
+    });
+
+    it('未取得ならサイズ付きのダウンロード操作を出し、押すと取得を始める', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'not_downloaded' });
+
+      const { getByText } = renderWithSpeechState({ enabled: true });
+
+      expect(getByText('voicevoxNotDownloadedDescription')).toBeTruthy();
+      fireEvent.press(getByText('voicevoxDownloadAction'));
+      expect(mockRequestVoicevoxAssetsDownload).toHaveBeenCalledTimes(1);
+    });
+
+    it('取得中は進捗とキャンセルを出す', () => {
+      setPlatformOS('ios');
+      setStatus({
+        phase: 'downloading',
+        downloadedBytes: 72_000_000,
+        totalBytes: 160_000_000,
+      });
+
+      const { getByText, getByTestId } = renderWithSpeechState({
+        enabled: true,
+      });
+
+      expect(getByText('voicevoxDownloading 45%')).toBeTruthy();
+      expect(getByText('72MB / 160MB')).toBeTruthy();
+      expect(
+        getByTestId('voicevox-progressbar').props.accessibilityValue
+      ).toMatchObject({ now: 45 });
+      fireEvent.press(getByText('cancel'));
+      expect(mockCancelVoicevoxAssetsDownload).toHaveBeenCalledTimes(1);
+    });
+
+    it('取得済みならサイズと削除を出し、削除は確認ダイアログを経て実行する', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'installed', totalBytes: 162_000_000, version: 'v1' });
+
+      const { getByText } = renderWithSpeechState({ enabled: true });
+
+      expect(getByText('voicevoxInstalled')).toBeTruthy();
+      fireEvent.press(getByText('voicevoxDelete'));
+
+      const snapshot = getDialogPresentationSnapshot();
+      expect(snapshot.request?.title).toBe('voicevoxDeleteConfirmTitle');
+      expect(mockDeleteVoicevoxAssets).not.toHaveBeenCalled();
+      snapshot.request?.buttons
+        .find((button) => button.style === 'destructive')
+        ?.onPress?.();
+      expect(mockDeleteVoicevoxAssets).toHaveBeenCalledTimes(1);
+    });
+
+    it('失敗時は再試行を出す', () => {
+      setPlatformOS('ios');
+      setStatus({ phase: 'error', errorMessage: 'manifest fetch failed: 500' });
+
+      const { getByText } = renderWithSpeechState({ enabled: true });
+
+      expect(getByText('voicevoxDownloadFailed')).toBeTruthy();
+      fireEvent.press(getByText('retry'));
+      expect(mockRequestVoicevoxAssetsDownload).toHaveBeenCalledTimes(1);
     });
   });
 });

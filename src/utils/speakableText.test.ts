@@ -11,14 +11,18 @@ describe('toSpeakableText', () => {
 
   it('SSML タグを除去し、sub は読み仮名を採用する', () => {
     expect(
-      toSpeakableText('次は<sub alias="オオサキ">大崎</sub>です', 'JA')
+      toSpeakableText(
+        '次は<sub alias="オオサキ">大崎</sub>です',
+        'JA',
+        'native'
+      )
     ).toBe('次はオオサキです');
   });
 
   it('日本語の break は読点へ置き換える', () => {
-    expect(toSpeakableText('次は<break time="250ms"/>大崎です', 'JA')).toBe(
-      '次は、大崎です'
-    );
+    expect(
+      toSpeakableText('次は<break time="250ms"/>大崎です', 'JA', 'native')
+    ).toBe('次は、大崎です');
   });
 
   it('英語の break は半角スペースへ置き換える', () => {
@@ -26,16 +30,53 @@ describe('toSpeakableText', () => {
     expect(
       toSpeakableText(
         'The next station is Osaki,<break time="200ms"/> J Y 24.',
-        'EN'
+        'EN',
+        'native'
       )
     ).toBe('The next station is Osaki, J Y 24.');
   });
 
   it('「JR」を言語ごとの読み方が確定する表記へ置換する', () => {
-    expect(toSpeakableText('<sub alias="JRセン">JR線</sub>', 'JA')).toBe(
-      'ジェーアールセン'
+    expect(
+      toSpeakableText('<sub alias="JRセン">JR線</sub>', 'JA', 'native')
+    ).toBe('ジェーアールセン');
+    expect(toSpeakableText('the JR Kobe Line', 'EN', 'native')).toBe(
+      'the J-R Kobe Line'
     );
-    expect(toSpeakableText('the JR Kobe Line', 'EN')).toBe('the J-R Kobe Line');
+  });
+
+  it('端末内蔵 TTS 向けの英語文では「Keisei」を「けいせい」と読む表記へ置換する', () => {
+    expect(
+      toSpeakableText(
+        'The next station is Keisei-Ueno,<break time="200ms"/> KS 1.',
+        'EN',
+        'native'
+      )
+    ).toBe('The next station is Kay-say-Ueno, KS 1.');
+    // 日本語文はカタカナ読み (sub alias) がそのまま使われるので対象外
+    expect(
+      toSpeakableText(
+        '<sub alias="ケイセイウエノ">京成上野</sub>',
+        'JA',
+        'native'
+      )
+    ).toBe('ケイセイウエノ');
+  });
+
+  it('リモート TTS 向けの英語文では「Keisei」を置換せず原文のまま送る', () => {
+    // 同じ置換を TrainLCD/functions の normalizeRomanText が合成前に行うため、
+    // アプリ側では手を入れずサーバーの正規化とキャッシュキーを単一の入力に揃える
+    expect(
+      toSpeakableText(
+        'The next station is Keisei-Ueno,<break time="200ms"/> KS 1.',
+        'EN',
+        'remote'
+      )
+    ).toBe('The next station is Keisei-Ueno, KS 1.');
+    // JR の置換はサーバー側が J-R を素通しする前提なので、リモートでも適用する
+    expect(toSpeakableText('the JR Kobe Line', 'EN', 'remote')).toBe(
+      'the J-R Kobe Line'
+    );
   });
 
   it('英語文に混入した日本語を除去する', () => {
@@ -43,7 +84,7 @@ describe('toSpeakableText', () => {
     // 全文を日本語音声で読んでしまうため最終防衛線として除去する
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
 
-    expect(toSpeakableText('Arriving at あかさか K 7.', 'EN')).toBe(
+    expect(toSpeakableText('Arriving at あかさか K 7.', 'EN', 'native')).toBe(
       'Arriving at K 7.'
     );
     expect(warnSpy).toHaveBeenCalledWith(
@@ -53,7 +94,7 @@ describe('toSpeakableText', () => {
   });
 
   it('日本語文の日本語は当然除去しない', () => {
-    expect(toSpeakableText('つぎはあかさかです', 'JA')).toBe(
+    expect(toSpeakableText('つぎはあかさかです', 'JA', 'native')).toBe(
       'つぎはあかさかです'
     );
   });

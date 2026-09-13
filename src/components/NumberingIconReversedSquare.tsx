@@ -1,11 +1,15 @@
 import type React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   FONTS,
   NUMBERING_ICON_SIZE,
   type NumberingIconSize,
 } from '../constants';
 import isTablet from '../utils/isTablet';
+import {
+  numberingGlyphLift,
+  numberingStackedGlyphLift,
+} from '../utils/numberingGlyphLift';
 import Typography from './Typography';
 
 type Props = {
@@ -15,6 +19,20 @@ type Props = {
   darkText?: boolean;
   withOutline?: boolean;
 };
+
+const FONT = 'MyriadPro';
+const SYMBOL_SIZE = isTablet ? 22 * 1.5 : 22;
+const NUMBER_SIZE = isTablet ? 37 * 1.5 : 35;
+const MEDIUM_SIZE = isTablet ? 18 * 1.5 : 18;
+
+// Androidのグリフ上寄り補正。記号と番号で異なる値を使うと両者の間隔まで変わるため、
+// 縦に並ぶ2行には同じ値を使い回す
+const GLYPH_LIFT = numberingStackedGlyphLift(
+  { fontSize: SYMBOL_SIZE, font: FONT },
+  { fontSize: NUMBER_SIZE, font: FONT }
+);
+const MEDIUM_GLYPH_LIFT = numberingGlyphLift(MEDIUM_SIZE, FONT);
+const TINY_GLYPH_LIFT = numberingGlyphLift(10, FONT);
 
 const styles = StyleSheet.create({
   optionalBorder: {
@@ -53,29 +71,36 @@ const styles = StyleSheet.create({
     borderColor: 'white',
   },
   lineSymbol: {
-    fontSize: isTablet ? 22 * 1.5 : 22,
-    lineHeight: isTablet ? 22 * 1.5 : 22,
+    fontSize: SYMBOL_SIZE,
+    lineHeight: SYMBOL_SIZE,
+    transform: GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
-    marginTop: 4,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 4 : 0,
   },
   lineSymbolMedium: {
-    fontSize: isTablet ? 18 * 1.5 : 18,
-    lineHeight: isTablet ? 18 * 1.5 : 18,
+    fontSize: MEDIUM_SIZE,
+    lineHeight: MEDIUM_SIZE,
+    transform: MEDIUM_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   lineSymbolTiny: {
     fontSize: 10,
     lineHeight: 10,
+    transform: TINY_GLYPH_LIFT,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
-    marginTop: 2,
+    // Androidの上下ズレは GLYPH_LIFT が打ち消すので、視覚補正の marginTop は iOS のみ
+    marginTop: Platform.OS === 'ios' ? 2 : 0,
   },
   stationNumber: {
-    fontSize: isTablet ? 37 * 1.5 : 35,
-    lineHeight: isTablet ? 37 * 1.5 : 35,
+    fontSize: NUMBER_SIZE,
+    lineHeight: NUMBER_SIZE,
+    transform: GLYPH_LIFT,
     marginTop: isTablet ? -4 * 1.2 : -4,
     textAlign: 'center',
     fontFamily: FONTS.MyriadPro,
