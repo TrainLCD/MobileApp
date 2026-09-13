@@ -11,10 +11,14 @@ import { execFileSync } from 'node:child_process';
 import { test } from 'node:test';
 
 import {
+  applySignalProfile,
   buildDeepLinkQuery,
+  cumulativeDistances,
   isPassStopCondition,
+  isUndergroundStation,
   resolveIsHoliday,
   resolveStopIndices,
+  stationAtDistance,
 } from './generate-location-gpx.mjs';
 
 const station = (id, stopCondition) => ({ id, stopCondition });
@@ -182,3 +186,163 @@ test(
     }
   }
 );
+
+// --- 電波環境プロファイル -------------------------------------------------
+// 地下鉄の検証用GPX (assets/gpx/FukutoshinExpressThrough.gpx) の中身を決める部分。
+// 落とす点と付ける精度を間違えると、アプリ側の地下鉄分岐を踏まないトラックが
+// 静かに出来上がるので、分類規則をここで押さえる。
+
+// 1 秒ごとに 10m ずつ北上する走行点を作る。stopped の点は同じ座標に留まる。
+const makeLeg = ({ underground, stoppedSec, runSec, startElapsed = 0 }) => {
+  const points = [];
+  let elapsed = startElapsed;
+  let latitude = 35.0;
+  for (let i = 0; i < stoppedSec; i++) {
+    points.push({
+      latitude,
+      longitude: 139.0,
+      elapsed,
+      stopped: true,
+      underground,
+    });
+    elapsed += 1;
+  }
+  for (let i = 0; i < runSec; i++) {
+    latitude += 10 / 111_132;
+    points.push({
+      latitude,
+      longitude: 139.0,
+      elapsed,
+      stopped: false,
+      underground,
+    });
+    elapsed += 1;
+  }
+  return points;
+};
+
+test('open では点を落とさず精度も付けない', () => {
+  const waypoints = makeLeg({ underground: true, stoppedSec: 3, runSec: 120 });
+  const result = applySignalProfile(waypoints, 'open');
+  assert.equal(result.length, waypoints.length);
+  assert.ok(result.every((wp) => wp.accuracy === undefined));
+});
+
+test('subway は地下鉄の駅間だけを落とし、地上の点は全部残す', () => {
+  const subway = applySignalProfile(
+    makeLeg({ underground: true, stoppedSec: 3, runSec: 120 }),
+    'subway'
+  );
+  const surface = applySignalProfile(
+    makeLeg({ underground: false, stoppedSec: 3, runSec: 120 }),
+    'subway'
+  );
+
+  // 地上は 1 点も落ちない。直通で乗り入れた先が地上路線でも欠測しないこと。
+  assert.equal(surface.length, 123);
+  // 地下は坑口付近 (portalSec=20) だけが残る。3 点の停車 + 発車後 20 点。
+  assert.equal(subway.length, 23);
+  // 落ちた点のぶん <time> に穴が開く
+  const gaps = subway
+    .slice(1)
+    .map((wp, i) => wp.elapsed - subway[i].elapsed)
+    .filter((gap) => gap > 1);
+  assert.equal(gaps.length, 0, '末尾が落ちるだけなので途中に穴はできない');
+});
+
+test('subway の精度帯は地上 < ホーム < 坑口の順で、坑口だけが200mを超える', () => {
+  const surface = applySignalProfile(
+    makeLeg({ underground: false, stoppedSec: 3, runSec: 10 }),
+    'subway'
+  );
+  const underground = applySignalProfile(
+    makeLeg({ underground: true, stoppedSec: 3, runSec: 10 }),
+    'subway'
+  );
+
+  // 地上: GPS が効く帯
+  assert.ok(surface.every((wp) => wp.accuracy >= 8 && wp.accuracy <= 20));
+  // 地下のホーム: BAD_ACCURACY_THRESHOLD (200m) より良い
+  const platform = underground.filter((wp) => wp.stopped);
+  assert.ok(platform.every((wp) => wp.accuracy >= 25 && wp.accuracy <= 60));
+  // 坑口: 200m を必ず超える。ここが isAccuracyStable を false にする
+  const portal = underground.filter((wp) => !wp.stopped);
+  assert.ok(portal.length > 0);
+  assert.ok(portal.every((wp) => wp.accuracy > 200 && wp.accuracy <= 620));
+});
+
+test('subway は止まったままの点に坑口の精度を付けない', () => {
+  // 加減速プロファイルの端や、直通の境界駅 (同じ駅が路線ごとに 2 回並ぶ) では
+  // stopped が立たないまま座標が動かない点が出る。そこへトンネル内の精度を
+  // 付けると「駅に停まったまま基地局測位しか入らない」現実にない点になる。
+  const at = (elapsed, stopped) => ({
+    latitude: 35.0,
+    longitude: 139.0,
+    elapsed,
+    stopped,
+    underground: true,
+  });
+  const waypoints = [at(0, true), at(1, false), at(2, false)];
+  const result = applySignalProfile(waypoints, 'subway');
+  assert.equal(result.length, 3);
+  assert.ok(
+    result.every((wp) => wp.accuracy <= 60),
+    '動いていない点はホーム扱いにする'
+  );
+});
+
+test('subway の出力は決定的', () => {
+  const build = () =>
+    applySignalProfile(
+      makeLeg({ underground: true, stoppedSec: 3, runSec: 60 }),
+      'subway'
+    );
+  assert.deepEqual(build(), build());
+});
+
+test('区間の起点駅は境界で切り替わる', () => {
+  // 直通では駅ごとに line が異なる。走行中の点がどちらの路線に属するかは
+  // 区間の起点駅で決まる。
+  const polyline = [
+    { latitude: 35.0, longitude: 139.0, line: { lineType: 'Normal' } },
+    { latitude: 35.01, longitude: 139.0, line: { lineType: 'Subway' } },
+    { latitude: 35.02, longitude: 139.0, line: { lineType: 'Subway' } },
+  ];
+  const cumulative = cumulativeDistances(polyline);
+  const half = cumulative.at(-1) / 2;
+  assert.equal(stationAtDistance(polyline, cumulative, 0).line.lineType, 'Normal');
+  assert.equal(
+    stationAtDistance(polyline, cumulative, half * 0.5).line.lineType,
+    'Normal'
+  );
+  assert.equal(
+    stationAtDistance(polyline, cumulative, half * 1.5).line.lineType,
+    'Subway'
+  );
+  assert.equal(
+    stationAtDistance(polyline, cumulative, cumulative.at(-1)).line.lineType,
+    'Subway'
+  );
+});
+
+test('地下の判定は lineType と --subway-lines の和になる', () => {
+  const subwayLineIds = new Set([99310]);
+  // lineType が Subway ならそのまま地下
+  assert.equal(
+    isUndergroundStation({ line: { id: 28010, lineType: 'Subway' } }, subwayLineIds),
+    true
+  );
+  // 全線地下でも API 上は Normal の路線は、ID を渡して地下へ寄せる
+  assert.equal(
+    isUndergroundStation({ line: { id: 99310, lineType: 'Normal' } }, subwayLineIds),
+    true
+  );
+  // 指定していない地上路線は地上のまま
+  assert.equal(
+    isUndergroundStation({ line: { id: 26001, lineType: 'Normal' } }, subwayLineIds),
+    false
+  );
+  // 路線情報が欠けていても落ちない
+  assert.equal(isUndergroundStation(undefined, subwayLineIds), false);
+  assert.equal(isUndergroundStation({}, subwayLineIds), false);
+});

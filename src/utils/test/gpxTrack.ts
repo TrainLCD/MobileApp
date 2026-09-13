@@ -8,7 +8,16 @@ import { join } from 'node:path';
 import type * as Location from 'expo-location';
 import getPreciseDistance from 'geolib/es/getPreciseDistance';
 
-export type TrackPoint = { t: number; lat: number; lon: number };
+export type TrackPoint = {
+  t: number;
+  lat: number;
+  lon: number;
+  /**
+   * 水平精度(m)。trainlcd 拡張を持つGPXだけが値を返す(docs/location-simulation.md)。
+   * 記録が無いトラックでは undefined になるので、呼び出し側が既定値を決める。
+   */
+  accuracy?: number;
+};
 
 /** 速度がほぼ0の区間から検出した「駅での停車」 */
 export type TrackStop = {
@@ -20,19 +29,52 @@ export type TrackStop = {
 /** GPXのディレクトリ(リポジトリルート起点) */
 export const GPX_DIR = 'assets/gpx';
 
+// 1点ぶんのノードを丸ごと切り出す。trkpt / wpt のどちらの形式でも読み(実走ログと
+// 生成物で異なる)、子を持たない自己終端タグ(<wpt ... />)にも一致させる。
+//
+// ノード単位で切ってから中身を読むのが要点。XML全体へ
+// `lat=... lon=... [\s\S]*? <time>` のような緩いパターンを当てると、<time> を
+// 持たない点があったときに次以降の点の <time> まで食い、「N点目の座標 + N+k点目の
+// 時刻」という組を黙って作る。精度のように点によって有無が変わる要素を足すと
+// 必ず踏むため、フィールドはノードの内側だけから読む。
+const WPT_NODE_RE = /<(wpt|trkpt)\b([^>]*?)(?:\/>|>([\s\S]*?)<\/\1\s*>)/g;
+const LAT_RE = /\blat\s*=\s*"([^"]*)"/;
+const LON_RE = /\blon\s*=\s*"([^"]*)"/;
+const TIME_RE = /<time>([^<]*)<\/time>/;
+// trainlcd 拡張の水平精度(m)。名前空間の接頭辞は生成側の都合で変わりうるので、
+// 局所名だけで拾う。
+const ACCURACY_RE =
+  /<(?:[A-Za-z_][\w.-]*:)?accuracy>([^<]*)<\/(?:[A-Za-z_][\w.-]*:)?accuracy>/;
+
 export const parseGpx = (relPath: string): TrackPoint[] => {
   const xml = readFileSync(join(process.cwd(), relPath), 'utf8');
   const points: TrackPoint[] = [];
-  // trkpt / wpt のどちらの形式でも読む(実走ログと生成物で異なる)
-  const re =
-    /<(?:wpt|trkpt)\s+lat="([-\d.]+)"\s+lon="([-\d.]+)"[^>]*>[\s\S]*?<time>([^<]+)<\/time>/g;
-  let m = re.exec(xml);
-  while (m !== null) {
-    points.push({ lat: Number(m[1]), lon: Number(m[2]), t: Date.parse(m[3]) });
-    m = re.exec(xml);
+  for (let m = WPT_NODE_RE.exec(xml); m !== null; m = WPT_NODE_RE.exec(xml)) {
+    const [, , attrs, inner = ''] = m;
+    const lat = Number(LAT_RE.exec(attrs)?.[1]);
+    const lon = Number(LON_RE.exec(attrs)?.[1]);
+    const t = Date.parse(TIME_RE.exec(inner)?.[1] ?? '');
+    // 時刻の無い点は時間軸に置けないため落とす。座標だけのウェイポイント
+    // (ルート上の目印など)が混ざったGPXでも、走行トラックとしては無意味。
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(t)) {
+      continue;
+    }
+    const rawAccuracy = ACCURACY_RE.exec(inner)?.[1];
+    const accuracy =
+      rawAccuracy === undefined ? Number.NaN : Number(rawAccuracy);
+    points.push({
+      lat,
+      lon,
+      t,
+      ...(Number.isFinite(accuracy) && accuracy >= 0 ? { accuracy } : {}),
+    });
   }
   return points.sort((a, b) => a.t - b.t);
 };
+
+/** トラックが点ごとの精度(trainlcd 拡張)を持つか */
+export const hasRecordedAccuracy = (track: TrackPoint[]): boolean =>
+  track.some((p) => p.accuracy != null);
 
 export const trackDistance = (
   a: { lat: number; lon: number },
