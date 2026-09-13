@@ -24,7 +24,9 @@ const USAGE = `使い方: npm run gpx:replay -- --gpx <file> [options]
                       Play 開発者サービスの Fused は gps/network を見るため
                       既定では 3 つすべてに同じ座標を流す
   --speed <n>         再生倍率。既定 1 (GPX の <time> どおり)
-  --accuracy <m>      水平精度 (m)。既定 8。カンマ区切りで区間ごとに巡回
+  --accuracy <m>      水平精度 (m)。カンマ区切りで点ごとに巡回
+                      省略時は GPX の trainlcd:accuracy を点ごとに使い、
+                      それが無い点だけ 8m。指定するとGPXの値より優先する
   --start <sec>       GPX 先頭からのスキップ秒数。--loop 時は初回のみ適用
   --loop              終端に達したら先頭から繰り返す
   --keep              終了時にテストプロバイダを削除しない`;
@@ -57,11 +59,22 @@ if (!Number.isFinite(speed) || speed <= 0) {
   fail(`--speed は正の有限数で指定してください: ${opt('speed')}`);
 }
 
-const accuracies = String(opt('accuracy', '8'))
+// --accuracy を明示したときは GPX に記録された精度より優先する。指定が無いときの
+// 既定 8m は、精度を持たない GPX (従来の生成物・実走ログ) 向けのフォールバック。
+//
+// 「指定の有無」は opt() の戻り値ではなく flag() で見る。opt() は末尾に値なしで
+// `--accuracy` を置いたときも undefined を返すため、戻り値だけで判定すると
+// 「上書きするつもりの実行」が黙って GPX の記録値で走る。
+const hasAccuracyOverride = flag('accuracy');
+const accuracyArg = opt('accuracy');
+if (hasAccuracyOverride && accuracyArg === undefined) {
+  fail('--accuracy には値が必要です (例: --accuracy 100,300)');
+}
+const accuracies = String(accuracyArg ?? '8')
   .split(',')
   .map((v) => Number(v.trim()));
 if (accuracies.some((v) => !Number.isFinite(v) || v <= 0)) {
-  fail(`--accuracy は正の有限数をカンマ区切りで指定してください: ${opt('accuracy')}`);
+  fail(`--accuracy は正の有限数をカンマ区切りで指定してください: ${accuracyArg}`);
 }
 
 const startSec = Number(opt('start', '0'));
@@ -97,7 +110,22 @@ for (let m; (m = nodeRe.exec(xml)); ) {
     fail(`<${tag}> の lat/lon を数値として読めません: ${attrs.trim()}`);
   }
   const timeMatch = /<time>([^<]*)<\/time>/.exec(inner);
-  points.push({ lat, lon, rawTime: timeMatch ? timeMatch[1].trim() : null });
+  // trainlcd 拡張の水平精度(m)。docs/location-simulation.md を参照。
+  // 名前空間の接頭辞は生成側の都合で変わりうるので局所名だけで拾う。
+  const accMatch =
+    /<(?:[A-Za-z_][\w.-]*:)?accuracy>([^<]*)<\/(?:[A-Za-z_][\w.-]*:)?accuracy>/.exec(
+      inner
+    );
+  const acc = accMatch ? Number(accMatch[1].trim()) : Number.NaN;
+  if (accMatch && (!Number.isFinite(acc) || acc <= 0)) {
+    fail(`accuracy 拡張を正の数値として読めません: ${accMatch[1].trim()}`);
+  }
+  points.push({
+    lat,
+    lon,
+    rawTime: timeMatch ? timeMatch[1].trim() : null,
+    accuracy: accMatch ? acc : null,
+  });
 }
 if (points.length === 0) {
   fail(`${gpxPath} に <wpt> / <trkpt> が見つかりません。`);
@@ -158,6 +186,16 @@ async function setup() {
 
   await registerProviders();
   console.log(`テストプロバイダ ${providers.join(', ')} を有効化しました`);
+  const recorded = points.filter((p) => p.accuracy !== null).length;
+  if (recorded > 0 && hasAccuracyOverride) {
+    console.log(
+      `GPX の精度 (${recorded}/${points.length} 点) は --accuracy の指定で上書きします`
+    );
+  } else if (recorded > 0) {
+    console.log(
+      `GPX に記録された精度を使います (${recorded}/${points.length} 点。残りは ${accuracies.join(',')}m)`
+    );
+  }
 }
 
 async function registerProviders() {
@@ -281,7 +319,12 @@ async function play(skipSec) {
     if (wait > 0) await sleep(wait);
     if (stopping) return;
 
-    const acc = accuracies[i % accuracies.length];
+    // GPX が点ごとの精度を持つならそれを使う。--accuracy を明示したときと、
+    // 精度を持たない点は従来どおり巡回リストから引く。
+    const acc =
+      !hasAccuracyOverride && p.accuracy !== null
+        ? p.accuracy
+        : accuracies[i % accuracies.length];
     await push(p, acc);
 
     const elapsed = ((p.offset - originOffset) / 1000).toFixed(0);

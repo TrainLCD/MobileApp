@@ -34,6 +34,7 @@ Argent の MCP ツールには位置情報を注入するものが無いため�
 | `assets/gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。種別グループから生成 |
 | `assets/gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km・最高 95km/h |
 | `assets/gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。最高 120km/h |
+| `assets/gpx/FLinerSeibu.gpx` | Fライナー相当 元町・中華街→飯能。地下鉄の電波環境入り |
 
 新しい経路は `npm run gpx:generate` で作る。詳細は `docs/location-simulation.md`。
 
@@ -42,6 +43,22 @@ npm run gpx:generate -- --line 1004 --list
 npm run gpx:generate -- --line 1004 --from 100418 --to 100411 --max-speed 320 \
   --skip 100417,100416,100415,100413,100412 --out assets/gpx/SampleTohokuShinkansen.gpx
 ```
+
+地下鉄のように電波が入りづらい条件を再現したいときは `--signal-profile subway` を
+付ける。駅間の測位を落として `<time>` に穴を開け、残る点に地下向けの水平精度を
+`trainlcd:accuracy` 拡張として書き込む。劣化するのは地下を走る区間だけなので、
+直通の経路なら地上 → 地下 → 地上が 1 本に入る。全線地下でも API 上は `Normal` の
+路線 (みなとみらい線 `99310`、西武有楽町線 `22003`) は `--subway-lines` で地下へ
+寄せる。詳細と数値の根拠は `docs/location-simulation.md`。
+
+```bash
+npm run gpx:generate -- --line-group 152 --max-speed 80 \
+  --signal-profile subway --subway-lines 99310,22003 \
+  --out assets/gpx/FLinerSeibu.gpx
+```
+
+生成時に `区間の扱い: ...(地下) / ...(地上)` が標準エラーへ出る。意図どおりに
+分かれたかはここで確認する。
 
 列車種別の停車パターンをそのまま走らせたいときは `--line-group` を使う。通過駅は
 `stopCondition` から自動判定されるので `--skip` を手で並べなくてよく、直通で複数
@@ -83,7 +100,7 @@ npm run gpx:replay -- --gpx assets/gpx/SampleTohokuShinkansen.gpx --serial <seri
 | `--gpx <path>` | 再生する GPX (必須)。`<wpt>` と `<trkpt>` のどちらでも読む |
 | `--serial <serial>` | adb シリアル。接続が 1 台だけなら省略可 |
 | `--speed <n>` | 再生倍率。既定 1 |
-| `--accuracy <m>` | 水平精度 (m)。既定 8。カンマ区切りで区間ごとに巡回 |
+| `--accuracy <m>` | 水平精度 (m)。点ごとに巡回。既定は GPX の精度、無ければ 8 |
 | `--start <sec>` | GPX 先頭からのスキップ秒数。`--loop` 時は初回の再生にだけ効く |
 | `--provider <names>` | テストプロバイダ名。既定 `gps,network,fused` |
 | `--loop` | 終端で先頭に戻る |
@@ -91,8 +108,9 @@ npm run gpx:replay -- --gpx assets/gpx/SampleTohokuShinkansen.gpx --serial <seri
 
 ### 4. 画面を確認する
 
-Argent で撮る。DEV OVERLAY の `LOCATION ACCURACY` が `--accuracy` の値になっていれば
-モックが届いている。
+Argent で撮る。DEV OVERLAY の `LOCATION ACCURACY` が `--accuracy` の値、または GPX に
+記録された精度 (その時点の `trainlcd:accuracy`) になっていればモックが届いている。
+電波環境入りの GPX では点ごとに値が変わるので、8m でも指定値でもない数字が出るのが正常。
 
 ```text
 screenshot udid=<serial> scale=0.35
@@ -113,6 +131,22 @@ adb -s <serial> shell appops set 2000 android:mock_location default
 
 ## 落とし穴
 
+- **電波環境入りの GPX では `--accuracy` を渡さない。** 明示すると GPX に記録された
+  精度を上書きしてしまい、坑口帯とホーム帯の切り替わりが消える。精度の出所は起動時の
+  ログに出るので、`GPX に記録された精度を使います` と出ているか確認する。
+  (200m 以上の値を一律に渡すと、今度は全点が地下鉄分岐に入って別の状態になる。)
+- **欠測は実際に測位の途絶になる。** 「投入を止めるだけなので Fused が最後の測位を
+  配り続けるのでは」という懸念は Galaxy SCG13 (Android 16) で確認済みで、欠測中は
+  `dumpsys location` の `last location` が `et=` (測位時刻) ごと固まり、新しい測位は
+  1 つも生まれなかった。疑わしいときは次で確認する。
+
+  ```bash
+  adb shell dumpsys location | grep -A3 "fused provider" | grep "last location="
+  ```
+
+- **バックグラウンドで走らせたときは後始末を必ず手で確認する。** エージェントの
+  タスク停止は SIGTERM ではなく kill として届くことがあり、その場合スクリプトの
+  後始末が走らない。`[killed]` で終わっていたら下の手動手順を実行する。
 - **`--speed` は 1 のままにする。** `MAX_PLAUSIBLE_SPEED` は 100m/s (360km/h) なので、
   320km/h の GPX を 2 倍速以上で流すと速度フィルタが全点を棄却して現在地が凍る。
   倍速で流したいときは `--max-speed` を下げた GPX を作り直す。
@@ -138,6 +172,6 @@ adb -s <serial> shell appops set 2000 android:mock_location default
 | 条件 | この手順 |
 | ---- | ---- |
 | 精度を落とした測位 (α=0.6 / 0.3) | ✅ `--accuracy 100,300` などで指定できる |
-| トンネルでの測位途絶 | ❌ 途絶を表現できない |
+| トンネルでの測位途絶 | ✅ `--signal-profile subway` の GPX で `<time>` に穴を開ける |
 | 車体による GPS 減衰 | ❌ |
 | `coords.speed` を使う表示の検証 | ❌ 常に 0 |

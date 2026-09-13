@@ -33,6 +33,52 @@ const INTERVAL_SEC = 1;
 const DEFAULT_DWELL_SEC = 60;
 const EARTH_RADIUS_M = 6_371_008.8;
 
+// trainlcd 独自拡張の名前空間。GPX 1.1 の <extensions> は
+// `<xsd:any namespace="##other" processContents="lax">` なので、GPX 以外の
+// 名前空間に属していれば妥当なまま任意の要素を置ける(逆に名前空間が無いと不正)。
+// URI は識別子であって取得先ではないため実在しなくてよい。
+// 要素の意味は docs/location-simulation.md に定義する。
+const TRAINLCD_GPX_NS = 'https://trainlcd.app/xmlns/gpx/v1';
+
+// 電波環境のプロファイル。既定の open は従来どおり「常に測位が届き、精度は
+// 再生側が決める」トラックで、精度も穴も書き出さない。
+//
+// subway は経路のうち地下を走る区間だけを劣化させる(判定は isUndergroundStation)。
+// 直通運転(--line-group)では駅ごとに line が異なるため、地上の路線へ乗り入れた
+// 区間は地上のまま残り、地下 <-> 地上の切り替わりが 1 本のトラックに入る。これは
+// setLocation が基準を張り直す経路(地下鉄からの復帰)を踏ませるために要る。
+//
+// 数値はアプリ側の判定境界から逆算している。
+//  - 地上区間は通常の GPS が効くので BAD_ACCURACY_THRESHOLD (200m) より十分良く、
+//    ばらつきも小さい帯に置く。isAccuracyStable(src/store/atoms/location.ts) が
+//    true になり、スムージングが働く。
+//  - 地下駅のホームは Wi-Fi / 基地局が届くので、地上ほどではないが 200m 以内。
+//  - 走り出して坑口を離れると基地局測位だけになるため、必ず 200m を超える帯へ移す。
+//    accuracyHistory(直近12点)の平均が 200m を上回った時点で isAccuracyStable が
+//    false になり、setLocation の地下鉄分岐(skipSmoothing)に入る。
+//    MAX_PERMIT_ACCURACY(1500m)は超えないので、精度フィルタでの棄却は起きない。
+//  - トンネル内は測位そのものが来ない。点を落とすと <time> に穴が開き、再生側も
+//    Jest 側も「測位が届かない時間」として扱う。
+//
+// 地下/地上の別は StationAPI の lineType と --subway-lines で決まる。どちらも
+// 路線単位なので、一部だけ地下化されている路線(東急東横線の渋谷付近など)は
+// 区間ごとには分かれない。
+const SIGNAL_PROFILES = {
+  open: null,
+  subway: {
+    // 地上区間の精度帯(m)
+    surfaceAccuracy: [8, 20],
+    // 地下駅のホーム(停車中)の精度帯(m)
+    platformAccuracy: [25, 60],
+    // 坑口付近、基地局測位のみの精度帯(m)
+    portalAccuracy: [260, 620],
+    // 停車点から何秒ぶんを坑口付近として残すか。これを超えた地下の走行点は落とす
+    portalSec: 20,
+  },
+};
+const SIGNAL_PROFILE_NAMES = Object.keys(SIGNAL_PROFILES);
+const DEFAULT_SIGNAL_PROFILE = 'open';
+
 const usage = `使い方: node scripts/generate-location-gpx.mjs [options]
 
   --line <id>         路線 ID (例: 東北新幹線 = 1004)
@@ -47,6 +93,14 @@ const usage = `使い方: node scripts/generate-location-gpx.mjs [options]
   --start <ISO8601>   先頭 waypoint の時刻。タイムゾーン(Z または ±HH:MM)必須
                       (既定: 2026-01-01T00:00:00Z)
                       平日/休日運転の stopCondition はこの日付(JST)で判定する
+  --signal-profile <name>
+                      電波環境 (${SIGNAL_PROFILE_NAMES.join(' | ')}。既定: ${DEFAULT_SIGNAL_PROFILE})
+                      subway は駅間の測位を落とし、残る点に地下向けの水平精度を
+                      trainlcd 拡張として書き出す
+  --subway-lines <ids>
+                      地下扱いにする路線 ID (カンマ区切り)。lineType が Subway で
+                      なくても地下として扱う。全線地下なのに API 上は Normal の
+                      路線 (みなとみらい線 99310、西武有楽町線 22003 など) 向け
   --out <path>        出力先 (既定: 標準出力)
   --api <url>         StationAPI の URL (既定: $GQL_API_URL または ${DEFAULT_API_URL})
   --list              路線 / 種別グループの駅一覧を表示して終了する
@@ -83,7 +137,13 @@ export const isValidIso8601WithTimezone = (value) => {
 };
 
 export const parseArgs = (argv) => {
-  const args = { maxSpeed: 320, dwell: DEFAULT_DWELL_SEC, skip: [] };
+  const args = {
+    maxSpeed: 320,
+    dwell: DEFAULT_DWELL_SEC,
+    skip: [],
+    signalProfile: DEFAULT_SIGNAL_PROFILE,
+    subwayLines: [],
+  };
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i];
     const next = () => {
@@ -120,6 +180,15 @@ export const parseArgs = (argv) => {
         break;
       case '--start':
         args.start = next();
+        break;
+      case '--signal-profile':
+        args.signalProfile = next();
+        break;
+      case '--subway-lines':
+        args.subwayLines = next()
+          .split(',')
+          .map((v) => Number(v.trim()))
+          .filter((v) => Number.isFinite(v));
         break;
       case '--out':
         args.out = next();
@@ -174,6 +243,11 @@ const fetchLineStations = async (apiUrl, lineId) => {
         nameRoman
         latitude
         longitude
+        line {
+          id
+          nameShort
+          lineType
+        }
       }
     }`,
     { lineId }
@@ -200,6 +274,7 @@ const fetchLineGroupStations = async (apiUrl, lineGroupId) => {
         line {
           id
           nameShort
+          lineType
         }
       }
     }`,
@@ -268,6 +343,16 @@ export const cumulativeDistances = (polyline) => {
   return cumulative;
 };
 
+// travelled(m) の地点を含む区間 polyline[i-1] -> polyline[i] の i を返す。
+// 両端は最初 / 最後の区間へ丸めるので、戻り値は必ず 1 以上 length-1 以下。
+export const segmentIndexAtDistance = (cumulative, travelled) => {
+  let i = 1;
+  while (i < cumulative.length - 1 && cumulative[i] < travelled) {
+    i++;
+  }
+  return i;
+};
+
 // 折れ線の始点から travelled(m) 進んだ地点の座標を返す
 export const pointAtDistance = (polyline, cumulative, travelled) => {
   const total = cumulative.at(-1);
@@ -277,14 +362,23 @@ export const pointAtDistance = (polyline, cumulative, travelled) => {
   if (travelled >= total) {
     return { ...polyline.at(-1) };
   }
-  let i = 1;
-  while (i < cumulative.length - 1 && cumulative[i] < travelled) {
-    i++;
-  }
+  const i = segmentIndexAtDistance(cumulative, travelled);
   const segmentLength = cumulative[i] - cumulative[i - 1];
   const ratio =
     segmentLength > 0 ? (travelled - cumulative[i - 1]) / segmentLength : 1;
   return interpolate(polyline[i - 1], polyline[i], ratio);
+};
+
+// travelled(m) の地点が属する区間の、起点側の駅。直通では駅ごとに line が違うため、
+// 「いまどの路線を走っているか」は区間の起点駅から決める(境界駅で切り替わる)。
+export const stationAtDistance = (polyline, cumulative, travelled) => {
+  if (travelled <= 0) {
+    return polyline[0];
+  }
+  if (travelled >= cumulative.at(-1)) {
+    return polyline.at(-1);
+  }
+  return polyline[segmentIndexAtDistance(cumulative, travelled) - 1];
 };
 
 // 停車/通過の判定はアプリ本体 (src/utils/isPass.ts) と同じ規則にする。
@@ -366,14 +460,34 @@ export const buildDeepLinkQuery = (route, stopIndices) => {
 //
 // 通過駅で停車しないよう、速度プロファイルは「停車駅から停車駅まで」を 1 本の
 // 走行として生成する。通過駅を区切りにすると駅ごとに減速・停止してしまう。
+// 地下を走る区間かどうか。原則は StationAPI の lineType だが、これは路線単位の
+// 属性なので、全線地下でも Normal で登録されている路線がある(みなとみらい線、
+// 西武有楽町線など)。--subway-lines でそうした路線を地下側へ寄せる。
+// 逆に一部だけ地下化されている路線(東急東横線の渋谷〜代官山)は路線単位では
+// 表せないため、駅数の多い側に倒して地上のままにする。
+export const isUndergroundStation = (station, subwayLineIds) =>
+  station?.line?.lineType === 'Subway' ||
+  (station?.line?.id != null && subwayLineIds.has(station.line.id));
+
 export const buildWaypoints = ({
   route,
   stopIndices,
   maxSpeedKmh,
   dwellSec,
+  subwayLineIds = new Set(),
 }) => {
   const maxSpeed = maxSpeedKmh / 3.6; // m/s
-  const waypoints = [{ ...route[0], elapsed: 0 }];
+  // stopped は「駅に止まっている点」。電波プロファイル(applySignalProfile)が
+  // 駅からの距離を時間で測るために使う。始発駅は停車時間を持たないが、
+  // 発車前の 1 点なので駅にいる扱いにする。
+  const waypoints = [
+    {
+      ...route[0],
+      elapsed: 0,
+      stopped: true,
+      underground: isUndergroundStation(route[0], subwayLineIds),
+    },
+  ];
   let elapsed = 0;
 
   for (let leg = 0; leg < stopIndices.length - 1; leg++) {
@@ -389,6 +503,27 @@ export const buildWaypoints = ({
       enableRandomCoast: false,
     });
 
+    // 直通運転では乗り入れの境界駅が路線ごとに 2 回並ぶ(和光市が東京メトロ
+    // 副都心線と東武東上線の両方に現れるなど)。同じ地点なので区間長が 0 になり、
+    // generateTrainSpeedProfile が [0] を返すため「走行扱いなのに 1mm も進まない点」
+    // が 1 点だけ混じる。電波プロファイルから見るとそこへトンネル内の精度が付き、
+    // 「駅に停まったまま基地局測位しか入らない」現実にない点になる。
+    // 停車扱いのまま次へ進める。この分岐を通る境界駅は、旧実装より 1 点(1 秒)短くなる。
+    if (distance < 1) {
+      const here = polyline.at(-1);
+      const dwellPoints = leg === stopIndices.length - 2 ? 0 : dwellSec;
+      for (let t = -INTERVAL_SEC; t < dwellPoints; t += INTERVAL_SEC) {
+        elapsed += INTERVAL_SEC;
+        waypoints.push({
+          ...here,
+          elapsed,
+          stopped: true,
+          underground: isUndergroundStation(here, subwayLineIds),
+        });
+      }
+      continue;
+    }
+
     let travelled = 0;
     for (const speed of speedProfile) {
       travelled = Math.min(distance, travelled + speed * INTERVAL_SEC);
@@ -396,20 +531,35 @@ export const buildWaypoints = ({
       waypoints.push({
         ...pointAtDistance(polyline, cumulative, travelled),
         elapsed,
+        stopped: false,
+        underground: isUndergroundStation(
+          stationAtDistance(polyline, cumulative, travelled),
+          subwayLineIds
+        ),
       });
     }
 
     // プロファイルの離散化誤差で駅に届かないことがあるため、到着点を明示的に置く
     const arrival = polyline.at(-1);
     elapsed += INTERVAL_SEC;
-    waypoints.push({ ...arrival, elapsed });
+    waypoints.push({
+      ...arrival,
+      elapsed,
+      stopped: true,
+      underground: isUndergroundStation(arrival, subwayLineIds),
+    });
 
     // 終点以外は停車する。停車中も測位は届き続けるので同じ座標を並べる
     const isFinalStop = leg === stopIndices.length - 2;
     if (!isFinalStop) {
       for (let t = 0; t < dwellSec; t += INTERVAL_SEC) {
         elapsed += INTERVAL_SEC;
-        waypoints.push({ ...arrival, elapsed });
+        waypoints.push({
+          ...arrival,
+          elapsed,
+          stopped: true,
+          underground: isUndergroundStation(arrival, subwayLineIds),
+        });
       }
     }
   }
@@ -417,22 +567,106 @@ export const buildWaypoints = ({
   return waypoints;
 };
 
+// 再現性のある一様乱数。生成物は繰り返し同じ内容になる必要があるため
+// Math.random は使わない(--start の形式を厳格に縛っているのと同じ理由)。
+const makeRandom = (seed) => {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+};
+
+/**
+ * 電波環境のプロファイルを適用する。
+ *
+ * 地下鉄区間だけを劣化させる。地下の走行中でも駅から portalSec 以内の点は坑口付近
+ * として残し、それより奥は落とす。残した点には水平精度(m)を付ける。
+ * open では何もしない。
+ */
+export const applySignalProfile = (waypoints, profileName) => {
+  const profile = SIGNAL_PROFILES[profileName];
+  if (!profile) {
+    return waypoints;
+  }
+  const stopElapsed = waypoints
+    .filter((wp) => wp.stopped)
+    .map((wp) => wp.elapsed);
+  if (stopElapsed.length === 0) {
+    throw new Error('停車している点がないため電波プロファイルを適用できません');
+  }
+  const random = makeRandom(0x5eed);
+  const pick = ([min, max]) => Math.round(min + (max - min) * random());
+
+  // waypoints も stopElapsed も時刻の昇順なので、最寄りの停車点は前へ戻らない。
+  // 坑口の窓は「直前/直後の停車駅から何秒か」で測る。境界駅が地上路線側でも
+  // (和光市で東武東上線から副都心線へ入るなど)その駅を起点に測ってよい。
+  // 書き出す座標は 7 桁に丸めるので、動いたかどうかも丸めた後で判定する。
+  // 加減速プロファイルの端では速度が 0 のまま数点続き、停車フラグは立っていないのに
+  // 位置が 1mm も変わらないことがある。そこへトンネル内の精度を付けると
+  // 「駅に停まったまま基地局測位しか入らない」現実にない点になる。
+  const key = (wp) => `${wp.latitude.toFixed(7)},${wp.longitude.toFixed(7)}`;
+
+  let nearest = 0;
+  let previousKey = null;
+  const result = [];
+  for (const wp of waypoints) {
+    const currentKey = key(wp);
+    const moved = previousKey !== null && currentKey !== previousKey;
+    previousKey = currentKey;
+    while (
+      nearest + 1 < stopElapsed.length &&
+      Math.abs(stopElapsed[nearest + 1] - wp.elapsed) <=
+        Math.abs(stopElapsed[nearest] - wp.elapsed)
+    ) {
+      nearest += 1;
+    }
+    if (!wp.underground) {
+      result.push({ ...wp, accuracy: pick(profile.surfaceAccuracy) });
+      continue;
+    }
+    if (wp.stopped || !moved) {
+      result.push({ ...wp, accuracy: pick(profile.platformAccuracy) });
+      continue;
+    }
+    if (Math.abs(stopElapsed[nearest] - wp.elapsed) <= profile.portalSec) {
+      result.push({ ...wp, accuracy: pick(profile.portalAccuracy) });
+      continue;
+    }
+    // トンネル内。点を落として <time> に穴を開ける
+  }
+  return result;
+};
+
 export const toGpx = (waypoints, startTime) => {
   const startMs = Date.parse(startTime);
   const body = waypoints
     .map((wp) => {
       const time = new Date(startMs + wp.elapsed * 1000).toISOString();
-      return [
+      const lines = [
         `<wpt lat="${wp.latitude.toFixed(7)}" lon="${wp.longitude.toFixed(7)}">`,
         `<time>${time}</time>`,
-        '</wpt>',
-      ].join('\n');
+      ];
+      if (wp.accuracy != null) {
+        lines.push(
+          `<extensions><trainlcd:accuracy>${wp.accuracy}</trainlcd:accuracy></extensions>`
+        );
+      }
+      lines.push('</wpt>');
+      return lines.join('\n');
     })
     .join('\n');
 
+  // 名前空間の宣言は精度を書くときだけ付ける。GPX 1.1 の extensions は
+  // GPX 以外の名前空間しか受け付けないので書くなら必須である一方、精度を持たない
+  // 従来の生成物へ付けると意味の無い差分になる。
+  const namespace = waypoints.some((wp) => wp.accuracy != null)
+    ? ` xmlns:trainlcd="${TRAINLCD_GPX_NS}"`
+    : '';
+
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<gpx version="1.1" creator="TrainLCD scripts/generate-location-gpx.mjs" xmlns="http://www.topografix.com/GPX/1/1">',
+    `<gpx version="1.1" creator="TrainLCD scripts/generate-location-gpx.mjs" xmlns="http://www.topografix.com/GPX/1/1"${namespace}>`,
     body,
     '</gpx>',
     '',
@@ -476,6 +710,23 @@ const main = async () => {
   }
   if (useLineGroup && !Number.isFinite(args.lineGroup)) {
     throw new Error('--line-group には種別グループ ID を指定してください');
+  }
+
+  // --subway-lines は subway プロファイルの分類にしか使われない。プロファイルを
+  // 付け忘れると、地下扱いにしたつもりの区間が精度も欠測も無いまま出力され、
+  // しかも終了コード 0 で成功する。経路外の ID を弾いているのと同じ理由で止める。
+  //
+  // 経路データを要らない検査なので StationAPI を叩く前に済ませる。後ろに置くと、
+  // 引数の誤りなのに通信・GraphQL のエラーが先に出て原因が分からなくなる。
+  // --list は駅一覧を出すだけでプロファイルを使わないため対象外。
+  if (
+    !args.list &&
+    args.subwayLines.length > 0 &&
+    args.signalProfile !== 'subway'
+  ) {
+    throw new Error(
+      `--subway-lines は --signal-profile subway と一緒に指定してください (現在: ${args.signalProfile})`
+    );
   }
 
   const allStations = useLineGroup
@@ -522,6 +773,11 @@ const main = async () => {
   if (!Number.isFinite(args.dwell) || args.dwell < 0) {
     throw new Error(
       `--dwell には 0 以上の数値を指定してください: ${args.dwell}`
+    );
+  }
+  if (!Object.hasOwn(SIGNAL_PROFILES, args.signalProfile)) {
+    throw new Error(
+      `--signal-profile には ${SIGNAL_PROFILE_NAMES.join(' / ')} のいずれかを指定してください: ${args.signalProfile}`
     );
   }
   if (args.start !== undefined && !isValidIso8601WithTimezone(args.start)) {
@@ -578,12 +834,42 @@ const main = async () => {
     isHoliday,
   });
 
-  const waypoints = buildWaypoints({
+  const subwayLineIds = new Set(args.subwayLines);
+
+  // --subway-lines に経路外の路線 ID を書いても黙って無視されると、地下扱いに
+  // したつもりの区間が地上のまま出てしまう。ID の打ち間違いを検出する。
+  const routeLineIds = new Set(
+    ordered.map((s) => s.line?.id).filter((id) => id != null)
+  );
+  const unusedSubwayLines = [...subwayLineIds].filter(
+    (id) => !routeLineIds.has(id)
+  );
+  if (unusedSubwayLines.length > 0) {
+    throw new Error(
+      `--subway-lines に経路上にない路線 ID が含まれています: ${unusedSubwayLines.join(', ')}`
+    );
+  }
+
+  // subway は地下を走る区間だけを劣化させるので、地下の駅を 1 つも含まない経路に
+  // 当てても地上の精度が付くだけで穴が開かない。黙って「地下鉄の GPX を作った
+  // つもり」になるのを防ぐため、その場合だけ知らせる。
+  if (
+    args.signalProfile === 'subway' &&
+    !ordered.some((s) => isUndergroundStation(s, subwayLineIds))
+  ) {
+    process.stderr.write(
+      '警告: --signal-profile subway ですが、経路に地下の駅がありません。欠測は発生しません\n'
+    );
+  }
+
+  const dense = buildWaypoints({
     route: ordered,
     stopIndices,
     maxSpeedKmh: args.maxSpeed,
     dwellSec: args.dwell,
+    subwayLineIds,
   });
+  const waypoints = applySignalProfile(dense, args.signalProfile);
   const gpx = toGpx(waypoints, startTime);
 
   if (args.out) {
@@ -592,6 +878,33 @@ const main = async () => {
     process.stderr.write(
       `${args.out} を出力しました (経路 ${ordered.length} 駅 / うち停車 ${stopIndices.length} 駅 / ${waypoints.length} 点 / 約 ${minutes} 分 / 最高 ${args.maxSpeed}km/h)\n`
     );
+    if (args.signalProfile === 'subway') {
+      // どの路線を地下として扱ったかは生成物から読み取れないので、ここで残す。
+      const byLine = new Map();
+      for (const st of ordered) {
+        if (st.line?.id == null) continue;
+        byLine.set(st.line.id, st.line);
+      }
+      const label = (l) =>
+        `${l.nameShort}${isUndergroundStation({ line: l }, subwayLineIds) ? '(地下)' : '(地上)'}`;
+      process.stderr.write(
+        `区間の扱い: ${[...byLine.values()].map(label).join(' / ')}\n`
+      );
+    }
+    if (waypoints.length !== dense.length) {
+      // 落ちた点は「測位が届かない時間」。最長の穴は到着判定の遅れに直結するので、
+      // 生成時に見えるようにしておく。
+      let longestGapSec = 0;
+      for (let i = 1; i < waypoints.length; i++) {
+        longestGapSec = Math.max(
+          longestGapSec,
+          waypoints[i].elapsed - waypoints[i - 1].elapsed
+        );
+      }
+      process.stderr.write(
+        `電波プロファイル ${args.signalProfile}: ${dense.length - waypoints.length} 点を欠測として除去 (最長の欠測 ${longestGapSec} 秒)\n`
+      );
+    }
     // 再生時はアプリを同じ経路に入れておく必要がある。通過駅の index を手で
     // 数え直さずに済むよう、ディープリンクのクエリ部をそのまま出す。
     process.stderr.write(
