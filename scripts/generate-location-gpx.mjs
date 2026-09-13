@@ -712,6 +712,23 @@ const main = async () => {
     throw new Error('--line-group には種別グループ ID を指定してください');
   }
 
+  // --subway-lines は subway プロファイルの分類にしか使われない。プロファイルを
+  // 付け忘れると、地下扱いにしたつもりの区間が精度も欠測も無いまま出力され、
+  // しかも終了コード 0 で成功する。経路外の ID を弾いているのと同じ理由で止める。
+  //
+  // 経路データを要らない検査なので StationAPI を叩く前に済ませる。後ろに置くと、
+  // 引数の誤りなのに通信・GraphQL のエラーが先に出て原因が分からなくなる。
+  // --list は駅一覧を出すだけでプロファイルを使わないため対象外。
+  if (
+    !args.list &&
+    args.subwayLines.length > 0 &&
+    args.signalProfile !== 'subway'
+  ) {
+    throw new Error(
+      `--subway-lines は --signal-profile subway と一緒に指定してください (現在: ${args.signalProfile})`
+    );
+  }
+
   const allStations = useLineGroup
     ? await fetchLineGroupStations(apiUrl, args.lineGroup)
     : await fetchLineStations(apiUrl, args.line);
@@ -816,15 +833,6 @@ const main = async () => {
     skippedIds: skipped,
     isHoliday,
   });
-
-  // --subway-lines は subway プロファイルの分類にしか使われない。プロファイルを
-  // 付け忘れると、地下扱いにしたつもりの区間が精度も欠測も無いまま出力され、
-  // しかも終了コード 0 で成功する。経路外の ID を弾いているのと同じ理由で止める。
-  if (args.subwayLines.length > 0 && args.signalProfile !== 'subway') {
-    throw new Error(
-      `--subway-lines は --signal-profile subway と一緒に指定してください (現在: ${args.signalProfile})`
-    );
-  }
 
   const subwayLineIds = new Set(args.subwayLines);
 
