@@ -100,6 +100,105 @@ npm run gpx:generate -- --line-group 71 --max-speed 110 --out assets/gpx/KeioSpe
 アプリを同じ経路で開くディープリンク: ?sids=2400101,2400104,...&skips=2,4,5,...
 ```
 
+## 電波環境を GPX に書く
+
+既定の GPX は「常に測位が届き、精度は再生側が決める」トラックになる。地下鉄のように
+電波が入りづらい条件は `--signal-profile` で GPX 自身に埋め込む。
+
+電波環境は 3 つの成分に分かれ、それぞれ GPX 上の表現が違う。
+
+| 成分 | GPX 上の表現 |
+| ---- | ---- |
+| 測位が届かない (トンネル内) | 点を書かない。`<time>` に穴が開く |
+| 精度の劣化 (基地局測位のみ) | 各点の `trainlcd:accuracy` |
+| 位置そのもののずれ | 座標 (現状のプロファイルでは動かしていない) |
+
+### trainlcd:accuracy 拡張
+
+GPX 1.1 にはメートル単位の水平精度を書く標準要素が無い (`<hdop>` は無次元の DOP 値で
+あって精度ではない)。そのため独自要素を `<extensions>` に置く。
+
+```xml
+<gpx version="1.1" creator="TrainLCD scripts/generate-location-gpx.mjs"
+     xmlns="http://www.topografix.com/GPX/1/1"
+     xmlns:trainlcd="https://trainlcd.app/xmlns/gpx/v1">
+<wpt lat="35.6908530" lon="139.7048280">
+<time>2026-01-01T00:05:12.000Z</time>
+<extensions><trainlcd:accuracy>412</trainlcd:accuracy></extensions>
+</wpt>
+</gpx>
+```
+
+- 値は**水平精度のメートル**。`coords.accuracy` にそのまま入る。
+- `<extensions>` は GPX 1.1 が用意している拡張口で、中身は
+  `<xsd:any namespace="##other" processContents="lax">` と定義されている。
+  「GPX 以外の名前空間なら何でも置いてよく、スキーマを知らないバリデータは素通しする」
+  という意味なので、**この書き方をしたファイルは妥当な GPX 1.1 のままである**。
+  Garmin の `gpxtpx`(心拍・ケイデンス) なども同じ仕組みで相乗りしている。
+- `##other` なので**名前空間の宣言が必須**。接頭辞を付けずに `<accuracy>` と書いたり、
+  `<extensions>` の外へ置いたりすると不正な GPX になる。
+- 名前空間 URI は識別子であって取得先ではないため、実在しなくてよい。
+- 精度を 1 点も書かないときはこの宣言も出さない。従来の生成物に無意味な差分を
+  出さないためで、既存の GPX は同じコマンドで再生成するとバイト単位で一致する。
+
+### --signal-profile
+
+| 値 | 内容 |
+| ---- | ---- |
+| `open` | 既定。従来どおり。精度も穴も書かない |
+| `subway` | 経路のうち地下鉄 (`lineType` が `Subway`) の区間だけを劣化させる |
+
+`subway` の数値はアプリ側の判定境界から逆算している。
+
+| 区間 | 精度 (m) | 狙い |
+| ---- | ---- | ---- |
+| 地上 | 8〜20 | 通常の GPS。`isAccuracyStable` が true になりスムージングが働く |
+| 地下駅のホーム | 25〜60 | Wi-Fi / 基地局。`BAD_ACCURACY_THRESHOLD` (200m) 以内 |
+| 坑口付近 (駅から 20 秒以内) | 260〜620 | 基地局のみ。200m を必ず超える |
+| トンネル内 | (点を落とす) | 測位が届かない時間になる |
+
+坑口帯が 200m を超えることが要点で、`accuracyHistory` (直近 12 点) の平均が 200m を
+上回ると `isAccuracyStable` が false になり、`setLocation` の地下鉄分岐
+(`skipSmoothing`) に入る。逆に言うと、精度が一定のトラックを地下鉄の路線で流しても
+`stddev/mean` が 0 で「安定」と判定されるため、**地下鉄のコードパスには一度も入らない**。
+`MAX_PERMIT_ACCURACY` (1500m) は超えないので、精度フィルタでの棄却は起きない。
+
+### 直通運転
+
+劣化させるのは `lineType` が `Subway` の区間だけなので、`--line-group` で直通の経路を
+生成すると地上 → 地下 → 地上が 1 本のトラックに入る。地下から地上へ戻ったところで
+精度が回復し、長い欠測のあとなので基準が古い (`STALE_REFERENCE_MS`) と判断されて
+基準の張り直しが走る。この経路は合成データでは作りにくい。
+
+地下と地上の別は原則 StationAPI の `lineType` に従うが、これは路線単位の属性なので
+実態と食い違うことがある。全線地下でも `Normal` で登録されている路線があるため、
+`--subway-lines` に路線 ID を渡して地下側へ寄せる。
+
+| 路線 | ID | API の `lineType` | 実際 |
+| ---- | ---- | ---- | ---- |
+| みなとみらい線 | `99310` | `Normal` | 全線地下 |
+| 西武有楽町線 | `22003` | `Normal` | 小竹向原〜練馬が地下 |
+
+逆に**一部だけ地下化されている路線 (東急東横線の渋谷〜代官山) は路線単位では
+表せない**ので、駅数の多い側に倒して地上のまま扱う。`--subway-lines` に経路上に無い
+路線 ID を渡した場合はエラーにする (地下扱いにしたつもりの区間が黙って地上のまま
+出るのを防ぐため)。経路に地下の駅が 1 つも無いまま `--signal-profile subway` を
+指定した場合は、欠測が発生しないことを標準エラーで知らせる。
+
+生成時、どの路線を地下として扱ったかを標準エラーに出す。生成物からは読み取れない
+情報なので、意図どおりに分かれたかはここで確認する。
+
+```text
+区間の扱い: みなとみらい線(地下) / 東急東横線(地上) / 東京メトロ副都心線(地下) / 西武有楽町線(地下) / 西武池袋線(地上)
+```
+
+```bash
+# Fライナー相当 (元町・中華街→飯能)
+npm run gpx:generate -- \
+  --line-group 152 --max-speed 110 --signal-profile subway \
+  --subway-lines 99310,22003 --out assets/gpx/FLinerSeibu.gpx
+```
+
 ## 同梱している GPX
 
 | ファイル | 内容 |
@@ -109,6 +208,7 @@ npm run gpx:generate -- --line-group 71 --max-speed 110 --out assets/gpx/KeioSpe
 | `assets/gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。最高 110km/h |
 | `assets/gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km・最高 95km/h |
 | `assets/gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。駅間 3.4〜7.5km・最高 120km/h |
+| `assets/gpx/FLinerSeibu.gpx` | Fライナー相当 元町・中華街→飯能。地下鉄の電波環境付き |
 
 `SampleTohokuShinkansen.gpx` は盛岡以南の 320km/h 区間を再現するためのもの。
 経路上の 8 駅すべてに `ARRIVED_MAX_THRESHOLD` (200m) 以内まで接近するので、
@@ -117,6 +217,25 @@ npm run gpx:generate -- --line-group 71 --max-speed 110 --out assets/gpx/KeioSpe
 `KeioSpecialExpress.gpx` は在来線側のサンプルで、種別グループの停車パターン
 (経路 32 駅 / うち停車 12 駅) をそのまま走る。同じコマンドを再実行すれば
 バイト単位で同じ内容が得られる。
+
+`FLinerSeibu.gpx` は地下鉄の電波環境を持つ唯一のサンプル。いわゆる F ライナーだが、
+StationAPI に「F ライナー」という種別は無く、みなとみらい線・東急東横線が特急、
+副都心線が急行、西武有楽町線・西武池袋線が快速急行という組み合わせ (`lineGroupId`
+152) がそれにあたる。
+
+地下 (みなとみらい線) → 地上 (東急東横線) → 地下 (副都心線) → 地下 (西武有楽町線)
+→ 地上 (西武池袋線) と 5 社を跨ぐので、地下鉄分岐と、地上へ復帰したときの基準の
+張り直しを 1 本で繰り返し踏める。欠測は最長 144 秒あり、ETA 棄却の保険
+(`ETA_BOUND_MAX_HOLD_MS` = 90 秒) を超える区間を含む。
+
+84 分・4433 点と他のサンプルより大きいが、地下 ↔ 地上の切り替わりが 4 回入る経路は
+他に代えがない。
+
+`--max-speed` は路線ごとに変えられないので、全区間を副都心線の 80km/h で走らせて
+いる。地上側は本来もっと速い (東横線特急 110km/h、西武池袋線快速急行 105km/h) が、
+このサンプルの被検体はトンネル内の欠測長であり、速度を上げるとそこが縮む。110km/h で
+生成すると `ETA_BOUND_MAX_HOLD_MS` (90 秒) を超える欠測が 4 箇所から 1 箇所へ減る。
+地上区間の速度はこの検証に効かないため、地下側を実速度に合わせている。
 
 `KatamachiRapid.gpx` と `SobuRapid.gpx` は、EMA の追従遅れが到着判定へ効く条件を
 狙ったサンプル。到着圏は駅間 800m 以上でどれも 200m にクランプされるので、
@@ -149,13 +268,25 @@ npm run gpx:replay -- --gpx assets/gpx/SampleTohokuShinkansen.gpx --serial <seri
 | `--gpx` | 再生する GPX (必須) |
 | `--serial` | adb シリアル。接続が 1 台だけなら省略可 |
 | `--speed` | 再生倍率。既定 `1` |
-| `--accuracy` | 水平精度 (m)。既定 `8`。カンマ区切りで区間ごとに巡回 |
+| `--accuracy` | 水平精度 (m)。カンマ区切りで点ごとに巡回。既定の扱いは下記 |
 | `--start` | GPX 先頭からのスキップ秒数 |
 | `--provider` | テストプロバイダ名。既定 `gps,network,fused` |
 
 Xcode と違い精度を指定できるので、`--accuracy 100,300` のように渡せば
 `getSmoothingAlpha` の低精度分岐も実機で観測できる。一方で `coords.speed` を
 渡す手段が無いため、DEV OVERLAY の `CURRENT SPEED` は常に 0km/h を表示する。
+
+精度の優先順位は次のとおり。
+
+1. `--accuracy` を明示したときはその値。GPX に記録された精度より優先する。
+1. 指定が無ければ GPX の `trainlcd:accuracy`。
+1. どちらも無い点は `8`。
+
+欠測 (`<time>` の穴) はそのまま待ち時間になる。GPX に 268 秒の穴があれば端末へも
+268 秒のあいだ何も流さないので、`STALE_REFERENCE_MS` の基準張り直しまで含めて観測できる。
+ただし**テストプロバイダへ打つのを止めるだけ**なので、Play 開発者サービスの Fused が
+最後の測位を保持して配り続ける可能性がある。Jest 側 (後述) は完全な穴になるのに対し、
+実機側がそうなるかは端末ごとに `DevOverlay` で確かめること。
 
 `MAX_PLAUSIBLE_SPEED` は 100m/s (360km/h) なので、320km/h の GPX を `--speed 2`
 以上で流すと速度フィルタが全点を棄却して現在地が凍る。倍速で見たいときは
@@ -189,12 +320,19 @@ GPX は Xcode / adb だけでなく Jest からも参照する。`src/store/atom
 | テスト (`src/store/atoms/`) | 対象 | 使う GPX |
 | ---- | ---- | ---- |
 | `location.gpxLag.test.ts` | EMA の追従遅れが表示の切り替わり位置をどれだけ後ろへずらすか | 4 本 (新幹線を除く) |
-| `location.gpxEtaAssist.test.ts` | ETA 補助を有効にしても走行結果が変わらないこと | 全 GPX |
+| `location.gpxEtaAssist.test.ts` | ETA 補助を有効にしても走行結果が変わらないこと | 精度を持たない全 GPX |
+| `location.subwayGpx.test.ts` | 地下鉄の電波環境で地下鉄分岐へ入ること | F ライナー |
 
 ETA 補助 (`eta_assist_enabled`) がパイプラインへ介入する経路は、ETA が許す進行量を
 超えた測位の棄却 (`store/atoms/location.ts`) だけである。精度劣化時に到着圏を緩和する
 R1 (`hooks/useRefreshStation.ts`) も持っていたが、有効化して実走させたところ到着判定が
 悪化したため廃止した。
+
+`location.gpxEtaAssist.test.ts` は点ごとの精度を持つ GPX を対象から外す。あのスイープは
+「GPX は真の軌跡だけを供給し、精度と配信間隔はテストが振る」前提で組まれており、
+`truthAt` で等間隔に再サンプルするため GPX が持つ欠測は補間で消え、記録された精度も
+使われない。電波環境そのものが被検体になるトラックは `location.subwayGpx.test.ts` が
+記録されたまま流す。
 
 サーバー配信のフラグ 1 つで全ユーザーへ有効化されるため、有効化の前提は
 「正常な走行では何も変えない」ことになる。`location.gpxEtaAssist.test.ts` は各 GPX を
@@ -204,6 +342,10 @@ R1 (`hooks/useRefreshStation.ts`) も持っていたが、有効化して実走�
 `src/store/atoms/location.etaBound.test.ts` が受け持つ。
 
 GPX の解析・停車駅の検出・真の位置の補間は `src/utils/test/gpxTrack.ts` にまとめてある。
+`parseGpx` は 1 点ぶんのノードを切り出してからその内側だけを読む。XML 全体へ
+「`lat`/`lon` のあと最初に現れる `<time>`」のようなパターンを当てると、時刻を持たない点が
+あったときに次の点の `<time>` まで食い、座標と時刻が食い違った組を黙って作るため。
+点ごとに有無が変わる `trainlcd:accuracy` を足すと必ず踏む形になる。
 停車駅は速度がほぼ 0 の区間から検出するが、生成した GPX は始発駅の停車時間を書き出さず
 (1 点目から発車する)、終着駅では減速しきった時点でトラックが終わるため、停車時間の
 下限では始発駅・終着駅を拾えない。先頭・末尾で静止しているトラックはその点が
@@ -216,12 +358,37 @@ GPX の解析・停車駅の検出・真の位置の補間は `src/utils/test/gp
 | 条件 | GPX (iOS シミュレータ) | GPX (Android) | 実乗車 |
 | ---- | ---- | ---- | ---- |
 | 320km/h・精度良好 (精度 50m 未満) | ✅ | ✅ | ✅ |
-| 精度 100m / 300m | ❌ 常に良好な精度を返す | ✅ `--accuracy` で指定 | ✅ |
+| 精度 100m / 300m | ❌ 常に良好な精度を返す | ✅ `--accuracy` か GPX の精度 | ✅ |
 | 配信間隔ごとの追従遅れ | ❌ 間隔は OS 任せ | ❌ 同上 | ✅ |
-| トンネルでの測位途絶からの復帰 | ❌ | ❌ | ✅ |
+| トンネルでの測位途絶からの復帰 | ❓ Xcode が `<time>` の穴をどう扱うか未検証 | ✅ 実機で確認済み (下記) | ✅ |
 | 車体による GPS 減衰 | ❌ | ❌ | ✅ |
 | `coords.speed` を使う表示 | ✅ | ❌ 常に 0 | ✅ |
 
-測位途絶や車体による減衰は GPX では再現できない。
-これらは `src/store/atoms/location.test.ts` のユニットテストで代替するか、
-dev ビルドの `DevOverlay` (精度履歴・生座標を表示) を出したまま実際に乗車して確認する。
+測位途絶は `--signal-profile subway` で GPX に書ける。「テストプロバイダへ打つのを
+止めるだけなので、Play 開発者サービスの Fused が最後の測位を保持して配り続けるのでは
+ないか」という懸念を実機で確かめたが、**そうはならなかった**。
+
+`FLinerSeibu.gpx` の 195 秒の欠測を Galaxy SCG13 (Android 16) へ流し、`dumpsys location`
+を 3 秒間隔で採った結果、欠測のあいだ fused の `last location` は座標・`hAcc` だけでなく
+**測位自体の時刻 (`et=`) も 1ms も進まなかった** (26 サンプル)。Fused は測位を合成も
+再配信もせず、新しい測位が 1 つも生まれない。つまり GPX の穴はそのまま測位の途絶になる。
+
+```text
+09:21:34  35.692672,139.705452 hAcc=618.0 et=+5d1h23m15s728ms   ← 欠測へ突入
+  (26 サンプル、値が 1 つも変わらない)
+09:22:54  35.729662,139.709335 hAcc=378.0 et=+5d1h26m31s710ms   ← 195 秒後、池袋の手前で復帰
+09:23:09  35.731464,139.708291 hAcc= 45.0                       ← 池袋に到着、ホーム帯へ
+09:24:14  35.731466,139.708280 hAcc=496.0                       ← 発車、坑口帯へ
+```
+
+`trainlcd:accuracy` が端末へそのまま届くこともこれで確認できている (618m → 45m → 496m
+が GPX の坑口帯・ホーム帯・坑口帯に一致)。アプリ側は欠測のあいだ表示が凍り、復帰時に
+次の停車駅 (池袋) へ飛ぶ。`etaProgressBound.ts` が想定する「発車を観測できないまま次の
+停車駅で測位が復活する」経路そのものになる。
+
+Jest からの再生 (`location.subwayGpx.test.ts`) は `setLocation` を直接呼ぶので、こちらも
+完全な穴になる。
+
+車体による減衰は GPX では再現できない。これは
+`src/store/atoms/location.test.ts` のユニットテストで代替するか、dev ビルドの
+`DevOverlay` (精度履歴・生座標を表示) を出したまま実際に乗車して確認する。
