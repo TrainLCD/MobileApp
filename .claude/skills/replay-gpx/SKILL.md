@@ -108,8 +108,9 @@ npm run gpx:replay -- --gpx assets/gpx/SampleTohokuShinkansen.gpx --serial <seri
 
 ### 4. 画面を確認する
 
-Argent で撮る。DEV OVERLAY の `LOCATION ACCURACY` が `--accuracy` の値になっていれば
-モックが届いている。
+Argent で撮る。DEV OVERLAY の `LOCATION ACCURACY` が `--accuracy` の値、または GPX に
+記録された精度 (その時点の `trainlcd:accuracy`) になっていればモックが届いている。
+電波環境入りの GPX では点ごとに値が変わるので、8m でも指定値でもない数字が出るのが正常。
 
 ```text
 screenshot udid=<serial> scale=0.35
@@ -130,9 +131,10 @@ adb -s <serial> shell appops set 2000 android:mock_location default
 
 ## 落とし穴
 
-- **電波環境入りの GPX では `--accuracy` を渡さない。** 明示するとGPXに記録された
-  精度を上書きしてしまい、地下鉄の分岐 (`skipSmoothing`) に入らなくなる。精度の出所は
-  起動時のログに出るので、`GPX に記録された精度を使います` と出ているか確認する。
+- **電波環境入りの GPX では `--accuracy` を渡さない。** 明示すると GPX に記録された
+  精度を上書きしてしまい、坑口帯とホーム帯の切り替わりが消える。精度の出所は起動時の
+  ログに出るので、`GPX に記録された精度を使います` と出ているか確認する。
+  (200m 以上の値を一律に渡すと、今度は全点が地下鉄分岐に入って別の状態になる。)
 - **欠測は実際に測位の途絶になる。** 「投入を止めるだけなので Fused が最後の測位を
   配り続けるのでは」という懸念は Galaxy SCG13 (Android 16) で確認済みで、欠測中は
   `dumpsys location` の `last location` が `et=` (測位時刻) ごと固まり、新しい測位は
@@ -170,6 +172,6 @@ adb -s <serial> shell appops set 2000 android:mock_location default
 | 条件 | この手順 |
 | ---- | ---- |
 | 精度を落とした測位 (α=0.6 / 0.3) | ✅ `--accuracy 100,300` などで指定できる |
-| トンネルでの測位途絶 | ❌ 途絶を表現できない |
+| トンネルでの測位途絶 | ✅ `--signal-profile subway` の GPX で `<time>` に穴を開ける |
 | 車体による GPS 減衰 | ❌ |
 | `coords.speed` を使う表示の検証 | ❌ 常に 0 |
