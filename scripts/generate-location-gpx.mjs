@@ -505,9 +505,10 @@ export const buildWaypoints = ({
 
     // 直通運転では乗り入れの境界駅が路線ごとに 2 回並ぶ(和光市が東京メトロ
     // 副都心線と東武東上線の両方に現れるなど)。同じ地点なので区間長が 0 になり、
-    // 速度プロファイルを回すと「走っているのに 1mm も進まない点」が並ぶ。
-    // 停車扱いのまま次へ進める。電波プロファイルから見ると、この点の扱いを
-    // 誤ると駅に停まったままトンネル内の精度が付く。
+    // generateTrainSpeedProfile が [0] を返すため「走行扱いなのに 1mm も進まない点」
+    // が 1 点だけ混じる。電波プロファイルから見るとそこへトンネル内の精度が付き、
+    // 「駅に停まったまま基地局測位しか入らない」現実にない点になる。
+    // 停車扱いのまま次へ進める。この分岐を通る境界駅は、旧実装より 1 点(1 秒)短くなる。
     if (distance < 1) {
       const here = polyline.at(-1);
       const dwellPoints = leg === stopIndices.length - 2 ? 0 : dwellSec;
@@ -815,6 +816,15 @@ const main = async () => {
     skippedIds: skipped,
     isHoliday,
   });
+
+  // --subway-lines は subway プロファイルの分類にしか使われない。プロファイルを
+  // 付け忘れると、地下扱いにしたつもりの区間が精度も欠測も無いまま出力され、
+  // しかも終了コード 0 で成功する。経路外の ID を弾いているのと同じ理由で止める。
+  if (args.subwayLines.length > 0 && args.signalProfile !== 'subway') {
+    throw new Error(
+      `--subway-lines は --signal-profile subway と一緒に指定してください (現在: ${args.signalProfile})`
+    );
+  }
 
   const subwayLineIds = new Set(args.subwayLines);
 

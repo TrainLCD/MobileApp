@@ -188,7 +188,7 @@ test(
 );
 
 // --- 電波環境プロファイル -------------------------------------------------
-// 地下鉄の検証用GPX (assets/gpx/FukutoshinExpressThrough.gpx) の中身を決める部分。
+// 地下鉄の検証用GPX (assets/gpx/FLinerSeibu.gpx) の中身を決める部分。
 // 落とす点と付ける精度を間違えると、アプリ側の地下鉄分岐を踏まないトラックが
 // 静かに出来上がるので、分類規則をここで押さえる。
 
@@ -345,4 +345,89 @@ test('地下の判定は lineType と --subway-lines の和になる', () => {
   // 路線情報が欠けていても落ちない
   assert.equal(isUndergroundStation(undefined, subwayLineIds), false);
   assert.equal(isUndergroundStation({}, subwayLineIds), false);
+});
+
+// 停車 -> 走行 -> 停車 の 1 脚。makeLeg と違い走行の後ろにも停車があるので、
+// 到着側の坑口窓と、最寄りの停車点を次へ進める処理を通せる。
+const makeRoundTrip = ({
+  underground,
+  stoppedSec,
+  runSec,
+  leadingUnderground = underground,
+}) => {
+  const points = [];
+  let elapsed = 0;
+  let latitude = 35.0;
+  const at = (stopped, ug) => {
+    points.push({
+      latitude,
+      longitude: 139.0,
+      elapsed,
+      stopped,
+      underground: ug,
+    });
+    elapsed += 1;
+  };
+  for (let i = 0; i < stoppedSec; i++) at(true, leadingUnderground);
+  for (let i = 0; i < runSec; i++) {
+    latitude += 10 / 111_132;
+    at(false, underground);
+  }
+  for (let i = 0; i < stoppedSec; i++) at(true, underground);
+  return points;
+};
+
+test('subway は発車側と到着側の両方に坑口窓を残す', () => {
+  // 走行 120 秒のうち、両端 20 秒ぶん (portalSec) だけが残り、中央 80 点が落ちる。
+  // 到着側が残るには、最寄りの停車点が走行の途中で「次の停車」へ進む必要がある。
+  const result = applySignalProfile(
+    makeRoundTrip({ underground: true, stoppedSec: 3, runSec: 120 }),
+    'subway'
+  );
+
+  assert.equal(result.length, 3 + 20 + 20 + 3);
+
+  const gaps = result
+    .slice(1)
+    .map((wp, i) => wp.elapsed - result[i].elapsed)
+    .filter((gap) => gap > 1);
+  assert.deepEqual(gaps, [81], '穴は走行の中央に 1 つだけできる');
+
+  // 穴の前後がどちらも坑口帯であること。到着側が落ちると穴が駅到着まで伸び、
+  // 復帰点がホーム帯になる。
+  const holeAt = result.findIndex(
+    (wp, i) => i > 0 && wp.elapsed - result[i - 1].elapsed > 1
+  );
+  assert.ok(result[holeAt - 1].accuracy > 200, '発車側の末尾が坑口帯');
+  assert.ok(result[holeAt].accuracy > 200, '到着側の先頭が坑口帯');
+  assert.equal(
+    result.filter((wp) => wp.accuracy > 200).length,
+    40,
+    '坑口帯は両端 20 点ずつ'
+  );
+  assert.ok(
+    result.filter((wp) => wp.stopped).every((wp) => wp.accuracy <= 60),
+    '停車点はホーム帯'
+  );
+});
+
+test('坑口窓は境界駅が地上側でもその駅を起点に測る', () => {
+  // 直通の境界駅 (乗り入れ元が地上路線) から地下へ入るケース。停車点は地上帯に
+  // なるが、坑口窓の起点としては同じように使われる。
+  const result = applySignalProfile(
+    makeRoundTrip({
+      underground: true,
+      leadingUnderground: false,
+      stoppedSec: 3,
+      runSec: 120,
+    }),
+    'subway'
+  );
+
+  assert.equal(result.length, 3 + 20 + 20 + 3);
+  assert.ok(
+    result.slice(0, 3).every((wp) => wp.accuracy <= 20),
+    '地上側の境界駅は地上帯'
+  );
+  assert.ok(result[3].accuracy > 200, '発車直後は坑口帯');
 });

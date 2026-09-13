@@ -62,11 +62,14 @@ export const parseGpx = (relPath: string): TrackPoint[] => {
     const rawAccuracy = ACCURACY_RE.exec(inner)?.[1];
     const accuracy =
       rawAccuracy === undefined ? Number.NaN : Number(rawAccuracy);
+    // 0 以下は精度として採らない。再生側 (scripts/replay-location-gpx.mjs) が
+    // 正の数しか受け付けないので、同じGPXがJestでは「精度0mの完璧な測位」、
+    // 実機再生ではエラーという食い違いを避ける。
     points.push({
       lat,
       lon,
       t,
-      ...(Number.isFinite(accuracy) && accuracy >= 0 ? { accuracy } : {}),
+      ...(Number.isFinite(accuracy) && accuracy > 0 ? { accuracy } : {}),
     });
   }
   return points.sort((a, b) => a.t - b.t);

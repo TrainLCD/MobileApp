@@ -61,8 +61,15 @@ if (!Number.isFinite(speed) || speed <= 0) {
 
 // --accuracy を明示したときは GPX に記録された精度より優先する。指定が無いときの
 // 既定 8m は、精度を持たない GPX (従来の生成物・実走ログ) 向けのフォールバック。
+//
+// 「指定の有無」は opt() の戻り値ではなく flag() で見る。opt() は末尾に値なしで
+// `--accuracy` を置いたときも undefined を返すため、戻り値だけで判定すると
+// 「上書きするつもりの実行」が黙って GPX の記録値で走る。
+const hasAccuracyOverride = flag('accuracy');
 const accuracyArg = opt('accuracy');
-const hasAccuracyOverride = accuracyArg !== undefined;
+if (hasAccuracyOverride && accuracyArg === undefined) {
+  fail('--accuracy には値が必要です (例: --accuracy 100,300)');
+}
 const accuracies = String(accuracyArg ?? '8')
   .split(',')
   .map((v) => Number(v.trim()));
