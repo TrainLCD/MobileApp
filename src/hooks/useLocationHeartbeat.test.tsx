@@ -5,7 +5,7 @@ import {
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
 } from '../constants/location';
 import {
-  getLastTrackedLocationAtMs,
+  getMsSinceLastTrackedLocation,
   handleTrackingLocation,
 } from '../utils/handleTrackingLocation';
 import { useLocationHeartbeat } from './useLocationHeartbeat';
@@ -36,7 +36,7 @@ jest.mock('./useIsAppActive', () => ({
 
 jest.mock('../utils/handleTrackingLocation', () => ({
   handleTrackingLocation: jest.fn(),
-  getLastTrackedLocationAtMs: jest.fn(() => 0),
+  getMsSinceLastTrackedLocation: jest.fn(() => null),
 }));
 
 jest.mock('~/store/atoms/navigation', () => ({
@@ -70,7 +70,8 @@ const mockGetCurrentPositionAsync =
 const mockGetForegroundPermissionsAsync =
   Location.getForegroundPermissionsAsync as jest.Mock;
 const mockHandleTrackingLocation = handleTrackingLocation as jest.Mock;
-const mockGetLastTrackedLocationAtMs = getLastTrackedLocationAtMs as jest.Mock;
+const mockGetMsSinceLastTrackedLocation =
+  getMsSinceLastTrackedLocation as jest.Mock;
 
 const NOW = 1_700_000_000_000;
 
@@ -118,10 +119,9 @@ describe('useLocationHeartbeat', () => {
     mockSystemLowPowerMode = false;
     mockIsAppActive = true;
     mockGetForegroundPermissionsAsync.mockResolvedValue({ granted: true });
-    // 既定は「配信が途絶えている」状態。点検のたびに現在時刻から遡って返すことで、
-    // 何秒進めても途絶えたままの環境を表す。
-    mockGetLastTrackedLocationAtMs.mockImplementation(
-      () => Date.now() - LOCATION_HEARTBEAT_STALE_THRESHOLD
+    // 既定は「配信が途絶えている」状態
+    mockGetMsSinceLastTrackedLocation.mockReturnValue(
+      LOCATION_HEARTBEAT_STALE_THRESHOLD
     );
     mockGetCurrentPositionAsync.mockResolvedValue(makeLocation(NOW));
   });
@@ -143,8 +143,8 @@ describe('useLocationHeartbeat', () => {
 
   it('直近に配信が届いている間は取得しない', async () => {
     // 点検の直前まで配信が届き続けている環境
-    mockGetLastTrackedLocationAtMs.mockImplementation(
-      () => Date.now() - LOCATION_HEARTBEAT_STALE_THRESHOLD + 1
+    mockGetMsSinceLastTrackedLocation.mockReturnValue(
+      LOCATION_HEARTBEAT_STALE_THRESHOLD - 1
     );
     await startHeartbeat();
 
@@ -155,7 +155,7 @@ describe('useLocationHeartbeat', () => {
   });
 
   it('一度も配信が無い状態(起動直後に地下)でも取得する', async () => {
-    mockGetLastTrackedLocationAtMs.mockReturnValue(0);
+    mockGetMsSinceLastTrackedLocation.mockReturnValue(null);
     await startHeartbeat();
 
     await advanceToNextCheck();
@@ -166,7 +166,7 @@ describe('useLocationHeartbeat', () => {
   it('一度も配信が無い間は、まず継続測位に譲って途絶時間ぶん待つ', async () => {
     // 起動直後は継続測位が数秒で最初の測位を届ける。ここで待たないと、起動のたびに
     // 継続測位と一発取得が必ず二重に走る。
-    mockGetLastTrackedLocationAtMs.mockReturnValue(0);
+    mockGetMsSinceLastTrackedLocation.mockReturnValue(null);
     await startHeartbeat();
 
     await advanceBy(LOCATION_HEARTBEAT_STALE_THRESHOLD - 1);
@@ -179,8 +179,8 @@ describe('useLocationHeartbeat', () => {
   it('既に途絶している状態で開始したら待たずに取得する', async () => {
     // 地下でアプリを前景へ戻した場合。effectの張り直しで固定時間待つと、
     // 復帰から取得までさらに途絶時間ぶん遅れる。
-    mockGetLastTrackedLocationAtMs.mockReturnValue(
-      NOW - LOCATION_HEARTBEAT_STALE_THRESHOLD
+    mockGetMsSinceLastTrackedLocation.mockReturnValue(
+      LOCATION_HEARTBEAT_STALE_THRESHOLD
     );
     await startHeartbeat();
 
@@ -189,12 +189,11 @@ describe('useLocationHeartbeat', () => {
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
   });
 
-  it('端末の時計が巻き戻っても点検が先送りされない', async () => {
-    // 経過時間が負になる。残り時間として使うと巻き戻し幅ぶん点検が飛び、
-    // 補完測位が止まる(handleTrackingLocationの巻き戻しガードと同じ理由)。
-    mockGetLastTrackedLocationAtMs.mockImplementation(
-      () => Date.now() + 60_000
-    );
+  it('経過時間が負になっても点検が先送りされない', async () => {
+    // monotonicNowがDate.nowへフォールバックした環境では、時計の巻き戻しで経過時間が
+    // 負になりうる。残り時間として使うと巻き戻し幅ぶん点検が飛び、補完測位が止まる
+    // (handleTrackingLocationの巻き戻しガードと同じ理由)。
+    mockGetMsSinceLastTrackedLocation.mockReturnValue(-60_000);
     await startHeartbeat();
 
     await advanceBy(1);

@@ -3,9 +3,10 @@ import { useAtomValue } from 'jotai';
 import { useEffect } from 'react';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
-  getLastTrackedLocationAtMs,
+  getMsSinceLastTrackedLocation,
   handleTrackingLocation,
 } from '~/utils/handleTrackingLocation';
+import { monotonicNow } from '~/utils/monotonicNow';
 import {
   LOCATION_HEARTBEAT_MAX_PENDING,
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
@@ -68,7 +69,7 @@ export const useLocationHeartbeat = (): void => {
     // 測位を届けるので、そこへ譲るために「effectが始まった時刻に配信があった」と
     // 見なして途絶時間ぶん待つ。待たずに取りに行くと、継続測位と一発取得が起動時に
     // 必ず二重に走る。
-    const effectStartedAtMs = Date.now();
+    const effectStartedAtMs = monotonicNow();
     // 取得が返らないうちに重ねて要求すると、測位セッションだけが増えて電池を無駄に
     // する。応答が返るまでは新しい要求を出さない。ただし返らないまま放置すると補完
     // 測位ごと止まるので、LOCATION_HEARTBEAT_MAX_PENDINGで見切る。
@@ -93,11 +94,13 @@ export const useLocationHeartbeat = (): void => {
         return;
       }
 
-      const now = Date.now();
+      const now = monotonicNow();
 
-      // 経過時間が負になるのは端末の時計が巻き戻されたときで、基準が意味を失う。
-      // 残り時間として使うと巻き戻し幅ぶん点検が先送りされ、補完測位が止まる
-      // (同じ理由でhandleTrackingLocationにも巻き戻しガードがある)。待たずに次へ進む。
+      // 経過時間の判定はすべてmonotonicNowで揃える。端末の時計(Date.now)で測ると、
+      // 時刻同期や手動変更で巻き戻ったときに残り時間が巻き戻し幅ぶん伸びて点検が
+      // 止まり、進んだときは保留中の要求を早く見切って重複要求を出す。
+      // フォールバックでDate.nowが使われる環境も残るため、負の経過時間は
+      // 「基準が信用できない」として待たずに次へ進む。
       if (pending) {
         const pendingMs = now - pendingSinceMs;
         if (pendingMs >= 0 && pendingMs < LOCATION_HEARTBEAT_MAX_PENDING) {
@@ -106,12 +109,10 @@ export const useLocationHeartbeat = (): void => {
         }
       }
 
-      // 0は「起動後まだ一度も配信が無い」状態。基準をeffect開始時刻に置き換え、
+      // nullは「起動後まだ一度も配信が無い」状態。基準をeffect開始時刻に置き換え、
       // 起動直後は継続測位へ譲りつつ、届かないままなら途絶として取りに行く。
-      const lastTrackedAtMs = getLastTrackedLocationAtMs();
-      const referenceAtMs =
-        lastTrackedAtMs !== 0 ? lastTrackedAtMs : effectStartedAtMs;
-      const sinceDeliveryMs = now - referenceAtMs;
+      const sinceDeliveryMs =
+        getMsSinceLastTrackedLocation() ?? now - effectStartedAtMs;
       if (
         sinceDeliveryMs >= 0 &&
         sinceDeliveryMs < LOCATION_HEARTBEAT_STALE_THRESHOLD

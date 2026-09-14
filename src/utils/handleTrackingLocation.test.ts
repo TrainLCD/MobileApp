@@ -6,7 +6,7 @@ import {
   setRawLocation,
 } from '~/store/atoms/location';
 import {
-  getLastTrackedLocationAtMs,
+  getMsSinceLastTrackedLocation,
   handleTrackingLocation,
   resetTrackingLocationDedup,
 } from './handleTrackingLocation';
@@ -141,44 +141,49 @@ describe('handleTrackingLocation', () => {
     });
   });
 
-  // 補完測位(useLocationHeartbeat)は「最後に配信を処理した時刻」だけを見て、
-  // 継続測位が途絶えたかを判断する。
+  // 補完測位(useLocationHeartbeat)は「最後に配信を処理してからの経過時間」だけを見て、
+  // 継続測位が途絶えたかを判断する。経過時間は端末の時計の変更に影響されない
+  // monotonicNowで測る。
   describe('配信時刻の記録', () => {
-    it('処理していない状態では0を返す', () => {
-      expect(getLastTrackedLocationAtMs()).toBe(0);
+    beforeEach(() => {
+      jest.useFakeTimers();
     });
 
-    it('測位を処理した時刻を壁時計で記録する', () => {
-      const now = Date.now();
-      jest.spyOn(Date, 'now').mockReturnValue(now);
+    afterEach(() => {
+      jest.useRealTimers();
+    });
 
+    it('処理していない状態ではnullを返す', () => {
+      expect(getMsSinceLastTrackedLocation()).toBeNull();
+    });
+
+    it('測位を処理してからの経過時間を返す', () => {
       // 測位側のtimestampが古くても、届いたのは「今」なので途絶ではない
-      handleTrackingLocation(makeLocation(30, now - 60_000));
+      handleTrackingLocation(makeLocation(30, Date.now() - 60_000));
 
-      expect(getLastTrackedLocationAtMs()).toBe(now);
+      jest.advanceTimersByTime(5_000);
+
+      expect(getMsSinceLastTrackedLocation()).toBe(5_000);
     });
 
     it('精度フィルタで棄却した測位も配信としては記録する', () => {
-      const now = Date.now();
-      jest.spyOn(Date, 'now').mockReturnValue(now);
-
       // 棄却されたのは座標であって配信は届いている。ここで記録しないと、
       // 精度の悪い区間で補完測位が無条件に走り続ける。
-      handleTrackingLocation(makeLocation(MAX_PERMIT_ACCURACY + 1, now));
+      handleTrackingLocation(makeLocation(MAX_PERMIT_ACCURACY + 1, Date.now()));
+
+      jest.advanceTimersByTime(3_000);
 
       expect(mockSetLocation).not.toHaveBeenCalled();
-      expect(getLastTrackedLocationAtMs()).toBe(now);
+      expect(getMsSinceLastTrackedLocation()).toBe(3_000);
     });
 
     it('重複として破棄した測位では記録を更新しない', () => {
-      const first = Date.now();
-      jest.spyOn(Date, 'now').mockReturnValue(first);
       handleTrackingLocation(makeLocation(30, 1000));
 
-      jest.spyOn(Date, 'now').mockReturnValue(first + 5_000);
+      jest.advanceTimersByTime(5_000);
       handleTrackingLocation(makeLocation(30, 1000));
 
-      expect(getLastTrackedLocationAtMs()).toBe(first);
+      expect(getMsSinceLastTrackedLocation()).toBe(5_000);
     });
   });
 });
