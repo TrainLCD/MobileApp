@@ -34,7 +34,7 @@ import type {
 /**
  * iOS でリモート TTS が使えない回に、日本語だけを VOICEVOX CORE (端末内合成) で
  * 読み上げるエンジン。英語は VOICEVOX が話せないため、引数で受け取った
- * エンジン (端末内蔵 TTS) へ委譲する。
+ * エンジン (useVitsSpeechEngine → 端末内蔵 TTS) へ委譲する。
  *
  * 使える条件が 1 つでも欠けると onUnavailable を返し、呼び出し側 (useTTS) が
  * その回だけ端末内蔵 TTS で日英とも読み上げる。

@@ -1,8 +1,10 @@
 // 自動アナウンスの読み上げ手段を差し替えられるようにするための共通インターフェース。
-// Worker 経由の Google Cloud TTS (useRemoteSpeechEngine) と端末内蔵 TTS
-// (useNativeSpeechEngine) のどちらを使うかは Remote Config
-// (remote_tts_enabled_ios / remote_tts_enabled_android) が決め、リモートが
-// 使えないときは useTTS がその回だけ内蔵 TTS へフォールバックする。
+// Worker 経由の Google Cloud TTS (useRemoteSpeechEngine) と端末内合成のどちらを使うかは
+// Remote Config (remote_tts_enabled_ios / remote_tts_enabled_android) が決め、リモートが
+// 使えないときは useTTS がその回だけ端末内で読む。端末内の経路は言語ごとに分かれ、
+// 日本語は useVoicevoxSpeechEngine、英語は useVitsSpeechEngine が担い、どちらも使えない
+// 言語は useNativeSpeechEngine (端末内蔵 TTS) が読む。詳細は
+// docs/spec/tts/on-device-tts-ios.md を参照。
 
 export interface SpeechEngineRequest {
   // テンプレートが生成した SSML 断片。プレーンテキストへの変換はエンジン側で行う。

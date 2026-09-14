@@ -25,16 +25,19 @@ API 障害でアナウンスが丸ごと欠落しないようにするための�
 useTTS ────────────────── 放送タイミング・抑止判定・音声セッション・保留キュー
   ├─ useRemoteSpeechEngine   /tts へ合成要求 → expo-audio で再生
   ├─ useVoicevoxSpeechEngine iOS 本体アプリのフォールバック (日本語のみ VOICEVOX、英語は委譲)
+  ├─ useVitsSpeechEngine     iOS 本体アプリのフォールバック (英語のみ VITS、使えなければ委譲)
   └─ useNativeSpeechEngine   リモートを使わない構成の常用経路 / 最終フォールバック
 ```
 
 エンジンの選択は放送直前に `isRemoteTTSEnabled()`（`src/lib/remoteConfig.ts`）を引いて
 決めるため、起動後に Remote Config が届いた場合も次の放送から反映される。
 `isRemoteTTSEnabled()` が決めるのは「リモート合成を試すか、最初から端末内で読むか」だけで、
-端末内で読む側はまず `useVoicevoxSpeechEngine` を試し、VOICEVOX が使える条件（iOS 本体アプリの
-ネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・音声モデル内のスタイル ID）が
-そろわなければ `useNativeSpeechEngine` へ倒れる。条件の詳細は
-[オンデバイス TTS (VOICEVOX) 設計書](./on-device-tts-ios.md) を参照。
+端末内で読む側は言語ごとに分かれる。日本語はまず `useVoicevoxSpeechEngine` を試し、VOICEVOX が
+使える条件（iOS 本体アプリのネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・
+音声モデル内のスタイル ID）がそろわなければ `useNativeSpeechEngine` へ倒れる。英語は
+`useVitsSpeechEngine` が同様の条件（`vits_tts_enabled_ios`・検証済みの資産）で端末内合成を試し、
+使えなければその層が `useNativeSpeechEngine` へ委譲する。条件の詳細は
+[オンデバイス TTS 設計書](./on-device-tts-ios.md) を参照。
 
 各エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
 

@@ -82,6 +82,27 @@ jest.mock('./tts/useVoicevoxSpeechEngine', () => ({
   useVoicevoxSpeechEngine: () => mockVoicevoxEngine,
 }));
 
+// 英語の端末内合成 (VITS) も同様にモックする。実装の検証は
+// useVitsSpeechEngine.test.ts で行う。既定は「使えない」状態にして、
+// 従来どおり端末内蔵 TTS が日英をまとめて読む経路を通す。
+const mockVitsSpeak = jest.fn(
+  (_request: unknown, callbacks: { onSettled: () => void }) => {
+    callbacks.onSettled();
+  }
+);
+const mockVitsStop = jest.fn();
+let mockVitsAvailable = false;
+const mockVitsEngine = {
+  speak: (...args: unknown[]) =>
+    (mockVitsSpeak as unknown as (...a: unknown[]) => void)(...args),
+  stop: () => mockVitsStop(),
+  isAvailable: () => mockVitsAvailable,
+};
+
+jest.mock('./tts/useVitsSpeechEngine', () => ({
+  useVitsSpeechEngine: () => mockVitsEngine,
+}));
+
 jest.mock('./useCurrentLine', () => ({
   useCurrentLine: jest.fn(() => undefined),
 }));
@@ -159,6 +180,11 @@ describe('useTTS', () => {
     // 個別テストで差し替えたリモートエンジンの挙動を既定へ戻す
     mockRemoteSpeak.mockImplementation(remoteSpeakUnavailable);
     mockVoicevoxSpeak.mockImplementation(voicevoxSpeakUnavailable);
+    // 既定は英語の端末内合成が無い構成 (Android・未配信・未取得)
+    mockVitsAvailable = false;
+    mockVitsSpeak.mockImplementation((_request, callbacks) => {
+      callbacks.onSettled();
+    });
     // テスト間で useTTSText の mock を復元
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
@@ -212,6 +238,46 @@ describe('useTTS', () => {
       'en text',
       expect.objectContaining({ language: 'en-US' })
     );
+  });
+
+  it('英語を端末内で合成できるときは、日本語だけ端末内蔵TTSへ渡して英語を分ける', async () => {
+    // VOICEVOX が使えない回でも、英語だけは端末内合成で読めるようにする。
+    // 端末内蔵 TTS には日本語だけを渡し、英語は VITS エンジンへ回す。
+    mockVitsAvailable = true;
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    expect(mockSpeak).toHaveBeenCalledTimes(1);
+    expect(mockSpeak).toHaveBeenCalledWith(
+      'ja text',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
+    // 日本語の発話が終わってから英語へ進む
+    finishAllUtterances();
+    await flushAsync();
+
+    expect(mockVitsSpeak).toHaveBeenCalledTimes(1);
+    expect(mockVitsSpeak).toHaveBeenCalledWith(
+      expect.objectContaining({ speakJa: false, speakEn: true }),
+      expect.anything()
+    );
+  });
+
+  it('英語を端末内で合成できないときは、日英をまとめて端末内蔵TTSへ渡す', async () => {
+    // 分けて渡すと発話の合間に合成待ちのラグが入るため、VITS が使えない構成では
+    // 従来どおり日英を 1 回の speak で OS のキューへ積む
+    mockVitsAvailable = false;
+    const store = createStore();
+    store.set(speechState, defaultSpeechState);
+
+    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+    await flushAsync();
+
+    expect(mockSpeak).toHaveBeenCalledTimes(2);
+    expect(mockVitsSpeak).not.toHaveBeenCalled();
   });
 
   it('JAのみ有効時は日本語のみ読み上げる', async () => {
