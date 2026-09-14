@@ -30,8 +30,11 @@ export const vitsManifestSchema = z
   .object({
     schemaVersion: z.literal(1),
     version: manifestVersionSchema,
-    // 音声モデル (ONNX)
-    model: relativePathSchema,
+    // 音声モデル (ONNX)。拡張子まで見るのは、辞書のパスを取り違えたマニフェストを
+    // 配ると、ネイティブ側がテキストを ONNX として開こうとして合成が丸ごと失敗するため
+    model: relativePathSchema.refine((path) => path.endsWith('.onnx'), {
+      message: 'model must be an .onnx file',
+    }),
     // 音素 → トークン ID の対応表
     tokens: relativePathSchema,
     // 単語 → 音素列の発音辞書
@@ -46,17 +49,26 @@ export const vitsManifestSchema = z
         message: 'files must not contain duplicate paths',
       });
     }
-    for (const [key, value] of [
+    const roles = [
       ['model', manifest.model],
       ['tokens', manifest.tokens],
       ['lexicon', manifest.lexicon],
-    ] as const) {
+    ] as const;
+    for (const [key, value] of roles) {
       if (!paths.has(value)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: `${key} ${value} is not listed in files`,
         });
       }
+    }
+    // 3 つが同じファイルを指すマニフェストは、役割を取り違えて生成された証拠。
+    // 通してしまうと端末は資産を取得できても合成できない
+    if (new Set(roles.map(([, value]) => value)).size !== roles.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'model, tokens and lexicon must reference different files',
+      });
     }
   });
 

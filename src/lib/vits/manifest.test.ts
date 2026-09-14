@@ -81,6 +81,23 @@ describe('parseVitsManifest', () => {
     }
   });
 
+  it('model が .onnx でなければ弾く', () => {
+    // 役割を取り違えたマニフェストを配ると、ネイティブがテキストを ONNX として
+    // 開こうとして合成が丸ごと失敗する
+    expect(() =>
+      parseVitsManifest({ ...validManifest, model: 'lexicon.txt' })
+    ).toThrow(/model must be an \.onnx file/);
+  });
+
+  it('model・tokens・lexicon が同じファイルを指していたら弾く', () => {
+    expect(() =>
+      parseVitsManifest({
+        ...validManifest,
+        tokens: 'lexicon.txt',
+      })
+    ).toThrow(/must reference different files/);
+  });
+
   it('SHA-256 は 16 進 64 桁のみ受理する', () => {
     expect(() =>
       parseVitsManifest({
