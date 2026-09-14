@@ -8,8 +8,10 @@ import {
 // 設計は docs/spec/tts/on-device-tts-ios.md を参照。
 
 // 既定のスタイル ID。夜語トバリ「明るい」(voicevox_vvm の 24.vvm / スタイル ID 119)。
-// 「VOICEVOX:夜語トバリ」とクレジットを表記すれば商用・非商用ともに利用可
-// (https://yogataritobari.studio.site/#rules)。ライセンス画面のクレジットと対応させること。
+// 利用条件は「VOICEVOX:夜語トバリ」のクレジット表記 (voicevox_vvm の TERMS.txt)。ただし
+// キャラクター側の規約 (https://yogataritobari.studio.site/#rules) は法人利用・商用利用に
+// 別途問い合わせを求めているため、課金・広告を入れるときは最新の規約を確認すること。
+// ライセンス画面のクレジットと対応させること。
 export const VOICEVOX_DEFAULT_STYLE_ID = 119;
 
 // アナウンス速度設定を VOICEVOX の AudioQuery.speedScale へ写像する。
