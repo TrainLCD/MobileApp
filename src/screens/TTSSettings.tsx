@@ -18,7 +18,15 @@ import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { useRemoteTTSEnabled } from '~/hooks/useRemoteTTSEnabled';
 import { useTTSFeatureEnabled } from '~/hooks/useTTSFeatureEnabled';
+import { useVitsAssetsStatus } from '~/hooks/useVitsAssetsStatus';
 import { useVoicevoxAssetsStatus } from '~/hooks/useVoicevoxAssetsStatus';
+import {
+  cancelVitsAssetsDownload,
+  deleteVitsAssets,
+  getVitsAssetsStatus,
+  requestVitsAssetsDownload,
+  type VitsAssetsStatus,
+} from '~/lib/vits/assets';
 import {
   cancelVoicevoxAssetsDownload,
   deleteVoicevoxAssets,
@@ -38,6 +46,7 @@ import { showDialog } from '~/utils/dialogPresentation';
 import {
   STATUS_URL,
   STORAGE_KEYS,
+  VITS_ASSET_APPROX_MB,
   VOICEVOX_ASSET_APPROX_MB,
 } from '../constants';
 import { storage } from '../lib/storage';
@@ -176,16 +185,36 @@ const SpeedSettingsItem = ({
 const formatMegabytes = (bytes: number): string =>
   `${Math.max(1, Math.round(bytes / 1_000_000))}MB`;
 
-// iOS のオフライン用日本語音声 (VOICEVOX) のダウンロード状況。取得はユーザーの
-// 同意で始まるため、状態ごとに「ダウンロード / キャンセル / 再試行 / 削除」を出す。
+// パネルに出す文言。日本語 (VOICEVOX) と英語 (VITS) で別々の枠を出すため、
+// 表示は共通にして文言と testID だけを差し替える。
+type OfflineVoicePanelLabels = {
+  title: string;
+  downloading: string;
+  installed: (size: string) => string;
+  installedDescription: string;
+  notDownloadedDescription: string;
+  downloadAction: string;
+  downloadFailed: string;
+  delete: string;
+};
+
+// 日本語 (VOICEVOX) と英語 (VITS) は同じ形の取得状態を持つ
+type OfflineVoiceStatus = VoicevoxAssetsStatus | VitsAssetsStatus;
+
+// iOS のオフライン用音声のダウンロード状況。取得はユーザーの同意で始まるため、
+// 状態ごとに「ダウンロード / キャンセル / 再試行 / 削除」を出す。
 // 詳細は docs/spec/tts/on-device-tts-ios.md
-const VoicevoxAssetsPanel = ({
+const OfflineVoiceAssetsPanel = ({
   status,
+  labels,
+  testID,
   onPressDownload,
   onPressCancel,
   onPressDelete,
 }: {
-  status: VoicevoxAssetsStatus;
+  status: OfflineVoiceStatus;
+  labels: OfflineVoicePanelLabels;
+  testID: string;
   onPressDownload: () => void;
   onPressCancel: () => void;
   onPressDelete: () => void;
@@ -218,7 +247,7 @@ const VoicevoxAssetsPanel = ({
           fontWeight: 'bold',
         }}
       >
-        {translate('voicevoxDownloadTitle')}
+        {labels.title}
       </Typography>
       <View
         style={{
@@ -231,13 +260,13 @@ const VoicevoxAssetsPanel = ({
         {status.phase === 'downloading' ? (
           <>
             <Typography style={{ fontSize: 18, fontWeight: 'bold' }}>
-              {`${translate('voicevoxDownloading')} ${percent}%`}
+              {`${labels.downloading} ${percent}%`}
             </Typography>
             <View
               accessible
               accessibilityRole="progressbar"
               accessibilityValue={{ min: 0, max: 100, now: percent }}
-              testID="voicevox-progressbar"
+              testID={testID}
               style={{
                 marginTop: 12,
                 height: 6,
@@ -269,19 +298,17 @@ const VoicevoxAssetsPanel = ({
         {status.phase === 'installed' ? (
           <>
             <Typography style={{ fontSize: 18, fontWeight: 'bold' }}>
-              {translate('voicevoxInstalled', {
-                size: formatMegabytes(status.totalBytes),
-              })}
+              {labels.installed(formatMegabytes(status.totalBytes))}
             </Typography>
             <Typography style={{ marginTop: 8, color: colors.secondaryText }}>
-              {translate('voicevoxInstalledDescription')}
+              {labels.installedDescription}
             </Typography>
             <Typography
               accessibilityRole="button"
               onPress={onPressDelete}
               style={actionStyle}
             >
-              {translate('voicevoxDelete')}
+              {labels.delete}
             </Typography>
           </>
         ) : null}
@@ -289,10 +316,8 @@ const VoicevoxAssetsPanel = ({
           <>
             <Typography style={{ color: colors.secondaryText }}>
               {status.phase === 'error'
-                ? translate('voicevoxDownloadFailed')
-                : translate('voicevoxNotDownloadedDescription', {
-                    size: VOICEVOX_ASSET_APPROX_MB,
-                  })}
+                ? labels.downloadFailed
+                : labels.notDownloadedDescription}
             </Typography>
             <Typography
               accessibilityRole="button"
@@ -301,9 +326,7 @@ const VoicevoxAssetsPanel = ({
             >
               {status.phase === 'error'
                 ? translate('retry')
-                : translate('voicevoxDownloadAction', {
-                    size: VOICEVOX_ASSET_APPROX_MB,
-                  })}
+                : labels.downloadAction}
             </Typography>
           </>
         ) : null}
@@ -321,12 +344,16 @@ const ListFooter = ({
   speechEnabled,
   ttsFeatureEnabled,
   voicevoxStatus,
+  vitsStatus,
   onToggleTTSLanguage,
   onSelectTTSSpeed,
   onPressServiceStatus,
   onPressVoicevoxDownload,
   onPressVoicevoxCancel,
   onPressVoicevoxDelete,
+  onPressVitsDownload,
+  onPressVitsCancel,
+  onPressVitsDelete,
   onPressOK,
 }: {
   ttsLanguageItems: TTSLanguageSettingItem[];
@@ -337,12 +364,16 @@ const ListFooter = ({
   speechEnabled: boolean;
   ttsFeatureEnabled: boolean;
   voicevoxStatus: VoicevoxAssetsStatus;
+  vitsStatus: VitsAssetsStatus;
   onToggleTTSLanguage: (language: TTSLanguage) => void;
   onSelectTTSSpeed: (preference: TTSSpeedPreference) => void;
   onPressServiceStatus: () => void;
   onPressVoicevoxDownload: () => void;
   onPressVoicevoxCancel: () => void;
   onPressVoicevoxDelete: () => void;
+  onPressVitsDownload: () => void;
+  onPressVitsCancel: () => void;
+  onPressVitsDelete: () => void;
   onPressOK: () => void;
 }) => {
   const colors = useAppColors();
@@ -417,15 +448,56 @@ const ListFooter = ({
           </Typography>
         </>
       ) : null}
-      {/* オフライン用の日本語音声 (VOICEVOX)。ネイティブモジュールを持つ iOS 本体
-        アプリで Remote Config により有効化されているときだけ表示する (App Clip・
-        Android・未配信時は unsupported) */}
+      {/* オフライン用の日本語音声 (VOICEVOX) と英語音声 (VITS)。ネイティブモジュールを
+        持つ iOS 本体アプリで Remote Config により有効化されているときだけ表示する
+        (App Clip・Android・未配信時は unsupported)。日本語と英語は別々に取得・削除
+        できるよう枠を分けている */}
       {Platform.OS === 'ios' && voicevoxStatus.phase !== 'unsupported' ? (
-        <VoicevoxAssetsPanel
+        <OfflineVoiceAssetsPanel
           status={voicevoxStatus}
+          testID="voicevox-progressbar"
+          labels={{
+            title: translate('voicevoxDownloadTitle'),
+            downloading: translate('voicevoxDownloading'),
+            installed: (size) => translate('voicevoxInstalled', { size }),
+            installedDescription: translate('voicevoxInstalledDescription'),
+            notDownloadedDescription: translate(
+              'voicevoxNotDownloadedDescription',
+              { size: VOICEVOX_ASSET_APPROX_MB }
+            ),
+            downloadAction: translate('voicevoxDownloadAction', {
+              size: VOICEVOX_ASSET_APPROX_MB,
+            }),
+            downloadFailed: translate('voicevoxDownloadFailed'),
+            delete: translate('voicevoxDelete'),
+          }}
           onPressDownload={onPressVoicevoxDownload}
           onPressCancel={onPressVoicevoxCancel}
           onPressDelete={onPressVoicevoxDelete}
+        />
+      ) : null}
+      {Platform.OS === 'ios' && vitsStatus.phase !== 'unsupported' ? (
+        <OfflineVoiceAssetsPanel
+          status={vitsStatus}
+          testID="vits-progressbar"
+          labels={{
+            title: translate('vitsDownloadTitle'),
+            downloading: translate('vitsDownloading'),
+            installed: (size) => translate('vitsInstalled', { size }),
+            installedDescription: translate('vitsInstalledDescription'),
+            notDownloadedDescription: translate(
+              'vitsNotDownloadedDescription',
+              { size: VITS_ASSET_APPROX_MB }
+            ),
+            downloadAction: translate('vitsDownloadAction', {
+              size: VITS_ASSET_APPROX_MB,
+            }),
+            downloadFailed: translate('vitsDownloadFailed'),
+            delete: translate('vitsDelete'),
+          }}
+          onPressDownload={onPressVitsDownload}
+          onPressCancel={onPressVitsCancel}
+          onPressDelete={onPressVitsDelete}
         />
       ) : null}
       {!ttsFeatureEnabled ? (
@@ -488,6 +560,8 @@ const TTSSettingsScreen: React.FC = () => {
   const remoteTTSEnabled = useRemoteTTSEnabled();
   // オフライン用日本語音声 (VOICEVOX) の取得状況。進捗表示と操作に使う。
   const voicevoxStatus = useVoicevoxAssetsStatus();
+  // オフライン用英語音声 (VITS) の取得状況。日本語とは独立して取得・削除できる。
+  const vitsStatus = useVitsAssetsStatus();
 
   const SETTING_ITEMS: SettingItem[] = [
     {
@@ -592,6 +666,32 @@ const TTSSettingsScreen: React.FC = () => {
                 text: translate('download'),
                 onPress: (): void => {
                   void requestVoicevoxAssetsDownload();
+                },
+              },
+            ]
+          );
+        }
+
+        // 英語も同じく、有効化のタイミングでオフライン用の英語音声を尋ねる。
+        // 日本語とは別枠なので、両方未取得ならダイアログは順に 2 つ出る。
+        // 英語を読まない設定では尋ねない。
+        if (
+          flag &&
+          Platform.OS === 'ios' &&
+          ttsEnabledLanguages.includes('EN') &&
+          getVitsAssetsStatus().phase === 'not_downloaded'
+        ) {
+          showDialog(
+            translate('vitsDownloadTitle'),
+            translate('vitsDownloadPrompt', {
+              size: VITS_ASSET_APPROX_MB,
+            }),
+            [
+              { text: translate('later'), style: 'cancel' },
+              {
+                text: translate('download'),
+                onPress: (): void => {
+                  void requestVitsAssetsDownload();
                 },
               },
             ]
@@ -806,6 +906,31 @@ const TTSSettingsScreen: React.FC = () => {
     );
   }, []);
 
+  const handleVitsDownloadPress = useCallback(() => {
+    void requestVitsAssetsDownload();
+  }, []);
+
+  const handleVitsCancelPress = useCallback(() => {
+    cancelVitsAssetsDownload();
+  }, []);
+
+  const handleVitsDeletePress = useCallback(() => {
+    showDialog(
+      translate('vitsDeleteConfirmTitle'),
+      translate('vitsDeleteConfirmMessage'),
+      [
+        { text: translate('cancel'), style: 'cancel' },
+        {
+          text: translate('vitsDelete'),
+          style: 'destructive',
+          onPress: (): void => {
+            void deleteVitsAssets();
+          },
+        },
+      ]
+    );
+  }, []);
+
   const handleServiceStatusPress = useCallback(() => {
     Linking.openURL(STATUS_URL).catch((error) => {
       console.error('Failed to open service status page', error);
@@ -848,12 +973,16 @@ const TTSSettingsScreen: React.FC = () => {
               speechEnabled={effectiveSpeechEnabled}
               ttsFeatureEnabled={ttsFeatureEnabled}
               voicevoxStatus={voicevoxStatus}
+              vitsStatus={vitsStatus}
               onToggleTTSLanguage={handleToggleTTSLanguage}
               onSelectTTSSpeed={handleSelectTTSSpeed}
               onPressServiceStatus={handleServiceStatusPress}
               onPressVoicevoxDownload={handleVoicevoxDownloadPress}
               onPressVoicevoxCancel={handleVoicevoxCancelPress}
               onPressVoicevoxDelete={handleVoicevoxDeletePress}
+              onPressVitsDownload={handleVitsDownloadPress}
+              onPressVitsCancel={handleVitsCancelPress}
+              onPressVitsDelete={handleVitsDeletePress}
               onPressOK={() => navigation.goBack()}
             />
           }

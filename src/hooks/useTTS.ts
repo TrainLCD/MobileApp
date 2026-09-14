@@ -1,14 +1,16 @@
 import { setAudioModeAsync } from 'expo-audio';
 import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Platform } from 'react-native';
 import { TransportType } from '~/@types/graphql';
 import { isRemoteTTSEnabled } from '~/lib/remoteConfig';
 import speechState, { resetFirstSpeechAtom } from '../store/atoms/speech';
 import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { computeSuppressionDecision } from '../utils/computeSuppressionDecision';
-import type { SpeechEngineRequest } from './tts/speechEngine';
+import type { SpeechEngine, SpeechEngineRequest } from './tts/speechEngine';
 import { useNativeSpeechEngine } from './tts/useNativeSpeechEngine';
 import { useRemoteSpeechEngine } from './tts/useRemoteSpeechEngine';
+import { useVitsSpeechEngine } from './tts/useVitsSpeechEngine';
 import { useVoicevoxSpeechEngine } from './tts/useVoicevoxSpeechEngine';
 import { useCurrentLine } from './useCurrentLine';
 import { usePrevious } from './usePrevious';
@@ -21,6 +23,18 @@ import { useTTSText } from './useTTSText';
 // 解放されず以降の TTS 全体が停止するのを防ぐ。正常な発話（日英合わせても数十秒
 // 程度、リモートは取得時間を含めても十分収まる）はこの時間内に必ず完了する。
 const PLAYBACK_TIMEOUT_MS = 300_000;
+
+// iOS では端末内蔵 TTS (AVSpeechSynthesizer) を使わない。既定で選ばれるコンパクト音声は
+// 音質が悪く、Enhanced / Premium 音声はユーザーが設定アプリから手動で入れない限り使えない
+// (アプリからダウンロードを起動する API が無い)。リモート TTS も端末内合成も使えない回は、
+// 機械的な声を突然流すより読み上げないことを選ぶ。
+// Android は端末内蔵 TTS が常用経路なので対象外で、従来どおり読み上げる。
+const SILENT_SPEECH_ENGINE: SpeechEngine = {
+  speak: (_request, callbacks) => {
+    callbacks.onSettled();
+  },
+  stop: () => {},
+};
 
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
@@ -68,17 +82,28 @@ export const useTTS = (): void => {
   // 使えないときのフォールバックも担うため、どちらのプラットフォームでも用意しておく。
   const nativeEngine = useNativeSpeechEngine();
   const remoteEngine = useRemoteSpeechEngine();
+  // 端末内合成が使えない回に読み上げを引き受けるエンジン。iOS は上記の理由で
+  // 引き受け手を持たない (= その言語は読み上げない)。
+  const deviceFallbackEngine = useMemo(
+    () => (Platform.OS === 'ios' ? SILENT_SPEECH_ENGINE : nativeEngine),
+    [nativeEngine]
+  );
+  // iOS でリモート合成が使えない回の英語を VITS (端末内合成) で読み上げる。
+  // Remote Config (vits_tts_enabled_ios) で有効化され、音声モデル・発音辞書の
+  // 取得が済んでいるときだけ使われ、それ以外はこの層が端末内蔵 TTS へ委譲する。
+  const englishEngine = useVitsSpeechEngine(deviceFallbackEngine);
   // iOS でリモート合成が使えない回の日本語を VOICEVOX (端末内合成) で読み上げる。
-  // 英語は端末内蔵 TTS へ委譲する。Remote Config (voicevox_tts_enabled_ios) で
+  // 英語は englishEngine へ委譲する。Remote Config (voicevox_tts_enabled_ios) で
   // 有効化され、辞書・音声モデルの取得が済んでいるときだけ使われ、それ以外は
-  // onUnavailable を返すので端末内蔵 TTS に倒れる。
-  const voicevoxEngine = useVoicevoxSpeechEngine(nativeEngine);
+  // onUnavailable を返す。
+  const voicevoxEngine = useVoicevoxSpeechEngine(englishEngine);
 
   const stopAllEngines = useCallback(() => {
     remoteEngine.stop();
     voicevoxEngine.stop();
+    englishEngine.stop();
     nativeEngine.stop();
-  }, [nativeEngine, remoteEngine, voicevoxEngine]);
+  }, [englishEngine, nativeEngine, remoteEngine, voicevoxEngine]);
 
   // アンマウント時のクリーンアップから参照する。エンジンの識別子を effect の
   // 依存に入れると、識別子が変わっただけでクリーンアップが走って発話中の
@@ -233,7 +258,7 @@ export const useTTS = (): void => {
         }
 
         // 端末内で読み上げる経路。まず VOICEVOX (日本語のみ・iOS 本体アプリで
-        // 有効化済みのときだけ) を試し、使えなければ端末内蔵 TTS で日英とも読む。
+        // 有効化済みのときだけ) を試す。使えない回は日本語を端末内蔵 TTS が読む。
         const speakOnDevice = () => {
           voicevoxEngine.speak(request, {
             onSpeechStarted,
@@ -242,7 +267,31 @@ export const useTTS = (): void => {
               if (isStaleRun()) {
                 return;
               }
-              nativeEngine.speak(request, { onSpeechStarted, onSettled });
+              // VITS が使えない構成では、日英をまとめて端末内蔵 TTS のキューへ積む。
+              // 分けて渡すと発話の合間に合成待ちのラグが入るため、英語を端末内で
+              // 合成できるときだけ日本語と分離する。
+              if (!englishEngine.isAvailable()) {
+                deviceFallbackEngine.speak(request, {
+                  onSpeechStarted,
+                  onSettled,
+                });
+                return;
+              }
+              deviceFallbackEngine.speak(
+                { ...request, speakEn: false },
+                {
+                  onSpeechStarted,
+                  onSettled: () => {
+                    if (isStaleRun()) {
+                      return;
+                    }
+                    englishEngine.speak(
+                      { ...request, speakJa: false },
+                      { onSpeechStarted, onSettled }
+                    );
+                  },
+                }
+              );
             },
           });
         };
@@ -274,8 +323,9 @@ export const useTTS = (): void => {
     },
     [
       armPlaybackWatchdog,
+      deviceFallbackEngine,
+      englishEngine,
       finishPlaying,
-      nativeEngine,
       remoteEngine,
       setDuckingActiveAsync,
       shouldSpeakEnglish,

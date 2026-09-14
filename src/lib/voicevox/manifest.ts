@@ -1,4 +1,9 @@
 import { z } from 'zod';
+import {
+  manifestFileSchema,
+  manifestVersionSchema,
+  relativePathSchema,
+} from '~/lib/assetManifestSchema';
 
 // VOICEVOX の辞書・音声モデルを列挙するマニフェスト。Remote Config の
 // voicevox_tts_manifest_url_ios が指す JSON で、scripts/build-voicevox-manifest.mjs が
@@ -16,47 +21,15 @@ import { z } from 'zod';
 //   ]
 // }
 
-// ディレクトリ配下に閉じた相対パスだけを許す。`..`・先頭 `/`・空セグメントは
-// 取得先ディレクトリの外へ書き込みうるため弾く。
-const RELATIVE_PATH_SEGMENT = /^[A-Za-z0-9._-]+$/;
-const isSafeRelativePath = (value: string): boolean => {
-  const segments = value.split('/');
-  return segments.every(
-    (segment) =>
-      segment.length > 0 &&
-      segment !== '.' &&
-      segment !== '..' &&
-      RELATIVE_PATH_SEGMENT.test(segment)
-  );
-};
-
-const relativePathSchema = z
-  .string()
-  .min(1)
-  .refine(isSafeRelativePath, { message: 'unsafe relative path' });
-
-const httpsUrlSchema = z
-  .string()
-  .url()
-  .refine((value) => value.startsWith('https://'), {
-    message: 'url must use https',
-  });
-
-export const voicevoxManifestFileSchema = z.object({
-  path: relativePathSchema,
-  url: httpsUrlSchema,
-  sha256: z.string().regex(/^[0-9a-f]{64}$/),
-  bytes: z.number().int().positive(),
-});
+// パス・URL・ファイルの検証は VITS 側と共通 (src/lib/assetManifestSchema.ts)。
+// 取得先ディレクトリの外へ書き込ませない判定が片方だけ緩むのを防ぐため。
+export const voicevoxManifestFileSchema = manifestFileSchema;
 
 export const voicevoxManifestSchema = z
   .object({
     schemaVersion: z.literal(1),
     // 資産セットの識別子。変わると全ファイルを取り直し、旧ディレクトリを消す
-    version: z
-      .string()
-      .min(1)
-      .regex(/^[A-Za-z0-9._-]+$/),
+    version: manifestVersionSchema,
     openJtalkDicDir: relativePathSchema,
     voiceModels: z.array(relativePathSchema).min(1),
     files: z.array(voicevoxManifestFileSchema).min(1),

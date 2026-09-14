@@ -37,6 +37,7 @@ type LicenseId =
   | 'hakodate_city'
   | 'roboto'
   | 'voicevox_tobari'
+  | 'vits_ljs'
   | 'other_oss';
 
 type LicenseItem = {
@@ -152,6 +153,9 @@ const MIT_URL = 'https://opensource.org/licenses/MIT';
 // (docs/spec/tts/on-device-tts-ios.md) で使う音声で、クレジット表記が利用条件
 const VOICEVOX_URL = 'https://voicevox.hiroshiba.jp/';
 const VOICEVOX_TOBARI_TERMS_URL = 'https://yogataritobari.studio.site/#rules';
+// 英語のオンデバイス TTS で使う音声モデル。icefall の LJSpeech レシピで学習されたもので、
+// モデルは Apache-2.0、学習データ (LJSpeech) はパブリックドメイン
+const VITS_LJS_URL = 'https://huggingface.co/csukuangfj/vits-ljs';
 const ODPT_BASIC_LICENSE_URL =
   'https://developer.odpt.org/terms/data_basic_license.html';
 // 公共交通オープンデータセンターのGTFSデータ利用規約 (ckan.odpt.org の函館市電データセットが指定するライセンス)
@@ -298,6 +302,16 @@ const Licenses: React.FC = () => {
             href: VOICEVOX_URL,
             license: translate('voicevoxTobariTerms'),
             licenseUrl: VOICEVOX_TOBARI_TERMS_URL,
+            devOnly: false,
+            iosOnly: true,
+          },
+          {
+            id: 'vits_ljs',
+            title: translate('vitsLjsLicense'),
+            icon: '🗣️',
+            href: VITS_LJS_URL,
+            license: 'Apache License 2.0',
+            licenseUrl: APACHE_2_URL,
             devOnly: false,
             iosOnly: true,
           },
