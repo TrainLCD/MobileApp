@@ -82,12 +82,22 @@ jobs:
             exit 1
           fi
 
+          # 未引用のまま展開すると word splitting と同時に pathname expansion も
+          # 効き、`*` などを含む指定が runner 上のパス名へ化ける。配列へ分解して
+          # 複数の --device は保ったまま glob だけ止める。
+          read -r -a device_args <<< "$TEST_LAB_DEVICES"
+
+          # ここから先は「Test Lab への送信に到達した」として扱う。Robo がクラッシュを
+          # 検出すると gcloud は非ゼロ終了するが結果は残るので、終了コードではなく
+          # 到達したかどうかを記録する。Link Test Lab results はこれを見る。
+          echo "TEST_LAB_SUBMITTED=1" >> "$GITHUB_ENV"
+
           # --grant-permissions all を付けないと、Robo が位置情報の許可ダイアログで
           # 足止めされて初期導線より先へ進めない。
           gcloud firebase test android run \
             --type robo \
             --app "$aab" \
-            $TEST_LAB_DEVICES \
+            "${device_args[@]}" \
             --grant-permissions all \
             --timeout 10m \
             --results-history-name "TrainLCD Canary"
@@ -98,14 +108,15 @@ jobs:
           {
             echo "## Firebase Test Lab"
             echo
-            if [ -n "${TEST_LAB_PROJECT_ID:-}" ]; then
+            if [ "${TEST_LAB_SUBMITTED:-}" = "1" ]; then
               echo "スクリーンショット・動画・logcat は Test Lab コンソールに残る。"
               echo "ジョブのログ先頭に出る results URL か、以下から辿る。"
               echo
               echo "<https://console.firebase.google.com/project/$TEST_LAB_PROJECT_ID/testlab/histories/>"
             else
-              # 認証前に落ちた場合。プロジェクトが確定していないのでリンクを出すと
-              # 必ず壊れたリンクになる。
-              echo "認証前に終了したため、結果は残っていない。"
+              # 送信に到達していない場合。認証前に落ちたときと、認証後に AAB が
+              # 見つからず終了したときの両方がここへ来る。履歴 URL を出すと今回の
+              # 実行結果として読めてしまうので出さない。
+              echo "Test Lab へ送信する前に終了したため、今回の結果は残っていない。"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
