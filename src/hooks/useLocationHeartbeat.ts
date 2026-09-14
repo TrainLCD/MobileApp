@@ -74,7 +74,10 @@ export const useLocationHeartbeat = (): void => {
     // する。応答が返るまでは新しい要求を出さない。ただし返らないまま放置すると補完
     // 測位ごと止まるので、LOCATION_HEARTBEAT_MAX_PENDINGで見切る。
     let pending = false;
-    let pendingSinceMs = 0;
+    // 見切りは経過時間の計算ではなくタイマーで行う。時計がどうであれ必ず解けるので、
+    // monotonicNowがDate.nowへフォールバックした環境で時計が巻き戻っても、応答が
+    // 返らない要求のまま補完測位が止まることがない。
+    let giveUpTimeoutId: ReturnType<typeof setTimeout> | null = null;
     // 見切った要求が後から返ってきても、そのfinallyで新しい要求のガードを
     // 解いてしまわないよう、要求ごとの識別子で自分の番かを判断する。
     let requestSeq = 0;
@@ -83,6 +86,13 @@ export const useLocationHeartbeat = (): void => {
 
     const schedule = (delayMs: number) => {
       timeoutId = setTimeout(check, Math.max(delayMs, 0));
+    };
+
+    const clearGiveUp = () => {
+      if (giveUpTimeoutId !== null) {
+        clearTimeout(giveUpTimeoutId);
+        giveUpTimeoutId = null;
+      }
     };
 
     // 一定間隔のタイマーではなく、「次に途絶が成立する時刻」へ都度置き直す。
@@ -96,25 +106,11 @@ export const useLocationHeartbeat = (): void => {
 
       const now = monotonicNow();
 
-      // 経過時間の判定はすべてmonotonicNowで揃える。端末の時計(Date.now)で測ると、
-      // 時刻同期や手動変更で巻き戻ったときに残り時間が巻き戻し幅ぶん伸びて点検が
-      // 止まり、進んだときは保留中の要求を早く見切って重複要求を出す。
-      // ただしmonotonicNowはフォールバックでDate.nowになる環境が残るため、経過時間が
-      // 負になる可能性はここでも潰しておく。
+      // 取得中は何もしない。次の点検は応答のfinallyか、見切りタイマーが置き直す。
+      // 保留を「経過時間の計算」で解かないのが要点で、時計が巻き戻っても
+      // 進んでも、保留の長さは見切りタイマーだけが決める。
       if (pending) {
-        const pendingMs = now - pendingSinceMs;
-        if (pendingMs < LOCATION_HEARTBEAT_MAX_PENDING) {
-          // 負の経過時間でも「取得中」であることは変わらないので、保留は保留として
-          // 扱う(ここで抜けると応答待ちのまま2件目を出してしまう)。一方で残り時間を
-          // そのまま使うと見切りが巻き戻し幅ぶん先送りされるため、上限で頭打ちにする。
-          schedule(
-            Math.min(
-              LOCATION_HEARTBEAT_MAX_PENDING - pendingMs,
-              LOCATION_HEARTBEAT_MAX_PENDING
-            )
-          );
-          return;
-        }
+        return;
       }
 
       // nullは「起動後まだ一度も配信が無い」状態。基準をeffect開始時刻に置き換え、
@@ -130,11 +126,23 @@ export const useLocationHeartbeat = (): void => {
       }
 
       pending = true;
-      pendingSinceMs = now;
       requestSeq += 1;
       const seq = requestSeq;
-      // 応答を待つ前に次の点検を置く。応答が返らないケースでも点検が止まらない。
-      schedule(LOCATION_HEARTBEAT_STALE_THRESHOLD);
+
+      // iOSのgetCurrentPositionAsyncにはタイムアウトが無く、測位が得られない地下では
+      // 応答が返らないことがある。返らないままだと「取得中は次を出さない」ガードが
+      // 解けず補完測位が二度と動かないため、ここで見切る。識別子を進めてから次へ進むので、
+      // 見切った要求が後から返っても現役の要求のガードは触られない。
+      clearGiveUp();
+      giveUpTimeoutId = setTimeout(() => {
+        giveUpTimeoutId = null;
+        if (cancelled) {
+          return;
+        }
+        requestSeq += 1;
+        pending = false;
+        check();
+      }, LOCATION_HEARTBEAT_MAX_PENDING);
 
       Location.getCurrentPositionAsync({ accuracy })
         .then((location) => {
@@ -159,6 +167,7 @@ export const useLocationHeartbeat = (): void => {
             return;
           }
           pending = false;
+          clearGiveUp();
           // 要求時に置いた点検は「応答が返らない場合」のための保険で、応答が返った
           // いまは遠すぎる(見切り時刻まで延びている)。この応答を起点に置き直さないと、
           // 次の取得が見切り時間ぶん遅れる。
@@ -189,6 +198,7 @@ export const useLocationHeartbeat = (): void => {
 
     return () => {
       cancelled = true;
+      clearGiveUp();
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
         timeoutId = null;

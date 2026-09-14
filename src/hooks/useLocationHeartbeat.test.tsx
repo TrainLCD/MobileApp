@@ -309,10 +309,10 @@ describe('useLocationHeartbeat', () => {
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
   });
 
-  it('保留中に経過時間が負になっても要求を重ねない', async () => {
+  it('時計が巻き戻っても、保留の長さは見切りタイマーだけが決める', async () => {
     // monotonicNowがDate.nowへフォールバックした環境で、取得の応答を待っている間に
-    // 時計が巻き戻ったケース。保留の判定から外れると、1件目の応答を待たないまま
-    // 2件目の要求が走る。
+    // 時計が巻き戻ったケース。経過時間の計算で保留を解くと、巻き戻り方しだいで
+    // 「1件目の応答を待たずに2件目を出す」か「見切れないまま止まる」のどちらかになる。
     mockGetCurrentPositionAsync.mockImplementation(
       () => new Promise<Location.LocationObject>(() => {})
     );
@@ -321,10 +321,16 @@ describe('useLocationHeartbeat', () => {
     await advanceBy(1);
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
 
+    // 時計を巻き戻したまま維持する
     mockMonotonicNow.mockImplementation(() => Date.now() - 600_000);
-    await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING);
 
+    // 見切り時間まで: 重ねて要求しない
+    await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING - 2);
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+
+    // 見切り時間に達したら: 応答が無い要求を見切って次を出す
+    await advanceBy(1);
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
   });
 
   it('見切った取得が後から返ってきても新しい取得のガードを解かず、測位自体は取り込む', async () => {
