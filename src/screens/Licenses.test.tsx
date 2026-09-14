@@ -52,17 +52,17 @@ describe('Licenses', () => {
   };
 
   // VOICEVOX は iOS 本体アプリだけが使う素材なので、クレジットもそこでだけ出す
-  describe('VOICEVOX:No.7 のクレジット (iosOnly)', () => {
+  describe('VOICEVOX:夜語トバリ のクレジット (iosOnly)', () => {
     it('[iOS 本体アプリ] 表示する', () => {
       setPlatformOS('ios');
-      expect(renderedIds()).toContain('voicevox_no7');
+      expect(renderedIds()).toContain('voicevox_tobari');
     });
 
     it('[iOS App Clip] Platform.OS が ios でも表示しない', () => {
       setPlatformOS('ios');
       mockedIsClip.mockReturnValue(true);
       const ids = renderedIds();
-      expect(ids).not.toContain('voicevox_no7');
+      expect(ids).not.toContain('voicevox_tobari');
       // 他の項目は従来どおり
       expect(ids).toContain('other_oss');
       expect(ids).toContain('ekidata_jp');
@@ -70,7 +70,7 @@ describe('Licenses', () => {
 
     it('[Android] 表示しない', () => {
       setPlatformOS('android');
-      expect(renderedIds()).not.toContain('voicevox_no7');
+      expect(renderedIds()).not.toContain('voicevox_tobari');
     });
   });
 });

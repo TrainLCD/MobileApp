@@ -534,11 +534,11 @@ describe('isRemoteTTSEnabled（リモートTTS切替スイッチ）', () => {
 });
 
 describe('VOICEVOX フォールバック（voicevox_tts_*_ios）', () => {
-  it('未配信時は無効で、配信 URL は null、スタイル ID は No.7 アナウンス', () => {
+  it('未配信時は無効で、配信 URL は null、スタイル ID は夜語トバリ 明るい', () => {
     setPlatformOS('ios');
     expect(isVoicevoxTTSEnabled()).toBe(false);
     expect(getVoicevoxTTSManifestUrl()).toBeNull();
-    expect(getVoicevoxTTSStyleId()).toBe(30);
+    expect(getVoicevoxTTSStyleId()).toBe(119);
   });
 
   it('Remote Config で有効化すると iOS だけ有効になる', async () => {
@@ -573,7 +573,7 @@ describe('VOICEVOX フォールバック（voicevox_tts_*_ios）', () => {
     setPlatformOS('ios');
     expect(isVoicevoxTTSEnabled()).toBe(false);
     expect(getVoicevoxTTSManifestUrl()).toBeNull();
-    expect(getVoicevoxTTSStyleId()).toBe(30);
+    expect(getVoicevoxTTSStyleId()).toBe(119);
   });
 
   it('スタイル ID 0 (四国めたん あまあま) も受理する', async () => {
