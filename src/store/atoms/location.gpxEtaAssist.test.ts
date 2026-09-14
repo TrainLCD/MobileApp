@@ -31,6 +31,7 @@ import {
   clamp,
   findStops,
   GPX_DIR,
+  hasRecordedAccuracy,
   METERS_PER_DEG_LAT,
   makeNoise,
   median,
@@ -85,8 +86,14 @@ const CONDITIONS: Condition[] = [
   },
 ];
 
+// 点ごとの精度(trainlcd 拡張)を持つトラックはこのスイープの対象外にする。
+// ここは「GPXは真の軌跡だけを供給し、精度と配信間隔はテストがCONDITIONSで振る」
+// という前提で組まれており、truthAt で等間隔に再サンプルするためGPXが持つ欠測も
+// 補間で消える。記録された電波環境をそのまま流す検証は location.subwayGpx.test.ts
+// が受け持つ。
 const GPX_FILES = readdirSync(join(process.cwd(), GPX_DIR))
   .filter((f) => f.endsWith('.gpx'))
+  .filter((f) => !hasRecordedAccuracy(parseGpx(join(GPX_DIR, f))))
   .sort();
 
 const stationIdOf = (stopIndex: number) => stopIndex + 1;

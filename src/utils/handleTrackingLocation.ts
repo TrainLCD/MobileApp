@@ -6,6 +6,7 @@ import {
   setRawLocation,
 } from '~/store/atoms/location';
 import { isDevApp } from './isDevApp';
+import { monotonicNow } from './monotonicNow';
 
 // システム時計の巻き戻りとみなす閾値(ms)。処理済みタイムスタンプが現在時刻より
 // これ以上未来にある場合は時計が巻き戻されたと判断し、重複排除ガードをリセットする
@@ -17,10 +18,24 @@ const CLOCK_ROLLBACK_TOLERANCE_MS = 5_000;
 // これ以下のタイムスタンプの測位を重複・遅延再配信として破棄する基準に使う。
 let lastProcessedTimestampMs = 0;
 
+// 最後に本関数が測位を処理した時刻(monotonicNow基準)。継続測位の配信が途絶えたかの
+// 判定に使う(useLocationHeartbeat)。測位側のtimestampではなく処理時刻を持つのは、
+// 判定したいのが「測位がいつのものか」ではなく「どれだけ配信が来ていないか」だからで、
+// OSが古いtimestampの測位を配信し続けるあいだも無配信とは見なさないため。
+// 精度フィルタで棄却される測位も配信は届いているので、棄却の前にここで記録する。
+let lastProcessedAtMs: number | null = null;
+
 // テスト用: モジュール内部の重複排除状態をリセットする
 export const resetTrackingLocationDedup = () => {
   lastProcessedTimestampMs = 0;
+  lastProcessedAtMs = null;
 };
+
+// 継続測位を最後に処理してからの経過時間(ms)。一度も処理していなければnull。
+// 時刻ではなく経過時間を返すのは、呼び出し側が別の時計(Date.now)と引き算して
+// しまう余地を無くすため。
+export const getMsSinceLastTrackedLocation = (): number | null =>
+  lastProcessedAtMs === null ? null : monotonicNow() - lastProcessedAtMs;
 
 // watchPositionAsync / startLocationUpdatesAsync 双方の継続測位の共通入口。
 // 経路ごとにMAX_PERMIT_ACCURACYの適用漏れが起きないよう、精度フィルタをここへ集約する。
@@ -39,6 +54,7 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     return;
   }
   lastProcessedTimestampMs = location.timestamp;
+  lastProcessedAtMs = monotonicNow();
 
   // DevOverlayの診断表示用に、フィルタで棄却される測位も生の値として記録する。
   // DevOverlayはisDevApp時しか描画されないため、本番ビルドでは記録しない。

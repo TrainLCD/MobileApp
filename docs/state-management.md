@@ -107,6 +107,7 @@ const active = useAtomValue(pictureInPictureActiveAtom);
   実例: `FxTTS` (ユーザー設定と Remote Config キルスイッチの両方が有効なときのみ。
   単体テストできるよう本体は `src/components/FxTTS.tsx` に定義)、
   `FxUpdateLiveActivities` (iOS のみ)、
+  `FxLocationHeartbeat` (測位の配信を変位ゲートだけが決める iOS のみ)、
   `Permitted.tsx` のウェアラブル連携 (OS 別)。フックを条件分岐で呼ぶことは
   できないが、ホストコンポーネントのマウント自体を条件にすれば安全に止められる
 
