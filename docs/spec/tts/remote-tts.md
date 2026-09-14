@@ -26,7 +26,7 @@ useTTS ────────────────── 放送タイミン
   ├─ useRemoteSpeechEngine   /tts へ合成要求 → expo-audio で再生
   ├─ useVoicevoxSpeechEngine iOS 本体アプリのフォールバック (日本語のみ VOICEVOX、英語は委譲)
   ├─ useVitsSpeechEngine     iOS 本体アプリのフォールバック (英語のみ VITS、使えなければ委譲)
-  └─ useNativeSpeechEngine   リモートを使わない構成の常用経路 / 最終フォールバック
+  └─ useNativeSpeechEngine   Android の常用経路 (iOS では使わない。下記参照)
 ```
 
 エンジンの選択は放送直前に `isRemoteTTSEnabled()`（`src/lib/remoteConfig.ts`）を引いて
@@ -36,8 +36,11 @@ useTTS ────────────────── 放送タイミン
 使える条件（iOS 本体アプリのネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・
 音声モデル内のスタイル ID）がそろわなければ `useNativeSpeechEngine` へ倒れる。英語は
 `useVitsSpeechEngine` が同様の条件（`vits_tts_enabled_ios`・検証済みの資産）で端末内合成を試し、
-使えなければその層が `useNativeSpeechEngine` へ委譲する。条件の詳細は
-[オンデバイス TTS 設計書](./on-device-tts-ios.md) を参照。
+使えなければ `useTTS` が渡した委譲先へ回る。
+
+**iOS の委譲先は「読み上げないエンジン」で、端末内蔵 TTS は使わない**（コンパクト音声の音質が
+悪いため、流すより黙る方を選んでいる）。Android の委譲先は従来どおり `useNativeSpeechEngine`。
+条件と影響の詳細は [オンデバイス TTS 設計書](./on-device-tts-ios.md) を参照。
 
 各エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
 
@@ -223,17 +226,20 @@ Remote Config のキーは 2 系統あり、役割が異なる。
   （`useTTSFeatureEnabled`）。`false` のときは読み上げを行わず、設定画面のトグルも
   無効化する。フォールバックは `true`（提供する）。
 - `remote_tts_enabled_ios` / `remote_tts_enabled_android` — 読み上げエンジンの選択
-  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内合成
-  （iOS 本体アプリは VOICEVOX を試してから端末内蔵 TTS、それ以外は端末内蔵 TTS）。
-  フォールバックは iOS が `true`、Android が `false`。
+  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内合成。端末内合成は
+  言語ごとに分かれ、iOS 本体アプリは日本語を VOICEVOX、英語を VITS で読む。**iOS は
+  どちらも使えない言語を端末内蔵 TTS へ倒さず、その言語を読み上げない**。Android は
+  端末内蔵 TTS が読む。フォールバックは iOS が `true`、Android が `false`。
 
 両者は独立しているため、次のような運用ができる。
 
 - **Android でもリモート合成を使う**: `remote_tts_enabled_android` を `true` にする。
   段階的に開放したい場合はこのキーだけで切り戻せる。
 - **リモート合成のコスト・障害から退避する**: `remote_tts_enabled_*` を `false` にすると、
-  TTS 機能は維持したまま端末内合成（VOICEVOX → 端末内蔵 TTS の順）へ倒れる。
-  読み上げごと止めたい場合のみ `tts_enabled_*` を `false` にする。
+  TTS 機能は維持したまま端末内合成（iOS は日本語 VOICEVOX / 英語 VITS、Android は
+  端末内蔵 TTS）へ倒れる。**iOS で音声データが未取得の端末はアナウンスが流れなくなる**
+  ので、退避先として当てにする前に配信状況を確認すること。読み上げごと止めたい場合のみ
+  `tts_enabled_*` を `false` にする。
 
 iOS / Android 以外（web など）はリモート再生経路を持たないため、`isRemoteTTSEnabled()`
 は常に `false` を返す。

@@ -185,6 +185,11 @@ describe('useTTS', () => {
     mockVitsSpeak.mockImplementation((_request, callbacks) => {
       callbacks.onSettled();
     });
+    // 端末内蔵 TTS (expo-speech) の挙動を見るケースは Android を既定にする。
+    // iOS は端末内蔵 TTS を一切使わない構成になったため、expo-speech の呼び出しを
+    // 前提にしたケースは Android でしか成立しない。iOS の経路を見るケースは
+    // 各テストで setPlatformOS('ios') を明示する。
+    setPlatformOS('android');
     // テスト間で useTTSText の mock を復元
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
@@ -686,23 +691,6 @@ describe('useTTS', () => {
     );
   });
 
-  it('[iOS] 高品質音声が無い場合はvoice未指定でシステム既定に任せる', async () => {
-    const store = createStore();
-    store.set(speechState, defaultSpeechState);
-
-    renderHook(() => useTTS(), { wrapper: createWrapper(store) });
-    await flushAsync();
-
-    act(() => {
-      finishAllUtterances();
-    });
-
-    expect(mockSpeak).toHaveBeenCalledTimes(2);
-    for (const call of mockSpeak.mock.calls) {
-      expect(call[1]).not.toHaveProperty('voice');
-    }
-  });
-
   it('[Android] 既定品質でもローカル音声を明示指定して読み上げる', async () => {
     setPlatformOS('android');
 
@@ -941,6 +929,7 @@ describe('useTTS', () => {
 
   describe('プラットフォーム別の読み上げ経路', () => {
     it('[iOS] リモートTTSで読み上げ、端末内蔵TTSは使わない', async () => {
+      setPlatformOS('ios');
       mockRemoteSpeak.mockImplementation(
         (
           _request: unknown,
@@ -973,8 +962,10 @@ describe('useTTS', () => {
       expect(mockSpeak).not.toHaveBeenCalled();
     });
 
-    it('[iOS] リモートTTSが使えない回は端末内蔵TTSへフォールバックする', async () => {
-      // 圏外・トンネル・API障害で合成できなくてもアナウンスを欠落させない
+    it('[iOS] リモートTTSも端末内合成も使えない回は読み上げない', async () => {
+      setPlatformOS('ios');
+      // 端末内蔵 TTS のコンパクト音声は音質が悪く、突然それが流れる方が体験を損なう。
+      // 圏外・トンネル・API 障害で合成できず、端末内合成の資産も無い回は黙る。
       const store = createStore();
       store.set(speechState, defaultSpeechState);
 
@@ -982,29 +973,17 @@ describe('useTTS', () => {
       await flushAsync();
 
       expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
-      expect(mockSpeak).toHaveBeenNthCalledWith(
-        1,
-        'ja text',
-        expect.objectContaining({ language: 'ja-JP' })
-      );
-      expect(mockSpeak).toHaveBeenNthCalledWith(
-        2,
-        'en text',
-        expect.objectContaining({ language: 'en-US' })
-      );
+      expect(mockSpeak).not.toHaveBeenCalled();
     });
 
-    it('[iOS] フォールバックした発話の完了でも再生パイプラインが解放される', async () => {
+    it('[iOS] 読み上げなかった回でも再生パイプラインが解放される', async () => {
+      setPlatformOS('ios');
+      // 黙る回で playingRef が握られたままだと、以降の放送がすべて詰まる
       const store = createStore();
       store.set(speechState, defaultSpeechState);
 
       renderHook(() => useTTS(), { wrapper: createWrapper(store) });
       await flushAsync();
-
-      mockSetAudioModeAsync.mockClear();
-      await act(async () => {
-        finishAllUtterances();
-      });
 
       // ダッキングが解除される = playingRef が解放されている
       expect(mockSetAudioModeAsync).toHaveBeenCalledWith(
@@ -1092,7 +1071,8 @@ describe('useTTS', () => {
       );
     });
 
-    it('[iOS] Remote Configで無効なら端末内蔵TTSで読み上げる', async () => {
+    it('[iOS] Remote Configでリモートが無効でも端末内蔵TTSは使わない', async () => {
+      setPlatformOS('ios');
       mockedIsRemoteTTSEnabled.mockReturnValue(false);
 
       const store = createStore();
@@ -1102,15 +1082,12 @@ describe('useTTS', () => {
       await flushAsync();
 
       expect(mockRemoteSpeak).not.toHaveBeenCalled();
-      expect(mockSpeak).toHaveBeenNthCalledWith(
-        1,
-        'ja text',
-        expect.objectContaining({ language: 'ja-JP' })
-      );
+      expect(mockSpeak).not.toHaveBeenCalled();
     });
   });
   describe('VOICEVOX (端末内合成) へのフォールバック', () => {
-    it('[iOS] リモートTTSが使えない回はまず VOICEVOX を試し、使えなければ端末内蔵TTSで読む', async () => {
+    it('[iOS] リモートTTSが使えない回はまず VOICEVOX を試し、使えなければ読み上げない', async () => {
+      setPlatformOS('ios');
       const store = createStore();
       store.set(speechState, defaultSpeechState);
 
@@ -1128,11 +1105,30 @@ describe('useTTS', () => {
         },
         expect.objectContaining({ onUnavailable: expect.any(Function) })
       );
-      // VOICEVOX が onUnavailable を返したので端末内蔵 TTS が日英とも読む
-      expect(mockSpeak).toHaveBeenCalledTimes(2);
+      // VOICEVOX が onUnavailable を返しても、iOS は端末内蔵 TTS へ倒さない
+      expect(mockSpeak).not.toHaveBeenCalled();
+    });
+
+    it('[iOS] VOICEVOX が使えない回でも英語だけは端末内合成で読む', async () => {
+      setPlatformOS('ios');
+      // 日本語は黙るが、英語の音声データが入っていれば英語は読める
+      mockVitsAvailable = true;
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+
+      renderHook(() => useTTS(), { wrapper: createWrapper(store) });
+      await flushAsync();
+
+      expect(mockSpeak).not.toHaveBeenCalled();
+      expect(mockVitsSpeak).toHaveBeenCalledTimes(1);
+      expect(mockVitsSpeak).toHaveBeenCalledWith(
+        expect.objectContaining({ speakJa: false, speakEn: true }),
+        expect.anything()
+      );
     });
 
     it('[iOS] VOICEVOX が読み上げた回は端末内蔵TTSを直接は使わない', async () => {
+      setPlatformOS('ios');
       mockVoicevoxSpeak.mockImplementation(
         (
           _request: unknown,
@@ -1159,6 +1155,7 @@ describe('useTTS', () => {
     });
 
     it('[iOS] Remote Config でリモートTTSが無効でも VOICEVOX を先に試す', async () => {
+      setPlatformOS('ios');
       mockedIsRemoteTTSEnabled.mockReturnValue(false);
 
       const store = createStore();
@@ -1169,7 +1166,7 @@ describe('useTTS', () => {
 
       expect(mockRemoteSpeak).not.toHaveBeenCalled();
       expect(mockVoicevoxSpeak).toHaveBeenCalledTimes(1);
-      expect(mockSpeak).toHaveBeenCalledTimes(2);
+      expect(mockSpeak).not.toHaveBeenCalled();
     });
 
     it('アンマウント時は VOICEVOX の読み上げも停止する', async () => {

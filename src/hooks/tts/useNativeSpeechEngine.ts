@@ -33,8 +33,11 @@ const VOICES_READY_TIMEOUT_MS = 5_000;
 
 /**
  * 端末内蔵の TTS (expo-speech) で読み上げるエンジン。
- * Android の常用経路であり、iOS ではリモート TTS が使えないときの
- * フォールバックとして使う。
+ *
+ * 実際に読み上げに使われるのは Android だけ。iOS では useTTS がこのエンジンを
+ * 呼ばない (既定のコンパクト音声は音質が悪く、Enhanced / Premium 音声はユーザーが
+ * 設定アプリから手動で入れない限り使えないため、流すより黙る方を選んでいる。
+ * useTTS の SILENT_SPEECH_ENGINE を参照)。
  */
 export const useNativeSpeechEngine = (): SpeechEngine => {
   // 発話ごとに採番する世代 ID。停止や新規発話で無効化された古い発話の

@@ -5,6 +5,9 @@ import { type Voice, VoiceQuality } from 'expo-speech';
 // iOS は voice 未指定だとコンパクト版（機械的な音質）が既定になりがちなため、
 // 端末にインストール済みの拡張（Enhanced）/ プレミアム（Premium）音声があれば
 // それを明示指定して音質を引き上げる。
+// ただし現在 iOS では useTTS が端末内蔵 TTS を呼ばない（コンパクト音声を流すより
+// 黙る方針）ため、iOS 向けの選択はアナウンスには効かない。将来 iOS で内蔵 TTS を
+// 使う構成に戻す場合に備えて残している。
 //
 // Android は音声の明示指定が品質改善に加えて言語選択の正しさにも必要になる。
 // expo-speech の Android 実装は speak の language を `Locale(tag)` にそのまま渡す

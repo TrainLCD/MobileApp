@@ -20,15 +20,36 @@ useTTS
   ├─ useRemoteSpeechEngine   Worker /tts (Google Cloud TTS) → expo-audio          … 主経路
   ├─ useVoicevoxSpeechEngine 日本語: VOICEVOX CORE → WAV → expo-audio             … リモート不可時
   │                          英語  : useVitsSpeechEngine へ委譲
-  ├─ useVitsSpeechEngine     英語  : VITS (ONNX Runtime) → WAV → expo-audio
-  │                          使えない回はこの層が useNativeSpeechEngine へ委譲する
-  └─ useNativeSpeechEngine   端末内蔵 TTS (expo-speech) で読む                     … 最終フォールバック
+  └─ useVitsSpeechEngine     英語  : VITS (ONNX Runtime) → WAV → expo-audio
+                             使えない回は useTTS が渡した委譲先へ回す
 ```
 
-VOICEVOX が使えない回（無効・資産未取得）は `useTTS` が日本語を端末内蔵 TTS へ回すが、その際
-**英語を端末内合成できるなら日本語と英語を分けて渡す**（`EnglishSpeechEngine.isAvailable()`）。
-分けると発話の合間に合成待ちのラグが入るため、英語も端末内蔵 TTS で読む構成では従来どおり
-日英をまとめて 1 回の `Speech.speak` で OS のキューへ積む。
+## iOS では端末内蔵 TTS を使わない
+
+**iOS では `useNativeSpeechEngine`（`expo-speech` / AVSpeechSynthesizer）を一切呼ばない。**
+既定で選ばれるコンパクト音声は音質が悪く、Enhanced / Premium 音声はユーザーが設定アプリから
+手動で入れない限り使えない（アプリからダウンロードを起動する API が無い）。リモート TTS も
+端末内合成も使えない回に機械的な声を突然流すより、**その言語を読み上げない**方を選んでいる。
+
+実装は `useTTS` の `SILENT_SPEECH_ENGINE`。端末内合成が使えない回の引き受け手として、iOS では
+このエンジン（即 `onSettled` を呼ぶだけ）を渡す。Android は端末内蔵 TTS が常用経路なので
+従来どおり `useNativeSpeechEngine` を渡す。
+
+この結果、iOS では次の状態で**アナウンスが流れない**。
+
+| 状況 | 挙動 |
+| --- | --- |
+| 音声データ未取得 + リモート不可（圏外・トンネル・API 障害） | その言語は読み上げない |
+| 日本語だけ取得済み + リモート不可 | 日本語は VOICEVOX、英語は読み上げない |
+| 英語だけ取得済み + リモート不可 | 英語は VITS、日本語は読み上げない |
+| App Clip + リモート不可 | 端末内合成のモジュールを持たないため、日英とも読み上げない |
+
+`isRemoteTTSEnabled()` が `false` の構成（Remote Config で iOS のリモート合成を止めた場合）も
+同じで、端末内合成の資産が無ければ黙る。
+
+VOICEVOX が使えない回でも、英語の資産があれば**英語だけは読む**（`EnglishSpeechEngine.isAvailable()`
+で判定して日本語と分けて渡す）。Android で英語を端末内合成できないときは、発話の合間に合成待ちの
+ラグが入るのを避けるため日英をまとめて 1 回の `Speech.speak` で OS のキューへ積む。
 
 `useVoicevoxSpeechEngine` は次のいずれかを満たさないと `onUnavailable` を返し、その回の
 日本語は端末内蔵 TTS が読む（英語は上記のとおり、端末内合成できるならそちらへ回る）。
