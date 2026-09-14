@@ -7,6 +7,7 @@ import {
   ensureVitsAssets,
   fileUriToPath,
   getInstalledVitsAssets,
+  subscribeVitsAssets,
   type VitsInstalledAssets,
 } from '~/lib/vits/assets';
 import { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
@@ -26,9 +27,9 @@ import type {
 
 /**
  * 端末内合成で英語を読めるかを呼び出し側から同期的に問い合わせられる SpeechEngine。
- * useTTS はこれを見て、英語を端末内蔵 TTS へまとめて渡すか、日本語と分けて
- * こちらへ回すかを決める (分けると発話間に合成待ちのラグが入るため、使えない
- * ときは従来どおり日英をまとめて端末内蔵 TTS のキューへ積む)。
+ * useTTS はこれを見て、日本語と分けてこちらへ回すかを決める。Android では
+ * 分けると発話間に合成待ちのラグが入るため、使えないときは日英をまとめて
+ * 端末内蔵 TTS のキューへ積む。
  */
 export interface EnglishSpeechEngine extends SpeechEngine {
   isAvailable: () => boolean;
@@ -39,8 +40,10 @@ export interface EnglishSpeechEngine extends SpeechEngine {
  * エンジン。日本語は VITS の英語モデルが話せないため、呼び出し側が
  * `speakJa: false` にして渡す契約になっている。
  *
- * 使える条件が 1 つでも欠けると、その回の英語は引数で受け取った
- * エンジン (端末内蔵 TTS) が読む。onUnavailable は呼ばない。
+ * 使える条件が 1 つでも欠けると、その回の英語は引数で受け取ったエンジンへ渡す。
+ * onUnavailable は呼ばない。渡す先は useTTS が決めており、Android は端末内蔵 TTS、
+ * iOS は「読み上げないエンジン」なので、iOS ではその回の英語が流れない
+ * (端末内蔵 TTS のコンパクト音声を流さない方針。useTTS の SILENT_SPEECH_ENGINE 参照)。
  * - ネイティブモジュールがある (本体アプリの iOS のみ。App Clip / Android は無い)
  * - Remote Config (vits_tts_enabled_ios) で有効化されている
  * - 音声モデルと発音辞書の取得・検証が完了している
@@ -79,6 +82,19 @@ export const useVitsSpeechEngine = (
     kick();
     return subscribeRemoteConfig(kick);
   }, []);
+
+  // 資産が削除されるとネイティブ側は release() で設定ごと破棄する。setup 済みの
+  // 記録を残したままだと、同じ version を取り直したときに setup を省略してしまい、
+  // 以後の合成が not_initialized で失敗し続ける。資産が無くなった時点で捨てる。
+  useEffect(
+    () =>
+      subscribeVitsAssets(() => {
+        if (!getInstalledVitsAssets()) {
+          setupRef.current = null;
+        }
+      }),
+    []
+  );
 
   const releasePlayer = useCallback(() => {
     safeRemoveListener(handleRef.current?.listener ?? null);
@@ -145,8 +161,8 @@ export const useVitsSpeechEngine = (
       const isStaleRun = () => runIdRef.current !== runId;
 
       // このエンジンは英語だけを読む契約。日本語が残っている回は、読み落としを
-      // 防ぐため端末内蔵 TTS へ丸ごと委譲する (呼び出し側が speakJa: false にして
-      // 渡すため、通常ここは通らない)
+      // 防ぐため委譲先へ丸ごと渡す (呼び出し側が speakJa: false にして渡すため、
+      // 通常ここは通らない)
       if (request.speakJa) {
         fallbackEngine.speak(request, callbacks);
         return;
@@ -157,9 +173,9 @@ export const useVitsSpeechEngine = (
         return;
       }
 
-      // 端末内合成が使えない回は、その回の英語を端末内蔵 TTS が読む。
-      // ここで onUnavailable を返すと呼び出し側 (VOICEVOX エンジン) が
-      // 日本語から読み直しかねないため、この層で吸収する。
+      // 端末内合成が使えない回は委譲先へ渡す。ここで onUnavailable を返すと
+      // 呼び出し側 (VOICEVOX エンジン) が日本語から読み直しかねないため、
+      // この層で吸収する。
       const fallback = () => {
         fallbackEngine.speak(request, callbacks);
       };
@@ -216,8 +232,6 @@ export const useVitsSpeechEngine = (
           return;
         }
 
-        callbacks.onSpeechStarted?.();
-
         const settle = () => {
           releasePlayer();
           if (isStaleRun()) {
@@ -226,17 +240,47 @@ export const useVitsSpeechEngine = (
           callbacks.onSettled();
         };
 
+        // playAudio は最初の play() が同期的に失敗すると、戻り値を返す前に
+        // onError を呼ぶ。その回は英語を一度も再生できていないので、初回放送
+        // フラグを確定させず委譲先へ回す。プレイヤーの解放には playAudio の
+        // 戻り値が要るため、同期的なエラーは受け取っておいて代入後に処理する。
+        let playbackStarted = false;
+        const startupError: { current: { error: unknown } | null } = {
+          current: null,
+        };
+        const failToStart = (e: unknown) => {
+          console.warn('[useVitsSpeechEngine] playback failed to start:', e);
+          releasePlayer();
+          if (isStaleRun()) {
+            return;
+          }
+          fallback();
+        };
+
         fileRef.current = file;
         try {
           handleRef.current = playAudio({
             uri: file.uri,
             onFinish: settle,
-            onError: settle,
+            onError: (e) => {
+              if (!playbackStarted) {
+                startupError.current = { error: e };
+                return;
+              }
+              // 再生が始まった後の中断は、頭から読み直さずそのまま終える
+              settle();
+            },
           });
         } catch (e) {
-          console.warn('[useVitsSpeechEngine] playback failed to start:', e);
-          settle();
+          failToStart(e);
+          return;
         }
+        if (startupError.current) {
+          failToStart(startupError.current.error);
+          return;
+        }
+        playbackStarted = true;
+        callbacks.onSpeechStarted?.();
       })();
     },
     [ensureSetup, fallbackEngine, releasePlayer]

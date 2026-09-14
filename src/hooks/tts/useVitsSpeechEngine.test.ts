@@ -44,10 +44,17 @@ const installedAssets = {
 };
 let mockInstalled: typeof installedAssets | null = installedAssets;
 const mockEnsureAssets = jest.fn(async () => mockInstalled);
+const mockAssetsListeners = new Set<() => void>();
 jest.mock('~/lib/vits/assets', () => ({
   getInstalledVitsAssets: () => mockInstalled,
   ensureVitsAssets: () => mockEnsureAssets(),
   fileUriToPath: (uri: string) => uri.replace(/^file:\/\//, ''),
+  subscribeVitsAssets: (listener: () => void) => {
+    mockAssetsListeners.add(listener);
+    return () => {
+      mockAssetsListeners.delete(listener);
+    };
+  },
 }));
 
 const mockFileDelete = jest.fn();
@@ -128,6 +135,7 @@ describe('useVitsSpeechEngine', () => {
     mockEnabled = true;
     mockInstalled = installedAssets;
     mockRemoteConfigListeners.clear();
+    mockAssetsListeners.clear();
     mockSetup.mockResolvedValue({ sampleRate: 22050, addBlank: true });
     mockSynthesize.mockImplementation(async (o: { outputPath: string }) => ({
       path: o.outputPath,
@@ -260,6 +268,69 @@ describe('useVitsSpeechEngine', () => {
 
     expect(fallbackSpeak).toHaveBeenCalledWith(defaultRequest, cb);
     expect(cb.onSettled).not.toHaveBeenCalled();
+  });
+
+  it('再生が始まらなかった回は端末内蔵 TTS が英語を読む', async () => {
+    // playAudio は最初の play() が同期的に失敗すると、戻り値を返す前に onError を呼ぶ。
+    // 一度も鳴っていないので初回放送フラグを確定させてはいけない
+    mockPlayAudio.mockImplementationOnce((options: PlayAudioOptions) => {
+      playAudioCalls.push(options);
+      options.onError(new Error('failed to start'));
+      return { player: { uri: options.uri }, listener: { remove: jest.fn() } };
+    });
+    const { result } = renderEngine();
+    const cb = callbacks();
+    act(() => {
+      result.current.speak(defaultRequest, cb);
+    });
+    await flushAsync();
+
+    expect(cb.onSpeechStarted).not.toHaveBeenCalled();
+    expect(cb.onSettled).not.toHaveBeenCalled();
+    expect(fallbackSpeak).toHaveBeenCalledWith(defaultRequest, cb);
+  });
+
+  it('再生が始まった後のエラーは読み直さずそのまま終える', async () => {
+    const { result } = renderEngine();
+    const cb = callbacks();
+    act(() => {
+      result.current.speak(defaultRequest, cb);
+    });
+    await flushAsync();
+
+    expect(cb.onSpeechStarted).toHaveBeenCalledTimes(1);
+    act(() => {
+      playAudioCalls[0].onError(new Error('interrupted'));
+    });
+
+    expect(cb.onSettled).toHaveBeenCalledTimes(1);
+    expect(fallbackSpeak).not.toHaveBeenCalled();
+  });
+
+  it('資産が削除されたら setup をやり直す', async () => {
+    const { result } = renderEngine();
+    act(() => {
+      result.current.speak(defaultRequest, callbacks());
+    });
+    await flushAsync();
+    expect(mockSetup).toHaveBeenCalledTimes(1);
+
+    // 削除 → 同じ version で再取得。ネイティブは release() で設定ごと破棄しているので、
+    // setup を省略すると以後の合成が not_initialized で失敗し続ける
+    mockInstalled = null;
+    act(() => {
+      for (const listener of mockAssetsListeners) {
+        listener();
+      }
+    });
+    mockInstalled = installedAssets;
+
+    act(() => {
+      result.current.speak(defaultRequest, callbacks());
+    });
+    await flushAsync();
+
+    expect(mockSetup).toHaveBeenCalledTimes(2);
   });
 
   it('資産が揃っていれば isAvailable が true になる', () => {
