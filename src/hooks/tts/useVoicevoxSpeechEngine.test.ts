@@ -44,10 +44,17 @@ const installedAssets = {
 };
 let mockInstalled: typeof installedAssets | null = installedAssets;
 const mockEnsureAssets = jest.fn(async () => mockInstalled);
+const mockAssetsListeners = new Set<() => void>();
 jest.mock('~/lib/voicevox/assets', () => ({
   getInstalledVoicevoxAssets: () => mockInstalled,
   ensureVoicevoxAssets: () => mockEnsureAssets(),
   fileUriToPath: (uri: string) => uri.replace(/^file:\/\//, ''),
+  subscribeVoicevoxAssets: (listener: () => void) => {
+    mockAssetsListeners.add(listener);
+    return () => {
+      mockAssetsListeners.delete(listener);
+    };
+  },
 }));
 
 const mockFileDelete = jest.fn();
@@ -131,6 +138,7 @@ describe('useVoicevoxSpeechEngine', () => {
     mockStyleId = 30;
     mockInstalled = installedAssets;
     mockRemoteConfigListeners.clear();
+    mockAssetsListeners.clear();
     mockSetup.mockResolvedValue({ coreVersion: '0.17.0', styleIds: [29, 30] });
     mockSynthesize.mockImplementation(async (o: { outputPath: string }) => ({
       path: o.outputPath,
@@ -141,6 +149,32 @@ describe('useVoicevoxSpeechEngine', () => {
   it('マウント時に資産の取得を始める', () => {
     renderEngine();
     expect(mockEnsureAssets).toHaveBeenCalledTimes(1);
+  });
+
+  it('資産が削除されたら setup をやり直す', async () => {
+    const { result } = renderEngine();
+    act(() => {
+      result.current.speak(defaultRequest, callbacks());
+    });
+    await flushAsync();
+    expect(mockSetup).toHaveBeenCalledTimes(1);
+
+    // 削除 → 同じ version で再取得。ネイティブは release() で設定ごと破棄しているので、
+    // setup を省略すると以後の合成が not_initialized で失敗し続ける
+    mockInstalled = null;
+    act(() => {
+      for (const listener of mockAssetsListeners) {
+        listener();
+      }
+    });
+    mockInstalled = installedAssets;
+
+    act(() => {
+      result.current.speak(defaultRequest, callbacks());
+    });
+    await flushAsync();
+
+    expect(mockSetup).toHaveBeenCalledTimes(2);
   });
 
   it('Remote Config の更新でも資産の取得を試みる', () => {
