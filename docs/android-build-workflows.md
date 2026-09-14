@@ -40,6 +40,7 @@ Configure these GitHub Actions secrets:
 | `KEYSTORE_KEY_ALIAS` | Release signing key alias |
 | `KEYSTORE_KEY_PASSWORD` | Release signing key password |
 | `PLAY_SERVICE_ACCOUNT_JSON` | Google Play service account JSON |
+| `TEST_LAB_SERVICE_ACCOUNT_JSON` | Firebase Test Lab service account JSON |
 
 The workflow exposes application endpoint and telemetry values as environment
 variables. Signing credentials, the Google Play service account, and the Fonts
@@ -61,6 +62,101 @@ SSH key remain step-scoped secrets.
 Enable **Upload the AAB to Google Play (internal track)** only when the selected
 ref is intended for distribution. Push-triggered Canary and Production workflows
 always upload to the internal tracks.
+
+## Firebase Test Lab smoke test
+
+**Canary only.** After the build job finishes, `test_lab` downloads the
+`app-devRelease` bundle and runs a Firebase Test Lab
+[Robo test](https://firebase.google.com/docs/test-lab/android/robo-ux-test)
+against it on several devices. Robo crawls the app on its own, so this needs no
+test code, no test APK, and no `testID` wiring — the bundle the build already
+produces is the entire input.
+
+It answers one question: **does the app launch and survive the first screens on
+a device nobody is holding?** Crash detection across OEMs and API levels, plus
+screenshots, video, and logcat per device, without a cable.
+
+It is deliberately *not* a functional test. Anything that depends on the
+positioning pipeline (speed filter, EMA smoothing, accuracy filter) still needs
+a real device and `docs/location-simulation.md`.
+
+### Test Lab prerequisites
+
+- A Firebase project with Test Lab enabled, on the Blaze plan once the runs
+  exceed the free daily quota.
+- A service account in that project holding the **Firebase Test Lab Admin** and
+  **Firebase Analytics Viewer** roles, exported as JSON into
+  `TEST_LAB_SERVICE_ACCOUNT_JSON`.
+
+The project ID is read from the `project_id` field of that JSON rather than
+carried as a separate secret, so the two can never drift apart. The service
+account must therefore belong to the project the tests should run in.
+
+`gcloud` ships preinstalled on the GitHub-hosted runner, so the job authenticates
+with `gcloud auth activate-service-account` instead of pulling in a third-party
+action.
+
+### When it runs
+
+| Trigger | Behavior |
+| --- | --- |
+| Push to `canary` | Always runs |
+| Manual run | Only when the `run_test_lab` input is enabled |
+
+`test_lab` is a separate job that `needs: build`, so a Robo failure never blocks
+the Google Play upload — Canary ships to the internal track, and detecting the
+crash matters more than withholding that build. The failed job is the record.
+
+### Devices
+
+The device list lives in the `TEST_LAB_DEVICES` environment variable of the
+**Run Robo test** step, as repeated `--device` flags:
+
+```yaml
+TEST_LAB_DEVICES: >-
+  --device model=MediumPhone.arm,version=34
+  --device model=MediumPhone.arm,version=30
+```
+
+These are Arm virtual devices, chosen because they are the cheapest way to cover
+two API levels. Add physical devices with the same syntax
+(`--device model=shiba,version=34`) when OEM-specific behavior is what you need.
+
+Model IDs are retired from the catalog over time. When a run fails with
+`model ... is not a valid model id`, list the current catalog and update the
+variable:
+
+```bash
+gcloud firebase test android models list
+```
+
+### Test Lab dry-run
+
+1. Configure `TEST_LAB_SERVICE_ACCOUNT_JSON`.
+2. Open **Actions** → **Build Android Canary** and select the ref to validate.
+3. Leave **Upload the AAB to Google Play (internal track)** disabled and enable
+   **Run the Firebase Test Lab Robo test against the built AAB**.
+4. Confirm that `test_lab` authenticates, resolves an AAB, and that the Robo
+   matrix reaches `Finished` for every device.
+5. Open the results URL from the job log and confirm the crawl got past the
+   launch screen rather than stalling on a dialog.
+
+### Known limits and follow-ups
+
+- **Artifacts stay in the Test Lab console.** Screenshots, video, and logcat are
+  not copied into GitHub Actions artifacts; doing so needs an explicit
+  `--results-bucket` plus a download step.
+- **The crawl is undirected.** Robo picks its own path, so how far it gets is
+  not guaranteed to be stable run to run. Pinning a route needs a
+  [Robo script](https://firebase.google.com/docs/test-lab/android/robo-scripts-reference),
+  recorded once from Android Studio.
+- **Element targeting is unwired.** `src/test/e2e.ts` defines `TestIds`, but no
+  component receives those values — only the `ButtonTestId` type is imported
+  (`src/components/Button.tsx`, `src/components/Chip.tsx`). A half-written
+  Maestro flow that depended on them (`Flow.yaml`) was removed rather than left
+  to look like a working asset. Robo scripts identify elements by
+  `resource-id`, which React Native derives from `testID`, so wiring those up is
+  the prerequisite for any directed run — Robo script or Maestro alike.
 
 ## Wear OS delivery
 

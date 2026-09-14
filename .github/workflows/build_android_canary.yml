@@ -20,6 +20,11 @@ on:
         required: false
         default: false
         type: boolean
+      run_test_lab:
+        description: "Run the Firebase Test Lab Robo test against the built AAB"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: build-android-canary-${{ github.ref }}
@@ -182,3 +187,93 @@ jobs:
           tracks: "wear:internal"
           status: completed
           mappingFile: android/wearable/build/outputs/mapping/devRelease/mapping.txt
+
+  # Robo テストはクローラなので、テストコードも testID の配線も無しに動く。canary の
+  # AAB をそのまま投げて、複数機種での起動時クラッシュと初期導線の到達可否だけを見る。
+  #
+  # ビルドとは別ジョブに分けてあるのは、Test Lab の結果で Play へのアップロードを
+  # ブロックしないため。canary は internal トラック配信なので、配信を止めるより
+  # クラッシュを検知できる方を優先する。赤くなったジョブが検知の記録になる。
+  test_lab:
+    needs: build
+    if: github.event_name == 'push' || inputs.run_test_lab
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Download AAB artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-devRelease
+          path: test-lab-app
+
+      - name: Validate Test Lab environment
+        env:
+          TEST_LAB_SERVICE_ACCOUNT_JSON: "${{ secrets.TEST_LAB_SERVICE_ACCOUNT_JSON }}"
+        run: |
+          if [ -z "${TEST_LAB_SERVICE_ACCOUNT_JSON:-}" ]; then
+            echo "::error::Required secret is not configured: TEST_LAB_SERVICE_ACCOUNT_JSON"
+            exit 1
+          fi
+
+      - name: Authenticate to Google Cloud
+        env:
+          TEST_LAB_SERVICE_ACCOUNT_JSON: "${{ secrets.TEST_LAB_SERVICE_ACCOUNT_JSON }}"
+        run: |
+          key_file="$RUNNER_TEMP/test-lab-service-account.json"
+          printf '%s' "$TEST_LAB_SERVICE_ACCOUNT_JSON" > "$key_file"
+          chmod 600 "$key_file"
+
+          # プロジェクト ID は鍵から読む。サービスアカウントは Test Lab を動かす
+          # Firebase プロジェクトに属するので、別途 secret を増やすより食い違わない。
+          project_id="$(KEY_FILE="$key_file" python3 -c 'import json,os,sys; sys.stdout.write(json.load(open(os.environ["KEY_FILE"]))["project_id"])')"
+          if [ -z "$project_id" ]; then
+            echo "::error::project_id is missing from TEST_LAB_SERVICE_ACCOUNT_JSON"
+            exit 1
+          fi
+
+          gcloud auth activate-service-account --key-file="$key_file"
+          gcloud config set project "$project_id"
+          echo "TEST_LAB_PROJECT_ID=$project_id" >> "$GITHUB_ENV"
+
+      - name: Run Robo test
+        env:
+          # 端末の型番はカタログから退役する。`model ... is not a valid model id` で
+          # 落ちたら `gcloud firebase test android models list` で現行の型番を確認する。
+          # 物理端末を足すときも同じ形式 (例: --device model=shiba,version=34)。
+          TEST_LAB_DEVICES: >-
+            --device model=MediumPhone.arm,version=34
+            --device model=MediumPhone.arm,version=30
+        run: |
+          aab="$(find test-lab-app -name '*.aab' -print -quit)"
+          if [ -z "$aab" ]; then
+            echo "::error::No AAB found in the downloaded artifact"
+            exit 1
+          fi
+
+          # --grant-permissions all を付けないと、Robo が位置情報の許可ダイアログで
+          # 足止めされて初期導線より先へ進めない。
+          gcloud firebase test android run \
+            --type robo \
+            --app "$aab" \
+            $TEST_LAB_DEVICES \
+            --grant-permissions all \
+            --timeout 10m \
+            --results-history-name "TrainLCD Canary"
+
+      - name: Link Test Lab results
+        if: always()
+        run: |
+          {
+            echo "## Firebase Test Lab"
+            echo
+            if [ -n "${TEST_LAB_PROJECT_ID:-}" ]; then
+              echo "スクリーンショット・動画・logcat は Test Lab コンソールに残る。"
+              echo "ジョブのログ先頭に出る results URL か、以下から辿る。"
+              echo
+              echo "<https://console.firebase.google.com/project/$TEST_LAB_PROJECT_ID/testlab/histories/>"
+            else
+              # 認証前に落ちた場合。プロジェクトが確定していないのでリンクを出すと
+              # 必ず壊れたリンクになる。
+              echo "認証前に終了したため、結果は残っていない。"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
