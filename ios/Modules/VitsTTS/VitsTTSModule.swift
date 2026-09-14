@@ -102,7 +102,6 @@ final class VitsTTSModule: NSObject {
     case runtimeUnavailable
     case ort(String, String)
     case notInitialized
-    case unreadableText([String])
     case io(String)
 
     var description: String {
@@ -115,8 +114,6 @@ final class VitsTTSModule: NSObject {
         return "\(operation) failed: \(message)"
       case .notInitialized:
         return "synthesizer is not initialized"
-      case .unreadableText(let words):
-        return "text contains words this voice cannot read: \(words.joined(separator: ", "))"
       case .io(let message):
         return message
       }
@@ -128,7 +125,6 @@ final class VitsTTSModule: NSObject {
       case .runtimeUnavailable: return "runtime_unavailable"
       case .ort: return "onnxruntime_error"
       case .notInitialized: return "not_initialized"
-      case .unreadableText: return "unreadable_text"
       case .io: return "io_error"
       }
     }
@@ -513,10 +509,12 @@ final class VitsTTSModule: NSObject {
 
         let converted = VitsPhonemizer.tokenIds(
           text: text, dictionary: dictionary, addBlank: self.addBlank)
-        guard converted.unreadableWords.isEmpty else {
-          // 駅名が黙って欠けたアナウンスを流さないため、読めない語があれば合成しない。
-          // JS 側はこの回だけ端末内蔵 TTS へ倒す。
-          throw VitsError.unreadableText(converted.unreadableWords)
+        if !converted.unreadableWords.isEmpty {
+          // 端末内蔵 TTS へ倒しても同じ語は読めないので、読める部分だけで合成する。
+          // 音素化の規則を実機で詰めるための手掛かりとして、飛ばした語だけ残す。
+          NSLog(
+            "[VitsTTS] skipped unreadable words: %@",
+            converted.unreadableWords.joined(separator: ", "))
         }
         guard !converted.sentences.isEmpty else {
           throw VitsError.invalidArgument("text has nothing to speak")
