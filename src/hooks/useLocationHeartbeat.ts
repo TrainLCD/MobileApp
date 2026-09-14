@@ -99,12 +99,20 @@ export const useLocationHeartbeat = (): void => {
       // 経過時間の判定はすべてmonotonicNowで揃える。端末の時計(Date.now)で測ると、
       // 時刻同期や手動変更で巻き戻ったときに残り時間が巻き戻し幅ぶん伸びて点検が
       // 止まり、進んだときは保留中の要求を早く見切って重複要求を出す。
-      // フォールバックでDate.nowが使われる環境も残るため、負の経過時間は
-      // 「基準が信用できない」として待たずに次へ進む。
+      // ただしmonotonicNowはフォールバックでDate.nowになる環境が残るため、経過時間が
+      // 負になる可能性はここでも潰しておく。
       if (pending) {
         const pendingMs = now - pendingSinceMs;
-        if (pendingMs >= 0 && pendingMs < LOCATION_HEARTBEAT_MAX_PENDING) {
-          schedule(LOCATION_HEARTBEAT_MAX_PENDING - pendingMs);
+        if (pendingMs < LOCATION_HEARTBEAT_MAX_PENDING) {
+          // 負の経過時間でも「取得中」であることは変わらないので、保留は保留として
+          // 扱う(ここで抜けると応答待ちのまま2件目を出してしまう)。一方で残り時間を
+          // そのまま使うと見切りが巻き戻し幅ぶん先送りされるため、上限で頭打ちにする。
+          schedule(
+            Math.min(
+              LOCATION_HEARTBEAT_MAX_PENDING - pendingMs,
+              LOCATION_HEARTBEAT_MAX_PENDING
+            )
+          );
           return;
         }
       }

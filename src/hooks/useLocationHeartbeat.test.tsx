@@ -8,6 +8,7 @@ import {
   getMsSinceLastTrackedLocation,
   handleTrackingLocation,
 } from '../utils/handleTrackingLocation';
+import { monotonicNow } from '../utils/monotonicNow';
 import { useLocationHeartbeat } from './useLocationHeartbeat';
 
 let mockNeedsLocationHeartbeat = true;
@@ -32,6 +33,10 @@ jest.mock('expo-battery', () => ({
 let mockIsAppActive = true;
 jest.mock('./useIsAppActive', () => ({
   useIsAppActive: () => mockIsAppActive,
+}));
+
+jest.mock('../utils/monotonicNow', () => ({
+  monotonicNow: jest.fn(() => Date.now()),
 }));
 
 jest.mock('../utils/handleTrackingLocation', () => ({
@@ -72,6 +77,7 @@ const mockGetForegroundPermissionsAsync =
 const mockHandleTrackingLocation = handleTrackingLocation as jest.Mock;
 const mockGetMsSinceLastTrackedLocation =
   getMsSinceLastTrackedLocation as jest.Mock;
+const mockMonotonicNow = monotonicNow as jest.Mock;
 
 const NOW = 1_700_000_000_000;
 
@@ -124,6 +130,7 @@ describe('useLocationHeartbeat', () => {
       LOCATION_HEARTBEAT_STALE_THRESHOLD
     );
     mockGetCurrentPositionAsync.mockResolvedValue(makeLocation(NOW));
+    mockMonotonicNow.mockImplementation(() => Date.now());
   });
 
   afterEach(() => {
@@ -300,6 +307,24 @@ describe('useLocationHeartbeat', () => {
 
     await advanceBy(1);
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
+  });
+
+  it('保留中に経過時間が負になっても要求を重ねない', async () => {
+    // monotonicNowがDate.nowへフォールバックした環境で、取得の応答を待っている間に
+    // 時計が巻き戻ったケース。保留の判定から外れると、1件目の応答を待たないまま
+    // 2件目の要求が走る。
+    mockGetCurrentPositionAsync.mockImplementation(
+      () => new Promise<Location.LocationObject>(() => {})
+    );
+    await startHeartbeat();
+
+    await advanceBy(1);
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+
+    mockMonotonicNow.mockImplementation(() => Date.now() - 600_000);
+    await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING);
+
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
   });
 
   it('見切った取得が後から返ってきても新しい取得のガードを解かず、測位自体は取り込む', async () => {
