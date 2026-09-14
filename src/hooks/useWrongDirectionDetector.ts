@@ -14,7 +14,7 @@ import { useNextStation } from './useNextStation';
 
 // 連続何回の距離増加で逆方向と判定するか
 const WRONG_DIRECTION_CONSECUTIVE_COUNT = 4;
-// 逆方向判定に必要な最小累積距離(m)
+// 逆方向判定に必要な、最接近点からの最小の正味距離(m)
 const WRONG_DIRECTION_MIN_DISTANCE = 300;
 // GPSノイズとみなして無視する減少幅(m)。これ以下の減少では検知カウンタを維持する
 const WRONG_DIRECTION_NOISE_TOLERANCE = 10;
@@ -56,8 +56,10 @@ export const useWrongDirectionDetectorEffect = (): void => {
   const prevDistanceRef = useRef<number | null>(null);
   // 連続で距離が増加した回数
   const consecutiveIncreaseCountRef = useRef(0);
-  // 連続増加中の累積距離(m)
-  const cumulativeIncreaseRef = useRef(0);
+  // 連続増加中に次駅へ最も近づいたときの距離(m)。「遠ざかった距離」はここからの
+  // 正味の差で測る。正の増加だけを足し込む累積だと、ノイズとして無視した小さな
+  // 減少が相殺されず、静止していてもGPSの揺れだけで単調に伸びる(#6967)
+  const nearestDistanceRef = useRef<number | null>(null);
   // 通知済みのnextStation ID（undefinedは未設定、null/numberは通知済み駅ID）
   const notifiedForStationIdRef = useRef<number | null | undefined>(undefined);
   // 前回のnextStation ID（駅変更検知用）
@@ -89,7 +91,7 @@ export const useWrongDirectionDetectorEffect = (): void => {
   const resetDetectionState = useCallback(() => {
     prevDistanceRef.current = null;
     consecutiveIncreaseCountRef.current = 0;
-    cumulativeIncreaseRef.current = 0;
+    nearestDistanceRef.current = null;
     notifiedForStationIdRef.current = undefined;
     writeState(false, false);
   }, [writeState]);
@@ -149,31 +151,43 @@ export const useWrongDirectionDetectorEffect = (): void => {
     const prevDistance = prevDistanceRef.current;
     prevDistanceRef.current = currentDistance;
 
-    // 初回測定は比較対象がないのでスキップ
+    // 初回測定は比較対象がないので、正味の増加を測る起点だけ置いて終了する
     if (prevDistance == null) {
+      nearestDistanceRef.current = currentDistance;
       return;
     }
 
     const increase = currentDistance - prevDistance;
 
     if (increase > 0) {
-      // 遠ざかった: 連続カウンタと累積距離を伸ばす
+      // 遠ざかった: 連続カウンタを伸ばす
       consecutiveIncreaseCountRef.current += 1;
-      cumulativeIncreaseRef.current += increase;
     } else if (increase < -WRONG_DIRECTION_NOISE_TOLERANCE) {
-      // 明確に近づいた: 連続カウンタをリセット
+      // 明確に近づいた: 連続カウンタをリセットし、起点も現在地へ張り直す
+      // (= 正味の増加を 0 に戻す)。
       // ただし wrongDirectionDetected 自体は据え置き、通知発火済みフラグも維持する。
       // 一度逆方向と判定された後、GPSノイズで一時的に近づいたとしても、
       // 次駅が変わるか到着するまでは「逆方向状態」のまま扱う
       consecutiveIncreaseCountRef.current = 0;
-      cumulativeIncreaseRef.current = 0;
+      nearestDistanceRef.current = currentDistance;
     }
-    // 上記いずれにも当てはまらない小さな減少は GPS ノイズとして無視する
+    // 小さな減少は GPS ノイズとして連続カウンタを落とさない(ヒステリシス)。
+    // ただし起点の更新は増減に関わらず行うため、距離そのものには反映される。
+
+    // 起点より近づいたら起点を更新する。無視した小さな減少もここで効くので、
+    // 静止中の揺れでは正味の増加が伸びない
+    const nearestDistance =
+      nearestDistanceRef.current == null
+        ? currentDistance
+        : Math.min(nearestDistanceRef.current, currentDistance);
+    nearestDistanceRef.current = nearestDistance;
+    // 最接近点からの正味の増加距離(m)
+    const netIncrease = currentDistance - nearestDistance;
 
     if (
       consecutiveIncreaseCountRef.current >=
         WRONG_DIRECTION_CONSECUTIVE_COUNT &&
-      cumulativeIncreaseRef.current >= WRONG_DIRECTION_MIN_DISTANCE
+      netIncrease >= WRONG_DIRECTION_MIN_DISTANCE
     ) {
       // 同一のnextStationに対して既に通知済みならスキップ
       if (
