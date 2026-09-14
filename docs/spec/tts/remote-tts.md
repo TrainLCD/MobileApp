@@ -25,16 +25,22 @@ API 障害でアナウンスが丸ごと欠落しないようにするための�
 useTTS ────────────────── 放送タイミング・抑止判定・音声セッション・保留キュー
   ├─ useRemoteSpeechEngine   /tts へ合成要求 → expo-audio で再生
   ├─ useVoicevoxSpeechEngine iOS 本体アプリのフォールバック (日本語のみ VOICEVOX、英語は委譲)
-  └─ useNativeSpeechEngine   リモートを使わない構成の常用経路 / 最終フォールバック
+  ├─ useVitsSpeechEngine     iOS 本体アプリのフォールバック (英語のみ VITS、使えなければ委譲)
+  └─ useNativeSpeechEngine   Android の常用経路 (iOS では使わない。下記参照)
 ```
 
 エンジンの選択は放送直前に `isRemoteTTSEnabled()`（`src/lib/remoteConfig.ts`）を引いて
 決めるため、起動後に Remote Config が届いた場合も次の放送から反映される。
 `isRemoteTTSEnabled()` が決めるのは「リモート合成を試すか、最初から端末内で読むか」だけで、
-端末内で読む側はまず `useVoicevoxSpeechEngine` を試し、VOICEVOX が使える条件（iOS 本体アプリの
-ネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・音声モデル内のスタイル ID）が
-そろわなければ `useNativeSpeechEngine` へ倒れる。条件の詳細は
-[オンデバイス TTS (VOICEVOX) 設計書](./on-device-tts-ios.md) を参照。
+端末内で読む側は言語ごとに分かれる。日本語はまず `useVoicevoxSpeechEngine` を試し、VOICEVOX が
+使える条件（iOS 本体アプリのネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・
+音声モデル内のスタイル ID）がそろわなければ `useTTS` が渡した委譲先へ回る。英語は
+`useVitsSpeechEngine` が同様の条件（`vits_tts_enabled_ios`・検証済みの資産）で端末内合成を試し、
+使えなければ同じく委譲先へ回る。
+
+**iOS の委譲先は「読み上げないエンジン」で、端末内蔵 TTS は使わない**（コンパクト音声の音質が
+悪いため、流すより黙る方を選んでいる）。Android の委譲先は従来どおり `useNativeSpeechEngine`。
+条件と影響の詳細は [オンデバイス TTS 設計書](./on-device-tts-ios.md) を参照。
 
 各エンジンは `SpeechEngine` (`src/hooks/tts/speechEngine.ts`) を実装する。
 
@@ -83,6 +89,9 @@ Android は音声の明示指定が必須である。`expo-speech` の Android �
 ローカル音声を明示指定する（`allowDefaultQuality`）。iOS はユーザーが OS 設定で
 選んだ既定音声を尊重し、拡張（Enhanced）/ プレミアム（Premium）音声がある場合だけ
 明示指定する。
+
+ただし現在 iOS は端末内蔵 TTS で読み上げないため（[オンデバイス TTS 設計書](./on-device-tts-ios.md)）、
+iOS 向けの選択はアナウンスには効かない。将来 iOS で内蔵 TTS を使う構成へ戻す場合に備えて残している。
 
 `expo-speech` が返す `quality` は `Enhanced` / `Default` の 2 値に丸められており、
 Google TTS の日本語ローカル音声のように `QUALITY_NORMAL` へ横並びになる端末では
@@ -180,8 +189,9 @@ Worker 側の設定（`TTS_SPEED` / `TTS_PITCH`）で決まる。
 }
 ```
 
-- 要求した言語の音声が欠けている応答は失敗として扱い、端末内蔵 TTS へフォールバック
-  する。要求していない言語のフィールドは省略してよい。
+- 要求した言語の音声が欠けている応答は失敗として扱い、その回は端末内で読み上げる経路へ倒す
+  （Android は端末内蔵 TTS、iOS は端末内合成が使えなければ読み上げない）。要求していない
+  言語のフィールドは省略してよい。
 - 音声は既定で MP3 (`audio/mpeg`)。Worker の `TTS_RESPONSE_FORMAT` を変えると
   WAV (`audio/wav`) でも返せるが、アプリが再生できない形式を選ばないこと。
 - MIME タイプは省略可。省略時はアプリ側が先頭バイトから MP3 / WAV を判定し、どちらとも
@@ -220,17 +230,20 @@ Remote Config のキーは 2 系統あり、役割が異なる。
   （`useTTSFeatureEnabled`）。`false` のときは読み上げを行わず、設定画面のトグルも
   無効化する。フォールバックは `true`（提供する）。
 - `remote_tts_enabled_ios` / `remote_tts_enabled_android` — 読み上げエンジンの選択
-  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内合成
-  （iOS 本体アプリは VOICEVOX を試してから端末内蔵 TTS、それ以外は端末内蔵 TTS）。
-  フォールバックは iOS が `true`、Android が `false`。
+  （`isRemoteTTSEnabled`）。`true` でリモート合成、`false` で端末内合成。端末内合成は
+  言語ごとに分かれ、iOS 本体アプリは日本語を VOICEVOX、英語を VITS で読む。**iOS は
+  どちらも使えない言語を端末内蔵 TTS へ倒さず、その言語を読み上げない**。Android は
+  端末内蔵 TTS が読む。フォールバックは iOS が `true`、Android が `false`。
 
 両者は独立しているため、次のような運用ができる。
 
 - **Android でもリモート合成を使う**: `remote_tts_enabled_android` を `true` にする。
   段階的に開放したい場合はこのキーだけで切り戻せる。
 - **リモート合成のコスト・障害から退避する**: `remote_tts_enabled_*` を `false` にすると、
-  TTS 機能は維持したまま端末内合成（VOICEVOX → 端末内蔵 TTS の順）へ倒れる。
-  読み上げごと止めたい場合のみ `tts_enabled_*` を `false` にする。
+  TTS 機能は維持したまま端末内合成（iOS は日本語 VOICEVOX / 英語 VITS、Android は
+  端末内蔵 TTS）へ倒れる。**iOS で音声データが未取得の端末はアナウンスが流れなくなる**
+  ので、退避先として当てにする前に配信状況を確認すること。読み上げごと止めたい場合のみ
+  `tts_enabled_*` を `false` にする。
 
 iOS / Android 以外（web など）はリモート再生経路を持たないため、`isRemoteTTSEnabled()`
 は常に `false` を返す。

@@ -1,7 +1,9 @@
-// iOS 本体アプリへ埋め込む VOICEVOX CORE の xcframework を取得する。
+// iOS 本体アプリへ埋め込む VOICEVOX CORE の xcframework と、その ONNX Runtime を
+// Swift から直接呼ぶためのヘッダを取得する。
 //
 // ios/Frameworks/voicevox-frameworks.json に固定したバージョン・URL・SHA-256 の
 // とおりに zip を取得し、検証してから ios/Frameworks/<name>.xcframework へ展開する。
+// ヘッダ (headers) は展開が要らないので、検証後に ios/Frameworks/<name>/ へそのまま置く。
 // 展開物はリポジトリに含めない（数十 MB のバイナリで、GitHub Releases から
 // 再現可能に取得できるため）。既に同じバージョンが展開済みなら取得はしない。
 //
@@ -19,6 +21,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -55,6 +58,43 @@ const download = async (url) => {
   }
   return Buffer.from(await response.arrayBuffer());
 };
+
+// ヘッダ群を取得する。voicevox_onnxruntime.framework はヘッダを同梱しないため、
+// 同じ版の ONNX Runtime 公式ヘッダ (MIT) を置いて ios/Modules/VitsTTS から使う。
+// 展開物と同じく .gitignore 済みで、バージョンが変わったら丸ごと取り直す。
+const installHeaders = async (group) => {
+  const destination = join(frameworksDir, group.name);
+  const versionMarker = join(destination, '.trainlcd-version');
+  const installed =
+    existsSync(versionMarker) &&
+    group.files.every((file) => existsSync(join(destination, file.path))) &&
+    readFileSync(versionMarker, 'utf8').trim() === group.version;
+
+  if (installed) {
+    console.log(`[voicevox] ${group.name} ${group.version} is already installed`);
+    return;
+  }
+
+  console.log(`[voicevox] downloading ${group.name} ${group.version}`);
+  rmSync(destination, { recursive: true, force: true });
+  mkdirSync(destination, { recursive: true });
+  for (const file of group.files) {
+    const body = await download(file.url);
+    const actual = sha256Hex(body);
+    if (actual !== file.sha256) {
+      throw new Error(
+        `[voicevox] SHA-256 mismatch for ${group.name}/${file.path}: expected ${file.sha256}, got ${actual}`
+      );
+    }
+    writeFileSync(join(destination, file.path), body);
+  }
+  writeFileSync(versionMarker, `${group.version}\n`);
+  console.log(`[voicevox] installed ${group.name} ${group.version} -> ${destination}`);
+};
+
+for (const group of manifest.headers ?? []) {
+  await installHeaders(group);
+}
 
 // xcframework 配下の各スライス (<slice>/<name>.framework/Info.plist) を列挙する。
 // macOS スライスは Versions/ 配下にシンボリックリンクを張っているので辿らない

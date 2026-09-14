@@ -1,14 +1,17 @@
-# オンデバイス TTS (VOICEVOX) 設計書 — iOS
+# オンデバイス TTS 設計書 — iOS
 
-iOS でリモート TTS（[リモート TTS 設計書](./remote-tts.md)）が使えない回の**日本語**を、
-Apple 内蔵 TTS のコンパクト音声ではなく [VOICEVOX CORE](https://github.com/VOICEVOX/voicevox_core)
-で端末内合成して読み上げる。英語は VOICEVOX が話せないため、従来どおり端末内蔵 TTS
-（`expo-speech`）で読む。
+iOS でリモート TTS（[リモート TTS 設計書](./remote-tts.md)）が使えない回を、Apple 内蔵 TTS の
+コンパクト音声ではなく端末内合成で読み上げる。日本語は
+[VOICEVOX CORE](https://github.com/VOICEVOX/voicevox_core)、英語は
+[VITS (vits-ljs)](https://huggingface.co/csukuangfj/vits-ljs) を使う。
 
-背景: Apple 内蔵 TTS の日本語は既定でコンパクト版が選ばれ、Enhanced / Premium 音声は
+背景: Apple 内蔵 TTS は日本語も英語も既定でコンパクト版が選ばれ、Enhanced / Premium 音声は
 ユーザーが設定アプリから手動でダウンロードしない限り使えない（アプリからダウンロードを
 起動する API は無い）。リモート TTS が主経路の iOS では、圏外・トンネル・API 障害のときだけ
 この機械的な声が突然流れることになり、体験を大きく損なっていた。
+
+日本語と英語は独立した機能として実装してある。Remote Config のキーも、資産のダウンロード
+同意も、設定画面のパネルも別々で、片方だけ有効・片方だけ取得済みという状態で問題なく動く。
 
 ## 読み上げ経路
 
@@ -16,12 +19,45 @@ Apple 内蔵 TTS のコンパクト音声ではなく [VOICEVOX CORE](https://gi
 useTTS
   ├─ useRemoteSpeechEngine   Worker /tts (Google Cloud TTS) → expo-audio          … 主経路
   ├─ useVoicevoxSpeechEngine 日本語: VOICEVOX CORE → WAV → expo-audio             … リモート不可時
-  │                          英語  : useNativeSpeechEngine へ委譲
-  └─ useNativeSpeechEngine   端末内蔵 TTS (expo-speech) で日英とも                 … 最終フォールバック
+  │                          英語  : useVitsSpeechEngine へ委譲
+  └─ useVitsSpeechEngine     英語  : VITS (ONNX Runtime) → WAV → expo-audio
+                             使えない回は useTTS が渡した委譲先へ回す
 ```
 
-`useVoicevoxSpeechEngine` は次のいずれかを満たさないと `onUnavailable` を返し、その回は
-端末内蔵 TTS が日英とも読む。
+## iOS では端末内蔵 TTS を使わない
+
+**iOS では端末内蔵 TTS（`expo-speech` / AVSpeechSynthesizer）で読み上げない。**
+既定で選ばれるコンパクト音声は音質が悪く、Enhanced / Premium 音声はユーザーが設定アプリから
+手動で入れない限り使えない（アプリからダウンロードを起動する API が無い）。リモート TTS も
+端末内合成も使えない回に機械的な声を突然流すより、**その言語を読み上げない**方を選んでいる。
+
+正確には、`useTTS` は iOS でも `useNativeSpeechEngine()` をフックとして呼び（エンジンはマウント時に
+音声一覧を取得する）、`stopAllEngines` で `nativeEngine.stop()` も呼ぶ。使わないのは
+**読み上げの委譲先としての `nativeEngine.speak`** で、iOS ではこれを選ばない。
+
+実装は `useTTS` の `SILENT_SPEECH_ENGINE`。端末内合成が使えない回の引き受け手として、iOS では
+このエンジン（即 `onSettled` を呼ぶだけ）を渡す。Android は端末内蔵 TTS が常用経路なので
+従来どおり `useNativeSpeechEngine` を渡す。
+
+この結果、iOS では次の状態で**アナウンスが流れない**。
+
+| 状況 | 挙動 |
+| --- | --- |
+| 音声データ未取得 + リモート不可（圏外・トンネル・API 障害） | その言語は読み上げない |
+| 日本語だけ取得済み + リモート不可 | 日本語は VOICEVOX、英語は読み上げない |
+| 英語だけ取得済み + リモート不可 | 英語は VITS、日本語は読み上げない |
+| App Clip + リモート不可 | 端末内合成のモジュールを持たないため、日英とも読み上げない |
+
+`isRemoteTTSEnabled()` が `false` の構成（Remote Config で iOS のリモート合成を止めた場合）も
+同じで、端末内合成の資産が無ければ黙る。
+
+VOICEVOX が使えない回でも、英語の資産があれば**英語だけは読む**（`EnglishSpeechEngine.isAvailable()`
+で判定して日本語と分けて渡す）。Android で英語を端末内合成できないときは、発話の合間に合成待ちの
+ラグが入るのを避けるため日英をまとめて 1 回の `Speech.speak` で OS のキューへ積む。
+
+`useVoicevoxSpeechEngine` は次のいずれかを満たさないと `onUnavailable` を返す。その回の日本語は
+Android なら端末内蔵 TTS が読み、**iOS は読み上げない**（英語は上記のとおり、端末内合成できるなら
+そちらへ回る）。
 
 - ネイティブモジュール `VoicevoxTTSModule` がある（iOS 本体アプリのみ。App Clip / Android には無い）
 - Remote Config `voicevox_tts_enabled_ios` が `true`
@@ -110,9 +146,11 @@ VOICEVOX CORE の C API はスレッドセーフを保証していないため�
 
 App Clip（`ProdAppClip` / `CanaryAppClip`）は deployment target が 16.4 のため非圧縮
 バイナリの上限が 15MB で、上記 2 フレームワーク（約 18MB）を埋め込めない。そのため
-モジュールのソースもフレームワークも本体ターゲットにだけ追加し、App Clip は従来どおり
-「リモート TTS → 端末内蔵 TTS」の経路のままにする。JS 側は `NativeModules.VoicevoxTTSModule`
-の有無で判定するので、Clip 向けの分岐は要らない。
+モジュールのソースもフレームワークも本体ターゲットにだけ追加する。JS 側は
+`NativeModules.VoicevoxTTSModule` の有無で判定するので、Clip 向けの分岐は要らない。
+
+その結果 **App Clip の読み上げ経路はリモート TTS だけ**になる。iOS なので端末内蔵 TTS へは
+倒れず、リモートが使えない回は日英とも読み上げない。
 
 ## 資産の取得
 
@@ -138,7 +176,7 @@ App Clip（`ProdAppClip` / `CanaryAppClip`）は deployment target が 16.4 の�
 - **同意ダイアログ**: 自動アナウンスを有効化した瞬間に、VOICEVOX が使える構成
   （`phase !== 'unsupported'`）で未取得なら「オフライン用の日本語音声」の同意ダイアログを
   出す。文言は「ダウンロードしなくても通信できないときは端末内蔵の読み上げ音声で流れる」
-  「ダウンロードすると圏外・トンネルでもより自然な音声（VOICEVOX:No.7）で読める」の
+  「ダウンロードすると圏外・トンネルでもより自然な音声（VOICEVOX:夜語トバリ）で読める」の
   2 点を明示し、取得が再生の前提だと読めないようにする（パネルの未取得時の説明・削除確認も
   同じ趣旨）。既存の注意ダイアログが先に出る場合はキューで続けて表示される。
   「ダウンロード」で `requestVoicevoxAssetsDownload()`（同意を MMKV
@@ -176,7 +214,7 @@ mkdir -p "$WORK/2026-09-08" && cd "$WORK/2026-09-08"
 # --fail: HTTP エラーを成功扱いにしない / --retry: 一時的な通信エラーは再試行する
 curl -LO --fail --retry 3 https://github.com/r9y9/open_jtalk/releases/download/v1.11.1/open_jtalk_dic_utf_8-1.11.tar.gz
 tar xzf open_jtalk_dic_utf_8-1.11.tar.gz && rm open_jtalk_dic_utf_8-1.11.tar.gz
-curl -LO --fail --retry 3 https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/6.vvm
+curl -LO --fail --retry 3 https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.16.4/24.vvm
 cd -   # リポジトリへ戻る
 
 # マニフェストを生成する (version は省略時に今日の日付)。
@@ -192,7 +230,7 @@ test -s "$WORK/manifest.json"
 voicevox/
 ├── manifest.json
 └── 2026-09-08/                        … base-url に対応するディレクトリ
-    ├── 6.vvm                          … VOICEVOX:No.7 (style 29/30/31)
+    ├── 24.vvm                         … VOICEVOX:夜語トバリ (style 118〜121)
     └── open_jtalk_dic_utf_8-1.11/
         ├── sys.dic  unk.dic  char.bin  matrix.bin
         ├── left-id.def  right-id.def  pos-id.def  rewrite.def
@@ -325,28 +363,154 @@ dev 側の組み合わせだけなので、production 側の更新漏れは cana
 旧 VVM でそれを解決できず、やはり端末内蔵 TTS へ落ちる。スタイル ID の反映は各端末の次回起動時なので、
 戻したあとも不一致の期間は残る。
 
+## 英語 (VITS)
+
+日本語の VOICEVOX と同じ形（Remote Config で有効化 → 同意を得て資産を取得 → 発話時に WAV を
+合成して `expo-audio` で再生）で動く。ここでは日本語と違う点だけを書く。
+
+### なぜ sherpa-onnx ではないのか
+
+オンデバイス TTS のライブラリとしては [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) が
+手近だが、**採用していない**。sherpa-onnx は `SHERPA_ONNX_ENABLE_TTS=ON` にすると
+`CMakeLists.txt` で `espeak-ng-for-piper` と `piper-phonemize` を無条件に取り込み、espeak だけを
+外すビルドオプションが無い。espeak-ng は GPL v3 で、MIT のこのアプリを App Store 経由で
+バイナリ配布する構成とは両立しない（公式配布の iOS xcframework にも
+`CallPhonemizeEspeak` などのシンボルが含まれることを確認済み）。Piper 系のモデルは
+いずれも音素化に espeak を前提とするので、モデルを選び直しても回避できない。
+
+そのため、**ONNX Runtime を直接呼び、espeak に依存しない lexicon 方式のモデルを使う**構成に
+した。音素化（G2P）は自前実装になるが、GPL のコードは一切入らない。
+
+### 推論に使う ONNX Runtime
+
+VOICEVOX 用に既に埋め込んである `voicevox_onnxruntime.framework`（素の ONNX Runtime 1.23.2）を
+**共用する**。この framework が公開するシンボルは `OrtGetApiBase` と
+`OrtSessionOptionsAppendExecutionProvider_CPU` の 2 つだけだが、ONNX Runtime の C API は
+`OrtGetApiBase` から全関数ポインタを引く設計なのでこれで足りる。vits-ljs が使う 51 種の演算子
+（`RandomNormalLike` `ConvTranspose` `GatherND` `ScatterND` `CumSum` `Erf` など）のカーネルが
+含まれていることも確認済み。
+
+Microsoft 公式の `onnxruntime-c` (MIT) を別途埋め込むとアプリが約 47MB 大きくなるため共用を選んだ。
+**VOICEVOX をやめるときも、この framework と `ios/Frameworks/voicevox-frameworks.json` の定義は
+残す必要がある**（消すと英語の端末内合成が動かなくなる）。
+
+framework にヘッダが同梱されていないので、同じ版の ONNX Runtime 公式ヘッダ (MIT) を
+`scripts/fetch-voicevox-frameworks.mjs` が `ios/Frameworks/onnxruntime-headers/` へ取得し、
+`ios/TrainLCD-Bridging-Header.h` から読み込む（`HEADER_SEARCH_PATHS` に登録済み）。
+**framework のバージョンを上げるときはヘッダの `version` と `url` も必ず揃えること。**
+
+### ネイティブモジュール (VitsTTS)
+
+`ios/Modules/VitsTTS/`（Swift + ObjC ブリッジ）。VOICEVOX と同じく本体ターゲットにだけ追加してある。
+
+| メソッド | 役割 |
+| --- | --- |
+| `setup({ modelPath, tokensPath, lexiconPath, cpuNumThreads })` | ONNX セッション生成・辞書読込。同じ設定なら no-op。サンプリングレートと `add_blank` を返す |
+| `synthesize({ text, speed, outputPath })` | WAV（16bit / mono）を `outputPath` へ書く |
+| `release()` | セッションと辞書を解放する |
+| `sha256(path)` | ダウンロード検証用 |
+| `setExcludedFromBackup(path)` | 取得した資産を iCloud バックアップから除外する |
+
+サンプリングレートと `add_blank` は**モデルの ONNX メタデータから読む**。マニフェストへ二重に
+持たせるとモデルを差し替えたときに片方だけ古い値が残るため、モデル本体を正としている。
+推論パラメータ `noise_scale` (0.667) と `noise_scale_w` (0.8) はモデルの学習時設定に対応する
+固定値で、速度設定は `length_scale = 1 / speed` として渡す。
+
+### 音素化 (G2P)
+
+`ios/Modules/VitsTTS/VitsPhonemizer.swift`。モデルに付属する `lexicon.txt`（単語 → IPA 音素列）と
+`tokens.txt`（音素 → ID）による辞書引きが基本で、辞書に載らない語だけを規則で補う。
+
+- **駅名・路線名のローマ字**（Shinjuku, Yamanote など）: ヘボン式として読み、英語話者が日本の
+  地名を読むときの音へ写像する。促音は子音を畳み、撥音はそれ自体を 1 つの音として立てる。
+  強勢は英語の一般的な型に合わせて後ろから 2 番目の音節へ置く（1 音節語は先頭）。
+- **駅ナンバリングの数字**: `<say-as>` が外れて "17" のまま来るので、英単語へ開いてから辞書を
+  引く。路線記号は `useTTSText` が既に "J Y" と 1 文字ずつ分かち書きしており、lexicon が単独
+  アルファベットをアルファベット読みで持っているのでそのまま引ける。
+
+辞書にも規則にも載らない語は**読み飛ばして残りを合成する**。端末内蔵 TTS へ倒しても、そこで
+読めるようになる語ではない（辞書に無いのはたいてい規則から外れた固有名詞で、内蔵 TTS も同じ
+ように読み違える）ため、その回だけエンジンを替える意味が無い。飛ばした語は
+`[VitsTTS] skipped unreadable words:` としてネイティブのログに出るので、実機で音素化の規則を
+詰めるときの手掛かりにする。
+
+文は `.` `!` `?` `;` `:` で区切って 1 文ずつ推論し、間に 0.2 秒の無音を挟んで繋ぐ。
+
+### 資産
+
+| ファイル | 内容 | サイズ |
+| --- | --- | --- |
+| `vits-ljs.onnx` | 音声モデル | 約 114MB |
+| `lexicon.txt` | 単語 → 音素列 | 約 3.7MB |
+| `tokens.txt` | 音素 → ID | 約 1KB |
+
+取得・検証・保存の手順は日本語と同じ（`src/lib/vits/assets.ts`。置き場は
+`Paths.document/vits/<version>/`、記録は MMKV の `VITS_ASSETS`、同意は `VITS_DOWNLOAD_CONSENTED`）。
+
+マニフェストの形式は `src/lib/vits/manifest.ts`（zod スキーマ）が正で、
+`scripts/build-vits-manifest.mjs` で生成する。
+
+```bash
+set -euo pipefail
+
+WORK=~/vits-assets
+mkdir -p "$WORK/2026-09-15" && cd "$WORK/2026-09-15"
+for f in vits-ljs.onnx tokens.txt lexicon.txt; do
+  curl -LO --fail --retry 3 "https://huggingface.co/csukuangfj/vits-ljs/resolve/main/$f"
+done
+cd -
+
+node scripts/build-vits-manifest.mjs "$WORK/2026-09-15" https://example.invalid/vits/2026-09-15 2026-09-15 > "$WORK/manifest.json"
+test -s "$WORK/manifest.json"
+```
+
+配信先は日本語と同じ R2（本番 `assets.trainlcd.app` / staging `assets-stg.trainlcd.app`）で、
+プレフィックスを `vits/` にして置く。Remote Config の `vits_tts_manifest_url_ios` には
+`https://<host>/vits/manifest.json` を入れる。staging へ先に出して canary で確かめてから本番へ
+昇格する運用、資産を差し替えるときに `version`・`files[].path`・`files[].sha256` の 3 点を
+突き合わせる手順、マニフェストと Remote Config の反映が原子的でないことは、いずれも
+[日本語側の記述](#staging-配信先)がそのまま当てはまる。スタイル ID に相当する設定を持たない
+ぶん、こちらは資産だけを揃えればよい。
+
+### 音声とライセンス
+
+モデルは icefall の LJSpeech レシピで学習された VITS（Apache-2.0）で、学習データの
+[LJSpeech](https://keithito.com/LJ-Speech-Dataset/) はパブリックドメイン。クレジット表記は
+利用条件ではないが、Apache-2.0 の著作権表示を保持するためライセンス画面
+（`src/screens/Licenses.tsx`）に載せている。声はアメリカ英語の女性 1 名で、モデルは単一話者
+（`n_speakers = 0`）のため話者 ID の入力を持たない。
+
 ## Remote Config
 
 | キー | 型 | フォールバック | 役割 |
 | --- | --- | --- | --- |
 | `voicevox_tts_enabled_ios` | boolean | `false` | VOICEVOX フォールバックの有効化 |
 | `voicevox_tts_manifest_url_ios` | string (https) | 未設定 | マニフェスト JSON の URL。未設定なら有効でも資産を取得できない |
-| `voicevox_tts_style_id_ios` | integer ≥ 0 | `30` | スタイル ID。配信した VVM に含まれる ID を指定する |
+| `voicevox_tts_style_id_ios` | integer ≥ 0 | `119` | スタイル ID。配信した VVM に含まれる ID を指定する |
+
+| `vits_tts_enabled_ios` | boolean | `false` | VITS フォールバック（英語）の有効化 |
+| `vits_tts_manifest_url_ios` | string (https) | 未設定 | マニフェスト JSON の URL。未設定なら有効でも資産を取得できない |
 
 `remote_tts_enabled_ios` とは独立している。リモート合成を主経路のまま「フォールバック先だけ」を
-差し替える設計で、`voicevox_tts_enabled_ios` を `false` にすれば取得済みの資産があっても
-端末内蔵 TTS へ戻る。
+差し替える設計で、`voicevox_tts_enabled_ios` / `vits_tts_enabled_ios` を `false` にすれば
+取得済みの資産があっても端末内蔵 TTS へ戻る。日本語と英語も互いに独立で、片方だけ有効にできる。
 
 ## 音声とクレジット
 
-既定は **No.7「アナウンス」**（`6.vvm` / スタイル ID 30）。No.7 の規約は個人の非商用利用を
-クレジット表記のみで許諾している（商用利用は事前確認が必要）。本アプリは課金・広告を持たない
-個人開発のため非商用利用に当たるが、**課金や広告を将来入れる場合は再確認が必要**。
+既定は **夜語トバリ「明るい」**（`24.vvm` / スタイル ID 119）。
 
 VOICEVOX 音声モデルの利用規約（[voicevox_vvm README](https://github.com/VOICEVOX/voicevox_vvm)）は
-「VOICEVOX を利用したことがわかるクレジット表記」を求める。ライセンス画面
-（`src/screens/Licenses.tsx`）に `VOICEVOX:No.7` を iOS でのみ表示している。スタイル ID を
+「VOICEVOX を利用したことがわかるクレジット表記」を求め、夜語トバリについては
+「`VOICEVOX:夜語トバリ` とクレジットを記載すれば商用・非商用で利用可能」としている。ライセンス画面
+（`src/screens/Licenses.tsx`）に `VOICEVOX:夜語トバリ` を iOS でのみ表示している。スタイル ID を
 別キャラクターへ変えるときは、そのキャラクターの規約とクレジット表記も合わせて変えること。
+
+ただし同規約は「作成された音声を利用する際は、各音声ライブラリの規約に従ってください」とも定めて
+おり、キャラクター側の規約（[夜語トバリ公式](https://yogataritobari.studio.site/#rules)）は法人
+利用・その他の商用目的での使用に別途問い合わせを求めている。現状のアプリは課金も広告も持たない
+ため追加の手続きは不要だが、**課金・広告を入れるときはクレジット表記だけで足りると決めつけず、
+その時点の規約を確認し、必要なら権利者へ照会すること**。キャラクター側の規約は予告なく変更され
+うる。
 
 ## 未計測の項目
 
@@ -358,3 +522,14 @@ VOICEVOX 音声モデルの利用規約（[voicevox_vvm README](https://github.c
 - 位置情報・Live Activity と同居した背景実行中のメモリ（合成器常駐時）と発熱
 - カタカナ入力時のアクセント。漢字を渡した方が自然なら `toSpeakableText` の
   VOICEVOX 向け分岐を検討する
+
+英語 (VITS) は加えて次を確認する。
+
+- `voicevox_onnxruntime.framework` のシンボルで ONNX セッションを作れるか（`OrtGetApiBase`
+  経由の C API 呼び出しがリンク・実行できるか）
+- ONNX セッション構築の時間と 1 文あたりの合成時間。日本語と英語を続けて合成する回の合計
+- 日本語 (VOICEVOX) と同時に合成器を持ったときのメモリ。メモリ警告での解放が効くか
+- ローマ字から作った音が実際の駅名で聞けるか（強勢の位置、母音の写像、促音・撥音）。
+  不自然なら `VitsPhonemizer` の `romajiVowels` と強勢規則を調整する
+- 読み飛ばされる語の有無。`[VitsTTS] skipped unreadable words:` のログを見ながら実路線を流し、
+  駅名が欠けるようならローマ字の規則を広げる

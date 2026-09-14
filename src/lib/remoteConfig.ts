@@ -44,8 +44,17 @@ export const REMOTE_CONFIG_KEYS = {
   // 形式は src/lib/voicevox/manifest.ts を参照。
   VOICEVOX_TTS_MANIFEST_URL_IOS: 'voicevox_tts_manifest_url_ios',
   // VOICEVOX のスタイル ID (話者と声色)。配信した音声モデルに含まれる ID を指定する。
-  // 未配信時は VOICEVOX_DEFAULT_STYLE_ID (No.7 アナウンス)。
+  // 未配信時は VOICEVOX_DEFAULT_STYLE_ID (夜語トバリ 明るい)。
   VOICEVOX_TTS_STYLE_ID_IOS: 'voicevox_tts_style_id_ios',
+  // iOS でリモート TTS が使えない回の英語フォールバックを、端末内蔵 TTS の代わりに
+  // VITS (端末内合成) で読み上げるかどうか。音声モデルと発音辞書 (約 118MB) を
+  // 初回に取得するため、配信 URL とセットで有効化する。未配信・取得失敗時は無効
+  // (従来どおり端末内蔵 TTS へフォールバック)。App Clip と Android は対象外。
+  // 日本語の VOICEVOX とは独立しており、片方だけ有効にできる。
+  VITS_TTS_ENABLED_IOS: 'vits_tts_enabled_ios',
+  // VITS の音声モデル・発音辞書を列挙したマニフェスト JSON の URL。
+  // 形式は src/lib/vits/manifest.ts を参照。
+  VITS_TTS_MANIFEST_URL_IOS: 'vits_tts_manifest_url_ios',
   // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
   // エントリポイントごと機能を止められるようにするキルスイッチ。
   AI_AGENT_ENABLED: 'ai_agent_enabled',
@@ -66,6 +75,8 @@ type RemoteConfigResponse = {
   voicevox_tts_enabled_ios?: boolean;
   voicevox_tts_manifest_url_ios?: string;
   voicevox_tts_style_id_ios?: number;
+  vits_tts_enabled_ios?: boolean;
+  vits_tts_manifest_url_ios?: string;
   ai_agent_enabled?: boolean;
 };
 
@@ -98,6 +109,10 @@ const AI_AGENT_ENABLED_FALLBACK = false;
 // VOICEVOX フォールバックのフォールバック既定値。約 180MB の辞書・音声モデルを
 // 端末へ取得する機能のため、Remote Config で明示的に有効化されたときだけ動かす。
 const VOICEVOX_TTS_ENABLED_IOS_FALLBACK = false;
+
+// VITS フォールバックのフォールバック既定値。約 118MB の音声モデル・発音辞書を
+// 端末へ取得する機能のため、Remote Config で明示的に有効化されたときだけ動かす。
+const VITS_TTS_ENABLED_IOS_FALLBACK = false;
 
 // リモート設定の数値は「有限かつ正」のみ受理する(0・負値・非数はフォールバックへ倒す)。
 // 真偽値や配列は Number() で 1 や 5 に化けるため、number 型に限定してから検証する。
@@ -145,6 +160,8 @@ let cachedAIAgentEnabled: boolean | null = null;
 let cachedVoicevoxTTSEnabledIOS: boolean | null = null;
 let cachedVoicevoxTTSManifestUrlIOS: string | null = null;
 let cachedVoicevoxTTSStyleIdIOS: number | null = null;
+let cachedVitsTTSEnabledIOS: boolean | null = null;
+let cachedVitsTTSManifestUrlIOS: string | null = null;
 
 // setupRemoteConfig は起動時に非同期で完了するため、初回レンダー後にキャッシュが
 // 更新されても React は再レンダーしない。UI(FxTTS・設定画面)が useSyncExternalStore
@@ -180,6 +197,8 @@ export const resetRemoteConfigCache = (): void => {
   cachedVoicevoxTTSEnabledIOS = null;
   cachedVoicevoxTTSManifestUrlIOS = null;
   cachedVoicevoxTTSStyleIdIOS = null;
+  cachedVitsTTSEnabledIOS = null;
+  cachedVitsTTSManifestUrlIOS = null;
   notifyRemoteConfigListeners();
 };
 
@@ -242,6 +261,13 @@ export const setupRemoteConfig = async (): Promise<void> => {
   const styleId = parseNonNegativeInteger(data.voicevox_tts_style_id_ios);
   if (styleId != null) {
     cachedVoicevoxTTSStyleIdIOS = styleId;
+  }
+  if (typeof data.vits_tts_enabled_ios === 'boolean') {
+    cachedVitsTTSEnabledIOS = data.vits_tts_enabled_ios;
+  }
+  const vitsManifestUrl = parseHttpsUrl(data.vits_tts_manifest_url_ios);
+  if (vitsManifestUrl != null) {
+    cachedVitsTTSManifestUrlIOS = vitsManifestUrl;
   }
   notifyRemoteConfigListeners();
 };
@@ -376,7 +402,28 @@ export const getVoicevoxTTSManifestUrl = (): string | null =>
   cachedVoicevoxTTSManifestUrlIOS;
 
 /**
- * VOICEVOX のスタイル ID。未配信・不正値ならフォールバック(No.7 アナウンス)。
+ * VOICEVOX のスタイル ID。未配信・不正値ならフォールバック(夜語トバリ 明るい)。
  */
 export const getVoicevoxTTSStyleId = (): number =>
   cachedVoicevoxTTSStyleIdIOS ?? VOICEVOX_DEFAULT_STYLE_ID;
+
+/**
+ * iOS でリモート TTS が使えない回の英語フォールバックを VITS (端末内合成) で
+ * 読み上げるかどうかを同期的に取得する。日本語の isVoicevoxTTSEnabled とは独立しており、
+ * 片方だけ有効にできる。有効でも音声モデル・発音辞書が未取得の間や App Clip では
+ * 従来どおり端末内蔵 TTS が使われる。Android は対象外(ネイティブモジュールを持たない)の
+ * ため常に false。
+ */
+export const isVitsTTSEnabled = (): boolean => {
+  if (Platform.OS !== 'ios') {
+    return false;
+  }
+  return cachedVitsTTSEnabledIOS ?? VITS_TTS_ENABLED_IOS_FALLBACK;
+};
+
+/**
+ * VITS の音声モデル・発音辞書を列挙したマニフェスト JSON の URL。未配信なら null で、
+ * その場合は有効化されていても資産を取得できないため VITS は使われない。
+ */
+export const getVitsTTSManifestUrl = (): string | null =>
+  cachedVitsTTSManifestUrlIOS;
