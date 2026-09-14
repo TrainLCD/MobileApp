@@ -64,6 +64,11 @@ export const useLocationHeartbeat = (): void => {
 
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    // 配信をまだ一度も受けていない間の基準時刻。起動直後は継続測位が数秒で最初の
+    // 測位を届けるので、そこへ譲るために「effectが始まった時刻に配信があった」と
+    // 見なして途絶時間ぶん待つ。待たずに取りに行くと、継続測位と一発取得が起動時に
+    // 必ず二重に走る。
+    const effectStartedAtMs = Date.now();
     // 取得が返らないうちに重ねて要求すると、測位セッションだけが増えて電池を無駄に
     // する。応答が返るまでは新しい要求を出さない。ただし返らないまま放置すると補完
     // 測位ごと止まるので、LOCATION_HEARTBEAT_MAX_PENDINGで見切る。
@@ -90,23 +95,29 @@ export const useLocationHeartbeat = (): void => {
 
       const now = Date.now();
 
+      // 経過時間が負になるのは端末の時計が巻き戻されたときで、基準が意味を失う。
+      // 残り時間として使うと巻き戻し幅ぶん点検が先送りされ、補完測位が止まる
+      // (同じ理由でhandleTrackingLocationにも巻き戻しガードがある)。待たずに次へ進む。
       if (pending) {
         const pendingMs = now - pendingSinceMs;
-        if (pendingMs < LOCATION_HEARTBEAT_MAX_PENDING) {
+        if (pendingMs >= 0 && pendingMs < LOCATION_HEARTBEAT_MAX_PENDING) {
           schedule(LOCATION_HEARTBEAT_MAX_PENDING - pendingMs);
           return;
         }
       }
 
+      // 0は「起動後まだ一度も配信が無い」状態。基準をeffect開始時刻に置き換え、
+      // 起動直後は継続測位へ譲りつつ、届かないままなら途絶として取りに行く。
       const lastTrackedAtMs = getLastTrackedLocationAtMs();
-      // 0は「起動後まだ一度も配信が無い」状態。地下で起動した場合もここに入るため、
-      // 未配信は途絶と同じに扱って取りに行く。
-      if (lastTrackedAtMs !== 0) {
-        const sinceDeliveryMs = now - lastTrackedAtMs;
-        if (sinceDeliveryMs < LOCATION_HEARTBEAT_STALE_THRESHOLD) {
-          schedule(LOCATION_HEARTBEAT_STALE_THRESHOLD - sinceDeliveryMs);
-          return;
-        }
+      const referenceAtMs =
+        lastTrackedAtMs !== 0 ? lastTrackedAtMs : effectStartedAtMs;
+      const sinceDeliveryMs = now - referenceAtMs;
+      if (
+        sinceDeliveryMs >= 0 &&
+        sinceDeliveryMs < LOCATION_HEARTBEAT_STALE_THRESHOLD
+      ) {
+        schedule(LOCATION_HEARTBEAT_STALE_THRESHOLD - sinceDeliveryMs);
+        return;
       }
 
       pending = true;
@@ -161,7 +172,10 @@ export const useLocationHeartbeat = (): void => {
         console.warn('前景の位置情報権限の確認に失敗しました:', error);
         return;
       }
-      schedule(LOCATION_HEARTBEAT_STALE_THRESHOLD);
+      // 初回も待たずにcheckへ入れる。ここで固定の途絶時間を待つと、既に途絶した
+      // 状態で前景へ戻ったとき(地下でアプリを開き直した等)に、取りに行くまで
+      // さらに途絶時間ぶん遅れる。待つかどうかの判断はcheckが一手に持つ。
+      schedule(0);
     })();
 
     return () => {

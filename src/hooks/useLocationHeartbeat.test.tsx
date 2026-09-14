@@ -102,6 +102,12 @@ const advanceToNextCheck = async () => {
   });
 };
 
+const advanceBy = async (ms: number) => {
+  await act(async () => {
+    jest.advanceTimersByTime(ms);
+  });
+};
+
 describe('useLocationHeartbeat', () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -153,6 +159,45 @@ describe('useLocationHeartbeat', () => {
     await startHeartbeat();
 
     await advanceToNextCheck();
+
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('一度も配信が無い間は、まず継続測位に譲って途絶時間ぶん待つ', async () => {
+    // 起動直後は継続測位が数秒で最初の測位を届ける。ここで待たないと、起動のたびに
+    // 継続測位と一発取得が必ず二重に走る。
+    mockGetLastTrackedLocationAtMs.mockReturnValue(0);
+    await startHeartbeat();
+
+    await advanceBy(LOCATION_HEARTBEAT_STALE_THRESHOLD - 1);
+    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+
+    await advanceBy(1);
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('既に途絶している状態で開始したら待たずに取得する', async () => {
+    // 地下でアプリを前景へ戻した場合。effectの張り直しで固定時間待つと、
+    // 復帰から取得までさらに途絶時間ぶん遅れる。
+    mockGetLastTrackedLocationAtMs.mockReturnValue(
+      NOW - LOCATION_HEARTBEAT_STALE_THRESHOLD
+    );
+    await startHeartbeat();
+
+    await advanceBy(1);
+
+    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('端末の時計が巻き戻っても点検が先送りされない', async () => {
+    // 経過時間が負になる。残り時間として使うと巻き戻し幅ぶん点検が飛び、
+    // 補完測位が止まる(handleTrackingLocationの巻き戻しガードと同じ理由)。
+    mockGetLastTrackedLocationAtMs.mockImplementation(
+      () => Date.now() + 60_000
+    );
+    await startHeartbeat();
+
+    await advanceBy(1);
 
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
   });
@@ -247,19 +292,14 @@ describe('useLocationHeartbeat', () => {
     );
     await startHeartbeat();
 
-    await advanceToNextCheck();
+    await advanceBy(1);
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
 
-    // 見切り時間に達するまでは重ねて要求しない
-    const checksUntilGiveUp = Math.ceil(
-      LOCATION_HEARTBEAT_MAX_PENDING / LOCATION_HEARTBEAT_STALE_THRESHOLD
-    );
-    for (let i = 1; i < checksUntilGiveUp; i++) {
-      await advanceToNextCheck();
-    }
+    // 見切り時間に達するまでは重ねて要求しない(1件目の要求時刻は進める前の時点)
+    await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING - 2);
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
 
-    await advanceToNextCheck();
+    await advanceBy(1);
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
   });
 
@@ -277,12 +317,9 @@ describe('useLocationHeartbeat', () => {
     );
     await startHeartbeat();
 
-    const checksUntilGiveUp = Math.ceil(
-      LOCATION_HEARTBEAT_MAX_PENDING / LOCATION_HEARTBEAT_STALE_THRESHOLD
-    );
-    for (let i = 0; i < checksUntilGiveUp + 1; i++) {
-      await advanceToNextCheck();
-    }
+    await advanceBy(1);
+    // 1件目を見切って2件目を出させる
+    await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING);
     expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
 
     // 1件目(見切り済み)が返っても、2件目は取得中のままなので次の点検では要求しない
