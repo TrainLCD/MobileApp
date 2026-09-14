@@ -32,6 +32,7 @@ import { SelectBoundModal } from '~/components/SelectBoundModal';
 import {
   IS_LIVE_UPDATE_ELIGIBLE_PLATFORM,
   LOW_POWER_THEME_COLORS,
+  NEEDS_LOCATION_HEARTBEAT,
   STORAGE_KEYS,
 } from '~/constants';
 import {
@@ -46,6 +47,7 @@ import {
   useFirstStop,
   useKeepAwake,
   useLazyGraphQLQuery,
+  useLocationHeartbeat,
   useLoopLine,
   useNextStation,
   usePreventBackInUntouchableMode,
@@ -177,6 +179,11 @@ const FxStartBackgroundLocationUpdates: React.FC = () => {
   useStartBackgroundLocationUpdates();
   return null;
 };
+// 継続測位の配信が途絶えたときの補完測位。変位ゲートだけが配信を決めるiOSでのみ必要
+const FxLocationHeartbeat: React.FC = () => {
+  useLocationHeartbeat();
+  return null;
+};
 const FxUpdateLiveActivitiesInner: React.FC = () => {
   useUpdateLiveActivities();
   return null;
@@ -218,6 +225,7 @@ const MainScreenEffects: React.FC = () => {
       <FxEtaFallback />
       <FxKeepAwake />
       <FxStartBackgroundLocationUpdates />
+      {NEEDS_LOCATION_HEARTBEAT && <FxLocationHeartbeat />}
       <FxTTS />
       <FxUpdateLiveActivities />
       {Platform.OS === 'android' && <FxUpdateWidget />}
