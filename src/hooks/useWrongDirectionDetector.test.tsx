@@ -245,6 +245,45 @@ describe('useWrongDirectionDetector (hysteresis)', () => {
     expect(result.current.isLoopLineWrongDirection).toBe(false);
   });
 
+  it('静止したまま小さなGPSノイズで揺れ続けても逆方向と判定されない', () => {
+    // #6967: 増加だけを累積し、ノイズトレランス以内の減少を相殺しないと、
+    // 実際には動いていなくても累積が単調に伸びて閾値に達する。
+    // 0.00009 度 ≒ 8m の往復なので、位置は 8m の帯から一歩も出ていない。
+    const NOISE_LON_DELTA = 0.00009;
+
+    const store = createStore();
+    seedStore(store);
+
+    const { result } = renderDetector(store);
+
+    // 旧ロジックでは 76 サンプル目(38 往復)で累積が 300m に達していた
+    for (let i = 0; i < 200; i += 1) {
+      act(() =>
+        setLocationLon(
+          store,
+          i % 2 === 0 ? BASE_LON : BASE_LON - NOISE_LON_DELTA
+        )
+      );
+    }
+
+    expect(result.current.isWrongDirection).toBe(false);
+    expect(result.current.isLoopLineWrongDirection).toBe(false);
+  });
+
+  it('ノイズ以下の後退を挟んでも、実際に遠ざかっていれば逆方向と判定される', () => {
+    const store = createStore();
+    seedStore(store);
+
+    const { result } = renderDetector(store);
+
+    act(() => setLocationLon(store, BASE_LON));
+
+    // 100m 級の西進のあいだに、ノイズトレランス以内(約 8m)の東進を挟む
+    advanceWest(store, [-0.001, 0.00009, -0.001, -0.001, -0.001, -0.001]);
+
+    expect(result.current.isWrongDirection).toBe(true);
+  });
+
   it('公開フックは atom を読むだけで、Effectフックを呼ばなくても初期値を返す', () => {
     const store = createStore();
     const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (

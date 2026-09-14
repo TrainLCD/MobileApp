@@ -360,7 +360,7 @@ final class VitsTTSModule: NSObject {
           try outputs.withUnsafeMutableBufferPointer { outValues in
             try check(
               api.pointee.Run!(
-                session, nil, inNames.baseAddress, inValues.baseAddress, inputs.count,
+                session, nil, inNames.baseAddress, inValues.baseAddress, inValues.count,
                 outNames.baseAddress, outputNameArgs.count, outValues.baseAddress),
               "Run")
           }
