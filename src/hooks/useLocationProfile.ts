@@ -10,6 +10,12 @@ import {
 } from '../constants';
 
 type LocationProfile = {
+  /**
+   * 省電力測位プロファイルが選ばれているか。「バッテリー」設定のトグルと端末の
+   * 省電力モードのどちらかで真になる。プロファイルの中身だけでなくこの判定自体を
+   * 参照する側があるため(補完測位は省電力中は動かない)、選択結果と一緒に返す。
+   */
+  powerSavingEnabled: boolean;
   watchOptions: Location.LocationOptions;
   taskOptions: Location.LocationTaskOptions;
 };
@@ -39,6 +45,7 @@ export const useLocationProfile = (): LocationProfile => {
   const powerSavingEnabled = powerSavingSettingEnabled || systemLowPowerMode;
 
   return {
+    powerSavingEnabled,
     watchOptions: powerSavingEnabled
       ? LOCATION_WATCH_OPTIONS_POWER_SAVING
       : LOCATION_WATCH_OPTIONS,

@@ -114,6 +114,25 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
     });
 
+    // 測位オプションはeffect依存に置かれているため、参照が再レンダーごとに変わると
+    // タスクの停止→再開（フォアグラウンドサービスの再起動）が毎回走る。
+    // オプションの組み立てはuseLocationProfileへ抽出したので、その参照安定性が
+    // 崩れたときにここで気づけるようにする。
+    test('should not restart location updates on re-render', async () => {
+      mockAutoModeEnabled = false;
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+
+      const { rerender } = renderHook(() =>
+        useStartBackgroundLocationUpdates()
+      );
+      await new Promise(process.nextTick);
+      rerender({});
+      await new Promise(process.nextTick);
+
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(1);
+      expect(mockStopLocationUpdatesAsync).not.toHaveBeenCalled();
+    });
+
     test('should not start background location updates when autoModeEnabled=true', async () => {
       mockAutoModeEnabled = true;
       mockUseLocationPermissionsGranted.mockReturnValue(true);

@@ -82,14 +82,14 @@ describe('測位オプション', () => {
     }
   );
 
-  it('補完測位の間隔と途絶判定はAndroidが確保している更新間隔に合わせる', () => {
+  it('補完測位の途絶判定はAndroidが確保している更新間隔に合わせる', () => {
     const constants = loadConstants('ios');
 
-    expect(constants.LOCATION_HEARTBEAT_INTERVAL).toBe(
-      constants.LOCATION_TIME_INTERVAL
-    );
     expect(constants.LOCATION_HEARTBEAT_STALE_THRESHOLD).toBe(
       constants.LOCATION_TIME_INTERVAL
+    );
+    expect(constants.LOCATION_HEARTBEAT_MAX_PENDING).toBe(
+      constants.LOCATION_HEARTBEAT_STALE_THRESHOLD * 3
     );
   });
 
