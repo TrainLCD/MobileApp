@@ -67,6 +67,32 @@ describe('測位オプション', () => {
     }
   );
 
+  // 補完測位(useLocationHeartbeat)は変位ゲートが配信を止めうるOSでだけ必要になる。
+  // ゲートを持たないAndroidで有効になると、timeIntervalで既に届いている測位に
+  // 上乗せで取得が走り電池を無駄にする。
+  it.each([
+    ['iOS', 'ios', true],
+    ['Android', 'android', false],
+  ] as const)(
+    '%s の補完測位の要否は変位ゲートの有無から決まる',
+    (_label, os, expected) => {
+      const constants = loadConstants(os);
+
+      expect(constants.NEEDS_LOCATION_HEARTBEAT).toBe(expected);
+    }
+  );
+
+  it('補完測位の間隔と途絶判定はAndroidが確保している更新間隔に合わせる', () => {
+    const constants = loadConstants('ios');
+
+    expect(constants.LOCATION_HEARTBEAT_INTERVAL).toBe(
+      constants.LOCATION_TIME_INTERVAL
+    );
+    expect(constants.LOCATION_HEARTBEAT_STALE_THRESHOLD).toBe(
+      constants.LOCATION_TIME_INTERVAL
+    );
+  });
+
   it('バックグラウンドのバッチ配信は変位ではなく時間だけで区切る', () => {
     const constants = loadConstants('android');
 

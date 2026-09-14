@@ -6,6 +6,7 @@ import {
   setRawLocation,
 } from '~/store/atoms/location';
 import {
+  getLastTrackedLocationAtMs,
   handleTrackingLocation,
   resetTrackingLocationDedup,
 } from './handleTrackingLocation';
@@ -46,6 +47,7 @@ const makeLocation = (
 describe('handleTrackingLocation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
     mockIsDevApp = false;
     resetTrackingLocationDedup();
   });
@@ -136,6 +138,47 @@ describe('handleTrackingLocation', () => {
       handleTrackingLocation(makeLocation(30, Date.now()));
 
       expect(mockSetLocation).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // 補完測位(useLocationHeartbeat)は「最後に配信を処理した時刻」だけを見て、
+  // 継続測位が途絶えたかを判断する。
+  describe('配信時刻の記録', () => {
+    it('処理していない状態では0を返す', () => {
+      expect(getLastTrackedLocationAtMs()).toBe(0);
+    });
+
+    it('測位を処理した時刻を壁時計で記録する', () => {
+      const now = Date.now();
+      jest.spyOn(Date, 'now').mockReturnValue(now);
+
+      // 測位側のtimestampが古くても、届いたのは「今」なので途絶ではない
+      handleTrackingLocation(makeLocation(30, now - 60_000));
+
+      expect(getLastTrackedLocationAtMs()).toBe(now);
+    });
+
+    it('精度フィルタで棄却した測位も配信としては記録する', () => {
+      const now = Date.now();
+      jest.spyOn(Date, 'now').mockReturnValue(now);
+
+      // 棄却されたのは座標であって配信は届いている。ここで記録しないと、
+      // 精度の悪い区間で補完測位が無条件に走り続ける。
+      handleTrackingLocation(makeLocation(MAX_PERMIT_ACCURACY + 1, now));
+
+      expect(mockSetLocation).not.toHaveBeenCalled();
+      expect(getLastTrackedLocationAtMs()).toBe(now);
+    });
+
+    it('重複として破棄した測位では記録を更新しない', () => {
+      const first = Date.now();
+      jest.spyOn(Date, 'now').mockReturnValue(first);
+      handleTrackingLocation(makeLocation(30, 1000));
+
+      jest.spyOn(Date, 'now').mockReturnValue(first + 5_000);
+      handleTrackingLocation(makeLocation(30, 1000));
+
+      expect(getLastTrackedLocationAtMs()).toBe(first);
     });
   });
 });

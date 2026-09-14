@@ -17,10 +17,21 @@ const CLOCK_ROLLBACK_TOLERANCE_MS = 5_000;
 // これ以下のタイムスタンプの測位を重複・遅延再配信として破棄する基準に使う。
 let lastProcessedTimestampMs = 0;
 
+// 最後に本関数が測位を処理した時刻(壁時計)。継続測位の配信が途絶えたかの判定に使う
+// (useLocationHeartbeat)。測位側のtimestampではなく壁時計を持つのは、判定したいのが
+// 「測位がいつのものか」ではなく「どれだけ配信が来ていないか」だからで、OSが古い
+// timestampの測位を配信し続けるあいだも無配信とは見なさないため。
+// 精度フィルタで棄却される測位も配信は届いているので、棄却の前にここで記録する。
+let lastProcessedAtMs = 0;
+
 // テスト用: モジュール内部の重複排除状態をリセットする
 export const resetTrackingLocationDedup = () => {
   lastProcessedTimestampMs = 0;
+  lastProcessedAtMs = 0;
 };
+
+// 継続測位を最後に処理した時刻(壁時計/ms)。一度も処理していなければ0。
+export const getLastTrackedLocationAtMs = (): number => lastProcessedAtMs;
 
 // watchPositionAsync / startLocationUpdatesAsync 双方の継続測位の共通入口。
 // 経路ごとにMAX_PERMIT_ACCURACYの適用漏れが起きないよう、精度フィルタをここへ集約する。
@@ -39,6 +50,7 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     return;
   }
   lastProcessedTimestampMs = location.timestamp;
+  lastProcessedAtMs = Date.now();
 
   // DevOverlayの診断表示用に、フィルタで棄却される測位も生の値として記録する。
   // DevOverlayはisDevApp時しか描画されないため、本番ビルドでは記録しない。
