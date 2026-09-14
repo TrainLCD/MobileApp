@@ -26,10 +26,14 @@ useTTS
 
 ## iOS では端末内蔵 TTS を使わない
 
-**iOS では `useNativeSpeechEngine`（`expo-speech` / AVSpeechSynthesizer）を一切呼ばない。**
+**iOS では端末内蔵 TTS（`expo-speech` / AVSpeechSynthesizer）で読み上げない。**
 既定で選ばれるコンパクト音声は音質が悪く、Enhanced / Premium 音声はユーザーが設定アプリから
 手動で入れない限り使えない（アプリからダウンロードを起動する API が無い）。リモート TTS も
 端末内合成も使えない回に機械的な声を突然流すより、**その言語を読み上げない**方を選んでいる。
+
+正確には、`useTTS` は iOS でも `useNativeSpeechEngine()` をフックとして呼び（エンジンはマウント時に
+音声一覧を取得する）、`stopAllEngines` で `nativeEngine.stop()` も呼ぶ。使わないのは
+**読み上げの委譲先としての `nativeEngine.speak`** で、iOS ではこれを選ばない。
 
 実装は `useTTS` の `SILENT_SPEECH_ENGINE`。端末内合成が使えない回の引き受け手として、iOS では
 このエンジン（即 `onSettled` を呼ぶだけ）を渡す。Android は端末内蔵 TTS が常用経路なので
@@ -51,8 +55,9 @@ VOICEVOX が使えない回でも、英語の資産があれば**英語だけは
 で判定して日本語と分けて渡す）。Android で英語を端末内合成できないときは、発話の合間に合成待ちの
 ラグが入るのを避けるため日英をまとめて 1 回の `Speech.speak` で OS のキューへ積む。
 
-`useVoicevoxSpeechEngine` は次のいずれかを満たさないと `onUnavailable` を返し、その回の
-日本語は端末内蔵 TTS が読む（英語は上記のとおり、端末内合成できるならそちらへ回る）。
+`useVoicevoxSpeechEngine` は次のいずれかを満たさないと `onUnavailable` を返す。その回の日本語は
+Android なら端末内蔵 TTS が読み、**iOS は読み上げない**（英語は上記のとおり、端末内合成できるなら
+そちらへ回る）。
 
 - ネイティブモジュール `VoicevoxTTSModule` がある（iOS 本体アプリのみ。App Clip / Android には無い）
 - Remote Config `voicevox_tts_enabled_ios` が `true`
@@ -141,9 +146,11 @@ VOICEVOX CORE の C API はスレッドセーフを保証していないため�
 
 App Clip（`ProdAppClip` / `CanaryAppClip`）は deployment target が 16.4 のため非圧縮
 バイナリの上限が 15MB で、上記 2 フレームワーク（約 18MB）を埋め込めない。そのため
-モジュールのソースもフレームワークも本体ターゲットにだけ追加し、App Clip は従来どおり
-「リモート TTS → 端末内蔵 TTS」の経路のままにする。JS 側は `NativeModules.VoicevoxTTSModule`
-の有無で判定するので、Clip 向けの分岐は要らない。
+モジュールのソースもフレームワークも本体ターゲットにだけ追加する。JS 側は
+`NativeModules.VoicevoxTTSModule` の有無で判定するので、Clip 向けの分岐は要らない。
+
+その結果 **App Clip の読み上げ経路はリモート TTS だけ**になる。iOS なので端末内蔵 TTS へは
+倒れず、リモートが使えない回は日英とも読み上げない。
 
 ## 資産の取得
 

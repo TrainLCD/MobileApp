@@ -34,9 +34,9 @@ useTTS ────────────────── 放送タイミン
 `isRemoteTTSEnabled()` が決めるのは「リモート合成を試すか、最初から端末内で読むか」だけで、
 端末内で読む側は言語ごとに分かれる。日本語はまず `useVoicevoxSpeechEngine` を試し、VOICEVOX が
 使える条件（iOS 本体アプリのネイティブモジュール・`voicevox_tts_enabled_ios`・検証済みの資産・
-音声モデル内のスタイル ID）がそろわなければ `useNativeSpeechEngine` へ倒れる。英語は
+音声モデル内のスタイル ID）がそろわなければ `useTTS` が渡した委譲先へ回る。英語は
 `useVitsSpeechEngine` が同様の条件（`vits_tts_enabled_ios`・検証済みの資産）で端末内合成を試し、
-使えなければ `useTTS` が渡した委譲先へ回る。
+使えなければ同じく委譲先へ回る。
 
 **iOS の委譲先は「読み上げないエンジン」で、端末内蔵 TTS は使わない**（コンパクト音声の音質が
 悪いため、流すより黙る方を選んでいる）。Android の委譲先は従来どおり `useNativeSpeechEngine`。
@@ -89,6 +89,9 @@ Android は音声の明示指定が必須である。`expo-speech` の Android �
 ローカル音声を明示指定する（`allowDefaultQuality`）。iOS はユーザーが OS 設定で
 選んだ既定音声を尊重し、拡張（Enhanced）/ プレミアム（Premium）音声がある場合だけ
 明示指定する。
+
+ただし現在 iOS は端末内蔵 TTS で読み上げないため（[オンデバイス TTS 設計書](./on-device-tts-ios.md)）、
+iOS 向けの選択はアナウンスには効かない。将来 iOS で内蔵 TTS を使う構成へ戻す場合に備えて残している。
 
 `expo-speech` が返す `quality` は `Enhanced` / `Default` の 2 値に丸められており、
 Google TTS の日本語ローカル音声のように `QUALITY_NORMAL` へ横並びになる端末では
@@ -186,8 +189,9 @@ Worker 側の設定（`TTS_SPEED` / `TTS_PITCH`）で決まる。
 }
 ```
 
-- 要求した言語の音声が欠けている応答は失敗として扱い、端末内蔵 TTS へフォールバック
-  する。要求していない言語のフィールドは省略してよい。
+- 要求した言語の音声が欠けている応答は失敗として扱い、その回は端末内で読み上げる経路へ倒す
+  （Android は端末内蔵 TTS、iOS は端末内合成が使えなければ読み上げない）。要求していない
+  言語のフィールドは省略してよい。
 - 音声は既定で MP3 (`audio/mpeg`)。Worker の `TTS_RESPONSE_FORMAT` を変えると
   WAV (`audio/wav`) でも返せるが、アプリが再生できない形式を選ばないこと。
 - MIME タイプは省略可。省略時はアプリ側が先頭バイトから MP3 / WAV を判定し、どちらとも
