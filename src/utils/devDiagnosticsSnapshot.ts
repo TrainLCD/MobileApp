@@ -41,9 +41,13 @@ export type DevDiagnosticsInput = {
    * 地下鉄分岐に入っているかを説明できるのはこちらなので、必ず一緒に持ち出す。
    */
   filterAccuracyHistory: number[];
-  /** 直近の測位が地下鉄分岐(平滑化スキップ)を通ったか */
+  /**
+   * 直近の測位が地下鉄分岐(平滑化スキップ)を通ったか。次の lineType と
+   * 対で受け取ること。どちらも smoothingDecisionAtom が同じ判定時に書いた値で、
+   * 片方を stationAtom から読み直すと別の瞬間の値が混ざる。
+   */
   skipSmoothing: boolean;
-  /** 地下鉄分岐の条件のうち、路線側の入力 */
+  /** 上の判定に使った路線種別(判定時の値) */
   lineType: string | null;
   /** 表示に使っている速度(m/s)と、それが実測かどうか */
   effectiveSpeedMps: number;
