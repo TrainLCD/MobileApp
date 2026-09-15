@@ -16,9 +16,14 @@ jest.mock('~/lib/remoteConfig', () => ({
 }));
 
 const METERS_PER_DEG_LAT = 111_320;
-const STATION_INTERVAL_M = 1_100;
+// 駅間を短く取り、ETAの進行量上限だけを分離して測れるようにする。setLocationには
+// 速度フィルタ(ワープ対策)も入っており、地下鉄分岐でも精度ぶんを差し引いたうえで働く。
+// 駅間を長く取ると、ここで使う「数駅ぶん飛ぶ測位」が1〜10秒間隔では物理的にありえない
+// 跳躍になり、ETAではなく速度フィルタが棄却するため、ETA側の挙動を測れなくなる。
+// 最大の跳躍(4駅ぶん)でも精度2件ぶん(300m×2)の控除内に収まる値にしてある。
+const STATION_INTERVAL_M = 150;
 
-// 1.1km間隔で南北に並ぶ10駅の路線
+// 150m間隔で南北に並ぶ10駅の路線
 const stations: Station[] = Array.from(
   { length: 10 },
   (_, i) =>
