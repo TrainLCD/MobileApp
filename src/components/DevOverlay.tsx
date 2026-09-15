@@ -7,6 +7,8 @@ import {
   Animated,
   Easing,
   PanResponder,
+  Platform,
+  Pressable,
   type StyleProp,
   StyleSheet,
   type TextStyle,
@@ -29,11 +31,14 @@ import {
   rawLocationAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import { copyTextToClipboard } from '~/utils/clipboard';
+import { formatDevDiagnosticsSnapshot } from '~/utils/devDiagnosticsSnapshot';
 import {
   getDisplacementSpeed,
   hasMeasuredSpeed,
 } from '~/utils/displacementSpeed';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
+import { isDevApp } from '~/utils/isDevApp';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
 
@@ -44,6 +49,9 @@ const EXPAND_DURATION = 280;
 // 「GPSが止まっているのに動いて見える」状態を視覚的に区別できるようにする。
 const ACCURACY_CHART_SAMPLE_INTERVAL_MS = 1000;
 const ACCURACY_CHART_LIMIT = 12;
+
+// 「コピーした」表示を出しておく時間(ms)
+const COPIED_FEEDBACK_DURATION_MS = 1500;
 
 const PANEL_BORDER = 'rgba(255,255,255,0.18)';
 const PANEL_BG = 'rgba(7, 11, 24, 0.78)';
@@ -162,6 +170,19 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderWidth: 1,
     minWidth: 72,
+  },
+  copyButton: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    minWidth: 72,
+    borderColor: 'rgba(148, 163, 184, 0.45)',
+    backgroundColor: 'rgba(30, 41, 59, 0.55)',
+  },
+  copyButtonPressed: {
+    borderColor: 'rgba(56, 189, 248, 0.6)',
+    backgroundColor: 'rgba(14, 165, 233, 0.28)',
   },
   statusLabel: {
     color: 'rgba(226, 232, 240, 0.78)',
@@ -502,6 +523,55 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
   const telemetryValue = isTelemetryEnabled ? 'ON' : 'OFF';
   const backgroundValue = isBackgroundLocationTracking ? 'ON' : 'OFF';
+
+  // 診断情報をクリップボードへ載せたことの一時的なフィードバック。
+  // タイマーはアンマウントと連打で必ず張り直す（残ると解除済みの状態を書きに行く）。
+  const [hasCopied, setHasCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (copiedTimerRef.current !== null) {
+        clearTimeout(copiedTimerRef.current);
+      }
+    },
+    []
+  );
+
+  const handleCopyDiagnostics = () => {
+    copyTextToClipboard(
+      formatDevDiagnosticsSnapshot({
+        // レンダー中ではなくイベントハンドラ内なので Date.now() を直接読んでよい
+        nowMs: Date.now(),
+        appVersion: Application.nativeApplicationVersion ?? 'unknown',
+        buildNumber: Application.nativeBuildVersion ?? 'unknown',
+        channel: isDevApp ? 'canary' : 'production',
+        platform: Platform.OS,
+        osVersion: Platform.Version,
+        autoModeEnabled,
+        telemetryEnabled: isTelemetryEnabled,
+        backgroundLocationTracking: isBackgroundLocationTracking,
+        rawLocation,
+        filteredLocation: simulatedLocation,
+        accuracyHistory: chartHistory,
+        effectiveSpeedMps: effectiveSpeed,
+        hasMeasuredSpeed: hasEverMeasuredSpeed,
+        maxPermitAccuracy,
+        etaAssistEnabled,
+        etaPhase,
+        etaAnchor,
+        nextStation,
+        distanceToNextStation,
+      })
+    );
+    setHasCopied(true);
+    if (copiedTimerRef.current !== null) {
+      clearTimeout(copiedTimerRef.current);
+    }
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setHasCopied(false);
+    }, COPIED_FEEDBACK_DURATION_MS);
+  };
   // ETA推定フェーズ(RUNNING/APPROACHING/DWELLING)を表示。フェーズ未推定時は IDLE。
   const etaFallbackValue = etaPhase?.kind ?? 'IDLE';
   // 推定対象の駅ID(走行/接近中は目標駅、停車中は当該駅)。
@@ -850,6 +920,25 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
                 value={backgroundValue}
                 style={statusPillStyle}
               />
+              {/* パネルのPanResponderはcaptureを使っていないため、子のPressableが
+                  先にタッチを取る。展開/折りたたみのトグルとは競合しない。
+                  折りたたみ中は上に載るcollapsedOverlayがタッチを受けるので押せない。 */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="診断情報をコピー"
+                testID="dev-overlay-copy-button"
+                onPress={handleCopyDiagnostics}
+                style={({ pressed }) => [
+                  styles.copyButton,
+                  statusPillStyle,
+                  pressed && styles.copyButtonPressed,
+                ]}
+              >
+                <Typography style={styles.statusLabel}>DIAGNOSTICS</Typography>
+                <Typography style={styles.statusValue}>
+                  {hasCopied ? 'COPIED' : 'COPY'}
+                </Typography>
+              </Pressable>
             </View>
           </View>
 
