@@ -9,6 +9,7 @@ import {
   resetLocationState,
   setLocation,
   setRawLocation,
+  skipSmoothingAtom,
 } from './location';
 import stationState from './station';
 
@@ -115,6 +116,48 @@ describe('setLocation', () => {
       // EMAが適用されるため、生の座標(35.001)とは異なる値になるはず
       expect(result?.coords.latitude).not.toBe(35.001);
       expect(result?.coords.longitude).not.toBe(139.001);
+    });
+  });
+
+  describe('地下鉄分岐を通ったかの記録', () => {
+    // 診断の持ち出し(DevOverlay)がこの値を読む。同じ条件を外で組み直すと、
+    // 判定と表示が別々に育って食い違うため、setLocationが下した結果そのものを固定する。
+    it('地下鉄かつ精度が不安定なら真になる', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(skipSmoothingAtom)).toBe(true);
+    });
+
+    it('地上路線なら偽になる', () => {
+      setStationLineType(LineType.Normal);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(skipSmoothingAtom)).toBe(false);
+    });
+
+    it('地下鉄でも精度履歴が安定していれば偽になる', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [30, 35, 28, 32]);
+
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+
+      expect(store.get(skipSmoothingAtom)).toBe(false);
+    });
+
+    it('リセットで偽へ戻る', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+      expect(store.get(skipSmoothingAtom)).toBe(true);
+
+      resetLocationState();
+
+      expect(store.get(skipSmoothingAtom)).toBe(false);
     });
   });
 

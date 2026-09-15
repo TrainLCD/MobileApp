@@ -8,11 +8,14 @@ import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
+  accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
   locationAtom,
   rawLocationAtom,
+  skipSmoothingAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import { stationAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import DevOverlay, {
@@ -106,6 +109,9 @@ describe('DevOverlay', () => {
     autoModeEnabled = false,
     etaPhase = null,
     etaAnchor = null,
+    filterAccuracyHistory = [15],
+    skipSmoothing = false,
+    station = null,
   }: {
     location?: unknown;
     rawLocation?: unknown;
@@ -113,6 +119,9 @@ describe('DevOverlay', () => {
     autoModeEnabled?: boolean;
     etaPhase?: unknown;
     etaAnchor?: unknown;
+    filterAccuracyHistory?: number[];
+    skipSmoothing?: boolean;
+    station?: unknown;
   } = {}) => {
     mockGetEtaPhaseNow.mockReturnValue(etaPhase as never);
     mockUseAtomValue.mockImplementation((atom) => {
@@ -130,6 +139,15 @@ describe('DevOverlay', () => {
       }
       if (atom === etaAnchorAtom) {
         return etaAnchor as never;
+      }
+      if (atom === accuracyHistoryAtom) {
+        return filterAccuracyHistory as never;
+      }
+      if (atom === skipSmoothingAtom) {
+        return skipSmoothing as never;
+      }
+      if (atom === stationAtom) {
+        return station as never;
       }
       if (atom === isLEDThemeAtom) {
         return false as never;

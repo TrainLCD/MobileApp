@@ -26,11 +26,14 @@ import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
+  accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
   locationAtom,
   rawLocationAtom,
+  skipSmoothingAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import { stationAtom } from '~/store/atoms/station';
 import { copyTextToClipboard } from '~/utils/clipboard';
 import { formatDevDiagnosticsSnapshot } from '~/utils/devDiagnosticsSnapshot';
 import {
@@ -463,6 +466,11 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const isBackgroundLocationTracking = useAtomValue(
     backgroundLocationTrackingAtom
   );
+  // 平滑化の要否を決めている履歴と、その判定結果。チャート用のchartHistoryとは
+  // 別物なので、診断の持ち出しでは両方を出す。
+  const filterAccuracyHistory = useAtomValue(accuracyHistoryAtom);
+  const skipSmoothing = useAtomValue(skipSmoothingAtom);
+  const currentLineType = useAtomValue(stationAtom)?.line?.lineType ?? null;
   // ETA補助の診断表示。有効フラグ(リモート設定/手動トグル)は非リアクティブなgetter、
   // アンカーはatomから購読する。推定フェーズは常駐タイマーで公開されなくなったため、
   // DevOverlay自身の1秒ティック(nowTick)を評価時刻としてオンデマンド計算する。
@@ -555,6 +563,9 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         rawLocation,
         filteredLocation: simulatedLocation,
         accuracyHistory: chartHistory,
+        filterAccuracyHistory,
+        skipSmoothing,
+        lineType: currentLineType,
         effectiveSpeedMps: effectiveSpeed,
         hasMeasuredSpeed: hasEverMeasuredSpeed,
         maxPermitAccuracy,

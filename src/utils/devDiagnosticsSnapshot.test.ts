@@ -37,6 +37,9 @@ const baseInput: DevDiagnosticsInput = {
   rawLocation: makeLocation(35.732538, 139.670653, 312, 1_700_000_000_000),
   filteredLocation: makeLocation(35.7325, 139.6706, 312, 1_700_000_000_000),
   accuracyHistory: [20, 45, 310],
+  filterAccuracyHistory: [20, 45, 310, 620],
+  skipSmoothing: true,
+  lineType: 'Subway',
   effectiveSpeedMps: 12.5,
   hasMeasuredSpeed: true,
   maxPermitAccuracy: 1500,
@@ -87,6 +90,22 @@ describe('buildDevDiagnosticsSnapshot', () => {
       longitude: 139.6706,
     });
     expect(snapshot.location.accuracyHistory).toEqual([20, 45, 310]);
+  });
+
+  it('平滑化の判定材料と結果を持つ', () => {
+    // locationAtomの値だけでは、平滑化を掛けたのか生の座標を入れたのかが区別できない。
+    // チャート用の精度履歴とは別に、判定に使われた履歴と結果を持ち出す
+    const snapshot = buildDevDiagnosticsSnapshot(baseInput);
+
+    expect(snapshot.filter).toEqual({
+      skipSmoothing: true,
+      lineType: 'Subway',
+      accuracyHistory: [20, 45, 310, 620],
+    });
+    // チャート用とは別物であることを固定する(取り違えると地下鉄分岐の説明が付かない)
+    expect(snapshot.filter.accuracyHistory).not.toEqual(
+      snapshot.location.accuracyHistory
+    );
   });
 
   it('測位が無い場合もnullで表現して壊れない', () => {

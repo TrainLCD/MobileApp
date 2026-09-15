@@ -106,6 +106,12 @@ export const backgroundLocationTrackingAtom = atom(false);
 // 下流の処理が「現在位置を信用できない＝走行中」と扱えるようにする。
 export const locationAccuracyOutlierAtom = atom(false);
 
+// 直近のsetLocationが地下鉄分岐(平滑化スキップ)を通ったか。診断表示専用で、
+// パイプラインの判定には使わない。地下の挙動を調べるとき、locationAtomの値だけでは
+// どちらの経路を通ったか分からず、条件(lineTypeと精度履歴)を外から組み直すと
+// 判定と食い違うため、結果そのものを残す。
+export const skipSmoothingAtom = atom(false);
+
 // EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
@@ -128,6 +134,7 @@ export const resetLocationState = () => {
   store.set(lastFilteredLocationAtom, null);
   store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
+  store.set(skipSmoothingAtom, false);
   consecutiveSpeedRejections = 0;
   resetEtaBoundHold();
 };
@@ -261,6 +268,10 @@ export const setLocation = (location: Location.LocationObject) => {
   const currentLineType = store.get(stationState).station?.line?.lineType;
   const skipSmoothing =
     currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
+  // 判定の結果そのものを残す。DevOverlayの診断表示から「いま地下鉄分岐に入って
+  // いるか」を読めるようにするためで、同じ条件を呼び出し側で組み直すと
+  // 判定と表示が別々に育って食い違う。
+  store.set(skipSmoothingAtom, skipSmoothing);
 
   // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
   if (isImplausibleByEta(location)) {
