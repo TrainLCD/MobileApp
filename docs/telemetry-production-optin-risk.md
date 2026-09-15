@@ -90,11 +90,14 @@ isTelemetryEnabledByBuild = isDevApp && ENABLE_EXPERIMENTAL_TELEMETRY === 'true'
 
 ### 1. コンソールテレメトリは本番に出さない
 
-`useConsoleTelemetry` は `console.*` を丸ごと横取りして送るため、サードパーティ製
-ライブラリのエラー、ディープリンク URL、ユーザー入力を含む例外メッセージが、
-何が入るか分からないまま送信される。`sanitizeTelemetryMessage` の防御は正規表現
-4 本 (`src/utils/sanitizeTelemetryMessage.ts`) で、キー名が想定外の秘密情報や生の
-JWT は素通りする。
+`useConsoleTelemetry` は `console.*` を横取りして送る。`babel.config.js` は
+production 環境のビルドで `transform-remove-console` を有効にし、`warn` / `error`
+以外の `console.*` を除去するので、本番ビルドでこの経路に乗るのは警告とエラーに
+なる。それでもサードパーティ製ライブラリのエラーや、ディープリンク URL・ユーザー
+入力を含む例外メッセージは `console.error` で出るため、何が入るかは制御できない。
+`sanitizeTelemetryMessage` の防御は正規表現 4 本
+(`src/utils/sanitizeTelemetryMessage.ts`) で、キー名が想定外の秘密情報や生の JWT は
+素通りする。
 
 加えて `/api/log` への送信ペイロードには `channel` も `sessionId` も入っていない
 ため、本番ログと canary ログが基盤側で区別できない。
@@ -109,10 +112,12 @@ JWT は素通りする。
 
 ### 2. 静的 Bearer トークンをやめる
 
-`EXPERIMENTAL_TELEMETRY_TOKEN` は react-native-dotenv でバンドルへインライン展開
-されるので、IPA / APK から抽出できる。canary は配布先が限られるため許容できて
-いたが、本番は公開配布であり、偽の位置イベントを無制限に流し込める。データ汚染と
-コスト攻撃が成立する。
+`EXPERIMENTAL_TELEMETRY_TOKEN` は Babel プラグイン (`babel.config.js` の
+`module:react-native-dotenv`) がビルド時に値へ置き換えるので、トークンはバンドルの
+中身そのものになる。canary は配布先が限られるため許容できていたが、本番は公開配布
+なので、アプリを入手した第三者は正規クライアントと同じ資格情報を持つことになる。
+書き込み権限を端末ごとに絞れないため、汚染された位置ログを後から見分ける手段も
+無い。
 
 `src/lib/session.ts` に installId を短期セッショントークンへ交換する仕組み
 (`/auth/token`) が既にあるので、これに乗せ替えるのが筋。
@@ -128,10 +133,10 @@ JWT は素通りする。
 
 ### ストア申告
 
-App Store のプライバシーラベルに「Precise Location → Analytics」、Google Play の
-データセーフティに「位置情報 (任意) ・診断情報」の追加申告が要る。申告漏れは
-審査差し戻しや公開停止の対象になる。ATT はアプリ横断の追跡もデータブローカーへの
-提供も無いので不要のはずだが、「Tracking に使わない」という前提を崩さないこと。
+App Store のプライバシーラベルと Google Play のデータセーフティは、アプリが実際に
+収集する内容と一致している必要がある。位置情報を解析目的で収集する状態になるので、
+申告内容を見直す。ATT が必要かどうかは「アプリ横断の追跡に使うか」「データブローカー
+へ提供するか」で決まるため、そこを広げない設計を前提にする。
 
 ### 開示・削除請求への対応方針
 
@@ -151,8 +156,8 @@ TrainLCD/THQ#37 に起票済み。
 
 ### コストと電池
 
-1 秒 1 リクエストで、バッチングもリトライ制御も無い。30 分乗車で 1 ユーザーあたり
-1,800 リクエスト。送信は画面を見ている間に限らない。`index.js` の `TaskManager`
+送信はスロットルで最大 1 秒 1 リクエストに制限されるだけで、バッチングもリトライ
+制御も無い。毎秒の測位が続けば 30 分乗車で 1 ユーザーあたり 1,800 リクエストになる。送信は画面を見ている間に限らない。`index.js` の `TaskManager`
 タスクが `handleTrackingLocation` 経由で `locationAtom` を更新し、
 `FxTelemetrySender` がそれを購読しているため、バックグラウンド測位が動いている
 あいだは測位のたびに送信が続く。canary の母数では問題にならなかった数字が、本番の DAU では桁が
