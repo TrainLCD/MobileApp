@@ -350,6 +350,31 @@ describe('DevOverlay', () => {
       }
     });
 
+    it('成功直後にコピーが失敗したらCOPIED表示とタイマーを解除する', async () => {
+      // 成功のタイマーが生きている間に失敗すると、古い表示が残って
+      // 「最後のコピーは失敗しているのにCOPIEDに見える」状態になる
+      jest.useFakeTimers();
+      try {
+        const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+        expect(getByText('COPIED')).toBeTruthy();
+
+        mockCopyTextToClipboard.mockResolvedValue(false);
+        act(() => {
+          jest.advanceTimersByTime(COPIED_FEEDBACK_DURATION_MS / 2);
+        });
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+
+        expect(queryByText('COPIED')).toBeNull();
+        expect(getByText('COPY')).toBeTruthy();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
     it('クリップボードへ載せられなかった場合はCOPIEDを出さない', async () => {
       // 失敗しているのに成功表示を出すと、貼り付けてみるまで気付けない
       mockCopyTextToClipboard.mockResolvedValue(false);

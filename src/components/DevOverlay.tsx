@@ -565,13 +565,17 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         distanceToNextStation,
       })
     );
+    if (copiedTimerRef.current !== null) {
+      clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = null;
+    }
     if (!copied) {
+      // 直前の成功で立てた表示とタイマーをここで落とす。残すと、最後のコピーが
+      // 失敗しているのに前回のタイマーが切れるまでCOPIEDのままになる。
+      setHasCopied(false);
       return;
     }
     setHasCopied(true);
-    if (copiedTimerRef.current !== null) {
-      clearTimeout(copiedTimerRef.current);
-    }
     copiedTimerRef.current = setTimeout(() => {
       copiedTimerRef.current = null;
       setHasCopied(false);
