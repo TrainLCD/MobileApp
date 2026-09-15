@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
 import { Dimensions, StyleSheet } from 'react-native';
@@ -55,8 +55,14 @@ jest.mock('~/utils/etaPhaseNow', () => ({
   getEtaPhaseNow: jest.fn(() => null),
 }));
 
+// クリップボードは react-native core の非推奨 Clipboard を触るため、テストでは差し替える
+jest.mock('~/utils/clipboard', () => ({
+  copyTextToClipboard: jest.fn(),
+}));
+
 // Import mocked hooks for type safety
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
+import { copyTextToClipboard } from '~/utils/clipboard';
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
@@ -71,6 +77,9 @@ const mockUseNextStation = useNextStation as jest.MockedFunction<
 >;
 const mockGetEtaPhaseNow = getEtaPhaseNow as jest.MockedFunction<
   typeof getEtaPhaseNow
+>;
+const mockCopyTextToClipboard = copyTextToClipboard as jest.MockedFunction<
+  typeof copyTextToClipboard
 >;
 
 describe('DevOverlay', () => {
@@ -288,6 +297,47 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
         '#5 · 12s ago'
       );
+    });
+  });
+
+  describe('診断情報のコピー', () => {
+    it('ボタンを押すと診断情報をクリップボードへ載せる', () => {
+      const { getByTestId } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+
+      expect(mockCopyTextToClipboard).toHaveBeenCalledTimes(1);
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      // 座標だけでなく実効設定も載っていること。設定が無いと同じ測位でも
+      // 挙動を説明できないため、これが欠けると持ち出す意味が薄れる
+      expect(copied.config).toMatchObject({
+        maxPermitAccuracy: MAX_PERMIT_ACCURACY,
+        telemetryEnabled: true,
+        autoModeEnabled: false,
+      });
+      expect(copied.location.raw).toMatchObject({ accuracy: 15 });
+      expect(copied.build.appVersion).toBe(
+        `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
+      );
+    });
+
+    it('押した直後はCOPIED表示になり、一定時間で戻る', () => {
+      jest.useFakeTimers();
+      try {
+        const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+        expect(getByText('COPY')).toBeTruthy();
+
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        expect(getByText('COPIED')).toBeTruthy();
+
+        act(() => {
+          jest.advanceTimersByTime(1500);
+        });
+        expect(queryByText('COPIED')).toBeNull();
+        expect(getByText('COPY')).toBeTruthy();
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
