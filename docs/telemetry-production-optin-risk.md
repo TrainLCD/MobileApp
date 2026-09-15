@@ -37,12 +37,12 @@ isTelemetryEnabledByBuild = isDevApp && ENABLE_EXPERIMENTAL_TELEMETRY === 'true'
 送信先はいずれも `EXPERIMENTAL_TELEMETRY_ENDPOINT_URL`。GraphQL ミューテーション
 (`/graphql`) と、コンソールテレメトリだけが使う REST (`/api/log`) の 2 系統がある。
 
-ただし後者は**受け口が無い**。THQ (`TrainLCD/THQ`) のルータに定義されているルートは
-`/`、`/ws`、`/healthz`、`/graphql` の 4 つだけで、`/api/log` は存在しない
-(`src/server.rs`)。クライアント側はカスケードエラーを防ぐため送信失敗を握り潰すので、
-404 が返っていても誰も気づかない。コンソールログは送っているつもりで捨てられている。
-上の表はコードが送ろうとしている内容であって、実際に基盤へ届いている内容ではない。
-基盤側の方針決めは TrainLCD/THQ#38。
+ただし後者には対応するルートが無い。THQ (`TrainLCD/THQ`) のルータに定義されて
+いるのは `/`、`/ws`、`/healthz`、`/graphql` の 4 つで、`/api/log` は含まれない
+(`src/server.rs`)。GraphQL 側には同じ役割の `sendLogEvent` があり、そちらは
+`sessionId` / `appVersion` / `platform` / `channel` も受け取れる。クライアント側は
+カスケードエラーを防ぐため送信結果を見ないので、この不一致はアプリ側からは
+分からない。どちらへ寄せるかの方針決めは TrainLCD/THQ#38。
 
 ### 同意文言と取得範囲のズレ
 
@@ -102,10 +102,9 @@ production 環境のビルドで `transform-remove-console` を有効にし、`w
 加えて `/api/log` への送信ペイロードには `channel` も `sessionId` も入っていない
 ため、本番ログと canary ログが基盤側で区別できない。
 
-なお前述のとおり、その `/api/log` は THQ に存在しない。**今は漏れていないが、
-リスクが消えているわけではない**: 受け口を作った瞬間に上記の内容が無制御で流れ出す。
-本番へ出す前に、コンソール経路を `sendLogEvent` へ寄せるか、経路ごと落とすかを
-決めておく。
+前述のとおり、この経路の送信先 `/api/log` は THQ のルータに無い。受け口を用意すれば
+上記の内容がそのまま流れ込むので、本番へ出す前にコンソール経路を `sendLogEvent` へ
+寄せるか、経路ごと落とすかを決めておく。
 
 対応は、本番では `FxConsoleTelemetry` (`src/screens/Main.tsx`) をマウントしない。
 出すなら `warn` / `error` 限定かつ送信元を許可リストで絞る作りに変えてから。
