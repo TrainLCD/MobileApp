@@ -107,10 +107,11 @@ export const backgroundLocationTrackingAtom = atom(false);
 export const locationAccuracyOutlierAtom = atom(false);
 
 // EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
-// 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
+// 地下鉄モード中はnullへ落とすため、モード復帰後の最初の測位がノイジーなprevと混ざらない
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
-// 速度フィルタの基準として使う「最後に受理した“生の”座標」。
+// 速度フィルタの基準として使う「最後に受理した“生の”座標」。地下鉄モード中も更新する
+// (更新しないと地下にいるあいだ検査の相手が無く、速度フィルタが一度も働かない)。
 // EMA後の座標を基準にすると、EMAの追従遅れ(定速時 ((1-α)/α)·v·dt)が変位へ上乗せ
 // され、算出速度が実速度の 1/α 倍に膨らむ。実効的なしきい値が α×360km/h まで下がり、
 // 精度が良くても288km/h、精度200m超では108km/hで棄却が始まるため、新幹線の320km/h
@@ -182,6 +183,43 @@ const resetEtaBoundHold = () => {
   etaBoundBypassedContext = null;
 };
 
+/** ETAの進行量上限の素の判定。打ち切り(ETA_BOUND_MAX_HOLD_MS)の状態は見ない。 */
+const evaluateEtaProgressBound = (
+  anchorStationId: number,
+  targetStationId: number,
+  location: Location.LocationObject
+): boolean =>
+  isBeyondEtaProgress({
+    stations: store.get(stationState).stations,
+    anchorStationId,
+    targetStationId,
+    latitude: location.coords.latitude,
+    longitude: location.coords.longitude,
+    toleranceStations: ETA_BOUND_TOLERANCE_STATIONS,
+    // 許容は停車駅単位で数える。stationsは通過駅を含むため、ETA側の停車駅リストを
+    // 渡さないと急行の通過駅ぶんだけ許容が目減りする。
+    stopStationIds: store.get(etaStopsAtom).map((s) => s.stationId),
+  });
+
+/**
+ * ETAから見て「そこまで進んでいるはずがない」位置か。打ち切りの状態を見ない素の判定で、
+ * ETAが無効・アンカーが無い等で判断できない場合は false(＝意見なし)を返す。
+ *
+ * isImplausibleByEta と違い、こちらは「受理するか」ではなく「基準として採用してよいか」を
+ * 決めるために使う。打ち切りは位置が凍結し続けないための保険なので、打ち切り中でも
+ * 「ETAはここまで進めないと言っている」という事実自体は残り、基準の張り直しには使える。
+ */
+const isBeyondEtaProgressNow = (location: Location.LocationObject): boolean => {
+  const anchor = store.get(etaAnchorAtom);
+  const phase = getEtaPhaseNow(location.timestamp);
+  if (!anchor || !phase) {
+    return false;
+  }
+  const targetStationId =
+    phase.kind === 'DWELLING' ? phase.stationId : phase.targetStationId;
+  return evaluateEtaProgressBound(anchor.stationId, targetStationId, location);
+};
+
 /**
  * ETAが許す進行量を超えた測位か。超えていれば受理せず、位置を据え置く。
  * ETAは位置を進めない(#6369の方針)ので、棄却にのみ使う。
@@ -203,17 +241,11 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
     resetEtaBoundHold();
   }
 
-  const beyond = isBeyondEtaProgress({
-    stations: store.get(stationState).stations,
-    anchorStationId: anchor.stationId,
+  const beyond = evaluateEtaProgressBound(
+    anchor.stationId,
     targetStationId,
-    latitude: location.coords.latitude,
-    longitude: location.coords.longitude,
-    toleranceStations: ETA_BOUND_TOLERANCE_STATIONS,
-    // 許容は停車駅単位で数える。stationsは通過駅を含むため、ETA側の停車駅リストを
-    // 渡さないと急行の通過駅ぶんだけ許容が目減りする。
-    stopStationIds: store.get(etaStopsAtom).map((s) => s.stationId),
-  });
+    location
+  );
   if (!beyond) {
     // 範囲内の測位が届いた＝ETAと実測が再び噛み合った
     resetEtaBoundHold();
@@ -234,6 +266,72 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
     return false;
   }
   return true;
+};
+
+/**
+ * ノイズ控除に使える精度(m)。未取得・非数・負値はノイズの大きさを表さないので0として扱う。
+ * NaNをそのまま控除に使うと比較が常にfalseになり、フィルタが静かに無効化される。
+ */
+const usableAccuracy = (accuracy: number | null | undefined): number =>
+  accuracy != null && Number.isFinite(accuracy) && accuracy > 0 ? accuracy : 0;
+
+/**
+ * 見かけ速度が物理的にありえない跳躍か。判定は生座標同士で行う(lastRawLocationAtom参照)。
+ *
+ * noiseMarginMeters は「変位のうち測位ノイズで説明が付く量」で、これを差し引いた残りだけを
+ * 実際の移動とみなす。地下鉄分岐は平滑化を掛けない生の座標を相手にするため、控除が無いと
+ * ノイズだけで閾値へ届き、#5665 が分岐ごとフィルタを外す原因になった誤棄却が再発する。
+ * 平滑化を通す本線側は控除しない(0を渡す)。精度が安定した帯でしか通らない経路なので、
+ * 控除すると 1Hz 配信では予算(MAX_PLAUSIBLE_SPEED×Δt=100m)を精度が上回り、フィルタが
+ * 実質無効になる。
+ */
+const isImplausibleBySpeed = (
+  location: Location.LocationObject,
+  rawPrev: Location.LocationObject,
+  noiseMarginMeters: number
+): boolean => {
+  const dt = (location.timestamp - rawPrev.timestamp) / 1000; // 秒
+  if (dt <= 0) {
+    return false;
+  }
+  const dist = getDistance(
+    {
+      latitude: rawPrev.coords.latitude,
+      longitude: rawPrev.coords.longitude,
+    },
+    {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    }
+  );
+  const explainedByNoise = Math.max(dist - noiseMarginMeters, 0);
+  return explainedByNoise / dt > MAX_PLAUSIBLE_SPEED;
+};
+
+/** 速度フィルタが棄却した測位の後始末。棄却を数え、上限に達したら基準を張り直す。 */
+const handleSpeedRejection = (
+  location: Location.LocationObject,
+  updatedHistory: number[]
+) => {
+  consecutiveSpeedRejections += 1;
+  // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま復帰できなく
+  // なるのを避けるため、上限に達したら届いた測位で基準を張り直す。
+  //
+  // ただしETAが「そこまで進んでいるはずがない」と言える測位では張り直さない。
+  // ETA側の打ち切り(ETA_BOUND_MAX_HOLD_MS)は「位置を永久に凍結させない」ための保険で、
+  // 打ち切り後は範囲外の測位も受理へ回るため、ここで無条件に基準を張り直すと
+  // 一貫した誤測位のクラスタが上限回数ぶん粘っただけで基準ごと乗っ取られる
+  // (地下鉄で数駅先へ飛んで戻らない)。ETAが判断できない場合(無効・アンカー無し)は
+  // 意見なしとして従来どおり張り直す。張り直さなかった場合も棄却数は数え続けるので、
+  // ETAが認める測位が届いた時点で即座に張り直される。
+  if (
+    consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS &&
+    !isBeyondEtaProgressNow(location)
+  ) {
+    resyncLocationReference(location, updatedHistory);
+    return;
+  }
+  store.set(accuracyHistoryAtom, updatedHistory);
 };
 
 // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
@@ -262,24 +360,63 @@ export const setLocation = (location: Location.LocationObject) => {
   const skipSmoothing =
     currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
 
+  // 変位のうち測位ノイズで説明が付く量。基準側と今回の精度の和で見積もる。
+  // 平滑化を通さない経路(地下鉄分岐と、その直後にEMA基準が無いまま本経路へ移った場合)は
+  // 生のノイズをそのまま相手にするため、この控除が要る。
+  const noiseMarginMeters =
+    usableAccuracy(rawPrev?.coords.accuracy) + usableAccuracy(newAccuracy);
+
   // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
   if (isImplausibleByEta(location)) {
     store.set(accuracyHistoryAtom, updatedHistory);
     return;
   }
 
-  // スムージングスキップ時はフィルタ・スムージングを全てスキップする
-  // UIには生の座標を反映するが、EMA基準(lastFilteredLocationAtom)も速度フィルタ基準
-  // (lastRawLocationAtom)も更新しない。地上復帰時は基準が古いためSTALE_REFERENCE_MSの
-  // 判定に掛かり、そこで張り直される
+  // スムージングスキップ時はEMAを掛けず、UIへ生の座標をそのまま反映する。
+  //
+  // 平滑化だけを外し、ワープ対策の速度フィルタは通す。#5665 がこの分岐ごと速度フィルタを
+  // 外したのは、当時の基準がEMA後の座標で追従遅れが変位へ乗っていたうえ、誤棄却からの
+  // 脱出口(MAX_CONSECUTIVE_SPEED_REJECTIONS / STALE_REFERENCE_MS)も無く、一度弾き始めると
+  // 位置が永久に凍結したためで、フィルタが不要と判断されたわけではない。基準は生座標へ
+  // 移り(lastRawLocationAtom)、脱出口も揃った現在は、測位ノイズぶんを差し引いた妥当性検査を
+  // 掛けられる。掛けないと、地下で基地局測位が数km離れた駅へ張り付いたときに、その座標が
+  // 検査を一切受けずにlocationAtomへ入る。
   if (skipSmoothing) {
+    if (
+      rawPrev != null &&
+      isImplausibleBySpeed(location, rawPrev, noiseMarginMeters)
+    ) {
+      handleSpeedRejection(location, updatedHistory);
+      return;
+    }
     store.set(locationAtom, location);
+    // 速度フィルタの基準としては維持する。維持しないと次の測位を検査する相手が無く、
+    // 地下にいるあいだフィルタが一度も働かない。
+    store.set(lastRawLocationAtom, location);
+    // EMAの基準にはしない。地上復帰後の最初の測位はノイジーなこの座標と混ぜず、
+    // 基準が無い場合の経路(resyncLocationReference)で張り直させる。
+    store.set(lastFilteredLocationAtom, null);
     store.set(accuracyHistoryAtom, updatedHistory);
+    consecutiveSpeedRejections = 0;
     return;
   }
 
-  // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
-  if (filteredPrev == null || rawPrev == null) {
+  // 基準が無い場合（初回起動時）
+  if (rawPrev == null) {
+    resyncLocationReference(location, updatedHistory);
+    return;
+  }
+
+  // 速度フィルタの基準はあるがEMAの基準が無い場合（地下鉄分岐からの復帰直後）。
+  // 平滑化はできないので生の測位へスナップするが、妥当性の検査は通す。
+  // 素通りさせると、地下鉄分岐で棄却が続いている最中に精度履歴が安定して本経路へ
+  // 移った瞬間、その測位が無検査で受理され、連続棄却の上限(#6899)も回避される。
+  // 基準が地下鉄分岐由来のノイジーな座標でありうるので、控除は地下鉄分岐と同じにする。
+  if (filteredPrev == null) {
+    if (isImplausibleBySpeed(location, rawPrev, noiseMarginMeters)) {
+      handleSpeedRejection(location, updatedHistory);
+      return;
+    }
     resyncLocationReference(location, updatedHistory);
     return;
   }
@@ -291,32 +428,10 @@ export const setLocation = (location: Location.LocationObject) => {
   // (下のSTALE_REFERENCE_MS判定)だけで、変位÷経過時間という速度の妥当性検査は
   // 経過時間が延びても成立するため。ここを飛ばすと、間隔が空いた直後の1点に限って
   // ワープ対策が無効になる。
-  const dt = (location.timestamp - rawPrev.timestamp) / 1000; // 秒
-  if (dt > 0) {
-    const dist = getDistance(
-      {
-        latitude: rawPrev.coords.latitude,
-        longitude: rawPrev.coords.longitude,
-      },
-      {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      }
-    );
-    const speed = dist / dt;
-
-    // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
-    if (speed > MAX_PLAUSIBLE_SPEED) {
-      consecutiveSpeedRejections += 1;
-      // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま
-      // 復帰できなくなるのを避けるため、上限に達したら基準を張り直す。
-      if (consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS) {
-        resyncLocationReference(location, updatedHistory);
-        return;
-      }
-      store.set(accuracyHistoryAtom, updatedHistory);
-      return;
-    }
+  // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
+  if (isImplausibleBySpeed(location, rawPrev, 0)) {
+    handleSpeedRejection(location, updatedHistory);
+    return;
   }
 
   consecutiveSpeedRejections = 0;
