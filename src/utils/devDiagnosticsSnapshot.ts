@@ -30,8 +30,25 @@ export type DevDiagnosticsInput = {
   rawLocation: Location.LocationObject | null;
   /** フィルタ・スムージングを通した、アプリが現在地として使っている値 */
   filteredLocation: Location.LocationObject | null;
-  /** DevOverlay のチャートが持つ精度履歴(古い順) */
+  /**
+   * DevOverlay のチャートが持つ精度履歴(古い順)。1秒ごとのサンプリングで、
+   * 測位が無い間は NaN が積まれる(JSONでは null になる)。見た目の推移用。
+   */
   accuracyHistory: number[];
+  /**
+   * 平滑化の要否(isAccuracyStable)を決めている accuracyHistoryAtom の中身。
+   * 測位を受理するたびに積まれ、無効値は捨てられるのでチャート用とは別物。
+   * 地下鉄分岐に入っているかを説明できるのはこちらなので、必ず一緒に持ち出す。
+   */
+  filterAccuracyHistory: number[];
+  /**
+   * 直近の測位が地下鉄分岐(平滑化スキップ)を通ったか。次の lineType と
+   * 対で受け取ること。どちらも smoothingDecisionAtom が同じ判定時に書いた値で、
+   * 片方を stationAtom から読み直すと別の瞬間の値が混ざる。
+   */
+  skipSmoothing: boolean;
+  /** 上の判定に使った路線種別(判定時の値) */
+  lineType: string | null;
   /** 表示に使っている速度(m/s)と、それが実測かどうか */
   effectiveSpeedMps: number;
   hasMeasuredSpeed: boolean;
@@ -111,6 +128,13 @@ export const buildDevDiagnosticsSnapshot = (input: DevDiagnosticsInput) => ({
     effectiveSpeedMps: input.effectiveSpeedMps,
     // 変位から算出した値か、測位が運んできた実測かを区別する
     speedIsMeasured: input.hasMeasuredSpeed,
+  },
+  // どちらの経路を通ったかと、その判定材料。locationAtomの値だけでは
+  // 平滑化を掛けたのか生の座標を入れたのかが区別できない。
+  filter: {
+    skipSmoothing: input.skipSmoothing,
+    lineType: input.lineType,
+    accuracyHistory: input.filterAccuracyHistory,
   },
   eta: {
     phase: input.etaPhase,
