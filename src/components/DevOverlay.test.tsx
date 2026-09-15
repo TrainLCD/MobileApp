@@ -2,15 +2,17 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
 import { Dimensions, StyleSheet } from 'react-native';
-import type { Station } from '~/@types/graphql';
+import { LineType, type Station } from '~/@types/graphql';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
+  accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
   locationAtom,
   rawLocationAtom,
+  smoothingDecisionAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -106,6 +108,8 @@ describe('DevOverlay', () => {
     autoModeEnabled = false,
     etaPhase = null,
     etaAnchor = null,
+    filterAccuracyHistory = [15],
+    smoothingDecision = { skipSmoothing: false, lineType: null },
   }: {
     location?: unknown;
     rawLocation?: unknown;
@@ -113,6 +117,8 @@ describe('DevOverlay', () => {
     autoModeEnabled?: boolean;
     etaPhase?: unknown;
     etaAnchor?: unknown;
+    filterAccuracyHistory?: number[];
+    smoothingDecision?: { skipSmoothing: boolean; lineType: unknown };
   } = {}) => {
     mockGetEtaPhaseNow.mockReturnValue(etaPhase as never);
     mockUseAtomValue.mockImplementation((atom) => {
@@ -130,6 +136,12 @@ describe('DevOverlay', () => {
       }
       if (atom === etaAnchorAtom) {
         return etaAnchor as never;
+      }
+      if (atom === accuracyHistoryAtom) {
+        return filterAccuracyHistory as never;
+      }
+      if (atom === smoothingDecisionAtom) {
+        return smoothingDecision as never;
       }
       if (atom === isLEDThemeAtom) {
         return false as never;
@@ -328,6 +340,25 @@ describe('DevOverlay', () => {
       expect(copied.build.appVersion).toBe(
         `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
       );
+    });
+
+    // filterのskipSmoothingとlineTypeは、判定時に1つのatomへまとめて書かれた組を
+    // そのまま出す。片方をstationAtomから読み直すと、測位と無関係な路線の
+    // 切り替わりで持ち出し時の値だけが進み、両者で検算できなくなる。
+    it('平滑化の判定は結果と入力を同じ組のまま出力する', async () => {
+      setupAtomValues({
+        smoothingDecision: { skipSmoothing: true, lineType: LineType.Subway },
+      });
+      const { getByTestId } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.filter).toMatchObject({
+        skipSmoothing: true,
+        lineType: LineType.Subway,
+      });
     });
 
     it('押した直後はCOPIED表示になり、一定時間で戻る', async () => {

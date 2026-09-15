@@ -9,6 +9,7 @@ import {
   resetLocationState,
   setLocation,
   setRawLocation,
+  smoothingDecisionAtom,
 } from './location';
 import stationState from './station';
 
@@ -115,6 +116,101 @@ describe('setLocation', () => {
       // EMAが適用されるため、生の座標(35.001)とは異なる値になるはず
       expect(result?.coords.latitude).not.toBe(35.001);
       expect(result?.coords.longitude).not.toBe(139.001);
+    });
+  });
+
+  describe('地下鉄分岐を通ったかの記録', () => {
+    // 診断の持ち出し(DevOverlay)がこの値を読む。同じ条件を外で組み直すと、
+    // 判定と表示が別々に育って食い違うため、setLocationが下した結果そのものを固定する。
+    it('地下鉄かつ精度が不安定なら真になる', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: true,
+        lineType: LineType.Subway,
+      });
+    });
+
+    it('地上路線なら偽になる', () => {
+      setStationLineType(LineType.Normal);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: LineType.Normal,
+      });
+    });
+
+    it('地下鉄でも精度履歴が安定していれば偽になる', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [30, 35, 28, 32]);
+
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: LineType.Subway,
+      });
+    });
+
+    it('駅が無ければ路線種別はnullで記録する', () => {
+      setStationLineType(null);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: null,
+      });
+    });
+
+    // 回帰: 結果と入力を別々のatom(あるいは片方をstationAtomの直読み)で持つと、
+    // 測位と無関係な路線の切り替わりで入力側だけが進み、持ち出した診断の
+    // skipSmoothingとlineTypeが別の瞬間の値になって検算できなくなる。
+    it('判定後に路線が変わっても判定時の組を保つ', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      setStationLineType(LineType.Normal);
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: true,
+        lineType: LineType.Subway,
+      });
+    });
+
+    // 判定が変わらない限り同じオブジェクトを保つ。測位のたびに新しい参照を入れると、
+    // 購読しているDevOverlayが1秒ごとに再レンダーする。
+    it('判定が変わらなければ参照を作り直さない', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+      const first = store.get(smoothingDecisionAtom);
+
+      setLocation(makeLocation(35.0001, 139.0001, 500, 2000));
+
+      expect(store.get(smoothingDecisionAtom)).toBe(first);
+    });
+
+    it('リセットで初期値へ戻る', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(true);
+
+      resetLocationState();
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: null,
+      });
     });
   });
 
