@@ -360,6 +360,12 @@ export const setLocation = (location: Location.LocationObject) => {
   const skipSmoothing =
     currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
 
+  // 変位のうち測位ノイズで説明が付く量。基準側と今回の精度の和で見積もる。
+  // 平滑化を通さない経路(地下鉄分岐と、その直後にEMA基準が無いまま本経路へ移った場合)は
+  // 生のノイズをそのまま相手にするため、この控除が要る。
+  const noiseMarginMeters =
+    usableAccuracy(rawPrev?.coords.accuracy) + usableAccuracy(newAccuracy);
+
   // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
   if (isImplausibleByEta(location)) {
     store.set(accuracyHistoryAtom, updatedHistory);
@@ -378,12 +384,7 @@ export const setLocation = (location: Location.LocationObject) => {
   if (skipSmoothing) {
     if (
       rawPrev != null &&
-      isImplausibleBySpeed(
-        location,
-        rawPrev,
-        // ノイズで説明が付く量は両測位の精度の和とみなす
-        usableAccuracy(rawPrev.coords.accuracy) + usableAccuracy(newAccuracy)
-      )
+      isImplausibleBySpeed(location, rawPrev, noiseMarginMeters)
     ) {
       handleSpeedRejection(location, updatedHistory);
       return;
@@ -400,8 +401,22 @@ export const setLocation = (location: Location.LocationObject) => {
     return;
   }
 
-  // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
-  if (filteredPrev == null || rawPrev == null) {
+  // 基準が無い場合（初回起動時）
+  if (rawPrev == null) {
+    resyncLocationReference(location, updatedHistory);
+    return;
+  }
+
+  // 速度フィルタの基準はあるがEMAの基準が無い場合（地下鉄分岐からの復帰直後）。
+  // 平滑化はできないので生の測位へスナップするが、妥当性の検査は通す。
+  // 素通りさせると、地下鉄分岐で棄却が続いている最中に精度履歴が安定して本経路へ
+  // 移った瞬間、その測位が無検査で受理され、連続棄却の上限(#6899)も回避される。
+  // 基準が地下鉄分岐由来のノイジーな座標でありうるので、控除は地下鉄分岐と同じにする。
+  if (filteredPrev == null) {
+    if (isImplausibleBySpeed(location, rawPrev, noiseMarginMeters)) {
+      handleSpeedRejection(location, updatedHistory);
+      return;
+    }
     resyncLocationReference(location, updatedHistory);
     return;
   }

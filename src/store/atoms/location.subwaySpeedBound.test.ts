@@ -145,6 +145,20 @@ describe('地下鉄分岐の速度フィルタ', () => {
     expect(currentLatLon()).toEqual([shinegota.lat + 0.001, shinegota.lon]);
   });
 
+  it('精度履歴が安定して本経路へ移った瞬間の測位も検査される', () => {
+    // 地下鉄分岐はEMAの基準を残さないので、精度履歴が安定して本経路へ移ると
+    // 「基準が無い」経路へ入る。ここを素通りさせると、棄却が続いている最中に
+    // 異常測位が無検査で受理され、連続棄却の上限も回避される。
+    setLocation(makeLocation(shinegota.lat, shinegota.lon, T0, 20));
+    // 履歴が4件に届くまでは地下鉄分岐。速度フィルタが棄却する
+    setLocation(makeLocation(hikarigaoka.lat, hikarigaoka.lon, T0 + 2_000, 20));
+    setLocation(makeLocation(hikarigaoka.lat, hikarigaoka.lon, T0 + 4_000, 20));
+    // 4件目で isAccuracyStable が真になり、本経路(filteredPrev == null)へ移る
+    setLocation(makeLocation(hikarigaoka.lat, hikarigaoka.lon, T0 + 6_000, 20));
+
+    expect(currentLatLon()).toEqual([shinegota.lat, shinegota.lon]);
+  });
+
   it('地上へ戻った最初の測位はEMAを掛けずに基準を張り直す', () => {
     // 地下鉄分岐はEMAの基準(lastFilteredLocationAtom)を残さないので、地上復帰後の
     // 1件目はノイジーな地下の座標と混ざらず、生の座標がそのまま入る。
