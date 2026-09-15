@@ -301,10 +301,19 @@ describe('DevOverlay', () => {
   });
 
   describe('診断情報のコピー', () => {
-    it('ボタンを押すと診断情報をクリップボードへ載せる', () => {
+    // DevOverlay の COPIED_FEEDBACK_DURATION_MS と同値。exportしていないのでここで持つ
+    const COPIED_FEEDBACK_DURATION_MS = 1500;
+
+    beforeEach(() => {
+      mockCopyTextToClipboard.mockResolvedValue(true);
+    });
+
+    it('ボタンを押すと診断情報をクリップボードへ載せる', async () => {
       const { getByTestId } = render(<DevOverlay />);
 
       fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      // コピーはPromiseを返すので、解決後の状態更新までactの中で流す
+      await act(async () => {});
 
       expect(mockCopyTextToClipboard).toHaveBeenCalledTimes(1);
       const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
@@ -321,23 +330,37 @@ describe('DevOverlay', () => {
       );
     });
 
-    it('押した直後はCOPIED表示になり、一定時間で戻る', () => {
+    it('押した直後はCOPIED表示になり、一定時間で戻る', async () => {
       jest.useFakeTimers();
       try {
         const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
         expect(getByText('COPY')).toBeTruthy();
 
         fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
         expect(getByText('COPIED')).toBeTruthy();
 
         act(() => {
-          jest.advanceTimersByTime(1500);
+          jest.advanceTimersByTime(COPIED_FEEDBACK_DURATION_MS);
         });
         expect(queryByText('COPIED')).toBeNull();
         expect(getByText('COPY')).toBeTruthy();
       } finally {
         jest.useRealTimers();
       }
+    });
+
+    it('クリップボードへ載せられなかった場合はCOPIEDを出さない', async () => {
+      // 失敗しているのに成功表示を出すと、貼り付けてみるまで気付けない
+      mockCopyTextToClipboard.mockResolvedValue(false);
+      const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      expect(mockCopyTextToClipboard).toHaveBeenCalledTimes(1);
+      expect(queryByText('COPIED')).toBeNull();
+      expect(getByText('COPY')).toBeTruthy();
     });
   });
 

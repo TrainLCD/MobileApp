@@ -537,8 +537,10 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
     []
   );
 
-  const handleCopyDiagnostics = () => {
-    copyTextToClipboard(
+  const handleCopyDiagnostics = async () => {
+    // 実際に載ったときだけ COPIED を出す。失敗しているのに成功表示を出すと、
+    // 貼り付けてみるまで気付けない。
+    const copied = await copyTextToClipboard(
       formatDevDiagnosticsSnapshot({
         // レンダー中ではなくイベントハンドラ内なので Date.now() を直接読んでよい
         nowMs: Date.now(),
@@ -563,6 +565,9 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         distanceToNextStation,
       })
     );
+    if (!copied) {
+      return;
+    }
     setHasCopied(true);
     if (copiedTimerRef.current !== null) {
       clearTimeout(copiedTimerRef.current);
@@ -927,7 +932,9 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
                 accessibilityRole="button"
                 accessibilityLabel="診断情報をコピー"
                 testID="dev-overlay-copy-button"
-                onPress={handleCopyDiagnostics}
+                onPress={() => {
+                  void handleCopyDiagnostics();
+                }}
                 style={({ pressed }) => [
                   styles.copyButton,
                   statusPillStyle,
