@@ -209,6 +209,8 @@ This repository is managed with **Git**, and agents drive version control throug
 - [ ] Code-level facts and runtime outcomes are not conflated.
 - [ ] Quotes come from the original text, not from a summary.
 - [ ] Nothing depends on a question you have asked and not yet had answered.
+- [ ] Operationally sensitive details are written at the same granularity as the public privacy policy.
+- [ ] Review-bot findings are verified against code or the original text before you act on them.
 
 **For workflow, release, or CI updates**
 
