@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
 import { Dimensions, StyleSheet } from 'react-native';
@@ -55,8 +55,14 @@ jest.mock('~/utils/etaPhaseNow', () => ({
   getEtaPhaseNow: jest.fn(() => null),
 }));
 
+// クリップボードは react-native core の非推奨 Clipboard を触るため、テストでは差し替える
+jest.mock('~/utils/clipboard', () => ({
+  copyTextToClipboard: jest.fn(),
+}));
+
 // Import mocked hooks for type safety
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
+import { copyTextToClipboard } from '~/utils/clipboard';
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
@@ -71,6 +77,9 @@ const mockUseNextStation = useNextStation as jest.MockedFunction<
 >;
 const mockGetEtaPhaseNow = getEtaPhaseNow as jest.MockedFunction<
   typeof getEtaPhaseNow
+>;
+const mockCopyTextToClipboard = copyTextToClipboard as jest.MockedFunction<
+  typeof copyTextToClipboard
 >;
 
 describe('DevOverlay', () => {
@@ -288,6 +297,95 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
         '#5 · 12s ago'
       );
+    });
+  });
+
+  describe('診断情報のコピー', () => {
+    // DevOverlay の COPIED_FEEDBACK_DURATION_MS と同値。exportしていないのでここで持つ
+    const COPIED_FEEDBACK_DURATION_MS = 1500;
+
+    beforeEach(() => {
+      mockCopyTextToClipboard.mockResolvedValue(true);
+    });
+
+    it('ボタンを押すと診断情報をクリップボードへ載せる', async () => {
+      const { getByTestId } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      // コピーはPromiseを返すので、解決後の状態更新までactの中で流す
+      await act(async () => {});
+
+      expect(mockCopyTextToClipboard).toHaveBeenCalledTimes(1);
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      // 座標だけでなく実効設定も載っていること。設定が無いと同じ測位でも
+      // 挙動を説明できないため、これが欠けると持ち出す意味が薄れる
+      expect(copied.config).toMatchObject({
+        maxPermitAccuracy: MAX_PERMIT_ACCURACY,
+        telemetryEnabled: true,
+        autoModeEnabled: false,
+      });
+      expect(copied.location.raw).toMatchObject({ accuracy: 15 });
+      expect(copied.build.appVersion).toBe(
+        `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
+      );
+    });
+
+    it('押した直後はCOPIED表示になり、一定時間で戻る', async () => {
+      jest.useFakeTimers();
+      try {
+        const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+        expect(getByText('COPY')).toBeTruthy();
+
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+        expect(getByText('COPIED')).toBeTruthy();
+
+        act(() => {
+          jest.advanceTimersByTime(COPIED_FEEDBACK_DURATION_MS);
+        });
+        expect(queryByText('COPIED')).toBeNull();
+        expect(getByText('COPY')).toBeTruthy();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('成功直後にコピーが失敗したらCOPIED表示とタイマーを解除する', async () => {
+      // 成功のタイマーが生きている間に失敗すると、古い表示が残って
+      // 「最後のコピーは失敗しているのにCOPIEDに見える」状態になる
+      jest.useFakeTimers();
+      try {
+        const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+        expect(getByText('COPIED')).toBeTruthy();
+
+        mockCopyTextToClipboard.mockResolvedValue(false);
+        act(() => {
+          jest.advanceTimersByTime(COPIED_FEEDBACK_DURATION_MS / 2);
+        });
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+
+        expect(queryByText('COPIED')).toBeNull();
+        expect(getByText('COPY')).toBeTruthy();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('クリップボードへ載せられなかった場合はCOPIEDを出さない', async () => {
+      // 失敗しているのに成功表示を出すと、貼り付けてみるまで気付けない
+      mockCopyTextToClipboard.mockResolvedValue(false);
+      const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      expect(mockCopyTextToClipboard).toHaveBeenCalledTimes(1);
+      expect(queryByText('COPIED')).toBeNull();
+      expect(getByText('COPY')).toBeTruthy();
     });
   });
 
