@@ -37,6 +37,42 @@ This handbook defines how automation agents collaborate safely and effectively o
 - Do not treat CI after a push as a substitute for local validation before the
   commit or push.
 
+### Publishing gate
+
+docs/・README・PR のタイトルと本文・レビュー返信・issue（他リポジトリのものを含む）
+は、push や投稿をした時点で取り消せない公開物になる。TrainLCD のリポジトリは公開
+されており、書いた内容はそのまま作者の設計判断として読まれる。文を足す前に次を
+満たすこと。
+
+- **出典の無い主張を書かない。** 書いてよいのは、(a) リポジトリのコードや設定
+  ファイル、(b) 実際に取得した一次情報（公開ページの原文、仕様書）、(c) メンテナの
+  回答、のいずれかに辿れる内容だけ。辿れないものは書かずにタスクスレッドで聞く。
+  記憶から書いた製品仕様・ストアの審査要件・条文の要旨は、原文を当たるまでは
+  出典の無い主張として扱う。
+- **「未確認」「〜かもしれない」で逃げない。** アプリ・基盤・ポリシーはいずれも
+  同じメンテナのものなので、自分たちの構成が不明である旨を公開物に書くのは事実に
+  反するうえ、調べていないようにしか読めない。分からないことは書かず、聞けば済む。
+  ソースから確定できるものは、聞く前に読んで確定させる。
+- **実装から言えることと、運用の結果を混同しない。** 「ルータに定義が無い」はコード
+  の事実、「リクエストが届いていない」は運用の結果で、前者から後者は導けない。片方
+  しか確かめていないなら、確かめた方だけを書く。仮説を立てて別リポジトリを探しに
+  行く前に、確定済みの事実で足りるかを見直す。
+- **引用は一次情報から取る。** 日付・条文・公開文書の文言は、要約ではなく原文を
+  当たる。要約ツールの出力をそのまま引用として貼らない。
+- **メンテナに質問中の事項は公開しない。** 確認を出したなら、その答えに依存する
+  記述は回答を得るまで書かない。質問と並行して公開すると、回答前に誤りが出回る。
+- **運用上の秘匿情報は粒度を落とす。** サーバの設置場所やネットワーク構成など、
+  目的に対して不要な粒度は書かない。公開済みのプライバシーポリシーと同じ粒度に
+  留める。
+- **レビューボットの指摘も検証してから従う。** 指摘が誤っていることもある。原文や
+  コードで裏を取り、違う対応を採るならその理由を返信に書く。裏取りをせずに指摘の
+  文面をそのまま本文へ反映しない。
+
+公開済みの文に誤りや裏付けの無い記述を見つけたら、直すより先にタスクスレッドで
+報告する。どの記述が・なぜ問題で・どう直すつもりかを示し、メンテナの指示を得てから、
+push・PR 本文の編集・Issue の編集・訂正コメントやレビュー返信の投稿など、訂正内容を
+公開する操作を行う。自分の判断で訂正内容を公開しない。
+
 ## Repository Map
 
 - `src/`: Expo React Native app code.
@@ -165,6 +201,16 @@ This repository is managed with **Git**, and agents drive version control throug
 - [ ] Ensure docs match current directory structure and script names.
 - [ ] Update cross-references (README, docs/) to prevent drift.
 - [ ] Spell-check or self-review for clarity and typos.
+
+**Before publishing prose (docs, PR body, review replies, issues)**
+
+- [ ] Every claim traces to repository code, a primary source you fetched, or a maintainer answer.
+- [ ] No "未確認" / "かもしれない" hedges about our own app, backend, or policy; unknowns are questions, not sentences.
+- [ ] Code-level facts and runtime outcomes are not conflated.
+- [ ] Quotes come from the original text, not from a summary.
+- [ ] Nothing depends on a question you have asked and not yet had answered.
+- [ ] Operationally sensitive details are written at the same granularity as the public privacy policy.
+- [ ] Review-bot findings are verified against code or the original text before you act on them.
 
 **For workflow, release, or CI updates**
 
