@@ -410,6 +410,39 @@ describe('DevOverlay', () => {
       });
     });
 
+    it('最寄り駅までの距離を到着判定と同じ0.01m精度で持ち出す', async () => {
+      // 既定の1m丸めだと、閾値ぎりぎりのときダンプ上だけ arrivedThreshold との
+      // 大小が逆に見える。到着判定(isPointWithinRadius)は 0.01m 精度・strict `<`。
+      // 実測ダンプの再現: 都営大江戸線 汐留まで 288.84m / 実効到着圏 295.75m
+      setupAtomValues({
+        location: {
+          coords: {
+            speed: 10,
+            accuracy: 2000,
+            latitude: 35.66237384361426,
+            longitude: 139.76338478107792,
+          },
+        },
+      });
+      mockUseNearestStation.mockReturnValue({
+        id: 9930120,
+        name: '汐留',
+        latitude: 35.663703,
+        longitude: 139.760642,
+      } as Station);
+
+      const { getByTestId } = render(<DevOverlay />);
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.state.distanceToNearestStation).toBeCloseTo(288.84, 2);
+      // 1m丸め(289)へ戻ると落ちる
+      expect(Number.isInteger(copied.state.distanceToNearestStation)).toBe(
+        false
+      );
+    });
+
     it('押した直後はCOPIED表示になり、一定時間で戻る', async () => {
       jest.useFakeTimers();
       try {
