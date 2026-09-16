@@ -6,6 +6,11 @@ import {
   setRawLocation,
 } from '~/store/atoms/location';
 import { isDevApp } from './isDevApp';
+import {
+  countLocationRejectedAsDuplicate,
+  countLocationRejectedByAccuracy,
+  recordLocationInput,
+} from './locationPipelineStats';
 import { monotonicNow } from './monotonicNow';
 
 // システム時計の巻き戻りとみなす閾値(ms)。処理済みタイムスタンプが現在時刻より
@@ -51,10 +56,18 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     lastProcessedTimestampMs = 0;
   }
   if (location.timestamp <= lastProcessedTimestampMs) {
+    // 破棄した事実だけ数える。重複排除はlastProcessedAtMsを更新する前に抜けるので、
+    // 経過時間からは「OSが呼んでいない」状態と区別が付かない(locationPipelineStats)。
+    countLocationRejectedAsDuplicate();
     return;
   }
   lastProcessedTimestampMs = location.timestamp;
   lastProcessedAtMs = monotonicNow();
+
+  // 診断用の飛び幅記録。精度フィルタより前に置くのが要点で、地下で最も知りたい
+  // 「棄却された生座標がどれだけ飛んでいたか」はここでしか観測できない
+  // (rawLocationAtomは最新1件しか持たない)。
+  recordLocationInput(location);
 
   // DevOverlayの診断表示用に、フィルタで棄却される測位も生の値として記録する。
   // DevOverlayはisDevApp時しか描画されないため、本番ビルドでは記録しない。
@@ -70,6 +83,7 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     // フラグの解除は受理側のsetLocationに集約している（ワンショット取得・手動選択など
     // 本関数を経由しない経路でも確実に解除するため）。
     setLocationAccuracyOutlier(true);
+    countLocationRejectedByAccuracy();
     return;
   }
 

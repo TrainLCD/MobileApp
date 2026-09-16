@@ -5,6 +5,12 @@ import { LineType } from '~/@types/graphql';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
+import {
+  countAcceptedLocation,
+  countLocationRejectedByEta,
+  countLocationRejectedBySpeed,
+  resetLocationPipelineStats,
+} from '~/utils/locationPipelineStats';
 import { store } from '..';
 import { etaAnchorAtom, etaStopsAtom } from './etaFallback';
 import stationState from './station';
@@ -153,6 +159,7 @@ export const resetLocationState = () => {
   store.set(smoothingDecisionAtom, INITIAL_SMOOTHING_DECISION);
   consecutiveSpeedRejections = 0;
   resetEtaBoundHold();
+  resetLocationPipelineStats();
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -182,6 +189,7 @@ const resyncLocationReference = (
   store.set(lastRawLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
   consecutiveSpeedRejections = 0;
+  countAcceptedLocation();
 };
 
 // ETAの進行量上限から外れた測位を、何駅ぶんまで許容するか。単位は「停車駅」で、
@@ -303,6 +311,7 @@ export const setLocation = (location: Location.LocationObject) => {
   // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
   if (isImplausibleByEta(location)) {
     store.set(accuracyHistoryAtom, updatedHistory);
+    countLocationRejectedByEta();
     return;
   }
 
@@ -313,6 +322,7 @@ export const setLocation = (location: Location.LocationObject) => {
   if (skipSmoothing) {
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
+    countAcceptedLocation();
     return;
   }
 
@@ -353,6 +363,7 @@ export const setLocation = (location: Location.LocationObject) => {
         return;
       }
       store.set(accuracyHistoryAtom, updatedHistory);
+      countLocationRejectedBySpeed();
       return;
     }
   }
@@ -396,4 +407,5 @@ export const setLocation = (location: Location.LocationObject) => {
   // 速度フィルタの基準はスムージング前の生座標を保持する
   store.set(lastRawLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
+  countAcceptedLocation();
 };
