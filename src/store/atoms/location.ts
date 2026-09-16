@@ -9,7 +9,6 @@ import {
   countAcceptedLocation,
   countLocationRejectedByEta,
   countLocationRejectedBySpeed,
-  recordLocationInput,
   resetLocationPipelineStats,
 } from '~/utils/locationPipelineStats';
 import { store } from '..';
@@ -277,9 +276,6 @@ export const setLocation = (location: Location.LocationObject) => {
   // 張り付く。座標棄却(speedフィルタ)で早期returnする経路でも精度自体は良好なため、
   // フィルタ判定より前で解除する。
   store.set(locationAccuracyOutlierAtom, false);
-
-  // 診断用。受理・棄却に関わらず、届いた入力そのものの飛び幅を記録する。
-  recordLocationInput(location);
 
   const filteredPrev = store.get(lastFilteredLocationAtom);
   const rawPrev = store.get(lastRawLocationAtom);

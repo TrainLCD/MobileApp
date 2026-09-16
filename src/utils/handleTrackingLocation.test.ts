@@ -11,6 +11,7 @@ import {
   resetTrackingLocationDedup,
 } from './handleTrackingLocation';
 import {
+  getLocationInputDisplacementHistory,
   getLocationPipelineCounts,
   resetLocationPipelineStats,
 } from './locationPipelineStats';
@@ -32,13 +33,15 @@ const mockSetLocation = setLocation as jest.Mock;
 const mockSetRawLocation = setRawLocation as jest.Mock;
 const mockSetLocationAccuracyOutlier = setLocationAccuracyOutlier as jest.Mock;
 
-const makeLocation = (
+const makeLocationAt = (
+  latitude: number,
+  longitude: number,
   accuracy: number | null,
   timestamp = 1000
 ): Location.LocationObject => ({
   coords: {
-    latitude: 35.0,
-    longitude: 139.0,
+    latitude,
+    longitude,
     accuracy,
     altitude: 0,
     altitudeAccuracy: 0,
@@ -47,6 +50,11 @@ const makeLocation = (
   },
   timestamp,
 });
+
+const makeLocation = (
+  accuracy: number | null,
+  timestamp = 1000
+): Location.LocationObject => makeLocationAt(35.0, 139.0, accuracy, timestamp);
 
 describe('handleTrackingLocation', () => {
   beforeEach(() => {
@@ -214,6 +222,29 @@ describe('handleTrackingLocation', () => {
       handleTrackingLocation(makeLocation(30, 900));
 
       expect(getLocationPipelineCounts().rejectedAsDuplicate).toBe(2);
+    });
+
+    it('精度フィルタで棄却した測位も飛び幅に積む', () => {
+      // 地下で一番知りたいのは「棄却された生座標がどれだけ飛んでいたか」。
+      // 精度フィルタのあとで記録すると、その区間が丸ごと抜ける
+      handleTrackingLocation(makeLocationAt(35.0, 139.0, 30, 1000));
+      handleTrackingLocation(
+        makeLocationAt(35.01, 139.0, MAX_PERMIT_ACCURACY + 1, 2000)
+      );
+
+      const history = getLocationInputDisplacementHistory();
+      expect(mockSetLocation).toHaveBeenCalledTimes(1);
+      expect(history).toHaveLength(1);
+      // 緯度0.01度 ≒ 1.1km
+      expect(history[0]).toBeGreaterThan(1000);
+    });
+
+    it('重複として破棄した測位は飛び幅に積まない', () => {
+      // 同じ測位の再配信を積むと、距離0が並んで「動いていない」と誤読させる
+      handleTrackingLocation(makeLocationAt(35.0, 139.0, 30, 1000));
+      handleTrackingLocation(makeLocationAt(35.0, 139.0, 30, 1000));
+
+      expect(getLocationInputDisplacementHistory()).toEqual([]);
     });
 
     it('受理した測位はここでは数えない(setLocation側の責務)', () => {

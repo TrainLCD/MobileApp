@@ -51,12 +51,12 @@ export type DevDiagnosticsInput = {
   /** 上の判定に使った路線種別(判定時の値) */
   lineType: string | null;
   /**
-   * setLocation へ届いた連続する入力座標の距離(m)。受理・棄却に関わらず積むので、
-   * 「位置が飛び続けているのか、一点だけ外れたのか」を精度履歴と並べて読める。
+   * 継続測位で届いた連続する入力座標の距離(m)。精度フィルタで棄却された測位も含むので、
+   * 「位置が飛び続けているのか、一点だけ外れたのか」が棄却ぶんまで読める。
    *
-   * filterAccuracyHistory と同じ12件で頭打ちになるが、index は厳密には対応しない。
-   * こちらはセッション最初の1件を積まず(距離の基準が無いため)、あちらは精度を
-   * 持たない測位を積まないので、両者の件数はずれうる。
+   * filterAccuracyHistory とは母集団が違う(あちらは setLocation へ到達した測位、
+   * つまり精度フィルタを通過したものだけ)。両方を並べると「棄却された測位が飛んで
+   * いたのか」が分かる一方、index は対応しないので突き合わせて読まないこと。
    */
   displacementHistory: number[];
   /**
@@ -64,7 +64,11 @@ export type DevDiagnosticsInput = {
    * 到着判定の強制未到着分岐を直接ゲートするので、判定の説明に要る。
    */
   accuracyOutlier: boolean;
-  /** 測位1件ごとの処理結果の内訳。どの門で何件落ちたかを数えたもの */
+  /**
+   * 測位1件ごとの処理結果の内訳。どの門で何件落ちたかを数えたもの。
+   * プロセス起動からの累積で、路線を選び直しても戻らない(「今回の乗車ぶん」ではない)。
+   * 2枚のダンプを撮れば差分で区間ごとの内訳が読める。
+   */
   pipelineCounts: LocationPipelineCounts;
   /** 表示に使っている速度(m/s)と、それが実測かどうか */
   effectiveSpeedMps: number;
@@ -88,6 +92,10 @@ export type DevDiagnosticsInput = {
   /**
    * 現在地に最も近い駅(useNearestStation)と、そこまでの距離(m)。
    * 到着判定の対象そのもので、表示上の次駅(nextStation)とは別物。
+   *
+   * 距離は到着判定(isPointWithinRadius)と同じ 0.01m 精度で求める。既定の 1m 丸めだと
+   * 閾値ぎりぎりのとき arrivedThreshold との大小がダンプ上だけ逆に見える。
+   * 判定は `distanceToNearestStation < arrivedThreshold` (strict) で行われる。
    */
   nearestStation: Station | null | undefined;
   distanceToNearestStation: number | null;

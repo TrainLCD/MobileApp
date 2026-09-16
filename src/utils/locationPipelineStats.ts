@@ -25,7 +25,11 @@ import getDistance from 'geolib/es/getDistance';
  * 基準を張り直す経路は locationAtom を書くので accepted に数える(棄却ではない)。
  */
 export type LocationPipelineCounts = {
-  /** locationAtom へ反映された件数。継続測位に加えワンショット取得・手動選択も含む */
+  /**
+   * setLocation が locationAtom を書いた件数。継続測位に加え、ワンショット取得・
+   * 手動選択も含む。オートモードのシミュレーション(useSimulationMode)と NowHeader は
+   * setLocation を経由せず locationAtom を直接書くため、これらは含まない。
+   */
   accepted: number;
   /** handleTrackingLocation の最大許容精度フィルタで棄却した件数 */
   rejectedByAccuracy: number;
@@ -75,12 +79,17 @@ export const countLocationRejectedBySpeed = (): void => {
 };
 
 /**
- * setLocation へ届いた測位を記録し、直前の入力からの距離(m)を履歴へ積む。
+ * 継続測位で届いた測位を記録し、直前の入力からの距離(m)を履歴へ積む。
  *
- * 受理・棄却に関わらず入力そのものを見るのが要点で、地下で座標が飛んでいるのか
- * 一点だけ外れたのかは、受理された座標だけを並べても分からない。基準は常に更新するため、
- * 棄却された測位を挟んでも次の距離は隣り合う入力同士の距離になる。
+ * handleTrackingLocation が重複排除を通ったあと、**精度フィルタより前**に呼ぶ。
+ * 地下で知りたいのは「棄却された生座標がどれだけ飛んでいたか」で、精度フィルタの
+ * あとに置くとその一番見たい区間が丸ごと抜ける(rawLocationAtomは最新1件しか持たない)。
  *
+ * 逆に、setLocation を直接呼ぶ経路(手動での駅選択・起動時のワンショット取得)は
+ * 対象外にしている。手動選択は意図的な瞬間移動なので、測位の飛び幅として混ぜると
+ * 履歴の意味が壊れる。
+ *
+ * 棄却された測位でも基準は常に更新するため、次の距離は隣り合う入力同士の距離になる。
  * セッション最初の1件は基準が無いので積まない(履歴が1件短くなる)。
  */
 export const recordLocationInput = (

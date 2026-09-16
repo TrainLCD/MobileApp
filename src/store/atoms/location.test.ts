@@ -148,16 +148,13 @@ describe('setLocation', () => {
       ).toBe(6);
     });
 
-    it('棄却された測位も飛び幅の基準を更新する', () => {
-      // 受理された座標だけを並べると、棄却を挟んだ区間の距離が実際より大きく出る
+    it('setLocationを直接呼ぶ経路は飛び幅に積まない', () => {
+      // 手動での駅選択・起動時のワンショットは意図的な瞬間移動なので、
+      // 測位の飛び幅として混ぜると履歴の意味が壊れる(記録はhandleTrackingLocation側)
       setLocation(makeLocation(35.0, 139.0, 30, 1000));
-      setLocation(makeLocation(36.0, 140.0, 30, 2000)); // 速度フィルタで棄却
-      setLocation(makeLocation(36.0, 140.0, 30, 3000)); // 同じ場所
+      setLocation(makeLocation(35.0001, 139.0, 30, 2000));
 
-      const history = getLocationInputDisplacementHistory();
-      expect(history).toHaveLength(2);
-      // 直前の入力(棄却された座標)との距離なので0になる
-      expect(history[1]).toBe(0);
+      expect(getLocationInputDisplacementHistory()).toEqual([]);
     });
   });
 

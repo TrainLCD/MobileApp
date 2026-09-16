@@ -574,7 +574,7 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
 
   const handleCopyDiagnostics = async () => {
     // 到着判定と同じ入力(= locationAtom 側の精度)から実効閾値を組み立てる。
-    // DevOverlayの表示用 accuracy は rawLocation 由来なので、ここで使うと判定と食い違う。
+    // 表示用の accuracy は通常モードでは rawLocation 由来なので、ここで使うと判定と食い違う。
     const accuracyBonus = getAccuracyBonus(simulatedLocation?.coords?.accuracy);
     const nearestLatitude = nearestStation?.latitude;
     const nearestLongitude = nearestStation?.longitude;
@@ -582,12 +582,15 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
       simulatedLocation != null &&
       nearestLatitude != null &&
       nearestLongitude != null
-        ? getDistance(
+        ? // 到着判定(isPointWithinRadius)と同じ 0.01m 精度で測る。既定の 1m 丸めだと、
+          // 閾値ぎりぎりのときダンプ上だけ大小が逆に見える
+          getDistance(
             {
               latitude: simulatedLocation.coords.latitude,
               longitude: simulatedLocation.coords.longitude,
             },
-            { latitude: nearestLatitude, longitude: nearestLongitude }
+            { latitude: nearestLatitude, longitude: nearestLongitude },
+            0.01
           )
         : null;
 
