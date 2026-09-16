@@ -26,6 +26,7 @@ import {
   ARRIVED_MIN_THRESHOLD,
   BAD_ACCURACY_THRESHOLD,
 } from '~/constants/threshold';
+import { getAccuracyBonus } from '~/utils/accuracyBonus';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import {
   clamp,
@@ -56,9 +57,6 @@ jest.mock('~/lib/remoteConfig', () => ({
   getMaxPermitAccuracy: () => 1500,
   isForceNotArrivedOnLowAccuracyEnabled: () => true,
 }));
-
-// useRefreshStation のプライベート定数と同値。到着圏へ加える精度ボーナスの上限(m)。
-const MAX_ACCURACY_BONUS = 150;
 
 type Condition = {
   label: string;
@@ -223,9 +221,9 @@ const replay = (
       ARRIVED_MIN_THRESHOLD,
       ARRIVED_MAX_THRESHOLD
     );
-    // 到着圏はGPS精度だけで決まる(ETAは到着判定へ介入しない)
-    const arrivedRadius =
-      arrivedThreshold + Math.min(accuracy * 0.5, MAX_ACCURACY_BONUS);
+    // 到着圏はGPS精度だけで決まる(ETAは到着判定へ介入しない)。精度ボーナスは
+    // useRefreshStation と同じ関数で求める(式を写すと判定とずれても気付けない)
+    const arrivedRadius = arrivedThreshold + getAccuracyBonus(accuracy);
 
     const arrived = nearestDistance <= arrivedRadius;
     if (arrived && firstDetection[nearestIdx] === null) {
