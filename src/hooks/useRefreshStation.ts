@@ -16,6 +16,7 @@ import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import { getAccuracyBonus } from '../utils/accuracyBonus';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useApproachingStation } from './useApproachingStation';
@@ -27,9 +28,6 @@ import { useThreshold } from './useThreshold';
 import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
-
-// GPS精度に応じた閾値補正の上限(m)
-const MAX_ACCURACY_BONUS = 150;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -72,14 +70,9 @@ export const useRefreshStation = (): void => {
   // isWrongDirection の単なる false 復帰ではリセットせず、次駅が変わるまで保持する。
   const lastNotifiedWrongDirectionStationIdRef = useRef<number | null>(null);
 
-  // GPS精度に応じた実効閾値を算出する
-  // 精度が悪い場合は判定圏を広げることで検知漏れを減らす
-  const accuracyBonus = useMemo(() => {
-    if (accuracy == null || !Number.isFinite(accuracy) || accuracy <= 0) {
-      return 0;
-    }
-    return Math.min(accuracy * 0.5, MAX_ACCURACY_BONUS);
-  }, [accuracy]);
+  // GPS精度に応じた実効閾値を算出する。補正の式はDevOverlayの診断表示と共有する
+  // (呼び出し側で組み直すと、持ち出した実効閾値が実際の判定と食い違う)
+  const accuracyBonus = useMemo(() => getAccuracyBonus(accuracy), [accuracy]);
 
   const effectiveArrivedThreshold = arrivedThreshold + accuracyBonus;
   const effectiveApproachingThreshold = approachingThreshold + accuracyBonus;
