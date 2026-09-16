@@ -1,5 +1,9 @@
 import type * as Location from 'expo-location';
 import { LineType, type Station } from '~/@types/graphql';
+import {
+  getLocationInputDisplacementHistory,
+  getLocationPipelineCounts,
+} from '~/utils/locationPipelineStats';
 import { store } from '..';
 import {
   accuracyHistoryAtom,
@@ -99,6 +103,61 @@ describe('setLocation', () => {
       // 座標は前回値のまま（棄却）だが、精度自体は良好なので外れ値フラグは解除される
       expect(store.get(locationAtom)?.coords.latitude).toBe(35.0);
       expect(store.get(locationAccuracyOutlierAtom)).toBe(false);
+    });
+  });
+
+  // 診断用の集計。判定には使わないが、判定箇所そのもので数えていないと
+  // 「どの門で落ちたか」を読み違えるため、実パイプラインの結果と突き合わせて固定する。
+  describe('パイプラインの集計(診断用)', () => {
+    it('locationAtomへ反映された件数をacceptedとして数える', () => {
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      setLocation(makeLocation(35.0001, 139.0, 30, 2000));
+
+      expect(getLocationPipelineCounts().accepted).toBe(2);
+      expect(getLocationPipelineCounts().rejectedBySpeed).toBe(0);
+    });
+
+    it('速度フィルタの棄却をrejectedBySpeedとして数える', () => {
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      setLocation(makeLocation(36.0, 140.0, 30, 2000));
+
+      expect(getLocationPipelineCounts()).toMatchObject({
+        accepted: 1,
+        rejectedBySpeed: 1,
+      });
+    });
+
+    it('連続棄却の上限で基準を張り直した回はacceptedに数える', () => {
+      // この経路はlocationAtomを書くので棄却ではない。内訳の合計が入力件数と
+      // 一致しないと「落ちていない」のか「数え漏らしている」のかが読めなくなる。
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      for (let i = 1; i <= 5; i += 1) {
+        setLocation(makeLocation(36.0, 140.0, 30, 1000 + i * 1000));
+      }
+
+      const counts = getLocationPipelineCounts();
+      expect(counts.accepted).toBe(2);
+      expect(counts.rejectedBySpeed).toBe(4);
+      // 入力6件がすべてどれかの内訳に入る
+      expect(
+        counts.accepted +
+          counts.rejectedByAccuracy +
+          counts.rejectedAsDuplicate +
+          counts.rejectedByEta +
+          counts.rejectedBySpeed
+      ).toBe(6);
+    });
+
+    it('棄却された測位も飛び幅の基準を更新する', () => {
+      // 受理された座標だけを並べると、棄却を挟んだ区間の距離が実際より大きく出る
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      setLocation(makeLocation(36.0, 140.0, 30, 2000)); // 速度フィルタで棄却
+      setLocation(makeLocation(36.0, 140.0, 30, 3000)); // 同じ場所
+
+      const history = getLocationInputDisplacementHistory();
+      expect(history).toHaveLength(2);
+      // 直前の入力(棄却された座標)との距離なので0になる
+      expect(history[1]).toBe(0);
     });
   });
 

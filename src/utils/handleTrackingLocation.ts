@@ -6,6 +6,10 @@ import {
   setRawLocation,
 } from '~/store/atoms/location';
 import { isDevApp } from './isDevApp';
+import {
+  countLocationRejectedAsDuplicate,
+  countLocationRejectedByAccuracy,
+} from './locationPipelineStats';
 import { monotonicNow } from './monotonicNow';
 
 // システム時計の巻き戻りとみなす閾値(ms)。処理済みタイムスタンプが現在時刻より
@@ -51,6 +55,9 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     lastProcessedTimestampMs = 0;
   }
   if (location.timestamp <= lastProcessedTimestampMs) {
+    // 破棄した事実だけ数える。重複排除はlastProcessedAtMsを更新する前に抜けるので、
+    // 経過時間からは「OSが呼んでいない」状態と区別が付かない(locationPipelineStats)。
+    countLocationRejectedAsDuplicate();
     return;
   }
   lastProcessedTimestampMs = location.timestamp;
@@ -70,6 +77,7 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     // フラグの解除は受理側のsetLocationに集約している（ワンショット取得・手動選択など
     // 本関数を経由しない経路でも確実に解除するため）。
     setLocationAccuracyOutlier(true);
+    countLocationRejectedByAccuracy();
     return;
   }
 

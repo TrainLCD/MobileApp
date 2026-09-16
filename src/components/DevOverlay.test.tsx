@@ -10,11 +10,17 @@ import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
   accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
+  locationAccuracyOutlierAtom,
   locationAtom,
   rawLocationAtom,
   smoothingDecisionAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import {
+  approachingAtom,
+  arrivedAtom,
+  stationAtom,
+} from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import DevOverlay, {
@@ -52,6 +58,16 @@ jest.mock('~/hooks/useTelemetryEnabled', () => ({
   useTelemetryEnabled: jest.fn(() => true),
 }));
 
+// 到着判定の対象と実効閾値は判定側のフックをそのまま読む。DevOverlayの検証対象は
+// 「持ち出す値を組み立てられるか」なので、フックの中身はここでは差し替える。
+jest.mock('~/hooks/useNearestStation', () => ({
+  useNearestStation: jest.fn(),
+}));
+
+jest.mock('~/hooks/useThreshold', () => ({
+  useThreshold: jest.fn(),
+}));
+
 // ETA推定フェーズは常駐atomではなくオンデマンド計算になったため、関数ごとモックする
 jest.mock('~/utils/etaPhaseNow', () => ({
   getEtaPhaseNow: jest.fn(() => null),
@@ -64,6 +80,8 @@ jest.mock('~/utils/clipboard', () => ({
 
 // Import mocked hooks for type safety
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
+import { useNearestStation } from '~/hooks/useNearestStation';
+import { useThreshold } from '~/hooks/useThreshold';
 import { copyTextToClipboard } from '~/utils/clipboard';
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
@@ -82,6 +100,12 @@ const mockGetEtaPhaseNow = getEtaPhaseNow as jest.MockedFunction<
 >;
 const mockCopyTextToClipboard = copyTextToClipboard as jest.MockedFunction<
   typeof copyTextToClipboard
+>;
+const mockUseNearestStation = useNearestStation as jest.MockedFunction<
+  typeof useNearestStation
+>;
+const mockUseThreshold = useThreshold as jest.MockedFunction<
+  typeof useThreshold
 >;
 
 describe('DevOverlay', () => {
@@ -110,6 +134,10 @@ describe('DevOverlay', () => {
     etaAnchor = null,
     filterAccuracyHistory = [15],
     smoothingDecision = { skipSmoothing: false, lineType: null },
+    currentStation = null,
+    arrived = false,
+    approaching = false,
+    accuracyOutlier = false,
   }: {
     location?: unknown;
     rawLocation?: unknown;
@@ -119,6 +147,10 @@ describe('DevOverlay', () => {
     etaAnchor?: unknown;
     filterAccuracyHistory?: number[];
     smoothingDecision?: { skipSmoothing: boolean; lineType: unknown };
+    currentStation?: unknown;
+    arrived?: boolean;
+    approaching?: boolean;
+    accuracyOutlier?: boolean;
   } = {}) => {
     mockGetEtaPhaseNow.mockReturnValue(etaPhase as never);
     mockUseAtomValue.mockImplementation((atom) => {
@@ -143,6 +175,18 @@ describe('DevOverlay', () => {
       if (atom === smoothingDecisionAtom) {
         return smoothingDecision as never;
       }
+      if (atom === stationAtom) {
+        return currentStation as never;
+      }
+      if (atom === arrivedAtom) {
+        return arrived as never;
+      }
+      if (atom === approachingAtom) {
+        return approaching as never;
+      }
+      if (atom === locationAccuracyOutlierAtom) {
+        return accuracyOutlier as never;
+      }
       if (atom === isLEDThemeAtom) {
         return false as never;
       }
@@ -165,6 +209,11 @@ describe('DevOverlay', () => {
       nameRoman: 'Test Station',
       stationNumbers: [{ stationNumber: 'JK-01' }],
     } as Station);
+    mockUseNearestStation.mockReturnValue(undefined);
+    mockUseThreshold.mockReturnValue({
+      arrivedThreshold: 200,
+      approachingThreshold: 1000,
+    });
   });
 
   afterEach(() => {

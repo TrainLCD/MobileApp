@@ -10,6 +10,10 @@ import {
   handleTrackingLocation,
   resetTrackingLocationDedup,
 } from './handleTrackingLocation';
+import {
+  getLocationPipelineCounts,
+  resetLocationPipelineStats,
+} from './locationPipelineStats';
 
 jest.mock('~/store/atoms/location', () => ({
   setLocation: jest.fn(),
@@ -184,6 +188,40 @@ describe('handleTrackingLocation', () => {
       handleTrackingLocation(makeLocation(30, 1000));
 
       expect(getMsSinceLastTrackedLocation()).toBe(5_000);
+    });
+  });
+  // 診断用の集計。判定には使わないが、判定箇所そのもので数えていないと
+  // 「どの門で落ちたか」を読み違えるため、実挙動と突き合わせて固定する。
+  describe('パイプラインの集計(診断用)', () => {
+    beforeEach(() => {
+      resetLocationPipelineStats();
+    });
+
+    it('最大許容精度で棄却した件数を数える', () => {
+      handleTrackingLocation(makeLocation(MAX_PERMIT_ACCURACY + 1, 1000));
+
+      expect(getLocationPipelineCounts()).toMatchObject({
+        rejectedByAccuracy: 1,
+        rejectedAsDuplicate: 0,
+      });
+    });
+
+    it('重複排除で破棄した件数を数える', () => {
+      // 重複排除はlastProcessedAtMsを更新する前に抜けるため、経過時間では
+      // 「OSが呼んでいない」状態と区別が付かない。数えた値でしか読めない
+      handleTrackingLocation(makeLocation(30, 1000));
+      handleTrackingLocation(makeLocation(30, 1000));
+      handleTrackingLocation(makeLocation(30, 900));
+
+      expect(getLocationPipelineCounts().rejectedAsDuplicate).toBe(2);
+    });
+
+    it('受理した測位はここでは数えない(setLocation側の責務)', () => {
+      // acceptedはlocationAtomを書いた回数。ここで数えると二重計上になる
+      handleTrackingLocation(makeLocation(30, 1000));
+
+      expect(mockSetLocation).toHaveBeenCalledTimes(1);
+      expect(getLocationPipelineCounts().accepted).toBe(0);
     });
   });
 });

@@ -1,6 +1,7 @@
 import * as Application from 'expo-application';
 import { LinearGradient } from 'expo-linear-gradient';
 import type * as Location from 'expo-location';
+import getDistance from 'geolib/es/getDistance';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -22,17 +23,30 @@ import {
   useLandscapeWindowDimensions,
   useNextStation,
 } from '~/hooks';
+import { useNearestStation } from '~/hooks/useNearestStation';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
-import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
+import { useThreshold } from '~/hooks/useThreshold';
+import {
+  getMaxPermitAccuracy,
+  isEtaAssistEnabled,
+  isForceNotArrivedOnLowAccuracyEnabled,
+} from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
   accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
+  locationAccuracyOutlierAtom,
   locationAtom,
   rawLocationAtom,
   smoothingDecisionAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import {
+  approachingAtom,
+  arrivedAtom,
+  stationAtom,
+} from '~/store/atoms/station';
+import { getAccuracyBonus } from '~/utils/accuracyBonus';
 import { copyTextToClipboard } from '~/utils/clipboard';
 import { formatDevDiagnosticsSnapshot } from '~/utils/devDiagnosticsSnapshot';
 import {
@@ -41,6 +55,10 @@ import {
 } from '~/utils/displacementSpeed';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isDevApp } from '~/utils/isDevApp';
+import {
+  getLocationInputDisplacementHistory,
+  getLocationPipelineCounts,
+} from '~/utils/locationPipelineStats';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
 
@@ -475,6 +493,14 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   // ETA補助の診断表示。有効フラグ(リモート設定/手動トグル)は非リアクティブなgetter、
   // アンカーはatomから購読する。推定フェーズは常駐タイマーで公開されなくなったため、
   // DevOverlay自身の1秒ティック(nowTick)を評価時刻としてオンデマンド計算する。
+  // GPSが下している判定そのもの。座標と閾値からの逆算は直通運転で成り立たないため、
+  // 判定に使われている値をそのまま持ち出す。
+  const currentStation = useAtomValue(stationAtom);
+  const arrived = useAtomValue(arrivedAtom);
+  const approaching = useAtomValue(approachingAtom);
+  const accuracyOutlier = useAtomValue(locationAccuracyOutlierAtom);
+  const nearestStation = useNearestStation();
+  const { arrivedThreshold, approachingThreshold } = useThreshold();
   const etaAssistEnabled = isEtaAssistEnabled();
   const etaPhase = useMemo(() => getEtaPhaseNow(nowTick), [nowTick]);
   const etaAnchor = useAtomValue(etaAnchorAtom);
@@ -547,6 +573,24 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   );
 
   const handleCopyDiagnostics = async () => {
+    // 到着判定と同じ入力(= locationAtom 側の精度)から実効閾値を組み立てる。
+    // DevOverlayの表示用 accuracy は rawLocation 由来なので、ここで使うと判定と食い違う。
+    const accuracyBonus = getAccuracyBonus(simulatedLocation?.coords?.accuracy);
+    const nearestLatitude = nearestStation?.latitude;
+    const nearestLongitude = nearestStation?.longitude;
+    const distanceToNearestStation =
+      simulatedLocation != null &&
+      nearestLatitude != null &&
+      nearestLongitude != null
+        ? getDistance(
+            {
+              latitude: simulatedLocation.coords.latitude,
+              longitude: simulatedLocation.coords.longitude,
+            },
+            { latitude: nearestLatitude, longitude: nearestLongitude }
+          )
+        : null;
+
     // 実際に載ったときだけ COPIED を出す。失敗しているのに成功表示を出すと、
     // 貼り付けてみるまで気付けない。
     const copied = await copyTextToClipboard(
@@ -565,14 +609,25 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         filteredLocation: simulatedLocation,
         accuracyHistory: chartHistory,
         filterAccuracyHistory,
+        displacementHistory: getLocationInputDisplacementHistory(),
+        accuracyOutlier,
+        pipelineCounts: getLocationPipelineCounts(),
         skipSmoothing: smoothingDecision.skipSmoothing,
         lineType: smoothingDecision.lineType,
         effectiveSpeedMps: effectiveSpeed,
         hasMeasuredSpeed: hasEverMeasuredSpeed,
         maxPermitAccuracy,
         etaAssistEnabled,
+        forceNotArrivedOnLowAccuracy: isForceNotArrivedOnLowAccuracyEnabled(),
         etaPhase,
         etaAnchor,
+        currentStation,
+        arrived,
+        approaching,
+        nearestStation,
+        distanceToNearestStation,
+        arrivedThreshold: arrivedThreshold + accuracyBonus,
+        approachingThreshold: approachingThreshold + accuracyBonus,
         nextStation,
         distanceToNextStation,
       })

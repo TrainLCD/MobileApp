@@ -42,14 +42,31 @@ const baseInput: DevDiagnosticsInput = {
   lineType: 'Subway',
   effectiveSpeedMps: 12.5,
   hasMeasuredSpeed: true,
+  displacementHistory: [4, 9, 1200, 830],
+  accuracyOutlier: false,
+  pipelineCounts: {
+    accepted: 41,
+    rejectedByAccuracy: 3,
+    rejectedAsDuplicate: 17,
+    rejectedByEta: 2,
+    rejectedBySpeed: 1,
+  },
   maxPermitAccuracy: 1500,
   etaAssistEnabled: false,
+  forceNotArrivedOnLowAccuracy: true,
   etaPhase: { kind: 'RUNNING', targetStationId: 9930135 },
   etaAnchor: {
     stationId: 9930134,
     kind: 'DEPARTED',
     observedAtMs: 1_700_000_000_000,
   },
+  currentStation: { id: 9930136, name: '豊島園' } as Station,
+  arrived: false,
+  approaching: false,
+  nearestStation: { id: 9930137, name: '練馬春日町' } as Station,
+  distanceToNearestStation: 597,
+  arrivedThreshold: 344.75,
+  approachingThreshold: 539.5,
   nextStation: { id: 9930135, name: '練馬' } as Station,
   distanceToNextStation: '1,234',
 };
@@ -63,6 +80,7 @@ describe('buildDevDiagnosticsSnapshot', () => {
     expect(snapshot.config).toEqual({
       maxPermitAccuracy: 1500,
       etaAssistEnabled: false,
+      forceNotArrivedOnLowAccuracy: true,
       autoModeEnabled: false,
       telemetryEnabled: true,
       backgroundLocationTracking: true,
@@ -101,6 +119,14 @@ describe('buildDevDiagnosticsSnapshot', () => {
       skipSmoothing: true,
       lineType: 'Subway',
       accuracyHistory: [20, 45, 310, 620],
+      accuracyOutlier: false,
+      counts: {
+        accepted: 41,
+        rejectedByAccuracy: 3,
+        rejectedAsDuplicate: 17,
+        rejectedByEta: 2,
+        rejectedBySpeed: 1,
+      },
     });
     // チャート用とは別物であることを固定する(取り違えると地下鉄分岐の説明が付かない)
     expect(snapshot.filter.accuracyHistory).not.toEqual(
@@ -146,6 +172,48 @@ describe('buildDevDiagnosticsSnapshot', () => {
       timestampISO: null,
       latitude: null,
     });
+  });
+
+  it('どの門で測位が落ちたかの内訳を持つ', () => {
+    // 受理済みの座標だけでは「測位が届いていない」のか「届いているが捨てている」のかが
+    // 区別できない。とくに重複排除は経過時間に現れないため、数えた値でしか読めない
+    const snapshot = buildDevDiagnosticsSnapshot(baseInput);
+
+    expect(snapshot.filter.counts.rejectedAsDuplicate).toBe(17);
+    expect(snapshot.filter.counts.accepted).toBe(41);
+  });
+
+  it('入力座標の飛び幅を精度履歴と並べて持つ', () => {
+    // 精度だけでは、位置が飛び続けているのか一点だけ外れたのかが分からない
+    const snapshot = buildDevDiagnosticsSnapshot(baseInput);
+
+    expect(snapshot.location.displacementHistory).toEqual([4, 9, 1200, 830]);
+    // チャート用の精度履歴とは別物(取り違えると読みが逆になる)
+    expect(snapshot.location.displacementHistory).not.toEqual(
+      snapshot.location.accuracyHistory
+    );
+  });
+
+  it('GPSが下している判定そのものを持つ', () => {
+    // 現在駅・到着中・最寄り駅・実効閾値は、座標と駅座標からの逆算では再現できない
+    // (直通運転では進行方向の逆算が成り立たない)
+    const snapshot = buildDevDiagnosticsSnapshot(baseInput);
+
+    expect(snapshot.state).toEqual({
+      currentStationId: 9930136,
+      currentStationName: '豊島園',
+      arrived: false,
+      approaching: false,
+      nearestStationId: 9930137,
+      nearestStationName: '練馬春日町',
+      distanceToNearestStation: 597,
+      arrivedThreshold: 344.75,
+      approachingThreshold: 539.5,
+    });
+    // 到着判定の対象(最寄り駅)と表示上の次駅は別物
+    expect(snapshot.state.nearestStationId).not.toBe(
+      snapshot.derived.nextStationId
+    );
   });
 
   it('ETAのフェーズとアンカーをそのまま持つ', () => {
