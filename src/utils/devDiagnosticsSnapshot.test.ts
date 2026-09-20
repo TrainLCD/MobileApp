@@ -51,6 +51,14 @@ const baseInput: DevDiagnosticsInput = {
     rejectedByEta: 2,
     rejectedBySpeed: 1,
   },
+  heartbeat: {
+    state: 'running',
+    requested: 12,
+    succeeded: 1,
+    failed: 11,
+    abandoned: 0,
+    lastErrorMessage: '位置情報を取得できません',
+  },
   maxPermitAccuracy: 1500,
   etaAssistEnabled: false,
   forceNotArrivedOnLowAccuracy: true,
@@ -181,6 +189,39 @@ describe('buildDevDiagnosticsSnapshot', () => {
 
     expect(snapshot.filter.counts.rejectedAsDuplicate).toBe(17);
     expect(snapshot.filter.counts.accepted).toBe(41);
+  });
+
+  it('補完測位の稼働状態と要求結果を持つ', () => {
+    // 測位が一件も得られない区間では counts のどれも動かないため、内訳だけでは
+    // 「要求を出していない」のか「出しても得られていない」のかが読めない
+    const snapshot = buildDevDiagnosticsSnapshot(baseInput);
+
+    expect(snapshot.heartbeat).toEqual({
+      state: 'running',
+      requested: 12,
+      succeeded: 1,
+      failed: 11,
+      abandoned: 0,
+      lastErrorMessage: '位置情報を取得できません',
+    });
+  });
+
+  it('補完測位が止まっているときはその理由を持つ', () => {
+    // 要求数が0でも、止まっているのか途絶が無かったのかで読みが真逆になる
+    const snapshot = buildDevDiagnosticsSnapshot({
+      ...baseInput,
+      heartbeat: {
+        state: 'power-saving',
+        requested: 0,
+        succeeded: 0,
+        failed: 0,
+        abandoned: 0,
+        lastErrorMessage: null,
+      },
+    });
+
+    expect(snapshot.heartbeat.state).toBe('power-saving');
+    expect(snapshot.heartbeat.requested).toBe(0);
   });
 
   it('入力座標の飛び幅を精度履歴と並べて持つ', () => {

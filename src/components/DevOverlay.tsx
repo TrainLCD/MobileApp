@@ -55,6 +55,7 @@ import {
 } from '~/utils/displacementSpeed';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isDevApp } from '~/utils/isDevApp';
+import { getLocationHeartbeatStats } from '~/utils/locationHeartbeatStats';
 import {
   getLocationInputDisplacementHistory,
   getLocationPipelineCounts,
@@ -615,6 +616,7 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         displacementHistory: getLocationInputDisplacementHistory(),
         accuracyOutlier,
         pipelineCounts: getLocationPipelineCounts(),
+        heartbeat: getLocationHeartbeatStats(),
         skipSmoothing: smoothingDecision.skipSmoothing,
         lineType: smoothingDecision.lineType,
         effectiveSpeedMps: effectiveSpeed,
