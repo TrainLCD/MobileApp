@@ -1,5 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as Location from 'expo-location';
+import { StrictMode } from 'react';
+import { AppState } from 'react-native';
 import {
   LOCATION_HEARTBEAT_MAX_PENDING,
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
@@ -163,6 +165,7 @@ describe('useLocationHeartbeat', () => {
     mockPowerSavingLocationEnabled = false;
     mockSystemLowPowerMode = false;
     mockIsAppForeground = true;
+    (AppState as { currentState: string }).currentState = 'active';
     mockGetForegroundPermissionsAsync.mockResolvedValue({ granted: true });
     // 既定は「配信が途絶えている」状態
     mockGetMsSinceLastTrackedLocation.mockReturnValue(
@@ -653,6 +656,34 @@ describe('useLocationHeartbeat', () => {
 
       unmount();
       expect(getLocationHeartbeatStats().teardowns).toBe(2);
+    });
+
+    // 回数だけでは引き金が読めない。前景判定が外れたのか、省電力へ切り替わったのか、
+    // ホストが作り直されただけなのかで、次に直す場所が変わる。
+    it('張り直しの理由に、変わった依存とそのときのAppStateを残す', async () => {
+      const { rerender } = await startHeartbeat();
+      expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([]);
+
+      mockIsAppForeground = false;
+      (AppState as { currentState: string }).currentState = 'background';
+      await act(async () => {
+        rerender(undefined);
+      });
+
+      expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([
+        'foreground: true→false / AppState=background',
+      ]);
+    });
+
+    // StrictModeは開発時にeffectの片付けと張り直しを必ず1往復させる。依存は何も
+    // 変わっていないので、依存の名前が出ると無関係な値を疑うことになる。
+    it('依存が変わっていない張り直しは再マウントとして残す', async () => {
+      renderHook(() => useLocationHeartbeat(), { wrapper: StrictMode });
+      await act(async () => {});
+
+      expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([
+        '依存の変化なし(再マウント) / AppState=active',
+      ]);
     });
 
     // 画面を離れたあとも running のままだと、動いていない区間のダンプが動作中に見える

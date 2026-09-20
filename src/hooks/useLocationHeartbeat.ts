@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   getMsSinceLastTrackedLocation,
@@ -14,6 +15,7 @@ import {
   countLocationHeartbeatSucceeded,
   countLocationHeartbeatTornDown,
   type LocationHeartbeatState,
+  recordLocationHeartbeatTeardownReason,
   setLocationHeartbeatState,
 } from '~/utils/locationHeartbeatStats';
 import { monotonicNow } from '~/utils/monotonicNow';
@@ -87,6 +89,48 @@ const watchSingleLocation = (
   });
 
   return { promise, stop };
+};
+
+/** effectを張り直す依存の組。張り直しの理由を出すために前回ぶんを持ち越す。 */
+type HeartbeatDeps = {
+  accuracy: Location.LocationOptions['accuracy'];
+  autoModeEnabled: boolean;
+  isAppForeground: boolean;
+  powerSavingEnabled: boolean;
+};
+
+/**
+ * 張り直しの理由を1行で組み立てる。
+ *
+ * 回数だけでは引き金が読めない。前景判定が外れたのか、省電力へ切り替わったのか、
+ * ホストが作り直されただけなのかで、次に直す場所が変わる。依存が1つも変わっていない
+ * ときも「変化なし」として残す。理由が空くと、記録し損ねたのか変化が無かったのかを
+ * 区別できなくなる。
+ */
+const describeDepChange = (
+  prev: HeartbeatDeps,
+  next: HeartbeatDeps
+): string => {
+  const changes = [
+    prev.accuracy !== next.accuracy
+      ? `accuracy: ${String(prev.accuracy)}→${String(next.accuracy)}`
+      : null,
+    prev.autoModeEnabled !== next.autoModeEnabled
+      ? `autoMode: ${prev.autoModeEnabled}→${next.autoModeEnabled}`
+      : null,
+    prev.isAppForeground !== next.isAppForeground
+      ? `foreground: ${prev.isAppForeground}→${next.isAppForeground}`
+      : null,
+    prev.powerSavingEnabled !== next.powerSavingEnabled
+      ? `powerSaving: ${prev.powerSavingEnabled}→${next.powerSavingEnabled}`
+      : null,
+  ].filter((change): change is string => change !== null);
+  // AppStateは依存そのものではないが、前景判定が外れたときに'background'だったのか
+  // 'inactive'だったのかで意味が変わる。判定の元の値として必ず添える。
+  const appState = `AppState=${AppState.currentState}`;
+  return changes.length === 0
+    ? `依存の変化なし(再マウント) / ${appState}`
+    : `${changes.join(', ')} / ${appState}`;
 };
 
 /**
@@ -164,8 +208,23 @@ export const useLocationHeartbeat = (): void => {
   // 補完測位が継続測位より高精度を要求すると、片方だけ電池の重い測位で走ってしまう。
   // 精度は継続測位と同じものを使う。
   const accuracy = watchOptions.accuracy;
+  const prevDepsRef = useRef<HeartbeatDeps | null>(null);
 
   useEffect(() => {
+    // 張り直しの理由は、前回の依存と突き合わせて初めて差分になる。片付け側からは
+    // 新しい値が見えないので、張り直したあとのここで記録する。
+    const deps: HeartbeatDeps = {
+      accuracy,
+      autoModeEnabled,
+      isAppForeground,
+      powerSavingEnabled,
+    };
+    const prevDeps = prevDepsRef.current;
+    if (prevDeps !== null) {
+      recordLocationHeartbeatTeardownReason(describeDepChange(prevDeps, deps));
+    }
+    prevDepsRef.current = deps;
+
     const inactiveState = resolveInactiveState({
       autoModeEnabled,
       isAppForeground,

@@ -66,6 +66,19 @@ export type LocationHeartbeatStats = {
    */
   teardowns: number;
   /**
+   * 直近の張り直しの理由(古いものが先頭、最大 MAX_TEARDOWN_REASONS 件)。
+   * 「どの依存が変わったか」と「そのときの AppState」を1件ずつ文字列で持つ。
+   *
+   * 回数(teardowns)だけでは引き金が読めない。前景判定が外れたのか、省電力へ切り替わった
+   * のか、ホストが作り直されただけなのかで、次に直す場所がまるで変わる。数だけを見て
+   * 引き金を推測すると外すので、理由そのものを残す。
+   *
+   * 理由は張り直したあとの実行で記録する(前回の依存と突き合わせて初めて差分が出る)。
+   * 画面を離れたときのアンマウントは次の実行が無いため、teardowns だけが進んで理由は
+   * 増えない。
+   */
+  recentTeardownReasons: string[];
+  /**
    * 直近の取得失敗の内容。失敗が地下で連続するとき、ログを追わずに理由を持ち出せるようにする。
    * 長い文字列がダンプを埋めないよう切り詰める。
    */
@@ -82,8 +95,13 @@ const createStats = (): LocationHeartbeatStats => ({
   abandoned: 0,
   discarded: 0,
   teardowns: 0,
+  recentTeardownReasons: [],
   lastErrorMessage: null,
 });
+
+// 残す理由の件数。乗車1回ぶんの張り直しを追うには数件あれば足り、ダンプを
+// 埋めない程度に抑える。
+const MAX_TEARDOWN_REASONS = 5;
 
 let stats = createStats();
 
@@ -130,8 +148,18 @@ export const countLocationHeartbeatTornDown = (): void => {
   stats.teardowns += 1;
 };
 
+export const recordLocationHeartbeatTeardownReason = (reason: string): void => {
+  // 差し替えで足す。getLocationHeartbeatStats が返した配列は浅いコピーで共有される
+  // ため、既に持ち出されたダンプを後から書き換えないようにする。
+  stats.recentTeardownReasons = [
+    ...stats.recentTeardownReasons,
+    reason.slice(0, MAX_ERROR_MESSAGE_LENGTH),
+  ].slice(-MAX_TEARDOWN_REASONS);
+};
+
 export const getLocationHeartbeatStats = (): LocationHeartbeatStats => ({
   ...stats,
+  recentTeardownReasons: [...stats.recentTeardownReasons],
 });
 
 /**

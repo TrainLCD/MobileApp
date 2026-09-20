@@ -59,6 +59,7 @@ const baseInput: DevDiagnosticsInput = {
     abandoned: 0,
     discarded: 0,
     teardowns: 2,
+    recentTeardownReasons: ['foreground: true→false / AppState=background'],
     lastErrorMessage: '位置情報を取得できません',
   },
   maxPermitAccuracy: 1500,
@@ -206,6 +207,7 @@ describe('buildDevDiagnosticsSnapshot', () => {
       abandoned: 0,
       discarded: 0,
       teardowns: 2,
+      recentTeardownReasons: ['foreground: true→false / AppState=background'],
       lastErrorMessage: '位置情報を取得できません',
     });
   });
@@ -222,6 +224,7 @@ describe('buildDevDiagnosticsSnapshot', () => {
         abandoned: 0,
         discarded: 0,
         teardowns: 0,
+        recentTeardownReasons: [],
         lastErrorMessage: null,
       },
     });
