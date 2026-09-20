@@ -20,8 +20,8 @@ jest.mock('expo-battery', () => ({
   useLowPowerMode: () => false,
 }));
 
-jest.mock('./useIsAppActive', () => ({
-  useIsAppActive: () => true,
+jest.mock('./useIsAppForeground', () => ({
+  useIsAppForeground: () => true,
 }));
 
 // handleTrackingLocation の下流(ストア)だけ止める。フック → handleTrackingLocation →

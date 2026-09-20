@@ -1,8 +1,10 @@
 import {
   countLocationHeartbeatAbandoned,
+  countLocationHeartbeatDiscarded,
   countLocationHeartbeatFailed,
   countLocationHeartbeatRequested,
   countLocationHeartbeatSucceeded,
+  countLocationHeartbeatTornDown,
   getLocationHeartbeatStats,
   resetLocationHeartbeatStats,
   setLocationHeartbeatState,
@@ -20,6 +22,8 @@ describe('locationHeartbeatStats', () => {
       succeeded: 0,
       failed: 0,
       abandoned: 0,
+      discarded: 0,
+      teardowns: 0,
       lastErrorMessage: null,
     });
   });
@@ -36,6 +40,16 @@ describe('locationHeartbeatStats', () => {
     expect(stats.succeeded).toBe(1);
     expect(stats.failed).toBe(1);
     expect(stats.abandoned).toBe(1);
+  });
+
+  it('捨てた要求と片付けの回数をそれぞれ数える', () => {
+    countLocationHeartbeatDiscarded();
+    countLocationHeartbeatTornDown();
+    countLocationHeartbeatTornDown();
+
+    const stats = getLocationHeartbeatStats();
+    expect(stats.discarded).toBe(1);
+    expect(stats.teardowns).toBe(2);
   });
 
   it('直近の失敗理由を残す', () => {
@@ -92,6 +106,8 @@ describe('locationHeartbeatStats', () => {
       succeeded: 0,
       failed: 0,
       abandoned: 0,
+      discarded: 0,
+      teardowns: 0,
       lastErrorMessage: null,
     });
   });

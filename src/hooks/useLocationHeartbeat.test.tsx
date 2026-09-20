@@ -34,9 +34,9 @@ jest.mock('expo-battery', () => ({
   useLowPowerMode: () => mockSystemLowPowerMode,
 }));
 
-let mockIsAppActive = true;
-jest.mock('./useIsAppActive', () => ({
-  useIsAppActive: () => mockIsAppActive,
+let mockIsAppForeground = true;
+jest.mock('./useIsAppForeground', () => ({
+  useIsAppForeground: () => mockIsAppForeground,
 }));
 
 jest.mock('../utils/monotonicNow', () => ({
@@ -162,7 +162,7 @@ describe('useLocationHeartbeat', () => {
     mockAutoModeEnabled = false;
     mockPowerSavingLocationEnabled = false;
     mockSystemLowPowerMode = false;
-    mockIsAppActive = true;
+    mockIsAppForeground = true;
     mockGetForegroundPermissionsAsync.mockResolvedValue({ granted: true });
     // 既定は「配信が途絶えている」状態
     mockGetMsSinceLastTrackedLocation.mockReturnValue(
@@ -269,8 +269,11 @@ describe('useLocationHeartbeat', () => {
 
   it('背景では動かない', async () => {
     // 背景では測位が deferredUpdatesInterval ぶん貯めてから報告されるため、正常時も
-    // 配信間隔が途絶時間以上になり途絶と区別できない。一発取得も背景では成立しない。
-    mockIsAppActive = false;
+    // 配信間隔が途絶時間以上になり途絶と区別できない。補完測位が作る
+    // CLLocationManagerも背景では測位を受け取れない。
+    // iOSの'inactive'はここに含めない(useIsAppForeground)。含めると、乗車中に
+    // コントロールセンターを開いただけで補完測位が畳まれる。
+    mockIsAppForeground = false;
     await startHeartbeat();
 
     await advanceToNextCheck();
@@ -517,7 +520,7 @@ describe('useLocationHeartbeat', () => {
     it.each([
       ['変位ゲートを持たないプラットフォーム', 'unnecessary'],
       ['オートモード', 'auto-mode'],
-      ['背景', 'app-inactive'],
+      ['背景', 'app-background'],
       ['省電力測位', 'power-saving'],
       ['権限なし', 'permission-denied'],
     ] as const)('%s では止めている理由を残す', async (label, expected) => {
@@ -526,7 +529,7 @@ describe('useLocationHeartbeat', () => {
       } else if (label === 'オートモード') {
         mockAutoModeEnabled = true;
       } else if (label === '背景') {
-        mockIsAppActive = false;
+        mockIsAppForeground = false;
       } else if (label === '省電力測位') {
         mockPowerSavingLocationEnabled = true;
       } else {
@@ -588,6 +591,68 @@ describe('useLocationHeartbeat', () => {
       expect(getLocationHeartbeatStats().state).toBe('not-mounted');
 
       warnSpy.mockRestore();
+    });
+
+    // 張り直しの向こう側へ要求は残らない。捨てた事実を数えないと、結果のカウンタが
+    // どれも動かないまま要求数だけが進むダンプになり、「応答が返っていない」のか
+    // 「返る前に捨てた」のかが読めなくなる。
+    it('結果を待たずに捨てた要求を数える', async () => {
+      setWatchBehavior(null);
+      const { rerender } = await startHeartbeat();
+
+      await advanceToNextCheck();
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 1,
+        discarded: 0,
+      });
+
+      // 稼働条件から外れてeffectが張り直される(オートモードへの切り替え)
+      mockAutoModeEnabled = true;
+      await act(async () => {
+        rerender(undefined);
+      });
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 1,
+        succeeded: 0,
+        failed: 0,
+        abandoned: 0,
+        discarded: 1,
+      });
+      // 捨てた要求の購読は閉じる。閉じないと画面の外で測位が回り続ける
+      expect(watches[0].remove).toHaveBeenCalled();
+    });
+
+    it('要求を出していなければ捨てた数は増えない', async () => {
+      // 途絶が無く要求を出していない間の張り直しまで捨てたことにすると、
+      // 「要求が捨てられている」という読みが立たなくなる
+      mockGetMsSinceLastTrackedLocation.mockReturnValue(
+        LOCATION_HEARTBEAT_STALE_THRESHOLD - 1
+      );
+      const { unmount } = await startHeartbeat();
+
+      await advanceToNextCheck();
+      unmount();
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 0,
+        discarded: 0,
+      });
+    });
+
+    // 張り直しが頻発していること自体が「なぜ補完測位が進まないのか」の手掛かりになる
+    it('片付けが走った回数を数える', async () => {
+      const { rerender, unmount } = await startHeartbeat();
+      expect(getLocationHeartbeatStats().teardowns).toBe(0);
+
+      mockAutoModeEnabled = true;
+      await act(async () => {
+        rerender(undefined);
+      });
+      expect(getLocationHeartbeatStats().teardowns).toBe(1);
+
+      unmount();
+      expect(getLocationHeartbeatStats().teardowns).toBe(2);
     });
 
     // 画面を離れたあとも running のままだと、動いていない区間のダンプが動作中に見える

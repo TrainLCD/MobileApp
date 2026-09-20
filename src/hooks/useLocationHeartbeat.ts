@@ -8,9 +8,11 @@ import {
 } from '~/utils/handleTrackingLocation';
 import {
   countLocationHeartbeatAbandoned,
+  countLocationHeartbeatDiscarded,
   countLocationHeartbeatFailed,
   countLocationHeartbeatRequested,
   countLocationHeartbeatSucceeded,
+  countLocationHeartbeatTornDown,
   type LocationHeartbeatState,
   setLocationHeartbeatState,
 } from '~/utils/locationHeartbeatStats';
@@ -20,7 +22,7 @@ import {
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
   NEEDS_LOCATION_HEARTBEAT,
 } from '../constants/location';
-import { useIsAppActive } from './useIsAppActive';
+import { useIsAppForeground } from './useIsAppForeground';
 import { useLocationProfile } from './useLocationProfile';
 
 /** 測位を1件だけ取りに行く要求。見切るときは stop で購読を閉じる。 */
@@ -97,11 +99,11 @@ const watchSingleLocation = (
  */
 const resolveInactiveState = ({
   autoModeEnabled,
-  isAppActive,
+  isAppForeground,
   powerSavingEnabled,
 }: {
   autoModeEnabled: boolean;
-  isAppActive: boolean;
+  isAppForeground: boolean;
   powerSavingEnabled: boolean;
 }): LocationHeartbeatState | null => {
   if (!NEEDS_LOCATION_HEARTBEAT) {
@@ -111,8 +113,8 @@ const resolveInactiveState = ({
   if (autoModeEnabled) {
     return 'auto-mode';
   }
-  if (!isAppActive) {
-    return 'app-inactive';
+  if (!isAppForeground) {
+    return 'app-background';
   }
   if (powerSavingEnabled) {
     return 'power-saving';
@@ -137,12 +139,17 @@ const resolveInactiveState = ({
  * 取りこぼす」ケースも、継続測位側の変位ゲートを維持したまま補える。
  *
  * 動かさない条件が3つある。
- *  - 背景(前景以外): expo-locationのタスクは前景でだけ測位を即時報告し、それ以外では
+ *  - 背景: expo-locationのタスクは前景でだけ測位を即時報告し、それ以外では
  *    deferredUpdatesInterval(=10秒)ぶん貯めてから報告する。つまり背景では正常時も
  *    配信間隔が10秒以上になり、途絶と区別できない。加えて補完測位が作る
  *    CLLocationManagerはallowsBackgroundLocationUpdatesを立てない
  *    (Providers/BaseLocationProvider.swift)ため、背景ではそもそも測位を受け取れない。
- *    取りに行っても無駄で、地上でも誤って発火する。
+ *    取りに行っても無駄で、地上でも誤って発火する。判定にはuseIsAppForegroundを使い、
+ *    iOSの'inactive'は前景として扱う。'inactive'はコントロールセンターを引き下ろした間や
+ *    Appスイッチャーを開いた間に入る状態で、アプリは画面に出たまま、測位も前景と同じように
+ *    届く。ここをfalseにすると、乗車中に一度でもそれらを開いただけでeffectが張り直され、
+ *    進行中の要求が結果を残さず捨てられる(#6995の診断で要求だけが増え、成功・失敗・見切りが
+ *    揃って0だったのがこれ)。
  *  - 前景の位置情報権限が無い: 「許可せずに開始」した利用者では測位の要求が毎回失敗する
  *    だけになる(権限プロンプトも出ない)。前景復帰のたびに再評価する。
  *  - 省電力測位プロファイル中: このプロファイルはiOSで停車中の測位休止
@@ -152,7 +159,7 @@ const resolveInactiveState = ({
  */
 export const useLocationHeartbeat = (): void => {
   const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
-  const isAppActive = useIsAppActive();
+  const isAppForeground = useIsAppForeground();
   const { powerSavingEnabled, watchOptions } = useLocationProfile();
   // 補完測位が継続測位より高精度を要求すると、片方だけ電池の重い測位で走ってしまう。
   // 精度は継続測位と同じものを使う。
@@ -161,7 +168,7 @@ export const useLocationHeartbeat = (): void => {
   useEffect(() => {
     const inactiveState = resolveInactiveState({
       autoModeEnabled,
-      isAppActive,
+      isAppForeground,
       powerSavingEnabled,
     });
     if (inactiveState !== null) {
@@ -169,6 +176,7 @@ export const useLocationHeartbeat = (): void => {
       // 非稼働のまま画面を離れたときも状態を戻す。戻さないと「省電力で止まっている」等の
       // 古い理由がダンプに残り、いま何が止めているのかと読み違える。
       return () => {
+        countLocationHeartbeatTornDown();
         setLocationHeartbeatState('not-mounted');
       };
     }
@@ -343,9 +351,17 @@ export const useLocationHeartbeat = (): void => {
 
     return () => {
       cancelled = true;
+      countLocationHeartbeatTornDown();
       // 画面を離れた・effectを張り直した時点で点検は止まる。'running' のまま残すと、
       // 動いていない区間のダンプが動作中に見える。張り直しなら直後に再評価が上書きする。
       setLocationHeartbeatState('not-mounted');
+      // 進行中の要求はここで終わる。要求も保留ガードも見切りタイマーもこのeffectの
+      // ローカル変数なので、張り直しの向こう側へは何も残らない。捨てた事実を数えないと、
+      // 結果のカウンタがどれも動かないまま要求数だけが進むダンプになり、「応答が返って
+      // いない」のか「返る前に捨てた」のかが読めなくなる。
+      if (activeRequest !== null) {
+        countLocationHeartbeatDiscarded();
+      }
       // 購読はアンマウントで自然に閉じない。閉じ忘れると画面を離れたあとも測位が回る。
       activeRequest?.stop();
       activeRequest = null;
@@ -355,5 +371,5 @@ export const useLocationHeartbeat = (): void => {
         timeoutId = null;
       }
     };
-  }, [accuracy, autoModeEnabled, isAppActive, powerSavingEnabled]);
+  }, [accuracy, autoModeEnabled, isAppForeground, powerSavingEnabled]);
 };

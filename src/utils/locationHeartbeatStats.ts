@@ -29,8 +29,8 @@ export type LocationHeartbeatState =
   | 'unnecessary'
   /** オートモード中(現在地はシミュレーターが直接書くので実測位を混ぜない) */
   | 'auto-mode'
-  /** 前景でない(背景では正常時も配信間隔が空き、途絶と区別できない) */
-  | 'app-inactive'
+  /** 背景(背景では正常時も配信間隔が空き、途絶と区別できない) */
+  | 'app-background'
   /** 省電力測位プロファイル中(停車中の測位休止を打ち消さないため動かさない) */
   | 'power-saving'
   /** 前景の位置情報権限が無い、または権限の確認自体に失敗した */
@@ -49,6 +49,23 @@ export type LocationHeartbeatStats = {
   /** 応答が返らないまま LOCATION_HEARTBEAT_MAX_PENDING で見切った回数 */
   abandoned: number;
   /**
+   * 進行中のまま捨てた要求の回数。画面を離れたときと、稼働条件から外れて
+   * useLocationHeartbeat の effect が張り直されたときに起きる。
+   *
+   * 捨てた要求はどの結果カウンタにも現れない。数えないと requested だけが進んで
+   * succeeded/failed/abandoned が揃って 0 のダンプになり、「応答が返っていない」のか
+   * 「返る前に捨てた」のかが読めなくなる。
+   */
+  discarded: number;
+  /**
+   * useLocationHeartbeat の片付けが走った回数。依存の変化による張り直しと、画面を
+   * 離れたときのアンマウントの両方を含む。
+   *
+   * 進行中の要求は張り直しで捨てられる(discarded)。張り直しがどれだけ起きているかは
+   * 補完測位が進まない理由の手掛かりになるので、捨てた数と並べて読めるようにする。
+   */
+  teardowns: number;
+  /**
    * 直近の取得失敗の内容。失敗が地下で連続するとき、ログを追わずに理由を持ち出せるようにする。
    * 長い文字列がダンプを埋めないよう切り詰める。
    */
@@ -63,6 +80,8 @@ const createStats = (): LocationHeartbeatStats => ({
   succeeded: 0,
   failed: 0,
   abandoned: 0,
+  discarded: 0,
+  teardowns: 0,
   lastErrorMessage: null,
 });
 
@@ -101,6 +120,14 @@ export const countLocationHeartbeatFailed = (error: unknown): void => {
 
 export const countLocationHeartbeatAbandoned = (): void => {
   stats.abandoned += 1;
+};
+
+export const countLocationHeartbeatDiscarded = (): void => {
+  stats.discarded += 1;
+};
+
+export const countLocationHeartbeatTornDown = (): void => {
+  stats.teardowns += 1;
 };
 
 export const getLocationHeartbeatStats = (): LocationHeartbeatStats => ({
