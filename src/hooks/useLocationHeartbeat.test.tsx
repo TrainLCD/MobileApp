@@ -554,6 +554,42 @@ describe('useLocationHeartbeat', () => {
       warnSpy.mockRestore();
     });
 
+    // 止めている理由も画面を離れたら消す。残すと、いま何が止めているのかと読み違える
+    it('止まっている状態のままアンマウントしても未マウントへ戻る', async () => {
+      mockPowerSavingLocationEnabled = true;
+      const { unmount } = await startHeartbeat();
+      expect(getLocationHeartbeatStats().state).toBe('power-saving');
+
+      unmount();
+
+      expect(getLocationHeartbeatStats().state).toBe('not-mounted');
+    });
+
+    // effectは前景復帰のたびに張り直される。古いeffectの権限確認が遅れて失敗したとき、
+    // その結果で新しいeffectの状態を上書きしてはいけない。
+    it('アンマウント後に権限確認が失敗しても状態を上書きしない', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      let rejectPermissions: ((error: Error) => void) | null = null;
+      mockGetForegroundPermissionsAsync.mockReturnValue(
+        new Promise((_resolve, reject) => {
+          rejectPermissions = reject;
+        })
+      );
+      const { unmount } = renderHook(() => useLocationHeartbeat());
+      await act(async () => {});
+
+      unmount();
+      expect(getLocationHeartbeatStats().state).toBe('not-mounted');
+
+      await act(async () => {
+        rejectPermissions?.(new Error('権限を確認できません'));
+      });
+
+      expect(getLocationHeartbeatStats().state).toBe('not-mounted');
+
+      warnSpy.mockRestore();
+    });
+
     // 画面を離れたあとも running のままだと、動いていない区間のダンプが動作中に見える
     it('アンマウントで未マウントへ戻る', async () => {
       const { unmount } = await startHeartbeat();

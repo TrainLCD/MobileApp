@@ -166,7 +166,11 @@ export const useLocationHeartbeat = (): void => {
     });
     if (inactiveState !== null) {
       setLocationHeartbeatState(inactiveState);
-      return;
+      // 非稼働のまま画面を離れたときも状態を戻す。戻さないと「省電力で止まっている」等の
+      // 古い理由がダンプに残り、いま何が止めているのかと読み違える。
+      return () => {
+        setLocationHeartbeatState('not-mounted');
+      };
     }
 
     let cancelled = false;
@@ -320,6 +324,11 @@ export const useLocationHeartbeat = (): void => {
         }
       } catch (error) {
         console.warn('前景の位置情報権限の確認に失敗しました:', error);
+        // 張り直されたあとに古いeffectの確認が失敗することがある。cancelledを見ないと、
+        // 新しいeffectが書いた状態をこの古い失敗が上書きする。
+        if (cancelled) {
+          return;
+        }
         // 確認できなかった場合も補完測位は動かないので、同じ状態として残す。
         // 権限が無いのか確認に失敗したのかは、このログでしか区別しない。
         setLocationHeartbeatState('permission-denied');
