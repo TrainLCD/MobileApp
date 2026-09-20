@@ -8,6 +8,10 @@ import {
   getMsSinceLastTrackedLocation,
   handleTrackingLocation,
 } from '../utils/handleTrackingLocation';
+import {
+  getLocationHeartbeatStats,
+  resetLocationHeartbeatStats,
+} from '../utils/locationHeartbeatStats';
 import { monotonicNow } from '../utils/monotonicNow';
 import { useLocationHeartbeat } from './useLocationHeartbeat';
 
@@ -131,6 +135,7 @@ describe('useLocationHeartbeat', () => {
     );
     mockGetCurrentPositionAsync.mockResolvedValue(makeLocation(NOW));
     mockMonotonicNow.mockImplementation(() => Date.now());
+    resetLocationHeartbeatStats();
   });
 
   afterEach(() => {
@@ -410,5 +415,146 @@ describe('useLocationHeartbeat', () => {
     expect(warnSpy).toHaveBeenCalledTimes(1);
 
     warnSpy.mockRestore();
+  });
+
+  /**
+   * 診断(DevOverlayのダンプ)向けの記録。測位が一件も得られない区間では
+   * locationPipelineStats のどのカウンタも動かないため、「要求を出していない」のか
+   * 「出しても得られていない」のかはここで数えないと後から区別できない。
+   */
+  describe('診断の記録', () => {
+    it('要求と成功を数える', async () => {
+      await startHeartbeat();
+
+      await advanceToNextCheck();
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        state: 'running',
+        requested: 1,
+        succeeded: 1,
+        failed: 0,
+      });
+    });
+
+    it('失敗の件数と直近の理由を残す', async () => {
+      // 警告は連続の先頭だけに絞られるので、2件目以降はログから追えない。
+      // 地下で失敗が続いているのかどうかは、この件数でしか判断できない。
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      mockGetCurrentPositionAsync.mockRejectedValue(
+        new Error('位置情報を取得できません')
+      );
+      await startHeartbeat();
+
+      await advanceToNextCheck();
+      await advanceToNextCheck();
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 2,
+        succeeded: 0,
+        failed: 2,
+        lastErrorMessage: '位置情報を取得できません',
+      });
+
+      warnSpy.mockRestore();
+    });
+
+    it('応答が返らないまま見切った取得を数える', async () => {
+      mockGetCurrentPositionAsync.mockReturnValue(new Promise(() => {}));
+      await startHeartbeat();
+
+      await advanceToNextCheck();
+      await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING);
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 2,
+        abandoned: 1,
+      });
+    });
+
+    it.each([
+      ['変位ゲートを持たないプラットフォーム', 'unnecessary'],
+      ['オートモード', 'auto-mode'],
+      ['背景', 'app-inactive'],
+      ['省電力測位', 'power-saving'],
+      ['権限なし', 'permission-denied'],
+    ] as const)('%s では止めている理由を残す', async (label, expected) => {
+      if (label === '変位ゲートを持たないプラットフォーム') {
+        mockNeedsLocationHeartbeat = false;
+      } else if (label === 'オートモード') {
+        mockAutoModeEnabled = true;
+      } else if (label === '背景') {
+        mockIsAppActive = false;
+      } else if (label === '省電力測位') {
+        mockPowerSavingLocationEnabled = true;
+      } else {
+        mockGetForegroundPermissionsAsync.mockResolvedValue({
+          granted: false,
+        });
+      }
+      await startHeartbeat();
+
+      await advanceToNextCheck();
+
+      expect(getLocationHeartbeatStats().state).toBe(expected);
+      expect(getLocationHeartbeatStats().requested).toBe(0);
+    });
+
+    it('権限の確認自体に失敗したときも止まった状態として残す', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      mockGetForegroundPermissionsAsync.mockRejectedValue(
+        new Error('権限を確認できません')
+      );
+      await startHeartbeat();
+
+      expect(getLocationHeartbeatStats().state).toBe('permission-denied');
+
+      warnSpy.mockRestore();
+    });
+
+    // 止めている理由も画面を離れたら消す。残すと、いま何が止めているのかと読み違える
+    it('止まっている状態のままアンマウントしても未マウントへ戻る', async () => {
+      mockPowerSavingLocationEnabled = true;
+      const { unmount } = await startHeartbeat();
+      expect(getLocationHeartbeatStats().state).toBe('power-saving');
+
+      unmount();
+
+      expect(getLocationHeartbeatStats().state).toBe('not-mounted');
+    });
+
+    // effectは前景復帰のたびに張り直される。古いeffectの権限確認が遅れて失敗したとき、
+    // その結果で新しいeffectの状態を上書きしてはいけない。
+    it('アンマウント後に権限確認が失敗しても状態を上書きしない', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      let rejectPermissions: ((error: Error) => void) | null = null;
+      mockGetForegroundPermissionsAsync.mockReturnValue(
+        new Promise((_resolve, reject) => {
+          rejectPermissions = reject;
+        })
+      );
+      const { unmount } = renderHook(() => useLocationHeartbeat());
+      await act(async () => {});
+
+      unmount();
+      expect(getLocationHeartbeatStats().state).toBe('not-mounted');
+
+      await act(async () => {
+        rejectPermissions?.(new Error('権限を確認できません'));
+      });
+
+      expect(getLocationHeartbeatStats().state).toBe('not-mounted');
+
+      warnSpy.mockRestore();
+    });
+
+    // 画面を離れたあとも running のままだと、動いていない区間のダンプが動作中に見える
+    it('アンマウントで未マウントへ戻る', async () => {
+      const { unmount } = await startHeartbeat();
+      expect(getLocationHeartbeatStats().state).toBe('running');
+
+      unmount();
+
+      expect(getLocationHeartbeatStats().state).toBe('not-mounted');
+    });
   });
 });

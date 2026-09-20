@@ -6,6 +6,14 @@ import {
   getMsSinceLastTrackedLocation,
   handleTrackingLocation,
 } from '~/utils/handleTrackingLocation';
+import {
+  countLocationHeartbeatAbandoned,
+  countLocationHeartbeatFailed,
+  countLocationHeartbeatRequested,
+  countLocationHeartbeatSucceeded,
+  type LocationHeartbeatState,
+  setLocationHeartbeatState,
+} from '~/utils/locationHeartbeatStats';
 import { monotonicNow } from '~/utils/monotonicNow';
 import {
   LOCATION_HEARTBEAT_MAX_PENDING,
@@ -14,6 +22,39 @@ import {
 } from '../constants/location';
 import { useIsAppActive } from './useIsAppActive';
 import { useLocationProfile } from './useLocationProfile';
+
+/**
+ * 補完測位を止めている条件を返す。動かしてよいときは null。
+ *
+ * 早期returnを条件の論理和で書くと、止まっていること自体は分かっても何が止めたのかが
+ * 残らない。要求数が0のとき「途絶が無くて出す必要がなかった」のか「そもそも動いていない」
+ * のかは診断で必ず問題になるので、判定したその場で理由として持ち出せる形にする。
+ * 先に成立したものを理由とするため、判定の順序がそのまま優先順位になる。
+ */
+const resolveInactiveState = ({
+  autoModeEnabled,
+  isAppActive,
+  powerSavingEnabled,
+}: {
+  autoModeEnabled: boolean;
+  isAppActive: boolean;
+  powerSavingEnabled: boolean;
+}): LocationHeartbeatState | null => {
+  if (!NEEDS_LOCATION_HEARTBEAT) {
+    return 'unnecessary';
+  }
+  // オートモードの現在地はシミュレーターが直接書き込むため、実測位を混ぜない。
+  if (autoModeEnabled) {
+    return 'auto-mode';
+  }
+  if (!isAppActive) {
+    return 'app-inactive';
+  }
+  if (powerSavingEnabled) {
+    return 'power-saving';
+  }
+  return null;
+};
 
 /**
  * 継続測位の配信が途絶えたときだけ、測位を自前で取りに行く補完測位。
@@ -53,14 +94,18 @@ export const useLocationHeartbeat = (): void => {
   const accuracy = watchOptions.accuracy;
 
   useEffect(() => {
-    if (
-      !NEEDS_LOCATION_HEARTBEAT ||
-      // オートモードの現在地はシミュレーターが直接書き込むため、実測位を混ぜない。
-      autoModeEnabled ||
-      !isAppActive ||
-      powerSavingEnabled
-    ) {
-      return;
+    const inactiveState = resolveInactiveState({
+      autoModeEnabled,
+      isAppActive,
+      powerSavingEnabled,
+    });
+    if (inactiveState !== null) {
+      setLocationHeartbeatState(inactiveState);
+      // 非稼働のまま画面を離れたときも状態を戻す。戻さないと「省電力で止まっている」等の
+      // 古い理由がダンプに残り、いま何が止めているのかと読み違える。
+      return () => {
+        setLocationHeartbeatState('not-mounted');
+      };
     }
 
     let cancelled = false;
@@ -128,6 +173,7 @@ export const useLocationHeartbeat = (): void => {
       pending = true;
       requestSeq += 1;
       const seq = requestSeq;
+      countLocationHeartbeatRequested();
 
       // iOSのgetCurrentPositionAsyncにはタイムアウトが無く、測位が得られない地下では
       // 応答が返らないことがある。返らないままだと「取得中は次を出さない」ガードが
@@ -139,6 +185,7 @@ export const useLocationHeartbeat = (): void => {
         if (cancelled) {
           return;
         }
+        countLocationHeartbeatAbandoned();
         requestSeq += 1;
         pending = false;
         check();
@@ -150,6 +197,9 @@ export const useLocationHeartbeat = (): void => {
           if (cancelled) {
             return;
           }
+          // 見切ったあとに返ってきた要求もここへ来るので、同じ要求で abandoned と
+          // succeeded の両方が立つことがある(locationHeartbeatStats)。
+          countLocationHeartbeatSucceeded();
           // 継続測位と同じ入口へ通す。同じ測位が返ってきた場合は重複排除で捨てられ、
           // 精度フィルタ・EMA・速度フィルタも継続測位とまったく同じ扱いになる。
           // 見切ったあとに返ってきた測位も、古ければ重複排除が落とすのでそのまま通す。
@@ -160,6 +210,8 @@ export const useLocationHeartbeat = (): void => {
             console.warn('補完測位の取得に失敗しました:', error);
           }
           consecutiveFailures += 1;
+          // ログは連続中の先頭1回しか出さないので、件数と直近の理由はここで必ず残す。
+          countLocationHeartbeatFailed(error);
         })
         .finally(() => {
           // 見切られたあとの要求は、現役の要求のガードも点検予定も触らない。
@@ -183,13 +235,26 @@ export const useLocationHeartbeat = (): void => {
         // 権限はフックの外(Privacy画面)で決まり、設定アプリでいつでも変わる。
         // このeffectは前景復帰のたびに張り直されるので、そのたびに見に行けばよい。
         const { granted } = await Location.getForegroundPermissionsAsync();
-        if (cancelled || !granted) {
+        if (cancelled) {
+          return;
+        }
+        if (!granted) {
+          setLocationHeartbeatState('permission-denied');
           return;
         }
       } catch (error) {
         console.warn('前景の位置情報権限の確認に失敗しました:', error);
+        // 張り直されたあとに古いeffectの確認が失敗することがある。cancelledを見ないと、
+        // 新しいeffectが書いた状態をこの古い失敗が上書きする。
+        if (cancelled) {
+          return;
+        }
+        // 確認できなかった場合も補完測位は動かないので、同じ状態として残す。
+        // 権限が無いのか確認に失敗したのかは、このログでしか区別しない。
+        setLocationHeartbeatState('permission-denied');
         return;
       }
+      setLocationHeartbeatState('running');
       // 初回も待たずにcheckへ入れる。ここで固定の途絶時間を待つと、既に途絶した
       // 状態で前景へ戻ったとき(地下でアプリを開き直した等)に、取りに行くまで
       // さらに途絶時間ぶん遅れる。待つかどうかの判断はcheckが一手に持つ。
@@ -198,6 +263,9 @@ export const useLocationHeartbeat = (): void => {
 
     return () => {
       cancelled = true;
+      // 画面を離れた・effectを張り直した時点で点検は止まる。'running' のまま残すと、
+      // 動いていない区間のダンプが動作中に見える。張り直しなら直後に再評価が上書きする。
+      setLocationHeartbeatState('not-mounted');
       clearGiveUp();
       if (timeoutId !== null) {
         clearTimeout(timeoutId);

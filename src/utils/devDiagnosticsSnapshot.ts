@@ -1,6 +1,7 @@
 import type * as Location from 'expo-location';
 import type { Station } from '~/@types/graphql';
 import type { EtaAnchor, EtaPhase } from './etaFallback';
+import type { LocationHeartbeatStats } from './locationHeartbeatStats';
 import type { LocationPipelineCounts } from './locationPipelineStats';
 
 /**
@@ -71,6 +72,12 @@ export type DevDiagnosticsInput = {
    * 2枚のダンプを撮れば差分で区間ごとの内訳が読める。
    */
   pipelineCounts: LocationPipelineCounts;
+  /**
+   * 補完測位(useLocationHeartbeat)の稼働状態と要求結果。iOSで継続測位の配信が途絶えた区間は
+   * これが唯一の測位源になるが、一件も得られなければ pipelineCounts はどれも動かないため、
+   * 内訳だけでは「要求を出していない」のか「出しても得られていない」のかが読めない。
+   */
+  heartbeat: LocationHeartbeatStats;
   /** 表示に使っている速度(m/s)と、それが実測かどうか */
   effectiveSpeedMps: number;
   hasMeasuredSpeed: boolean;
@@ -188,6 +195,9 @@ export const buildDevDiagnosticsSnapshot = (input: DevDiagnosticsInput) => ({
     accuracyOutlier: input.accuracyOutlier,
     counts: input.pipelineCounts,
   },
+  // 測位が届かない区間で、補完測位が何をしていたか。counts とは母集団が違い
+  // (あちらは継続測位の配信も含む)、合計は一致しない。
+  heartbeat: input.heartbeat,
   eta: {
     phase: input.etaPhase,
     anchor: input.etaAnchor,

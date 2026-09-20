@@ -83,6 +83,14 @@ import { useDistanceToNextStation, useNextStation } from '~/hooks';
 import { useNearestStation } from '~/hooks/useNearestStation';
 import { useThreshold } from '~/hooks/useThreshold';
 import { copyTextToClipboard } from '~/utils/clipboard';
+// 補完測位の集計は実体を使う。モックに差し替えると「DevOverlayがgetterを呼んでいるか」
+// ではなく「モックの戻り値を貼れるか」しか見られなくなる。
+import {
+  countLocationHeartbeatFailed,
+  countLocationHeartbeatRequested,
+  resetLocationHeartbeatStats,
+  setLocationHeartbeatState,
+} from '~/utils/locationHeartbeatStats';
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
@@ -367,6 +375,12 @@ describe('DevOverlay', () => {
 
     beforeEach(() => {
       mockCopyTextToClipboard.mockResolvedValue(true);
+      resetLocationHeartbeatStats();
+    });
+
+    afterEach(() => {
+      // 集計はモジュールに溜まるので、他のテストへ持ち越さない
+      resetLocationHeartbeatStats();
     });
 
     it('ボタンを押すと診断情報をクリップボードへ載せる', async () => {
@@ -389,6 +403,32 @@ describe('DevOverlay', () => {
       expect(copied.build.appVersion).toBe(
         `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
       );
+    });
+
+    // 補完測位が測位を一件も得られない区間では pipelineCounts がどれも動かないので、
+    // heartbeat が欠けるとダンプから「要求を出していないのか、出しても得られていないのか」が
+    // 読めなくなる。スナップショット側のテストは値を直接渡して検証するため、DevOverlayが
+    // 渡し忘れてもそちらでは落ちない。コピー経路そのものでも固定する。
+    it('補完測位の稼働状態と要求結果も載せる', async () => {
+      setLocationHeartbeatState('power-saving');
+      countLocationHeartbeatRequested();
+      countLocationHeartbeatRequested();
+      countLocationHeartbeatFailed(new Error('位置情報を取得できません'));
+
+      const { getByTestId } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.heartbeat).toEqual({
+        state: 'power-saving',
+        requested: 2,
+        succeeded: 0,
+        failed: 1,
+        abandoned: 0,
+        lastErrorMessage: '位置情報を取得できません',
+      });
     });
 
     // filterのskipSmoothingとlineTypeは、判定時に1つのatomへまとめて書かれた組を
