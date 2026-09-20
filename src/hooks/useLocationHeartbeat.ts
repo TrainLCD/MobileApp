@@ -23,6 +23,70 @@ import {
 import { useIsAppActive } from './useIsAppActive';
 import { useLocationProfile } from './useLocationProfile';
 
+/** 測位を1件だけ取りに行く要求。見切るときは stop で購読を閉じる。 */
+type SingleLocationRequest = {
+  promise: Promise<Location.LocationObject>;
+  stop: () => void;
+};
+
+/**
+ * 継続測位と同じ startUpdatingLocation で測位を1件だけ取り、届いたら購読を閉じる。
+ *
+ * 一発取得(getCurrentPositionAsync)は使わない。あちらは CLLocationManager の
+ * requestLocation() で、Apple の仕様では「If a location fix cannot be determined in a
+ * timely manner, the location manager calls the delegate's method instead and reports a
+ * error.」となっており、fixが取れない地下では毎回エラーで終わる(要求精度は理由にならない。
+ * 同じDiscussionに「If obtaining the desired accuracy would take too long, the location
+ * manager delivers a less accurate location value rather than reporting an error.」とある)。
+ * 一方 watchPositionAsync が使う startUpdatingLocation は、expo-location 側が
+ * locationUnknown(code 0) を明示的に無視して待ち続ける(Providers/LocationsStreamer.swift)。
+ * 地下でセル測位が出た瞬間を拾えるのはこちらだけなので、1件で閉じる前提でこちらを使う。
+ *
+ * 変位ゲートは0で張る。ここへ来る時点で「変位がLOCATION_DISTANCE_INTERVALに届かず配信が
+ * 止まっている」ことが分かっており、同じゲートを張り直したら待っても届かない。1件で閉じる
+ * ので、#6470が避けた「常時1Hzで回り続ける」状態にはならない。
+ */
+const watchSingleLocation = (
+  accuracy: Location.LocationOptions['accuracy']
+): SingleLocationRequest => {
+  let subscription: Location.LocationSubscription | null = null;
+  // 購読を開く前に見切られることがある(watchPositionAsyncの解決待ちの間)。その場合は
+  // 開いた直後に閉じないと、誰も参照しない購読が測位を回し続ける。
+  let finished = false;
+
+  const stop = () => {
+    finished = true;
+    subscription?.remove();
+    subscription = null;
+  };
+
+  const promise = new Promise<Location.LocationObject>((resolve, reject) => {
+    Location.watchPositionAsync(
+      { accuracy, distanceInterval: 0 },
+      (location) => {
+        if (finished) {
+          return;
+        }
+        stop();
+        resolve(location);
+      }
+    )
+      .then((sub) => {
+        if (finished) {
+          sub.remove();
+          return;
+        }
+        subscription = sub;
+      })
+      .catch((error) => {
+        finished = true;
+        reject(error);
+      });
+  });
+
+  return { promise, stop };
+};
+
 /**
  * 補完測位を止めている条件を返す。動かしてよいときは null。
  *
@@ -66,20 +130,21 @@ const resolveInactiveState = ({
  * timeIntervalが効くため同じ区間でも10秒ごとに届く。この差が「Androidでは地下鉄でも
  * 更新されるのにiPhoneでは更新されない」の正体で、ここで埋める。
  *
- * 変位ゲート自体を0へ戻す選択は取らない。iOSでは約1Hzの配信になり電池を著しく消費
- * するため実車検証を経て10mが選ばれている(#6470)。本フックは無配信のときだけ動くので、
- * 前景で走行中(10mは数秒で超える)は一度も発火せず、その決定を実質的に変えない。
- * 併せて#6470が狙った「停車中に測位が途絶えて到着判定を取りこぼす」ケースも、
- * 変位ゲートを維持したまま補える。
+ * 継続測位の変位ゲート自体を0へ戻す選択は取らない。iOSでは約1Hzの配信になり電池を
+ * 著しく消費するため実車検証を経て10mが選ばれている(#6470)。本フックは無配信のときだけ
+ * 動き、取れた1件で購読を閉じるので、前景で走行中(10mは数秒で超える)は一度も発火せず、
+ * その決定を実質的に変えない。併せて#6470が狙った「停車中に測位が途絶えて到着判定を
+ * 取りこぼす」ケースも、継続測位側の変位ゲートを維持したまま補える。
  *
  * 動かさない条件が3つある。
  *  - 背景(前景以外): expo-locationのタスクは前景でだけ測位を即時報告し、それ以外では
  *    deferredUpdatesInterval(=10秒)ぶん貯めてから報告する。つまり背景では正常時も
- *    配信間隔が10秒以上になり、途絶と区別できない。加えて背景での一発取得に使われる
- *    CLLocationManagerはallowsBackgroundLocationUpdatesを立てないため、そもそも
- *    測位を受け取れない。取りに行っても無駄で、地上でも誤って発火する。
- *  - 前景の位置情報権限が無い: 「許可せずに開始」した利用者ではgetCurrentPositionAsyncが
- *    毎回失敗するだけになる(権限プロンプトも出ない)。前景復帰のたびに再評価する。
+ *    配信間隔が10秒以上になり、途絶と区別できない。加えて補完測位が作る
+ *    CLLocationManagerはallowsBackgroundLocationUpdatesを立てない
+ *    (Providers/BaseLocationProvider.swift)ため、背景ではそもそも測位を受け取れない。
+ *    取りに行っても無駄で、地上でも誤って発火する。
+ *  - 前景の位置情報権限が無い: 「許可せずに開始」した利用者では測位の要求が毎回失敗する
+ *    だけになる(権限プロンプトも出ない)。前景復帰のたびに再評価する。
  *  - 省電力測位プロファイル中: このプロファイルはiOSで停車中の測位休止
  *    (pausesUpdatesAutomatically)を許可している(#6395)。休止すれば配信は当然途絶えるので、
  *    補完測位を動かすと休止をそのまま打ち消してしまう。電池優先という設定の意図を守り、
@@ -119,6 +184,8 @@ export const useLocationHeartbeat = (): void => {
     // monotonicNowがDate.nowへフォールバックした環境で時計が巻き戻っても、応答が
     // 返らない要求のまま補完測位が止まることがない。
     let giveUpTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    // 現役の要求。見切りとクリーンアップから購読を閉じるために持つ。
+    let activeRequest: SingleLocationRequest | null = null;
     // 見切った要求が後から返ってきても、そのfinallyで新しい要求のガードを
     // 解いてしまわないよう、要求ごとの識別子で自分の番かを判断する。
     let requestSeq = 0;
@@ -171,10 +238,13 @@ export const useLocationHeartbeat = (): void => {
       const seq = requestSeq;
       countLocationHeartbeatRequested();
 
-      // iOSのgetCurrentPositionAsyncにはタイムアウトが無く、測位が得られない地下では
-      // 応答が返らないことがある。返らないままだと「取得中は次を出さない」ガードが
-      // 解けず補完測位が二度と動かないため、ここで見切る。識別子を進めてから次へ進むので、
-      // 見切った要求が後から返っても現役の要求のガードは触られない。
+      const request = watchSingleLocation(accuracy);
+      activeRequest = request;
+
+      // 測位が得られない地下では購読が延々と待ち続ける。待たせたままだと「取得中は次を
+      // 出さない」ガードが解けず補完測位が二度と動かないため、ここで見切る。識別子を
+      // 進めてから次へ進むので、見切った要求が後から返っても現役の要求のガードは触られない。
+      // 一発取得と違い、購読は放置すると測位を回し続けるので必ず閉じる。
       clearGiveUp();
       giveUpTimeoutId = setTimeout(() => {
         giveUpTimeoutId = null;
@@ -182,23 +252,26 @@ export const useLocationHeartbeat = (): void => {
           return;
         }
         countLocationHeartbeatAbandoned();
+        request.stop();
+        if (activeRequest === request) {
+          activeRequest = null;
+        }
         requestSeq += 1;
         pending = false;
         check();
       }, LOCATION_HEARTBEAT_MAX_PENDING);
 
-      Location.getCurrentPositionAsync({ accuracy })
+      request.promise
         .then((location) => {
           consecutiveFailures = 0;
           if (cancelled) {
             return;
           }
-          // 見切ったあとに返ってきた要求もここへ来るので、同じ要求で abandoned と
-          // succeeded の両方が立つことがある(locationHeartbeatStats)。
+          // 配信と見切りがほぼ同時だったときだけ、同じ要求で succeeded と abandoned の
+          // 両方が立つ(locationHeartbeatStats)。
           countLocationHeartbeatSucceeded();
           // 継続測位と同じ入口へ通す。同じ測位が返ってきた場合は重複排除で捨てられ、
           // 精度フィルタ・EMA・速度フィルタも継続測位とまったく同じ扱いになる。
-          // 見切ったあとに返ってきた測位も、古ければ重複排除が落とすのでそのまま通す。
           handleTrackingLocation(location);
         })
         .catch((error) => {
@@ -210,6 +283,13 @@ export const useLocationHeartbeat = (): void => {
           countLocationHeartbeatFailed(error);
         })
         .finally(() => {
+          // 解決・棄却のどちらで終わっても購読は閉じる。resolve 経路は watchSingleLocation
+          // が自分で閉じるが、reject 経路と「見切られたあとに終わった要求」はここでしか
+          // 閉じる機会が無い。
+          request.stop();
+          if (activeRequest === request) {
+            activeRequest = null;
+          }
           // 見切られたあとの要求は、現役の要求のガードも点検予定も触らない。
           if (cancelled || seq !== requestSeq) {
             return;
@@ -257,6 +337,9 @@ export const useLocationHeartbeat = (): void => {
       // 画面を離れた・effectを張り直した時点で点検は止まる。'running' のまま残すと、
       // 動いていない区間のダンプが動作中に見える。張り直しなら直後に再評価が上書きする。
       setLocationHeartbeatState('not-mounted');
+      // 購読はアンマウントで自然に閉じない。閉じ忘れると画面を離れたあとも測位が回る。
+      activeRequest?.stop();
+      activeRequest = null;
       clearGiveUp();
       if (timeoutId !== null) {
         clearTimeout(timeoutId);

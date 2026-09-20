@@ -55,9 +55,8 @@ export type LocationHeartbeatStats = {
   lastErrorMessage: string | null;
 };
 
-// 見切った要求が後から返ることがあるため(useLocationHeartbeat は古い測位も重複排除へ委ねて
-// そのまま通す)、succeeded と abandoned は同じ要求で両方立ちうる。requested と内訳の合計は
-// 一致しない前提で読むこと。
+// 配信と見切りがほぼ同時に起きたときだけ、同じ要求で succeeded と abandoned の両方が
+// 立ちうる。requested と内訳の合計は一致しない前提で読むこと。
 const createStats = (): LocationHeartbeatStats => ({
   state: 'not-mounted',
   requested: 0,

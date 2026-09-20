@@ -47,11 +47,11 @@ export const NEEDS_LOCATION_HEARTBEAT =
 // 途絶タイマーが巻き戻るぶん必ず1回空振りし、実際の取得間隔がこの値の2倍まで開く。
 export const LOCATION_HEARTBEAT_STALE_THRESHOLD = LOCATION_TIME_INTERVAL;
 
-// 補完測位の取得を待つ上限(ms)。iOSのgetCurrentPositionAsyncにはタイムアウトが無く、
-// 測位が得られない地下では応答が返らないことがある。1件でも返らないままだと
-// 「取得中は次を出さない」ガードが解けず補完測位が二度と動かなくなるため、この時間を
-// 超えた要求は諦めて次を出せるようにする。3回ぶんの途絶時間を待っても返らない要求は
-// 環境側が応えていないと判断する。
+// 補完測位の取得を待つ上限(ms)。補完測位は継続測位と同じstartUpdatingLocationで1件を
+// 待つ(useLocationHeartbeat)ので、測位が得られない地下では購読が延々と待ち続ける。
+// 1件でも返らないままだと「取得中は次を出さない」ガードが解けず補完測位が二度と
+// 動かなくなるため、この時間を超えた要求は購読を閉じて次を出せるようにする。
+// 3回ぶんの途絶時間を待っても返らない要求は環境側が応えていないと判断する。
 export const LOCATION_HEARTBEAT_MAX_PENDING =
   LOCATION_HEARTBEAT_STALE_THRESHOLD * 3;
 
