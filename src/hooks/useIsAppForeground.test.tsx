@@ -40,8 +40,8 @@ describe('useIsAppForeground', () => {
     expect(latestValue).toBe(false);
   });
 
-  // ここがuseIsAppActiveとの唯一の違い。コントロールセンターやAppスイッチャーを
-  // 開いた間もアプリは画面に出たままで、測位も前景と同じように届く。
+  // ここがuseIsAppActiveとの唯一の違い。マルチタスク画面や通知センターを開いた間は
+  // 'inactive'になるが、アプリはまだ背景に入っていない。
   it('inactiveへ移行してもtrueのままになる', () => {
     render(<TestComponent />);
     const handler = mockAddEventListener.mock.calls[0][0];
