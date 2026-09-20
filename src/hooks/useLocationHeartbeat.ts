@@ -346,6 +346,13 @@ export const useLocationHeartbeat = (): void => {
           handleTrackingLocation(location);
         })
         .catch((error) => {
+          // 見切った要求(abandoned)と、画面を離れる・稼働条件から外れるときに捨てた
+          // 要求(discarded)は、その時点で1件として数え終えている。ここでも failed に
+          // 足すと1件の要求が二重に計上され、直近の失敗理由も待ち手のいない要求のもので
+          // 上書きされる。診断を読み違える元になるので数えない。
+          if (cancelled || seq !== requestSeq) {
+            return;
+          }
           if (consecutiveFailures === 0) {
             console.warn('補完測位の取得に失敗しました:', error);
           }

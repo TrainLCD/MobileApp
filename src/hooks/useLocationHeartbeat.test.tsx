@@ -596,6 +596,37 @@ describe('useLocationHeartbeat', () => {
       warnSpy.mockRestore();
     });
 
+    // 捨てた要求・見切った要求はその時点で数え終えている。あとから来る失敗をここでも
+    // 数えると、1件の要求が discarded と failed の両方に乗る。
+    it('捨てたあとに失敗が返っても、失敗としては数えない', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      let rejectWatch: ((error: Error) => void) | null = null;
+      mockWatchPositionAsync.mockImplementation(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectWatch = reject;
+          })
+      );
+      const { unmount } = await startHeartbeat();
+
+      await advanceToNextCheck();
+      expect(getLocationHeartbeatStats().requested).toBe(1);
+
+      unmount();
+      await act(async () => {
+        rejectWatch?.(new Error('位置情報を取得できません'));
+      });
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 1,
+        failed: 0,
+        discarded: 1,
+        lastErrorMessage: null,
+      });
+
+      warnSpy.mockRestore();
+    });
+
     // 張り直しの向こう側へ要求は残らない。捨てた事実を数えないと、結果のカウンタが
     // どれも動かないまま要求数だけが進むダンプになり、「応答が返っていない」のか
     // 「返る前に捨てた」のかが読めなくなる。
