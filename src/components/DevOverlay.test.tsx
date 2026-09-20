@@ -427,6 +427,9 @@ describe('DevOverlay', () => {
         succeeded: 0,
         failed: 1,
         abandoned: 0,
+        discarded: 0,
+        teardowns: 0,
+        recentTeardownReasons: [],
         lastErrorMessage: '位置情報を取得できません',
       });
     });

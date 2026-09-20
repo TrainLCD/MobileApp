@@ -1,5 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as Location from 'expo-location';
+import { StrictMode } from 'react';
+import { AppState } from 'react-native';
 import {
   LOCATION_HEARTBEAT_MAX_PENDING,
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
@@ -34,9 +36,9 @@ jest.mock('expo-battery', () => ({
   useLowPowerMode: () => mockSystemLowPowerMode,
 }));
 
-let mockIsAppActive = true;
-jest.mock('./useIsAppActive', () => ({
-  useIsAppActive: () => mockIsAppActive,
+let mockIsAppForeground = true;
+jest.mock('./useIsAppForeground', () => ({
+  useIsAppForeground: () => mockIsAppForeground,
 }));
 
 jest.mock('../utils/monotonicNow', () => ({
@@ -74,8 +76,7 @@ jest.mock('jotai', () => ({
   }),
 }));
 
-const mockGetCurrentPositionAsync =
-  Location.getCurrentPositionAsync as jest.Mock;
+const mockWatchPositionAsync = Location.watchPositionAsync as jest.Mock;
 const mockGetForegroundPermissionsAsync =
   Location.getForegroundPermissionsAsync as jest.Mock;
 const mockHandleTrackingLocation = handleTrackingLocation as jest.Mock;
@@ -97,6 +98,42 @@ const makeLocation = (timestamp: number): Location.LocationObject => ({
   },
   timestamp,
 });
+
+/**
+ * watchPositionAsync の呼び出しを掴むハーネス。
+ *
+ * 補完測位は一発取得ではなく「1件で閉じる購読」なので、測位はコールバックで届き、
+ * 購読は明示的に閉じる必要がある。届いたかどうかだけでなく閉じたかどうかも検証したいので、
+ * コールバックと remove の両方を記録する。
+ */
+type Watch = {
+  emit: (location: Location.LocationObject) => void;
+  remove: jest.Mock;
+};
+
+let watches: Watch[] = [];
+
+/**
+ * 購読の挙動を決める。`emitAt` を渡すとその時刻の測位を1件流し(=取得が成功する環境)、
+ * null なら何も流さない(=測位が得られない地下)。実際の順序に合わせ、購読が確立してから流す。
+ */
+const setWatchBehavior = (
+  emitAt: ((timestamp: number) => Location.LocationObject) | null
+) => {
+  mockWatchPositionAsync.mockImplementation(
+    (
+      _options: Location.LocationOptions,
+      callback: (location: Location.LocationObject) => void
+    ) => {
+      const remove = jest.fn();
+      watches.push({ emit: callback, remove });
+      if (emitAt) {
+        Promise.resolve().then(() => callback(emitAt(Date.now())));
+      }
+      return Promise.resolve({ remove });
+    }
+  );
+};
 
 // 権限確認(非同期)を消化してからでないと点検タイマーが張られない
 const startHeartbeat = async () => {
@@ -127,13 +164,15 @@ describe('useLocationHeartbeat', () => {
     mockAutoModeEnabled = false;
     mockPowerSavingLocationEnabled = false;
     mockSystemLowPowerMode = false;
-    mockIsAppActive = true;
+    mockIsAppForeground = true;
+    (AppState as { currentState: string }).currentState = 'active';
     mockGetForegroundPermissionsAsync.mockResolvedValue({ granted: true });
     // 既定は「配信が途絶えている」状態
     mockGetMsSinceLastTrackedLocation.mockReturnValue(
       LOCATION_HEARTBEAT_STALE_THRESHOLD
     );
-    mockGetCurrentPositionAsync.mockResolvedValue(makeLocation(NOW));
+    watches = [];
+    setWatchBehavior(() => makeLocation(NOW));
     mockMonotonicNow.mockImplementation(() => Date.now());
     resetLocationHeartbeatStats();
   });
@@ -148,7 +187,7 @@ describe('useLocationHeartbeat', () => {
 
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
     // 重複排除・精度フィルタ・EMAを継続測位と共有するため、必ずこの入口を通す
     expect(mockHandleTrackingLocation).toHaveBeenCalledWith(makeLocation(NOW));
   });
@@ -163,7 +202,7 @@ describe('useLocationHeartbeat', () => {
     await advanceToNextCheck();
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
   });
 
   it('一度も配信が無い状態(起動直後に地下)でも取得する', async () => {
@@ -172,7 +211,7 @@ describe('useLocationHeartbeat', () => {
 
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
   });
 
   it('一度も配信が無い間は、まず継続測位に譲って途絶時間ぶん待つ', async () => {
@@ -182,10 +221,10 @@ describe('useLocationHeartbeat', () => {
     await startHeartbeat();
 
     await advanceBy(LOCATION_HEARTBEAT_STALE_THRESHOLD - 1);
-    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
 
     await advanceBy(1);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
   });
 
   it('既に途絶している状態で開始したら待たずに取得する', async () => {
@@ -198,7 +237,7 @@ describe('useLocationHeartbeat', () => {
 
     await advanceBy(1);
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
   });
 
   it('経過時間が負になっても点検が先送りされない', async () => {
@@ -210,7 +249,7 @@ describe('useLocationHeartbeat', () => {
 
     await advanceBy(1);
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
   });
 
   it('変位ゲートを持たないプラットフォームでは動かない', async () => {
@@ -219,7 +258,7 @@ describe('useLocationHeartbeat', () => {
 
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
   });
 
   it('オートモード中はシミュレーターの現在地を汚さないよう動かない', async () => {
@@ -228,18 +267,21 @@ describe('useLocationHeartbeat', () => {
 
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
   });
 
   it('背景では動かない', async () => {
     // 背景では測位が deferredUpdatesInterval ぶん貯めてから報告されるため、正常時も
-    // 配信間隔が途絶時間以上になり途絶と区別できない。一発取得も背景では成立しない。
-    mockIsAppActive = false;
+    // 配信間隔が途絶時間以上になり途絶と区別できない。補完測位が作る
+    // CLLocationManagerも背景では測位を受け取れない。
+    // iOSの'inactive'はここに含めない(useIsAppForeground)。含めると、乗車中に
+    // 通知センターを開いただけでeffectが張り直され、進行中の要求が捨てられる。
+    mockIsAppForeground = false;
     await startHeartbeat();
 
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
   });
 
   it('前景の位置情報権限が無ければ動かない', async () => {
@@ -250,7 +292,7 @@ describe('useLocationHeartbeat', () => {
     await advanceToNextCheck();
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
   });
 
   // 省電力プロファイルはiOSで停車中の測位休止(pausesUpdatesAutomatically, #6395)を
@@ -268,105 +310,103 @@ describe('useLocationHeartbeat', () => {
 
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
   });
 
   it('取得が返るまでは次の点検で重ねて要求しない', async () => {
-    let resolveFirst: ((location: Location.LocationObject) => void) | null =
-      null;
-    mockGetCurrentPositionAsync.mockImplementationOnce(
-      () =>
-        new Promise<Location.LocationObject>((resolve) => {
-          resolveFirst = resolve;
-        })
-    );
+    setWatchBehavior(null);
     await startHeartbeat();
 
     await advanceToNextCheck();
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      resolveFirst?.(makeLocation(Date.now()));
+      watches[0].emit(makeLocation(Date.now()));
     });
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(2);
+  });
+
+  it('測位が1件届いたら購読を閉じる', async () => {
+    // 閉じ忘れると、途絶のたびに張った購読が積み上がったまま測位を回し続ける
+    await startHeartbeat();
+
+    await advanceToNextCheck();
+
+    expect(watches).toHaveLength(1);
+    expect(watches[0].remove).toHaveBeenCalled();
   });
 
   it('応答が返らない取得に引きずられて補完測位ごと止まらない', async () => {
-    // iOSのgetCurrentPositionAsyncにはタイムアウトが無く、測位が得られない地下では
-    // 応答が返らないことがある。見切らないとガードが解けず二度と取得しなくなる。
-    mockGetCurrentPositionAsync.mockImplementation(
-      () => new Promise<Location.LocationObject>(() => {})
-    );
+    // 測位が得られない地下では購読が延々と待ち続ける。
+    // 見切らないとガードが解けず二度と取得しなくなる。
+    setWatchBehavior(null);
     await startHeartbeat();
 
     await advanceBy(1);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
 
     // 見切り時間に達するまでは重ねて要求しない(1件目の要求時刻は進める前の時点)
     await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING - 2);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
 
     await advanceBy(1);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(2);
   });
 
   it('時計が巻き戻っても、保留の長さは見切りタイマーだけが決める', async () => {
     // monotonicNowがDate.nowへフォールバックした環境で、取得の応答を待っている間に
     // 時計が巻き戻ったケース。経過時間の計算で保留を解くと、巻き戻り方しだいで
     // 「1件目の応答を待たずに2件目を出す」か「見切れないまま止まる」のどちらかになる。
-    mockGetCurrentPositionAsync.mockImplementation(
-      () => new Promise<Location.LocationObject>(() => {})
-    );
+    setWatchBehavior(null);
     await startHeartbeat();
 
     await advanceBy(1);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
 
     // 時計を巻き戻したまま維持する
     mockMonotonicNow.mockImplementation(() => Date.now() - 600_000);
 
     // 見切り時間まで: 重ねて要求しない
     await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING - 2);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
 
     // 見切り時間に達したら: 応答が無い要求を見切って次を出す
     await advanceBy(1);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(2);
   });
 
-  it('見切った取得が後から返ってきても新しい取得のガードを解かず、測位自体は取り込む', async () => {
-    let resolveFirst: ((location: Location.LocationObject) => void) | null =
-      null;
-    mockGetCurrentPositionAsync.mockImplementationOnce(
-      () =>
-        new Promise<Location.LocationObject>((resolve) => {
-          resolveFirst = resolve;
-        })
-    );
-    mockGetCurrentPositionAsync.mockImplementationOnce(
-      () => new Promise<Location.LocationObject>(() => {})
-    );
+  it('見切った購読は閉じ、張り直した購読が次の測位を取り込む', async () => {
+    // 一発取得のときは「見切った要求が後から返る」ことがあり、その測位も通していた。
+    // 購読は見切りで閉じるので後からは届かないが、閉じた直後に次の購読を張るため、
+    // 測位が出た瞬間はそちらが拾う。取りこぼしはこの張り直しで防ぐ。
+    setWatchBehavior(null);
     await startHeartbeat();
 
     await advanceBy(1);
     // 1件目を見切って2件目を出させる
     await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING);
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(2);
+    // 見切った購読は閉じる。閉じないと、見切っただけで測位が回り続ける
+    expect(watches[0].remove).toHaveBeenCalled();
 
-    // 1件目(見切り済み)が返っても、2件目は取得中のままなので次の点検では要求しない
-    const lateLocation = makeLocation(Date.now());
+    // 1件目(見切り済み)へ遅れて測位が来ても、閉じているので何も起こさない
     await act(async () => {
-      resolveFirst?.(lateLocation);
+      watches[0].emit(makeLocation(Date.now()));
     });
-    await advanceToNextCheck();
+    expect(mockHandleTrackingLocation).not.toHaveBeenCalled();
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(2);
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
-    // 遅れて届いた測位も捨てず、継続測位と同じ入口へ通す(古ければ重複排除が落とす)
-    expect(mockHandleTrackingLocation).toHaveBeenCalledWith(lateLocation);
+    // 張り直した2件目が測位を拾う
+    const location = makeLocation(Date.now());
+    await act(async () => {
+      watches[1].emit(location);
+    });
+
+    expect(mockHandleTrackingLocation).toHaveBeenCalledWith(location);
   });
 
   it('継続測位と同じ精度で取得する', async () => {
@@ -374,36 +414,45 @@ describe('useLocationHeartbeat', () => {
 
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenLastCalledWith({
-      accuracy: Location.Accuracy.High,
-    });
+    // 変位ゲートは0で張る。ここへ来る時点で継続測位のゲート(10m)に届いていないので、
+    // 同じゲートを張り直したら待っても届かない
+    expect(mockWatchPositionAsync).toHaveBeenLastCalledWith(
+      { accuracy: Location.Accuracy.High, distanceInterval: 0 },
+      expect.any(Function)
+    );
   });
 
   it('アンマウント後は取得も反映も行わない', async () => {
-    let resolveFirst: ((location: Location.LocationObject) => void) | null =
-      null;
-    mockGetCurrentPositionAsync.mockImplementationOnce(
-      () =>
-        new Promise<Location.LocationObject>((resolve) => {
-          resolveFirst = resolve;
-        })
-    );
+    setWatchBehavior(null);
     const { unmount } = await startHeartbeat();
 
     await advanceToNextCheck();
     unmount();
     await act(async () => {
-      resolveFirst?.(makeLocation(Date.now()));
+      watches[0].emit(makeLocation(Date.now()));
     });
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
     expect(mockHandleTrackingLocation).not.toHaveBeenCalled();
+  });
+
+  it('アンマウントで購読を閉じる', async () => {
+    // 購読はアンマウントで自然に閉じない。画面を離れたあとも測位が回り続ける
+    setWatchBehavior(null);
+    const { unmount } = await startHeartbeat();
+
+    await advanceToNextCheck();
+    expect(watches[0].remove).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(watches[0].remove).toHaveBeenCalled();
   });
 
   it('取得に失敗し続けても警告は連続の先頭だけに絞る', async () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    mockGetCurrentPositionAsync.mockRejectedValue(
+    mockWatchPositionAsync.mockRejectedValue(
       new Error('位置情報を取得できません')
     );
     await startHeartbeat();
@@ -411,7 +460,7 @@ describe('useLocationHeartbeat', () => {
     await advanceToNextCheck();
     await advanceToNextCheck();
 
-    expect(mockGetCurrentPositionAsync).toHaveBeenCalledTimes(2);
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(2);
     expect(warnSpy).toHaveBeenCalledTimes(1);
 
     warnSpy.mockRestore();
@@ -440,7 +489,7 @@ describe('useLocationHeartbeat', () => {
       // 警告は連続の先頭だけに絞られるので、2件目以降はログから追えない。
       // 地下で失敗が続いているのかどうかは、この件数でしか判断できない。
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      mockGetCurrentPositionAsync.mockRejectedValue(
+      mockWatchPositionAsync.mockRejectedValue(
         new Error('位置情報を取得できません')
       );
       await startHeartbeat();
@@ -459,7 +508,7 @@ describe('useLocationHeartbeat', () => {
     });
 
     it('応答が返らないまま見切った取得を数える', async () => {
-      mockGetCurrentPositionAsync.mockReturnValue(new Promise(() => {}));
+      setWatchBehavior(null);
       await startHeartbeat();
 
       await advanceToNextCheck();
@@ -474,7 +523,7 @@ describe('useLocationHeartbeat', () => {
     it.each([
       ['変位ゲートを持たないプラットフォーム', 'unnecessary'],
       ['オートモード', 'auto-mode'],
-      ['背景', 'app-inactive'],
+      ['背景', 'app-background'],
       ['省電力測位', 'power-saving'],
       ['権限なし', 'permission-denied'],
     ] as const)('%s では止めている理由を残す', async (label, expected) => {
@@ -483,7 +532,7 @@ describe('useLocationHeartbeat', () => {
       } else if (label === 'オートモード') {
         mockAutoModeEnabled = true;
       } else if (label === '背景') {
-        mockIsAppActive = false;
+        mockIsAppForeground = false;
       } else if (label === '省電力測位') {
         mockPowerSavingLocationEnabled = true;
       } else {
@@ -545,6 +594,127 @@ describe('useLocationHeartbeat', () => {
       expect(getLocationHeartbeatStats().state).toBe('not-mounted');
 
       warnSpy.mockRestore();
+    });
+
+    // 捨てた要求・見切った要求はその時点で数え終えている。あとから来る失敗をここでも
+    // 数えると、1件の要求が discarded と failed の両方に乗る。
+    it('捨てたあとに失敗が返っても、失敗としては数えない', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      let rejectWatch: ((error: Error) => void) | null = null;
+      mockWatchPositionAsync.mockImplementation(
+        () =>
+          new Promise((_resolve, reject) => {
+            rejectWatch = reject;
+          })
+      );
+      const { unmount } = await startHeartbeat();
+
+      await advanceToNextCheck();
+      expect(getLocationHeartbeatStats().requested).toBe(1);
+
+      unmount();
+      await act(async () => {
+        rejectWatch?.(new Error('位置情報を取得できません'));
+      });
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 1,
+        failed: 0,
+        discarded: 1,
+        lastErrorMessage: null,
+      });
+
+      warnSpy.mockRestore();
+    });
+
+    // 張り直しの向こう側へ要求は残らない。捨てた事実を数えないと、結果のカウンタが
+    // どれも動かないまま要求数だけが進むダンプになり、「応答が返っていない」のか
+    // 「返る前に捨てた」のかが読めなくなる。
+    it('結果を待たずに捨てた要求を数える', async () => {
+      setWatchBehavior(null);
+      const { rerender } = await startHeartbeat();
+
+      await advanceToNextCheck();
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 1,
+        discarded: 0,
+      });
+
+      // 稼働条件から外れてeffectが張り直される(オートモードへの切り替え)
+      mockAutoModeEnabled = true;
+      await act(async () => {
+        rerender(undefined);
+      });
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 1,
+        succeeded: 0,
+        failed: 0,
+        abandoned: 0,
+        discarded: 1,
+      });
+      // 捨てた要求の購読は閉じる。閉じないと画面の外で測位が回り続ける
+      expect(watches[0].remove).toHaveBeenCalled();
+    });
+
+    it('要求を出していなければ捨てた数は増えない', async () => {
+      // 途絶が無く要求を出していない間の張り直しまで捨てたことにすると、
+      // 「要求が捨てられている」という読みが立たなくなる
+      mockGetMsSinceLastTrackedLocation.mockReturnValue(
+        LOCATION_HEARTBEAT_STALE_THRESHOLD - 1
+      );
+      const { unmount } = await startHeartbeat();
+
+      await advanceToNextCheck();
+      unmount();
+
+      expect(getLocationHeartbeatStats()).toMatchObject({
+        requested: 0,
+        discarded: 0,
+      });
+    });
+
+    // 張り直しが頻発していること自体が「なぜ補完測位が進まないのか」の手掛かりになる
+    it('片付けが走った回数を数える', async () => {
+      const { rerender, unmount } = await startHeartbeat();
+      expect(getLocationHeartbeatStats().teardowns).toBe(0);
+
+      mockAutoModeEnabled = true;
+      await act(async () => {
+        rerender(undefined);
+      });
+      expect(getLocationHeartbeatStats().teardowns).toBe(1);
+
+      unmount();
+      expect(getLocationHeartbeatStats().teardowns).toBe(2);
+    });
+
+    // 回数だけでは引き金が読めない。前景判定が外れたのか、省電力へ切り替わったのか、
+    // ホストが作り直されただけなのかで、次に直す場所が変わる。
+    it('張り直しの理由に、変わった依存とそのときのAppStateを残す', async () => {
+      const { rerender } = await startHeartbeat();
+      expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([]);
+
+      mockIsAppForeground = false;
+      (AppState as { currentState: string }).currentState = 'background';
+      await act(async () => {
+        rerender(undefined);
+      });
+
+      expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([
+        'foreground: true→false / AppState=background',
+      ]);
+    });
+
+    // StrictModeは開発時にeffectの片付けと張り直しを必ず1往復させる。依存は何も
+    // 変わっていないので、依存の名前が出ると無関係な値を疑うことになる。
+    it('依存が変わっていない張り直しは再マウントとして残す', async () => {
+      renderHook(() => useLocationHeartbeat(), { wrapper: StrictMode });
+      await act(async () => {});
+
+      expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([
+        '依存の変化なし(再マウント) / AppState=active',
+      ]);
     });
 
     // 画面を離れたあとも running のままだと、動いていない区間のダンプが動作中に見える

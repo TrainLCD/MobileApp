@@ -29,8 +29,8 @@ export type LocationHeartbeatState =
   | 'unnecessary'
   /** オートモード中(現在地はシミュレーターが直接書くので実測位を混ぜない) */
   | 'auto-mode'
-  /** 前景でない(背景では正常時も配信間隔が空き、途絶と区別できない) */
-  | 'app-inactive'
+  /** 背景(背景では正常時も配信間隔が空き、途絶と区別できない) */
+  | 'app-background'
   /** 省電力測位プロファイル中(停車中の測位休止を打ち消さないため動かさない) */
   | 'power-saving'
   /** 前景の位置情報権限が無い、または権限の確認自体に失敗した */
@@ -49,23 +49,59 @@ export type LocationHeartbeatStats = {
   /** 応答が返らないまま LOCATION_HEARTBEAT_MAX_PENDING で見切った回数 */
   abandoned: number;
   /**
+   * 進行中のまま捨てた要求の回数。画面を離れたときと、稼働条件から外れて
+   * useLocationHeartbeat の effect が張り直されたときに起きる。
+   *
+   * 捨てた要求はどの結果カウンタにも現れない。数えないと requested だけが進んで
+   * succeeded/failed/abandoned が揃って 0 のダンプになり、「応答が返っていない」のか
+   * 「返る前に捨てた」のかが読めなくなる。
+   */
+  discarded: number;
+  /**
+   * useLocationHeartbeat の片付けが走った回数。依存の変化による張り直しと、画面を
+   * 離れたときのアンマウントの両方を含む。
+   *
+   * 進行中の要求は張り直しで捨てられる(discarded)。張り直しがどれだけ起きているかは
+   * 補完測位が進まない理由の手掛かりになるので、捨てた数と並べて読めるようにする。
+   */
+  teardowns: number;
+  /**
+   * 直近の張り直しの理由(古いものが先頭、最大 MAX_TEARDOWN_REASONS 件)。
+   * 「どの依存が変わったか」と「そのときの AppState」を1件ずつ文字列で持つ。
+   *
+   * 回数(teardowns)だけでは引き金が読めない。前景判定が外れたのか、省電力へ切り替わった
+   * のか、ホストが作り直されただけなのかで、次に直す場所がまるで変わる。数だけを見て
+   * 引き金を推測すると外すので、理由そのものを残す。
+   *
+   * 理由は張り直したあとの実行で記録する(前回の依存と突き合わせて初めて差分が出る)。
+   * 画面を離れたときのアンマウントは次の実行が無いため、teardowns だけが進んで理由は
+   * 増えない。
+   */
+  recentTeardownReasons: string[];
+  /**
    * 直近の取得失敗の内容。失敗が地下で連続するとき、ログを追わずに理由を持ち出せるようにする。
    * 長い文字列がダンプを埋めないよう切り詰める。
    */
   lastErrorMessage: string | null;
 };
 
-// 見切った要求が後から返ることがあるため(useLocationHeartbeat は古い測位も重複排除へ委ねて
-// そのまま通す)、succeeded と abandoned は同じ要求で両方立ちうる。requested と内訳の合計は
-// 一致しない前提で読むこと。
+// 配信と見切りがほぼ同時に起きたときだけ、同じ要求で succeeded と abandoned の両方が
+// 立ちうる。requested と内訳の合計は一致しない前提で読むこと。
 const createStats = (): LocationHeartbeatStats => ({
   state: 'not-mounted',
   requested: 0,
   succeeded: 0,
   failed: 0,
   abandoned: 0,
+  discarded: 0,
+  teardowns: 0,
+  recentTeardownReasons: [],
   lastErrorMessage: null,
 });
+
+// 残す理由の件数。乗車1回ぶんの張り直しを追うには数件あれば足り、ダンプを
+// 埋めない程度に抑える。
+const MAX_TEARDOWN_REASONS = 5;
 
 let stats = createStats();
 
@@ -104,8 +140,26 @@ export const countLocationHeartbeatAbandoned = (): void => {
   stats.abandoned += 1;
 };
 
+export const countLocationHeartbeatDiscarded = (): void => {
+  stats.discarded += 1;
+};
+
+export const countLocationHeartbeatTornDown = (): void => {
+  stats.teardowns += 1;
+};
+
+export const recordLocationHeartbeatTeardownReason = (reason: string): void => {
+  // 差し替えで足す。getLocationHeartbeatStats が返した配列は浅いコピーで共有される
+  // ため、既に持ち出されたダンプを後から書き換えないようにする。
+  stats.recentTeardownReasons = [
+    ...stats.recentTeardownReasons,
+    reason.slice(0, MAX_ERROR_MESSAGE_LENGTH),
+  ].slice(-MAX_TEARDOWN_REASONS);
+};
+
 export const getLocationHeartbeatStats = (): LocationHeartbeatStats => ({
   ...stats,
+  recentTeardownReasons: [...stats.recentTeardownReasons],
 });
 
 /**
