@@ -275,7 +275,7 @@ describe('useLocationHeartbeat', () => {
     // 配信間隔が途絶時間以上になり途絶と区別できない。補完測位が作る
     // CLLocationManagerも背景では測位を受け取れない。
     // iOSの'inactive'はここに含めない(useIsAppForeground)。含めると、乗車中に
-    // 通知センターを開いただけで補完測位が畳まれる。
+    // 通知センターを開いただけでeffectが張り直され、進行中の要求が捨てられる。
     mockIsAppForeground = false;
     await startHeartbeat();
 

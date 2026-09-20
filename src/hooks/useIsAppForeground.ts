@@ -16,7 +16,7 @@ const isForegroundState = (state: AppStateStatus): boolean =>
  * useIsAppActiveとの違いは'inactive'の扱いだけで、あちらは'active'以外をすべてfalseに
  * する。表示要素の出し分け(PiPへ写り込ませない等)はそれでよいが、「前景でしか成立しない
  * 処理を動かしてよいか」の判断には狭すぎる。通知センターを開いただけでfalseになり、
- * 進行中の処理が畳まれてしまう。
+ * このフックを依存に持つeffectが張り直される。
  */
 export const useIsAppForeground = (): boolean => {
   const [isForeground, setIsForeground] = useState(() =>
