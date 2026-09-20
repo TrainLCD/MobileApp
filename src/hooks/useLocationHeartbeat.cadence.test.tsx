@@ -20,8 +20,8 @@ jest.mock('expo-battery', () => ({
   useLowPowerMode: () => false,
 }));
 
-jest.mock('./useIsAppActive', () => ({
-  useIsAppActive: () => true,
+jest.mock('./useIsAppForeground', () => ({
+  useIsAppForeground: () => true,
 }));
 
 // handleTrackingLocation の下流(ストア)だけ止める。フック → handleTrackingLocation →
@@ -47,14 +47,13 @@ jest.mock('jotai', () => ({
   useAtomValue: jest.fn(() => false),
 }));
 
-const mockGetCurrentPositionAsync =
-  Location.getCurrentPositionAsync as jest.Mock;
+const mockWatchPositionAsync = Location.watchPositionAsync as jest.Mock;
 const mockGetForegroundPermissionsAsync =
   Location.getForegroundPermissionsAsync as jest.Mock;
 
 const NOW = 1_700_000_000_000;
-// 取得にかかる時間。0だと固定間隔の実装でも間隔が合ってしまい、退行を捕まえられない
-// (自分の測位が次の点検の直前に届くことが、間隔が倍に開く条件そのもの)。
+// 購読を張ってから測位が届くまでの時間。0だと固定間隔の実装でも間隔が合ってしまい、
+// 退行を捕まえられない(自分の測位が次の点検の直前に届くことが、間隔が倍に開く条件そのもの)。
 const RESPONSE_LATENCY_MS = 1_500;
 const OBSERVE_MS = 60_000;
 const STEP_MS = 250;
@@ -74,12 +73,15 @@ describe('useLocationHeartbeat の取得間隔', () => {
 
   it('継続測位が完全に途絶している間、途絶時間を超えて取得が空かない', async () => {
     const requestedAt: number[] = [];
-    mockGetCurrentPositionAsync.mockImplementation(() => {
-      requestedAt.push(Date.now());
-      return new Promise<Location.LocationObject>((resolve) => {
-        // 実機と同じく取得には時間がかかる。応答時刻の測位を返す。
+    mockWatchPositionAsync.mockImplementation(
+      (
+        _options: Location.LocationOptions,
+        callback: (location: Location.LocationObject) => void
+      ) => {
+        requestedAt.push(Date.now());
+        // 実機と同じく、購読を張ってから測位が届くまでに時間がかかる。
         setTimeout(() => {
-          resolve({
+          callback({
             coords: {
               latitude: 35.681236,
               longitude: 139.767125,
@@ -92,8 +94,9 @@ describe('useLocationHeartbeat の取得間隔', () => {
             timestamp: Date.now(),
           });
         }, RESPONSE_LATENCY_MS);
-      });
-    });
+        return Promise.resolve({ remove: jest.fn() });
+      }
+    );
 
     renderHook(() => useLocationHeartbeat());
     await act(async () => {});
@@ -104,7 +107,7 @@ describe('useLocationHeartbeat の取得間隔', () => {
       });
     }
 
-    // 取得と取得の間隔が途絶時間+応答時間を超えない = 更新が10秒台で回り続ける。
+    // 購読と購読の間隔が途絶時間+配信までの時間を超えない = 更新が10秒台で回り続ける。
     // 固定間隔の実装ではここが約20秒になり落ちる。
     const gaps = requestedAt
       .slice(1)

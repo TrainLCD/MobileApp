@@ -1,9 +1,12 @@
 import {
   countLocationHeartbeatAbandoned,
+  countLocationHeartbeatDiscarded,
   countLocationHeartbeatFailed,
   countLocationHeartbeatRequested,
   countLocationHeartbeatSucceeded,
+  countLocationHeartbeatTornDown,
   getLocationHeartbeatStats,
+  recordLocationHeartbeatTeardownReason,
   resetLocationHeartbeatStats,
   setLocationHeartbeatState,
 } from './locationHeartbeatStats';
@@ -20,6 +23,9 @@ describe('locationHeartbeatStats', () => {
       succeeded: 0,
       failed: 0,
       abandoned: 0,
+      discarded: 0,
+      teardowns: 0,
+      recentTeardownReasons: [],
       lastErrorMessage: null,
     });
   });
@@ -36,6 +42,51 @@ describe('locationHeartbeatStats', () => {
     expect(stats.succeeded).toBe(1);
     expect(stats.failed).toBe(1);
     expect(stats.abandoned).toBe(1);
+  });
+
+  it('捨てた要求と片付けの回数をそれぞれ数える', () => {
+    countLocationHeartbeatDiscarded();
+    countLocationHeartbeatTornDown();
+    countLocationHeartbeatTornDown();
+
+    const stats = getLocationHeartbeatStats();
+    expect(stats.discarded).toBe(1);
+    expect(stats.teardowns).toBe(2);
+  });
+
+  it('張り直しの理由を新しいものが末尾になる順で残す', () => {
+    recordLocationHeartbeatTeardownReason('foreground: true→false');
+    recordLocationHeartbeatTeardownReason('foreground: false→true');
+
+    expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([
+      'foreground: true→false',
+      'foreground: false→true',
+    ]);
+  });
+
+  it('張り直しの理由は直近5件だけ残す', () => {
+    // 乗車1回ぶんを追うには数件あれば足りる。無制限に積むとダンプが埋まる
+    for (let i = 1; i <= 7; i += 1) {
+      recordLocationHeartbeatTeardownReason(`理由${i}`);
+    }
+
+    expect(getLocationHeartbeatStats().recentTeardownReasons).toEqual([
+      '理由3',
+      '理由4',
+      '理由5',
+      '理由6',
+      '理由7',
+    ]);
+  });
+
+  it('持ち出した理由の配列は後から書き換わらない', () => {
+    // ダンプは持ち出した時点の値でなければ、2枚の差分で区間を読めない
+    recordLocationHeartbeatTeardownReason('1件目');
+    const taken = getLocationHeartbeatStats().recentTeardownReasons;
+
+    recordLocationHeartbeatTeardownReason('2件目');
+
+    expect(taken).toEqual(['1件目']);
   });
 
   it('直近の失敗理由を残す', () => {
@@ -92,6 +143,9 @@ describe('locationHeartbeatStats', () => {
       succeeded: 0,
       failed: 0,
       abandoned: 0,
+      discarded: 0,
+      teardowns: 0,
+      recentTeardownReasons: [],
       lastErrorMessage: null,
     });
   });
