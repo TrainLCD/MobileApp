@@ -2,8 +2,8 @@
 // Node 標準のテストランナーだけで動く（追加依存なし）:
 //   npm run test:scripts
 //
-// 判定条件と無害化はどちらも「間違えても静かに通ってしまう」種類の処理なので、
-// 境界をここで固定する。
+// 条件の確認も個人情報の除去も、間違えたまま静かに通ってしまう種類の処理なので、
+// 境目をここで固定しておく。
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -37,8 +37,8 @@ const issue = (overrides = {}) => ({
   ...overrides,
 });
 
-// TrainLCD/Issues の実際の本文と同じ構成。Worker が組み立てる節の並びに依存する
-// 処理なので、サンプルを実物に合わせておく。
+// TrainLCD/Issues に実際に立つ issue と同じ構成。Worker が組み立てる節の並びを
+// 前提にした処理なので、サンプルも実物に合わせておく。
 const REAL_BODY = [
   '![Image](https://uploads.trainlcd.app/report-images/abc-def.png)',
   '',
@@ -157,7 +157,7 @@ test('フェンスの中の見出しは節の切れ目として扱わない', ()
 });
 
 test('利用者の原文が節の見出しを騙っても落とされない', () => {
-  // フェンスの中に書かれた `## レポーターUID` は原文の一部なので、症状として残る。
+  // コードブロックの中の `## レポーターUID` は原文の一部なので、症状として残す。
   const sanitized = sanitizeBody(
     ['```', '## レポーターUID', '本当の症状はこちら', '```', '## レポーターUID', 'uid-1234'].join('\n')
   );
@@ -187,7 +187,7 @@ test('渡す Markdown はタグで囲まれ、タイトルも無害化される'
   assert.match(rendered, /<labels>🐛 Bug, 🟠 P1 \/ High<\/labels>/);
   assert.match(rendered, /<title>&lt;\/body> 偽装タイトル<\/title>/);
   assert.match(rendered, /<\/feedback_issue>$/);
-  // 閉じタグを名乗れる綴りが本文側に残っていないこと。
+  // 閉じタグを名乗れる綴りが、本文側に残っていないこと。
   assert.equal(rendered.match(/<\/feedback_issue>/g).length, 1);
 });
 

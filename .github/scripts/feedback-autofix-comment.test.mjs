@@ -2,9 +2,9 @@
 // Node 標準のテストランナーだけで動く（追加依存なし）:
 //   npm run test:scripts
 //
-// 押さえるのは 2 点。どの経路でも必ずコメントを返すこと（返さない経路は
-// issue が放置される経路になる）と、失敗の報告が重複検知に引っかからないこと
-// （引っかかると一過性の失敗で二度と再実行できなくなる）。
+// 押さえたいのは 2 点ある。どの場合でも必ずコメントを返すこと（返さないまま
+// 終えると issue が放置される）と、失敗の報告が重複の確認に引っかからないこと
+// （引っかかると、一時的な失敗のせいで二度と試せなくなる）。
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -54,7 +54,7 @@ test('declined なら理由と引き継ぎ先を添えて返す', () => {
 });
 
 test('判断のあとで実行が落ちた場合は、その旨も併記する', () => {
-  // 判断だけ書くと完走したように読め、実行ログだけ出すと判断が埋もれる。
+  // 判断だけ書くと最後まで動いたように読め、実行ログだけ出すと判断が埋もれる。
   const { action, body } = decideComment({
     prUrl: '',
     verdictResult: declined(),
@@ -63,7 +63,7 @@ test('判断のあとで実行が落ちた場合は、その旨も併記する',
   });
   assert.equal(action, 'declined');
   assert.match(body, /直せないと判断しました/);
-  assert.match(body, /実行自体は完了していません/);
+  assert.match(body, /実行は最後まで進んでいません/);
   assert.match(body, /actions\/runs\/1/);
 });
 
@@ -139,7 +139,7 @@ test('どの入力でも action は空にならない', () => {
 });
 
 test('失敗の報告は重複検知の目印に一致しない', () => {
-  // 一致すると、一過性の失敗のあと二度と再実行できなくなる。
+  // 一致してしまうと、一時的な失敗のあと二度と試せなくなる。
   const body = renderFailureComment({ stage: 'agent-failed', runUrl: RUN_URL });
   assert.ok(body.startsWith(ERROR_MARKER));
   assert.equal(body.startsWith(MARKER), false);
