@@ -35,8 +35,8 @@ Configure these GitHub Actions secrets:
 | `FONTS_SSH_KEY` | Fonts submodule SSH private key |
 | `SENTRY_DSN` | Sentry runtime DSN (required; the build fails when unset) |
 | `SENTRY_PROPERTIES_BASE64` | Base64-encoded `sentry.properties` |
-| `GOOGLE_SERVICES_JSON_DEV_BASE64` | Base64-encoded Canary `google-services.json` (must include `me.tinykitten.trainlcd.dev`) |
-| `GOOGLE_SERVICES_JSON_PROD_BASE64` | Base64-encoded Production `google-services.json` (must include `me.tinykitten.trainlcd`) |
+| `GOOGLE_SERVICES_JSON_DEV_BASE64` | Canary JSON (Base64) |
+| `GOOGLE_SERVICES_JSON_PROD_BASE64` | Production JSON (Base64) |
 | `RELEASE_KEYSTORE` | Base64-encoded Android release keystore |
 | `KEYSTORE_PASSWORD` | Release keystore password |
 | `KEYSTORE_KEY_ALIAS` | Release signing key alias |
@@ -46,6 +46,18 @@ Configure these GitHub Actions secrets:
 The workflow exposes application endpoint and telemetry values as environment
 variables. Signing credentials, the Google Play service account, and the Fonts
 SSH key remain step-scoped secrets.
+
+Android builds on EAS Build do not use these secrets. Register
+`google-services.json` as a file environment variable named
+`GOOGLE_SERVICES_JSON` in each EAS environment (`development` for Canary,
+`production` for Production). The `eas-build-pre-install` hook in
+`package.json` runs `scripts/eas-restore-google-services.mjs`, which copies that
+file to `android/app/google-services.json` and fails the build when the
+variable is missing.
+
+Each `google-services.json` must include the application ID of the flavor it
+builds: `me.tinykitten.trainlcd.dev` for Canary and `me.tinykitten.trainlcd`
+for Production.
 
 ## Safe dry-run
 
