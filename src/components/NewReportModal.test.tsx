@@ -40,7 +40,6 @@ const defaultProps = {
   sending: false,
   onClose: jest.fn(),
   onSubmit: jest.fn(),
-  descriptionLowerLimit: 10,
 };
 
 const renderModal = (props: Partial<typeof defaultProps> = {}) => {
@@ -52,17 +51,7 @@ const renderModal = (props: Partial<typeof defaultProps> = {}) => {
 };
 
 describe('NewReportModal', () => {
-  // プログレスバーの Animated.timing がタイマー経由で state を更新するため、
-  // fake timers で act 内に閉じ込めて警告を防ぐ
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
   afterEach(() => {
-    act(() => {
-      jest.runOnlyPendingTimers();
-    });
-    jest.useRealTimers();
     // clearAllMocks は mockReturnValue を復元しないため、LEDテーマの上書きを明示的に戻す
     useAtomValue.mockReturnValue(false);
     jest.clearAllMocks();
@@ -150,31 +139,26 @@ describe('NewReportModal', () => {
     expect(onSubmit).toHaveBeenCalledWith('FAQを開けなくても送信できること');
   });
 
-  it('下限未満の入力では残り文字数を表示し、送信してもonSubmitが呼ばれない', () => {
+  // 文字数の下限は撤廃したため、空白のみでないことだけを送信条件として固定する
+  it('空白のみの入力では送信してもonSubmitが呼ばれない', () => {
     const onSubmit = jest.fn();
-    const { input, getByText, queryByText } = renderModal({ onSubmit });
+    const { input, getByText } = renderModal({ onSubmit });
 
-    fireEvent.changeText(input, 'short');
-
-    expect(getByText('remainingCharacters')).toBeTruthy();
-    expect(queryByText('sendable')).toBeNull();
+    fireEvent.changeText(input, '   \n  ');
 
     fireEvent.press(getByText('reportSend'));
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('下限以上の入力で送信可能になり、onSubmitに入力内容を渡す', () => {
+  // 旧下限(50文字)を下回る短文でも送信できることを、実際の境界として固定する
+  it('1文字でも入力があれば送信でき、onSubmitに入力内容をそのまま渡す', () => {
     const onSubmit = jest.fn();
-    const text = 'あ'.repeat(10);
-    const { input, getByText, queryByText } = renderModal({ onSubmit });
+    const { input, getByText } = renderModal({ onSubmit });
 
-    fireEvent.changeText(input, text);
-
-    expect(getByText('sendable')).toBeTruthy();
-    expect(queryByText('remainingCharacters')).toBeNull();
+    fireEvent.changeText(input, '遅い');
 
     fireEvent.press(getByText('reportSend'));
-    expect(onSubmit).toHaveBeenCalledWith(text);
+    expect(onSubmit).toHaveBeenCalledWith('遅い');
   });
 
   it('未入力で閉じると確認ダイアログなしでonCloseを呼ぶ', () => {

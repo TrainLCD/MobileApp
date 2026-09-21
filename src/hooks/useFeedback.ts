@@ -6,7 +6,6 @@ import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
 import { isClip } from 'react-native-app-clip';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
-import { FEEDBACK_DESCRIPTION_LOWER_LIMIT } from '../constants';
 import { getSessionToken } from '../lib/session';
 import { workerUrl } from '../lib/workerApi';
 import type { Report, ReportType } from '../models/Report';
@@ -48,7 +47,6 @@ export const useFeedback = (
     stacktrace?: string;
     sentryEventId?: string;
   }) => Promise<void>;
-  descriptionLowerLimit: number;
 } => {
   const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
 
@@ -66,10 +64,9 @@ export const useFeedback = (
       stacktrace?: string;
       sentryEventId?: string;
     }) => {
-      if (
-        description.trim().length < FEEDBACK_DESCRIPTION_LOWER_LIMIT ||
-        !user
-      ) {
+      // 本文が空白のみのフィードバックは送信しない。文字数の下限は設けず、
+      // クラッシュレポートのように本文が短くなる経路も取りこぼさない。
+      if (!description.trim().length || !user) {
         return;
       }
 
@@ -171,8 +168,5 @@ export const useFeedback = (
     [user, autoModeEnabled]
   );
 
-  return {
-    sendReport,
-    descriptionLowerLimit: FEEDBACK_DESCRIPTION_LOWER_LIMIT,
-  };
+  return { sendReport };
 };
