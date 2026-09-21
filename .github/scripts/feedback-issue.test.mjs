@@ -88,11 +88,30 @@ test('除外ラベルが 1 つでも付いていれば対象にしない', () =>
 
 test('トリアージラベルが無ければ対象にしない', () => {
   const result = evaluateEligibility(
-    issue({ labels: [{ name: '🟡 P2 / Medium' }, { name: '🐛 Bug' }] }),
+    issue({ labels: [{ name: '🟢 P3 / Low' }, { name: '🐛 Bug' }] }),
     RULES
   );
   assert.equal(result.eligible, false);
   assert.match(result.reason, /トリアージラベル/);
+});
+
+// P1 だけに絞っていた頃は、この組み合わせが対象外だった。既定を広げた側を
+// 固定しておかないと、次に既定を触ったときに黙って元へ戻る。
+test('P2 の Bug も対象になる', () => {
+  const result = evaluateEligibility(
+    issue({ labels: [{ name: '🟡 P2 / Medium' }, { name: '🐛 Bug' }] }),
+    RULES
+  );
+  assert.equal(result.eligible, true);
+});
+
+test('P2 でも除外ラベルが付いていれば対象にしない', () => {
+  const result = evaluateEligibility(
+    issue({ labels: [{ name: '🟡 P2 / Medium' }, { name: '🐛 Bug' }, { name: 'duplicate' }] }),
+    RULES
+  );
+  assert.equal(result.eligible, false);
+  assert.match(result.reason, /duplicate/);
 });
 
 test('カテゴリラベルが無ければ対象にしない', () => {

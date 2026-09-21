@@ -15,10 +15,16 @@ import { realpathSync } from 'node:fs';
 import { appendFile, readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
-// 既定のトリアージ条件。P1 に絞ったのは、open な P1 が 5 件しか無いのに対して
-// P2 は数十件あるため。全部エージェントに渡すと、#6721 でクレジットを使い切った
-// ときと同じことになる。ai_code_review.yml を手動実行だけにしてあるのと同じ理由。
-export const DEFAULT_TRIAGE_LABELS = ['🟠 P1 / High'];
+// 既定のトリアージ条件。初版は P1 だけに絞っていたが、P2 も入れた。
+//
+// 費用を心配して P1 だけにしていた。ただ数えてみると、2026 年 1 月から 9 月 21 日
+// までに立った P1 の Bug は 8 件（duplicate を除く）しかない。月 1 件動くかどうかで、
+// これでは仕組みとして仕事をしない。同じ期間の P2 の Bug は 43 件で、足しても
+// 月 6 件弱に収まる。
+//
+// 溜まっている分が一度に流れることはない。起動するのは新しくラベルが付いたときで、
+// 既に open な P2 の Bug 28 件は、誰かが付け直さないかぎり動かない。
+export const DEFAULT_TRIAGE_LABELS = ['🟠 P1 / High', '🟡 P2 / Medium'];
 export const DEFAULT_CATEGORY_LABELS = ['🐛 Bug', '💣 Crash'];
 // plan-from-feedback スキルは `🐥 Canary` も既定で除外しているが、あちらは
 // たまったチケットから次に手を付けるものを選ぶスキルで、目的が違う。Canary で

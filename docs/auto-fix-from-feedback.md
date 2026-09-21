@@ -40,18 +40,24 @@ fix/feedback-<issue番号> → dev の Pull Request
 
 | 条件 | 既定値 |
 | ---- | ---- |
-| トリアージ（いずれか必須） | `🟠 P1 / High` |
+| トリアージ（いずれか必須） | `🟠 P1 / High`, `🟡 P2 / Medium` |
 | カテゴリ（いずれか必須） | `🐛 Bug`, `💣 Crash` |
 | 除外（1 つでも付いていれば対象外） | `💩 Spam`, `duplicate`, `wontfix`, `invalid` |
 
-P1 だけに絞ったのは費用を抑えるためです。open な P1 は数件しかありませんが、P2 は
-数十件あります。これを全部エージェントに渡すと、#6721 で OpenAI のクレジットを
-使い切ったときと同じことになります。`ai_code_review.yml` を手動実行だけにして
-あるのも、もともと同じ理由からです。
+初版は費用を心配して P1 だけに絞っていました。ただ数えてみると、2026 年 1 月から
+9 月 21 日までに立った P1 の Bug は 8 件（`duplicate` を除く）しかありません。月に
+1 件動くかどうかで、これでは仕組みとして仕事をしません。同じ期間の P2 の Bug は
+43 件なので、足しても月 6 件弱に収まります。
+
+溜まっている分が一度に流れることはありません。起動するのは新しくラベルが付いた
+ときなので、既に open な P2 の Bug 28 件は、誰かが付け直さないかぎり動きません。
+
+P3 は入れていません。`✨ Feature Request` や `🛠️ Improvement` も対象外です。直す
+場所が決まっている不具合とは違って、何を作るかから決める話になるためです。
 
 `🐥 Canary` は除外していません。`plan-from-feedback` スキルでは既定で除外して
 いますが、あちらはたまったチケットから次に手を付けるものを選ぶスキルなので、
-目的が違います。Canary で見つかった P1 は、製品版に降りてくる前に直したいものです。
+目的が違います。Canary で見つかった不具合は、製品版に降りてくる前に直したいものです。
 
 ラベルの確認は Issues 側と MobileApp 側の両方で行います。dispatch を投げてきた側が
 正しく絞ってくれているとは限らないので、受け取った側でももう一度確かめます。手動で
@@ -99,11 +105,11 @@ jobs:
     runs-on: ubuntu-22.04
     # 条件に使うラベルが付いたときだけ動かす。issue を作るときはラベルが
     # まとめて付き、その数だけ labeled イベントが飛んでくる。どの順で付くかは
-    # 決まっていないので、P1 だけを見ていると Bug が後から付いた場合に
-    # 取りこぼす。そこで 3 つのどれが付いたときも一度確かめる形にした。
+    # 決まっていないので、優先度だけを見ていると Bug が後から付いた場合に
+    # 取りこぼす。そこでどれが付いたときも一度確かめる形にした。
     # 重複して飛んだ分は MobileApp 側で止まる。
     if: >-
-      contains(fromJSON('["🟠 P1 / High", "🐛 Bug", "💣 Crash"]'),
+      contains(fromJSON('["🟠 P1 / High", "🟡 P2 / Medium", "🐛 Bug", "💣 Crash"]'),
       github.event.label.name)
     steps:
       - name: Check labels
@@ -115,7 +121,7 @@ jobs:
           set -euo pipefail
           LABELS="$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json labels --jq '[.labels[].name]')"
           MATCH="$(jq -n --argjson labels "$LABELS" '
-            ($labels | any(. == "🟠 P1 / High")) and
+            ($labels | any(. == "🟠 P1 / High" or . == "🟡 P2 / Medium")) and
             ($labels | any(. == "🐛 Bug" or . == "💣 Crash")) and
             ($labels | any(. == "💩 Spam" or . == "duplicate" or . == "wontfix" or . == "invalid") | not)
           ')"
