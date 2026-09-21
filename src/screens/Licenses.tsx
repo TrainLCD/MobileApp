@@ -35,6 +35,7 @@ type LicenseId =
   | 'keio_bus'
   | 'tokyu_bus'
   | 'hakodate_city'
+  | 'firebase'
   | 'roboto'
   | 'voicevox_tobari'
   | 'vits_ljs'
@@ -283,6 +284,15 @@ const Licenses: React.FC = () => {
             href: 'https://www.city.hakodate.hokkaido.jp/tram/',
             license: translate('odptGtfs'),
             licenseUrl: GTFS_RUL_URL,
+            devOnly: false,
+          },
+          {
+            id: 'firebase',
+            title: 'Firebase',
+            icon: '🔥',
+            href: 'https://firebase.google.com/',
+            license: 'Apache License 2.0',
+            licenseUrl: APACHE_2_URL,
             devOnly: false,
           },
           {

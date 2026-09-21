@@ -163,3 +163,7 @@ ruleset_relaxed.json
 # scripts/fetch-voicevox-frameworks.mjs が取得する
 /ios/Frameworks/*.xcframework/
 /ios/Frameworks/onnxruntime-headers/
+
+# Firebase（CI はシークレットから復元する）
+google-services.json
+GoogleService-Info.plist

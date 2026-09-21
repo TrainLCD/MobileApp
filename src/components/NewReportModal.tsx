@@ -3,7 +3,6 @@ import * as WebBrowser from 'expo-web-browser';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Animated,
   Keyboard,
   Platform,
   Pressable,
@@ -29,7 +28,6 @@ type Props = {
   sending: boolean;
   onClose: () => void;
   onSubmit: (description: string) => void;
-  descriptionLowerLimit: number;
 };
 
 // この画面だけで使う淡色。共通パレットへ足すほど汎用でないため局所的に持つ。
@@ -38,15 +36,11 @@ const REPORT_COLORS = {
   light: {
     inputBackground: '#f6f8fa',
     inputBorder: '#dde3ea',
-    progressTrack: '#e5eaf0',
-    mutedText: '#767676',
     cautionText: '#555',
   },
   dark: {
     inputBackground: '#24272C',
     inputBorder: '#3A3E45',
-    progressTrack: '#3A3E45',
-    mutedText: '#9AA0A6',
     cautionText: '#B4B9BF',
   },
 } as const;
@@ -101,38 +95,13 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     borderRadius: 12,
   },
-  progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 10,
-  },
-  progressTrack: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statusText: {
-    fontWeight: 'bold',
-    fontSize: RFValue(11),
-  },
   cautionBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     // FAQ導線と注意書きを「送信前に目を通す補足」として一つのまとまりに見せるため、
-    // 上の進捗表示との間(20)より狭くしている。等間隔にするとFAQ導線が独立した
-    // 3つ目のブロックとして読まれ、視線の着地点が分散する。
+    // 入力欄とFAQ導線の間(20)より狭くしている。等間隔にするとFAQ導線が独立した
+    // ブロックとして読まれ、視線の着地点が分散する。
     marginTop: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -188,7 +157,6 @@ const NewReportModal: React.FC<Props> = ({
   sending,
   onClose,
   onSubmit,
-  descriptionLowerLimit,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAtomValue(appColorsAtom);
@@ -197,7 +165,6 @@ const NewReportModal: React.FC<Props> = ({
   const textRef = useRef('');
   const [charCount, setCharCount] = useState(0);
   const [inputFocused, setInputFocused] = useState(false);
-  const progressAnim = useRef(new Animated.Value(0)).current;
 
   // モーダルが開かれたときに初期化
   useEffect(() => {
@@ -207,16 +174,6 @@ const NewReportModal: React.FC<Props> = ({
       textInputRef.current?.clear();
     }
   }, [visible]);
-
-  // 下限文字数に対する進捗をプログレスバーに反映する
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: Math.min(charCount / descriptionLowerLimit, 1),
-      duration: 200,
-      // NOTE: width をアニメーションするため native driver は使えない
-      useNativeDriver: false,
-    }).start();
-  }, [charCount, descriptionLowerLimit, progressAnim]);
 
   const handleChangeText = useCallback((text: string) => {
     textRef.current = text;
@@ -271,13 +228,10 @@ const NewReportModal: React.FC<Props> = ({
     }
   }, [onClose]);
 
-  const sendable = charCount >= descriptionLowerLimit;
-  const remainingCount = Math.max(descriptionLowerLimit - charCount, 0);
+  // 文字数の下限は設けず、空白のみの本文だけを送信不可にする。
+  const sendable = charCount > 0;
 
   const accentColor = isLEDTheme ? '#fff' : colors.accent;
-  const mutedTextColor = isLEDTheme
-    ? 'rgba(255, 255, 255, 0.7)'
-    : reportColors.mutedText;
   const inputBorderColor = (() => {
     if (isLEDTheme) {
       return inputFocused ? '#fff' : 'rgba(255, 255, 255, 0.4)';
@@ -351,61 +305,11 @@ const NewReportModal: React.FC<Props> = ({
                 borderRadius: isLEDTheme ? 0 : 12,
               },
             ]}
-            placeholder={translate('reportPlaceholder', {
-              lowerLimit: descriptionLowerLimit,
-            })}
+            placeholder={translate('reportPlaceholder')}
             placeholderTextColor={
               isLEDTheme || colors.isDark ? 'rgba(255, 255, 255, 0.5)' : '#999'
             }
           />
-
-          <View style={styles.progressRow}>
-            <View
-              style={[
-                styles.progressTrack,
-                {
-                  backgroundColor: isLEDTheme
-                    ? 'rgba(255, 255, 255, 0.25)'
-                    : reportColors.progressTrack,
-                },
-              ]}
-            >
-              <Animated.View
-                style={[
-                  styles.progressFill,
-                  {
-                    backgroundColor: accentColor,
-                    width: progressAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', '100%'],
-                    }),
-                  },
-                ]}
-              />
-            </View>
-            <View style={styles.statusRow}>
-              {sendable ? (
-                <>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={RFValue(12)}
-                    color={accentColor}
-                  />
-                  <Typography
-                    style={[styles.statusText, { color: accentColor }]}
-                  >
-                    {translate('sendable')}
-                  </Typography>
-                </>
-              ) : (
-                <Typography
-                  style={[styles.statusText, { color: mutedTextColor }]}
-                >
-                  {translate('remainingCharacters', { count: remainingCount })}
-                </Typography>
-              )}
-            </View>
-          </View>
 
           <Pressable
             accessibilityRole="link"
