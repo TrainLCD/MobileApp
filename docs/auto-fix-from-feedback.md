@@ -84,9 +84,11 @@ Pull Request は Claude GitHub App のトークンで作ります。App が入�
 ### Issues 側のディスパッチャ
 
 `TrainLCD/Issues` に、以下を `.github/workflows/dispatch_feedback_auto_fix.yml`
-として置いてください。あわせて、MobileApp の Actions を起動できるトークンを同じ
-リポジトリの secret `MOBILEAPP_DISPATCH_TOKEN` に入れます。必要な権限は
-`TrainLCD/MobileApp` の Contents: read-only と Actions: read and write です。
+として置いてください。あわせて、MobileApp のワークフローを起動できるトークンを同じ
+リポジトリの secret `MOBILEAPP_DISPATCH_TOKEN` に入れます。fine-grained token なら
+`TrainLCD/MobileApp` の Contents: write が必要です。GitHub の[権限表](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens)で
+`POST /repos/{owner}/{repo}/dispatches` は Contents の write に挙がっていて、Actions の
+節には出てきません。Actions の権限だけでは API が通らず、MobileApp 側は起動しません。
 
 ```yaml
 # 条件を満たすフィードバック issue を TrainLCD/MobileApp へ知らせ、自動修正を
