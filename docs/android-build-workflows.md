@@ -35,7 +35,8 @@ Configure these GitHub Actions secrets:
 | `FONTS_SSH_KEY` | Fonts submodule SSH private key |
 | `SENTRY_DSN` | Sentry runtime DSN (required; the build fails when unset) |
 | `SENTRY_PROPERTIES_BASE64` | Base64-encoded `sentry.properties` |
-| `GOOGLE_SERVICES_JSON_BASE64` | Base64-encoded `google-services.json` registering all of `me.tinykitten.trainlcd`, `.dev`, and `.local` |
+| `GOOGLE_SERVICES_JSON_DEV_BASE64` | Base64-encoded Canary `google-services.json` (must include `me.tinykitten.trainlcd.dev`) |
+| `GOOGLE_SERVICES_JSON_PROD_BASE64` | Base64-encoded Production `google-services.json` (must include `me.tinykitten.trainlcd`) |
 | `RELEASE_KEYSTORE` | Base64-encoded Android release keystore |
 | `KEYSTORE_PASSWORD` | Release keystore password |
 | `KEYSTORE_KEY_ALIAS` | Release signing key alias |
