@@ -63,7 +63,7 @@ export type DevDiagnosticsInput = {
   displacementHistory: number[];
   /**
    * 直近の継続測位が最大許容精度フィルタで棄却されたか(locationAccuracyOutlierAtom)。
-   * 到着判定の強制未到着分岐を直接ゲートするので、判定の説明に要る。
+   * 棄却は座標を凍結させるので、位置が動かない理由の説明に要る。
    */
   accuracyOutlier: boolean;
   /**
@@ -83,12 +83,6 @@ export type DevDiagnosticsInput = {
   hasMeasuredSpeed: boolean;
   maxPermitAccuracy: number;
   etaAssistEnabled: boolean;
-  /**
-   * 精度が最大許容精度を超えたとき到着判定を強制的に未到着へ倒す機能の有効/無効。
-   * 精度が上限を超えて棄却された測位では、このフラグの有無で到着判定の読み方が
-   * 変わるため、他の実効設定と同じく座標とセットで持ち出す。
-   */
-  forceNotArrivedOnLowAccuracy: boolean;
   etaPhase: EtaPhase | null;
   etaAnchor: EtaAnchor | null;
   /** 最後に到着確定した駅(stationState.station)。全判定の起点 */
@@ -172,7 +166,6 @@ export const buildDevDiagnosticsSnapshot = (input: DevDiagnosticsInput) => ({
   config: {
     maxPermitAccuracy: input.maxPermitAccuracy,
     etaAssistEnabled: input.etaAssistEnabled,
-    forceNotArrivedOnLowAccuracy: input.forceNotArrivedOnLowAccuracy,
     autoModeEnabled: input.autoModeEnabled,
     telemetryEnabled: input.telemetryEnabled,
     backgroundLocationTracking: input.backgroundLocationTracking,

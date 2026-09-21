@@ -2,7 +2,6 @@
 import { renderHook } from '@testing-library/react-native';
 import { Provider, useAtomValue, useSetAtom } from 'jotai';
 import { OperationStatus, type Station, StopCondition } from '~/@types/graphql';
-import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import * as useApproachingStationModule from '~/hooks/useApproachingStation';
 import * as useCanGoForwardModule from '~/hooks/useCanGoForward';
 import * as useNearestStationModule from '~/hooks/useNearestStation';
@@ -95,7 +94,7 @@ describe('useRefreshStation', () => {
   });
 
   it('runs without crashing with basic mocks', () => {
-    // locationAtom, locationAccuracyOutlierAtom, notifyStateの順で呼ばれる
+    // locationAtom, notifyStateの順で呼ばれる
     mockUseAtomValue
       .mockReturnValueOnce({
         coords: {
@@ -103,7 +102,6 @@ describe('useRefreshStation', () => {
           longitude: 135.0,
         },
       }) // locationAtom
-      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     jest
@@ -129,147 +127,6 @@ describe('useRefreshStation', () => {
     });
 
     expect(result).toBeTruthy();
-  });
-
-  it('実際の精度がMAX_PERMIT_ACCURACYを超える場合はarrivedを強制的にfalseにする', () => {
-    // ワンショット取得などフィルタを経由せず粗い精度の測位がlocationAtomに入った場合、
-    // 最寄り駅と完全に同一座標でも到着とみなさない
-    mockUseAtomValue
-      .mockReturnValueOnce({
-        coords: {
-          latitude: 35.0,
-          longitude: 135.0,
-          accuracy: MAX_PERMIT_ACCURACY + 1,
-        },
-      }) // locationAtom
-      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
-      .mockReturnValue({ targetStationIds: [] }); // notifyState
-
-    // useRefreshStation内のuseSetAtom呼び出し順:
-    // 1回目=setStation(stationState), 2回目=setNavigation(navigationState)
-    const setStation = jest.fn();
-    mockUseSetAtom.mockReturnValueOnce(setStation).mockReturnValue(jest.fn());
-
-    jest
-      .spyOn(useNearestStationModule, 'useNearestStation')
-      .mockReturnValue(mockStation);
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(mockStation);
-    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
-    jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
-      arrivedThreshold: 100,
-      approachingThreshold: 300,
-    });
-    jest
-      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
-      .mockReturnValue({
-        isWrongDirection: false,
-        isLoopLineWrongDirection: false,
-      });
-
-    renderHook(() => useRefreshStation(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    expect(setStation).toHaveBeenCalled();
-    const updater = setStation.mock.calls[0][0] as (prev: any) => any;
-    const nextState = updater({});
-    expect(nextState.arrived).toBe(false);
-  });
-
-  it('外れ値フラグが立っている場合は精度が良好でもarrivedを強制的にfalseにする', () => {
-    // 継続測位ではMAX_PERMIT_ACCURACY超の測位は棄却され座標が前回値で凍結するため、
-    // locationAtomの精度は良好なまま。棄却の事実は外れ値フラグから判定する
-    mockUseAtomValue
-      .mockReturnValueOnce({
-        coords: {
-          latitude: 35.0,
-          longitude: 135.0,
-          accuracy: 10,
-        },
-      }) // locationAtom
-      .mockReturnValueOnce(true) // locationAccuracyOutlierAtom
-      .mockReturnValue({ targetStationIds: [] }); // notifyState
-
-    const setStation = jest.fn();
-    mockUseSetAtom.mockReturnValueOnce(setStation).mockReturnValue(jest.fn());
-
-    jest
-      .spyOn(useNearestStationModule, 'useNearestStation')
-      .mockReturnValue(mockStation);
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(mockStation);
-    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
-    jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
-      arrivedThreshold: 100,
-      approachingThreshold: 300,
-    });
-    jest
-      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
-      .mockReturnValue({
-        isWrongDirection: false,
-        isLoopLineWrongDirection: false,
-      });
-
-    renderHook(() => useRefreshStation(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    expect(setStation).toHaveBeenCalled();
-    const updater = setStation.mock.calls[0][0] as (prev: any) => any;
-    const nextState = updater({});
-    expect(nextState.arrived).toBe(false);
-  });
-
-  it('強制未到着トグルが無効なら精度超過・外れ値でも通常の到着判定を行う', () => {
-    // Remote Configのフィーチャートグルで無効化された場合、精度に依らず
-    // 最寄り駅と同一座標なら到着とみなす
-    jest
-      .spyOn(remoteConfigModule, 'isForceNotArrivedOnLowAccuracyEnabled')
-      .mockReturnValue(false);
-
-    mockUseAtomValue
-      .mockReturnValueOnce({
-        coords: {
-          latitude: 35.0,
-          longitude: 135.0,
-          accuracy: MAX_PERMIT_ACCURACY + 1,
-        },
-      }) // locationAtom
-      .mockReturnValueOnce(true) // locationAccuracyOutlierAtom
-      .mockReturnValue({ targetStationIds: [] }); // notifyState
-
-    const setStation = jest.fn();
-    mockUseSetAtom.mockReturnValueOnce(setStation).mockReturnValue(jest.fn());
-
-    jest
-      .spyOn(useNearestStationModule, 'useNearestStation')
-      .mockReturnValue(mockStation);
-    jest
-      .spyOn(useNextStationModule, 'useNextStation')
-      .mockReturnValue(mockStation);
-    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
-    jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
-      arrivedThreshold: 100,
-      approachingThreshold: 300,
-    });
-    jest
-      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
-      .mockReturnValue({
-        isWrongDirection: false,
-        isLoopLineWrongDirection: false,
-      });
-
-    renderHook(() => useRefreshStation(), {
-      wrapper: ({ children }) => <Provider>{children}</Provider>,
-    });
-
-    expect(setStation).toHaveBeenCalled();
-    const updater = setStation.mock.calls[0][0] as (prev: any) => any;
-    const nextState = updater({});
-    expect(nextState.arrived).toBe(true);
   });
 
   it('接近判定は次駅ではなく現在地基準の接近駅(useApproachingStation)を基準にする', () => {
@@ -300,7 +157,6 @@ describe('useRefreshStation', () => {
           longitude: 135.0,
         },
       }) // locationAtom
-      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     const setStation = jest.fn();
@@ -368,7 +224,6 @@ describe('useRefreshStation', () => {
           longitude: 135.0,
         },
       }) // locationAtom
-      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     const setStation = jest.fn();
@@ -432,7 +287,6 @@ describe('useRefreshStation', () => {
       .mockReturnValueOnce({
         coords: { latitude: 35.0, longitude: 135.0 },
       }) // locationAtom
-      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
       .mockReturnValue({ targetStationIds: [2] }); // notifyState(接近駅id=2が通知対象)
 
     mockUseSetAtom.mockReturnValue(jest.fn());
@@ -488,7 +342,6 @@ describe('useRefreshStation', () => {
           accuracy: 800,
         },
       }) // locationAtom
-      .mockReturnValueOnce(false) // locationAccuracyOutlierAtom
       .mockReturnValue({ targetStationIds: [] }); // notifyState
 
     const setStation = jest.fn();
