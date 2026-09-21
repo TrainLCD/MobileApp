@@ -63,7 +63,7 @@ test('判断のあとで実行が落ちた場合は、その旨も併記する',
   });
   assert.equal(action, 'declined');
   assert.match(body, /直せないと判断しました/);
-  assert.match(body, /実行は最後まで進んでいません/);
+  assert.match(body, /実行そのものは最後まで進んでいません/);
   assert.match(body, /actions\/runs\/1/);
 });
 
@@ -97,11 +97,11 @@ test('判断が無い場合は、どこで止まったかで内訳を出し分�
       runUrl: RUN_URL,
     }).body;
 
-  assert.match(stage('skipped'), /実行まで到達しませんでした/);
-  assert.match(stage(''), /実行まで到達しませんでした/);
-  assert.match(stage('failure'), /失敗または中断しました/);
-  assert.match(stage('cancelled'), /失敗または中断しました/);
-  assert.match(stage('success'), /判断を残しませんでした/);
+  assert.match(stage('skipped'), /動き出すところまで進みませんでした/);
+  assert.match(stage(''), /動き出すところまで進みませんでした/);
+  assert.match(stage('failure'), /実行が途中で止まりました/);
+  assert.match(stage('cancelled'), /実行が途中で止まりました/);
+  assert.match(stage('success'), /調べた結果を書き残していません/);
 });
 
 test('壊れた verdict.json は内訳と先頭の抜粋を返す', () => {

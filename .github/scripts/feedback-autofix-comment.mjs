@@ -18,7 +18,7 @@ import { realpathSync } from 'node:fs';
 import { appendFile, readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
-// 同じ issue に二度判断を下さないための目印。ワークフローは動き出す前にこの
+// 同じ issue を二度調べさせないための目印。ワークフローは動き出す前にこの
 // 綴りを探し、見つかれば何もせずに終わる。
 export const MARKER = '<!-- auto-fix-from-feedback -->';
 // 失敗の報告には別の目印を使う。MARKER で始まらないので上の確認には引っかからず、
@@ -46,23 +46,23 @@ const HANDOFF_REPOSITORIES = {
 // なってしまうため。
 const FAILURE_STAGES = {
   'not-reached': {
-    summary: '準備の途中で失敗し、エージェントの実行まで到達しませんでした。',
-    hint: 'checkout・依存のインストール・issue の取得のどれかで止まっています。',
+    summary: '準備の途中で止まり、エージェントが動き出すところまで進みませんでした。',
+    hint: 'checkout・依存のインストール・issue の取得のどれかで失敗しています。',
   },
   'agent-failed': {
-    summary: 'エージェントの実行が失敗または中断しました。',
-    hint: '判断も残っていないので、このフィードバックはまだ調べられていません。',
+    summary: 'エージェントの実行が途中で止まりました。',
+    hint: '何を調べたのかも書き残されていないので、原因は分かっていません。',
   },
   'no-verdict': {
-    summary: 'エージェントは終了しましたが、判断を残しませんでした。',
+    summary: 'エージェントは終了しましたが、調べた結果を書き残していません。',
     hint: 'PR も出来ていません。何をしていたのかは実行ログから追えます。',
   },
   'invalid-verdict': {
-    summary: 'エージェントが残した判断のファイルを読めませんでした。',
-    hint: '判断はしていたかもしれませんが、中身を読めていません。',
+    summary: 'エージェントが書き残したファイルを読めませんでした。',
+    hint: '調べてはいたようですが、書かれている内容を取り出せていません。',
   },
   'pr-missing': {
-    summary: 'エージェントは修正したと報告しましたが、PR が見つかりません。',
+    summary: 'エージェントは修正したと書いていますが、PR が見つかりません。',
     hint: 'push か PR の作成に失敗したのかもしれません。',
   },
 };
@@ -128,7 +128,7 @@ export const renderDeclineComment = ({ reason, handoff, aborted = false, runUrl 
   if (aborted) {
     lines.push(
       '',
-      `この判断を書いたあと、実行は最後まで進んでいません。実行ログ: ${runUrl}`
+      `上の理由を書き残したあと、実行そのものは最後まで進んでいません。実行ログ: ${runUrl}`
     );
   }
   lines.push('', 'このコメントを消すと、次に条件を満たしたときにもう一度試します。');

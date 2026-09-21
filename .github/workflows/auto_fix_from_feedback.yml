@@ -105,7 +105,7 @@ jobs:
       # 状態に対応している。
       #  - ブランチ: PR を出す前に実行が落ちると、これだけが残る
       #  - PR: ブランチを消したあとの merged / closed を見つける
-      #  - issue のコメント: 「直せない」と判断済みかどうかを見る。この場合は
+      #  - issue のコメント: 「直せない」と書いて終えたかどうかを見る。この場合は
       #    PR もブランチも残らないので、ここを見ないとラベルが付き直すたびに
       #    同じ調査をやり直し、同じコメントが積み上がっていく
       - name: Check for existing work
@@ -282,7 +282,7 @@ jobs:
               読み取れることは、分けて書いてください。
 
       # 結果は必ず issue 側へ返す。PR が出来たならそのリンクを、直せないと
-      # 判断したならその理由を、実行が最後まで進まなかったならどこで止まったのかを
+      # 分かったならその理由を、実行が最後まで進まなかったならどこで止まったのかを
       # 投稿する。何も言わずに終わる場合を作らないこと。issue を見た人には
       # 「調べたうえで何もしなかった」のか「そもそも動かなかった」のかが分からず、
       # 手つかずの issue を対応済みだと思って読み飛ばすことになる。
@@ -297,8 +297,8 @@ jobs:
           BRANCH: ${{ steps.target.outputs.branch }}
           VERDICT_PATH: ${{ runner.temp }}/verdict.json
           OUTPUT_PATH: ${{ runner.temp }}/issue-comment.md
-          # 判断が残っていないとき、どこまで進んだのかはこの結果でしか分からない。
-          # 手前のステップで落ちていれば skipped になる。
+          # 結果が書き残されていないとき、どこまで進んだのかはこのステップの
+          # 結果からしか分からない。手前のステップで落ちていれば skipped になる。
           CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -327,7 +327,7 @@ jobs:
 
       # どこで止まったのかを投稿し終えてから、ジョブを失敗させる。Claude の
       # ステップがすでに失敗していれば、ここへ来る前からジョブは赤い。問題は
-      # ステップが成功したまま判断も PR も残らなかった場合で、これが無いと
+      # ステップが成功したまま結果も PR も残らなかった場合で、これが無いと
       # 緑のまま終わってしまう。
       - name: Fail when the run did not complete
         if: ${{ always() && steps.report.outputs.action == 'failed' }}
