@@ -39,14 +39,15 @@ internal class AppDelegate: ExpoAppDelegate {
     reactNativeDelegate = delegate
     reactNativeFactory = factory
 
+    // Firebase Analytics。ターゲットごとに Schemes/{Dev,Prod}/GoogleService-Info.plist を同梱している。
+    // JS 側から default app を参照する前に初期化を済ませるため、React Native の起動より前に呼ぶ
+    FirebaseApp.configure()
+
     window = UIWindow(frame: UIScreen.main.bounds)
     factory.startReactNative(
       withModuleName: "main",
       in: window,
       launchOptions: launchOptions)
-
-    // Firebase Analytics。ターゲットごとに Schemes/{Dev,Prod}/GoogleService-Info.plist を同梱している
-    FirebaseApp.configure()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
