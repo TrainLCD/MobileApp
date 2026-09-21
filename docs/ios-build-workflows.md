@@ -36,6 +36,8 @@ Configure these GitHub Actions secrets:
 | `FONTS_SSH_KEY` | Fonts submodule SSH private key |
 | `SENTRY_DSN` | Sentry runtime DSN (required; the build fails when unset) |
 | `SENTRY_PROPERTIES_BASE64` | Base64-encoded `sentry.properties` |
+| `GOOGLE_SERVICE_INFO_PLIST_DEV_BASE64` | Base64-encoded Canary `GoogleService-Info.plist` |
+| `GOOGLE_SERVICE_INFO_PLIST_PROD_BASE64` | Base64-encoded Production `GoogleService-Info.plist` |
 | `APP_STORE_CONNECT_API_ISSUER_ID` | App Store Connect API issuer ID |
 | `APP_STORE_CONNECT_API_KEY_ID` | App Store Connect API key ID |
 | `APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64` | Base64-encoded API private key |
