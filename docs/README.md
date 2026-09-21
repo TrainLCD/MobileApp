@@ -12,6 +12,7 @@
 - [canary リリース PR でのバージョン更新](./bump-version-on-canary-pr.md)
 - [本番リリース PR でのバージョン更新](./bump-version-on-release-pr.md)
 - [AI コードレビュー (GPT-5.6 Sol)](./ai-code-review-workflow.md)
+- [フィードバックからの自動修正 PR](./auto-fix-from-feedback.md)
 - [Firebase Test Lab の Robo テスト](./test-lab-robo.md)
 - [テレメトリの本番オプトイン: リスク評価](./telemetry-production-optin-risk.md)
 - [AIエージェント設計書](./spec/ai-agent/architecture.md)
