@@ -55,7 +55,6 @@ jest.mock('~/lib/remoteConfig', () => ({
   isEtaAssistEnabled: () => mockEtaAssistEnabled,
   getEtaFallbackArrivalConfirmMarginSec: () => 30,
   getMaxPermitAccuracy: () => 1500,
-  isForceNotArrivedOnLowAccuracyEnabled: () => true,
 }));
 
 type Condition = {

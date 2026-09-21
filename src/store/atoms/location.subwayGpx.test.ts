@@ -44,7 +44,6 @@ jest.mock('~/lib/remoteConfig', () => ({
   // 遅延 require する。定数の二重管理を避けるのが目的。
   getMaxPermitAccuracy: () =>
     jest.requireActual('~/constants/location').MAX_PERMIT_ACCURACY,
-  isForceNotArrivedOnLowAccuracyEnabled: () => true,
 }));
 
 // src/store/atoms/location.ts の同名の非公開定数と同値。export されていないので

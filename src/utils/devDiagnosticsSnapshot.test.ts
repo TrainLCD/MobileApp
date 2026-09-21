@@ -64,7 +64,6 @@ const baseInput: DevDiagnosticsInput = {
   },
   maxPermitAccuracy: 1500,
   etaAssistEnabled: false,
-  forceNotArrivedOnLowAccuracy: true,
   etaPhase: { kind: 'RUNNING', targetStationId: 9930135 },
   etaAnchor: {
     stationId: 9930134,
@@ -91,7 +90,6 @@ describe('buildDevDiagnosticsSnapshot', () => {
     expect(snapshot.config).toEqual({
       maxPermitAccuracy: 1500,
       etaAssistEnabled: false,
-      forceNotArrivedOnLowAccuracy: true,
       autoModeEnabled: false,
       telemetryEnabled: true,
       backgroundLocationTracking: true,

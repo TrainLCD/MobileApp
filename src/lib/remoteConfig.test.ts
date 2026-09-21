@@ -8,7 +8,6 @@ import {
   getVoicevoxTTSStyleId,
   isAIAgentFeatureEnabled,
   isEtaAssistEnabled,
-  isForceNotArrivedOnLowAccuracyEnabled,
   isRemoteTTSEnabled,
   isTTSFeatureEnabled,
   isVoicevoxTTSEnabled,
@@ -76,27 +75,6 @@ describe('getMaxPermitAccuracy', () => {
     });
     await setupRemoteConfig();
     expect(getMaxPermitAccuracy()).toBe(MAX_PERMIT_ACCURACY);
-  });
-});
-
-describe('isForceNotArrivedOnLowAccuracyEnabled', () => {
-  it('falls back to true before setup', () => {
-    expect(isForceNotArrivedOnLowAccuracyEnabled()).toBe(true);
-  });
-
-  it('returns the remote boolean after setup', async () => {
-    mockRemoteConfig({
-      max_permit_accuracy: 1500,
-      force_not_arrived_on_low_accuracy: false,
-    });
-    await setupRemoteConfig();
-    expect(isForceNotArrivedOnLowAccuracyEnabled()).toBe(false);
-  });
-
-  it('falls back to true when the boolean is missing', async () => {
-    mockRemoteConfig({ max_permit_accuracy: 1500 });
-    await setupRemoteConfig();
-    expect(isForceNotArrivedOnLowAccuracyEnabled()).toBe(true);
   });
 });
 
