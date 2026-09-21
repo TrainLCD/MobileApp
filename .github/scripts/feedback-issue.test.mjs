@@ -86,9 +86,11 @@ test('除外ラベルが 1 つでも付いていれば対象にしない', () =>
   assert.match(result.reason, /💩 Spam/);
 });
 
-test('トリアージラベルが無ければ対象にしない', () => {
+// 優先度が付く前の issue を先に渡さないための関門。3 つとも既定に入っているので
+// 素通りに見えるが、これが無いとトリアージ前のものが流れる。
+test('優先度ラベルが無ければ対象にしない', () => {
   const result = evaluateEligibility(
-    issue({ labels: [{ name: '🟢 P3 / Low' }, { name: '🐛 Bug' }] }),
+    issue({ labels: [{ name: '🐛 Bug' }, { name: '🍎 iOS' }] }),
     RULES
   );
   assert.equal(result.eligible, false);
@@ -103,6 +105,24 @@ test('P2 の Bug も対象になる', () => {
     RULES
   );
   assert.equal(result.eligible, true);
+});
+
+test('P3 の Bug も対象になる', () => {
+  const result = evaluateEligibility(
+    issue({ labels: [{ name: '🟢 P3 / Low' }, { name: '🐛 Bug' }] }),
+    RULES
+  );
+  assert.equal(result.eligible, true);
+});
+
+// 優先度が低くても、作るものから決める話はカテゴリの条件が弾く。
+test('P3 でもカテゴリが Bug / Crash でなければ対象にしない', () => {
+  const result = evaluateEligibility(
+    issue({ labels: [{ name: '🟢 P3 / Low' }, { name: '✨ Feature Request' }] }),
+    RULES
+  );
+  assert.equal(result.eligible, false);
+  assert.match(result.reason, /カテゴリラベル/);
 });
 
 test('P2 でも除外ラベルが付いていれば対象にしない', () => {

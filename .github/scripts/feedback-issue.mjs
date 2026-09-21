@@ -15,16 +15,30 @@ import { realpathSync } from 'node:fs';
 import { appendFile, readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
-// 既定のトリアージ条件。初版は P1 だけに絞っていたが、P2 も入れた。
+// 既定のトリアージ条件。初版は P1 だけに絞っていたが、優先度は 3 つとも入れた。
 //
 // 費用を心配して P1 だけにしていた。ただ数えてみると、2026 年 1 月から 9 月 21 日
-// までに立った P1 の Bug は 8 件（duplicate を除く）しかない。月 1 件動くかどうかで、
-// これでは仕組みとして仕事をしない。同じ期間の P2 の Bug は 43 件で、足しても
+// までに立った Bug は P1 が 8 件、P2 が 43 件、P3 が 3 件（duplicate と Spam を
+// 除く）。P1 だけでは月 1 件動くかどうかで、仕組みとして仕事をしない。3 つ足しても
 // 月 6 件弱に収まる。
 //
+// P3 を外す理由は無い。作るものから決める Feature Request や Improvement は
+// カテゴリの条件（下記）が弾く。P3 の Bug は Bug なので、直す場所が決まっている
+// 点では P2 の Bug と変わらない。
+//
+// 3 つとも入れた結果この条件はほぼ素通りになるが、外さないこと。優先度が付く前の
+// issue を先に渡さないための関門になっている。issue を作るときはラベルがまとめて
+// 付き、その順は決まっていない。Bug が先に付いた時点で走ると、まだトリアージの
+// 終わっていないものをエージェントへ渡すことになる。
+//
 // 溜まっている分が一度に流れることはない。起動するのは新しくラベルが付いたときで、
-// 既に open な P2 の Bug 28 件は、誰かが付け直さないかぎり動かない。
-export const DEFAULT_TRIAGE_LABELS = ['🟠 P1 / High', '🟡 P2 / Medium'];
+// 既に open な Bug（P1 が 5 件、P2 が 28 件、P3 が 3 件）は、誰かが付け直さない
+// かぎり動かない。
+export const DEFAULT_TRIAGE_LABELS = [
+  '🟠 P1 / High',
+  '🟡 P2 / Medium',
+  '🟢 P3 / Low',
+];
 export const DEFAULT_CATEGORY_LABELS = ['🐛 Bug', '💣 Crash'];
 // plan-from-feedback スキルは `🐥 Canary` も既定で除外しているが、あちらは
 // たまったチケットから次に手を付けるものを選ぶスキルで、目的が違う。Canary で

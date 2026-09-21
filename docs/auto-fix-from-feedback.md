@@ -40,20 +40,31 @@ fix/feedback-<issue番号> → dev の Pull Request
 
 | 条件 | 既定値 |
 | ---- | ---- |
-| トリアージ（いずれか必須） | `🟠 P1 / High`, `🟡 P2 / Medium` |
+| トリアージ（いずれか必須） | `🟠 P1 / High`, `🟡 P2 / Medium`, `🟢 P3 / Low` |
 | カテゴリ（いずれか必須） | `🐛 Bug`, `💣 Crash` |
 | 除外（1 つでも付いていれば対象外） | `💩 Spam`, `duplicate`, `wontfix`, `invalid` |
 
 初版は費用を心配して P1 だけに絞っていました。ただ数えてみると、2026 年 1 月から
-9 月 21 日までに立った P1 の Bug は 8 件（`duplicate` を除く）しかありません。月に
-1 件動くかどうかで、これでは仕組みとして仕事をしません。同じ期間の P2 の Bug は
-43 件なので、足しても月 6 件弱に収まります。
+9 月 21 日までに立った Bug は P1 が 8 件、P2 が 43 件、P3 が 3 件です（`duplicate` と
+`💩 Spam` を除く）。P1 だけでは月に 1 件動くかどうかで、仕組みとして仕事をしません。
+3 つ足しても月 6 件弱に収まります。
+
+| | 2026 年の新規 | 月あたり | 現在 open |
+| ---- | ---- | ---- | ---- |
+| P1 + Bug | 8 件 | 約 0.9 件 | 5 件 |
+| P2 + Bug | 43 件 | 約 4.9 件 | 28 件 |
+| P3 + Bug | 3 件 | 約 0.3 件 | 3 件 |
 
 溜まっている分が一度に流れることはありません。起動するのは新しくラベルが付いた
-ときなので、既に open な P2 の Bug 28 件は、誰かが付け直さないかぎり動きません。
+ときなので、既に open な分は誰かが付け直さないかぎり動きません。
 
-P3 は入れていません。`✨ Feature Request` や `🛠️ Improvement` も対象外です。直す
-場所が決まっている不具合とは違って、何を作るかから決める話になるためです。
+優先度を 3 つとも入れたので、この条件はほぼ素通りになります。それでも外さないで
+ください。優先度が付く前の issue を先に渡さないための関門になっています。issue を
+作るときはラベルがまとめて付き、その順は決まっていません。`🐛 Bug` が先に付いた
+時点で走ると、まだトリアージの終わっていないものをエージェントへ渡すことになります。
+
+`✨ Feature Request` と `🛠️ Improvement` はカテゴリの条件が弾きます。直す場所が
+決まっている不具合とは違って、何を作るかから決める話になるためです。
 
 `🐥 Canary` は除外していません。`plan-from-feedback` スキルでは既定で除外して
 いますが、あちらはたまったチケットから次に手を付けるものを選ぶスキルなので、
@@ -111,8 +122,8 @@ jobs:
     # 取りこぼす。そこでどれが付いたときも一度確かめる形にした。
     # 重複して飛んだ分は MobileApp 側で止まる。
     if: >-
-      contains(fromJSON('["🟠 P1 / High", "🟡 P2 / Medium", "🐛 Bug", "💣 Crash"]'),
-      github.event.label.name)
+      contains(fromJSON('["🟠 P1 / High", "🟡 P2 / Medium", "🟢 P3 / Low",
+      "🐛 Bug", "💣 Crash"]'), github.event.label.name)
     steps:
       - name: Check labels
         id: check
@@ -123,7 +134,7 @@ jobs:
           set -euo pipefail
           LABELS="$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json labels --jq '[.labels[].name]')"
           MATCH="$(jq -n --argjson labels "$LABELS" '
-            ($labels | any(. == "🟠 P1 / High" or . == "🟡 P2 / Medium")) and
+            ($labels | any(. == "🟠 P1 / High" or . == "🟡 P2 / Medium" or . == "🟢 P3 / Low")) and
             ($labels | any(. == "🐛 Bug" or . == "💣 Crash")) and
             ($labels | any(. == "💩 Spam" or . == "duplicate" or . == "wontfix" or . == "invalid") | not)
           ')"
