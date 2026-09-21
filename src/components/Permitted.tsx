@@ -140,7 +140,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   // 走行画面から開いた場合も配色設定に追従させる。走行画面はProviderの
   // 外側にあるため、モーダル本体と同じくatomを直接購読する。
   const actionSheetColors = useAtomValue(resolvedAppColorsAtom);
-  const { sendReport, descriptionLowerLimit } = useFeedback(user);
+  const { sendReport } = useFeedback(user);
   const { warningInfo, clearWarningInfo } = useWarningInfo();
   const {
     isSettingListModalOpen,
@@ -650,13 +650,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
 
   const handleReportSend = useCallback(
     (description: string) => {
-      if (description.trim().length < descriptionLowerLimit) {
-        showDialog(
-          translate('errorTitle'),
-          translate('feedbackCharactersCountNotReached', {
-            lowerLimit: descriptionLowerLimit,
-          })
-        );
+      if (!description.trim().length) {
+        showDialog(translate('errorTitle'), translate('feedbackEmpty'));
         return;
       }
 
@@ -695,12 +690,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         ]
       );
     },
-    [
-      descriptionLowerLimit,
-      handleNewReportModalClose,
-      screenShotBase64,
-      sendReport,
-    ]
+    [handleNewReportModalClose, screenShotBase64, sendReport]
   );
 
   // PiP を有効にしている場合、バックグラウンド(PiP 表示含む)へ移行した際は
@@ -767,7 +757,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
           sending={sendingReport}
           onClose={handleNewReportModalClose}
           onSubmit={handleReportSend}
-          descriptionLowerLimit={descriptionLowerLimit}
         />
       </View>
     </ViewShot>

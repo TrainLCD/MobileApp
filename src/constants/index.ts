@@ -1,7 +1,6 @@
 export * from './color';
 export * from './colorScheme';
 export * from './duration';
-export * from './feedback';
 export * from './fonts';
 export * from './ident';
 export * from './languages';
