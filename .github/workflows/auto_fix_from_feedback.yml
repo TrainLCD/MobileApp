@@ -168,6 +168,7 @@ jobs:
         run: npm ci
 
       - name: Run Claude Code
+        id: claude
         if: steps.feedback.outputs.eligible == 'true'
         uses: anthropics/claude-code-action@v1
         with:
@@ -193,8 +194,9 @@ jobs:
             ## 出力するファイル
 
             終了する前に、必ず `${{ runner.temp }}/verdict.json` を書いてください。
-            ワークフローはこのファイルを読んで issue へコメントします。書かないと、
-            フィードバックを送った側にも見る側にも、何も残らないまま終わります。
+            ワークフローはこのファイルを読んで issue へコメントします。書かずに
+            終えると実行は失敗として扱われ、「判断を残しませんでした」という
+            report が issue に投稿されます。
 
             ```json
             {
@@ -268,12 +270,13 @@ jobs:
               本文から読み取れることを分けて書いてください。
 
       # 結果を必ず issue 側へ返す。PR が出来たならそのリンクを、直せないと
-      # 判断したならその理由を投稿する。どちらでもない場合（実行が途中で
-      # 落ちた場合など）は投稿しない。黙って落ちた実行を「直せませんでした」と
-      # 報告すると、事実と違う記録が issue に残るため。
+      # 判断したならその理由を、実行が完了しなかったならどこで止まったのかを
+      # 投稿する。無言で終わる経路は作らない。フィードバックを見る人からは
+      # 「自動修正が何もしなかった」と「そもそも動かなかった」が区別できず、
+      # 未処理の issue が処理済みに見えてしまうため。
       #
-      # always() を付けているのは、Claude のステップが失敗した場合でも
-      # verdict.json が残っていれば理由を返したいから。
+      # always() を付けているのは、Claude のステップが失敗した場合や
+      # そこまで到達しなかった場合こそ報告が要るから。
       - name: Report the outcome back to the issue
         id: report
         if: ${{ always() && steps.feedback.outputs.eligible == 'true' }}
@@ -282,8 +285,14 @@ jobs:
           BRANCH: ${{ steps.target.outputs.branch }}
           VERDICT_PATH: ${{ runner.temp }}/verdict.json
           OUTPUT_PATH: ${{ runner.temp }}/issue-comment.md
+          # 判断が残っていないとき、どこまで進んだかはこの結果でしか分からない。
+          # 手前のステップで落ちた場合は skipped になる。
+          CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
+          # 取得に失敗しても報告そのものは続ける。PR が見つからない場合の扱いは
+          # スクリプト側が判断する。
           PR_URL="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state open --json url --jq '.[0].url // empty' || true)"
           export PR_URL
           if [ -n "$PR_URL" ]; then
@@ -294,7 +303,7 @@ jobs:
       # 投稿だけを別ステップに分けているのは、Issues リポジトリのトークンを
       # 本文を組み立てる処理から切り離しておくため。
       - name: Post the comment
-        if: ${{ always() && steps.report.outputs.action != '' && steps.report.outputs.action != 'none' }}
+        if: ${{ always() && steps.report.outputs.action != '' }}
         env:
           GH_TOKEN: ${{ secrets.ISSUES_REPO_TOKEN }}
           ISSUE_NUMBER: ${{ steps.target.outputs.number }}
@@ -303,3 +312,12 @@ jobs:
           gh issue comment "$ISSUE_NUMBER" \
             --repo "$ISSUES_REPO" \
             --body-file "$RUNNER_TEMP/issue-comment.md"
+
+      # 内訳を投稿し終えてからジョブを落とす。Claude のステップが既に失敗して
+      # いる場合はここまで来ずに赤いが、ステップが成功したまま判断も PR も
+      # 残らなかった場合は、これが無いと緑で終わってしまう。
+      - name: Fail when the run did not complete
+        if: ${{ always() && steps.report.outputs.action == 'failed' }}
+        run: |
+          echo "::error::自動修正が完了しませんでした。内訳は issue のコメントを参照してください"
+          exit 1
