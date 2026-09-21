@@ -1,6 +1,7 @@
 internal import Expo
 import React
 import ReactAppDependencyProvider
+import FirebaseCore
 
 @UIApplicationMain
 internal class AppDelegate: ExpoAppDelegate {
@@ -27,6 +28,9 @@ internal class AppDelegate: ExpoAppDelegate {
       in: window,
       launchOptions: launchOptions)
 #endif
+
+    // Firebase Analytics。ターゲットごとに Schemes/{Dev,Prod}/GoogleService-Info.plist を同梱している
+    FirebaseApp.configure()
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

@@ -1,6 +1,9 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Firebase Analytics 用。android/app/google-services.json（Git 管理外、CI はシークレットから復元）を読む。
+// prod / dev / local の 3 つの applicationId をすべて登録した JSON が必要
+apply plugin: 'com.google.gms.google-services'
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
