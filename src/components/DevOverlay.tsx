@@ -26,11 +26,7 @@ import {
 import { useNearestStation } from '~/hooks/useNearestStation';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { useThreshold } from '~/hooks/useThreshold';
-import {
-  getMaxPermitAccuracy,
-  isEtaAssistEnabled,
-  isForceNotArrivedOnLowAccuracyEnabled,
-} from '~/lib/remoteConfig';
+import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
   accuracyHistoryAtom,
@@ -623,7 +619,6 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         hasMeasuredSpeed: hasEverMeasuredSpeed,
         maxPermitAccuracy,
         etaAssistEnabled,
-        forceNotArrivedOnLowAccuracy: isForceNotArrivedOnLowAccuracyEnabled(),
         etaPhase,
         etaAnchor,
         currentStation,
