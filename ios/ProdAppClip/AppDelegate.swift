@@ -13,6 +13,7 @@
 internal import Expo
 import React
 import ReactAppDependencyProvider
+import FirebaseCore
 
 // App Clip も本体アプリ（ios/AppDelegate.swift）と同じ Expo のブートストラップを使う。
 // 素の `RCTAppDelegate` は `RCTReactNativeFactory` しか生成せず、`EXAppContext` を作って
@@ -37,6 +38,10 @@ internal class AppDelegate: ExpoAppDelegate {
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
+
+    // Firebase Analytics。ターゲットごとに Schemes/{Dev,Prod}/GoogleService-Info.plist を同梱している。
+    // JS 側から default app を参照する前に初期化を済ませるため、React Native の起動より前に呼ぶ
+    FirebaseApp.configure()
 
     window = UIWindow(frame: UIScreen.main.bounds)
     factory.startReactNative(
