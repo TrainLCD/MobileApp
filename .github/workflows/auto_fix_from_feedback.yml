@@ -95,11 +95,19 @@ jobs:
 
       # 既定ブランチ（dev）に固定する。CLAUDE.md が git blame での確認を求めて
       # いるので、履歴もすべて取る。
+      #
+      # persist-credentials を false にして、GITHUB_TOKEN をローカルの git 設定へ
+      # 残さない。既定の true のままだと、書き込み権限付きのトークンが作業ツリーに
+      # 置かれ、この後の npm ci の postinstall と、エージェントに許可した
+      # Bash(git:*) から素で使える状態になる。削除はジョブ終了時なので、
+      # エージェントが動く時点ではまだ残っている。
+      # ブランチの push と PR の作成は Claude Code Action が自前のトークンで行う。
       - uses: actions/checkout@v4
         if: steps.guard.outputs.enabled == 'true'
         with:
           ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
+          persist-credentials: false
 
       # 同じ issue を二度扱わないようにする。見るのは次の 3 つで、それぞれ別の
       # 状態に対応している。
@@ -289,9 +297,15 @@ jobs:
       #
       # always() を付けてあるのは、Claude のステップが失敗した場合や、そこまで
       # 到達しなかった場合こそ報告が要るから。
+      #
+      # 条件が長いのは、対象だった場合だけでなく「対象かどうかを確かめる途中で
+      # 落ちた場合」も報告したいから。issue の取得に失敗すると Evaluate and
+      # sanitize は skipped になり、eligible は空のままになる。eligible == 'true'
+      # だけで見ていると、その経路で無言のまま終わってしまう。
+      # 逆に、secret が無くて何もしていない場合と、既に扱い済みの場合は除く。
       - name: Report the outcome back to the issue
         id: report
-        if: ${{ always() && steps.feedback.outputs.eligible == 'true' }}
+        if: ${{ always() && steps.guard.outputs.enabled == 'true' && steps.existing.outputs.found != 'true' && (steps.feedback.outputs.eligible == 'true' || steps.feedback.outcome != 'success') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ steps.target.outputs.branch }}

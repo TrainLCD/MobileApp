@@ -113,7 +113,24 @@ test('壊れた verdict.json は内訳と先頭の抜粋を返す', () => {
   });
   assert.equal(action, 'failed');
   assert.match(body, /読めませんでした/);
-  assert.match(body, /```text\n\{"outcome": "fix\n```/);
+  assert.match(body, /\n {4}\{"outcome": "fix\n/);
+});
+
+// CodeRabbit #7006 の指摘に対する回帰テスト。
+// 抜粋をフェンスで囲むと、中に含まれるフェンスでコードブロックが閉じ、
+// 続きがリンクやメンションとして描画される。
+test('抜粋にフェンスが含まれても描画が乗っ取られない', () => {
+  const { body } = decideComment({
+    prUrl: '',
+    verdictResult: parseVerdict('```\n[リンク](https://example.invalid)\n@TinyKitten'),
+    claudeOutcome: 'success',
+    runUrl: RUN_URL,
+  });
+  // 抜粋の各行が字下げされ、フェンスは 1 つも使われていない。
+  assert.doesNotMatch(body, /^```/m);
+  assert.match(body, /^ {4}```$/m);
+  assert.match(body, /^ {4}\[リンク\]\(https:\/\/example\.invalid\)$/m);
+  assert.match(body, /^ {4}@TinyKitten$/m);
 });
 
 test('どの入力でも action は空にならない', () => {

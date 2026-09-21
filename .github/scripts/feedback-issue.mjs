@@ -110,6 +110,49 @@ export const evaluateEligibility = (issue, rules) => {
   return { eligible: true, reason: '条件を満たしています' };
 };
 
+const HEADING_PATTERN = /^##\s+(.+?)\s*$/;
+
+// 個人情報の節を、フェンスの開閉状態と無関係に取り除く。
+//
+// Worker は利用者の原文をフェンスで囲み、その後ろに端末情報などの節を足す。
+// 原文の中に ``` だけの行が奇数個あると、フェンスの開閉がずれて末尾の節まで
+// 「フェンスの内側」と見なされる。そうなると見出しとして認識されず、
+// splitSections 側の除去をすり抜けてレポーターの識別子がモデルへ渡ってしまう。
+// ここは行を素直に走査し、見出しの並びだけで節を切る。
+//
+// 取り除くのは各見出しの「最後の出現」に限る。利用者が原文に同じ見出しを
+// 書いていた場合、そちらは症状の一部なので残す。Worker が足す節は必ず原文より
+// 後ろに来るため、最後の出現が Worker のものになる。
+export const dropSensitiveSections = (body) => {
+  const lines = String(body ?? '').split(/\r?\n/);
+  const removed = new Array(lines.length).fill(false);
+
+  for (const heading of DROPPED_SECTIONS) {
+    let start = -1;
+    for (let index = 0; index < lines.length; index += 1) {
+      const matched = HEADING_PATTERN.exec(lines[index]);
+      if (matched && matched[1] === heading) {
+        start = index;
+      }
+    }
+    if (start === -1) {
+      continue;
+    }
+    let end = lines.length;
+    for (let index = start + 1; index < lines.length; index += 1) {
+      if (HEADING_PATTERN.test(lines[index])) {
+        end = index;
+        break;
+      }
+    }
+    for (let index = start; index < end; index += 1) {
+      removed[index] = true;
+    }
+  }
+
+  return lines.filter((_, index) => !removed[index]).join('\n');
+};
+
 // 本文を「見出しの無い前書き」と「## 見出しごとの節」に分ける。
 // コードブロックの内側にある `## ` は見出しとして扱わない。利用者の原文は
 // コードブロックの中に入るので、そこに `## レポーターUID` のような行を書いて
@@ -150,8 +193,11 @@ const stripImages = (text) =>
 const collapseBlankLines = (text) => text.replace(/\n{3,}/g, '\n\n').trim();
 
 // 個人情報を含む節を取り除き、画像を外した本文を組み立てる。
+// 除去は 2 段構えにしてある。先に dropSensitiveSections でフェンスと無関係に
+// 落とし、そのうえで節に分けたあともう一度落とす。片方が想定外の本文で
+// すり抜けても、もう片方が残る。
 export const sanitizeBody = (body) => {
-  const { preamble, sections } = splitSections(body);
+  const { preamble, sections } = splitSections(dropSensitiveSections(body));
   const kept = sections.filter(({ heading }) => !DROPPED_SECTIONS.has(heading));
   const rendered = kept
     .map(({ heading, content }) => `## ${heading}\n${collapseBlankLines(content)}`)

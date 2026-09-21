@@ -145,7 +145,15 @@ export const renderFailureComment = ({ stage, runUrl, excerpt = '' }) => {
     hint,
   ];
   if (excerpt !== '') {
-    lines.push('', '読めなかった内容の先頭:', '', '```text', excerpt, '```');
+    // 壊れた verdict.json の中身をフェンスで囲まない。抜粋に ``` が含まれると
+    // そこでコードブロックが閉じ、続きがリンクやメンションとして描画される。
+    // 各行を 4 文字下げると、何が入っていても字面のまま出る。
+    lines.push(
+      '',
+      '読めなかった内容の先頭:',
+      '',
+      ...excerpt.split('\n').map((line) => `    ${line}`)
+    );
   }
   lines.push('', `実行ログ: ${runUrl}`);
   return withFooter(lines);

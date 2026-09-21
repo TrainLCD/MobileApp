@@ -12,6 +12,7 @@ import {
   DEFAULT_CATEGORY_LABELS,
   DEFAULT_EXCLUDE_LABELS,
   DEFAULT_TRIAGE_LABELS,
+  dropSensitiveSections,
   evaluateEligibility,
   extractLabelNames,
   neutralizeStructuralTags,
@@ -163,6 +164,68 @@ test('利用者の原文が節の見出しを騙っても落とされない', ()
   );
   assert.match(sanitized, /本当の症状はこちら/);
   assert.doesNotMatch(sanitized, /uid-1234/);
+});
+
+// CodeRabbit #7006 の指摘に対する回帰テスト。
+// Worker は利用者の原文をフェンスで囲むので、原文の中にフェンスだけの行が
+// 奇数個あると開閉がずれ、末尾の節までフェンスの内側と見なされる。見出しとして
+// 認識されなくなり、節を単位にした除去だけではレポーターの識別子が残ってしまう。
+test('原文でフェンスの開閉がずれても個人情報は落ちる', () => {
+  const body = [
+    '![Image](https://uploads.trainlcd.app/report-images/a.png)',
+    '',
+    '```',
+    '症状はこうです',
+    '```',
+    'まだ症状の続き',
+    '```',
+    '',
+    '## AIによる要約',
+    '要約',
+    '',
+    '## 端末モデル名',
+    'Pixel 8',
+    '',
+    '## チケットID',
+    'ticket-9999',
+    '',
+    '## Sentry Event ID',
+    'sentry-9999',
+    '',
+    '## レポーターUID',
+    'uid-9999',
+  ].join('\n');
+
+  const sanitized = sanitizeBody(body);
+  assert.doesNotMatch(sanitized, /uid-9999/);
+  assert.doesNotMatch(sanitized, /ticket-9999/);
+  assert.doesNotMatch(sanitized, /sentry-9999/);
+  // 症状と端末情報は残る。
+  assert.match(sanitized, /症状はこうです/);
+  assert.match(sanitized, /まだ症状の続き/);
+  assert.match(sanitized, /Pixel 8/);
+});
+
+test('除去は各見出しの最後の出現だけを対象にする', () => {
+  // 原文の中に同じ見出しを書かれても、そちらは症状として残す。
+  const body = [
+    '```',
+    '## レポーターUID',
+    '本当の症状はこちら',
+    '```',
+    '',
+    '## レポーターUID',
+    'uid-1234',
+  ].join('\n');
+
+  const dropped = dropSensitiveSections(body);
+  assert.match(dropped, /本当の症状はこちら/);
+  assert.doesNotMatch(dropped, /uid-1234/);
+});
+
+test('対象の見出しが無い本文はそのまま通る', () => {
+  const body = ['## AIによる要約', '要約', '', '## 端末モデル名', 'Pixel 8'].join('\n');
+  assert.equal(dropSensitiveSections(body), body);
 });
 
 test('構造タグの綴りは無害化される', () => {
