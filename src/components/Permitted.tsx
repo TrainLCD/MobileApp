@@ -35,6 +35,7 @@ import {
 import {
   useAndroidWearable,
   useAppleWatch,
+  useBLEDiagnostic,
   useCachedInitAnonymousUser,
   useCheckStoreVersion,
   useCurrentLine,
@@ -94,6 +95,11 @@ const FxWrongDirectionDetector: React.FC = () => {
   useWrongDirectionDetectorEffect();
   return null;
 };
+// 実験用
+const FxBLEDiagnostic: React.FC = () => {
+  useBLEDiagnostic();
+  return null;
+};
 
 const PermittedLayoutEffects: React.FC = () => {
   // 高頻度購読のフックをホスト自身で呼ぶと、その再レンダーが sibling の
@@ -104,6 +110,7 @@ const PermittedLayoutEffects: React.FC = () => {
     <>
       <FxCheckStoreVersion />
       <FxWrongDirectionDetector />
+      <FxBLEDiagnostic />
       {Platform.OS === 'ios' && <FxAppleWatchInner />}
       {Platform.OS === 'android' && <FxAndroidWearableInner />}
     </>

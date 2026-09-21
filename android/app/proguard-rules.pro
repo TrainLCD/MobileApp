@@ -15,3 +15,6 @@
 
 # Expo modules (Headless tasks, notifications, etc.)
 -keep class expo.modules.** { *; }
+
+# react-native-ble-plx
+-dontwarn com.polidea.reactnativeble.**

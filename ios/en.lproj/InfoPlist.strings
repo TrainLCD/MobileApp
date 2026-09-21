@@ -10,3 +10,4 @@
 "NSLocationAlwaysUsageDescription" = "Location information is continuously used while the application is in use to retrieve the nearest station.";
 "NSPhotoLibraryAddUsageDescription" = "Save the screenshot image to your iPhone.";
 "NSMotionUsageDescription" = "Motion sensor data is used together with your location to determine your movement activity, such as riding a train or walking.";
+"NSBluetoothAlwaysUsageDescription" = "FOR EXPERIMENTAL USAGE";

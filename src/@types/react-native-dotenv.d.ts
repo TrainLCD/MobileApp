@@ -7,6 +7,10 @@ declare module 'react-native-dotenv' {
   export const PRODUCTION_ROUTE_RESOLVER_API_URL: string;
   export const DEV_ROUTE_RESOLVER_API_URL: string;
   export const SENTRY_DSN: string;
+  export const BLE_ENABLED: string;
+  export const BLE_TARGET_LOCAL_NAME: string;
+  export const BLE_TARGET_SERVICE_UUID: string;
+  export const BLE_TARGET_CHARACTERISTIC_UUID: string;
   export const ENABLE_EXPERIMENTAL_TELEMETRY: string;
   export const EXPERIMENTAL_TELEMETRY_ENDPOINT_URL: string;
   export const EXPERIMENTAL_TELEMETRY_TOKEN: string;

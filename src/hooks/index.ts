@@ -5,6 +5,7 @@ export { useAnonymousUser } from './useAnonymousUser';
 export { useAppleWatch } from './useAppleWatch';
 export { useApproachingStation } from './useApproachingStation';
 export { useBadAccuracy } from './useBadAccuracy';
+export { useBLEDiagnostic } from './useBLEDiagnostic';
 export { useBounds } from './useBounds';
 export { useBoundText } from './useBoundText';
 export { useCachedInitAnonymousUser } from './useCachedAnonymousUser';

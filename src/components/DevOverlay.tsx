@@ -17,6 +17,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import { BLE_ENABLED } from 'react-native-dotenv';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import {
   useDistanceToNextStation,
@@ -319,6 +320,7 @@ type StatusPillProps = {
   label: string;
   value: 'ON' | 'OFF';
   style?: StyleProp<ViewStyle>;
+  valueTestID?: string;
 };
 
 type MetricCardProps = {
@@ -335,7 +337,12 @@ type MetricCardProps = {
   metaStyle?: StyleProp<TextStyle>;
 };
 
-const StatusPill: React.FC<StatusPillProps> = ({ label, value, style }) => {
+const StatusPill: React.FC<StatusPillProps> = ({
+  label,
+  value,
+  style,
+  valueTestID,
+}) => {
   const isOn = value === 'ON';
   const colors = isOn
     ? (['rgba(34,197,94,0.32)', 'rgba(14,165,233,0.2)'] as const)
@@ -355,7 +362,9 @@ const StatusPill: React.FC<StatusPillProps> = ({ label, value, style }) => {
       ]}
     >
       <Typography style={styles.statusLabel}>{label}</Typography>
-      <Typography style={styles.statusValue}>{value}</Typography>
+      <Typography style={styles.statusValue} testID={valueTestID}>
+        {value}
+      </Typography>
     </LinearGradient>
   );
 };
@@ -675,6 +684,7 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const etaAnchorMeta = etaAnchor
     ? `#${etaAnchor.stationId} · ${etaAnchorAgeSec}s ago`
     : 'no anchor';
+  const bleValue = BLE_ENABLED ? 'ON' : 'OFF';
   const nextStationNumber =
     nextStation?.stationNumbers?.find((item) => !!item?.stationNumber)
       ?.stationNumber ?? undefined;
@@ -990,11 +1000,19 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
                 label="TELEMETRY"
                 value={telemetryValue}
                 style={statusPillStyle}
+                valueTestID="dev-overlay-telemetry-value"
               />
               <StatusPill
                 label="BG LOC"
                 value={backgroundValue}
                 style={statusPillStyle}
+                valueTestID="dev-overlay-bg-loc-value"
+              />
+              <StatusPill
+                label="BLE"
+                value={bleValue}
+                style={statusPillStyle}
+                valueTestID="dev-overlay-ble-value"
               />
               {/* パネルのPanResponderはcaptureを使っていないため、子のPressableが
                   先にタッチを取る。展開/折りたたみのトグルとは競合しない。
