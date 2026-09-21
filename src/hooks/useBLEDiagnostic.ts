@@ -50,9 +50,9 @@ export const useBLEDiagnostic = (): void => {
   // 見なして送り損ねないよう、device が変わったら捨てる。
   const sentRef = useRef<{
     device: Device | null;
-    text: string;
+    text: string | null;
     stations: string | null;
-  }>({ device: null, text: '', stations: null });
+  }>({ device: null, text: null, stations: null });
   // 書き込みは1本の列に並べ、テキストと駅一覧の各通が混ざらないようにする
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
 
@@ -169,28 +169,45 @@ export const useBLEDiagnostic = (): void => {
 
   const resolveSent = useCallback((target: Device) => {
     if (sentRef.current.device !== target) {
-      sentRef.current = { device: target, text: '', stations: null };
+      sentRef.current = { device: target, text: null, stations: null };
     }
     return sentRef.current;
   }, []);
+
+  // 種別の色だけが変わっても送り直せるよう、テキストのメッセージは中身全体で比べる
+  const textMessage = useMemo(
+    () => buildTextMessage(stationText, trainType?.color),
+    [stationText, trainType?.color]
+  );
+  const textMessageKey = useMemo(
+    () => JSON.stringify(textMessage),
+    [textMessage]
+  );
 
   useEffect(() => {
     if (!isSendable || !device) {
       return;
     }
     const sent = resolveSent(device);
-    if (sent.text === stationText) {
+    if (sent.text === textMessageKey) {
       return;
     }
-    sent.text = stationText;
-    enqueueWrite(device, [buildTextMessage(stationText)]).catch((err) => {
+    sent.text = textMessageKey;
+    enqueueWrite(device, [textMessage]).catch((err) => {
       console.warn(err);
       // 失敗した内容は次の変化で送り直す
-      if (sentRef.current === sent && sent.text === stationText) {
-        sent.text = '';
+      if (sentRef.current === sent && sent.text === textMessageKey) {
+        sent.text = null;
       }
     });
-  }, [device, stationText, isSendable, resolveSent, enqueueWrite]);
+  }, [
+    device,
+    textMessage,
+    textMessageKey,
+    isSendable,
+    resolveSent,
+    enqueueWrite,
+  ]);
 
   useEffect(() => {
     if (!isSendable || !device) {

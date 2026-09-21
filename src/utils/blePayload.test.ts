@@ -1,4 +1,4 @@
-import type { Station } from '~/@types/graphql';
+import { type Station, StopCondition } from '~/@types/graphql';
 import {
   BLE_LINE_BOARD_STATION_COUNT,
   buildStationMessages,
@@ -25,11 +25,19 @@ const byteLength = (encoded: string): number => atob(encoded).length;
 const BLE_MAX_WRITE_BYTES = 512;
 
 describe('blePayload', () => {
-  it('テキストは type 付きの JSON で送る', () => {
-    expect(decode(encodeBleMessage(buildTextMessage('次は新宿')))).toEqual({
+  it('テキストは種別の色と一緒に type 付きの JSON で送る', () => {
+    expect(
+      decode(encodeBleMessage(buildTextMessage('次は新宿', '#1f63c6')))
+    ).toEqual({
       type: 'text',
       text: '次は新宿',
+      trainTypeColor: '#1f63c6',
     });
+  });
+
+  it('種別が無ければ色は空文字で送る', () => {
+    expect(buildTextMessage('次は新宿', null).trainTypeColor).toBe('');
+    expect(buildTextMessage('次は新宿').trainTypeColor).toBe('');
   });
 
   it('駅一覧はヘッダーに続けて1駅1通で並べる', () => {
@@ -45,18 +53,20 @@ describe('blePayload', () => {
         index: 0,
         total: 2,
         name: '駅1',
-        kana: 'エキ1',
+        kana: 'えき1',
         roman: 'Station 1',
         number: 'JY1',
+        pass: false,
       },
       {
         type: 'station',
         index: 1,
         total: 2,
         name: '駅2',
-        kana: 'エキ2',
+        kana: 'えき2',
         roman: 'Station 2',
         number: 'JY2',
+        pass: false,
       },
     ]);
   });
@@ -77,7 +87,7 @@ describe('blePayload', () => {
     ]);
   });
 
-  it('バス路線は駅名と英語名の括弧書きを外し、カナは加工しない', () => {
+  it('バス路線は駅名と英語名の括弧書きを外す', () => {
     const [, message] = buildStationMessages(
       [
         makeStation(1, {
@@ -91,10 +101,32 @@ describe('blePayload', () => {
     );
     expect(message).toMatchObject({
       name: '新宿駅西口',
-      kana: 'シンジュクエキニシグチ',
+      kana: 'しんじゅくえきにしぐち',
       // LineBoard と同じ正規表現なので、括弧の前の空白は画面と同じく残る
       roman: 'Shinjuku Sta. West Exit ',
     });
+  });
+
+  it('カナはひらがなにして送り、長音符はそのまま残す', () => {
+    const [, message] = buildStationMessages(
+      [makeStation(1, { nameKatakana: 'ケイバジョウマエ・センター' })],
+      false,
+      () => undefined
+    );
+    expect(message).toMatchObject({ kana: 'けいばじょうまえ・せんたー' });
+  });
+
+  it('通過駅は LineBoard と同じ判定で pass を立てる', () => {
+    const [, stop, pass] = buildStationMessages(
+      [
+        makeStation(1, { stopCondition: StopCondition.All }),
+        makeStation(2, { stopCondition: StopCondition.Not }),
+      ],
+      false,
+      () => undefined
+    );
+    expect(stop).toMatchObject({ pass: false });
+    expect(pass).toMatchObject({ pass: true });
   });
 
   it('欠けた項目は空文字で送る', () => {
