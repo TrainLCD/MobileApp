@@ -85,12 +85,12 @@ android {
       dimension = "environment"
       applicationIdSuffix = ".dev"
       versionNameSuffix = "-dev"
-      versionCode = 100000780
+      versionCode = 100000782
       versionName = "10.15.1"
     }
     create("prod") {
       dimension = "environment"
-      versionCode = 100000780
+      versionCode = 100000782
       versionName = "10.15.1"
     }
     // :app の local フレーバーと対になるローカル検証専用フレーバー。Wear の Data Layer は
@@ -100,7 +100,7 @@ android {
       dimension = "environment"
       applicationIdSuffix = ".local"
       versionNameSuffix = "-local"
-      versionCode = 100000780
+      versionCode = 100000782
       versionName = "10.15.1"
     }
   }

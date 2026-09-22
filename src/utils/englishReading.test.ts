@@ -34,10 +34,43 @@ describe('fixEnglishReading', () => {
     );
   });
 
+  it('「Mine」を英語 TTS が「みね」と読む表記へ置換する', () => {
+    expect(fixEnglishReading('Change here for the Mine Line.')).toBe(
+      'Change here for the Me-nay Line.'
+    );
+    expect(fixEnglishReading('The next station is MINE.')).toBe(
+      'The next station is Me-nay.'
+    );
+    expect(fixEnglishReading('The next station is Nishi-Mine.')).toBe(
+      'The next station is Nishi-Me-nay.'
+    );
+  });
+
+  it('語中の「mine」も前後にハイフンを挟んで置換する', () => {
+    expect(fixEnglishReading('The next station is Tsurugamine.')).toBe(
+      'The next station is Tsuruga-me-nay.'
+    );
+    expect(fixEnglishReading('Mitsumineguchi')).toBe('Mitsu-me-nay-guchi');
+    expect(fixEnglishReading('Minenobu')).toBe('Me-nay-nobu');
+    expect(fixEnglishReading('Takamine')).toBe('Taka-me-nay');
+    // マクロン付きの文字も語の一部として扱う
+    expect(fixEnglishReading('Minami-Ōmine')).toBe('Minami-Ō-me-nay');
+  });
+
+  it('二重に適用しても結果が変わらない', () => {
+    expect(fixEnglishReading(fixEnglishReading('Mine Line'))).toBe(
+      'Me-nay Line'
+    );
+    expect(fixEnglishReading(fixEnglishReading('Tsurugamine'))).toBe(
+      'Tsuruga-me-nay'
+    );
+  });
+
   it('別語の一部は置換しない', () => {
     expect(fixEnglishReading('Keiseibus')).toBe('Keiseibus');
     // 西武園 (Seibuen) は 1 語なので語単位の一致では対象外
     expect(fixEnglishReading('Seibuen')).toBe('Seibuen');
+    expect(fixEnglishReading('Minami-Urawa')).toBe('Minami-Urawa');
   });
 
   it('対象を含まないテキストはそのまま返す', () => {
