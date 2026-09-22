@@ -11,6 +11,7 @@ import {
   getSearchResultHeadingText,
   getStationWithMatchingLine,
   isTransferRouteTrainType,
+  pickDefaultTrainType,
   pickInitialRouteTrainType,
   pickLegStationsByGroupIds,
   sliceLegStations,
@@ -113,6 +114,47 @@ describe('乗換経路', () => {
     ],
   };
 
+  // groupId の無い種別は駅リストを引けず、選んでも乗車を始められない
+  describe('groupId の無い種別', () => {
+    const localWithoutGroup = {
+      ...saikyoLocal,
+      id: 99,
+      groupId: null,
+    } as unknown as TrainType;
+
+    it('各停でも groupId が無ければ既定に選ばない', () => {
+      expect(pickDefaultTrainType([localWithoutGroup, saikyoRapid])?.id).toBe(
+        saikyoRapid.id
+      );
+    });
+
+    it('種別一覧に並べず、そうした種別しか無い直通経路は乗車に使えない', () => {
+      const routeWithoutGroup: ConnectedRoute = {
+        legs: [
+          {
+            trainTypes: [localWithoutGroup],
+            fromStation: shinjukuSaikyo,
+            toStation: shibuya,
+          },
+        ],
+      };
+      expect(filterRideableRoutes([routeWithoutGroup])).toEqual([]);
+      expect(
+        buildRouteTrainTypes([
+          {
+            legs: [
+              {
+                trainTypes: [localWithoutGroup, saikyoRapid],
+                fromStation: shinjukuSaikyo,
+                toStation: shibuya,
+              },
+            ],
+          },
+        ]).trainTypes.map((tt) => tt.id)
+      ).toEqual([saikyoRapid.id]);
+    });
+  });
+
   describe('filterRideableRoutes', () => {
     it('乗り継げない経路と種別の無い直通経路を除き、順位を保つ', () => {
       const brokenRoute: ConnectedRoute = {
@@ -214,6 +256,16 @@ describe('乗換経路', () => {
       });
     });
 
+    it('id・groupId が null の駅は、同じく null の駅と一致させない', () => {
+      const unknown = {
+        ...hikarigaoka,
+        id: null,
+        groupId: null,
+      } as unknown as Station;
+      const withUnknown = [unknown, nerima, hikarigaoka];
+      expect(sliceLegStations(withUnknown, hikarigaoka, unknown)).toEqual([]);
+    });
+
     it('乗車駅か降車駅が系統に無ければ空配列を返す', () => {
       expect(sliceLegStations(oedoStations, hikarigaoka, shibuya)).toEqual([]);
     });
@@ -280,6 +332,25 @@ describe('乗換経路', () => {
   describe('concatLegStations', () => {
     // 乗換駅を前の区間の駅として残すと最後の区間の路線が行き先の 1 駅だけになり、
     // useConnectedLines が直通先から外してヘッダーに「〜線直通」が出なくなる
+    it('groupId が null の駅どうしは同じ乗換駅とみなさない', () => {
+      const unknownA = {
+        ...nerima,
+        id: 1,
+        groupId: null,
+      } as unknown as Station;
+      const unknownB = {
+        ...shibuya,
+        id: 2,
+        groupId: null,
+      } as unknown as Station;
+      expect(
+        concatLegStations([
+          [hikarigaoka, unknownA],
+          [unknownB, shibuya],
+        ]).map((s) => s.id)
+      ).toEqual([hikarigaoka.id, 1, 2, shibuya.id]);
+    });
+
     it('乗換駅は次の区間の乗車駅だけを残して 1 本につなぐ', () => {
       expect(
         concatLegStations([

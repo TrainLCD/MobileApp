@@ -79,8 +79,11 @@ export type ConnectedRoute = {
  */
 export const pickDefaultTrainType = (
   trainTypes: TrainType[] | null | undefined
-): TrainType | null =>
-  findLocalType(trainTypes ?? []) ?? trainTypes?.[0] ?? null;
+): TrainType | null => {
+  // groupId の無い種別は駅リストを引けず、選んでも乗車を始められないので候補にしない
+  const selectable = (trainTypes ?? []).filter((tt) => tt.groupId != null);
+  return findLocalType(selectable) ?? selectable[0] ?? null;
+};
 
 /**
  * 乗車に使える経路だけを残す。乗換のない経路は種別が 1 つでもあれば使える。
@@ -93,7 +96,7 @@ export const filterRideableRoutes = (
 ): ConnectedRoute[] =>
   routes.filter((route) => {
     const legs = route.legs ?? [];
-    if (legs.length === 1) return !!legs[0].trainTypes?.length;
+    if (legs.length === 1) return !!pickDefaultTrainType(legs[0].trainTypes);
     return (
       legs.length > 1 &&
       legs.every(
@@ -123,8 +126,11 @@ const indexOfStation = (
   target: Station,
   reference = -1
 ): number => {
-  const byId = stations.findIndex((s) => s.id === target.id);
+  // id・groupId が null の駅どうしを同じ駅とみなさない
+  const byId =
+    target.id == null ? -1 : stations.findIndex((s) => s.id === target.id);
   if (byId !== -1) return byId;
+  if (target.groupId == null) return -1;
 
   const candidates = stations.flatMap((s, index) =>
     s.groupId === target.groupId ? [index] : []
@@ -151,7 +157,8 @@ export const sliceLegStations = (
   to: Station
 ): Station[] => {
   // 駅 id で見つかる端を先に決め、もう一方はそれに近い位置を選ぶ
-  const fromById = stations.findIndex((s) => s.id === from.id);
+  const fromById =
+    from.id == null ? -1 : stations.findIndex((s) => s.id === from.id);
   const toIndex = indexOfStation(stations, to, fromById);
   const fromIndex = indexOfStation(stations, from, toIndex);
   if (fromIndex === -1 || toIndex === -1) return [];
@@ -222,7 +229,10 @@ export const pickLegStationsByGroupIds = (
 export const concatLegStations = (legStations: Station[][]): Station[] => {
   const result: Station[] = [];
   for (const stations of legStations) {
-    if (stations[0] && result.at(-1)?.groupId === stations[0].groupId) {
+    const previous = result.at(-1);
+    const next = stations[0];
+    // groupId が null の駅どうしは同じ乗換駅とみなさない
+    if (next?.groupId != null && previous?.groupId === next.groupId) {
       result.pop();
     }
     result.push(...stations);
@@ -322,10 +332,10 @@ export const buildRouteTrainTypes = (
     const legs = route.legs ?? [];
     if (legs.length === 1) {
       for (const trainType of legs[0].trainTypes ?? []) {
-        if (trainType.groupId != null) {
-          if (seenGroupIds.has(trainType.groupId)) continue;
-          seenGroupIds.add(trainType.groupId);
-        }
+        // groupId の無い種別は選んでも駅リストを引けないので並べない
+        if (trainType.groupId == null) continue;
+        if (seenGroupIds.has(trainType.groupId)) continue;
+        seenGroupIds.add(trainType.groupId);
         trainTypes.push(trainType);
       }
       return;
