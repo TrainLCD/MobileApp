@@ -111,11 +111,28 @@ const LOOP_LINE_IDS = new Set([
   DISNEY_RESORT_LINE_ID,
 ]);
 
-const indexOfStation = (stations: Station[], target: Station): number => {
+/**
+ * 駅リストでの駅の位置。駅 id で見つからなければ同じ駅グループの駅を使う。
+ * 同じ駅グループが 2 回出る系統(大江戸線の都庁前など)では、もう一方の端(reference)に
+ * 近いほうを選ぶ。遠いほうを選ぶと、環状部を回り込む長い区間を切り出してしまう
+ */
+const indexOfStation = (
+  stations: Station[],
+  target: Station,
+  reference = -1
+): number => {
   const byId = stations.findIndex((s) => s.id === target.id);
-  return byId !== -1
-    ? byId
-    : stations.findIndex((s) => s.groupId === target.groupId);
+  if (byId !== -1) return byId;
+
+  const candidates = stations.flatMap((s, index) =>
+    s.groupId === target.groupId ? [index] : []
+  );
+  if (reference === -1) return candidates[0] ?? -1;
+  return candidates.reduce(
+    (best, index) =>
+      Math.abs(index - reference) < Math.abs(best - reference) ? index : best,
+    candidates[0] ?? -1
+  );
 };
 
 /**
@@ -131,8 +148,10 @@ export const sliceLegStations = (
   from: Station,
   to: Station
 ): Station[] => {
-  const fromIndex = indexOfStation(stations, from);
-  const toIndex = indexOfStation(stations, to);
+  // 駅 id で見つかる端を先に決め、もう一方はそれに近い位置を選ぶ
+  const fromById = stations.findIndex((s) => s.id === from.id);
+  const toIndex = indexOfStation(stations, to, fromById);
+  const fromIndex = indexOfStation(stations, from, toIndex);
   if (fromIndex === -1 || toIndex === -1) return [];
 
   const straight =
@@ -222,6 +241,27 @@ export const buildTransferTrainType = (
 export const isTransferRouteTrainType = (
   trainType: TrainType | null | undefined
 ): boolean => (trainType?.id ?? 0) < 0;
+
+/**
+ * 行き先を選んだときに既定で選ぶ種別。API の順位が最も高い経路が乗換のある経路なら
+ * その経路を表す種別、乗換のない経路なら直通の種別から各停(無ければ先頭)を選ぶ。
+ * 直通に各停が無いとき、後ろの乗換経路の「各駅停車」を拾わないよう乗換経路は除いて探す
+ * @param routes 乗車に使える経路(API の順位順)
+ * @param trainTypes buildRouteTrainTypes の種別
+ * @param transferRouteById buildRouteTrainTypes の、経路を表す種別の id から経路を引く表
+ * @returns 既定の種別。種別が無ければ null
+ */
+export const pickInitialRouteTrainType = (
+  routes: ConnectedRoute[],
+  trainTypes: TrainType[],
+  transferRouteById: Map<number, ConnectedRoute>
+): TrainType | null =>
+  trainTypes.find(
+    (tt) => tt.id != null && transferRouteById.get(tt.id) === routes[0]
+  ) ??
+  pickDefaultTrainType(
+    trainTypes.filter((tt) => !isTransferRouteTrainType(tt))
+  );
 
 /**
  * 経路検索の結果を種別一覧に並べる種別へまとめる。乗換のない経路は区間で乗れる

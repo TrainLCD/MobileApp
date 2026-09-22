@@ -1043,6 +1043,139 @@ describe('useSimulationMode', () => {
       );
     });
 
+    describe('乗換経路の区間ごとの走行区間', () => {
+      const OEDO = 99301;
+      const SAIKYO = 11321;
+      const withTrainType = (station: Station, groupId: number): Station => ({
+        ...station,
+        trainType: { groupId } as Station['trainType'],
+      });
+      // 光が丘・都庁前(大江戸線) → 新宿・渋谷(埼京線)。乗換駅の新宿は後の区間の駅として持つ
+      const joinedStations = () => [
+        withTrainType(mockStation(9930138, 9930138, 35.76, 139.63, OEDO), 7),
+        withTrainType(mockStation(9930100, 1130225, 35.69, 139.69, OEDO), 7),
+        withTrainType(mockStation(1132104, 1130208, 35.69, 139.7, SAIKYO), 170),
+        withTrainType(
+          mockStation(1132103, 1130205, 35.658, 139.701, SAIKYO),
+          170
+        ),
+      ];
+      const segment = (distanceFromPrevious: number, maxSpeed: number) => ({
+        __typename: 'TrainRouteSegment' as const,
+        distanceFromPrevious,
+        maxAcceleration: 1,
+        maxDeceleration: 1,
+        maxSpeed,
+      });
+      // legs を渡した trainRoute にだけ応答する。API は乗換駅を両方の区間に含めるので、
+      // 新宿は大江戸線の到着(2000m)と埼京線の起点(0m)の 2 回現れる
+      const mockConnectedTrainRoute = (
+        segments: ReturnType<typeof segment>[]
+      ) =>
+        (useGraphQLQuery as jest.Mock).mockImplementation((document) =>
+          document === GET_CONNECTED_TRAIN_ROUTE
+            ? {
+                data: {
+                  trainRoute: { __typename: 'TrainRouteResponse', segments },
+                },
+                loading: false,
+                error: undefined,
+              }
+            : { data: undefined, loading: false, error: undefined }
+        );
+
+      it('区間を渡した trainRoute から、乗換駅の重複を除いて速度プロファイルを作る', () => {
+        const stations = joinedStations();
+        setupAtomMocks(
+          { station: stations[0], stations, selectedDirection: 'INBOUND' },
+          { autoModeEnabled: false }
+        );
+        mockConnectedTrainRoute([
+          segment(0, 10),
+          segment(1000, 10),
+          segment(2000, 20),
+          segment(0, 99),
+          segment(3000, 30),
+        ]);
+        const generateSpy = jest.spyOn(
+          trainSpeedModule,
+          'generateTrainSpeedProfile'
+        );
+
+        renderHook(() => useSimulationMode(), {
+          wrapper: ({ children }) => <Provider>{children}</Provider>,
+        });
+
+        expect(generateSpy.mock.calls.map(([args]) => args.maxSpeed)).toEqual([
+          10, 20, 30,
+        ]);
+        expect(generateSpy.mock.calls.map(([args]) => args.distance)).toEqual([
+          1000, 2000, 3000,
+        ]);
+      });
+
+      it('区間を渡した trainRoute の長さが駅リストと合わなければ速度プロファイルを作らない', () => {
+        const stations = joinedStations();
+        setupAtomMocks(
+          { station: stations[0], stations, selectedDirection: 'INBOUND' },
+          { autoModeEnabled: false }
+        );
+        mockConnectedTrainRoute([
+          segment(0, 10),
+          segment(1000, 10),
+          segment(2000, 20),
+          segment(3000, 30),
+        ]);
+        const generateSpy = jest.spyOn(
+          trainSpeedModule,
+          'generateTrainSpeedProfile'
+        );
+
+        renderHook(() => useSimulationMode(), {
+          wrapper: ({ children }) => <Provider>{children}</Provider>,
+        });
+
+        expect(generateSpy).not.toHaveBeenCalled();
+      });
+
+      // オートモードが終点で折り返すと OUTBOUND になる。区間を逆順にして引き直せないと
+      // 走行区間が来ず、折り返しの待機が解けずに止まったままになる
+      it('末尾から進むときは区間を逆順にして trainRoute を引く', () => {
+        const stations = joinedStations();
+        setupAtomMocks(
+          { station: stations[3], stations, selectedDirection: 'OUTBOUND' },
+          { autoModeEnabled: true }
+        );
+
+        renderHook(() => useSimulationMode(), {
+          wrapper: ({ children }) => <Provider>{children}</Provider>,
+        });
+
+        expect(useGraphQLQuery).toHaveBeenCalledWith(
+          GET_CONNECTED_TRAIN_ROUTE,
+          expect.objectContaining({
+            variables: {
+              fromStationId: 1132103,
+              toStationId: 9930138,
+              legs: [
+                {
+                  lineGroupId: 170,
+                  fromStationId: 1132103,
+                  toStationId: 1132104,
+                },
+                {
+                  lineGroupId: 7,
+                  fromStationId: 1132104,
+                  toStationId: 9930138,
+                },
+              ],
+            },
+            skip: false,
+          })
+        );
+      });
+    });
+
     it('trainRouteが返す最高速度・加減速度がそのままgenerateTrainSpeedProfileに渡される', () => {
       const stations = [
         mockStation(1, 1, 35.681, 139.767),

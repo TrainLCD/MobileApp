@@ -12,7 +12,6 @@ import {
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
-import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
@@ -36,9 +35,6 @@ jest.mock('../store/atoms/line', () => ({
 jest.mock('../store/atoms/navigation', () => ({
   __esModule: true,
   leftStationsAtom: { __atom: 'leftStations' },
-}));
-jest.mock('./useCurrentStation', () => ({
-  useCurrentStation: jest.fn(),
 }));
 jest.mock('./useCurrentTrainType', () => ({
   useCurrentTrainType: jest.fn(),
@@ -136,7 +132,6 @@ describe('useEstimateArrivalTimes', () => {
     setupAtoms();
     mockUseCurrentTrainType.mockReturnValue(null);
     mockUseDisplayCurrentStation.mockReturnValue(stationA);
-    (useCurrentStation as jest.Mock).mockReturnValue(stationA);
     mockUseLoopLine.mockReturnValue({
       isLoopLine: false,
     } as ReturnType<typeof useLoopLine>);
@@ -295,9 +290,7 @@ describe('useEstimateArrivalTimes', () => {
 
   // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになる。推定は 1 系統の中でしか
   // 返らないので、現在乗っている系統の範囲だけを、向きを指定せずに問い合わせる
-  // legs は駅リストの先頭から末尾へ進むときしか組み立てられない。オートモードの
-  // シミュレーションが終点で折り返して末尾から進むときは、現在乗っている系統の範囲だけを引く
-  it('乗換経路を末尾から進むときは現在駅を含む系統の範囲だけを問い合わせ、その系統で絞り込む', async () => {
+  it('乗換経路を末尾から進むときは区間を逆順にして推定させる', async () => {
     const leg1 = [
       createStation(11, {
         line: { id: 100 },
@@ -324,57 +317,10 @@ describe('useEstimateArrivalTimes', () => {
       selectedDirection: 'OUTBOUND',
       leftStations: [leg2[0], ...leg1],
     });
-    (useCurrentStation as jest.Mock).mockReturnValue(leg2[1]);
-    mockUseCurrentTrainType.mockReturnValue({ groupId: 7 } as TrainType);
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
         routes: [
-          { id: 7, stops: [] },
-          { id: 8, stops: [{ stationId: 22, cumulativeMinutes: 3 }] },
-        ],
-      },
-    });
-
-    const { hookRef } = renderHook();
-
-    await waitFor(() => {
-      expect(hookRef.current?.route?.id).toBe(8);
-    });
-    const variables = mockGqlRequest.mock.calls[0][1];
-    expect(variables.fromStationId).toBe(22);
-    expect(variables.toStationId).toBe(21);
-    expect(variables.viaLineIds).toEqual([200]);
-    expect(variables.directionId).toBeUndefined();
-  });
-
-  it('乗換経路を先頭から進むときは区間を渡して経路全体を 1 本として推定させる', async () => {
-    const leg1 = [
-      createStation(11, {
-        line: { id: 100 },
-        trainType: { groupId: 7 } as never,
-      }),
-      createStation(12, {
-        line: { id: 100 },
-        trainType: { groupId: 7 } as never,
-      }),
-    ];
-    const transfer = createStation(21, {
-      line: { id: 200 },
-      trainType: { groupId: 8 } as never,
-    });
-    const last = createStation(22, {
-      line: { id: 200 },
-      trainType: { groupId: 8 } as never,
-    });
-    setupAtoms({
-      stations: [...leg1, transfer, last],
-      selectedBound: last,
-      leftStations: [transfer, last],
-    });
-    mockGqlRequest.mockResolvedValue({
-      estimateArrivalTimes: {
-        routes: [
-          { id: null, stops: [{ stationId: 22, cumulativeMinutes: 9 }] },
+          { id: null, stops: [{ stationId: 11, cumulativeMinutes: 5 }] },
         ],
       },
     });
@@ -386,11 +332,11 @@ describe('useEstimateArrivalTimes', () => {
     });
     expect(mockGqlRequest).toHaveBeenCalledTimes(1);
     expect(mockGqlRequest.mock.calls[0][1]).toEqual({
-      fromStationId: 11,
-      toStationId: 22,
+      fromStationId: 22,
+      toStationId: 11,
       legs: [
-        { lineGroupId: 7, fromStationId: 11, toStationId: 21 },
-        { lineGroupId: 8, fromStationId: 21, toStationId: 22 },
+        { lineGroupId: 8, fromStationId: 22, toStationId: 21 },
+        { lineGroupId: 7, fromStationId: 21, toStationId: 11 },
       ],
     });
   });

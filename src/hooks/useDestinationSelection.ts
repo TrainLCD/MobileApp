@@ -21,8 +21,8 @@ import {
   concatLegStations,
   filterRideableRoutes,
   getStationWithMatchingLine,
-  isTransferRouteTrainType,
   pickDefaultTrainType,
+  pickInitialRouteTrainType,
   sliceLegStations,
 } from '~/utils/routeSearch';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
@@ -128,6 +128,12 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     GetLineGroupStationsVariables
   >(GET_LINE_GROUP_STATIONS);
 
+  // 乗換のある経路で、区間の駅の取得に失敗したとき。区間ごとの取得は並行に投げるので、
+  // 最後に投げた取得以外の失敗は useLazyGraphQLQuery の error に残らない
+  const [routeStationsError, setRouteStationsError] = useState<Error | null>(
+    null
+  );
+
   const { trainTypes: routeTrainTypes, transferRouteById } = useMemo(
     () =>
       buildRouteTrainTypes(
@@ -145,6 +151,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     ): Promise<Station[]> => {
       const route =
         trainType.id != null ? routeById.get(trainType.id) : undefined;
+      setRouteStationsError(null);
       if (!route) {
         if (!trainType.groupId) return [];
         const res = await fetchStationsByLineGroupId({
@@ -153,22 +160,31 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         return res.data?.lineGroupStations ?? [];
       }
 
-      const legStations = await Promise.all(
+      const results = await Promise.all(
         (route.legs ?? []).map(async (leg) => {
           const legTrainType = pickDefaultTrainType(leg.trainTypes);
           if (!legTrainType?.groupId || !leg.fromStation || !leg.toStation) {
-            return [];
+            return { stations: [], error: undefined };
           }
           const res = await fetchStationsByLineGroupId({
             variables: { lineGroupId: legTrainType.groupId },
           });
-          return sliceLegStations(
-            res.data?.lineGroupStations ?? [],
-            leg.fromStation,
-            leg.toStation
-          );
+          return {
+            stations: sliceLegStations(
+              res.data?.lineGroupStations ?? [],
+              leg.fromStation,
+              leg.toStation
+            ),
+            error: res.error,
+          };
         })
       );
+      const error = results.find((result) => result.error)?.error;
+      if (error) {
+        setRouteStationsError(error);
+        return [];
+      }
+      const legStations = results.map((result) => result.stations);
       // 駅をつなげない区間があれば経路として走らせられない
       return legStations.some((stations) => !stations.length)
         ? []
@@ -254,25 +270,27 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
 
       // 先に選択される列車種別を決定。先頭の経路が乗換のある経路ならそれを、
       // そうでなければ直通の種別から各停を選ぶ
-      const firstRouteTrainType = fetchedTrainTypes.find(
-        (tt) => tt.id != null && routeById.get(tt.id) === routes[0]
+      const localTrainType = pickInitialRouteTrainType(
+        routes,
+        fetchedTrainTypes,
+        routeById
       );
-      const localTrainType =
-        firstRouteTrainType ??
-        pickDefaultTrainType(
-          fetchedTrainTypes.filter((tt) => !isTransferRouteTrainType(tt))
-        );
 
       if (!localTrainType?.groupId) {
         return;
       }
 
-      // 選択された列車種別のみを使って路線を決定
-      const newCurrentStation = computeCurrentStationInRoutes(
-        station,
-        newPendingLine,
-        [localTrainType]
-      );
+      // 選択された列車種別のみを使って路線を決定。乗換のある経路は、乗車駅が後の区間の
+      // 路線も持つことがあるので、最初の区間の乗車駅の路線をそのまま使う
+      const firstLegLine =
+        localTrainType.id != null
+          ? routeById.get(localTrainType.id)?.legs?.[0]?.fromStation?.line
+          : null;
+      const newCurrentStation = firstLegLine
+        ? getStationWithMatchingLine(station, firstLegLine as Line)
+        : computeCurrentStationInRoutes(station, newPendingLine, [
+            localTrainType,
+          ]);
       if (newCurrentStation) {
         setStationState((prev) => {
           const isSamePendingStation =
@@ -339,12 +357,21 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         pendingTrainType: trainType,
       }));
 
-      // キャッシュ済みでも常に最新の駅一覧を取得したいので該当キーを破棄する
-      queryClient.removeQueries({
-        queryKey: graphqlQueryKey(GET_LINE_GROUP_STATIONS, {
-          lineGroupId: trainType.groupId,
-        }),
-      });
+      // キャッシュ済みでも常に最新の駅一覧を取得したいので該当キーを破棄する。
+      // 乗換のある経路は区間ごとの系統の駅一覧をすべて取り直す
+      const route =
+        trainType.id != null ? transferRouteById.get(trainType.id) : undefined;
+      const lineGroupIds = route
+        ? (route.legs ?? []).map(
+            (leg) => pickDefaultTrainType(leg.trainTypes)?.groupId
+          )
+        : [trainType.groupId];
+      for (const lineGroupId of lineGroupIds) {
+        if (lineGroupId == null) continue;
+        queryClient.removeQueries({
+          queryKey: graphqlQueryKey(GET_LINE_GROUP_STATIONS, { lineGroupId }),
+        });
+      }
 
       const pendingStations = await fetchStationsForTrainType(
         trainType,
@@ -411,6 +438,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     fetchConnectedRoutesError ??
     fetchStationsByLineIdError ??
     fetchStationsByLineGroupIdError ??
+    routeStationsError ??
     null;
 
   return {

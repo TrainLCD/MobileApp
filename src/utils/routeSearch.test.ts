@@ -11,6 +11,7 @@ import {
   getSearchResultHeadingText,
   getStationWithMatchingLine,
   isTransferRouteTrainType,
+  pickInitialRouteTrainType,
   sliceLegStations,
 } from './routeSearch';
 
@@ -175,6 +176,43 @@ describe('乗換経路', () => {
       ).toEqual(['大崎', '五反田']);
     });
 
+    describe('同じ駅グループが系統に 2 回出るとき(大江戸線の都庁前)', () => {
+      // 都庁前(内回り側) → 新宿 → 都庁前(外回り側) → 練馬 → 光が丘
+      const tochomaeInner = station(9930101, 1130225, '都庁前', oedoLine);
+      const oedoLoop = [
+        tochomaeInner,
+        shinjukuOedo,
+        tochomae,
+        nerima,
+        hikarigaoka,
+      ];
+
+      it('駅 id が一致すればその位置を使う', () => {
+        expect(
+          sliceLegStations(oedoLoop, hikarigaoka, tochomaeInner).map(
+            (s) => s.id
+          )
+        ).toEqual([
+          hikarigaoka.id,
+          nerima.id,
+          tochomae.id,
+          shinjukuOedo.id,
+          tochomaeInner.id,
+        ]);
+      });
+
+      // 別の路線の都庁前を渡されたとき、先に見つかる内回り側を使うと
+      // 環状部を回り込む長い区間になる
+      it('駅 id が一致しなければ、もう一方の端に近いほうを使う', () => {
+        const tochomaeOnOtherLine = station(1, 1130225, '都庁前', saikyoLine);
+        expect(
+          sliceLegStations(oedoLoop, hikarigaoka, tochomaeOnOtherLine).map(
+            (s) => s.id
+          )
+        ).toEqual([hikarigaoka.id, nerima.id, tochomae.id]);
+      });
+    });
+
     it('乗車駅か降車駅が系統に無ければ空配列を返す', () => {
       expect(sliceLegStations(oedoStations, hikarigaoka, shibuya)).toEqual([]);
     });
@@ -207,6 +245,36 @@ describe('乗換経路', () => {
       ]);
       expect(isTransferRouteTrainType(trainType)).toBe(true);
       expect(isTransferRouteTrainType(oedoLocal)).toBe(false);
+    });
+  });
+
+  describe('pickInitialRouteTrainType', () => {
+    const pick = (routes: ConnectedRoute[]) => {
+      const { trainTypes, transferRouteById } = buildRouteTrainTypes(routes);
+      return pickInitialRouteTrainType(routes, trainTypes, transferRouteById);
+    };
+
+    it('先頭の経路が乗換のある経路なら、その経路を表す種別を選ぶ', () => {
+      expect(pick([transferRoute, directRoute])?.id).toBe(-1);
+    });
+
+    it('先頭の経路が直通なら、直通の種別から各停を選ぶ', () => {
+      expect(pick([directRoute, transferRoute])?.id).toBe(saikyoLocal.id);
+    });
+
+    // 乗換経路を表す種別は最初の区間の種別名(各駅停車)を持つので、除かずに探すと
+    // 直通で行けるのに乗換経路が既定になる
+    it('直通に各停が無ければ、後ろの乗換経路ではなく直通の先頭の種別を選ぶ', () => {
+      const rapidOnlyRoute: ConnectedRoute = {
+        legs: [
+          {
+            trainTypes: [saikyoRapid],
+            fromStation: shinjukuSaikyo,
+            toStation: shibuya,
+          },
+        ],
+      };
+      expect(pick([rapidOnlyRoute, transferRoute])?.id).toBe(saikyoRapid.id);
     });
   });
 

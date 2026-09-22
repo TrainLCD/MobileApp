@@ -1,11 +1,5 @@
 import type { Station } from '~/@types/graphql';
 
-export type LineGroupStations = {
-  /** 範囲の駅が属する系統。駅に種別が無い駅リストでは null */
-  groupId: number | null;
-  stations: Station[];
-};
-
 type LineGroupRange = { groupId: number | null; start: number; end: number };
 
 /**
@@ -45,38 +39,6 @@ const getLineGroupRanges = (stations: Station[]): LineGroupRange[] => {
 export const isJoinedLineGroupStations = (stations: Station[]): boolean =>
   getLineGroupRanges(stations).length > 1;
 
-/**
- * 駅リストのうち、現在駅と同じ系統が続く範囲を返す。
- * 系統ごとの API は 1 系統の中でしか答えられないため、乗換経路では現在乗っている
- * 区間の範囲だけを渡す。1 系統だけの駅リストでは駅リストをそのまま返す
- * @param stations 乗車中の駅リスト
- * @param currentStation 現在駅
- * @returns 現在駅を含む範囲の駅と系統
- */
-export const getCurrentLineGroupStations = (
-  stations: Station[],
-  currentStation: Station | null | undefined
-): LineGroupStations => {
-  const ranges = getLineGroupRanges(stations);
-  if (ranges.length <= 1) {
-    return { groupId: ranges[0]?.groupId ?? null, stations };
-  }
-
-  const byId = stations.findIndex((s) => s.id === currentStation?.id);
-  const currentIndex =
-    byId !== -1
-      ? byId
-      : stations.findIndex((s) => s.groupId === currentStation?.groupId);
-  const range =
-    ranges.find((r) => currentIndex >= r.start && currentIndex <= r.end) ??
-    ranges[0];
-
-  return {
-    groupId: range.groupId,
-    stations: stations.slice(range.start, range.end + 1),
-  };
-};
-
 /** estimateArrivalTimes / trainRoute の legs に渡す 1 区間 */
 export type RouteLegInput = {
   lineGroupId: number;
@@ -89,12 +51,15 @@ export type RouteLegInput = {
  *
  * 駅リストは乗換駅を次の区間の乗車駅として持つので、前の区間の降車駅にもその乗換駅を
  * 渡す。系統に無い乗降駅は API が同じ駅グループの駅で引き当てる(StationAPI#1687)。
- * 駅リストの並び(= 進行順)で区間を並べるので、駅リストの先頭から末尾へ進むときだけ使える
- * @param stations 乗車中の駅リスト
- * @returns 区間の並び。1 系統だけの駅リストや、区間の系統を引けない場合は null
+ * 末尾から先頭へ進むとき(オートモードが終点で折り返したときなど)は、先頭から進むときの
+ * 区間を逆順にし、乗車駅と降車駅を入れ替える
+ * @param stations 乗車中の駅リスト(格納順)
+ * @param reversed 駅リストの末尾から先頭へ進むなら true
+ * @returns 進行順の区間の並び。1 系統だけの駅リストや、区間の系統を引けない場合は null
  */
 export const buildRouteLegInputs = (
-  stations: Station[]
+  stations: Station[],
+  reversed = false
 ): RouteLegInput[] | null => {
   const ranges = getLineGroupRanges(stations);
   if (ranges.length <= 1) return null;
@@ -109,30 +74,45 @@ export const buildRouteLegInputs = (
     }
     legs.push({ lineGroupId: range.groupId, fromStationId, toStationId });
   }
-  return legs;
+  return reversed
+    ? legs.reverse().map((leg) => ({
+        ...leg,
+        fromStationId: leg.toStationId,
+        toStationId: leg.fromStationId,
+      }))
+    : legs;
 };
 
 /**
- * legs を渡した trainRoute の segments を駅リストの並びに揃える。
+ * legs を渡した trainRoute の segments を、進行順に並べた駅リストに揃える。
  *
  * API は区間ごとの駅をそのまま連結して返すので、乗換駅は前の区間の降車駅と次の区間の
  * 乗車駅の 2 回現れる。駅リストは乗換駅を 1 度だけ持つので、次の区間の乗車駅の分
  * (距離 0 の区間の起点)を捨て、前の区間の列車で乗換駅に着くまでの分を残す
- * @param segments trainRoute の segments(区間ごとに連結されたもの)
- * @param stations 乗車中の駅リスト
- * @returns 駅リストと同じ長さの segments。長さが合わなければ null
+ * @param segments trainRoute の segments(進行順の区間ごとに連結されたもの)
+ * @param stations 乗車中の駅リスト(格納順)
+ * @param reversed 駅リストの末尾から先頭へ進むなら true
+ * @returns 進行順の駅リストと同じ長さの segments。長さが合わなければ null
  */
 export const alignConnectedTrainRouteSegments = <T>(
   segments: T[],
-  stations: Station[]
+  stations: Station[],
+  reversed = false
 ): T[] | null => {
   const ranges = getLineGroupRanges(stations);
+  // 駅リストは乗換駅を後ろの範囲の先頭に持つ。API の区間は乗換駅を両側に含むので、
+  // 格納順で前にある範囲(の区間)が 1 駅ぶん長い
+  const legLengths = ranges.map(
+    (range, index) =>
+      range.end - range.start + 1 + (index < ranges.length - 1 ? 1 : 0)
+  );
+  const orderedLengths = reversed ? legLengths.reverse() : legLengths;
+
   const dropIndices = new Set<number>();
   let offset = 0;
-  ranges.forEach((range, index) => {
+  orderedLengths.forEach((length, index) => {
     if (index > 0) dropIndices.add(offset);
-    // 最後以外の区間は、駅リストには無い降車駅(乗換駅)の分だけ API 側が長い
-    offset += range.end - range.start + 1 + (index < ranges.length - 1 ? 1 : 0);
+    offset += length;
   });
   if (offset !== segments.length) return null;
 

@@ -98,13 +98,15 @@ export const useSimulationMode = (): void => {
   const toStationId = maybeRevsersedStations.at(-1)?.id;
 
   // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになっている。1 系統を前提に
-  // した trainRoute では引けないので、先頭から末尾へ進むときは区間(legs)を渡す
+  // した trainRoute では引けないので区間(legs)を渡す。終点で折り返した後(OUTBOUND)も
+  // 同じ区間を逆順にして渡す(乗換経路は useLoopLine が環状線として扱わない)
+  const isReversed = selectedDirection === 'OUTBOUND';
   const routeLegs = useMemo(
     () =>
-      selectedDirection === 'INBOUND' && !isLoopLine
-        ? buildRouteLegInputs(maybeRevsersedStations)
+      selectedDirection && !isLoopLine
+        ? buildRouteLegInputs(stations, isReversed)
         : null,
-    [maybeRevsersedStations, selectedDirection, isLoopLine]
+    [stations, selectedDirection, isReversed, isLoopLine]
   );
   const canFetchTrainRoute =
     enabled &&
@@ -147,13 +149,14 @@ export const useSimulationMode = (): void => {
     }
     const segments = connectedTrainRouteData?.trainRoute?.segments;
     return segments
-      ? alignConnectedTrainRouteSegments(segments, maybeRevsersedStations)
+      ? alignConnectedTrainRouteSegments(segments, stations, isReversed)
       : null;
   }, [
     routeLegs,
     singleTrainRouteData,
     connectedTrainRouteData,
-    maybeRevsersedStations,
+    stations,
+    isReversed,
   ]);
 
   const resolveStartIndex = useCallback((): number => {
