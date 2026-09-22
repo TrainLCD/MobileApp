@@ -37,6 +37,15 @@ const getLineGroupRanges = (stations: Station[]): LineGroupRange[] => {
 };
 
 /**
+ * 駅リストが複数の系統の範囲に分かれているか(= 経路検索の乗換経路をつないだ駅リストか)。
+ * 1 系統だけの駅リスト(直通運転を含む従来の乗車)では false
+ * @param stations 乗車中の駅リスト
+ * @returns 複数の系統の範囲に分かれていれば true
+ */
+export const isJoinedLineGroupStations = (stations: Station[]): boolean =>
+  getLineGroupRanges(stations).length > 1;
+
+/**
  * 駅リストのうち、現在駅と同じ系統が続く範囲を返す。
  * 系統ごとの API は 1 系統の中でしか答えられないため、乗換経路では現在乗っている
  * 区間の範囲だけを渡す。1 系統だけの駅リストでは駅リストをそのまま返す

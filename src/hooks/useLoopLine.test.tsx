@@ -96,6 +96,49 @@ describe('useLoopLine', () => {
     expect(outbound).toContain('1130212');
   });
 
+  // 経路検索の乗換経路は区間ごとの駅を進行順につないだ線形の駅リストなので、
+  // 環状線の区間にいても環状線の規約(INBOUND = 配列逆順)を当てると次駅が逆向きになる
+  it('乗換経路をつないだ駅リストでは、山手線の区間にいても環状線として扱わない', () => {
+    const stations: Station[] = [
+      {
+        id: 9930138,
+        groupId: 9930138,
+        line: { id: TOEI_OEDO_LINE_ID },
+        trainType: { groupId: 1000099301 },
+      },
+      {
+        id: 9930128,
+        groupId: 1130208,
+        line: { id: TOEI_OEDO_LINE_ID },
+        trainType: { groupId: 1000099301 },
+      },
+      {
+        id: 1130207,
+        groupId: 1130207,
+        line: { id: YAMANOTE_LINE_ID },
+        trainType: { groupId: 363 },
+      },
+      {
+        id: 1130205,
+        groupId: 1130205,
+        line: { id: YAMANOTE_LINE_ID },
+        trainType: { groupId: 363 },
+      },
+    ] as unknown as Station[];
+
+    (useAtomValue as jest.Mock).mockReturnValueOnce(stations);
+    (useCurrentLine as jest.Mock).mockReturnValue({ id: YAMANOTE_LINE_ID });
+    (useCurrentStation as jest.Mock).mockReturnValue(stations[2]);
+    (useCurrentTrainType as jest.Mock).mockReturnValue(null);
+
+    const { getByTestId } = render(<TestComponent />);
+
+    expect(getByTestId('isYamanoteLine').props.children).toBe('false');
+    expect(getByTestId('isLoopLine').props.children).toBe('false');
+    expect(getByTestId('inbound').props.children).toBe('[]');
+    expect(getByTestId('outbound').props.children).toBe('[]');
+  });
+
   it('非ローカル種別のとき isLoopLine は false になり、駅リストは空', () => {
     const stations: Station[] = [
       { id: 1130224, groupId: 1, line: { id: YAMANOTE_LINE_ID } },
