@@ -62,7 +62,7 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 - `@types/`, `src/__mocks__/`, `src/__fixtures__/`: typings, mocks, fixtures.
 - `assets/`: media. `assets/gpx/` holds developer-only GPX fixtures that app code does not `require()`.
 - `docs/`: documentation, changelog, incident notes. `utils/`: developer scripts such as GraphQL codegen config. `android/`, `ios/`: native projects.
-- The Cloudflare Workers backend (TTS, session issuance, feedback triage, review notifiers, AI destination agent) lives in [TrainLCD/functions](https://github.com/TrainLCD/functions). The GraphQL API used by `src/lib/gql.ts` (`gql.trainlcd.app` / `gql-stg.trainlcd.app`) is [TrainLCD/StationAPI](https://github.com/TrainLCD/StationAPI); schema and resolver changes go there. [TrainLCD/BFF](https://github.com/TrainLCD/BFF) is archived; do not send anyone there.
+- The Cloudflare Workers backend (TTS, session issuance, feedback triage, review notifiers, AI destination agent) lives in [TrainLCD/functions](https://github.com/TrainLCD/functions). The GraphQL API used by `src/lib/gql.ts` is [TrainLCD/StationAPI](https://github.com/TrainLCD/StationAPI); schema and resolver changes go there. [TrainLCD/BFF](https://github.com/TrainLCD/BFF) is archived; do not send anyone there.
 
 ## Tooling & Commands
 
@@ -120,6 +120,6 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 
 ## Security & Incidents
 
-- Secrets and endpoints go in `.env.local` (template: `.env.example`); code reads API URLs from environment variables (`src/lib/gql.ts`). Never commit credentials, tokens, or endpoint URLs to code or config. Naming the public API hosts in docs, as in the Repository Map, is fine. Protect Expo credentials with 2FA.
+- Secrets and endpoints go in `.env.local` (template: `.env.example`); code reads API URLs from environment variables (`src/lib/gql.ts`). Never commit credentials, tokens, or endpoint URLs, including in docs. Protect Expo credentials with 2FA.
 - After dependency upgrades or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, `npm run typecheck`, and record the results in `docs/changelog.md`.
 - Open an issue with reproduction steps for regressions or flaky tests. After incidents or hot fixes, append learnings to `docs/changelog.md`.
