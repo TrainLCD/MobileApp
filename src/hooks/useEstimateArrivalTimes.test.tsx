@@ -344,6 +344,55 @@ describe('useEstimateArrivalTimes', () => {
     expect(variables.directionId).toBeUndefined();
   });
 
+  it('乗換経路を先頭から進むときは区間を渡して経路全体を 1 本として推定させる', async () => {
+    const leg1 = [
+      createStation(11, {
+        line: { id: 100 },
+        trainType: { groupId: 7 } as never,
+      }),
+      createStation(12, {
+        line: { id: 100 },
+        trainType: { groupId: 7 } as never,
+      }),
+    ];
+    const transfer = createStation(21, {
+      line: { id: 200 },
+      trainType: { groupId: 8 } as never,
+      lines: [{ id: 100, station: { id: 13 } }] as never,
+    });
+    const last = createStation(22, {
+      line: { id: 200 },
+      trainType: { groupId: 8 } as never,
+    });
+    setupAtoms({
+      stations: [...leg1, transfer, last],
+      selectedBound: last,
+      leftStations: [transfer, last],
+    });
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: {
+        routes: [
+          { id: null, stops: [{ stationId: 22, cumulativeMinutes: 9 }] },
+        ],
+      },
+    });
+
+    const { hookRef } = renderHook();
+
+    await waitFor(() => {
+      expect(hookRef.current?.route?.stops?.length).toBe(1);
+    });
+    expect(mockGqlRequest).toHaveBeenCalledTimes(1);
+    expect(mockGqlRequest.mock.calls[0][1]).toEqual({
+      fromStationId: 11,
+      toStationId: 22,
+      legs: [
+        { lineGroupId: 7, fromStationId: 11, toStationId: 13 },
+        { lineGroupId: 8, fromStationId: 21, toStationId: 22 },
+      ],
+    });
+  });
+
   it('trainType.groupId でルートをフィルタリングする', async () => {
     mockUseCurrentTrainType.mockReturnValue({
       groupId: 42,

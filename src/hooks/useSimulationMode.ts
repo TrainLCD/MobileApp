@@ -7,11 +7,19 @@ import type {
   GetTrainRouteQueryVariables,
 } from '~/@types/graphql';
 import { LOCATION_TASK_NAME } from '~/constants';
-import { GET_TRAIN_ROUTE } from '~/lib/graphql/queries';
+import {
+  GET_CONNECTED_TRAIN_ROUTE,
+  GET_TRAIN_ROUTE,
+} from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { resetFirstSpeechAtom } from '~/store/atoms/speech';
+import {
+  alignConnectedTrainRouteSegments,
+  buildRouteLegInputs,
+  type RouteLegInput,
+} from '~/utils/currentLineGroupStations';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import {
   selectedBoundAtom,
@@ -89,21 +97,64 @@ export const useSimulationMode = (): void => {
   const fromStationId = maybeRevsersedStations[0]?.id;
   const toStationId = maybeRevsersedStations.at(-1)?.id;
 
-  const { data: trainRouteData, error: trainRouteError } = useGraphQLQuery<
-    GetTrainRouteQuery,
-    GetTrainRouteQueryVariables
-  >(GET_TRAIN_ROUTE, {
-    variables: {
-      fromStationId: fromStationId ?? 0,
-      toStationId: toStationId ?? 0,
-      lineGroupId: trainType?.groupId,
-    },
-    skip:
-      !enabled ||
-      fromStationId == null ||
-      toStationId == null ||
-      fromStationId === toStationId,
-  });
+  // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになっている。1 系統を前提に
+  // した trainRoute では引けないので、先頭から末尾へ進むときは区間(legs)を渡す
+  const routeLegs = useMemo(
+    () =>
+      selectedDirection === 'INBOUND' && !isLoopLine
+        ? buildRouteLegInputs(maybeRevsersedStations)
+        : null,
+    [maybeRevsersedStations, selectedDirection, isLoopLine]
+  );
+  const canFetchTrainRoute =
+    enabled &&
+    fromStationId != null &&
+    toStationId != null &&
+    fromStationId !== toStationId;
+
+  const { data: singleTrainRouteData, error: singleTrainRouteError } =
+    useGraphQLQuery<GetTrainRouteQuery, GetTrainRouteQueryVariables>(
+      GET_TRAIN_ROUTE,
+      {
+        variables: {
+          fromStationId: fromStationId ?? 0,
+          toStationId: toStationId ?? 0,
+          lineGroupId: trainType?.groupId,
+        },
+        skip: !canFetchTrainRoute || !!routeLegs,
+      }
+    );
+  const { data: connectedTrainRouteData, error: connectedTrainRouteError } =
+    useGraphQLQuery<
+      GetTrainRouteQuery,
+      { fromStationId: number; toStationId: number; legs: RouteLegInput[] }
+    >(GET_CONNECTED_TRAIN_ROUTE, {
+      variables: {
+        fromStationId: routeLegs?.[0]?.fromStationId ?? 0,
+        toStationId: routeLegs?.at(-1)?.toStationId ?? 0,
+        legs: routeLegs ?? [],
+      },
+      skip: !canFetchTrainRoute || !routeLegs,
+    });
+  const trainRouteError = routeLegs
+    ? connectedTrainRouteError
+    : singleTrainRouteError;
+
+  // 区間を渡した trainRoute は乗換駅を 2 回含むので、駅リストの並びに揃えてから使う
+  const trainRouteSegments = useMemo(() => {
+    if (!routeLegs) {
+      return singleTrainRouteData?.trainRoute?.segments ?? null;
+    }
+    const segments = connectedTrainRouteData?.trainRoute?.segments;
+    return segments
+      ? alignConnectedTrainRouteSegments(segments, maybeRevsersedStations)
+      : null;
+  }, [
+    routeLegs,
+    singleTrainRouteData,
+    connectedTrainRouteData,
+    maybeRevsersedStations,
+  ]);
 
   const resolveStartIndex = useCallback((): number => {
     const cs = currentStationRef.current;
@@ -170,7 +221,7 @@ export const useSimulationMode = (): void => {
   }, [trainRouteError]);
 
   useEffect(() => {
-    const segments = trainRouteData?.trainRoute?.segments;
+    const segments = trainRouteSegments;
     if (!segments || segments.length === 0) {
       return;
     }
@@ -296,7 +347,7 @@ export const useSimulationMode = (): void => {
     terminalDwellCountRef.current = 0;
     // 新しい方向の速度プロファイルが揃ったので折り返し待機を解除する
     reversingRef.current = false;
-  }, [maybeRevsersedStations, trainRouteData, resolveStartIndex]);
+  }, [maybeRevsersedStations, trainRouteSegments, resolveStartIndex]);
 
   const step = useCallback(
     (speed: number) => {

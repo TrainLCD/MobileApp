@@ -13,7 +13,10 @@ import * as useCurrentTrainTypeModule from '~/hooks/useCurrentTrainType';
 import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
 import { useLoopLine } from '~/hooks/useLoopLine';
 import { useSimulationMode } from '~/hooks/useSimulationMode';
-import { GET_TRAIN_ROUTE } from '~/lib/graphql/queries';
+import {
+  GET_CONNECTED_TRAIN_ROUTE,
+  GET_TRAIN_ROUTE,
+} from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
 import * as trainSpeedModule from '~/utils/trainSpeed';
@@ -985,6 +988,69 @@ describe('useSimulationMode', () => {
             lineGroupId: 42,
           }),
         })
+      );
+    });
+
+    // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストなので、1 系統を前提にした
+    // trainRoute ではなく区間(legs)を渡して引く
+    it('乗換経路では区間を渡して trainRoute を引き、1 系統の問い合わせはしない', () => {
+      const OEDO = 99301;
+      const SAIKYO = 11321;
+      const withTrainType = (
+        station: Station,
+        groupId: number,
+        lines: Station['lines'] = []
+      ): Station => ({
+        ...station,
+        lines,
+        trainType: { groupId } as Station['trainType'],
+      });
+      const stations = [
+        withTrainType(mockStation(9930138, 9930138, 35.76, 139.63, OEDO), 7),
+        withTrainType(mockStation(9930100, 1130225, 35.69, 139.69, OEDO), 7),
+        withTrainType(
+          mockStation(1132104, 1130208, 35.69, 139.7, SAIKYO),
+          170,
+          [
+            { id: OEDO, station: { id: 9930128 } },
+          ] as unknown as Station['lines']
+        ),
+        withTrainType(
+          mockStation(1132103, 1130205, 35.658, 139.701, SAIKYO),
+          170
+        ),
+      ];
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: true }
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(useGraphQLQuery).toHaveBeenCalledWith(
+        GET_CONNECTED_TRAIN_ROUTE,
+        expect.objectContaining({
+          variables: {
+            fromStationId: 9930138,
+            toStationId: 1132103,
+            legs: [
+              { lineGroupId: 7, fromStationId: 9930138, toStationId: 9930128 },
+              {
+                lineGroupId: 170,
+                fromStationId: 1132104,
+                toStationId: 1132103,
+              },
+            ],
+          },
+          skip: false,
+        })
+      );
+      expect(useGraphQLQuery).toHaveBeenCalledWith(
+        GET_TRAIN_ROUTE,
+        expect.objectContaining({ skip: true })
       );
     });
 
