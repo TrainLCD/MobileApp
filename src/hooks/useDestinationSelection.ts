@@ -4,9 +4,9 @@ import { useCallback, useMemo, useState } from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { graphqlQueryKey } from '~/lib/gql';
 import {
+  GET_CONNECTED_ROUTES,
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
-  GET_ROUTE_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import lineState, { pendingLineAtom } from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
@@ -15,24 +15,21 @@ import stationState, {
   wantedDestinationAtom,
 } from '~/store/atoms/station';
 import {
+  type ConnectedRouteTrainTypes,
+  collectDirectRouteTrainTypes,
   computeCurrentStationInRoutes,
   getStationWithMatchingLine,
 } from '~/utils/routeSearch';
 import { findLocalType } from '~/utils/trainTypeString';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
-type GetRouteTypesData = {
-  routeTypes: {
-    nextPageToken: string | null;
-    trainTypes: TrainType[];
-  };
+type GetConnectedRoutesData = {
+  connectedRoutes: ConnectedRouteTrainTypes[];
 };
 
-type GetRouteTypesVariables = {
+type GetConnectedRoutesVariables = {
   fromStationGroupId: number;
   toStationGroupId: number;
-  pageSize?: number;
-  pageToken?: string;
   viaLineId?: number;
 };
 
@@ -53,9 +50,6 @@ type GetLineGroupStationsVariables = {
   lineGroupId: number;
 };
 
-// GET_ROUTE_TYPES_LIGHT の pageSize。RouteSearchScreen の検索結果上限と同値。
-const ROUTE_TYPES_PAGE_SIZE = 100;
-
 export type UseDestinationSelectionResult = {
   /** 行き先駅カードのタップハンドラ(SelectBoundModal を開いて pendingStations を構築する) */
   handleDestinationSelected: (selectedStation: Station) => Promise<void>;
@@ -67,8 +61,8 @@ export type UseDestinationSelectionResult = {
   wantedDestination: Station | null;
   /** TrainTypeListModal に渡す現在駅の路線 */
   trainTypeModalLine: Line | null;
-  /** 種別取得中フラグ(カードのサブタイトルスケルトン・空状態のローディングに使う) */
-  fetchRouteTypesLoading: boolean;
+  /** 経路取得中フラグ(カードのサブタイトルスケルトン・空状態のローディングに使う) */
+  fetchConnectedRoutesLoading: boolean;
   /** SelectBoundModal / TrainTypeListModal に渡すローディング集約 */
   modalLoading: boolean;
   /** SelectBoundModal に渡すエラー集約 */
@@ -99,14 +93,14 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
   const queryClient = useQueryClient();
 
   const [
-    fetchRouteTypes,
+    fetchConnectedRoutes,
     {
-      data: routeTypesData,
-      loading: fetchRouteTypesLoading,
-      error: fetchRouteTypesError,
+      data: connectedRoutesData,
+      loading: fetchConnectedRoutesLoading,
+      error: fetchConnectedRoutesError,
     },
-  ] = useLazyGraphQLQuery<GetRouteTypesData, GetRouteTypesVariables>(
-    GET_ROUTE_TYPES_LIGHT
+  ] = useLazyGraphQLQuery<GetConnectedRoutesData, GetConnectedRoutesVariables>(
+    GET_CONNECTED_ROUTES
   );
 
   const [
@@ -161,16 +155,17 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         return;
       }
 
-      const result = await fetchRouteTypes({
+      const result = await fetchConnectedRoutes({
         variables: {
           fromStationGroupId: station.groupId,
           toStationGroupId: selectedStation.groupId,
-          pageSize: ROUTE_TYPES_PAGE_SIZE,
           viaLineId: selectedStation.line.id,
         },
       });
 
-      const fetchedTrainTypes = result.data?.routeTypes.trainTypes ?? [];
+      const fetchedTrainTypes = collectDirectRouteTrainTypes(
+        result.data?.connectedRoutes ?? []
+      );
 
       if (!fetchedTrainTypes?.length) {
         if (!selectedStation.line?.id) {
@@ -266,7 +261,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
       station,
       fetchStationsByLineId,
       fetchStationsByLineGroupId,
-      fetchRouteTypes,
+      fetchConnectedRoutes,
       setNavigationState,
       setStationState,
       setLineState,
@@ -310,14 +305,20 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     ]
   );
 
+  const directRouteTrainTypes = useMemo(
+    () =>
+      collectDirectRouteTrainTypes(connectedRoutesData?.connectedRoutes ?? []),
+    [connectedRoutesData?.connectedRoutes]
+  );
+
   const currentStationInRoutes = useMemo<Station | null>(
     () =>
       computeCurrentStationInRoutes(
         station,
         pendingLine,
-        routeTypesData?.routeTypes?.trainTypes ?? []
+        directRouteTrainTypes
       ),
-    [station, pendingLine, routeTypesData?.routeTypes]
+    [station, pendingLine, directRouteTrainTypes]
   );
 
   const trainTypeModalLine = useMemo(() => {
@@ -354,12 +355,12 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
   }, []);
 
   const modalLoading =
-    fetchRouteTypesLoading ||
+    fetchConnectedRoutesLoading ||
     fetchStationsByLineIdLoading ||
     fetchStationsByLineGroupIdLoading;
 
   const modalError =
-    fetchRouteTypesError ??
+    fetchConnectedRoutesError ??
     fetchStationsByLineIdError ??
     fetchStationsByLineGroupIdError ??
     null;
@@ -372,7 +373,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     selectedDestination,
     wantedDestination,
     trainTypeModalLine,
-    fetchRouteTypesLoading,
+    fetchConnectedRoutesLoading,
     modalLoading,
     modalError,
     handleCloseSelectBoundModal,

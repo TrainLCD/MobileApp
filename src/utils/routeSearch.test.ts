@@ -2,6 +2,7 @@ import type { Line, Station, TrainType } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import {
+  collectDirectRouteTrainTypes,
   computeCurrentStationInRoutes,
   getSearchResultHeadingText,
   getStationWithMatchingLine,
@@ -57,6 +58,49 @@ const createMockTrainType = (
   }) as unknown as TrainType;
 
 afterEach(() => jest.clearAllMocks());
+
+describe('collectDirectRouteTrainTypes', () => {
+  const chuoLine = createMockLine(1, '中央線');
+  const saikyoLine = createMockLine(2, '埼京線');
+  const local = createMockTrainType(10, '各駅停車', chuoLine);
+  const rapid = createMockTrainType(11, '快速', chuoLine);
+  const saikyoLocal = createMockTrainType(20, '各駅停車', saikyoLine);
+
+  it('直通経路の区間の列車種別をすべて返す', () => {
+    expect(
+      collectDirectRouteTrainTypes([{ legs: [{ trainTypes: [rapid, local] }] }])
+    ).toEqual([rapid, local]);
+  });
+
+  it('乗換経路の列車種別は含めない', () => {
+    expect(
+      collectDirectRouteTrainTypes([
+        { legs: [{ trainTypes: [rapid] }, { trainTypes: [saikyoLocal] }] },
+        { legs: [{ trainTypes: [local] }] },
+      ])
+    ).toEqual([local]);
+  });
+
+  it('複数の直通経路に同じ種別があれば先に現れたものだけを残す', () => {
+    const rapidInLaterRoute = { ...rapid, name: '快速(後)' } as TrainType;
+    expect(
+      collectDirectRouteTrainTypes([
+        { legs: [{ trainTypes: [rapid] }] },
+        { legs: [{ trainTypes: [rapidInLaterRoute, local] }] },
+      ])
+    ).toEqual([rapid, local]);
+  });
+
+  it('区間や列車種別が無い経路は無視する', () => {
+    expect(
+      collectDirectRouteTrainTypes([
+        { legs: null },
+        { legs: [] },
+        { legs: [{ trainTypes: null }] },
+      ])
+    ).toEqual([]);
+  });
+});
 
 describe('computeCurrentStationInRoutes', () => {
   describe('列車種別がある場合', () => {

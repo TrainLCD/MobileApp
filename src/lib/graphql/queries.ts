@@ -439,26 +439,25 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
   }
 `;
 
-// Query for getting route types (lightweight)
-export const GET_ROUTE_TYPES_LIGHT = gql`
+// Query for getting routes that reach the destination, possibly with transfers.
+// The app only rides direct (single-leg) routes for now, so only the train types
+// of each leg are requested.
+export const GET_CONNECTED_ROUTES = gql`
   ${TRAIN_TYPE_ROUTE_FRAGMENT}
-  query GetRouteTypesLight(
+  query GetConnectedRoutes(
     $fromStationGroupId: Int!
     $toStationGroupId: Int!
-    $pageSize: Int
-    $pageToken: String
     $viaLineId: Int
   ) {
-    routeTypes(
+    connectedRoutes(
       fromStationGroupId: $fromStationGroupId
       toStationGroupId: $toStationGroupId
-      pageSize: $pageSize
-      pageToken: $pageToken
       viaLineId: $viaLineId
     ) {
-      nextPageToken
-      trainTypes {
-        ...TrainTypeRouteFields
+      legs {
+        trainTypes {
+          ...TrainTypeRouteFields
+        }
       }
     }
   }

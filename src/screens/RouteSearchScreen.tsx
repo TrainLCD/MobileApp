@@ -128,7 +128,7 @@ const RouteSearchScreen = () => {
     selectedDestination,
     wantedDestination,
     trainTypeModalLine,
-    fetchRouteTypesLoading,
+    fetchConnectedRoutesLoading,
     modalLoading,
     modalError,
     handleCloseSelectBoundModal,
@@ -245,12 +245,12 @@ const RouteSearchScreen = () => {
               ? line.nameShort || undefined
               : line.nameRoman || undefined
           }
-          loading={fetchRouteTypesLoading}
+          loading={fetchConnectedRoutesLoading}
           onPress={() => handleDestinationSelected(item)}
         />
       );
     },
-    [handleDestinationSelected, fetchRouteTypesLoading]
+    [handleDestinationSelected, fetchConnectedRoutesLoading]
   );
 
   const renderItem = ({ item, index }: ListRenderItemInfo<Station>) => {
@@ -431,7 +431,7 @@ const RouteSearchScreen = () => {
           ListEmptyComponent={
             <View ref={searchResultsRef} onLayout={measureSearchResults}>
               <EmptyResult
-                loading={byNameLoading || fetchRouteTypesLoading}
+                loading={byNameLoading || fetchConnectedRoutesLoading}
                 hasSearched={hasSearched}
               />
             </View>

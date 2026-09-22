@@ -50,6 +50,38 @@ export const computeCurrentStationInRoutes = (
   return { ...station, line: pendingLine } as Station;
 };
 
+/** connectedRoutes の経路のうち、列車種別の選択に使う部分 */
+export type ConnectedRouteTrainTypes = {
+  legs: { trainTypes: TrainType[] | null | undefined }[] | null | undefined;
+};
+
+/**
+ * connectedRoutes の結果から、乗り換えなしで行ける経路の列車種別を集める。
+ * 乗換経路(区間が2つ以上)は区間の切り替えが未実装のため使わない。
+ * 複数の経路に同じ種別が現れた場合は、先に現れたものだけを残す
+ * @param routes connectedRoutes の結果(API の順位順)
+ * @returns 直通経路の列車種別の配列
+ */
+export const collectDirectRouteTrainTypes = (
+  routes: ConnectedRouteTrainTypes[]
+): TrainType[] => {
+  const seenGroupIds = new Set<number>();
+  const trainTypes: TrainType[] = [];
+
+  for (const route of routes) {
+    if (route.legs?.length !== 1) continue;
+    for (const trainType of route.legs[0].trainTypes ?? []) {
+      if (trainType.groupId != null) {
+        if (seenGroupIds.has(trainType.groupId)) continue;
+        seenGroupIds.add(trainType.groupId);
+      }
+      trainTypes.push(trainType);
+    }
+  }
+
+  return trainTypes;
+};
+
 /**
  * 列車種別が存在しない場合に、選択した路線に一致する駅の路線を取得する
  * @param station 現在の駅
