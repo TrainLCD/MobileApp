@@ -31,7 +31,8 @@ export type AgentChatResult = {
 
 // UI 側で表示を分岐するためのエラー種別。
 // - rateLimited: 429(日次上限)。入力バーを無効化し定型文を表示する
-// - timeout: クライアント側 30 秒タイムアウト
+// - timeout: クライアント側 30 秒タイムアウト、またはサーバ側 25 秒期限の超過
+//   (504 / error イベントの deadline-exceeded)
 // - network: ネットワーク断・5xx・その他 HTTP エラー・レスポンス破損・
 //   ストリーム中断(error イベント / done 前の切断)
 export type AgentErrorKind = 'rateLimited' | 'timeout' | 'network';
@@ -104,6 +105,11 @@ export const dedupeAgentSuggestions = (
   return result;
 };
 
+// サーバ側 25 秒期限の超過を表す callable エラーコードと、ストリーム開始前に
+// 期限を超えたときの HTTP ステータス
+const DEADLINE_EXCEEDED_CODE = 'deadline-exceeded';
+const DEADLINE_EXCEEDED_STATUS = 504;
+
 const parseEventData = (data: string): Record<string, unknown> | null => {
   try {
     const parsed: unknown = JSON.parse(data);
@@ -169,9 +175,13 @@ const handleStreamEvent = (
         : { ok: false, error: 'network' };
     }
     case 'error':
-      // ストリーム開始後のエラーはネットワークエラーと同じ扱い
+      // サーバが期限切れを確定させた場合は timeout として返し、非ストリーミングへ
+      // 再送させない(同じ処理をもう一度 25 秒待たせることになるため)。
+      // それ以外のストリーム開始後のエラーはネットワークエラーと同じ扱い
       // (受信済みの delta は画面側で破棄される)
-      return { ok: false, error: 'network' };
+      return parseEventData(event.data)?.code === DEADLINE_EXCEEDED_CODE
+        ? { ok: false, error: 'timeout' }
+        : { ok: false, error: 'network' };
     default:
       // 未知のイベント名は無視する(前方互換)
       return null;
@@ -230,6 +240,9 @@ const sendViaExpoFetchStream = async (
     // ストリーム開始前のエラーは従来どおり HTTP ステータスで判定する
     if (res.status === 429) {
       return { ok: false, error: 'rateLimited' };
+    }
+    if (res.status === DEADLINE_EXCEEDED_STATUS) {
+      return { ok: false, error: 'timeout' };
     }
     if (!res.ok || !res.body) {
       return { ok: false, error: 'network' };
@@ -333,6 +346,11 @@ const sendViaXhrStream = async (
         xhr.abort();
         return;
       }
+      if (xhr.status === DEADLINE_EXCEEDED_STATUS) {
+        settle({ ok: false, error: 'timeout' });
+        xhr.abort();
+        return;
+      }
       if (xhr.status < 200 || xhr.status >= 300) {
         settle({ ok: false, error: 'network' });
         xhr.abort();
@@ -431,6 +449,9 @@ const sendViaJson = async (body: string): Promise<AgentChatResponse> => {
     if (res.status === 429) {
       return { ok: false, error: 'rateLimited' };
     }
+    if (res.status === DEADLINE_EXCEEDED_STATUS) {
+      return { ok: false, error: 'timeout' };
+    }
     if (!res.ok) {
       return { ok: false, error: 'network' };
     }
@@ -492,8 +513,8 @@ export const useDestinationAgent = (): {
       const body = buildRequestBody(messages, currentStationGroupId);
       const streamed = await sendViaStream(body, handlers);
       if (streamed.ok || streamed.error !== 'network') {
-        // rateLimited は確定情報、timeout は既に 30 秒待たせているため
-        // どちらも再送しない
+        // rateLimited は確定情報、timeout はクライアントの 30 秒かサーバの
+        // 25 秒期限を既に待たせているため、どちらも再送しない
         return streamed;
       }
 
