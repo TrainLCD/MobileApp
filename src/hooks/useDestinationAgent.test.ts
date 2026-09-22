@@ -549,6 +549,30 @@ describe('useDestinationAgent', () => {
     expect(res).toEqual({ ok: false, error: 'network' });
   });
 
+  it('deadline-exceeded の error イベントは timeout を返し、フォールバックしない', async () => {
+    // サーバが 25 秒期限で打ち切ったターンを再送すると、同じ処理をもう一度待たせる
+    mockStreamResponse([
+      'event: tool\ndata: {}\n\n',
+      'event: error\ndata: {"code":"deadline-exceeded"}\n\n',
+    ]);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    expect(res).toEqual({ ok: false, error: 'timeout' });
+    expect(fallbackFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('ストリーム開始前の 504 は timeout を返し、フォールバックしない', async () => {
+    mockErrorResponse(504);
+
+    const sendMessages = renderSendMessages();
+    const res = await sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    expect(res).toEqual({ ok: false, error: 'timeout' });
+    expect(fallbackFetchMock).not.toHaveBeenCalled();
+  });
+
   it('done 前にストリームが切れた場合は network を返す', async () => {
     mockStreamResponse(['event: delta\ndata: {"text":"途中まで"}\n\n']);
 
@@ -858,6 +882,30 @@ describe('useDestinationAgent (iOS / XHR ストリーミング)', () => {
       ok: false,
       error: 'rateLimited',
     });
+    expect(xhr.aborted).toBe(true);
+    expect(fallbackFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('deadline-exceeded の error イベントは timeout を返し、フォールバックしない', async () => {
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    const xhr = await takeXhr();
+    xhr.emitChunk('event: error\ndata: {"code":"deadline-exceeded"}\n\n');
+
+    await expect(promise).resolves.toEqual({ ok: false, error: 'timeout' });
+    expect(xhr.aborted).toBe(true);
+    expect(fallbackFetchMock).not.toHaveBeenCalled();
+  });
+
+  it('504 は timeout を返し、フォールバックしない', async () => {
+    const sendMessages = renderSendMessages();
+    const promise = sendMessages([{ role: 'user', content: 'テスト' }]);
+
+    const xhr = await takeXhr();
+    xhr.emitHeaders(504);
+
+    await expect(promise).resolves.toEqual({ ok: false, error: 'timeout' });
     expect(xhr.aborted).toBe(true);
     expect(fallbackFetchMock).not.toHaveBeenCalled();
   });

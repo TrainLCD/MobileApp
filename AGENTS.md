@@ -1,102 +1,50 @@
 # Repository Guidelines
 
-This handbook defines how automation agents collaborate safely and effectively on the TrainLCD mobile application. Follow these instructions for every bot- or AI-assisted contribution, regardless of scope.
+How automation agents work on the TrainLCD mobile app. Instruction priority: repository owners & maintainers → latest task prompt → this handbook → other documentation. Raise conflicts when you see them.
 
-## Operating Principles for Automation Agents
+## Operating Principles
 
-- **Honor instruction priority:** repository owners & maintainers → latest task prompt → this handbook → other documentation. Surface conflicting requirements immediately.
-- **Preserve the working tree:** operate on the current snapshot, never discard user changes, and avoid destructive commands (`git reset --hard`, `git clean -fd`, a bare `git restore .` / `git checkout -- .`, etc.). Uncommitted work is not recoverable — `git reflog` only reaches committed history — so never discard it at all; rewinding *committed* history is available for recovery only, and only with the user's explicit approval of that specific rollback. See [Version Control (Git)](#version-control-git).
-- **Favor minimal, auditable diffs:** prefer additive edits, keep formatting deterministic, and annotate non-obvious changes with concise comments.
-- **Document reproducibility:** record every manual command you execute and note any local assumptions about environment variables or credentials.
-- **Validate assumptions proactively:** confirm tool versions, workflow expectations, and environment needs instead of relying on cached knowledge.
-- **Verify what a branch actually claims, not just its shape:** before changing or removing a conditional — a platform branch, a feature gate, a piece of guidance copy — confirm that the thing it points at really exists on each side. When a platform-paired construct loses one side, re-validate the side you keep: the remaining branch was written under an assumption that may no longer hold, and nothing else will catch it. Copy that names a device setting, a screen, or a menu path is a factual claim about that platform and must be checked the same way as code.
-- **Clarify uncertainty:** request guidance or leave TODO notes rather than guessing at intent.
-- **Ground every proposal in the existing implementation:** an existing constant, threshold, guard, or branch is the residue of a decision someone already made, and changing its meaning silently reverses that decision. Before proposing or editing one, find out what put it there — read the comment above it, then trace the line with `git blame <path>` to the commit that introduced it, and read that commit's message (`git show --stat <commit>`) and the pull request it came from — and state in the proposal which past decision the change narrows, widens, or reverses, and why that is now correct. Watch for values that were introduced together in one fix: touching the sibling (a filter and the escape hatch that keeps it from freezing, a cap and the fallback that bounds it) undoes the fix just as surely as touching the value itself. Derive any replacement value from the widest case the code path can actually observe, not from the case that prompted the change, and verify what feeds the condition rather than assuming (`stationState.station` is the last *arrived* station, so a subway branch keeps running through a through-service on another operator's line).
-- **Treat a failing existing test as evidence against your change:** a test that breaks when you edit production code is the codebase telling you which guarantee you just removed. Read what it protects and fix the change. Rewriting, relaxing, or re-scoping that test to make your own change pass is permitted only when the user has explicitly agreed to drop that guarantee — never as part of getting your change green. When the guarantee is worth keeping but your change is too, narrow the change until both hold, and add a regression test that pins the reasoning behind any value you chose.
-- **Split shared state when you split what it describes:** adding a second reference, anchor, cache, counter, or flag beside an existing one silently re-points every piece of mutable state that was written for the original. Before pushing, list the state the existing path owns and decide, per item, whether it now belongs to one side or must be duplicated — a counter meaning "consecutive rejections against this reference" becomes wrong the instant two references write to it, and the wrong branch then trips a threshold it never earned. Reading the diff for whether it does what you intended will not surface this, so read it a second time for what it breaks — both readings are required, and neither substitutes for the other: a change that regresses nothing but does not produce the effect it was written for is not done, and evidence is owed for both halves.
-- **Close the defects you find in your own proposal:** if you notice a case your change handles incorrectly, fix it before proposing. Do not submit the change with the defect intact and mention it as something the reviewer can settle later ("adjust it if it bothers you") — that makes the reviewer re-derive a problem you already found, which is your own review work handed to them. When closing it genuinely needs a decision only the user can make (a trade-off between two acceptable behaviors), present the options with a recommendation instead of shipping the one you know is wrong.
-- **Prioritize quality and performance over speed:** prefer well-structured, performant implementations over quick solutions. Take extra time to consider edge cases, optimize hot paths, and ensure code correctness rather than rushing to deliver.
+- **Never discard user work.** See [Version Control (Git)](#version-control-git).
+- **Stay inside what was approved.** An approval covers the change that was described, not the wording, naming, structure, or history around it. Propose adjacent cleanups separately.
+- **Find out why existing code is there before changing it.** For any constant, threshold, guard, or branch you change, read its comment, `git blame` it, and read the introducing commit and PR. State which past decision your change narrows, widens, or reverses. Values introduced together in one fix (a filter and its escape hatch, a cap and its fallback) move together. Derive a new value from the widest case the code path can observe, and check what feeds the condition: `stationState.station` is the last *arrived* station, so a subway branch keeps running through a through-service on another operator's line.
+- **Check that what a branch points at really exists.** Before changing a platform branch, feature gate, or guidance copy, confirm its target exists on each platform. When one side of a platform pair is removed, re-validate the side you keep. Copy that names a device setting, screen, or menu path is a factual claim about that platform.
+- **A failing existing test is evidence against your change.** Fix the change, not the test. Relax or rewrite the test only when the user has agreed to drop that guarantee. When both are worth keeping, narrow the change and add a regression test that pins the value you chose.
+- **Split shared state when you split what it describes.** When you add a second reference, cache, counter, or flag beside an existing one, decide for each piece of existing state which side owns it. Read your diff twice: once for whether it does what you intended, once for what it breaks.
+- **Fix the defects you find in your own proposal before proposing it.** If the fix needs a trade-off only the user can decide, present the options with a recommendation.
+- **Ask instead of guessing intent.** If a review comment can be read two ways and you are about to change code or text because of it, ask which reading is meant first.
+- **Prefer correctness and performance over speed.** Consider edge cases and hot paths.
 
-## Standard Workflow
+## Workflow
 
-1. **Intake:** read the full issue, PR discussion, or prompt; restate deliverables and constraints before coding.
-2. **Reconnaissance:** map relevant files with `rg`, `ls`, or `find`; review interfaces and existing patterns to plan compatible changes.
-3. **Plan:** outline discrete steps, keep the plan updated as you progress, and expose blockers early.
-4. **Implement:** use `apply_patch` for targeted edits, commit in small logical units, and avoid regenerating large files unless required. Stay inside what was actually approved: an approval covers the change that was described, not the wording, naming, structure, or history around it. Adjacent cleanups that look obviously right are still a separate proposal — raise them and wait, rather than folding them into the approved edit.
-5. **Validate:** run only the necessary commands (`npm run lint`, `npm test`, `npm run typecheck`, etc.) and capture summarized output.
-6. **Document & Handoff:** update READMEs or docs when behavior changes, summarize modifications, list executed commands, and attach artifacts (logs, screenshots) before opening PRs.
+- Validate with `npm run lint`, `npm test`, and `npm run typecheck` as needed, and summarize the results.
+- When behavior changes, update tests and docs (README, docs/, inline comments) in the same change set.
 
 ### Commit and push gate
 
-- **Do not commit or push unvalidated code on your own initiative.** Before
-  every commit or push that contains code changes, run both `npm run lint` and
-  the relevant unit tests, and confirm that both commands succeed. Run
-  `npm test` when the relevant test scope cannot be narrowed with confidence.
-- If either lint or unit tests fail, do not commit or push. Fix the failure and
-  rerun the checks, or stop and report the blocker to the repository owner.
-- Do not treat CI after a push as a substitute for local validation before the
-  commit or push.
+- Before every commit or push that contains code changes, run `npm run lint` and the relevant unit tests, and confirm both succeed. Run `npm test` when you cannot narrow the scope with confidence.
+- If either fails, do not commit or push. Fix it and rerun, or report the blocker.
+- CI after a push is not a substitute for local validation.
 
 ### Publishing gate
 
-docs/・README・PR のタイトルと本文・レビュー返信・issue（他リポジトリのものを含む）
-は、push や投稿をした時点で取り消せない公開物になる。TrainLCD のリポジトリは公開
-されており、書いた内容はそのまま作者の設計判断として読まれる。文を足す前に次を
-満たすこと。
+docs/・README・PR のタイトルと本文・レビュー返信・issue（他リポジトリのものを含む）は、投稿した時点で取り消せない公開物になる。リポジトリは公開されていて、書いた内容は作者の設計判断として読まれる。
 
-- **出典の無い主張を書かない。** 書いてよいのは、(a) リポジトリのコードや設定
-  ファイル、(b) 実際に取得した一次情報（公開ページの原文、仕様書）、(c) メンテナの
-  回答、のいずれかに辿れる内容だけ。辿れないものは書かずにタスクスレッドで聞く。
-  記憶から書いた製品仕様・ストアの審査要件・条文の要旨は、原文を当たるまでは
-  出典の無い主張として扱う。
-- **「未確認」「〜かもしれない」で逃げない。** アプリ・基盤・ポリシーはいずれも
-  同じメンテナのものなので、自分たちの構成が不明である旨を公開物に書くのは事実に
-  反するうえ、調べていないようにしか読めない。分からないことは書かず、聞けば済む。
-  ソースから確定できるものは、聞く前に読んで確定させる。
-- **実装から言えることと、運用の結果を混同しない。** 「ルータに定義が無い」はコード
-  の事実、「リクエストが届いていない」は運用の結果で、前者から後者は導けない。片方
-  しか確かめていないなら、確かめた方だけを書く。仮説を立てて別リポジトリを探しに
-  行く前に、確定済みの事実で足りるかを見直す。
-- **引用は一次情報から取る。** 日付・条文・公開文書の文言は、要約ではなく原文を
-  当たる。要約ツールの出力をそのまま引用として貼らない。
-- **メンテナに質問中の事項は公開しない。** 確認を出したなら、その答えに依存する
-  記述は回答を得るまで書かない。質問と並行して公開すると、回答前に誤りが出回る。
-- **運用上の秘匿情報は粒度を落とす。** サーバの設置場所やネットワーク構成など、
-  目的に対して不要な粒度は書かない。公開済みのプライバシーポリシーと同じ粒度に
-  留める。
-- **レビューボットの指摘も検証してから従う。** 指摘が誤っていることもある。原文や
-  コードで裏を取り、違う対応を採るならその理由を返信に書く。裏取りをせずに指摘の
-  文面をそのまま本文へ反映しない。
-
-公開済みの文に誤りや裏付けの無い記述を見つけたら、直すより先にタスクスレッドで
-報告する。どの記述が・なぜ問題で・どう直すつもりかを示し、メンテナの指示を得てから、
-push・PR 本文の編集・Issue の編集・訂正コメントやレビュー返信の投稿など、訂正内容を
-公開する操作を行う。自分の判断で訂正内容を公開しない。
+- 書いてよいのは、リポジトリのコードと設定、実際に取得した一次情報（原文・仕様書）、メンテナの回答のいずれかに辿れる内容だけ。記憶から書いた製品仕様・ストアの審査要件・条文の要旨は、原文を当たるまで書かない。引用・日付・条文は要約でなく原文から取る。
+- 自分たちのアプリ・基盤・ポリシーについて「未確認」「〜かもしれない」と書かない。ソースで確定できることは読んで確定させ、できないことは書かずにタスクスレッドで聞く。答えを待っている間は、その答えに依存する記述を公開しない。
+- コードから言えること（「ルータに定義が無い」）と運用の結果（「リクエストが届いていない」）を混同しない。確かめた方だけを書く。
+- サーバの設置場所やネットワーク構成は、公開済みのプライバシーポリシーと同じ粒度に留める。
+- レビューボットの指摘は、コードや原文で裏を取ってから従う。違う対応を採るなら理由を返信に書く。
+- 公開済みの文に誤りを見つけたら、どの記述が・なぜ問題で・どう直すかをタスクスレッドで報告する。訂正の push・編集・投稿は、メンテナの指示を得てから行う。
 
 ### 日本語の文体
 
-日本語で書く公開物が対象。何語で書くかはここでは決めない（この手引きも docs/ も、
-英語の文書がある）。英語の構文をそのまま日本語へ移すと、内容が正しくても日本語として
-読みづらい文になり、読み手は中身より文の解きほぐしに時間を取られる。「翻訳調にしない」
-という心構えでは直らないので、次の症状を手掛かりに直す。
+日本語で書く公開物が対象。英語の構文をそのまま移した文にしない。敬体（です・ます）で統一する。
 
-- **一文へ節を詰め込まない。** 「〜のため」「〜ので」「〜が」で節をつなぎ続けず、
-  一文一義で切る。読点が3つを超えたら分割を検討する。
-- **無生物を主語にしない。** 「この変更が効く前提は確定していない」ではなく「この
-  変更で地下でも測位が届くようになるかは、次に乗ってダンプを取るまで分からない」
-  と書く。
-- **多義的な動詞でごまかさない。** 「効く」「回す」「刺さる」「見る」あたりは、
-  書き手の中で意味が定まっていても読み手には伝わらない。同じ語で別のことを指して
-  いないか疑い、何が起きるのかを書く。「この変更が効く」ではなく「この変更で測位が
-  届くようになる」、「ルールが効く」ではなく「読んだ人が自分の文の問題に気づける」。
-- **名詞句を積み上げない。** 「〜という前提の確定」「〜の可否の判断」のようにサ変
-  名詞を重ねず、動詞で書く。
-- **接続詞を連発しない。** 「つまり」「ただし」「なお」を段落ごとに置かない。段落を
-  分ければ不要になることが多い。
-- **括弧の中で列挙しない。** 括弧に3つ以上並べるくらいなら箇条書きにする。
-- **文体を揃える。** 敬体（です・ます）で統一し、体言止めや常体を混ぜない。
-
-実際に書き直した例（PR #6996 の本文）。どちらも内容は同じで、読みやすさだけが違う。
+- 一文一義で切る。読点が3つを超えたら分割を検討する。
+- 無生物を主語にしない。「この変更が効く前提は確定していない」ではなく、何が起きるかを人や物事の動きで書く。
+- 「効く」「回す」「刺さる」「見る」のような多義的な動詞を避け、何が起きるのかを書く。
+- 「〜の可否の判断」のようにサ変名詞を重ねず、動詞で書く。
+- 「つまり」「ただし」「なお」を段落ごとに置かない。括弧の中で3つ以上列挙しない。
 
 ```text
 Before: つまり要求精度は失敗理由になりません（粗い値でも返る）。地下で fix 自体が
@@ -108,165 +56,70 @@ After:  精度が足りないことは失敗の理由になりません。粗い
         補完測位は10秒おきに同じことを繰り返すだけです。
 ```
 
-```text
-Before: #6995 の診断が次の乗車で取れるまでは、この変更が効く前提（補完測位が要求を
-        出していて、かつ失敗し続けている）は確定していません。
-
-After:  補完測位（#6969）が動いていれば10秒ごとに測位が入るはずですが、最後の測位
-        からの経過は33秒・94秒・39秒。ここが怪しいと思っています。
-```
-
-投稿する前に一度通して読む。声に出して読めない文は、読み手も読めない。
-
 ## Repository Map
 
-- `src/`: Expo React Native app code.
-  - `src/components/`, `src/screens/`: UI components and screen containers.
-  - `src/hooks/`, `src/store/`, `src/stacks/`: shared state, navigation, and composition hooks.
-  - `src/lib/`, `src/providers/`, `src/config/`: integrations, context providers, configuration utilities.
-  - `src/constants/`, `src/utils/`, `src/translation.ts`, `src/lineSymbolImage.ts`: constants, helpers, localization maps, and asset selectors.
-  - `@types/`, `src/__mocks__/`, `src/__fixtures__/`, `test/`: global typings, reusable mocks, fixtures, and test helpers.
-- `assets/`: static media (images, fonts, icons) and `assets/gpx/` for the location-simulation GPX fixtures (developer-only; not `require()`d by app code, so Metro does not bundle them).
-- `docs/`: human-facing documentation including changelog and incident notes.
-- `utils/`: developer tooling scripts such as GraphQL codegen config.
-- `android/`, `ios/`: native projects.
+- `src/`: Expo React Native app (`components/`, `screens/`, `hooks/`, `store/`, `stacks/`, `lib/`, `providers/`, `config/`, `constants/`, `utils/`, `translation.ts`, `lineSymbolImage.ts`).
+- `@types/`, `src/__mocks__/`, `src/__fixtures__/`: typings, mocks, fixtures.
+- `assets/`: media. `assets/gpx/` holds developer-only GPX fixtures that app code does not `require()`.
+- `docs/`: documentation, changelog, incident notes. `utils/`: developer scripts such as GraphQL codegen config. `android/`, `ios/`: native projects.
+- The Cloudflare Workers backend (TTS, session issuance, feedback triage, review notifiers, AI destination agent) lives in [TrainLCD/functions](https://github.com/TrainLCD/functions). The GraphQL API used by `src/lib/gql.ts` is [TrainLCD/StationAPI](https://github.com/TrainLCD/StationAPI); schema and resolver changes go there. [TrainLCD/BFF](https://github.com/TrainLCD/BFF) is archived; do not send anyone there.
 
-> The Cloudflare Workers backend (TTS, session issuance, feedback triage via Workers AI, review notifiers, the AI destination agent) has been moved out of this repository into [TrainLCD/functions](https://github.com/TrainLCD/functions); the former `functions/` directory no longer lives here. The GraphQL API that `src/lib/gql.ts` talks to (`gql.trainlcd.app` / `gql-stg.trainlcd.app`) is served directly by [TrainLCD/StationAPI](https://github.com/TrainLCD/StationAPI), so schema and resolver changes belong there. The GraphQL BFF that used to sit in front of it has been retired and [TrainLCD/BFF](https://github.com/TrainLCD/BFF) is archived — do not send anyone there.
+## Tooling & Commands
 
-## Tooling & Environment Expectations
+- Node.js 24.x (`.nvmrc`) and npm 11 or later (`engines` in `package.json`). Keep `node-version` in `.github/workflows/` on the same Node major, or `npm ci` can fail on a runner with an older npm.
+- Run `npm install` when dependencies change; do not re-lock packages unless asked.
+- `npm run start` (Expo Dev Client), `npm run android` / `npm run ios` (native builds), `npm run web`.
+- `npm run lint` (Biome), `npm run format`, `npm test` (Jest in UTC; `-- --updateSnapshot` for intentional snapshot changes), `npm run typecheck`.
+- `npm run gql:codegen` after GraphQL document or schema changes; it needs `GQL_API_URL` in `.env.local`.
+- Use `expo start --clear` only when debugging build failures, and say that you did.
 
-- Target **Node.js 24.x** and **npm 11.x**, matching `.nvmrc`. All GitHub Actions workflows pin the same major; keep them in sync when bumping, otherwise a `package-lock.json` generated locally can fail `npm ci` on a runner carrying an older npm.
-- Run `npm install` when dependencies shift; avoid re-locking packages unless instructed.
-- Metro cache issues: run `expo start --clear` only when debugging build failures and document the action.
-- For native builds, rely on project scripts (`npm run android`, `npm run ios`).
-- GraphQL codegen requires `GQL_API_URL` in `.env.local`; run `npm run gql:codegen` after document or schema updates.
+## Coding Style
 
-## Build, Test & Development Commands
+- `.editorconfig`: UTF-8, two spaces, single quotes, ES5 trailing commas. Biome is authoritative; use `// biome-ignore` only with an inline reason.
+- Naming: components PascalCase, hooks `use*`, Jotai atoms in `store/atoms/*.ts`, GraphQL operations `FeatureVerbQuery`.
+- Comments explain intent or non-obvious constraints, not mechanics. Co-locate styles and constants with their consumers; share cross-cutting helpers via `src/utils/`.
+- Jotai state lives in field-level atoms (`arrivedAtom`, `headerStateAtom`, …); subscribe to those. The default-exported `stationState` / `navigationState` / `lineState` are write-compatible facades that re-render on every field change. See `docs/state-management.md`.
+- Hooks that subscribe to high-frequency atoms (`locationAtom` updates every second while riding) must not run in a screen body. Host each in its own renderless `Fx*` component (`MainScreenEffects` in `src/screens/Main.tsx`, `PermittedLayoutEffects` in `src/components/Permitted.tsx`), and gate platform- or setting-specific ones by mounting their host conditionally (`FxTTS`, `FxUpdateLiveActivities`). Subscribe to narrow derived atoms such as `pictureInPictureEnabledAtom` / `pictureInPictureActiveAtom` rather than the whole object.
+- StrictMode re-runs effects in development, so mount-time effects must be repeatable. Never call the unkeyed `showDialog` from `useEffect` or async work it starts; use `showDialogWhilePresenting` from `src/utils/dialogPresentation.ts`. Event handlers such as `onPress` may call `showDialog` directly. An effect that writes shared state in cleanup must correspond to a real lifecycle event (e.g., navigation `beforeRemove`).
 
-- `npm run start`: start the Expo Dev Client locally.
-- `npm run android` / `npm run ios`: build native binaries.
-- `npm run web`: run the web preview.
-- `npm run lint`: execute Biome linting (`biome ci ./src` in CI).
-- `npm run format`: apply Biome formatting fixes.
-- `npm test`: run Jest in UTC; add `--watch` or `--runInBand` for debugging.
-- `npm test -- --updateSnapshot`: refresh Jest snapshots when output diffs are intentional.
-- `npm run typecheck`: enforce TypeScript constraints.
-- `npm run gql:codegen`: regenerate generated GraphQL types.
+### Markdown (docs/, README, .claude/skills/\*\*/SKILL.md)
 
-## Coding Style & Naming Conventions
+`markdownlint-cli2` 準拠（CodeRabbit も同ルールで指摘する）。
 
-- `.editorconfig` enforces UTF-8, two-space indentation, single quotes, and ES5 trailing commas.
-- Biome is authoritative; avoid `// biome-ignore` unless a rule is truly incompatible and document the rationale inline.
-- Components → PascalCase (`StationBanner.tsx`); hooks → `use*` (`useStationFeed.ts`); Jotai atoms → `store/atoms/*.ts`; GraphQL operations → `FeatureVerbQuery`.
-- Jotai state is held in field-level primitive atoms (named exports such as `arrivedAtom`, `headerStateAtom`). Always subscribe to those for reads; the default-exported `stationState` / `navigationState` / `lineState` are write-compatible facades and subscribing to them re-renders on every field change. See `docs/state-management.md`.
-- Void side-effect hooks that subscribe to high-frequency atoms (`locationAtom` updates every second while riding) must not be called in a screen component's body. Host them in a renderless effects component instead (`MainScreenEffects` in `src/screens/Main.tsx`, `PermittedLayoutEffects` in `src/components/Permitted.tsx`; one hook per `Fx*` component so per-hook render cost stays measurable). Gate platform- or setting-specific hooks by conditionally mounting their host (`FxTTS`, `FxUpdateLiveActivities`). For objects with high-frequency fields such as `pictureInPictureAtom.activityState`, subscribe the narrow derived atoms (`pictureInPictureEnabledAtom` / `pictureInPictureActiveAtom`) instead of the whole atom. Details in `docs/state-management.md`.
-- Co-locate style modules or constants near their consumers; share cross-cutting utilities through `src/utils/`.
-- Keep comments purposeful: explain intent or non-obvious constraints, not obvious mechanics.
+- MD040: フェンスには言語を付ける（平文・図は `text`、シェルは `bash`、差分は `diff`、テンプレは `markdown`、データは `json` / `yaml`）。
+- MD038: インラインコードの内側の先頭・末尾に空白を入れない。
+- MD031 / MD032: フェンスとリストの前後に空行を入れる。
+- MD029: 順序リストの番号付けはファイル内で統一する。
+- MD033: HTML タグを使わない。`<details><summary>` と表セル内の `<br>` のみ可。
 
-### React Native side effects under StrictMode
+## Testing
 
-- React StrictMode intentionally re-runs effect setup/cleanup in development. Treat mount-time effects as repeatable, and never rely on an empty dependency array to mean "runs exactly once" for visible side effects.
-- Do not call the unkeyed `showDialog` from `useEffect` or from async functions launched by `useEffect`. StrictMode can evaluate the same persisted condition twice before the first dialog is dismissed.
-- For automatic dialogs, use `showDialogWhilePresenting` from `src/utils/dialogPresentation.ts`. The keyed presentation layer prevents duplicate dialogs only while the same logical dialog is active or queued, and releases the key after its closing animation completes.
-- User-initiated dialogs from event handlers such as `onPress` may call `showDialog` directly when they are not triggered by mount-time or subscription effects.
-- If an effect writes shared app state during cleanup, confirm that the cleanup represents a real lifecycle event such as a navigation `beforeRemove`, not only StrictMode's development-only unmount check.
-
-### Markdown documentation (docs/, README, .claude/skills/\*\*/SKILL.md)
-
-`markdownlint-cli2` 準拠。CodeRabbit も同ルールで指摘するため、執筆時点で以下を守る:
-
-- **MD040 (fenced code language)**: フェンスコードブロックには必ず言語指定を付ける。用途別の既定: 平文の図示・実行計画サマリは `text`、シェル例は `bash`、差分は `diff`、埋め込みテンプレ本文は `markdown`、構造化データは `json` / `yaml`。
-- **MD038 (no spaces in code spans)**: インラインコード（バッククォート）の内側先頭・末尾に空白を入れない。`` `**v<release_version>**` `` は OK、`` `**v<release_version>** ` `` は NG。
-- **MD031 / MD032 (blanks around fences / lists)**: フェンスコードブロック・リストブロックの前後に空行を 1 行入れる。
-- **MD029 (ordered list numbering)**: 順序リストの番号付けは単一ファイル内で統一する（全て `1.` で書くか、`1.` `2.` `3.` と逐次番号を振るか）。
-- **MD033 (inline HTML)**: Markdown で表現できる構造は HTML タグに落とさない。例外として `<details><summary>…</summary>` と表セル内の `<br>` は許可。
-
-## Testing Strategy
-
-- Jest global setup lives in `jest.setup.js` and `src/setupTests.ts`.
-- Co-locate unit tests as `.test.ts` or `.test.tsx` siblings to the module.
-- Reuse helper utilities from `src/utils/test/` to avoid duplicate setup code.
-- Mock network and backend API layers with `jest.mock`, and call `jest.clearAllMocks()` in `afterEach`.
-- For integration flows, extend `src/test/e2e.ts` and prefer fixtures from `src/__fixtures__/`.
-- When modifying behavior, update or add tests in the same change set; document skipped tests with TODOs and owner rationale.
+- Global setup: `jest.setup.js`, `src/setupTests.ts`. Co-locate tests as `.test.ts(x)`. Reuse helpers in `src/utils/test/` and fixtures in `src/__fixtures__/`; extend `src/test/e2e.ts` for integration flows.
+- Mock network and backend layers with `jest.mock` and call `jest.clearAllMocks()` in `afterEach`.
+- Document skipped tests with a TODO and the reason.
 
 ## Version Control (Git)
 
-This repository is managed with **Git**, and agents drive version control through `git` and `gh`.
-
-- **Preserve uncommitted work.** `git reset --hard`, `git clean -fd`, and a bare `git restore .` / `git checkout -- .` discard changes the user may not have saved anywhere — never run them on your own initiative. To set work aside, prefer a temporary WIP commit over `git stash`: the stash stack is shared with every other worktree of this repository, so a concurrent session can pop your entry or you can pop theirs.
-- **Stage deliberately.** Run `git status` and actually read the list before committing. Add the paths that belong in the commit (`git add <path>...`) instead of sweeping the tree with `git add -A`, so unrelated files do not ride along.
-- **Do not rewrite published history.** `git push --force` is prohibited. If a push is rejected, run `git fetch` and re-examine the state instead of reaching for a guard-removing flag; `--force-with-lease` is acceptable only on a topic branch you own, and only with the user's explicit approval of that specific push.
-- **Release tags are annotated** (`git tag -a` / `git push origin <tag>`): the release workflow on GitHub Actions creates annotated tags, and letting the tag type depend on which path ran is a release-metadata hazard. `.claude/skills/publish-release/SKILL.md` records the reasoning.
-- **Server-side writes through the GitHub API are a narrow, named exception — not a general escape hatch.** `.claude/skills/create-pr/SKILL.md` uploads PR screenshots to the orphan branch `assets/pr-screenshots` using the Contents and Git Data APIs. This is permitted because it touches no local state — no working tree, no index, no `HEAD` — so it cannot disturb the checkout or the branch under review. The exception holds only while **all** of these are true: the target branch carries assets and no application code; it is never merged into `dev` or `master`; published paths are content-addressed, immutable, and never overwritten; and the user approves the write beforehand. Any write to a branch that carries application code still goes through a local commit and a pull request.
-- Recovery for a local mistake is `git reflog` plus a rescue branch (`git branch <rescue> <sha>`) on history you own — it reaches committed history only, which is why uncommitted changes must never be discarded in the first place. Show the user the reflog entry you intend to move to and get explicit approval before rewinding anything. Reversibility is not a licence to run destructive commands in the first place.
+- **Preserve uncommitted work.** Never run `git reset --hard`, `git clean -fd`, or a bare `git restore .` / `git checkout -- .` on your own initiative. To set work aside, use a temporary WIP commit rather than `git stash`; the stash stack is shared with every worktree.
+- **Stage deliberately.** Read `git status` and `git add <path>...`; do not use `git add -A`.
+- **Do not rewrite published history.** `git push --force` is prohibited. If a push is rejected, `git fetch` and re-examine. `--force-with-lease` only on a topic branch you own, with the user's explicit approval of that push.
+- **Recovery** uses `git reflog` plus a rescue branch (`git branch <rescue> <sha>`). It reaches committed history only. Show the user the entry you intend to move to and get approval before rewinding anything.
+- **Release tags are annotated** (`git tag -a`), matching the release workflow. See `.claude/skills/publish-release/SKILL.md`.
+- **Server-side writes through the GitHub API** are allowed only for the PR-screenshot assets in `.claude/skills/create-pr/SKILL.md` (orphan branch `assets/pr-screenshots`), and only while all of these hold: the branch carries assets and no application code; it is never merged into `dev` or `master`; published paths are content-addressed, immutable, and never overwritten; and the user approves the write beforehand. Anything touching application code goes through a local commit and a PR.
 
 ## Commit & Pull Request Protocol
 
-- Follow git-flow for every working branch: create `feature/*`, `fix/*`, and `release/*` branches from `origin/dev`, and reserve `hotfix/*` from `origin/master` for urgent production fixes. Do not create tool-specific prefixes such as `agent/*`. Branch with `git switch -c <name> origin/<base>` — see [Version Control (Git)](#version-control-git).
-- Commit messages must be single-sentence statements in Japanese (e.g., `テレメトリー送信機をリファクタリングしてnull状態を回避`); prefix production hot fixes with `Hotfix:`.
-- Keep commits logically scoped (implementation, tests, docs) and mention generated artifacts in the description.
-- Pull requests must follow `.github/pull_request_template.md`; do not add or remove sections from the template without maintainer approval.
-- Open pull requests as ready for review by default; use Draft only when the user explicitly requests it.
-- Pull requests must be assigned to `@TinyKitten`.
-- Canary promotion PRs from `dev` to `canary` contain changes that have already passed review before reaching `dev`. Do not request or wait for an additional human or CodeRabbit review on the Canary PR itself. Once required CI succeeds and the PR is mergeable, the Canary PR may be merged without review approval.
-- Pull requests must include:
-  - Purpose and summary of key changes.
-  - Regression risk assessment and mitigation.
-  - Commands executed locally (e.g., `npm run lint && npm test && npm run typecheck`).
-  - Linked issues or tickets.
-  - Visual evidence for UI/UX deltas, each labeled with where the image came from. Any method is acceptable — a device or simulator capture (label it with the device name, e.g., Pixel 8, iPhone 15 Pro), a React Native Web rendering (`npm run web`), or a mockup / generated image. An image that is not a rendering of the implementation must say so in its label, so a reviewer never mistakes an illustration for observed behavior. If no image is attached, state the reason in that section instead of leaving it blank.
-- Mockups and illustrations of existing UI must reproduce whatever the real screen branches on. A mockup is read as the spec, so an inaccurate one manufactures a wrong agreement even when the implementation is correct. Before drawing an element that varies by line, theme, or train type — station numbering shape, palette, train-type badge, pass/stop treatment — trace what decides it and take the value for the case you are depicting, instead of reusing the appearance of whichever component file you happened to read for its dimensions. Station numbering shape comes from the API's `lineSymbolShape`, and `src/__fixtures__/station.ts` lists the symbol-to-shape pairs (JR East `JA` / `JB` / `JC` / `JO` / `JS` / `JY` are `SQUARE`; Tokyo Metro and Toei lines are `ROUND`). If you cannot confirm a value, choose a case that does not include that element.
-- If CI fails, pause reviews until you add root-cause notes plus reproduction steps or open an issue for blocking infrastructure problems.
-- **Keep PR metadata in sync with the branch state.** Whenever you push new commits to an open PR, refresh both the PR title and the body:
-  - **Title**: re-evaluate whether the current title still describes the full scope of the branch. If new commits introduce a subject that the title does not cover, propose an updated title and, once approved by the user, apply it via `gh pr edit --title`.
-  - **Body**: update the `変更の種類` checkboxes, the `変更内容` summary, and the test-result section so they reflect the updated diff. Preserve human-authored prose sections (`概要`, narrative added under `変更内容`, `関連Issue`, `スクリーンショット`) unless the changes invalidate them.
+- git-flow: `feature/*`, `fix/*`, `release/*` from `origin/dev`; `hotfix/*` from `origin/master`. No tool-specific prefixes such as `agent/*`. Branch with `git switch -c <name> origin/<base>`.
+- Commit messages are single Japanese sentences (e.g., `テレメトリー送信機をリファクタリングしてnull状態を回避`); prefix production hot fixes with `Hotfix:`. Keep commits logically scoped.
+- PRs follow `.github/pull_request_template.md` without adding or removing sections, open as ready for review (Draft only on request), and are assigned to `@TinyKitten`.
+- PR bodies include purpose and key changes, regression risk and mitigation, commands run locally, linked issues, and visual evidence for UI changes. Label each image with its source: a device name (e.g., Pixel 8), React Native Web, or an explicit note that it is a mockup and not a rendering of the implementation. With no image, state why.
+- Mockups of existing UI are read as the spec. For anything that varies by line, theme, or train type (numbering shape, palette, train-type badge, pass/stop treatment), trace what decides it and use the value for the depicted case. Numbering shape comes from the API's `lineSymbolShape`; `src/__fixtures__/station.ts` lists the pairs (JR East `JA` / `JB` / `JC` / `JO` / `JS` / `JY` are `SQUARE`; Tokyo Metro and Toei are `ROUND`). If you cannot confirm a value, depict a case without that element.
+- Canary promotion PRs (`dev` → `canary`) need no further review; merge once required CI passes and the PR is mergeable.
+- If CI fails, pause reviews until you add root-cause notes and reproduction steps, or open an issue for infrastructure problems.
+- **Keep PR metadata in sync with the branch state.** After pushing to an open PR, refresh the body (`変更の種類`, `変更内容`, test results) while preserving human-written prose unless the change invalidates it. If the title no longer covers the scope, propose a new one and apply it with `gh pr edit --title` after approval.
 
-## Security & Configuration Guardrails
+## Security & Incidents
 
-- Store secrets in `.env.local`; treat `.env.example` as the template for onboarding (copy it to `.env.local` and fill in values).
-- Never commit credentials, access tokens, or production endpoints.
-- Protect Expo credentials with 2FA and rotate access when automations change.
-- After dependency upgrades (`npm update`) or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, and `npm run typecheck`, then capture results in `docs/changelog.md`.
-
-## Automation Checklists
-
-**Before submitting code changes**
-
-- [ ] Confirm requirements and flag conflicts.
-- [ ] For every existing constant, threshold, guard, or branch you change, confirm how it got there (inline comment, `git blame <path>`, originating PR) and state which past decision the change alters.
-- [ ] Update or add tests relevant to code changes.
-- [ ] Run `npm run lint`, `npm test`, and `npm run typecheck`; record summaries.
-- [ ] Update documentation (README, docs/, inline comments) if behaviors shift.
-- [ ] Attach visual evidence for UI changes, each labeled with its source (device name, React Native Web, or an explicit 'not a rendering of the implementation' note for mockups); when no image is attached, state why instead of leaving the section blank.
-- [ ] For a mockup or illustration of existing UI, confirm the depicted case's real values for anything that branches by line, theme, or train type (e.g., `lineSymbolShape`) rather than reusing another component's appearance.
-
-**For documentation-only tasks**
-
-- [ ] Ensure docs match current directory structure and script names.
-- [ ] Update cross-references (README, docs/) to prevent drift.
-- [ ] Spell-check or self-review for clarity and typos.
-
-**Before publishing prose (docs, PR body, review replies, issues)**
-
-- [ ] Every claim traces to repository code, a primary source you fetched, or a maintainer answer.
-- [ ] No "未確認" / "かもしれない" hedges about our own app, backend, or policy; unknowns are questions, not sentences.
-- [ ] Code-level facts and runtime outcomes are not conflated.
-- [ ] Quotes come from the original text, not from a summary.
-- [ ] Nothing depends on a question you have asked and not yet had answered.
-- [ ] Operationally sensitive details are written at the same granularity as the public privacy policy.
-- [ ] Review-bot findings are verified against code or the original text before you act on them.
-- [ ] 日本語として読める文になっている（一文一義・無生物主語や名詞句の積み上げが無い・接続詞の連発が無い）。
-
-**For workflow, release, or CI updates**
-
-- [ ] Cross-check `.github/workflows/` for consistency.
-- [ ] Provide dry-run instructions or environment prerequisites.
-- [ ] Document required secrets, environment variables, or service accounts.
-
-## Communication & Incident Reporting
-
-- Surface blockers or ambiguities in the task thread; do not proceed on assumptions.
-- When a review comment or correction can be read more than one way, ask which reading is meant before implementing one. Terse feedback usually points at a defect the author already understands, so a plausible-sounding reinterpretation is likely to fix the wrong thing while looking responsive. Quote the reading you would act on and confirm it.
-- When discovering regressions or flaky tests, open an issue with reproduction steps and assign the relevant code owner.
-- After incidents or hot fixes, append learnings to `docs/changelog.md` and notify maintainers for follow-up.
+- Secrets and endpoints go in `.env.local` (template: `.env.example`); code reads API URLs from environment variables (`src/lib/gql.ts`). Never commit credentials, tokens, or endpoint URLs, including in docs. Protect Expo credentials with 2FA.
+- After dependency upgrades or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, `npm run typecheck`, and record the results in `docs/changelog.md`.
+- Open an issue with reproduction steps for regressions or flaky tests. After incidents or hot fixes, append learnings to `docs/changelog.md`.
