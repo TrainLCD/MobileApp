@@ -439,26 +439,33 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
   }
 `;
 
-// Query for getting route types (lightweight)
-export const GET_ROUTE_TYPES_LIGHT = gql`
+// Query for getting routes that reach the destination, possibly with transfers.
+// Each leg carries every train type that serves it and its boarding/alighting stations,
+// which are used to join the legs into one station list like a through service.
+export const GET_CONNECTED_ROUTES = gql`
   ${TRAIN_TYPE_ROUTE_FRAGMENT}
-  query GetRouteTypesLight(
+  ${STATION_FRAGMENT}
+  query GetConnectedRoutes(
     $fromStationGroupId: Int!
     $toStationGroupId: Int!
-    $pageSize: Int
-    $pageToken: String
     $viaLineId: Int
   ) {
-    routeTypes(
+    connectedRoutes(
       fromStationGroupId: $fromStationGroupId
       toStationGroupId: $toStationGroupId
-      pageSize: $pageSize
-      pageToken: $pageToken
       viaLineId: $viaLineId
     ) {
-      nextPageToken
-      trainTypes {
-        ...TrainTypeRouteFields
+      legs {
+        trainTypes {
+          ...TrainTypeRouteFields
+        }
+        fromStation {
+          ...StationFields
+        }
+        toStation {
+          ...StationFields
+        }
+        stationGroupIds
       }
     }
   }
@@ -497,6 +504,33 @@ export const GET_TRAIN_ROUTE = gql`
   }
 `;
 
+// Query for getting per-station segments along a route search's transfer route.
+// legs joins the line groups of each leg; lineGroupId must be omitted with legs.
+export const GET_CONNECTED_TRAIN_ROUTE = gql`
+  query GetConnectedTrainRoute(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $legs: [RouteLegInput!]!
+  ) {
+    trainRoute(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      legs: $legs
+    ) {
+      segments {
+        station {
+          id
+          groupId
+        }
+        distanceFromPrevious
+        maxAcceleration
+        maxDeceleration
+        maxSpeed
+      }
+    }
+  }
+`;
+
 // Query for estimating arrival times between two stations
 export const ESTIMATE_ARRIVAL_TIMES = gql`
   query EstimateArrivalTimes(
@@ -510,6 +544,33 @@ export const ESTIMATE_ARRIVAL_TIMES = gql`
       toStationId: $toStationId
       viaLineIds: $viaLineIds
       directionId: $directionId
+    ) {
+      routes {
+        id
+        stops {
+          stationId
+          stationGroupId
+          cumulativeMinutes
+          departureCumulativeMinutes
+          stopsHere
+        }
+      }
+    }
+  }
+`;
+
+// Query for estimating arrival times along a route search's transfer route.
+// legs joins the line groups of each leg; viaLineIds / directionId must be omitted.
+export const ESTIMATE_CONNECTED_ROUTE_ARRIVAL_TIMES = gql`
+  query EstimateConnectedRouteArrivalTimes(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $legs: [RouteLegInput!]!
+  ) {
+    estimateArrivalTimes(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      legs: $legs
     ) {
       routes {
         id

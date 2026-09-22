@@ -6,7 +6,7 @@ import {
 } from '@testing-library/react-native';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
-import { useBounds } from '~/hooks';
+import { useBounds, useSavedRoutes } from '~/hooks';
 import { pendingLineAtom, selectedLineAtom } from '../store/atoms/line';
 import {
   autoModeEnabledAtom,
@@ -259,6 +259,54 @@ describe('SelectBoundModal', () => {
         'save-preset-modal'
       )
     ).toBeNull();
+  });
+
+  // 乗換のある経路は 1 系統のプリセットに収まらず、保存すると最初の区間だけの
+  // 誤ったプリセットになる
+  it('乗換のある経路を選んでいる間はプリセットの保存を出さず、既存のプリセットとも照合しない', () => {
+    // 最初の区間の系統と同じ 1 系統のプリセットが保存済みでも、乗換経路には当てない
+    const findSavedRoute = jest.fn(() => ({
+      id: 'preset',
+      lineId: 10,
+      trainTypeId: 100,
+      direction: 'OUTBOUND',
+    }));
+    const originalUseSavedRoutes = (
+      useSavedRoutes as jest.Mock
+    ).getMockImplementation();
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      isInitialized: true,
+      find: findSavedRoute,
+      save: mockSaveRoute,
+      remove: jest.fn(),
+    });
+    mockAtomValues({
+      pendingStation: { id: 1, groupId: 1, lines: [{ id: 10 }] },
+      pendingStations: [
+        { id: 1, groupId: 1, line: { id: 10 }, lines: [{ id: 10 }] },
+        { id: 2, groupId: 2, line: { id: 20 }, lines: [{ id: 20 }] },
+      ],
+      pendingTrainType: { id: -1, groupId: 100, name: '各駅停車' },
+      pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      selectedLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+    });
+
+    const screen = render(
+      <SelectBoundModal
+        visible={true}
+        onClose={jest.fn()}
+        loading={false}
+        error={null}
+        onTrainTypeSelect={jest.fn()}
+        onBoundSelect={jest.fn()}
+      />
+    );
+
+    expect(screen.queryByText('saveCurrentRoute')).toBeNull();
+    expect(screen.queryByText('removeFromSavedRoutes')).toBeNull();
+    expect(findSavedRoute).not.toHaveBeenCalled();
+    // clearAllMocks は実装を戻さないので、後続のテストへ持ち越さない
+    (useSavedRoutes as jest.Mock).mockImplementation(originalUseSavedRoutes);
   });
 
   it('終着駅設定中でも RouteInfoModal には全駅が渡される', () => {

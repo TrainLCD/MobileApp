@@ -41,6 +41,7 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { resolvePresetSaveRoute } from '~/utils/presetRouteEndpoints';
+import { isTransferRouteTrainType } from '~/utils/routeSearch';
 import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -201,8 +202,15 @@ export const SelectBoundModal: React.FC<Props> = ({
     remove: removeCurrentRoute,
   } = useSavedRoutes();
 
+  // 乗換のある経路は今のプリセットの形式(1 系統)では保存も照合もできない
+  const isTransferRoute = isTransferRouteTrainType(pendingTrainType);
+
   useEffect(() => {
     if (!line || line.id == null || !isRoutesDBInitialized) return;
+    if (isTransferRoute) {
+      setSavedRoute(null);
+      return;
+    }
 
     const route = findSavedRoute({
       lineId: line.id ?? 0,
@@ -216,6 +224,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     pendingTrainType?.groupId,
     wantedDestination?.groupId,
     isRoutesDBInitialized,
+    isTransferRoute,
   ]);
 
   useEffect(() => {
@@ -977,19 +986,24 @@ export const SelectBoundModal: React.FC<Props> = ({
                   : translate('viewStopStations')}
               </Button>
 
-              <Button
-                outline
-                style={savedRoute ? styles.redOutlinedButton : null}
-                textStyle={savedRoute ? styles.redOutlinedButtonText : null}
-                onPress={handleSaveRoutePress}
-                disabled={
-                  !line || !isRoutesDBInitialized || loading || isTransitioning
-                }
-              >
-                {translate(
-                  !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
-                )}
-              </Button>
+              {isTransferRoute ? null : (
+                <Button
+                  outline
+                  style={savedRoute ? styles.redOutlinedButton : null}
+                  textStyle={savedRoute ? styles.redOutlinedButtonText : null}
+                  onPress={handleSaveRoutePress}
+                  disabled={
+                    !line ||
+                    !isRoutesDBInitialized ||
+                    loading ||
+                    isTransitioning
+                  }
+                >
+                  {translate(
+                    !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
+                  )}
+                </Button>
+              )}
               <Button
                 outline
                 onPress={() => setSelectBoundSettingListModalVisible(true)}
