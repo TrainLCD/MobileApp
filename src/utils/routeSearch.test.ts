@@ -181,13 +181,15 @@ describe('乗換経路', () => {
   });
 
   describe('concatLegStations', () => {
-    it('乗換駅は前の区間の降車駅だけを残して 1 本につなぐ', () => {
+    // 乗換駅を前の区間の駅として残すと最後の区間の路線が行き先の 1 駅だけになり、
+    // useConnectedLines が直通先から外してヘッダーに「〜線直通」が出なくなる
+    it('乗換駅は次の区間の乗車駅だけを残して 1 本につなぐ', () => {
       expect(
         concatLegStations([
           [hikarigaoka, nerima, shinjukuOedo],
           [shinjukuSaikyo, shibuya],
         ]).map((s) => s.id)
-      ).toEqual([hikarigaoka.id, nerima.id, shinjukuOedo.id, shibuya.id]);
+      ).toEqual([hikarigaoka.id, nerima.id, shinjukuSaikyo.id, shibuya.id]);
     });
   });
 

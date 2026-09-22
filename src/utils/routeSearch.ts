@@ -156,16 +156,18 @@ export const sliceLegStations = (
 
 /**
  * 区間ごとの駅をつないで 1 本の駅リストにする。直通運転の系統と同じく、路線が変わる駅は
- * 1 度だけ持つ(前の区間の降車駅を残し、次の区間の乗車駅は捨てる)
+ * 1 度だけ持ち、次の区間の乗車駅として残す。前の区間の降車駅として残すと、最後の区間の
+ * 路線が行き先の 1 駅だけになり、useConnectedLines が直通先から外してしまう
  * @param legStations 区間ごとの駅(進行順)
  * @returns 経路全体の駅(進行順)
  */
 export const concatLegStations = (legStations: Station[][]): Station[] => {
   const result: Station[] = [];
   for (const stations of legStations) {
-    const skipFirst =
-      !!stations[0] && result.at(-1)?.groupId === stations[0].groupId;
-    result.push(...(skipFirst ? stations.slice(1) : stations));
+    if (stations[0] && result.at(-1)?.groupId === stations[0].groupId) {
+      result.pop();
+    }
+    result.push(...stations);
   }
   return result;
 };

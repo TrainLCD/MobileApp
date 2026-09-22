@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
+import { concatLegStations } from '~/utils/routeSearch';
 import {
   createCompany,
   createLine,
@@ -290,5 +291,34 @@ describe('useConnectedLines', () => {
     const lines = JSON.parse(getByTestId('lines').props.children as string);
 
     expect(lines.map((l: Line) => l.id)).toEqual([2, 3, 4, 5]);
+  });
+  // 経路検索の乗換経路は区間の駅をつないで直通運転と同じ駅リストにする。
+  // 乗換駅を前の区間の駅として残すと最後の区間の路線が行き先の 1 駅だけになり、
+  // 直通先から外れてヘッダーに「〜線直通」が出なくなる
+  it('乗換経路をつないだ駅リストでは最後の区間の路線を直通先として返す', () => {
+    const oedo = createLine(99301, { nameShort: '都営大江戸線' });
+    const saikyo = createLine(11321, { nameShort: '埼京線' });
+    const onOedo = { line: { id: oedo.id, nameShort: oedo.nameShort } };
+    const onSaikyo = { line: { id: saikyo.id, nameShort: saikyo.nameShort } };
+    const shibuya = createStation(1132103, { groupId: 1130205, ...onSaikyo });
+
+    stationAtomValue = {
+      selectedBound: shibuya,
+      selectedDirection: 'INBOUND',
+      stations: concatLegStations([
+        [
+          createStation(9930138, { groupId: 9930138, ...onOedo }),
+          createStation(9930135, { groupId: 2200106, ...onOedo }),
+          createStation(9930128, { groupId: 1130208, ...onOedo }),
+        ],
+        [createStation(1132104, { groupId: 1130208, ...onSaikyo }), shibuya],
+      ]),
+    };
+    currentLineValue = oedo;
+
+    const { getByTestId } = render(<TestComponent />);
+    const lines = JSON.parse(getByTestId('lines').props.children as string);
+
+    expect(lines.map((l: Line) => l.id)).toEqual([saikyo.id]);
   });
 });
