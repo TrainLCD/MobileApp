@@ -66,7 +66,7 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 
 ## Tooling & Commands
 
-- Node.js 24.x and npm 11.x, matching `.nvmrc`. Keep `.github/workflows/` on the same major, or `npm ci` can fail on a runner with an older npm.
+- Node.js 24.x (`.nvmrc`) and npm 11 or later (`engines` in `package.json`). Keep `node-version` in `.github/workflows/` on the same Node major, or `npm ci` can fail on a runner with an older npm.
 - Run `npm install` when dependencies change; do not re-lock packages unless asked.
 - `npm run start` (Expo Dev Client), `npm run android` / `npm run ios` (native builds), `npm run web`.
 - `npm run lint` (Biome), `npm run format`, `npm test` (Jest in UTC; `-- --updateSnapshot` for intentional snapshot changes), `npm run typecheck`.
@@ -120,6 +120,6 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 
 ## Security & Incidents
 
-- Secrets go in `.env.local` (template: `.env.example`). Never commit credentials, tokens, or production endpoints. Protect Expo credentials with 2FA.
+- Secrets and endpoints go in `.env.local` (template: `.env.example`); code reads API URLs from environment variables (`src/lib/gql.ts`). Never commit credentials, tokens, or endpoint URLs to code or config. Naming the public API hosts in docs, as in the Repository Map, is fine. Protect Expo credentials with 2FA.
 - After dependency upgrades or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, `npm run typecheck`, and record the results in `docs/changelog.md`.
 - Open an issue with reproduction steps for regressions or flaky tests. After incidents or hot fixes, append learnings to `docs/changelog.md`.
