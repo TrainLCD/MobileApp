@@ -220,22 +220,20 @@ export const pickLegStationsByGroupIds = (
 };
 
 /**
- * 区間ごとの駅をつないで 1 本の駅リストにする。直通運転の系統と同じく、路線が変わる駅は
- * 1 度だけ持ち、次の区間の乗車駅として残す。前の区間の降車駅として残すと、最後の区間の
- * 路線が行き先の 1 駅だけになり、useConnectedLines が直通先から外してしまう
+ * 区間ごとの駅をつないで 1 本の駅リストにする。乗換駅は前の区間の降車駅と次の区間の
+ * 乗車駅の両方を残す(同じ駅 id なら 1 回だけ)。直通運転の系統でも路線が変わる駅は両方の路線の駅として 2 回並び、
+ * Main 画面の各処理(dropEitherJunctionStation・種別変更の案内・直通先の表示など)は
+ * その並びを前提にしているため
  * @param legStations 区間ごとの駅(進行順)
  * @returns 経路全体の駅(進行順)
  */
 export const concatLegStations = (legStations: Station[][]): Station[] => {
   const result: Station[] = [];
   for (const stations of legStations) {
-    const previous = result.at(-1);
-    const next = stations[0];
-    // groupId が null の駅どうしは同じ乗換駅とみなさない
-    if (next?.groupId != null && previous?.groupId === next.groupId) {
-      result.pop();
-    }
-    result.push(...stations);
+    // 同じ路線の上で種別だけを乗り換えるときは乗換駅の前後が同じ駅なので 1 回だけ持つ
+    const skipFirst =
+      stations[0]?.id != null && result.at(-1)?.id === stations[0].id;
+    result.push(...(skipFirst ? stations.slice(1) : stations));
   }
   return result;
 };

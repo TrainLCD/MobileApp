@@ -157,10 +157,12 @@ describe('useDestinationSelection', () => {
     });
 
     expect(fetchLineGroupStations).toHaveBeenCalledTimes(2);
-    // 大江戸線は格納順の逆向きに切り出し、乗換駅(新宿)は埼京線の駅として 1 度だけ持つ
+    // 大江戸線は格納順の逆向きに切り出し、乗換駅(新宿)は直通運転の系統と同じく
+    // 大江戸線と埼京線の駅として 2 回並べる
     expect(store.get(pendingStationsAtom).map((s) => s.id)).toEqual([
       hikarigaoka.id,
       nerima.id,
+      shinjukuOedo.id,
       shinjukuSaikyo.id,
       shibuya.id,
     ]);
@@ -193,6 +195,7 @@ describe('useDestinationSelection', () => {
 
     expect(store.get(pendingStationsAtom).map((s) => s.id)).toEqual([
       hikarigaoka.id,
+      shinjukuOedo.id,
       shinjukuSaikyo.id,
       shibuya.id,
     ]);

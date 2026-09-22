@@ -7,7 +7,7 @@ type LineGroupRange = { groupId: number | null; start: number; end: number };
  * 通過駅(trainType が null)は直前の範囲に含める。
  *
  * 経路検索の乗換経路は、区間ごとの系統の駅をつないで 1 本の駅リストにしている
- * (乗換駅は次の区間の乗車駅として 1 度だけ持つ)。1 系統だけの駅リスト
+ * (乗換駅は前後の区間の路線の駅として 2 回並ぶ)。1 系統だけの駅リスト
  * (直通運転を含む従来の乗車)は範囲が 1 つになる。
  */
 const getLineGroupRanges = (stations: Station[]): LineGroupRange[] => {
@@ -49,7 +49,7 @@ export type RouteLegInput = {
 /**
  * 乗換経路をつないだ駅リストから、estimateArrivalTimes / trainRoute の legs を組み立てる。
  *
- * 駅リストは乗換駅を次の区間の乗車駅として持つので、前の区間の降車駅にもその乗換駅を
+ * 乗換駅は前の区間の降車駅と次の区間の乗車駅として 2 回並ぶので、それぞれの路線の駅を
  * 渡す。系統に無い乗降駅は API が同じ駅グループの駅で引き当てる(StationAPI#1687)。
  * 末尾から先頭へ進むとき(オートモードが終点で折り返したときなど)は、先頭から進むときの
  * 区間を逆順にし、乗車駅と降車駅を入れ替える
@@ -68,7 +68,16 @@ export const buildRouteLegInputs = (
   for (const [index, range] of ranges.entries()) {
     const next = ranges[index + 1];
     const fromStationId = stations[range.start]?.id;
-    const toStationId = stations[next ? next.start : range.end]?.id;
+    // 乗換駅は前の区間の路線の駅(範囲の末尾)と次の区間の路線の駅(次の範囲の先頭)の
+    // 2 回並ぶので、前の区間の降車駅には範囲の末尾を渡す。1 回しか無い駅リストでは
+    // 次の範囲の先頭を渡し、系統に無い駅は API が同じ駅グループの駅で引き当てる
+    const lastStation = stations[range.end];
+    const toStationId =
+      next &&
+      lastStation?.groupId != null &&
+      lastStation.groupId !== stations[next.start]?.groupId
+        ? stations[next.start]?.id
+        : lastStation?.id;
     if (range.groupId == null || fromStationId == null || toStationId == null) {
       return null;
     }
@@ -88,7 +97,8 @@ export const buildRouteLegInputs = (
  *
  * API は区間ごとの駅をそのまま連結して返すので、乗換駅は前の区間の降車駅と次の区間の
  * 乗車駅の 2 回現れる。系統の中で路線が変わる駅(東海道・山陽新幹線の新大阪など)も
- * 2 回現れることがある。駅リストはどちらも 1 度だけ持つので、segments を駅グループで
+ * 2 回現れることがある。シミュレーションが使う駅リスト(dropEitherJunctionStation で
+ * 接続駅を 1 つにまとめたもの)はどちらも 1 度だけ持つので、segments を駅グループで
  * 駅リストと突き合わせ、同じ駅グループが続く分は最初の 1 つ(その駅に着くまでの分)だけを残す。
  * 件数の推定で揃えると、区間の切り出し方が API とずれたときに位置がずれる
  * @param segments trainRoute の segments(進行順の区間ごとに連結されたもの)

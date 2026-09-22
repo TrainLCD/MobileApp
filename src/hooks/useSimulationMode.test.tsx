@@ -1003,6 +1003,8 @@ describe('useSimulationMode', () => {
       const stations = [
         withTrainType(mockStation(9930138, 9930138, 35.76, 139.63, OEDO), 7),
         withTrainType(mockStation(9930100, 1130225, 35.69, 139.69, OEDO), 7),
+        // 乗換駅の新宿は大江戸線と埼京線の駅として 2 回並ぶ
+        withTrainType(mockStation(9930128, 1130208, 35.69, 139.7, OEDO), 7),
         withTrainType(mockStation(1132104, 1130208, 35.69, 139.7, SAIKYO), 170),
         withTrainType(
           mockStation(1132103, 1130205, 35.658, 139.701, SAIKYO),
@@ -1026,7 +1028,7 @@ describe('useSimulationMode', () => {
             fromStationId: 9930138,
             toStationId: 1132103,
             legs: [
-              { lineGroupId: 7, fromStationId: 9930138, toStationId: 1132104 },
+              { lineGroupId: 7, fromStationId: 9930138, toStationId: 9930128 },
               {
                 lineGroupId: 170,
                 fromStationId: 1132104,
@@ -1050,10 +1052,12 @@ describe('useSimulationMode', () => {
         ...station,
         trainType: { groupId } as Station['trainType'],
       });
-      // 光が丘・都庁前(大江戸線) → 新宿・渋谷(埼京線)。乗換駅の新宿は後の区間の駅として持つ
+      // 光が丘・都庁前・新宿(大江戸線) → 新宿・渋谷(埼京線)。乗換駅の新宿は直通運転の
+      // 系統と同じく両方の路線の駅として 2 回並ぶ
       const joinedStations = () => [
         withTrainType(mockStation(9930138, 9930138, 35.76, 139.63, OEDO), 7),
         withTrainType(mockStation(9930100, 1130225, 35.69, 139.69, OEDO), 7),
+        withTrainType(mockStation(9930128, 1130208, 35.69, 139.7, OEDO), 7),
         withTrainType(mockStation(1132104, 1130208, 35.69, 139.7, SAIKYO), 170),
         withTrainType(
           mockStation(1132103, 1130205, 35.658, 139.701, SAIKYO),
@@ -1149,7 +1153,7 @@ describe('useSimulationMode', () => {
       it('末尾から進むときは区間を逆順にして trainRoute を引く', () => {
         const stations = joinedStations();
         setupAtomMocks(
-          { station: stations[3], stations, selectedDirection: 'OUTBOUND' },
+          { station: stations[4], stations, selectedDirection: 'OUTBOUND' },
           { autoModeEnabled: true }
         );
 
@@ -1171,7 +1175,7 @@ describe('useSimulationMode', () => {
                 },
                 {
                   lineGroupId: 7,
-                  fromStationId: 1132104,
+                  fromStationId: 9930128,
                   toStationId: 9930138,
                 },
               ],

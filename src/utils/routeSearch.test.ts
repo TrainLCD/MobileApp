@@ -330,34 +330,31 @@ describe('乗換経路', () => {
   });
 
   describe('concatLegStations', () => {
-    // 乗換駅を前の区間の駅として残すと最後の区間の路線が行き先の 1 駅だけになり、
-    // useConnectedLines が直通先から外してヘッダーに「〜線直通」が出なくなる
-    it('groupId が null の駅どうしは同じ乗換駅とみなさない', () => {
-      const unknownA = {
-        ...nerima,
-        id: 1,
-        groupId: null,
-      } as unknown as Station;
-      const unknownB = {
-        ...shibuya,
-        id: 2,
-        groupId: null,
-      } as unknown as Station;
+    it('同じ路線の上で種別だけを乗り換えるときは、同じ駅を 1 回だけ持つ', () => {
       expect(
         concatLegStations([
-          [hikarigaoka, unknownA],
-          [unknownB, shibuya],
+          [hikarigaoka, nerima],
+          [nerima, shinjukuOedo],
         ]).map((s) => s.id)
-      ).toEqual([hikarigaoka.id, 1, 2, shibuya.id]);
+      ).toEqual([hikarigaoka.id, nerima.id, shinjukuOedo.id]);
     });
 
-    it('乗換駅は次の区間の乗車駅だけを残して 1 本につなぐ', () => {
+    // 直通運転の系統でも路線が変わる駅は両方の路線の駅として 2 回並び、Main 画面の処理は
+    // その並びを前提にしている。前の区間の駅を落とすと種別変更の案内が 1 つ手前の停車駅を
+    // 「〜から」の駅にし、次の区間の駅を落とすと最後の区間の直通表示が消える
+    it('乗換駅は前の区間の降車駅と次の区間の乗車駅の両方を残す', () => {
       expect(
         concatLegStations([
           [hikarigaoka, nerima, shinjukuOedo],
           [shinjukuSaikyo, shibuya],
         ]).map((s) => s.id)
-      ).toEqual([hikarigaoka.id, nerima.id, shinjukuSaikyo.id, shibuya.id]);
+      ).toEqual([
+        hikarigaoka.id,
+        nerima.id,
+        shinjukuOedo.id,
+        shinjukuSaikyo.id,
+        shibuya.id,
+      ]);
     });
   });
 

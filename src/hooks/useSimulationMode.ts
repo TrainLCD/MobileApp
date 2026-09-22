@@ -99,14 +99,16 @@ export const useSimulationMode = (): void => {
 
   // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになっている。1 系統を前提に
   // した trainRoute では引けないので区間(legs)を渡す。終点で折り返した後(OUTBOUND)も
-  // 同じ区間を逆順にして渡す(乗換経路は useLoopLine が環状線として扱わない)
+  // 同じ区間を逆順にして渡す(乗換経路は useLoopLine が環状線として扱わない)。
+  // 乗換駅は前後の路線の駅として 2 回並んでおり、dropEitherJunctionStation で片方を
+  // 落とした駅リストでは区間の境目を取れないので、落とす前の駅リストから組み立てる
   const isReversed = selectedDirection === 'OUTBOUND';
   const routeLegs = useMemo(
     () =>
       selectedDirection && !isLoopLine
-        ? buildRouteLegInputs(stations, isReversed)
+        ? buildRouteLegInputs(rawStations, isReversed)
         : null,
-    [stations, selectedDirection, isReversed, isLoopLine]
+    [rawStations, selectedDirection, isReversed, isLoopLine]
   );
   const canFetchTrainRoute =
     enabled &&

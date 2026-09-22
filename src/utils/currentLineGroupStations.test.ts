@@ -65,7 +65,37 @@ describe('乗換経路の区間指定', () => {
   const joined = [hikarigaoka, tochomae, shinjuku, shibuya];
 
   describe('buildRouteLegInputs', () => {
-    // 前の区間の系統に無い乗換駅は、API が同じ駅グループの駅で引き当てる
+    it('乗換駅が前後の路線の駅として 2 回並ぶときは、それぞれの路線の駅を渡す', () => {
+      // 新宿は大江戸線の駅と埼京線の駅の 2 回並ぶ(駅グループは同じ)
+      const shinjukuOedo = {
+        id: 9930128,
+        groupId: 1130208,
+        line: { id: OEDO },
+        trainType: { groupId: 1000099301 },
+      } as unknown as Station;
+      const shinjukuSaikyo = {
+        ...shinjuku,
+        groupId: 1130208,
+      } as unknown as Station;
+      expect(
+        buildRouteLegInputs([
+          hikarigaoka,
+          tochomae,
+          shinjukuOedo,
+          shinjukuSaikyo,
+          shibuya,
+        ])
+      ).toEqual([
+        {
+          lineGroupId: 1000099301,
+          fromStationId: 9930138,
+          toStationId: 9930128,
+        },
+        { lineGroupId: 170, fromStationId: 1132104, toStationId: 1132103 },
+      ]);
+    });
+
+    // 乗換駅が 1 回しか無いときは次の区間の駅を渡し、API が同じ駅グループの駅で引き当てる
     it('区間ごとの系統と乗降駅を並べ、前の区間の降車駅には乗換駅を渡す', () => {
       expect(buildRouteLegInputs(joined)).toEqual([
         {
