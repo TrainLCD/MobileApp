@@ -9,7 +9,9 @@ import {
   GET_LINE_STATIONS,
 } from '~/lib/graphql/queries';
 import lineState, { pendingLineAtom } from '~/store/atoms/line';
-import navigationState from '~/store/atoms/navigation';
+import navigationState, {
+  pendingTrainTypeAtom,
+} from '~/store/atoms/navigation';
 import stationState, {
   stationAtom,
   wantedDestinationAtom,
@@ -18,6 +20,7 @@ import {
   type ConnectedRouteTrainTypes,
   collectFirstLegTrainTypes,
   computeCurrentStationInRoutes,
+  findFirstLegToStation,
   getStationWithMatchingLine,
 } from '~/utils/routeSearch';
 import { findLocalType } from '~/utils/trainTypeString';
@@ -61,6 +64,8 @@ export type UseDestinationSelectionResult = {
   wantedDestination: Station | null;
   /** TrainTypeListModal に渡す現在駅の路線 */
   trainTypeModalLine: Line | null;
+  /** SelectBoundModal で方面を片方向に絞る基準駅(選択中の種別で乗る区間の降車駅) */
+  boundDirectionStation: Pick<Station, 'id' | 'groupId'> | null;
   /** 経路取得中フラグ(カードのサブタイトルスケルトン・空状態のローディングに使う) */
   fetchConnectedRoutesLoading: boolean;
   /** SelectBoundModal / TrainTypeListModal に渡すローディング集約 */
@@ -86,6 +91,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
   const station = useAtomValue(stationAtom);
   const wantedDestination = useAtomValue(wantedDestinationAtom);
   const pendingLine = useAtomValue(pendingLineAtom);
+  const pendingTrainType = useAtomValue(pendingTrainTypeAtom);
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
@@ -316,6 +322,17 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     [station, pendingLine, firstLegTrainTypes]
   );
 
+  // 乗換経路では行き先が最初の区間の駅リストに含まれないため、
+  // 行き先の代わりに選択中の種別で乗る区間の降車駅へ向かう方面に絞る
+  const boundDirectionStation = useMemo(
+    () =>
+      findFirstLegToStation(
+        connectedRoutesData?.connectedRoutes ?? [],
+        pendingTrainType?.groupId
+      ),
+    [connectedRoutesData?.connectedRoutes, pendingTrainType?.groupId]
+  );
+
   const trainTypeModalLine = useMemo(() => {
     const currentLine = currentStationInRoutes?.line;
     const currentStationLines = station?.lines ?? [];
@@ -368,6 +385,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     selectedDestination,
     wantedDestination,
     trainTypeModalLine,
+    boundDirectionStation,
     fetchConnectedRoutesLoading,
     modalLoading,
     modalError,

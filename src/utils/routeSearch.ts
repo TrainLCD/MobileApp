@@ -50,9 +50,15 @@ export const computeCurrentStationInRoutes = (
   return { ...station, line: pendingLine } as Station;
 };
 
-/** connectedRoutes の経路のうち、列車種別の選択に使う部分 */
+/** connectedRoutes の経路のうち、列車種別と方面の選択に使う部分 */
 export type ConnectedRouteTrainTypes = {
-  legs: { trainTypes: TrainType[] | null | undefined }[] | null | undefined;
+  legs:
+    | {
+        trainTypes: TrainType[] | null | undefined;
+        toStation?: Pick<Station, 'id' | 'groupId'> | null;
+      }[]
+    | null
+    | undefined;
 };
 
 /**
@@ -79,6 +85,32 @@ export const collectFirstLegTrainTypes = (
   }
 
   return trainTypes;
+};
+
+/**
+ * 列車種別で乗る最初の区間の降車駅を返す。乗換経路なら乗換駅、直通経路なら行き先になる。
+ * 複数の経路の最初の区間に同じ種別がある場合は、先に現れた経路(API の順位が高いもの)を使う
+ * @param routes connectedRoutes の結果(API の順位順)
+ * @param trainTypeGroupId 選択中の列車種別の groupId
+ * @returns 最初の区間の降車駅。該当する区間が無ければ null
+ */
+export const findFirstLegToStation = (
+  routes: ConnectedRouteTrainTypes[],
+  trainTypeGroupId: number | null | undefined
+): Pick<Station, 'id' | 'groupId'> | null => {
+  if (trainTypeGroupId == null) return null;
+
+  for (const route of routes) {
+    const firstLeg = route.legs?.[0];
+    if (
+      firstLeg?.toStation &&
+      firstLeg.trainTypes?.some((tt) => tt.groupId === trainTypeGroupId)
+    ) {
+      return firstLeg.toStation;
+    }
+  }
+
+  return null;
 };
 
 /**

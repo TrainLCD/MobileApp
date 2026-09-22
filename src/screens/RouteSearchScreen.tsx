@@ -127,6 +127,7 @@ const RouteSearchScreen = () => {
     selectedDestination,
     wantedDestination,
     trainTypeModalLine,
+    boundDirectionStation,
     fetchConnectedRoutesLoading,
     modalLoading,
     modalError,
@@ -455,6 +456,7 @@ const RouteSearchScreen = () => {
         error={modalError}
         onTrainTypeSelect={handleTrainTypeSelected}
         targetDestination={selectedDestination}
+        boundDirectionStation={boundDirectionStation}
       />
       <TrainTypeListModal
         visible={trainTypeListModalVisible}

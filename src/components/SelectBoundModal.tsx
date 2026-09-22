@@ -145,6 +145,11 @@ type Props = {
   onBoundSelect: () => void;
   /** 方面選択を片方向のみに絞るための目的地（終点としては扱わない） */
   targetDestination?: Station | null;
+  /**
+   * 方面を絞る基準駅。乗換経路では targetDestination が駅リストに無いため、
+   * 最初の区間の降車駅を渡してその方面に絞る。未指定なら targetDestination を使う
+   */
+  boundDirectionStation?: Pick<Station, 'id' | 'groupId'> | null;
 };
 
 export const SelectBoundModal: React.FC<Props> = ({
@@ -156,7 +161,9 @@ export const SelectBoundModal: React.FC<Props> = ({
   onTrainTypeSelect,
   onBoundSelect,
   targetDestination,
+  boundDirectionStation,
 }) => {
+  const directionTarget = boundDirectionStation ?? targetDestination ?? null;
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
   const [routeInfoModalVisible, setRouteInfoModalVisible] = useState(false);
@@ -479,13 +486,13 @@ export const SelectBoundModal: React.FC<Props> = ({
         return <></>;
       }
 
-      // targetDestination が設定されている場合、その方向のボタンのみ表示（終点としては扱わない）
-      if (targetDestination && !isLoopLine && !applicableWantedDestination) {
+      // directionTarget が設定されている場合、その方向のボタンのみ表示（終点としては扱わない）
+      if (directionTarget && !isLoopLine && !applicableWantedDestination) {
         const currentStationIndex = stations.findIndex(
           (s) => s.groupId === effectiveStation?.groupId
         );
         const targetStationIndex = stations.findIndex(
-          (s) => s.groupId === targetDestination.groupId
+          (s) => s.groupId === directionTarget.groupId
         );
 
         if (
@@ -641,7 +648,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       effectiveStation?.groupId,
       stations,
       applicableWantedDestination,
-      targetDestination,
+      directionTarget,
       line,
       loopLineDirectionText,
       normalLineDirectionText,
@@ -655,7 +662,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   // 行き先で経路を絞っているときは方向ごとに1枚だけ描画する既存ロジックに従う。
   // 絞り込みがない通常時のみ、乗車位置別のカード候補(大江戸線都庁前で3方向になる)を使う。
   const renderableBoundCards = useMemo<BoundCandidate[]>(() => {
-    if (applicableWantedDestination || targetDestination) {
+    if (applicableWantedDestination || directionTarget) {
       return (
         [
           { direction: 'INBOUND', stops: inboundStations },
@@ -673,7 +680,7 @@ export const SelectBoundModal: React.FC<Props> = ({
     return boundCandidates;
   }, [
     applicableWantedDestination,
-    targetDestination,
+    directionTarget,
     inboundStations,
     outboundStations,
     boundCandidates,

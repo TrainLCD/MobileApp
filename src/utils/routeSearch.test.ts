@@ -4,6 +4,7 @@ import { createStation } from '~/utils/test/factories';
 import {
   collectFirstLegTrainTypes,
   computeCurrentStationInRoutes,
+  findFirstLegToStation,
   getSearchResultHeadingText,
   getStationWithMatchingLine,
 } from './routeSearch';
@@ -99,6 +100,67 @@ describe('collectFirstLegTrainTypes', () => {
         { legs: [{ trainTypes: null }] },
       ])
     ).toEqual([]);
+  });
+});
+
+describe('findFirstLegToStation', () => {
+  const chuoLine = createMockLine(1, '中央線');
+  const saikyoLine = createMockLine(2, '埼京線');
+  const local = createMockTrainType(10, '各駅停車', chuoLine);
+  const rapid = createMockTrainType(11, '快速', chuoLine);
+  const saikyoLocal = createMockTrainType(20, '各駅停車', saikyoLine);
+  const shinjuku = { id: 1130208, groupId: 1130208 };
+  const yotsuya = { id: 1130210, groupId: 1130210 };
+  const shibuya = { id: 1130205, groupId: 1130205 };
+
+  it('乗換経路では選択中の種別で乗る区間の乗換駅を返す', () => {
+    expect(
+      findFirstLegToStation(
+        [
+          {
+            legs: [
+              { trainTypes: [rapid], toStation: shinjuku },
+              { trainTypes: [saikyoLocal], toStation: shibuya },
+            ],
+          },
+        ],
+        rapid.groupId
+      )
+    ).toEqual(shinjuku);
+  });
+
+  it('直通経路では行き先を返す', () => {
+    expect(
+      findFirstLegToStation(
+        [{ legs: [{ trainTypes: [local], toStation: shibuya }] }],
+        local.groupId
+      )
+    ).toEqual(shibuya);
+  });
+
+  it('同じ種別が複数の経路にあれば先に現れた経路の降車駅を返す', () => {
+    expect(
+      findFirstLegToStation(
+        [
+          { legs: [{ trainTypes: [rapid], toStation: shinjuku }] },
+          { legs: [{ trainTypes: [rapid], toStation: yotsuya }] },
+        ],
+        rapid.groupId
+      )
+    ).toEqual(shinjuku);
+  });
+
+  it('2区間目以降にしか無い種別や未選択の場合は null を返す', () => {
+    const routes = [
+      {
+        legs: [
+          { trainTypes: [rapid], toStation: shinjuku },
+          { trainTypes: [saikyoLocal], toStation: shibuya },
+        ],
+      },
+    ];
+    expect(findFirstLegToStation(routes, saikyoLocal.groupId)).toBeNull();
+    expect(findFirstLegToStation(routes, null)).toBeNull();
   });
 });
 

@@ -463,6 +463,80 @@ describe('SelectBoundModal', () => {
     });
   });
 
+  describe('乗換経路の方面の絞り込み', () => {
+    const line = { id: 11312, name: '中央線' };
+    const buildStation = (id: number, name: string) => ({
+      id,
+      groupId: id,
+      name,
+      nameRoman: name,
+      line,
+      lines: [line],
+    });
+    const mitaka = buildStation(1131201, '三鷹');
+    const nakano = buildStation(1131205, '中野');
+    const shinjuku = buildStation(1131208, '新宿');
+    const tokyo = buildStation(1131211, '東京');
+    // 乗換先の路線の駅なので中央線の駅リストには含まれない
+    const shibuya = { id: 1130205, groupId: 1130205, name: '渋谷' };
+
+    const setup = (
+      boundDirectionStation?: { id: number; groupId: number } | null
+    ) => {
+      mockAtomValues({
+        station: nakano,
+        pendingStation: nakano,
+        pendingStations: [mitaka, nakano, shinjuku, tokyo],
+        pendingLine: line,
+        selectedLine: line,
+      });
+      (useBounds as jest.Mock).mockReturnValue({
+        bounds: [[tokyo], [mitaka]],
+        boundCandidates: [
+          {
+            key: 'INBOUND',
+            direction: 'INBOUND',
+            boardingStation: null,
+            stops: [tokyo],
+          },
+          {
+            key: 'OUTBOUND',
+            direction: 'OUTBOUND',
+            boardingStation: null,
+            stops: [mitaka],
+          },
+        ],
+      });
+
+      return render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+          targetDestination={shibuya as never}
+          boundDirectionStation={boundDirectionStation}
+        />
+      );
+    };
+
+    it('乗換駅へ向かう方面のカードだけを描画する', () => {
+      const screen = setup({ id: shinjuku.id, groupId: shinjuku.groupId });
+
+      expect(screen.getByText('東京方面')).toBeTruthy();
+      expect(screen.queryByText('三鷹方面')).toBeNull();
+    });
+
+    it('基準駅が無く行き先も駅リストに無い場合は両方面を描画する', () => {
+      const screen = setup(null);
+
+      expect(screen.getByText('東京方面')).toBeTruthy();
+      expect(screen.getByText('三鷹方面')).toBeTruthy();
+    });
+  });
+
   describe('始発・終着を保存するかの選択', () => {
     const routeStations = [1, 2, 3, 4].map((groupId) => ({
       id: groupId,

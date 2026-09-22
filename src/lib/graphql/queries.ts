@@ -440,7 +440,7 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
 `;
 
 // Query for getting routes that reach the destination, possibly with transfers.
-// Only the train types of each leg are requested.
+// Only the train types and the alighting station of each leg are requested.
 export const GET_CONNECTED_ROUTES = gql`
   ${TRAIN_TYPE_ROUTE_FRAGMENT}
   query GetConnectedRoutes(
@@ -456,6 +456,10 @@ export const GET_CONNECTED_ROUTES = gql`
       legs {
         trainTypes {
           ...TrainTypeRouteFields
+        }
+        toStation {
+          id
+          groupId
         }
       }
     }
