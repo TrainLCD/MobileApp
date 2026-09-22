@@ -30,6 +30,7 @@ import type {
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
+import { journeyAtom, pendingJourneyAtom } from '~/store/atoms/journey';
 import notifyState from '~/store/atoms/notify';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
@@ -41,6 +42,7 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { resolvePresetSaveRoute } from '~/utils/presetRouteEndpoints';
+import { buildRouteListItem, type ConnectedRoute } from '~/utils/routeSearch';
 import { showToast } from '~/utils/toast';
 import Button from '../components/Button';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -62,6 +64,7 @@ import stationState, {
 import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { RouteInfoModal } from './RouteInfoModal';
+import { RouteListModal } from './RouteListModal';
 import { SavePresetNameModal } from './SavePresetNameModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { TrainTypeListModal } from './TrainTypeListModal';
@@ -149,7 +152,12 @@ type Props = {
    * 方面を絞る基準駅。乗換経路では targetDestination が駅リストに無いため、
    * 最初の区間の降車駅を渡してその方面に絞る。未指定なら targetDestination を使う
    */
-  boundDirectionStation?: Pick<Station, 'id' | 'groupId'> | null;
+  boundDirectionStation?: Station | null;
+  /** 経路検索で得た乗車に使える経路。2 件以上あれば設定から選び直せる */
+  routes?: ConnectedRoute[];
+  /** 選択中の経路の添字 */
+  selectedRouteIndex?: number;
+  onRouteSelect?: (index: number) => void;
 };
 
 export const SelectBoundModal: React.FC<Props> = ({
@@ -162,10 +170,14 @@ export const SelectBoundModal: React.FC<Props> = ({
   onBoundSelect,
   targetDestination,
   boundDirectionStation,
+  routes,
+  selectedRouteIndex = 0,
+  onRouteSelect,
 }) => {
   const directionTarget = boundDirectionStation ?? targetDestination ?? null;
   const [savedRoute, setSavedRoute] = useState<SavedRoute | null>(null);
   const [isTrainTypeModalVisible, setIsTrainTypeModalVisible] = useState(false);
+  const [isRouteListModalVisible, setIsRouteListModalVisible] = useState(false);
   const [routeInfoModalVisible, setRouteInfoModalVisible] = useState(false);
   const [
     selectBoundSettingListModalVisible,
@@ -176,6 +188,7 @@ export const SelectBoundModal: React.FC<Props> = ({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const isTransitioningRef = useRef(false);
   const pendingTrainTypeModalRef = useRef(false);
+  const pendingRouteListModalRef = useRef(false);
 
   const navigation = useNavigation();
   const confirmedStation = useAtomValue(stationAtom);
@@ -187,6 +200,8 @@ export const SelectBoundModal: React.FC<Props> = ({
   const fetchedTrainTypes = useAtomValue(fetchedTrainTypesAtom);
   const pendingTrainType = useAtomValue(pendingTrainTypeAtom);
   const setNavigationState = useSetAtom(navigationState);
+  const pendingJourney = useAtomValue(pendingJourneyAtom);
+  const setJourney = useSetAtom(journeyAtom);
   const line = useAtomValue(pendingLineAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const setLineState = useSetAtom(lineState);
@@ -248,6 +263,26 @@ export const SelectBoundModal: React.FC<Props> = ({
         : null,
     [wantedDestination, stations]
   );
+
+  // 乗換経路では探している駅が最初の区間の駅リストに無い。方面を乗換駅の側へ絞れたときは、
+  // カードに探している駅を出す(ループ線は方面を絞らないので対象外)
+  const transferDestination = useMemo(
+    () =>
+      targetDestination &&
+      boundDirectionStation &&
+      !isLoopLine &&
+      !stations.some((s) => s.groupId === targetDestination.groupId) &&
+      stations.some((s) => s.groupId === boundDirectionStation.groupId)
+        ? targetDestination
+        : null,
+    [targetDestination, boundDirectionStation, isLoopLine, stations]
+  );
+
+  const canSelectRoute = !!onRouteSelect && (routes?.length ?? 0) > 1;
+  const selectedRoute = routes?.[selectedRouteIndex];
+  const selectedRouteName = selectedRoute
+    ? buildRouteListItem(selectedRoute, isJapanese).title
+    : undefined;
 
   // 終点を明示指定した場合の始発駅はユーザーに選ばせず、経路内の最寄駅から自動で決める。
   // effectiveStation は区間外なら stations[0] へ倒れてしまい実際の現在地を表さないので、
@@ -371,10 +406,15 @@ export const SelectBoundModal: React.FC<Props> = ({
         leftStations: [],
         trainType: pendingTrainType,
       }));
+      // 乗換のある経路なら区間の並びを乗車中の経路にする。それ以外の方面選択
+      // (路線選択・乗換パネルからの路線変更など)では前の経路を残さない
+      setJourney(pendingJourney || null);
       navigateToMain();
       onBoundSelect();
     },
     [
+      pendingJourney,
+      setJourney,
       navigateToMain,
       effectiveStation,
       nearestPresetStation,
@@ -622,6 +662,25 @@ export const SelectBoundModal: React.FC<Props> = ({
           boardingStation
         );
 
+      if (transferDestination?.line) {
+        return (
+          <CommonCard
+            onPress={boundSelectOnPress}
+            disabled={isTransitioning}
+            loading={isTransitioning}
+            line={transferDestination.line}
+            title={
+              isJapanese
+                ? `${transferDestination.name}方面`
+                : `for ${transferDestination.nameRoman ?? ''}`
+            }
+            shrinkBoundAffix
+            subtitle={buildSubtitle(transferDestination.line) ?? ''}
+            targetStation={transferDestination}
+          />
+        );
+      }
+
       const title = isLoopLine
         ? loopLineDirectionText(direction)
         : normalLineDirectionText(boundStations);
@@ -649,6 +708,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       stations,
       applicableWantedDestination,
       directionTarget,
+      transferDestination,
       line,
       loopLineDirectionText,
       normalLineDirectionText,
@@ -984,19 +1044,25 @@ export const SelectBoundModal: React.FC<Props> = ({
                   : translate('viewStopStations')}
               </Button>
 
-              <Button
-                outline
-                style={savedRoute ? styles.redOutlinedButton : null}
-                textStyle={savedRoute ? styles.redOutlinedButtonText : null}
-                onPress={handleSaveRoutePress}
-                disabled={
-                  !line || !isRoutesDBInitialized || loading || isTransitioning
-                }
-              >
-                {translate(
-                  !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
-                )}
-              </Button>
+              {/* 乗換のある経路は今のプリセットの形式に保存できないため出さない */}
+              {pendingJourney ? null : (
+                <Button
+                  outline
+                  style={savedRoute ? styles.redOutlinedButton : null}
+                  textStyle={savedRoute ? styles.redOutlinedButtonText : null}
+                  onPress={handleSaveRoutePress}
+                  disabled={
+                    !line ||
+                    !isRoutesDBInitialized ||
+                    loading ||
+                    isTransitioning
+                  }
+                >
+                  {translate(
+                    !savedRoute ? 'saveCurrentRoute' : 'removeFromSavedRoutes'
+                  )}
+                </Button>
+              )}
               <Button
                 outline
                 onPress={() => setSelectBoundSettingListModalVisible(true)}
@@ -1073,10 +1139,23 @@ export const SelectBoundModal: React.FC<Props> = ({
           pendingTrainTypeModalRef.current = true;
           setSelectBoundSettingListModalVisible(false);
         }}
+        routeName={selectedRouteName}
+        onRoutePress={
+          canSelectRoute
+            ? () => {
+                pendingRouteListModalRef.current = true;
+                setSelectBoundSettingListModalVisible(false);
+              }
+            : undefined
+        }
         onCloseAnimationEnd={() => {
           if (pendingTrainTypeModalRef.current) {
             pendingTrainTypeModalRef.current = false;
             setIsTrainTypeModalVisible(true);
+          }
+          if (pendingRouteListModalRef.current) {
+            pendingRouteListModalRef.current = false;
+            setIsRouteListModalVisible(true);
           }
         }}
         trainTypeDisabled={fetchedTrainTypes.length <= 1}
@@ -1085,7 +1164,11 @@ export const SelectBoundModal: React.FC<Props> = ({
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
         line={trainTypeModalLine}
-        destination={targetDestination ?? wantedDestination}
+        // 乗換経路で選べるのは最初の区間の種別なので、その区間の降車駅を行先として扱う
+        destination={
+          (transferDestination ? boundDirectionStation : targetDestination) ??
+          wantedDestination
+        }
         boardingStation={station}
         onClose={() => {
           setIsTrainTypeModalVisible(false);
@@ -1096,6 +1179,20 @@ export const SelectBoundModal: React.FC<Props> = ({
           onTrainTypeSelect(trainType);
         }}
       />
+      {routes && onRouteSelect ? (
+        <RouteListModal
+          visible={isRouteListModalVisible}
+          routes={routes}
+          destination={targetDestination}
+          loading={loading}
+          onClose={() => setIsRouteListModalVisible(false)}
+          onSelect={(index) => {
+            setIsRouteListModalVisible(false);
+            setStationState((prev) => ({ ...prev, wantedDestination: null }));
+            onRouteSelect(index);
+          }}
+        />
+      ) : null}
       {/*
         Keep the preset-name modal outside the parent modal tree to avoid
         nested modal lifecycle glitches on iOS during route-save updates.

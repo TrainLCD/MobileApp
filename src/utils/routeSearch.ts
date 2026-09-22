@@ -1,6 +1,8 @@
 import type { Line, Station, TrainType } from '~/@types/graphql';
+import type { Journey, JourneyLeg } from '~/store/atoms/journey';
 import { translate } from '~/translation';
-import { isBusLine } from './line';
+import { getLocalizedLineName, isBusLine } from './line';
+import { findLocalType } from './trainTypeString';
 
 /**
  * 列車種別に基づいて、現在の駅の路線を決定する
@@ -50,67 +52,126 @@ export const computeCurrentStationInRoutes = (
   return { ...station, line: pendingLine } as Station;
 };
 
-/** connectedRoutes の経路のうち、列車種別と方面の選択に使う部分 */
-export type ConnectedRouteTrainTypes = {
-  legs:
-    | {
-        trainTypes: TrainType[] | null | undefined;
-        toStation?: Pick<Station, 'id' | 'groupId'> | null;
-      }[]
-    | null
-    | undefined;
+/** connectedRoutes の 1 区間 */
+export type ConnectedRouteLeg = {
+  trainTypes: TrainType[] | null | undefined;
+  fromStation?: Station | null;
+  toStation?: Station | null;
+};
+
+/** connectedRoutes の 1 経路(API の順位順に並ぶ) */
+export type ConnectedRoute = {
+  estimatedMinutes?: number | null;
+  transferCount?: number | null;
+  legs: ConnectedRouteLeg[] | null | undefined;
 };
 
 /**
- * connectedRoutes の結果から、各経路の最初の区間(現在駅から乗る列車)の列車種別を集める。
- * 乗換のない経路では、最初の区間の種別が行き先まで直通する種別になる。
- * 複数の経路に同じ種別が現れた場合は、先に現れたものだけを残す
- * @param routes connectedRoutes の結果(API の順位順)
- * @returns 最初の区間の列車種別の配列
+ * 区間で既定に選ぶ列車種別。直通の経路検索と同じく各停を優先し、無ければ先頭を使う
+ * @param trainTypes 区間で乗れる列車種別
+ * @returns 既定の列車種別。種別が無ければ null
  */
-export const collectFirstLegTrainTypes = (
-  routes: ConnectedRouteTrainTypes[]
-): TrainType[] => {
-  const seenGroupIds = new Set<number>();
-  const trainTypes: TrainType[] = [];
+export const pickDefaultTrainType = (
+  trainTypes: TrainType[] | null | undefined
+): TrainType | null =>
+  findLocalType(trainTypes ?? []) ?? trainTypes?.[0] ?? null;
 
-  for (const route of routes) {
-    for (const trainType of route.legs?.[0]?.trainTypes ?? []) {
-      if (trainType.groupId != null) {
-        if (seenGroupIds.has(trainType.groupId)) continue;
-        seenGroupIds.add(trainType.groupId);
-      }
-      trainTypes.push(trainType);
+/**
+ * 乗換を含む経路から、乗車に使う区間の並びを組み立てる。
+ * 乗換のない経路は従来の 1 系統の乗車で扱うため null を返す。
+ * 乗降駅か種別を引けない区間があれば、その経路は乗り継げないので null を返す
+ * @param route connectedRoutes の 1 経路
+ * @returns 区間の並び(現在の区間は先頭)。組み立てられなければ null
+ */
+export const buildJourney = (
+  route: ConnectedRoute | null | undefined
+): Journey | null => {
+  const legs = route?.legs ?? [];
+  if (legs.length < 2) return null;
+
+  const journeyLegs: JourneyLeg[] = [];
+  for (const leg of legs) {
+    const trainType = pickDefaultTrainType(leg.trainTypes);
+    if (!trainType?.groupId || !leg.fromStation || !leg.toStation) {
+      return null;
     }
+    journeyLegs.push({
+      trainType,
+      trainTypes: leg.trainTypes ?? [],
+      fromStation: leg.fromStation,
+      toStation: leg.toStation,
+    });
   }
 
-  return trainTypes;
+  return { legs: journeyLegs, currentLegIndex: 0 };
 };
 
 /**
- * 列車種別で乗る最初の区間の降車駅を返す。乗換経路なら乗換駅、直通経路なら行き先になる。
- * 複数の経路の最初の区間に同じ種別がある場合は、先に現れた経路(API の順位が高いもの)を使う
+ * 乗車に使える経路だけを残す。乗換のない経路は種別が 1 つでもあれば使える。
+ * 乗換のある経路は、全区間の乗降駅と種別が揃っていないと乗り継げないので除く
  * @param routes connectedRoutes の結果(API の順位順)
- * @param trainTypeGroupId 選択中の列車種別の groupId
- * @returns 最初の区間の降車駅。該当する区間が無ければ null
+ * @returns 乗車に使える経路(順位はそのまま)
  */
-export const findFirstLegToStation = (
-  routes: ConnectedRouteTrainTypes[],
-  trainTypeGroupId: number | null | undefined
-): Pick<Station, 'id' | 'groupId'> | null => {
-  if (trainTypeGroupId == null) return null;
+export const filterRideableRoutes = (
+  routes: ConnectedRoute[]
+): ConnectedRoute[] =>
+  routes.filter((route) => {
+    const legs = route.legs ?? [];
+    if (legs.length === 1) return !!legs[0].trainTypes?.length;
+    return buildJourney(route) !== null;
+  });
 
-  for (const route of routes) {
-    const firstLeg = route.legs?.[0];
-    if (
-      firstLeg?.toStation &&
-      firstLeg.trainTypes?.some((tt) => tt.groupId === trainTypeGroupId)
-    ) {
-      return firstLeg.toStation;
-    }
-  }
+/** 経路一覧の 1 行 */
+export type RouteListItem = {
+  /** 乗換駅(乗換なしならその旨) */
+  title: string;
+  /** 乗る路線の並びと所要時間の見込み */
+  subtitle: string;
+  /** カードの色・記号に使う最初の区間の路線 */
+  line: Line | null;
+  /** カードの駅ナンバリングに使う乗車駅 */
+  boardingStation: Station | null;
+};
 
-  return null;
+/**
+ * 経路一覧に出す 1 行を組み立てる
+ * @param route connectedRoutes の 1 経路
+ * @param isJapanese 日本語ロケールかどうか
+ * @returns 経路一覧の 1 行
+ */
+export const buildRouteListItem = (
+  route: ConnectedRoute,
+  isJapanese: boolean
+): RouteListItem => {
+  const legs = route.legs ?? [];
+  const stationName = (station: Station | null | undefined) =>
+    (isJapanese ? station?.name : (station?.nameRoman ?? station?.name)) ?? '';
+
+  const transferStations = legs
+    .slice(0, -1)
+    .map((leg) => stationName(leg.toStation));
+  const title = transferStations.length
+    ? translate('routeTransferAt', {
+        stations: transferStations.join(isJapanese ? '・' : ' & '),
+      })
+    : translate('routeNoTransfer');
+
+  const lineNames = legs
+    .map((leg) => getLocalizedLineName(leg.fromStation?.line, isJapanese))
+    .join(' → ');
+  const subtitle =
+    route.estimatedMinutes != null
+      ? `${lineNames} ${translate('routeEstimatedMinutes', {
+          minutes: Math.round(route.estimatedMinutes),
+        })}`
+      : lineNames;
+
+  return {
+    title,
+    subtitle,
+    line: legs[0]?.fromStation?.line ?? null,
+    boardingStation: legs[0]?.fromStation ?? null,
+  };
 };
 
 /**

@@ -7,6 +7,7 @@ import {
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useBounds } from '~/hooks';
+import { journeyAtom, pendingJourneyAtom } from '~/store/atoms/journey';
 import { pendingLineAtom, selectedLineAtom } from '../store/atoms/line';
 import {
   autoModeEnabledAtom,
@@ -199,6 +200,7 @@ const mockAtomValues = ({
   pendingTrainType = null as unknown,
   pendingLine = null as unknown,
   selectedLine = null as unknown,
+  pendingJourney = null as unknown,
 } = {}) => {
   (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
     if (atom === stationAtom) return station;
@@ -210,6 +212,7 @@ const mockAtomValues = ({
     if (atom === pendingTrainTypeAtom) return pendingTrainType;
     if (atom === pendingLineAtom) return pendingLine;
     if (atom === selectedLineAtom) return selectedLine;
+    if (atom === pendingJourneyAtom) return pendingJourney;
     if (atom === isLEDThemeAtom) return false;
     return false;
   });
@@ -478,10 +481,35 @@ describe('SelectBoundModal', () => {
     const shinjuku = buildStation(1131208, '新宿');
     const tokyo = buildStation(1131211, '東京');
     // 乗換先の路線の駅なので中央線の駅リストには含まれない
-    const shibuya = { id: 1130205, groupId: 1130205, name: '渋谷' };
+    const saikyoLine = { id: 11321, name: '埼京線' };
+    const shibuya = {
+      id: 1132103,
+      groupId: 1130205,
+      name: '渋谷',
+      nameRoman: 'Shibuya',
+      line: saikyoLine,
+      lines: [saikyoLine],
+    };
+
+    const pendingJourney = {
+      legs: [
+        {
+          trainType: { groupId: 100 },
+          fromStation: nakano,
+          toStation: shinjuku,
+        },
+        {
+          trainType: { groupId: 200 },
+          fromStation: shinjuku,
+          toStation: shibuya,
+        },
+      ],
+      currentLegIndex: 0,
+    };
 
     const setup = (
-      boundDirectionStation?: { id: number; groupId: number } | null
+      boundDirectionStation?: { id: number; groupId: number } | null,
+      journey: unknown = pendingJourney
     ) => {
       mockAtomValues({
         station: nakano,
@@ -489,6 +517,7 @@ describe('SelectBoundModal', () => {
         pendingStations: [mitaka, nakano, shinjuku, tokyo],
         pendingLine: line,
         selectedLine: line,
+        pendingJourney: journey,
       });
       (useBounds as jest.Mock).mockReturnValue({
         bounds: [[tokyo], [mitaka]],
@@ -517,16 +546,58 @@ describe('SelectBoundModal', () => {
           onTrainTypeSelect={jest.fn()}
           onBoundSelect={jest.fn()}
           targetDestination={shibuya as never}
-          boundDirectionStation={boundDirectionStation}
+          boundDirectionStation={boundDirectionStation as never}
         />
       );
     };
 
-    it('乗換駅へ向かう方面のカードだけを描画する', () => {
+    it('乗換駅へ向かう方面のカードだけを探している駅の名前で描画する', () => {
       const screen = setup({ id: shinjuku.id, groupId: shinjuku.groupId });
 
-      expect(screen.getByText('東京方面')).toBeTruthy();
+      expect(screen.getByText('渋谷方面')).toBeTruthy();
+      expect(screen.queryByText('東京方面')).toBeNull();
       expect(screen.queryByText('三鷹方面')).toBeNull();
+    });
+
+    it('渋谷方面カードは最初の区間の方面で乗車を確定し経路を乗車中にする', () => {
+      const setStationStateMock = jest.fn();
+      const setJourneyMock = jest.fn();
+      (useSetAtom as jest.Mock).mockImplementation((atom: unknown) => {
+        if (atom === stationState) return setStationStateMock;
+        if (atom === journeyAtom) return setJourneyMock;
+        return jest.fn();
+      });
+      const screen = setup({ id: shinjuku.id, groupId: shinjuku.groupId });
+
+      fireEvent.press(screen.getByText('渋谷方面'));
+
+      expect(setJourneyMock).toHaveBeenCalledWith(pendingJourney);
+
+      const updater = setStationStateMock.mock.calls.at(-1)?.[0] as (
+        prev: Record<string, unknown>
+      ) => { selectedDirection: string; selectedBound: { id: number } };
+      const next = updater({});
+      expect(next.selectedDirection).toBe('INBOUND');
+      expect(next.selectedBound.id).toBe(tokyo.id);
+    });
+
+    it('乗換経路ではプリセットを保存できない', () => {
+      const screen = setup({ id: shinjuku.id, groupId: shinjuku.groupId });
+
+      expect(screen.queryByText('saveCurrentRoute')).toBeNull();
+    });
+
+    it('経路の無い方面選択では前の経路を乗車中に残さない', () => {
+      const setJourneyMock = jest.fn();
+      (useSetAtom as jest.Mock).mockImplementation((atom: unknown) =>
+        atom === journeyAtom ? setJourneyMock : jest.fn()
+      );
+      const screen = setup(null, null);
+
+      expect(screen.getByText('saveCurrentRoute')).toBeTruthy();
+      fireEvent.press(screen.getByText('東京方面'));
+
+      expect(setJourneyMock).toHaveBeenCalledWith(null);
     });
 
     it('基準駅が無く行き先も駅リストに無い場合は両方面を描画する', () => {

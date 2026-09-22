@@ -199,6 +199,9 @@ const DestinationAgentScreen = () => {
     wantedDestination,
     trainTypeModalLine,
     boundDirectionStation,
+    routes,
+    selectedRouteIndex,
+    handleRouteSelected,
     modalLoading,
     modalError,
     handleCloseSelectBoundModal,
@@ -702,6 +705,9 @@ const DestinationAgentScreen = () => {
         onTrainTypeSelect={handleTrainTypeSelected}
         targetDestination={selectedDestination}
         boundDirectionStation={boundDirectionStation}
+        routes={routes}
+        selectedRouteIndex={selectedRouteIndex}
+        onRouteSelect={handleRouteSelected}
       />
       <TrainTypeListModal
         visible={trainTypeListModalVisible}

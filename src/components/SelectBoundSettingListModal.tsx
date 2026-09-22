@@ -121,6 +121,9 @@ type Props = {
   trainTypeLoading?: boolean;
   onTrainTypePress?: () => void;
   trainTypeDisabled?: boolean;
+  /** 選択中の経路の表示名。onRoutePress があるときだけ経路の行を出す */
+  routeName?: string;
+  onRoutePress?: () => void;
   isBus?: boolean;
   themeLabel?: string;
   themeColor?: string;
@@ -138,6 +141,8 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   trainTypeLoading,
   onTrainTypePress,
   trainTypeDisabled,
+  routeName,
+  onRoutePress,
   isBus,
   themeLabel,
   themeColor,
@@ -155,6 +160,10 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
     () => getTrainTypeTextColor(trainTypeColor),
     [trainTypeColor]
   );
+
+  // 経路には固有の色が無いので種別未設定時と同じ既定色を使う
+  const normalizedRouteColor = normalizeTrainTypeColor(undefined);
+  const routeTextColor = getTrainTypeTextColor(undefined);
 
   const themeTextColor = useMemo(
     () => getTrainTypeTextColor(themeColor),
@@ -265,6 +274,43 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                   </View>
                 </>
               )}
+            </TouchableOpacity>
+          )}
+          {onRoutePress && (
+            <TouchableOpacity
+              onPress={onRoutePress}
+              style={[
+                styles.trainTypeButton,
+                {
+                  backgroundColor: isLEDTheme
+                    ? LED_THEME_BG_COLOR
+                    : colors.card,
+                  borderColor: colors.accent,
+                  borderRadius: isLEDTheme ? 0 : 8,
+                },
+              ]}
+            >
+              <Typography
+                style={[styles.trainTypeLabel, { color: colors.accent }]}
+              >
+                {translate('route')}
+              </Typography>
+              <View
+                style={[
+                  styles.trainTypeNamePanel,
+                  {
+                    backgroundColor: normalizedRouteColor,
+                    borderRadius: isLEDTheme ? 0 : 8,
+                  },
+                ]}
+              >
+                <Typography
+                  style={[styles.trainTypeNameText, { color: routeTextColor }]}
+                  numberOfLines={1}
+                >
+                  {routeName ?? ''}
+                </Typography>
+              </View>
             </TouchableOpacity>
           )}
           {onThemePress && (
