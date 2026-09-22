@@ -2,20 +2,23 @@ import type { Line, Station, TrainType } from '~/@types/graphql';
 import { TrainTypeKind, TransportType } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import {
-  buildJourney,
-  buildRouteListItem,
+  buildRouteTrainTypes,
+  buildTransferTrainType,
   type ConnectedRoute,
   computeCurrentStationInRoutes,
+  concatLegStations,
   filterRideableRoutes,
   getSearchResultHeadingText,
   getStationWithMatchingLine,
+  isTransferRouteTrainType,
+  sliceLegStations,
 } from './routeSearch';
 
 // 文言そのものは翻訳ファイルの責務なので、
-// ここでは「どのキーをどの値で引くか」だけを検証できるようにモックする
+// ここでは「どのキーをどの駅名で引くか」だけを検証できるようにモックする
 jest.mock('~/translation', () => ({
-  translate: (key: string, params?: Record<string, string | number>) =>
-    params ? `${key}(${Object.values(params).join(',')})` : key,
+  translate: (key: string, params?: Record<string, string>) =>
+    params ? `${key}(${params.stationName})` : key,
 }));
 
 // テスト用のモックデータ
@@ -65,29 +68,25 @@ afterEach(() => jest.clearAllMocks());
 describe('乗換経路', () => {
   const oedoLine = createMockLine(99301, '都営大江戸線');
   const saikyoLine = createMockLine(11321, '埼京線');
+  const yamanoteLine = createMockLine(11302, '山手線');
   const oedoLocal = createMockTrainType(1000099301, '各駅停車', oedoLine);
   const saikyoLocal = createMockTrainType(170, '各駅停車', saikyoLine);
   const saikyoRapid = {
     ...createMockTrainType(171, '快速', saikyoLine),
     kind: TrainTypeKind.Rapid,
   } as TrainType;
-  const hikarigaoka = createMockStation(9930138, '光が丘', oedoLine);
-  const shinjukuOedo = {
-    ...createMockStation(9930128, '新宿', oedoLine),
-    groupId: 1130208,
-  } as Station;
-  const shinjukuSaikyo = {
-    ...createMockStation(1132104, '新宿', saikyoLine),
-    groupId: 1130208,
-  } as Station;
-  const shibuya = {
-    ...createMockStation(1132103, '渋谷', saikyoLine),
-    groupId: 1130205,
-  } as Station;
+  const station = (id: number, groupId: number, name: string, line: Line) =>
+    ({ ...createMockStation(id, name, line), groupId }) as Station;
+
+  const hikarigaoka = station(9930138, 9930138, '光が丘', oedoLine);
+  const nerima = station(9930135, 2200106, '練馬', oedoLine);
+  const tochomae = station(9930100, 1130225, '都庁前', oedoLine);
+  const shinjukuOedo = station(9930128, 1130208, '新宿', oedoLine);
+  const shinjukuSaikyo = station(1132104, 1130208, '新宿', saikyoLine);
+  const shibuya = station(1132103, 1130205, '渋谷', saikyoLine);
+  const _osaki = station(1132101, 1130201, '大崎', saikyoLine);
 
   const transferRoute: ConnectedRoute = {
-    estimatedMinutes: 34.6,
-    transferCount: 1,
     legs: [
       {
         trainTypes: [oedoLocal],
@@ -102,76 +101,25 @@ describe('乗換経路', () => {
       },
     ],
   };
-
-  describe('buildJourney', () => {
-    it('区間ごとに各停を既定の種別にして区間の並びを組み立てる', () => {
-      const journey = buildJourney(transferRoute);
-
-      expect(journey?.currentLegIndex).toBe(0);
-      expect(journey?.legs.map((leg) => leg.trainType.groupId)).toEqual([
-        oedoLocal.groupId,
-        saikyoLocal.groupId,
-      ]);
-      expect(journey?.legs[1].trainTypes).toEqual([saikyoRapid, saikyoLocal]);
-      // 乗換駅では同じ駅グループの別路線の駅から乗る
-      expect(journey?.legs[0].toStation.id).toBe(shinjukuOedo.id);
-      expect(journey?.legs[1].fromStation.id).toBe(shinjukuSaikyo.id);
-    });
-
-    it('乗換のない経路は従来の乗車で扱うため null を返す', () => {
-      expect(
-        buildJourney({
-          legs: [
-            {
-              trainTypes: [saikyoLocal],
-              fromStation: shinjukuSaikyo,
-              toStation: shibuya,
-            },
-          ],
-        })
-      ).toBeNull();
-    });
-
-    it('乗降駅か種別が欠けた区間があれば null を返す', () => {
-      expect(
-        buildJourney({
-          legs: [
-            transferRoute.legs?.[0] ?? { trainTypes: [] },
-            { trainTypes: [], fromStation: shinjukuSaikyo, toStation: shibuya },
-          ],
-        })
-      ).toBeNull();
-      expect(
-        buildJourney({
-          legs: [
-            transferRoute.legs?.[0] ?? { trainTypes: [] },
-            { trainTypes: [saikyoLocal], fromStation: shinjukuSaikyo },
-          ],
-        })
-      ).toBeNull();
-    });
-  });
+  const directRoute: ConnectedRoute = {
+    legs: [
+      {
+        trainTypes: [saikyoRapid, saikyoLocal],
+        fromStation: shinjukuSaikyo,
+        toStation: shibuya,
+      },
+    ],
+  };
 
   describe('filterRideableRoutes', () => {
     it('乗り継げない経路と種別の無い直通経路を除き、順位を保つ', () => {
-      const directRoute: ConnectedRoute = {
-        legs: [
-          {
-            trainTypes: [saikyoLocal],
-            fromStation: shinjukuSaikyo,
-            toStation: shibuya,
-          },
-        ],
-      };
       const brokenRoute: ConnectedRoute = {
         legs: [
           transferRoute.legs?.[0] ?? { trainTypes: [] },
           { trainTypes: [saikyoLocal], fromStation: shinjukuSaikyo },
         ],
       };
-      const emptyDirectRoute: ConnectedRoute = {
-        legs: [{ trainTypes: [] }],
-      };
+      const emptyDirectRoute: ConnectedRoute = { legs: [{ trainTypes: [] }] };
 
       expect(
         filterRideableRoutes([
@@ -184,31 +132,109 @@ describe('乗換経路', () => {
     });
   });
 
-  describe('buildRouteListItem', () => {
-    it('乗換駅・乗る路線・所要時間を表示する', () => {
-      expect(buildRouteListItem(transferRoute, true)).toEqual({
-        title: 'routeTransferAt(新宿)',
-        subtitle: '都営大江戸線 → 埼京線 routeEstimatedMinutes(35)',
-        line: oedoLine,
-        boardingStation: hikarigaoka,
-      });
+  describe('sliceLegStations', () => {
+    // 大江戸線の系統は光が丘が末尾に来る並び
+    const oedoStations = [tochomae, shinjukuOedo, nerima, hikarigaoka];
+
+    it('系統の並びと逆向きの区間は進行順に並べ替えて切り出す', () => {
+      expect(
+        sliceLegStations(oedoStations, hikarigaoka, shinjukuOedo).map(
+          (s) => s.name
+        )
+      ).toEqual(['光が丘', '練馬', '新宿']);
     });
 
-    it('乗換のない経路はその旨を表示する', () => {
+    it('系統の並びと同じ向きの区間はそのまま切り出す', () => {
       expect(
-        buildRouteListItem(
+        sliceLegStations(oedoStations, shinjukuOedo, hikarigaoka).map(
+          (s) => s.name
+        )
+      ).toEqual(['新宿', '練馬', '光が丘']);
+    });
+
+    it('環状線は継ぎ目をまたいだほうが短ければ回り込む', () => {
+      const yamanote = [
+        '大崎',
+        '五反田',
+        '目黒',
+        '恵比寿',
+        '渋谷',
+        '田町',
+        '品川',
+      ].map((name, i) => station(i + 1, i + 1, name, yamanoteLine));
+      const [osakiY, gotanda, , , , tamachi, shinagawa] = yamanote;
+
+      expect(
+        sliceLegStations(yamanote, tamachi, gotanda).map((s) => s.name)
+      ).toEqual(['田町', '品川', '大崎', '五反田']);
+      expect(
+        sliceLegStations(yamanote, gotanda, shinagawa).map((s) => s.name)
+      ).toEqual(['五反田', '大崎', '品川']);
+      expect(
+        sliceLegStations(yamanote, osakiY, gotanda).map((s) => s.name)
+      ).toEqual(['大崎', '五反田']);
+    });
+
+    it('乗車駅か降車駅が系統に無ければ空配列を返す', () => {
+      expect(sliceLegStations(oedoStations, hikarigaoka, shibuya)).toEqual([]);
+    });
+  });
+
+  describe('concatLegStations', () => {
+    it('乗換駅は前の区間の降車駅だけを残して 1 本につなぐ', () => {
+      expect(
+        concatLegStations([
+          [hikarigaoka, nerima, shinjukuOedo],
+          [shinjukuSaikyo, shibuya],
+        ]).map((s) => s.id)
+      ).toEqual([hikarigaoka.id, nerima.id, shinjukuOedo.id, shibuya.id]);
+    });
+  });
+
+  describe('buildTransferTrainType', () => {
+    it('最初の区間の種別を元に、区間ごとの路線を区間の種別つきで並べる', () => {
+      const trainType = buildTransferTrainType(transferRoute, -1);
+
+      expect(trainType?.id).toBe(-1);
+      expect(trainType?.name).toBe('各駅停車');
+      expect(trainType?.groupId).toBe(oedoLocal.groupId);
+      expect(trainType?.line?.id).toBe(saikyoLine.id);
+      expect(trainType?.lines?.map((l) => [l.id, l.trainType?.name])).toEqual([
+        [oedoLine.id, '各駅停車'],
+        [saikyoLine.id, '各駅停車'],
+      ]);
+      expect(isTransferRouteTrainType(trainType)).toBe(true);
+      expect(isTransferRouteTrainType(oedoLocal)).toBe(false);
+    });
+  });
+
+  describe('buildRouteTrainTypes', () => {
+    it('直通経路の種別と乗換経路を順位順に並べ、乗換経路を id から引ける', () => {
+      const otherTransferRoute: ConnectedRoute = {
+        legs: [
           {
-            legs: [
-              {
-                trainTypes: [saikyoLocal],
-                fromStation: shinjukuSaikyo,
-                toStation: shibuya,
-              },
-            ],
+            trainTypes: [oedoLocal],
+            fromStation: hikarigaoka,
+            toStation: tochomae,
           },
-          true
-        ).title
-      ).toBe('routeNoTransfer');
+          transferRoute.legs?.[1] ?? { trainTypes: [] },
+        ],
+      };
+      const { trainTypes, transferRouteById } = buildRouteTrainTypes([
+        transferRoute,
+        directRoute,
+        otherTransferRoute,
+        directRoute,
+      ]);
+
+      expect(trainTypes.map((tt) => tt.id)).toEqual([
+        -1,
+        saikyoRapid.id,
+        saikyoLocal.id,
+        -3,
+      ]);
+      expect(transferRouteById.get(-1)).toBe(transferRoute);
+      expect(transferRouteById.get(-3)).toBe(otherTransferRoute);
     });
   });
 });
@@ -692,21 +718,6 @@ describe('経路検索見出しの翻訳キー', () => {
       'searchResult',
       'searchResultFromStation',
       'searchResultFromBusStop',
-    ]) {
-      expect(typeof ja[key]).toBe('string');
-      expect(typeof en[key]).toBe('string');
-    }
-  });
-
-  it('経路一覧で参照するキーが日英どちらの翻訳にも存在する', () => {
-    const ja = require('../../assets/translations/ja.json');
-    const en = require('../../assets/translations/en.json');
-
-    for (const key of [
-      'route',
-      'routeNoTransfer',
-      'routeTransferAt',
-      'routeEstimatedMinutes',
     ]) {
       expect(typeof ja[key]).toBe('string');
       expect(typeof en[key]).toBe('string');

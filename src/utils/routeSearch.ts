@@ -1,7 +1,13 @@
+import uniqBy from 'lodash/uniqBy';
 import type { Line, Station, TrainType } from '~/@types/graphql';
-import type { Journey, JourneyLeg } from '~/store/atoms/journey';
+import {
+  DISNEY_RESORT_LINE_ID,
+  MEIJO_LINE_ID,
+  OSAKA_LOOP_LINE_ID,
+  YAMANOTE_LINE_ID,
+} from '~/constants/line';
 import { translate } from '~/translation';
-import { getLocalizedLineName, isBusLine } from './line';
+import { isBusLine } from './line';
 import { findLocalType } from './trainTypeString';
 
 /**
@@ -61,8 +67,6 @@ export type ConnectedRouteLeg = {
 
 /** connectedRoutes の 1 経路(API の順位順に並ぶ) */
 export type ConnectedRoute = {
-  estimatedMinutes?: number | null;
-  transferCount?: number | null;
   legs: ConnectedRouteLeg[] | null | undefined;
 };
 
@@ -77,38 +81,8 @@ export const pickDefaultTrainType = (
   findLocalType(trainTypes ?? []) ?? trainTypes?.[0] ?? null;
 
 /**
- * 乗換を含む経路から、乗車に使う区間の並びを組み立てる。
- * 乗換のない経路は従来の 1 系統の乗車で扱うため null を返す。
- * 乗降駅か種別を引けない区間があれば、その経路は乗り継げないので null を返す
- * @param route connectedRoutes の 1 経路
- * @returns 区間の並び(現在の区間は先頭)。組み立てられなければ null
- */
-export const buildJourney = (
-  route: ConnectedRoute | null | undefined
-): Journey | null => {
-  const legs = route?.legs ?? [];
-  if (legs.length < 2) return null;
-
-  const journeyLegs: JourneyLeg[] = [];
-  for (const leg of legs) {
-    const trainType = pickDefaultTrainType(leg.trainTypes);
-    if (!trainType?.groupId || !leg.fromStation || !leg.toStation) {
-      return null;
-    }
-    journeyLegs.push({
-      trainType,
-      trainTypes: leg.trainTypes ?? [],
-      fromStation: leg.fromStation,
-      toStation: leg.toStation,
-    });
-  }
-
-  return { legs: journeyLegs, currentLegIndex: 0 };
-};
-
-/**
  * 乗車に使える経路だけを残す。乗換のない経路は種別が 1 つでもあれば使える。
- * 乗換のある経路は、全区間の乗降駅と種別が揃っていないと乗り継げないので除く
+ * 乗換のある経路は、全区間の乗降駅と種別が揃っていないと駅をつなげないので除く
  * @param routes connectedRoutes の結果(API の順位順)
  * @returns 乗車に使える経路(順位はそのまま)
  */
@@ -118,60 +92,172 @@ export const filterRideableRoutes = (
   routes.filter((route) => {
     const legs = route.legs ?? [];
     if (legs.length === 1) return !!legs[0].trainTypes?.length;
-    return buildJourney(route) !== null;
+    return (
+      legs.length > 1 &&
+      legs.every(
+        (leg) =>
+          !!pickDefaultTrainType(leg.trainTypes)?.groupId &&
+          !!leg.fromStation &&
+          !!leg.toStation
+      )
+    );
   });
 
-/** 経路一覧の 1 行 */
-export type RouteListItem = {
-  /** 乗換駅(乗換なしならその旨) */
-  title: string;
-  /** 乗る路線の並びと所要時間の見込み */
-  subtitle: string;
-  /** カードの色・記号に使う最初の区間の路線 */
-  line: Line | null;
-  /** カードの駅ナンバリングに使う乗車駅 */
-  boardingStation: Station | null;
+// 駅リストの端が継ぎ目になっている環状線。継ぎ目をまたぐ区間は端から反対の端へ回り込む
+const LOOP_LINE_IDS = new Set([
+  YAMANOTE_LINE_ID,
+  OSAKA_LOOP_LINE_ID,
+  MEIJO_LINE_ID,
+  DISNEY_RESORT_LINE_ID,
+]);
+
+const indexOfStation = (stations: Station[], target: Station): number => {
+  const byId = stations.findIndex((s) => s.id === target.id);
+  return byId !== -1
+    ? byId
+    : stations.findIndex((s) => s.groupId === target.groupId);
 };
 
 /**
- * 経路一覧に出す 1 行を組み立てる
- * @param route connectedRoutes の 1 経路
- * @param isJapanese 日本語ロケールかどうか
- * @returns 経路一覧の 1 行
+ * 系統の駅リストから、区間の乗車駅から降車駅までを進行順に切り出す。
+ * 環状線では継ぎ目をまたいだほうが短ければ回り込む
+ * @param stations 区間の種別の lineGroupStations
+ * @param from 区間の乗車駅
+ * @param to 区間の降車駅
+ * @returns 乗車駅から降車駅までの駅(進行順)。どちらかが見つからなければ空配列
  */
-export const buildRouteListItem = (
+export const sliceLegStations = (
+  stations: Station[],
+  from: Station,
+  to: Station
+): Station[] => {
+  const fromIndex = indexOfStation(stations, from);
+  const toIndex = indexOfStation(stations, to);
+  if (fromIndex === -1 || toIndex === -1) return [];
+
+  const straight =
+    fromIndex <= toIndex
+      ? stations.slice(fromIndex, toIndex + 1)
+      : stations.slice(toIndex, fromIndex + 1).reverse();
+
+  const isLoop = LOOP_LINE_IDS.has(from.line?.id ?? -1);
+  const wrapLength = stations.length - Math.abs(toIndex - fromIndex);
+  if (!isLoop || wrapLength >= Math.abs(toIndex - fromIndex)) {
+    return straight;
+  }
+
+  return fromIndex < toIndex
+    ? [
+        ...stations.slice(0, fromIndex + 1).reverse(),
+        ...stations.slice(toIndex).reverse(),
+      ]
+    : [...stations.slice(fromIndex), ...stations.slice(0, toIndex + 1)];
+};
+
+/**
+ * 区間ごとの駅をつないで 1 本の駅リストにする。直通運転の系統と同じく、路線が変わる駅は
+ * 1 度だけ持つ(前の区間の降車駅を残し、次の区間の乗車駅は捨てる)
+ * @param legStations 区間ごとの駅(進行順)
+ * @returns 経路全体の駅(進行順)
+ */
+export const concatLegStations = (legStations: Station[][]): Station[] => {
+  const result: Station[] = [];
+  for (const stations of legStations) {
+    const skipFirst =
+      !!stations[0] && result.at(-1)?.groupId === stations[0].groupId;
+    result.push(...(skipFirst ? stations.slice(1) : stations));
+  }
+  return result;
+};
+
+/**
+ * 乗換のある経路を、直通運転の種別と同じ形の 1 種別として表す。
+ * 種別名・色は最初の区間で乗る種別のものを使い、lines には区間ごとの路線を
+ * その区間の種別つきで並べる(種別一覧で「路線名 種別名」と表示される)
+ * @param route 乗換のある経路
+ * @param id 種別一覧で経路を見分けるための id(実在の種別と重ならない負の値)
+ * @returns 経路を表す種別。区間の種別が無ければ null
+ */
+export const buildTransferTrainType = (
   route: ConnectedRoute,
-  isJapanese: boolean
-): RouteListItem => {
+  id: number
+): TrainType | null => {
   const legs = route.legs ?? [];
-  const stationName = (station: Station | null | undefined) =>
-    (isJapanese ? station?.name : (station?.nameRoman ?? station?.name)) ?? '';
+  const legTrainTypes = legs.map((leg) => pickDefaultTrainType(leg.trainTypes));
+  const [firstTrainType] = legTrainTypes;
+  if (!firstTrainType) return null;
 
-  const transferStations = legs
-    .slice(0, -1)
-    .map((leg) => stationName(leg.toStation));
-  const title = transferStations.length
-    ? translate('routeTransferAt', {
-        stations: transferStations.join(isJapanese ? '・' : ' & '),
-      })
-    : translate('routeNoTransfer');
-
-  const lineNames = legs
-    .map((leg) => getLocalizedLineName(leg.fromStation?.line, isJapanese))
-    .join(' → ');
-  const subtitle =
-    route.estimatedMinutes != null
-      ? `${lineNames} ${translate('routeEstimatedMinutes', {
-          minutes: Math.round(route.estimatedMinutes),
-        })}`
-      : lineNames;
+  const lines = legs.flatMap((leg, index) => {
+    const trainType = legTrainTypes[index];
+    return [leg.fromStation?.line, leg.toStation?.line]
+      .filter((line): line is NonNullable<Station['line']> => !!line)
+      .map((line) => ({
+        ...line,
+        trainType: (trainType?.lines?.find((l) => l.id === line.id)
+          ?.trainType ?? {
+          typeId: trainType?.typeId,
+          name: trainType?.name,
+          nameRoman: trainType?.nameRoman,
+        }) as Line['trainType'],
+      }));
+  });
 
   return {
-    title,
-    subtitle,
-    line: legs[0]?.fromStation?.line ?? null,
-    boardingStation: legs[0]?.fromStation ?? null,
+    ...firstTrainType,
+    id,
+    line: (legs.at(-1)?.toStation?.line ??
+      firstTrainType.line) as TrainType['line'],
+    lines: uniqBy(lines, 'id') as unknown as TrainType['lines'],
   };
+};
+
+/**
+ * 種別が乗換のある経路を表すものか。buildTransferTrainType は実在の種別と重ならない
+ * 負の id を振るので、それで見分ける
+ * @param trainType 種別
+ * @returns 乗換のある経路を表す種別なら true
+ */
+export const isTransferRouteTrainType = (
+  trainType: TrainType | null | undefined
+): boolean => (trainType?.id ?? 0) < 0;
+
+/**
+ * 経路検索の結果を種別一覧に並べる種別へまとめる。乗換のない経路は区間で乗れる
+ * 種別をそのまま、乗換のある経路は経路ごとに 1 種別として、API の順位順に並べる
+ * @param routes 乗車に使える経路(API の順位順)
+ * @returns 種別一覧に並べる種別と、経路を表す種別の id から経路を引く表
+ */
+export const buildRouteTrainTypes = (
+  routes: ConnectedRoute[]
+): {
+  trainTypes: TrainType[];
+  transferRouteById: Map<number, ConnectedRoute>;
+} => {
+  const trainTypes: TrainType[] = [];
+  const transferRouteById = new Map<number, ConnectedRoute>();
+  const seenGroupIds = new Set<number>();
+
+  routes.forEach((route, index) => {
+    const legs = route.legs ?? [];
+    if (legs.length === 1) {
+      for (const trainType of legs[0].trainTypes ?? []) {
+        if (trainType.groupId != null) {
+          if (seenGroupIds.has(trainType.groupId)) continue;
+          seenGroupIds.add(trainType.groupId);
+        }
+        trainTypes.push(trainType);
+      }
+      return;
+    }
+
+    const id = -(index + 1);
+    const trainType = buildTransferTrainType(route, id);
+    if (!trainType) return;
+    trainTypes.push(trainType);
+    transferRouteById.set(id, route);
+  });
+
+  return { trainTypes, transferRouteById };
 };
 
 /**

@@ -440,7 +440,8 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
 `;
 
 // Query for getting routes that reach the destination, possibly with transfers.
-// Each leg carries every train type that serves it and its boarding/alighting stations.
+// Each leg carries every train type that serves it and its boarding/alighting stations,
+// which are used to join the legs into one station list like a through service.
 export const GET_CONNECTED_ROUTES = gql`
   ${TRAIN_TYPE_ROUTE_FRAGMENT}
   ${STATION_FRAGMENT}
@@ -454,8 +455,6 @@ export const GET_CONNECTED_ROUTES = gql`
       toStationGroupId: $toStationGroupId
       viaLineId: $viaLineId
     ) {
-      estimatedMinutes
-      transferCount
       legs {
         trainTypes {
           ...TrainTypeRouteFields
