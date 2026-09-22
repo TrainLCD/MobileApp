@@ -16,7 +16,7 @@ import stationState, {
 } from '~/store/atoms/station';
 import {
   type ConnectedRouteTrainTypes,
-  collectDirectRouteTrainTypes,
+  collectFirstLegTrainTypes,
   computeCurrentStationInRoutes,
   getStationWithMatchingLine,
 } from '~/utils/routeSearch';
@@ -163,7 +163,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         },
       });
 
-      const fetchedTrainTypes = collectDirectRouteTrainTypes(
+      const fetchedTrainTypes = collectFirstLegTrainTypes(
         result.data?.connectedRoutes ?? []
       );
 
@@ -305,20 +305,15 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
     ]
   );
 
-  const directRouteTrainTypes = useMemo(
-    () =>
-      collectDirectRouteTrainTypes(connectedRoutesData?.connectedRoutes ?? []),
+  const firstLegTrainTypes = useMemo(
+    () => collectFirstLegTrainTypes(connectedRoutesData?.connectedRoutes ?? []),
     [connectedRoutesData?.connectedRoutes]
   );
 
   const currentStationInRoutes = useMemo<Station | null>(
     () =>
-      computeCurrentStationInRoutes(
-        station,
-        pendingLine,
-        directRouteTrainTypes
-      ),
-    [station, pendingLine, directRouteTrainTypes]
+      computeCurrentStationInRoutes(station, pendingLine, firstLegTrainTypes),
+    [station, pendingLine, firstLegTrainTypes]
   );
 
   const trainTypeModalLine = useMemo(() => {

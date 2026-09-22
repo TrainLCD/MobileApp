@@ -440,8 +440,7 @@ export const TRAIN_TYPE_ROUTE_FRAGMENT = gql`
 `;
 
 // Query for getting routes that reach the destination, possibly with transfers.
-// The app only rides direct (single-leg) routes for now, so only the train types
-// of each leg are requested.
+// Only the train types of each leg are requested.
 export const GET_CONNECTED_ROUTES = gql`
   ${TRAIN_TYPE_ROUTE_FRAGMENT}
   query GetConnectedRoutes(
