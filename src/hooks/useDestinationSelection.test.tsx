@@ -160,6 +160,36 @@ describe('useDestinationSelection', () => {
     expect(hookRef.current?.modalError).toBeNull();
   });
 
+  it('区間の駅グループの並び(探索が選んだ弧)があれば、それに沿って駅を拾う', async () => {
+    const { store, hookRef } = setup(hikarigaoka);
+    // 大江戸線の区間は練馬を通らない並びにしておき、並びに沿って拾ったことを確かめる
+    const routeWithPath = {
+      legs: [
+        {
+          ...transferRoute.legs[0],
+          stationGroupIds: [hikarigaoka.groupId, shinjukuOedo.groupId],
+        },
+        {
+          ...transferRoute.legs[1],
+          stationGroupIds: [shinjukuSaikyo.groupId, shibuya.groupId],
+        },
+      ],
+    };
+    fetchConnectedRoutes.mockResolvedValue({
+      data: { connectedRoutes: [routeWithPath] },
+    });
+
+    await act(async () => {
+      await hookRef.current?.handleDestinationSelected(shibuya);
+    });
+
+    expect(store.get(pendingStationsAtom).map((s) => s.id)).toEqual([
+      hikarigaoka.id,
+      shinjukuSaikyo.id,
+      shibuya.id,
+    ]);
+  });
+
   // 区間ごとの取得は並行に投げるので、最後に投げた取得以外の失敗は
   // useLazyGraphQLQuery の error に残らない
   it('区間の駅の取得に失敗したら駅リストを空にしてエラーを返す', async () => {

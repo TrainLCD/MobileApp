@@ -465,6 +465,7 @@ export const GET_CONNECTED_ROUTES = gql`
         toStation {
           ...StationFields
         }
+        stationGroupIds
       }
     }
   }

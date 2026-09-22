@@ -12,6 +12,7 @@ import {
   getStationWithMatchingLine,
   isTransferRouteTrainType,
   pickInitialRouteTrainType,
+  pickLegStationsByGroupIds,
   sliceLegStations,
 } from './routeSearch';
 
@@ -215,6 +216,64 @@ describe('乗換経路', () => {
 
     it('乗車駅か降車駅が系統に無ければ空配列を返す', () => {
       expect(sliceLegStations(oedoStations, hikarigaoka, shibuya)).toEqual([]);
+    });
+  });
+
+  describe('pickLegStationsByGroupIds', () => {
+    it('駅グループの並びに沿って進行順に拾う', () => {
+      const oedoStations = [tochomae, shinjukuOedo, nerima, hikarigaoka];
+      expect(
+        pickLegStationsByGroupIds(oedoStations, [
+          hikarigaoka.groupId as number,
+          nerima.groupId as number,
+          shinjukuOedo.groupId as number,
+        ]).map((s) => s.id)
+      ).toEqual([hikarigaoka.id, nerima.id, shinjukuOedo.id]);
+    });
+
+    it('同じ駅グループが 2 回出る系統では、直前に拾った駅に近いほうを選ぶ', () => {
+      const tochomaeInner = station(9930101, 1130225, '都庁前', oedoLine);
+      // 都庁前(内回り側) → 新宿 → 都庁前(外回り側) → 練馬 → 光が丘
+      const oedoLoop = [
+        tochomaeInner,
+        shinjukuOedo,
+        tochomae,
+        nerima,
+        hikarigaoka,
+      ];
+      expect(
+        pickLegStationsByGroupIds(oedoLoop, [
+          hikarigaoka.groupId as number,
+          nerima.groupId as number,
+          tochomae.groupId as number,
+        ]).map((s) => s.id)
+      ).toEqual([hikarigaoka.id, nerima.id, tochomae.id]);
+      // 先頭が 2 回出る駅グループのときは、次の駅グループに近いほうを選ぶ
+      expect(
+        pickLegStationsByGroupIds(oedoLoop, [
+          tochomae.groupId as number,
+          nerima.groupId as number,
+        ]).map((s) => s.id)
+      ).toEqual([tochomae.id, nerima.id]);
+    });
+
+    it('環状線の継ぎ目をまたぐ並びもそのまま拾う', () => {
+      const yamanote = ['大崎', '五反田', '目黒', '田町', '品川'].map(
+        (name, i) => station(i + 1, i + 1, name, yamanoteLine)
+      );
+      expect(
+        pickLegStationsByGroupIds(yamanote, [4, 5, 1, 2]).map((s) => s.name)
+      ).toEqual(['田町', '品川', '大崎', '五反田']);
+    });
+
+    // 選んだ種別が探索で使った系統と別の路線を走ると、並びの駅グループを持たない
+    it('並びの駅グループが系統に無ければ空配列を返す', () => {
+      expect(
+        pickLegStationsByGroupIds(
+          [tochomae, shinjukuOedo],
+          [tochomae.groupId as number, shibuya.groupId as number]
+        )
+      ).toEqual([]);
     });
   });
 

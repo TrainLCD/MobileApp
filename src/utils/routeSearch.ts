@@ -63,6 +63,8 @@ export type ConnectedRouteLeg = {
   trainTypes: TrainType[] | null | undefined;
   fromStation?: Station | null;
   toStation?: Station | null;
+  /** 乗車駅から降車駅までの駅グループ ID(進行順、通過駅を含む)。探索が選んだ弧 */
+  stationGroupIds?: number[] | null;
 };
 
 /** connectedRoutes の 1 経路(API の順位順に並ぶ) */
@@ -171,6 +173,43 @@ export const sliceLegStations = (
         ...stations.slice(toIndex).reverse(),
       ]
     : [...stations.slice(fromIndex), ...stations.slice(0, toIndex + 1)];
+};
+
+/**
+ * 区間の駅グループ ID の並び(探索が選んだ弧)に沿って、系統の駅リストから駅を拾う。
+ * 同じ駅グループが系統に 2 回出る場合(大江戸線の都庁前など)は、直前に拾った駅に
+ * 近いほうを選ぶ。先頭は次の駅グループに近いほうを選ぶ
+ * @param stations 区間の種別の lineGroupStations
+ * @param stationGroupIds 区間の駅グループ ID の並び
+ * @returns 進行順の駅。並びの駅グループが系統に無ければ空配列
+ */
+export const pickLegStationsByGroupIds = (
+  stations: Station[],
+  stationGroupIds: number[]
+): Station[] => {
+  const indicesOf = (groupId: number | undefined) =>
+    stations.flatMap((s, index) => (s.groupId === groupId ? [index] : []));
+  const nearest = (candidates: number[], reference: number) =>
+    candidates.reduce(
+      (best, index) =>
+        Math.abs(index - reference) < Math.abs(best - reference) ? index : best,
+      candidates[0] ?? -1
+    );
+
+  const picked: Station[] = [];
+  let previous = -1;
+  for (const [position, groupId] of stationGroupIds.entries()) {
+    const candidates = indicesOf(groupId);
+    if (!candidates.length) return [];
+    const reference =
+      previous !== -1
+        ? previous
+        : nearest(indicesOf(stationGroupIds[position + 1]), candidates[0]);
+    const index = nearest(candidates, reference);
+    picked.push(stations[index]);
+    previous = index;
+  }
+  return picked;
 };
 
 /**

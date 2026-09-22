@@ -23,6 +23,7 @@ import {
   getStationWithMatchingLine,
   pickDefaultTrainType,
   pickInitialRouteTrainType,
+  pickLegStationsByGroupIds,
   sliceLegStations,
 } from '~/utils/routeSearch';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
@@ -169,12 +170,16 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
           const res = await fetchStationsByLineGroupId({
             variables: { lineGroupId: legTrainType.groupId },
           });
+          const legStations = res.data?.lineGroupStations ?? [];
+          // 探索が選んだ弧(駅グループの並び)に沿って拾う。選んだ種別がその駅グループを
+          // 持たない(探索で使った系統と別の路線を走る)ときは、乗降駅から切り出す
+          const alongPath = leg.stationGroupIds?.length
+            ? pickLegStationsByGroupIds(legStations, leg.stationGroupIds)
+            : [];
           return {
-            stations: sliceLegStations(
-              res.data?.lineGroupStations ?? [],
-              leg.fromStation,
-              leg.toStation
-            ),
+            stations: alongPath.length
+              ? alongPath
+              : sliceLegStations(legStations, leg.fromStation, leg.toStation),
             error: res.error,
           };
         })
