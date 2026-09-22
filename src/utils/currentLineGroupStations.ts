@@ -87,34 +87,35 @@ export const buildRouteLegInputs = (
  * legs を渡した trainRoute の segments を、進行順に並べた駅リストに揃える。
  *
  * API は区間ごとの駅をそのまま連結して返すので、乗換駅は前の区間の降車駅と次の区間の
- * 乗車駅の 2 回現れる。駅リストは乗換駅を 1 度だけ持つので、次の区間の乗車駅の分
- * (距離 0 の区間の起点)を捨て、前の区間の列車で乗換駅に着くまでの分を残す
+ * 乗車駅の 2 回現れる。系統の中で路線が変わる駅(東海道・山陽新幹線の新大阪など)も
+ * 2 回現れることがある。駅リストはどちらも 1 度だけ持つので、segments を駅グループで
+ * 駅リストと突き合わせ、同じ駅グループが続く分は最初の 1 つ(その駅に着くまでの分)だけを残す。
+ * 件数の推定で揃えると、区間の切り出し方が API とずれたときに位置がずれる
  * @param segments trainRoute の segments(進行順の区間ごとに連結されたもの)
- * @param stations 乗車中の駅リスト(格納順)
- * @param reversed 駅リストの末尾から先頭へ進むなら true
- * @returns 進行順の駅リストと同じ長さの segments。長さが合わなければ null
+ * @param stations 進行順の駅リスト(同じ駅グループが続かないもの)
+ * @returns 駅リストと同じ長さの segments。突き合わせられなければ null
  */
-export const alignConnectedTrainRouteSegments = <T>(
+export const alignConnectedTrainRouteSegments = <
+  T extends { station?: { groupId?: number | null } | null },
+>(
   segments: T[],
-  stations: Station[],
-  reversed = false
+  stations: Station[]
 ): T[] | null => {
-  const ranges = getLineGroupRanges(stations);
-  // 駅リストは乗換駅を後ろの範囲の先頭に持つ。API の区間は乗換駅を両側に含むので、
-  // 格納順で前にある範囲(の区間)が 1 駅ぶん長い
-  const legLengths = ranges.map(
-    (range, index) =>
-      range.end - range.start + 1 + (index < ranges.length - 1 ? 1 : 0)
-  );
-  const orderedLengths = reversed ? legLengths.reverse() : legLengths;
-
-  const dropIndices = new Set<number>();
-  let offset = 0;
-  orderedLengths.forEach((length, index) => {
-    if (index > 0) dropIndices.add(offset);
-    offset += length;
-  });
-  if (offset !== segments.length) return null;
-
-  return segments.filter((_, index) => !dropIndices.has(index));
+  const aligned: T[] = [];
+  let cursor = 0;
+  for (const station of stations) {
+    const segment = segments[cursor];
+    if (
+      station.groupId == null ||
+      segment?.station?.groupId !== station.groupId
+    ) {
+      return null;
+    }
+    aligned.push(segment);
+    cursor++;
+    while (segments[cursor]?.station?.groupId === station.groupId) {
+      cursor++;
+    }
+  }
+  return cursor === segments.length ? aligned : null;
 };

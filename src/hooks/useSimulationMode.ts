@@ -128,7 +128,17 @@ export const useSimulationMode = (): void => {
     );
   const { data: connectedTrainRouteData, error: connectedTrainRouteError } =
     useGraphQLQuery<
-      GetTrainRouteQuery,
+      {
+        trainRoute: {
+          segments:
+            | (NonNullable<
+                GetTrainRouteQuery['trainRoute']['segments']
+              >[number] & {
+                station: { id?: number | null; groupId?: number | null } | null;
+              })[]
+            | null;
+        };
+      },
       { fromStationId: number; toStationId: number; legs: RouteLegInput[] }
     >(GET_CONNECTED_TRAIN_ROUTE, {
       variables: {
@@ -142,21 +152,20 @@ export const useSimulationMode = (): void => {
     ? connectedTrainRouteError
     : singleTrainRouteError;
 
-  // 区間を渡した trainRoute は乗換駅を 2 回含むので、駅リストの並びに揃えてから使う
+  // 区間を渡した trainRoute は乗換駅などを 2 回含むので、進行順の駅リストに揃えてから使う
   const trainRouteSegments = useMemo(() => {
     if (!routeLegs) {
       return singleTrainRouteData?.trainRoute?.segments ?? null;
     }
     const segments = connectedTrainRouteData?.trainRoute?.segments;
     return segments
-      ? alignConnectedTrainRouteSegments(segments, stations, isReversed)
+      ? alignConnectedTrainRouteSegments(segments, maybeRevsersedStations)
       : null;
   }, [
     routeLegs,
     singleTrainRouteData,
     connectedTrainRouteData,
-    stations,
-    isReversed,
+    maybeRevsersedStations,
   ]);
 
   const resolveStartIndex = useCallback((): number => {

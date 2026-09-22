@@ -95,45 +95,72 @@ describe('乗換経路の区間指定', () => {
   });
 
   describe('alignConnectedTrainRouteSegments', () => {
-    it('次の区間の乗車駅の分を捨てて駅リストの並びに揃える', () => {
-      // API: [光が丘, 都庁前, 新宿(大江戸線)] + [新宿(埼京線), 渋谷]
-      const segments = [
-        '光が丘',
-        '都庁前',
-        '新宿(大江戸線)',
-        '新宿(埼京線)',
-        '渋谷',
-      ];
-
-      expect(alignConnectedTrainRouteSegments(segments, joined)).toEqual([
-        '光が丘',
-        '都庁前',
-        '新宿(大江戸線)',
-        '渋谷',
-      ]);
+    const group = (groupId: number) =>
+      ({ id: groupId, groupId }) as unknown as Station;
+    const segment = (name: string, groupId: number) => ({
+      name,
+      station: { groupId },
     });
+    const names = (segments: { name: string }[] | null) =>
+      segments?.map((s) => s.name) ?? null;
 
-    it('末尾から進むときも次の区間の乗車駅の分を捨てて進行順に揃える', () => {
-      // API: [渋谷, 新宿(埼京線)] + [新宿(大江戸線), 都庁前, 光が丘]
-      const segments = [
-        '渋谷',
-        '新宿(埼京線)',
-        '新宿(大江戸線)',
-        '都庁前',
-        '光が丘',
-      ];
-
-      expect(alignConnectedTrainRouteSegments(segments, joined, true)).toEqual([
-        '渋谷',
-        '新宿(埼京線)',
-        '都庁前',
-        '光が丘',
-      ]);
-    });
-
-    it('長さが駅リストと合わなければ null を返す', () => {
+    it('乗換駅で 2 回現れる分は、その駅に着くまでの分だけを残す', () => {
+      // 光が丘・都庁前・新宿(大江戸線) + 新宿(埼京線)・渋谷。新宿は同じ駅グループ(3)
+      const stations = [group(1), group(2), group(3), group(4)];
       expect(
-        alignConnectedTrainRouteSegments(['光が丘', '渋谷'], joined)
+        names(
+          alignConnectedTrainRouteSegments(
+            [
+              segment('光が丘', 1),
+              segment('都庁前', 2),
+              segment('新宿(大江戸線)', 3),
+              segment('新宿(埼京線)', 3),
+              segment('渋谷', 4),
+            ],
+            stations
+          )
+        )
+      ).toEqual(['光が丘', '都庁前', '新宿(大江戸線)', '渋谷']);
+    });
+
+    // 系統の中で路線が変わる駅(東海道・山陽新幹線の新大阪)は、系統の駅リストに 2 回並ぶ。
+    // 乗換駅として次の区間の新大阪を渡すと API はそこまで切り出すので、区間の駅数から
+    // 件数を推定すると 1 駅ずれ、シミュレーションが走行区間を作れず止まっていた
+    it('系統の中で 2 回並ぶ駅と乗換駅が重なっても、駅グループで突き合わせて揃える', () => {
+      // 京都・新大阪 + 新大阪・新神戸。新大阪(3)は API で 3 回現れる
+      const stations = [group(1), group(2), group(3), group(4)];
+      expect(
+        names(
+          alignConnectedTrainRouteSegments(
+            [
+              segment('東京', 1),
+              segment('京都', 2),
+              segment('新大阪(東海道)', 3),
+              segment('新大阪(山陽、系統の中)', 3),
+              segment('新大阪(山陽、次の区間)', 3),
+              segment('新神戸', 4),
+            ],
+            stations
+          )
+        )
+      ).toEqual(['東京', '京都', '新大阪(東海道)', '新神戸']);
+    });
+
+    it('駅リストと突き合わせられなければ null を返す', () => {
+      const stations = [group(1), group(2), group(3)];
+      // 途中の駅が欠けている
+      expect(
+        alignConnectedTrainRouteSegments(
+          [segment('a', 1), segment('c', 3)],
+          stations
+        )
+      ).toBeNull();
+      // segments が余る
+      expect(
+        alignConnectedTrainRouteSegments(
+          [segment('a', 1), segment('b', 2), segment('c', 3), segment('d', 4)],
+          stations
+        )
       ).toBeNull();
     });
   });

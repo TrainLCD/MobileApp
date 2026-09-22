@@ -1060,8 +1060,13 @@ describe('useSimulationMode', () => {
           170
         ),
       ];
-      const segment = (distanceFromPrevious: number, maxSpeed: number) => ({
+      const segment = (
+        groupId: number,
+        distanceFromPrevious: number,
+        maxSpeed: number
+      ) => ({
         __typename: 'TrainRouteSegment' as const,
+        station: { groupId },
         distanceFromPrevious,
         maxAcceleration: 1,
         maxDeceleration: 1,
@@ -1091,11 +1096,11 @@ describe('useSimulationMode', () => {
           { autoModeEnabled: false }
         );
         mockConnectedTrainRoute([
-          segment(0, 10),
-          segment(1000, 10),
-          segment(2000, 20),
-          segment(0, 99),
-          segment(3000, 30),
+          segment(9930138, 0, 10),
+          segment(1130225, 1000, 10),
+          segment(1130208, 2000, 20),
+          segment(1130208, 0, 99),
+          segment(1130205, 3000, 30),
         ]);
         const generateSpy = jest.spyOn(
           trainSpeedModule,
@@ -1114,17 +1119,18 @@ describe('useSimulationMode', () => {
         ]);
       });
 
-      it('区間を渡した trainRoute の長さが駅リストと合わなければ速度プロファイルを作らない', () => {
+      it('区間を渡した trainRoute を駅リストと突き合わせられなければ速度プロファイルを作らない', () => {
         const stations = joinedStations();
         setupAtomMocks(
           { station: stations[0], stations, selectedDirection: 'INBOUND' },
           { autoModeEnabled: false }
         );
+        // 都庁前が欠けている
         mockConnectedTrainRoute([
-          segment(0, 10),
-          segment(1000, 10),
-          segment(2000, 20),
-          segment(3000, 30),
+          segment(9930138, 0, 10),
+          segment(1130208, 2000, 20),
+          segment(1130208, 0, 99),
+          segment(1130205, 3000, 30),
         ]);
         const generateSpy = jest.spyOn(
           trainSpeedModule,
