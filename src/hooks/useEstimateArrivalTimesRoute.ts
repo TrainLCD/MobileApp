@@ -4,7 +4,14 @@ import type {
   EstimateArrivalTimesQuery,
   EstimateArrivalTimesQueryVariables,
 } from '~/@types/graphql';
-import { ESTIMATE_ARRIVAL_TIMES } from '~/lib/graphql/queries';
+import {
+  ESTIMATE_ARRIVAL_TIMES,
+  ESTIMATE_CONNECTED_ROUTE_ARRIVAL_TIMES,
+} from '~/lib/graphql/queries';
+import {
+  buildRouteLegInputs,
+  type RouteLegInput,
+} from '~/utils/currentLineGroupStations';
 import { selectedLineAtom } from '../store/atoms/line';
 import {
   selectedBoundAtom,
@@ -14,6 +21,12 @@ import {
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
+
+type EstimateConnectedRouteArrivalTimesVariables = {
+  fromStationId: number;
+  toStationId: number;
+  legs: RouteLegInput[];
+};
 
 /**
  * 選択中の路線・駅情報から estimateArrivalTimes クエリの変数を組み立て、
@@ -30,6 +43,17 @@ export const useEstimateArrivalTimesRoute = (options?: { skip?: boolean }) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const trainType = useCurrentTrainType();
   const { isLoopLine } = useLoopLine();
+
+  // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになっていて、1 系統の中でしか
+  // 推定しない従来の問い合わせでは引けない。区間(legs)を進行順に渡して経路全体を
+  // 1 本として推定させる。1 系統だけの駅リストでは null になり、従来の問い合わせを使う
+  const routeLegs = useMemo(
+    () =>
+      selectedDirection
+        ? buildRouteLegInputs(stations, selectedDirection === 'OUTBOUND')
+        : null,
+    [stations, selectedDirection]
+  );
 
   // stations 配列は [上り方面の終点, ..., 下り方面の終点] の順。
   // 線形路線では OUTBOUND は末尾→先頭方向、INBOUND は先頭→末尾方向に進むので from/to を入れ替える。
@@ -73,6 +97,7 @@ export const useEstimateArrivalTimesRoute = (options?: { skip?: boolean }) => {
   const skip =
     !!options?.skip ||
     !selectedBound ||
+    !!routeLegs ||
     fromStationId == null ||
     toStationId == null ||
     filteringId == null;
@@ -90,11 +115,34 @@ export const useEstimateArrivalTimesRoute = (options?: { skip?: boolean }) => {
     skip,
   });
 
+  // 区間を渡した推定は、系統をまたぐ 1 本の経路(id は null)だけを返す
+  const connectedSkip = !!options?.skip || !selectedBound || !routeLegs;
+  const {
+    data: connectedData,
+    loading: connectedLoading,
+    error: connectedError,
+  } = useGraphQLQuery<
+    EstimateArrivalTimesQuery,
+    EstimateConnectedRouteArrivalTimesVariables
+  >(ESTIMATE_CONNECTED_ROUTE_ARRIVAL_TIMES, {
+    variables: {
+      fromStationId: routeLegs?.[0]?.fromStationId ?? 0,
+      toStationId: routeLegs?.at(-1)?.toStationId ?? 0,
+      legs: routeLegs ?? [],
+    },
+    skip: connectedSkip,
+  });
+
   // レスポンスの routes から filteringId に一致するルートを1件取り出す。
   // stops の絞り込み・相対時間変換は呼び出し側の責務。
   const matchedRoute = useMemo(() => {
     // skip時でも同一queryKeyのキャッシュがあるとdataは返ってくる(enabledはfetch抑止のみ)
     // ため、ルートを返さないことをここで保証する
+    if (routeLegs) {
+      return connectedSkip
+        ? null
+        : (connectedData?.estimateArrivalTimes?.routes?.[0] ?? null);
+    }
     if (skip) {
       return null;
     }
@@ -104,7 +152,9 @@ export const useEstimateArrivalTimesRoute = (options?: { skip?: boolean }) => {
     }
 
     return routes.find((r) => r.id === filteringId) ?? null;
-  }, [data, filteringId, skip]);
+  }, [data, filteringId, skip, routeLegs, connectedData, connectedSkip]);
 
-  return { route: matchedRoute, loading, error };
+  return routeLegs
+    ? { route: matchedRoute, loading: connectedLoading, error: connectedError }
+    : { route: matchedRoute, loading, error };
 };

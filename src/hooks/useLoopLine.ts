@@ -12,6 +12,7 @@ import {
   YAMANOTE_LINE_ID,
   YAMANOTE_LINE_MAJOR_STATIONS_ID,
 } from '~/constants';
+import { isJoinedLineGroupStations } from '~/utils/currentLineGroupStations';
 import reverseStations from '~/utils/reverseStations';
 import { getIsLocal } from '~/utils/trainTypeString';
 import { stationsAtom } from '../store/atoms/station';
@@ -37,27 +38,38 @@ export const useLoopLine = (
 
   const trainType = useCurrentTrainType();
 
+  // 経路検索の乗換経路は、区間ごとの駅を進行順につないだ線形の駅リストになっている。
+  // 環状線の区間を含んでいても、環状線の規約(INBOUND = 配列逆順など)を当てると
+  // 次駅や方面が逆向きになるので、環状線として扱わない
+  const isJoinedRoute = useMemo(
+    () => isJoinedLineGroupStations(stations),
+    [stations]
+  );
+
   const isYamanoteLine = useMemo(
     (): boolean =>
-      line
+      !isJoinedRoute &&
+      (line
         ? line?.id === YAMANOTE_LINE_ID
-        : stations.every((s) => s.line?.id === YAMANOTE_LINE_ID),
-    [line, stations]
+        : stations.every((s) => s.line?.id === YAMANOTE_LINE_ID)),
+    [isJoinedRoute, line, stations]
   );
 
   const isOsakaLoopLine = useMemo(
     (): boolean =>
-      line
+      !isJoinedRoute &&
+      (line
         ? line?.id === OSAKA_LOOP_LINE_ID
-        : stations.every((s) => s.line?.id === OSAKA_LOOP_LINE_ID),
-    [line, stations]
+        : stations.every((s) => s.line?.id === OSAKA_LOOP_LINE_ID)),
+    [isJoinedRoute, line, stations]
   );
   const isMeijoLine = useMemo(
     (): boolean =>
-      line
+      !isJoinedRoute &&
+      (line
         ? line?.id === MEIJO_LINE_ID
-        : stations.every((s) => s.line?.id === MEIJO_LINE_ID),
-    [line, stations]
+        : stations.every((s) => s.line?.id === MEIJO_LINE_ID)),
+    [isJoinedRoute, line, stations]
   );
   const isOedoLine = useMemo(
     (): boolean =>
@@ -68,10 +80,11 @@ export const useLoopLine = (
   );
   const isDisneyResortLine = useMemo(
     (): boolean =>
-      line
+      !isJoinedRoute &&
+      (line
         ? line?.id === DISNEY_RESORT_LINE_ID
-        : stations.every((s) => s.line?.id === DISNEY_RESORT_LINE_ID),
-    [line, stations]
+        : stations.every((s) => s.line?.id === DISNEY_RESORT_LINE_ID)),
+    [isJoinedRoute, line, stations]
   );
 
   const majorStationIdSet = useMemo(() => {
