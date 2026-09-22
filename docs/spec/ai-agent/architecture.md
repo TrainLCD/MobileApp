@@ -668,7 +668,7 @@ LLM 4 回（3 イテレーション + 最終応答。ツール結果の蓄積と
   React Native の XHR が逐次配送を有効にするので、`responseText` の未処理分
   （処理済み文字数との差分）を毎回切り出して `parseSSEChunk` に渡す。
   HTTP ステータスは `readyState >= 2` の時点で判定し、429 は `rateLimited`、
-  その他の非 2xx は `network` として確定して `abort()` する。
+  504 は `timeout`、その他の非 2xx は `network` として確定して `abort()` する。
 - SSE のパースは自前の最小実装 `src/utils/sse.ts`（新規・依存ゼロ）で
   行う。`event:` / `data:` 行とイベント区切り（空行）のみ解釈し、
   複数行 `data` の連結・コメント行（`:` 開始）の無視・チャンク境界を
