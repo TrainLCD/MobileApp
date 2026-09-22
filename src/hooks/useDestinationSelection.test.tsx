@@ -17,6 +17,14 @@ import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 jest.mock('./useLazyGraphQLQuery', () => ({
   useLazyGraphQLQuery: jest.fn(),
 }));
+// ~/lib/gql は読み込み時に API の URL(.env.local)を検査する。CI には .env.local が無いので
+// 実物を読み込まない
+jest.mock('~/lib/gql', () => ({
+  graphqlQueryKey: jest.fn((_document: unknown, variables?: object) => [
+    'query',
+    variables ?? null,
+  ]),
+}));
 
 type HookResult = ReturnType<typeof useDestinationSelection> | null;
 
