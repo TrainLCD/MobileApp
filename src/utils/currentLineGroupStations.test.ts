@@ -66,36 +66,32 @@ describe('getCurrentLineGroupStations', () => {
 describe('乗換経路の区間指定', () => {
   const OEDO = 99301;
   const SAIKYO = 11321;
-  // 乗換駅(新宿)は次の区間(埼京線)の駅として 1 度だけ持ち、lines から大江戸線の新宿を引ける
+  // 乗換駅(新宿)は次の区間(埼京線)の駅として 1 度だけ持つ
   const stationOn = (
     id: number,
     lineId: number,
-    groupId: number | null,
-    lines: { id: number; stationId: number }[] = []
+    groupId: number | null
   ): Station =>
     ({
       id,
       groupId: id,
       line: { id: lineId },
-      lines: lines.map((l) => ({ id: l.id, station: { id: l.stationId } })),
       trainType: groupId == null ? null : { groupId },
     }) as unknown as Station;
   const hikarigaoka = stationOn(9930138, OEDO, 1000099301);
   const tochomae = stationOn(9930100, OEDO, 1000099301);
-  const shinjuku = stationOn(1132104, SAIKYO, 170, [
-    { id: SAIKYO, stationId: 1132104 },
-    { id: OEDO, stationId: 9930128 },
-  ]);
+  const shinjuku = stationOn(1132104, SAIKYO, 170);
   const shibuya = stationOn(1132103, SAIKYO, 170);
   const joined = [hikarigaoka, tochomae, shinjuku, shibuya];
 
   describe('buildRouteLegInputs', () => {
-    it('区間ごとの系統と乗降駅を並べ、前の区間の降車駅は乗換駅の lines から引く', () => {
+    // 前の区間の系統に無い乗換駅は、API が同じ駅グループの駅で引き当てる
+    it('区間ごとの系統と乗降駅を並べ、前の区間の降車駅には乗換駅を渡す', () => {
       expect(buildRouteLegInputs(joined)).toEqual([
         {
           lineGroupId: 1000099301,
           fromStationId: 9930138,
-          toStationId: 9930128,
+          toStationId: 1132104,
         },
         { lineGroupId: 170, fromStationId: 1132104, toStationId: 1132103 },
       ]);
@@ -103,13 +99,6 @@ describe('乗換経路の区間指定', () => {
 
     it('1 系統だけの駅リストでは null を返す', () => {
       expect(buildRouteLegInputs([hikarigaoka, tochomae])).toBeNull();
-    });
-
-    it('乗換駅の lines に前の区間の路線が無ければ null を返す', () => {
-      const withoutOedo = stationOn(1132104, SAIKYO, 170);
-      expect(
-        buildRouteLegInputs([hikarigaoka, tochomae, withoutOedo, shibuya])
-      ).toBeNull();
     });
   });
 

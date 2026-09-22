@@ -996,25 +996,14 @@ describe('useSimulationMode', () => {
     it('乗換経路では区間を渡して trainRoute を引き、1 系統の問い合わせはしない', () => {
       const OEDO = 99301;
       const SAIKYO = 11321;
-      const withTrainType = (
-        station: Station,
-        groupId: number,
-        lines: Station['lines'] = []
-      ): Station => ({
+      const withTrainType = (station: Station, groupId: number): Station => ({
         ...station,
-        lines,
         trainType: { groupId } as Station['trainType'],
       });
       const stations = [
         withTrainType(mockStation(9930138, 9930138, 35.76, 139.63, OEDO), 7),
         withTrainType(mockStation(9930100, 1130225, 35.69, 139.69, OEDO), 7),
-        withTrainType(
-          mockStation(1132104, 1130208, 35.69, 139.7, SAIKYO),
-          170,
-          [
-            { id: OEDO, station: { id: 9930128 } },
-          ] as unknown as Station['lines']
-        ),
+        withTrainType(mockStation(1132104, 1130208, 35.69, 139.7, SAIKYO), 170),
         withTrainType(
           mockStation(1132103, 1130205, 35.658, 139.701, SAIKYO),
           170
@@ -1037,7 +1026,7 @@ describe('useSimulationMode', () => {
             fromStationId: 9930138,
             toStationId: 1132103,
             legs: [
-              { lineGroupId: 7, fromStationId: 9930138, toStationId: 9930128 },
+              { lineGroupId: 7, fromStationId: 9930138, toStationId: 1132104 },
               {
                 lineGroupId: 170,
                 fromStationId: 1132104,

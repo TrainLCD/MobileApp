@@ -78,11 +78,11 @@ export type RouteLegInput = {
 /**
  * 乗換経路をつないだ駅リストから、estimateArrivalTimes / trainRoute の legs を組み立てる。
  *
- * 駅リストは乗換駅を次の区間の乗車駅として持つので、前の区間の降車駅(同じ駅グループの
- * 前の区間の路線の駅)は、乗換駅の lines から前の区間の路線の駅を引いて求める。
+ * 駅リストは乗換駅を次の区間の乗車駅として持つので、前の区間の降車駅にもその乗換駅を
+ * 渡す。系統に無い乗降駅は API が同じ駅グループの駅で引き当てる(StationAPI#1687)。
  * 駅リストの並び(= 進行順)で区間を並べるので、駅リストの先頭から末尾へ進むときだけ使える
  * @param stations 乗車中の駅リスト
- * @returns 区間の並び。1 系統だけの駅リストや、区間の駅を引けない場合は null
+ * @returns 区間の並び。1 系統だけの駅リストや、区間の系統を引けない場合は null
  */
 export const buildRouteLegInputs = (
   stations: Station[]
@@ -94,11 +94,7 @@ export const buildRouteLegInputs = (
   for (const [index, range] of ranges.entries()) {
     const next = ranges[index + 1];
     const fromStationId = stations[range.start]?.id;
-    const toStationId = next
-      ? stations[next.start]?.lines?.find(
-          (line) => line.id === stations[range.end]?.line?.id
-        )?.station?.id
-      : stations[range.end]?.id;
+    const toStationId = stations[next ? next.start : range.end]?.id;
     if (range.groupId == null || fromStationId == null || toStationId == null) {
       return null;
     }

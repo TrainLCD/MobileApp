@@ -295,7 +295,9 @@ describe('useEstimateArrivalTimes', () => {
 
   // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになる。推定は 1 系統の中でしか
   // 返らないので、現在乗っている系統の範囲だけを、向きを指定せずに問い合わせる
-  it('乗換経路では現在駅を含む系統の範囲だけを問い合わせ、その系統で絞り込む', async () => {
+  // legs は駅リストの先頭から末尾へ進むときしか組み立てられない。オートモードの
+  // シミュレーションが終点で折り返して末尾から進むときは、現在乗っている系統の範囲だけを引く
+  it('乗換経路を末尾から進むときは現在駅を含む系統の範囲だけを問い合わせ、その系統で絞り込む', async () => {
     const leg1 = [
       createStation(11, {
         line: { id: 100 },
@@ -318,10 +320,11 @@ describe('useEstimateArrivalTimes', () => {
     ];
     setupAtoms({
       stations: [...leg1, ...leg2],
-      selectedBound: leg2[1],
-      leftStations: leg2,
+      selectedBound: leg1[0],
+      selectedDirection: 'OUTBOUND',
+      leftStations: [leg2[0], ...leg1],
     });
-    (useCurrentStation as jest.Mock).mockReturnValue(leg2[0]);
+    (useCurrentStation as jest.Mock).mockReturnValue(leg2[1]);
     mockUseCurrentTrainType.mockReturnValue({ groupId: 7 } as TrainType);
     mockGqlRequest.mockResolvedValue({
       estimateArrivalTimes: {
@@ -338,8 +341,8 @@ describe('useEstimateArrivalTimes', () => {
       expect(hookRef.current?.route?.id).toBe(8);
     });
     const variables = mockGqlRequest.mock.calls[0][1];
-    expect(variables.fromStationId).toBe(21);
-    expect(variables.toStationId).toBe(22);
+    expect(variables.fromStationId).toBe(22);
+    expect(variables.toStationId).toBe(21);
     expect(variables.viaLineIds).toEqual([200]);
     expect(variables.directionId).toBeUndefined();
   });
@@ -358,7 +361,6 @@ describe('useEstimateArrivalTimes', () => {
     const transfer = createStation(21, {
       line: { id: 200 },
       trainType: { groupId: 8 } as never,
-      lines: [{ id: 100, station: { id: 13 } }] as never,
     });
     const last = createStation(22, {
       line: { id: 200 },
@@ -387,7 +389,7 @@ describe('useEstimateArrivalTimes', () => {
       fromStationId: 11,
       toStationId: 22,
       legs: [
-        { lineGroupId: 7, fromStationId: 11, toStationId: 13 },
+        { lineGroupId: 7, fromStationId: 11, toStationId: 21 },
         { lineGroupId: 8, fromStationId: 21, toStationId: 22 },
       ],
     });
