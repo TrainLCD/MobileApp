@@ -47,6 +47,7 @@ type GetStationsByNameData = {
 type GetStationsByNameVariables = {
   name: string;
   limit?: number;
+  fromStationGroupId?: number;
 };
 
 const styles = StyleSheet.create({
@@ -206,6 +207,7 @@ const RouteSearchScreen = () => {
         variables: {
           name: query.trim(),
           limit: SEARCH_STATION_RESULT_LIMIT,
+          fromStationGroupId: station.groupId,
         },
       });
       const stations = result.data?.stationsByName ?? [];
