@@ -12,6 +12,7 @@ import {
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useDisplayCurrentStation } from './useDisplayCurrentStation';
 import { useEstimateArrivalTimes } from './useEstimateArrivalTimes';
@@ -35,6 +36,9 @@ jest.mock('../store/atoms/line', () => ({
 jest.mock('../store/atoms/navigation', () => ({
   __esModule: true,
   leftStationsAtom: { __atom: 'leftStations' },
+}));
+jest.mock('./useCurrentStation', () => ({
+  useCurrentStation: jest.fn(),
 }));
 jest.mock('./useCurrentTrainType', () => ({
   useCurrentTrainType: jest.fn(),
@@ -132,6 +136,7 @@ describe('useEstimateArrivalTimes', () => {
     setupAtoms();
     mockUseCurrentTrainType.mockReturnValue(null);
     mockUseDisplayCurrentStation.mockReturnValue(stationA);
+    (useCurrentStation as jest.Mock).mockReturnValue(stationA);
     mockUseLoopLine.mockReturnValue({
       isLoopLine: false,
     } as ReturnType<typeof useLoopLine>);
@@ -285,6 +290,57 @@ describe('useEstimateArrivalTimes', () => {
     });
 
     const variables = mockGqlRequest.mock.calls[0][1];
+    expect(variables.directionId).toBeUndefined();
+  });
+
+  // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになる。推定は 1 系統の中でしか
+  // 返らないので、現在乗っている系統の範囲だけを、向きを指定せずに問い合わせる
+  it('乗換経路では現在駅を含む系統の範囲だけを問い合わせ、その系統で絞り込む', async () => {
+    const leg1 = [
+      createStation(11, {
+        line: { id: 100 },
+        trainType: { groupId: 7 } as never,
+      }),
+      createStation(12, {
+        line: { id: 100 },
+        trainType: { groupId: 7 } as never,
+      }),
+    ];
+    const leg2 = [
+      createStation(21, {
+        line: { id: 200 },
+        trainType: { groupId: 8 } as never,
+      }),
+      createStation(22, {
+        line: { id: 200 },
+        trainType: { groupId: 8 } as never,
+      }),
+    ];
+    setupAtoms({
+      stations: [...leg1, ...leg2],
+      selectedBound: leg2[1],
+      leftStations: leg2,
+    });
+    (useCurrentStation as jest.Mock).mockReturnValue(leg2[0]);
+    mockUseCurrentTrainType.mockReturnValue({ groupId: 7 } as TrainType);
+    mockGqlRequest.mockResolvedValue({
+      estimateArrivalTimes: {
+        routes: [
+          { id: 7, stops: [] },
+          { id: 8, stops: [{ stationId: 22, cumulativeMinutes: 3 }] },
+        ],
+      },
+    });
+
+    const { hookRef } = renderHook();
+
+    await waitFor(() => {
+      expect(hookRef.current?.route?.id).toBe(8);
+    });
+    const variables = mockGqlRequest.mock.calls[0][1];
+    expect(variables.fromStationId).toBe(21);
+    expect(variables.toStationId).toBe(22);
+    expect(variables.viaLineIds).toEqual([200]);
     expect(variables.directionId).toBeUndefined();
   });
 

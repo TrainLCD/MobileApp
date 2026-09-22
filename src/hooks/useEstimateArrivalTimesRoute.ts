@@ -5,12 +5,14 @@ import type {
   EstimateArrivalTimesQueryVariables,
 } from '~/@types/graphql';
 import { ESTIMATE_ARRIVAL_TIMES } from '~/lib/graphql/queries';
+import { getCurrentLineGroupStations } from '~/utils/currentLineGroupStations';
 import { selectedLineAtom } from '../store/atoms/line';
 import {
   selectedBoundAtom,
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
+import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
@@ -24,12 +26,22 @@ import { useLoopLine } from './useLoopLine';
  * (useEstimateArrivalTimes)の責務とする。
  */
 export const useEstimateArrivalTimesRoute = (options?: { skip?: boolean }) => {
-  const stations = useAtomValue(stationsAtom);
+  const allStations = useAtomValue(stationsAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const trainType = useCurrentTrainType();
+  const currentStation = useCurrentStation();
   const { isLoopLine } = useLoopLine();
+
+  // 経路検索の乗換経路は系統ごとの駅をつないだ駅リストになっているが、推定は 1 系統の
+  // 中でしか返らないので、現在乗っている系統の範囲だけを問い合わせる。
+  // 1 系統だけの駅リストではそのまま全駅を使う
+  const { groupId: currentLineGroupId, stations } = useMemo(
+    () => getCurrentLineGroupStations(allStations, currentStation),
+    [allStations, currentStation]
+  );
+  const isJoinedRoute = stations !== allStations;
 
   // stations 配列は [上り方面の終点, ..., 下り方面の終点] の順。
   // 線形路線では OUTBOUND は末尾→先頭方向、INBOUND は先頭→末尾方向に進むので from/to を入れ替える。
@@ -56,8 +68,12 @@ export const useEstimateArrivalTimesRoute = (options?: { skip?: boolean }) => {
     [stations]
   );
 
-  // routes.id は種別選択時は trainType.groupId、未選択時は路線IDに対応する
-  const filteringId = trainType?.groupId ?? selectedLine?.id;
+  // routes.id は種別選択時は trainType.groupId、未選択時は路線IDに対応する。
+  // 乗換経路では今乗っている範囲の系統で引く
+  const filteringId =
+    (isJoinedRoute ? currentLineGroupId : null) ??
+    trainType?.groupId ??
+    selectedLine?.id;
 
   // StationAPI EstimateArrivalTimesRequest.direction_id (0 = 格納順, 1 = 逆順) に対応。
   // 環状路線は from/to 駅だけでは周回方向が一意に定まらず、directionId 未指定だと
@@ -66,8 +82,15 @@ export const useEstimateArrivalTimesRoute = (options?: { skip?: boolean }) => {
   // 進行方向が判明していれば常に directionId を明示的に指定する。travelsInStoredOrder は
   // 路線種別ごとの進行方向規約を織り込み済みなので、そのまま 格納順=0 / 逆順=1 に
   // 変換すればよい。undefined はシリアライズ時に落ちるので方面未選択時は送信されない。
+  // 乗換経路の範囲はアプリ側で並べ替えてつないでおり、API 側の格納順とは向きが
+  // 一致するとは限らない。線形の路線では directionId が無くても from→to で推定され、
+  // 環状線では短い弧が選ばれる(範囲を切り出すときも短い弧を選んでいる)ので渡さない
   const directionId =
-    selectedDirection != null ? (travelsInStoredOrder ? 0 : 1) : undefined;
+    selectedDirection != null && !isJoinedRoute
+      ? travelsInStoredOrder
+        ? 0
+        : 1
+      : undefined;
 
   // 呼び出し側がETA不要な場合・方面未選択・始発/終着が不明・フィルタ先が無い場合はクエリを実行しない
   const skip =
