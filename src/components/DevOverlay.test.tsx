@@ -350,22 +350,29 @@ describe('DevOverlay', () => {
       jest
         .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
         .mockReturnValue(true);
-      jest.spyOn(Date, 'now').mockReturnValue(100_000);
-      setupAtomValues({
-        etaAnchor: {
-          stationId: 5,
-          kind: 'DEPARTED',
-          observedAtMs: 88_000, // 12秒前
-        },
-      });
+      // clearAllMocks は戻り値の差し替えを残すので、ここで戻さないと後続のテストでも
+      // Date.now() が止まったままになる。コピー系の非同期テストは、それで高負荷時に
+      // 5秒のタイムアウトを超えていた
+      const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(100_000);
+      try {
+        setupAtomValues({
+          etaAnchor: {
+            stationId: 5,
+            kind: 'DEPARTED',
+            observedAtMs: 88_000, // 12秒前
+          },
+        });
 
-      const { getByTestId } = render(<DevOverlay />);
-      expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
-        'DEPARTED'
-      );
-      expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
-        '#5 · 12s ago'
-      );
+        const { getByTestId } = render(<DevOverlay />);
+        expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
+          'DEPARTED'
+        );
+        expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
+          '#5 · 12s ago'
+        );
+      } finally {
+        dateNowSpy.mockRestore();
+      }
     });
   });
 
