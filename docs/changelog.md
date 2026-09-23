@@ -6,6 +6,25 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-09-23 — Android リリースビルドの Gradle デーモンのヒープ上限を 4096m に引き上げ
+
+対象バージョン: v10.16.0 の本番ビルド失敗への対応
+
+### 内容
+
+- v10.16.0 の Build Android Production が `:expo-modules-core:lintVitalAnalyzeRelease` で
+  `OutOfMemoryError: Java heap space` を出して失敗した。同じ日の Canary ビルドでは同じタスクが通っている。
+- lint は Gradle デーモンの中で動き、`org.gradle.parallel=true` で複数モジュールの lint が同じヒープを使う。
+  そのため lint の重なり方によって 2048m を超えることがある。
+- `android/gradle.properties` の `org.gradle.jvmargs` を `-Xmx4096m` に上げた。Kotlin デーモンは 2048m のまま。
+- 引き上げ前に dry-run で実測した。ピーク時のメモリ使用量は 16GB 中 10289 MB で、swap は使われていない。
+  詳細は `docs/android-build-workflows.md` の「Build memory」にある。
+
+### 学び
+
+- #6879 では Metaspace だけが枯渇していたのでヒープを据え置いた。ヒープの上限を決めるときは、
+  Kotlin のコンパイルだけでなく lint のような Gradle デーモン内のタスクも含めて考える。
+
 ## 2026-09-12 — ストア版と同居できる Android の `local` ビルドバリアントを追加
 
 対象バージョン: v10.15.0

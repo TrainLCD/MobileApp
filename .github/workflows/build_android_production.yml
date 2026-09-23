@@ -147,20 +147,7 @@ jobs:
         working-directory: android
         env:
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
-        run: |
-          # TEMP: メモリ実測用。マージ前に削除する
-          ( while true; do
-              echo "$(date +%T) used_mb=$(free -m | awk '/Mem:/{print $3}') java_rss_mb=$(ps -C java -o rss= | awk '{s+=$1} END{print int(s/1024)}') top=$(ps -C java -o rss=,args= --sort=-rss | head -3 | awk '{printf "%dMB:%s ", $1/1024, ($0 ~ /KotlinCompileDaemon/ ? "kotlin" : ($0 ~ /GradleDaemon/ ? "gradle" : "other"))}')" >> /tmp/mem.log
-              sleep 5
-            done ) &
-          set +e
-          ./gradlew :app:bundleProdRelease :wearable:bundleProdRelease --no-daemon
-          rc=$?
-          echo "== peak used_mb"; sort -t= -k2 -n -r <(awk '{print $2}' /tmp/mem.log) | head -1
-          echo "== peak java_rss_mb"; awk '{print $3}' /tmp/mem.log | sort -t= -k2 -n -r | head -1
-          echo "== top samples by used"; sort -t= -k2 -n -r /tmp/mem.log | head -5
-          free -m
-          exit $rc
+        run: ./gradlew :app:bundleProdRelease :wearable:bundleProdRelease --no-daemon
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
