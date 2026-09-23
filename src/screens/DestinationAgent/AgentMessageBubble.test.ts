@@ -1,4 +1,4 @@
-import { parseBoldSegments } from './AgentMessageBubble';
+import { parseBoldSegments, splitUrls } from './AgentMessageBubble';
 
 describe('parseBoldSegments', () => {
   it('強調を含まない文はそのまま 1 セグメントで返す', () => {
@@ -39,5 +39,67 @@ describe('parseBoldSegments', () => {
 
   it('空文字は空配列を返す', () => {
     expect(parseBoldSegments('')).toEqual([]);
+  });
+});
+
+describe('splitUrls', () => {
+  it('URL を含まない文はそのまま返す', () => {
+    expect(splitUrls('こんにちは。')).toEqual([{ text: 'こんにちは。' }]);
+  });
+
+  it('全角括弧で囲まれた URL だけをリンクにする', () => {
+    expect(
+      splitUrls(
+        'サービスステータス（https://status.trainlcd.app）もご確認ください。'
+      )
+    ).toEqual([
+      { text: 'サービスステータス（' },
+      {
+        text: 'https://status.trainlcd.app',
+        url: 'https://status.trainlcd.app',
+      },
+      { text: '）もご確認ください。' },
+    ]);
+  });
+
+  it('空白なしで日本語が続いても URL に含めない', () => {
+    expect(splitUrls('https://trainlcd.appをご覧ください')).toEqual([
+      { text: 'https://trainlcd.app', url: 'https://trainlcd.app' },
+      { text: 'をご覧ください' },
+    ]);
+  });
+
+  it('文末のピリオドと半角の閉じ括弧を URL から外す', () => {
+    expect(splitUrls('See (https://example.com/a?b=1).')).toEqual([
+      { text: 'See (' },
+      { text: 'https://example.com/a?b=1', url: 'https://example.com/a?b=1' },
+      { text: ').' },
+    ]);
+  });
+
+  it('URL 内で対応の取れた括弧は残す', () => {
+    const url = 'https://en.wikipedia.org/wiki/Yamanote_Line_(disambiguation)';
+    expect(splitUrls(`${url} を参照`)).toEqual([
+      { text: url, url },
+      { text: ' を参照' },
+    ]);
+  });
+
+  it('複数の URL を順に分解する', () => {
+    expect(splitUrls('http://a.example と https://b.example')).toEqual([
+      { text: 'http://a.example', url: 'http://a.example' },
+      { text: ' と ' },
+      { text: 'https://b.example', url: 'https://b.example' },
+    ]);
+  });
+
+  it('http(s) 以外のスキームはリンクにしない', () => {
+    expect(splitUrls('javascript:alert(1) tel:0120')).toEqual([
+      { text: 'javascript:alert(1) tel:0120' },
+    ]);
+  });
+
+  it('スキームだけの文字列はリンクにしない', () => {
+    expect(splitUrls('https://.')).toEqual([{ text: 'https://.' }]);
   });
 });
