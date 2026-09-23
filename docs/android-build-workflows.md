@@ -206,9 +206,9 @@ So do not read the difference between the ceilings and the runner's RAM as
 available headroom, least of all on the 8 GB tier.
 
 Before merging the `4096m` Gradle daemon heap, a Build Android Production
-dry-run on `ubuntu-22.04`, already running with that ceiling, sampled `free -m` and the RSS of every `java` process
-every 5 seconds through `./gradlew :app:bundleProdRelease
-:wearable:bundleProdRelease --no-daemon`
+dry-run on `ubuntu-22.04`, already running with that ceiling, sampled
+`free -m` and the RSS of every `java` process every 5 seconds through
+`./gradlew :app:bundleProdRelease :wearable:bundleProdRelease --no-daemon`
 ([run 35844360229](https://github.com/TrainLCD/MobileApp/actions/runs/35844360229)):
 
 | Measurement | Peak |
