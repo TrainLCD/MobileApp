@@ -1,12 +1,11 @@
+import * as WebBrowser from 'expo-web-browser';
 import { useAtomValue } from 'jotai';
 import { useCallback } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Typography from '~/components/Typography';
 import type { AgentMessageRole } from '~/hooks/useDestinationAgent';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import { translate } from '~/translation';
-import { showDialog } from '~/utils/dialogPresentation';
 import { getAgentColors } from './agentColors';
 
 // ユーザバブルは白文字とのコントラスト比 4.5:1 以上(WCAG AA)を満たす色を使う。
@@ -125,10 +124,11 @@ export const AgentMessageBubble = ({ role, content }: Props) => {
   const isUser = role === 'user';
   const onColoredBubble = isUser || isLEDTheme;
 
+  // 外部ブラウザへ遷移すると相談中の会話から離脱してしまうため、
+  // 設定画面の FAQ などと同じくアプリ内ブラウザで開き、閉じれば会話へ戻れるようにする
   const handleLinkPress = useCallback((url: string) => {
-    Linking.openURL(url).catch((error) => {
-      console.error('Failed to open link in agent message', error);
-      showDialog(translate('errorTitle'), translate('failedToOpenLink'));
+    WebBrowser.openBrowserAsync(url).catch((error) => {
+      console.warn('リンクを開けませんでした:', error);
     });
   }, []);
 
