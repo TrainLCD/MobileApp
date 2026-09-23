@@ -27,22 +27,29 @@ export const parseBoldSegments = (content: string): BubbleSegment[] =>
 
 // URL として扱うのは http(s) だけ。AI 応答を開く先に任意スキームを許さない。
 // 日本語の本文では URL の直後に空白を置かずに「をご確認」「）」が続くため、
-// URL の構成文字は ASCII に限る
-const URL_REGEX = /https?:\/\/[A-Za-z0-9\-._~:/?#[\]@!$&'()*+,;=%]+/g;
+// URL の構成文字は ASCII に限る。カンマの直後に次の URL が始まる場合は
+// カンマを区切りとみなし、2 つの URL を 1 つのリンクにまとめない
+const URL_REGEX =
+  /https?:\/\/(?:[A-Za-z0-9\-._~:/?#[\]@!$&'()*+;=%]|,(?!https?:\/\/))+/g;
 // 文末の句読点や閉じ括弧は URL に含めない
 const URL_TRAILING_PUNCTUATION_REGEX = /[.,:;!?'*]+$/;
 
+const BRACKET_PAIRS: Record<string, string> = { ')': '(', ']': '[' };
+
+const countChar = (text: string, char: string) => text.split(char).length - 1;
+
 const trimUrl = (candidate: string): string => {
   let url = candidate.replace(URL_TRAILING_PUNCTUATION_REGEX, '');
-  // 「(https://example.com)」の閉じ括弧は URL の外側。URL 内で対応の取れた
-  // 括弧(Wikipedia の記事名など)だけを残す
-  while (
-    url.endsWith(')') &&
-    (url.match(/\)/g)?.length ?? 0) > (url.match(/\(/g)?.length ?? 0)
-  ) {
+  // 「(https://example.com)」「[https://example.com]」の閉じ括弧は URL の外側。
+  // URL 内で対応の取れた括弧(Wikipedia の記事名や IPv6 のホストなど)だけを残す
+  for (;;) {
+    const close = url[url.length - 1];
+    const open = BRACKET_PAIRS[close];
+    if (!open || countChar(url, close) <= countChar(url, open)) {
+      return url;
+    }
     url = url.slice(0, -1).replace(URL_TRAILING_PUNCTUATION_REGEX, '');
   }
-  return url;
 };
 
 export type TextPart = { text: string; url?: string };

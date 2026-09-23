@@ -85,6 +85,38 @@ describe('splitUrls', () => {
     ]);
   });
 
+  it('カンマで直結した URL を別々のリンクに分ける', () => {
+    expect(splitUrls('https://a.example,https://b.example')).toEqual([
+      { text: 'https://a.example', url: 'https://a.example' },
+      { text: ',' },
+      { text: 'https://b.example', url: 'https://b.example' },
+    ]);
+  });
+
+  it('URL の途中のカンマは残す', () => {
+    const url = 'https://example.com/?ids=1,2';
+    expect(splitUrls(url)).toEqual([{ text: url, url }]);
+  });
+
+  it('角括弧で囲まれた URL から閉じ角括弧を外す', () => {
+    expect(splitUrls('[https://status.trainlcd.app]')).toEqual([
+      { text: '[' },
+      {
+        text: 'https://status.trainlcd.app',
+        url: 'https://status.trainlcd.app',
+      },
+      { text: ']' },
+    ]);
+  });
+
+  it('IPv6 ホストの角括弧は残す', () => {
+    const url = 'http://[::1]:8080/path';
+    expect(splitUrls(`${url} を開く`)).toEqual([
+      { text: url, url },
+      { text: ' を開く' },
+    ]);
+  });
+
   it('複数の URL を順に分解する', () => {
     expect(splitUrls('http://a.example と https://b.example')).toEqual([
       { text: 'http://a.example', url: 'http://a.example' },
