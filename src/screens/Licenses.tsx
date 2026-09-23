@@ -35,8 +35,10 @@ type LicenseId =
   | 'keio_bus'
   | 'tokyu_bus'
   | 'hakodate_city'
+  | 'firebase'
   | 'roboto'
-  | 'voicevox_no7'
+  | 'voicevox_tobari'
+  | 'vits_ljs'
   | 'other_oss';
 
 type LicenseItem = {
@@ -148,10 +150,13 @@ const ListFooter = ({
 const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/';
 const APACHE_2_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 const MIT_URL = 'https://opensource.org/licenses/MIT';
-// VOICEVOX 音声ライブラリ「No.7」の利用規約。iOS のオンデバイス TTS フォールバック
+// VOICEVOX 音声ライブラリ「夜語トバリ」の利用規約。iOS のオンデバイス TTS フォールバック
 // (docs/spec/tts/on-device-tts-ios.md) で使う音声で、クレジット表記が利用条件
 const VOICEVOX_URL = 'https://voicevox.hiroshiba.jp/';
-const VOICEVOX_NO7_TERMS_URL = 'https://voiceseven.com/#j0200';
+const VOICEVOX_TOBARI_TERMS_URL = 'https://yogataritobari.studio.site/#rules';
+// 英語のオンデバイス TTS で使う音声モデル。icefall の LJSpeech レシピで学習されたもので、
+// モデルは Apache-2.0、学習データ (LJSpeech) はパブリックドメイン
+const VITS_LJS_URL = 'https://huggingface.co/csukuangfj/vits-ljs';
 const ODPT_BASIC_LICENSE_URL =
   'https://developer.odpt.org/terms/data_basic_license.html';
 // 公共交通オープンデータセンターのGTFSデータ利用規約 (ckan.odpt.org の函館市電データセットが指定するライセンス)
@@ -282,6 +287,15 @@ const Licenses: React.FC = () => {
             devOnly: false,
           },
           {
+            id: 'firebase',
+            title: 'Firebase',
+            icon: '🔥',
+            href: 'https://firebase.google.com/',
+            license: 'Apache License 2.0',
+            licenseUrl: APACHE_2_URL,
+            devOnly: false,
+          },
+          {
             id: 'roboto',
             title: 'Roboto Font',
             icon: '🔤',
@@ -291,13 +305,23 @@ const Licenses: React.FC = () => {
             devOnly: false,
           },
           {
-            // クレジット表記「VOICEVOX:No.7」は規約で定められた文言のため翻訳しない
-            id: 'voicevox_no7',
-            title: 'VOICEVOX:No.7',
+            // クレジット表記「VOICEVOX:夜語トバリ」は規約で定められた文言のため翻訳しない
+            id: 'voicevox_tobari',
+            title: 'VOICEVOX:夜語トバリ',
             icon: '🗣️',
             href: VOICEVOX_URL,
-            license: translate('voicevoxNo7Terms'),
-            licenseUrl: VOICEVOX_NO7_TERMS_URL,
+            license: translate('voicevoxTobariTerms'),
+            licenseUrl: VOICEVOX_TOBARI_TERMS_URL,
+            devOnly: false,
+            iosOnly: true,
+          },
+          {
+            id: 'vits_ljs',
+            title: translate('vitsLjsLicense'),
+            icon: '🗣️',
+            href: VITS_LJS_URL,
+            license: 'Apache License 2.0',
+            licenseUrl: APACHE_2_URL,
             devOnly: false,
             iosOnly: true,
           },

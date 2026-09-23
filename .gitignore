@@ -159,5 +159,11 @@ dist/
 ruleset_backup.json
 ruleset_relaxed.json
 
-# VOICEVOX CORE の xcframework は scripts/fetch-voicevox-frameworks.mjs が取得する
+# VOICEVOX CORE の xcframework と ONNX Runtime のヘッダは
+# scripts/fetch-voicevox-frameworks.mjs が取得する
 /ios/Frameworks/*.xcframework/
+/ios/Frameworks/onnxruntime-headers/
+
+# Firebase（CI はシークレットから復元する）
+google-services.json
+GoogleService-Info.plist

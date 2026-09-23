@@ -10,6 +10,10 @@
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
+  <!-- 広告 ID は使わない。Firebase Analytics（play-services-measurement）がマージしてくる権限を外す -->
+  <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+  <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove"/>
+  <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove"/>
   <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove"/>
   <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
   <uses-permission android:name="android.permission.WAKE_LOCK"/>

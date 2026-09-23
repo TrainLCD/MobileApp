@@ -11,6 +11,12 @@ ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSou
 ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true' && podfile_properties['newArchEnabled'] != 'false'
 platform :ios, podfile_properties['ios.deploymentTarget'] || '16.4'
 
+# 広告 ID（IDFA）は使わないため、Firebase Analytics の IdentitySupport をリンクしない
+$RNFirebaseAnalyticsWithoutAdIdSupport = true
+# ios.useFrameworks が static のため、Firebase を SPM ではなく CocoaPods で解決する。
+# SPM のままだと各 RNFB pod が Firebase を個別に埋め込み、リンク時にシンボルが重複する
+$RNFirebaseDisableSPM = true
+
 prepare_react_native_project!
 
 abstract_target 'TrainLCD' do

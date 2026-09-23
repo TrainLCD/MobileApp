@@ -5,6 +5,12 @@ import { LineType } from '~/@types/graphql';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
+import {
+  countAcceptedLocation,
+  countLocationRejectedByEta,
+  countLocationRejectedBySpeed,
+  resetLocationPipelineStats,
+} from '~/utils/locationPipelineStats';
 import { store } from '..';
 import { etaAnchorAtom, etaStopsAtom } from './etaFallback';
 import stationState from './station';
@@ -106,6 +112,28 @@ export const backgroundLocationTrackingAtom = atom(false);
 // 下流の処理が「現在位置を信用できない＝走行中」と扱えるようにする。
 export const locationAccuracyOutlierAtom = atom(false);
 
+// 直近のsetLocationが下した平滑化の判定。診断表示専用で、パイプラインの判定には使わない。
+// 地下の挙動を調べるとき、locationAtomの値だけではどちらの経路を通ったか分からず、
+// 条件を外から組み直すと判定と食い違うため、結果そのものを残す。
+//
+// 結果(skipSmoothing)と入力(lineType)を1つのオブジェクトで持つ。別々のatomにすると、
+// lineTypeは測位と無関係に変わる(stationAtomの更新)ため、判定後に路線が変わった状態で
+// 持ち出したときに「判定時のskipSmoothing」と「持ち出し時のlineType」という別の瞬間の
+// 値が並び、両者で検算できなくなる。
+export type SmoothingDecision = {
+  skipSmoothing: boolean;
+  lineType: LineType | null;
+};
+
+const INITIAL_SMOOTHING_DECISION: SmoothingDecision = {
+  skipSmoothing: false,
+  lineType: null,
+};
+
+export const smoothingDecisionAtom = atom<SmoothingDecision>(
+  INITIAL_SMOOTHING_DECISION
+);
+
 // EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
 // 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
@@ -128,8 +156,10 @@ export const resetLocationState = () => {
   store.set(lastFilteredLocationAtom, null);
   store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
+  store.set(smoothingDecisionAtom, INITIAL_SMOOTHING_DECISION);
   consecutiveSpeedRejections = 0;
   resetEtaBoundHold();
+  resetLocationPipelineStats();
 };
 
 // ワープ対策フィルタによる棄却有無を記録する。handleTrackingLocationから
@@ -159,6 +189,7 @@ const resyncLocationReference = (
   store.set(lastRawLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
   consecutiveSpeedRejections = 0;
+  countAcceptedLocation();
 };
 
 // ETAの進行量上限から外れた測位を、何駅ぶんまで許容するか。単位は「停車駅」で、
@@ -261,10 +292,26 @@ export const setLocation = (location: Location.LocationObject) => {
   const currentLineType = store.get(stationState).station?.line?.lineType;
   const skipSmoothing =
     currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
+  // 判定の結果と入力を、同じ瞬間の組として残す。DevOverlayの診断表示から
+  // 「いま地下鉄分岐に入っているか」と「その根拠」を読めるようにするためで、
+  // 同じ条件を呼び出し側で組み直すと判定と表示が別々に育って食い違う。
+  // 値が変わらないときは書かない。毎回新しいオブジェクトを入れると、購読側が
+  // 測位のたびに再レンダーする。
+  const prevDecision = store.get(smoothingDecisionAtom);
+  if (
+    prevDecision.skipSmoothing !== skipSmoothing ||
+    prevDecision.lineType !== (currentLineType ?? null)
+  ) {
+    store.set(smoothingDecisionAtom, {
+      skipSmoothing,
+      lineType: currentLineType ?? null,
+    });
+  }
 
   // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
   if (isImplausibleByEta(location)) {
     store.set(accuracyHistoryAtom, updatedHistory);
+    countLocationRejectedByEta();
     return;
   }
 
@@ -275,6 +322,7 @@ export const setLocation = (location: Location.LocationObject) => {
   if (skipSmoothing) {
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
+    countAcceptedLocation();
     return;
   }
 
@@ -315,6 +363,7 @@ export const setLocation = (location: Location.LocationObject) => {
         return;
       }
       store.set(accuracyHistoryAtom, updatedHistory);
+      countLocationRejectedBySpeed();
       return;
     }
   }
@@ -358,4 +407,5 @@ export const setLocation = (location: Location.LocationObject) => {
   // 速度フィルタの基準はスムージング前の生座標を保持する
   store.set(lastRawLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
+  countAcceptedLocation();
 };

@@ -1,6 +1,12 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Firebase Analytics 用。android/app/google-services.json（Git 管理外）を読む。
+// GitHub Actions は Canary / Production でシークレットを分けて復元する。EAS はファイル型環境変数
+// GOOGLE_SERVICES_JSON から置く（scripts/eas-restore-google-services.mjs）。
+// JSON にはビルドするフレーバーの applicationId が含まれている必要がある
+// （local フレーバーをビルドするなら .local も要る）
+apply plugin: 'com.google.gms.google-services'
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
@@ -161,13 +167,13 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000755
-            versionName "10.15.1"
+            versionCode 100000789
+            versionName "10.16.0"
         }
         prod {
             dimension "environment"
-            versionCode 100000755
-            versionName "10.15.1"
+            versionCode 100000789
+            versionName "10.16.0"
         }
         // ストア配信する dev (Canary) と applicationId を分けた、ローカル検証専用のフレーバー。
         // ストアの Canary 版を消さずに同居させるためだけに存在し、配信には使わない
@@ -177,8 +183,8 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.local"
             versionNameSuffix "-local"
-            versionCode 100000755
-            versionName "10.15.1"
+            versionCode 100000789
+            versionName "10.16.0"
         }
     }
 }

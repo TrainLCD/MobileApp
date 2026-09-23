@@ -26,11 +26,13 @@ import {
   ARRIVED_MIN_THRESHOLD,
   BAD_ACCURACY_THRESHOLD,
 } from '~/constants/threshold';
+import { getAccuracyBonus } from '~/utils/accuracyBonus';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import {
   clamp,
   findStops,
   GPX_DIR,
+  hasRecordedAccuracy,
   METERS_PER_DEG_LAT,
   makeNoise,
   median,
@@ -53,11 +55,7 @@ jest.mock('~/lib/remoteConfig', () => ({
   isEtaAssistEnabled: () => mockEtaAssistEnabled,
   getEtaFallbackArrivalConfirmMarginSec: () => 30,
   getMaxPermitAccuracy: () => 1500,
-  isForceNotArrivedOnLowAccuracyEnabled: () => true,
 }));
-
-// useRefreshStation のプライベート定数と同値。到着圏へ加える精度ボーナスの上限(m)。
-const MAX_ACCURACY_BONUS = 150;
 
 type Condition = {
   label: string;
@@ -85,8 +83,14 @@ const CONDITIONS: Condition[] = [
   },
 ];
 
+// 点ごとの精度(trainlcd 拡張)を持つトラックはこのスイープの対象外にする。
+// ここは「GPXは真の軌跡だけを供給し、精度と配信間隔はテストがCONDITIONSで振る」
+// という前提で組まれており、truthAt で等間隔に再サンプルするためGPXが持つ欠測も
+// 補間で消える。記録された電波環境をそのまま流す検証は location.subwayGpx.test.ts
+// が受け持つ。
 const GPX_FILES = readdirSync(join(process.cwd(), GPX_DIR))
   .filter((f) => f.endsWith('.gpx'))
+  .filter((f) => !hasRecordedAccuracy(parseGpx(join(GPX_DIR, f))))
   .sort();
 
 const stationIdOf = (stopIndex: number) => stopIndex + 1;
@@ -216,9 +220,9 @@ const replay = (
       ARRIVED_MIN_THRESHOLD,
       ARRIVED_MAX_THRESHOLD
     );
-    // 到着圏はGPS精度だけで決まる(ETAは到着判定へ介入しない)
-    const arrivedRadius =
-      arrivedThreshold + Math.min(accuracy * 0.5, MAX_ACCURACY_BONUS);
+    // 到着圏はGPS精度だけで決まる(ETAは到着判定へ介入しない)。精度ボーナスは
+    // useRefreshStation と同じ関数で求める(式を写すと判定とずれても気付けない)
+    const arrivedRadius = arrivedThreshold + getAccuracyBonus(accuracy);
 
     const arrived = nearestDistance <= arrivedRadius;
     if (arrived && firstDetection[nearestIdx] === null) {

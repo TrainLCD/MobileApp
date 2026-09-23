@@ -1,5 +1,9 @@
 import type * as Location from 'expo-location';
 import { LineType, type Station } from '~/@types/graphql';
+import {
+  getLocationInputDisplacementHistory,
+  getLocationPipelineCounts,
+} from '~/utils/locationPipelineStats';
 import { store } from '..';
 import {
   accuracyHistoryAtom,
@@ -9,6 +13,7 @@ import {
   resetLocationState,
   setLocation,
   setRawLocation,
+  smoothingDecisionAtom,
 } from './location';
 import stationState from './station';
 
@@ -101,6 +106,58 @@ describe('setLocation', () => {
     });
   });
 
+  // 診断用の集計。判定には使わないが、判定箇所そのもので数えていないと
+  // 「どの門で落ちたか」を読み違えるため、実パイプラインの結果と突き合わせて固定する。
+  describe('パイプラインの集計(診断用)', () => {
+    it('locationAtomへ反映された件数をacceptedとして数える', () => {
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      setLocation(makeLocation(35.0001, 139.0, 30, 2000));
+
+      expect(getLocationPipelineCounts().accepted).toBe(2);
+      expect(getLocationPipelineCounts().rejectedBySpeed).toBe(0);
+    });
+
+    it('速度フィルタの棄却をrejectedBySpeedとして数える', () => {
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      setLocation(makeLocation(36.0, 140.0, 30, 2000));
+
+      expect(getLocationPipelineCounts()).toMatchObject({
+        accepted: 1,
+        rejectedBySpeed: 1,
+      });
+    });
+
+    it('連続棄却の上限で基準を張り直した回はacceptedに数える', () => {
+      // この経路はlocationAtomを書くので棄却ではない。内訳の合計が入力件数と
+      // 一致しないと「落ちていない」のか「数え漏らしている」のかが読めなくなる。
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      for (let i = 1; i <= 5; i += 1) {
+        setLocation(makeLocation(36.0, 140.0, 30, 1000 + i * 1000));
+      }
+
+      const counts = getLocationPipelineCounts();
+      expect(counts.accepted).toBe(2);
+      expect(counts.rejectedBySpeed).toBe(4);
+      // 入力6件がすべてどれかの内訳に入る
+      expect(
+        counts.accepted +
+          counts.rejectedByAccuracy +
+          counts.rejectedAsDuplicate +
+          counts.rejectedByEta +
+          counts.rejectedBySpeed
+      ).toBe(6);
+    });
+
+    it('setLocationを直接呼ぶ経路は飛び幅に積まない', () => {
+      // 手動での駅選択・起動時のワンショットは意図的な瞬間移動なので、
+      // 測位の飛び幅として混ぜると履歴の意味が壊れる(記録はhandleTrackingLocation側)
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+      setLocation(makeLocation(35.0001, 139.0, 30, 2000));
+
+      expect(getLocationInputDisplacementHistory()).toEqual([]);
+    });
+  });
+
   describe('非地下鉄路線', () => {
     it('スムージングが適用される（座標が生の値と異なる）', () => {
       setStationLineType(LineType.Normal);
@@ -115,6 +172,101 @@ describe('setLocation', () => {
       // EMAが適用されるため、生の座標(35.001)とは異なる値になるはず
       expect(result?.coords.latitude).not.toBe(35.001);
       expect(result?.coords.longitude).not.toBe(139.001);
+    });
+  });
+
+  describe('地下鉄分岐を通ったかの記録', () => {
+    // 診断の持ち出し(DevOverlay)がこの値を読む。同じ条件を外で組み直すと、
+    // 判定と表示が別々に育って食い違うため、setLocationが下した結果そのものを固定する。
+    it('地下鉄かつ精度が不安定なら真になる', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: true,
+        lineType: LineType.Subway,
+      });
+    });
+
+    it('地上路線なら偽になる', () => {
+      setStationLineType(LineType.Normal);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: LineType.Normal,
+      });
+    });
+
+    it('地下鉄でも精度履歴が安定していれば偽になる', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [30, 35, 28, 32]);
+
+      setLocation(makeLocation(35.0, 139.0, 30, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: LineType.Subway,
+      });
+    });
+
+    it('駅が無ければ路線種別はnullで記録する', () => {
+      setStationLineType(null);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: null,
+      });
+    });
+
+    // 回帰: 結果と入力を別々のatom(あるいは片方をstationAtomの直読み)で持つと、
+    // 測位と無関係な路線の切り替わりで入力側だけが進み、持ち出した診断の
+    // skipSmoothingとlineTypeが別の瞬間の値になって検算できなくなる。
+    it('判定後に路線が変わっても判定時の組を保つ', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+
+      setStationLineType(LineType.Normal);
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: true,
+        lineType: LineType.Subway,
+      });
+    });
+
+    // 判定が変わらない限り同じオブジェクトを保つ。測位のたびに新しい参照を入れると、
+    // 購読しているDevOverlayが1秒ごとに再レンダーする。
+    it('判定が変わらなければ参照を作り直さない', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+      const first = store.get(smoothingDecisionAtom);
+
+      setLocation(makeLocation(35.0001, 139.0001, 500, 2000));
+
+      expect(store.get(smoothingDecisionAtom)).toBe(first);
+    });
+
+    it('リセットで初期値へ戻る', () => {
+      setStationLineType(LineType.Subway);
+      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      setLocation(makeLocation(35.0, 139.0, 500, 1000));
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(true);
+
+      resetLocationState();
+
+      expect(store.get(smoothingDecisionAtom)).toEqual({
+        skipSmoothing: false,
+        lineType: null,
+      });
     });
   });
 

@@ -14,6 +14,7 @@ import {
   ensureVoicevoxAssets,
   fileUriToPath,
   getInstalledVoicevoxAssets,
+  subscribeVoicevoxAssets,
   type VoicevoxInstalledAssets,
 } from '~/lib/voicevox/assets';
 import { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
@@ -34,7 +35,7 @@ import type {
 /**
  * iOS でリモート TTS が使えない回に、日本語だけを VOICEVOX CORE (端末内合成) で
  * 読み上げるエンジン。英語は VOICEVOX が話せないため、引数で受け取った
- * エンジン (端末内蔵 TTS) へ委譲する。
+ * エンジン (useVitsSpeechEngine → 端末内蔵 TTS) へ委譲する。
  *
  * 使える条件が 1 つでも欠けると onUnavailable を返し、呼び出し側 (useTTS) が
  * その回だけ端末内蔵 TTS で日英とも読み上げる。
@@ -76,6 +77,19 @@ export const useVoicevoxSpeechEngine = (
     kick();
     return subscribeRemoteConfig(kick);
   }, []);
+
+  // 資産が削除されるとネイティブ側は release() で設定ごと破棄する。setup 済みの
+  // 記録を残したままだと、同じ version を取り直したときに setup を省略してしまい、
+  // 以後の合成が not_initialized で失敗し続ける。資産が無くなった時点で捨てる。
+  useEffect(
+    () =>
+      subscribeVoicevoxAssets(() => {
+        if (!getInstalledVoicevoxAssets()) {
+          setupRef.current = null;
+        }
+      }),
+    []
+  );
 
   const releaseJaPlayer = useCallback(() => {
     safeRemoveListener(jaHandleRef.current?.listener ?? null);

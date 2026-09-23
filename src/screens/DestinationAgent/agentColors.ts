@@ -7,9 +7,12 @@ export const AGENT_COLORS = {
   light: {
     /** 免責文・入力中ラベルの文字色 */
     mutedText: '#737373',
+    /** 応答内リンクの文字色。カード背景に対し 4.5:1 以上(WCAG AA) */
+    linkText: '#0071CE',
   },
   dark: {
     mutedText: '#9AA0A6',
+    linkText: '#4DA3FF',
   },
 } as const;
 

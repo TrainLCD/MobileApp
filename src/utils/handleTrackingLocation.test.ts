@@ -6,9 +6,15 @@ import {
   setRawLocation,
 } from '~/store/atoms/location';
 import {
+  getMsSinceLastTrackedLocation,
   handleTrackingLocation,
   resetTrackingLocationDedup,
 } from './handleTrackingLocation';
+import {
+  getLocationInputDisplacementHistory,
+  getLocationPipelineCounts,
+  resetLocationPipelineStats,
+} from './locationPipelineStats';
 
 jest.mock('~/store/atoms/location', () => ({
   setLocation: jest.fn(),
@@ -27,13 +33,15 @@ const mockSetLocation = setLocation as jest.Mock;
 const mockSetRawLocation = setRawLocation as jest.Mock;
 const mockSetLocationAccuracyOutlier = setLocationAccuracyOutlier as jest.Mock;
 
-const makeLocation = (
+const makeLocationAt = (
+  latitude: number,
+  longitude: number,
   accuracy: number | null,
   timestamp = 1000
 ): Location.LocationObject => ({
   coords: {
-    latitude: 35.0,
-    longitude: 139.0,
+    latitude,
+    longitude,
     accuracy,
     altitude: 0,
     altitudeAccuracy: 0,
@@ -43,9 +51,15 @@ const makeLocation = (
   timestamp,
 });
 
+const makeLocation = (
+  accuracy: number | null,
+  timestamp = 1000
+): Location.LocationObject => makeLocationAt(35.0, 139.0, accuracy, timestamp);
+
 describe('handleTrackingLocation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
     mockIsDevApp = false;
     resetTrackingLocationDedup();
   });
@@ -136,6 +150,109 @@ describe('handleTrackingLocation', () => {
       handleTrackingLocation(makeLocation(30, Date.now()));
 
       expect(mockSetLocation).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // 補完測位(useLocationHeartbeat)は「最後に配信を処理してからの経過時間」だけを見て、
+  // 継続測位が途絶えたかを判断する。経過時間は端末の時計の変更に影響されない
+  // monotonicNowで測る。
+  describe('配信時刻の記録', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('処理していない状態ではnullを返す', () => {
+      expect(getMsSinceLastTrackedLocation()).toBeNull();
+    });
+
+    it('測位を処理してからの経過時間を返す', () => {
+      // 測位側のtimestampが古くても、届いたのは「今」なので途絶ではない
+      handleTrackingLocation(makeLocation(30, Date.now() - 60_000));
+
+      jest.advanceTimersByTime(5_000);
+
+      expect(getMsSinceLastTrackedLocation()).toBe(5_000);
+    });
+
+    it('精度フィルタで棄却した測位も配信としては記録する', () => {
+      // 棄却されたのは座標であって配信は届いている。ここで記録しないと、
+      // 精度の悪い区間で補完測位が無条件に走り続ける。
+      handleTrackingLocation(makeLocation(MAX_PERMIT_ACCURACY + 1, Date.now()));
+
+      jest.advanceTimersByTime(3_000);
+
+      expect(mockSetLocation).not.toHaveBeenCalled();
+      expect(getMsSinceLastTrackedLocation()).toBe(3_000);
+    });
+
+    it('重複として破棄した測位では記録を更新しない', () => {
+      handleTrackingLocation(makeLocation(30, 1000));
+
+      jest.advanceTimersByTime(5_000);
+      handleTrackingLocation(makeLocation(30, 1000));
+
+      expect(getMsSinceLastTrackedLocation()).toBe(5_000);
+    });
+  });
+  // 診断用の集計。判定には使わないが、判定箇所そのもので数えていないと
+  // 「どの門で落ちたか」を読み違えるため、実挙動と突き合わせて固定する。
+  describe('パイプラインの集計(診断用)', () => {
+    beforeEach(() => {
+      resetLocationPipelineStats();
+    });
+
+    it('最大許容精度で棄却した件数を数える', () => {
+      handleTrackingLocation(makeLocation(MAX_PERMIT_ACCURACY + 1, 1000));
+
+      expect(getLocationPipelineCounts()).toMatchObject({
+        rejectedByAccuracy: 1,
+        rejectedAsDuplicate: 0,
+      });
+    });
+
+    it('重複排除で破棄した件数を数える', () => {
+      // 重複排除はlastProcessedAtMsを更新する前に抜けるため、経過時間では
+      // 「OSが呼んでいない」状態と区別が付かない。数えた値でしか読めない
+      handleTrackingLocation(makeLocation(30, 1000));
+      handleTrackingLocation(makeLocation(30, 1000));
+      handleTrackingLocation(makeLocation(30, 900));
+
+      expect(getLocationPipelineCounts().rejectedAsDuplicate).toBe(2);
+    });
+
+    it('精度フィルタで棄却した測位も飛び幅に積む', () => {
+      // 地下で一番知りたいのは「棄却された生座標がどれだけ飛んでいたか」。
+      // 精度フィルタのあとで記録すると、その区間が丸ごと抜ける
+      handleTrackingLocation(makeLocationAt(35.0, 139.0, 30, 1000));
+      handleTrackingLocation(
+        makeLocationAt(35.01, 139.0, MAX_PERMIT_ACCURACY + 1, 2000)
+      );
+
+      const history = getLocationInputDisplacementHistory();
+      expect(mockSetLocation).toHaveBeenCalledTimes(1);
+      expect(history).toHaveLength(1);
+      // 緯度0.01度 ≒ 1.1km
+      expect(history[0]).toBeGreaterThan(1000);
+    });
+
+    it('重複として破棄した測位は飛び幅に積まない', () => {
+      // 同じ測位の再配信を積むと、距離0が並んで「動いていない」と誤読させる
+      handleTrackingLocation(makeLocationAt(35.0, 139.0, 30, 1000));
+      handleTrackingLocation(makeLocationAt(35.0, 139.0, 30, 1000));
+
+      expect(getLocationInputDisplacementHistory()).toEqual([]);
+    });
+
+    it('受理した測位はここでは数えない(setLocation側の責務)', () => {
+      // acceptedはlocationAtomを書いた回数。ここで数えると二重計上になる
+      handleTrackingLocation(makeLocation(30, 1000));
+
+      expect(mockSetLocation).toHaveBeenCalledTimes(1);
+      expect(getLocationPipelineCounts().accepted).toBe(0);
     });
   });
 });

@@ -48,6 +48,11 @@ export const STORAGE_KEYS = {
   // ユーザーが VOICEVOX 資産 (約 160MB) のダウンロードに同意したか。同意後は
   // 中断した取得や更新版の取得を自動で再開する
   VOICEVOX_DOWNLOAD_CONSENTED: '@TrainLCD:voicevoxDownloadConsented',
+  // 取得済みの VITS 英語音声モデル・発音辞書(iOS)。src/lib/vits/assets.ts が管理する
+  VITS_ASSETS: '@TrainLCD:vitsAssets',
+  // ユーザーが VITS 資産 (約 118MB) のダウンロードに同意したか。日本語 (VOICEVOX) とは
+  // 別枠で同意を取り、片方だけ入れられるようにしている
+  VITS_DOWNLOAD_CONSENTED: '@TrainLCD:vitsDownloadConsented',
   // 試験的機能: リモートTTSの有効判定を Remote Config より優先して固定する
   // ('auto' | 'on' | 'off')。src/lib/remoteTTSOverride.ts が管理する
   REMOTE_TTS_OVERRIDE: '@TrainLCD:remoteTTSOverride',

@@ -30,6 +30,31 @@ export const LOCATION_TIME_INTERVAL = 10000;
 //   揺らぎが閾値を超えず停車中の更新が止まりやすい。
 export const LOCATION_DISTANCE_INTERVAL = Platform.OS === 'ios' ? 10 : 0;
 
+// 継続測位が途絶えたときに測位を自前で取りに行く補完測位(ハートビート)を要するか。
+// iOSはtimeIntervalが無視され変位ゲートだけが配信を決めるため、地下鉄のように
+// 変位が閾値(LOCATION_DISTANCE_INTERVAL)へ達しない環境では配信そのものが止まり、
+// 位置・到着判定・ヘッダーが丸ごと凍結する。Androidは変位ゲートが0でtimeIntervalが
+// 効くため、同じ環境でも10秒ごとに測位が届き補完の必要がない。
+// 変位ゲートを0にできる日が来たらこの補完も不要になるので、ゲートの有無から導く。
+export const NEEDS_LOCATION_HEARTBEAT =
+  Platform.OS === 'ios' && LOCATION_DISTANCE_INTERVAL > 0;
+
+// 「配信が途絶えた」とみなす無配信時間(ms)。補完測位はこの時間を超えて測位が
+// 届かないときだけ動く。Androidが変位に依らず確保している更新間隔
+// (LOCATION_TIME_INTERVAL)を下回らないことが目標なので、その値に合わせる。
+// 補完測位は固定間隔のタイマーではなく「最後の配信からこの時間が経つ時刻」へ
+// 点検を置き直す(useLocationHeartbeat)。固定間隔にすると、自分が取得した測位で
+// 途絶タイマーが巻き戻るぶん必ず1回空振りし、実際の取得間隔がこの値の2倍まで開く。
+export const LOCATION_HEARTBEAT_STALE_THRESHOLD = LOCATION_TIME_INTERVAL;
+
+// 補完測位の取得を待つ上限(ms)。補完測位は継続測位と同じstartUpdatingLocationで1件を
+// 待つ(useLocationHeartbeat)ので、測位が得られない地下では購読が延々と待ち続ける。
+// 1件でも返らないままだと「取得中は次を出さない」ガードが解けず補完測位が二度と
+// 動かなくなるため、この時間を超えた要求は購読を閉じて次を出せるようにする。
+// 3回ぶんの途絶時間を待っても返らない要求は環境側が応えていないと判断する。
+export const LOCATION_HEARTBEAT_MAX_PENDING =
+  LOCATION_HEARTBEAT_STALE_THRESHOLD * 3;
+
 // 最大許容精度(m)のフォールバック既定値。実効値は Worker の /config/remote が返す
 // max_permit_accuracy を参照する（src/lib/remoteConfig.ts の getMaxPermitAccuracy）。
 // リモート値が未取得・不正な場合はこの値にフォールバックする。
@@ -69,6 +94,8 @@ export const LOCATION_TASK_OPTIONS_POWER_SAVING: Location.LocationTaskOptions =
     ...LOCATION_TASK_OPTIONS,
     accuracy: LOCATION_ACCURACY_POWER_SAVING,
     // 停車中はiOSに測位ハードウェアの休止を許可し、移動再開時にOtherNavigationの
-    // 活動種別を手掛かりとして自動再開させる。
+    // 活動種別を手掛かりとして自動再開させる。休止すれば当然配信も途絶えるため、
+    // 補完測位(useLocationHeartbeat)はこのプロファイル中は動かない。動かすと休止を
+    // そのまま打ち消してしまい、電池優先という設定の意図が失われる。
     pausesUpdatesAutomatically: true,
   } as const;

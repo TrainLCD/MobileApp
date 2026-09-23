@@ -1,18 +1,26 @@
-import { act, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import * as Application from 'expo-application';
 import { useAtomValue } from 'jotai';
 import { Dimensions, StyleSheet } from 'react-native';
-import type { Station } from '~/@types/graphql';
+import { LineType, type Station } from '~/@types/graphql';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
+  accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
+  locationAccuracyOutlierAtom,
   locationAtom,
   rawLocationAtom,
+  smoothingDecisionAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import {
+  approachingAtom,
+  arrivedAtom,
+  stationAtom,
+} from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import DevOverlay, {
@@ -50,13 +58,39 @@ jest.mock('~/hooks/useTelemetryEnabled', () => ({
   useTelemetryEnabled: jest.fn(() => true),
 }));
 
+// 到着判定の対象と実効閾値は判定側のフックをそのまま読む。DevOverlayの検証対象は
+// 「持ち出す値を組み立てられるか」なので、フックの中身はここでは差し替える。
+jest.mock('~/hooks/useNearestStation', () => ({
+  useNearestStation: jest.fn(),
+}));
+
+jest.mock('~/hooks/useThreshold', () => ({
+  useThreshold: jest.fn(),
+}));
+
 // ETA推定フェーズは常駐atomではなくオンデマンド計算になったため、関数ごとモックする
 jest.mock('~/utils/etaPhaseNow', () => ({
   getEtaPhaseNow: jest.fn(() => null),
 }));
 
+// クリップボードは react-native core の非推奨 Clipboard を触るため、テストでは差し替える
+jest.mock('~/utils/clipboard', () => ({
+  copyTextToClipboard: jest.fn(),
+}));
+
 // Import mocked hooks for type safety
 import { useDistanceToNextStation, useNextStation } from '~/hooks';
+import { useNearestStation } from '~/hooks/useNearestStation';
+import { useThreshold } from '~/hooks/useThreshold';
+import { copyTextToClipboard } from '~/utils/clipboard';
+// 補完測位の集計は実体を使う。モックに差し替えると「DevOverlayがgetterを呼んでいるか」
+// ではなく「モックの戻り値を貼れるか」しか見られなくなる。
+import {
+  countLocationHeartbeatFailed,
+  countLocationHeartbeatRequested,
+  resetLocationHeartbeatStats,
+  setLocationHeartbeatState,
+} from '~/utils/locationHeartbeatStats';
 
 const mockUseAtomValue = useAtomValue as jest.MockedFunction<
   typeof useAtomValue
@@ -71,6 +105,15 @@ const mockUseNextStation = useNextStation as jest.MockedFunction<
 >;
 const mockGetEtaPhaseNow = getEtaPhaseNow as jest.MockedFunction<
   typeof getEtaPhaseNow
+>;
+const mockCopyTextToClipboard = copyTextToClipboard as jest.MockedFunction<
+  typeof copyTextToClipboard
+>;
+const mockUseNearestStation = useNearestStation as jest.MockedFunction<
+  typeof useNearestStation
+>;
+const mockUseThreshold = useThreshold as jest.MockedFunction<
+  typeof useThreshold
 >;
 
 describe('DevOverlay', () => {
@@ -97,6 +140,12 @@ describe('DevOverlay', () => {
     autoModeEnabled = false,
     etaPhase = null,
     etaAnchor = null,
+    filterAccuracyHistory = [15],
+    smoothingDecision = { skipSmoothing: false, lineType: null },
+    currentStation = null,
+    arrived = false,
+    approaching = false,
+    accuracyOutlier = false,
   }: {
     location?: unknown;
     rawLocation?: unknown;
@@ -104,6 +153,12 @@ describe('DevOverlay', () => {
     autoModeEnabled?: boolean;
     etaPhase?: unknown;
     etaAnchor?: unknown;
+    filterAccuracyHistory?: number[];
+    smoothingDecision?: { skipSmoothing: boolean; lineType: unknown };
+    currentStation?: unknown;
+    arrived?: boolean;
+    approaching?: boolean;
+    accuracyOutlier?: boolean;
   } = {}) => {
     mockGetEtaPhaseNow.mockReturnValue(etaPhase as never);
     mockUseAtomValue.mockImplementation((atom) => {
@@ -121,6 +176,24 @@ describe('DevOverlay', () => {
       }
       if (atom === etaAnchorAtom) {
         return etaAnchor as never;
+      }
+      if (atom === accuracyHistoryAtom) {
+        return filterAccuracyHistory as never;
+      }
+      if (atom === smoothingDecisionAtom) {
+        return smoothingDecision as never;
+      }
+      if (atom === stationAtom) {
+        return currentStation as never;
+      }
+      if (atom === arrivedAtom) {
+        return arrived as never;
+      }
+      if (atom === approachingAtom) {
+        return approaching as never;
+      }
+      if (atom === locationAccuracyOutlierAtom) {
+        return accuracyOutlier as never;
       }
       if (atom === isLEDThemeAtom) {
         return false as never;
@@ -144,6 +217,11 @@ describe('DevOverlay', () => {
       nameRoman: 'Test Station',
       stationNumbers: [{ stationNumber: 'JK-01' }],
     } as Station);
+    mockUseNearestStation.mockReturnValue(undefined);
+    mockUseThreshold.mockReturnValue({
+      arrivedThreshold: 200,
+      approachingThreshold: 1000,
+    });
   });
 
   afterEach(() => {
@@ -272,22 +350,205 @@ describe('DevOverlay', () => {
       jest
         .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
         .mockReturnValue(true);
-      jest.spyOn(Date, 'now').mockReturnValue(100_000);
-      setupAtomValues({
-        etaAnchor: {
-          stationId: 5,
-          kind: 'DEPARTED',
-          observedAtMs: 88_000, // 12秒前
-        },
+      // clearAllMocks は戻り値の差し替えを残すので、ここで戻さないと後続のテストでも
+      // Date.now() が止まったままになる。コピー系の非同期テストは、それで高負荷時に
+      // 5秒のタイムアウトを超えていた
+      const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(100_000);
+      try {
+        setupAtomValues({
+          etaAnchor: {
+            stationId: 5,
+            kind: 'DEPARTED',
+            observedAtMs: 88_000, // 12秒前
+          },
+        });
+
+        const { getByTestId } = render(<DevOverlay />);
+        expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
+          'DEPARTED'
+        );
+        expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
+          '#5 · 12s ago'
+        );
+      } finally {
+        dateNowSpy.mockRestore();
+      }
+    });
+  });
+
+  describe('診断情報のコピー', () => {
+    // DevOverlay の COPIED_FEEDBACK_DURATION_MS と同値。exportしていないのでここで持つ
+    const COPIED_FEEDBACK_DURATION_MS = 1500;
+
+    beforeEach(() => {
+      mockCopyTextToClipboard.mockResolvedValue(true);
+      resetLocationHeartbeatStats();
+    });
+
+    afterEach(() => {
+      // 集計はモジュールに溜まるので、他のテストへ持ち越さない
+      resetLocationHeartbeatStats();
+    });
+
+    it('ボタンを押すと診断情報をクリップボードへ載せる', async () => {
+      const { getByTestId } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      // コピーはPromiseを返すので、解決後の状態更新までactの中で流す
+      await act(async () => {});
+
+      expect(mockCopyTextToClipboard).toHaveBeenCalledTimes(1);
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      // 座標だけでなく実効設定も載っていること。設定が無いと同じ測位でも
+      // 挙動を説明できないため、これが欠けると持ち出す意味が薄れる
+      expect(copied.config).toMatchObject({
+        maxPermitAccuracy: MAX_PERMIT_ACCURACY,
+        telemetryEnabled: true,
+        autoModeEnabled: false,
       });
+      expect(copied.location.raw).toMatchObject({ accuracy: 15 });
+      expect(copied.build.appVersion).toBe(
+        `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
+      );
+    });
+
+    // 補完測位が測位を一件も得られない区間では pipelineCounts がどれも動かないので、
+    // heartbeat が欠けるとダンプから「要求を出していないのか、出しても得られていないのか」が
+    // 読めなくなる。スナップショット側のテストは値を直接渡して検証するため、DevOverlayが
+    // 渡し忘れてもそちらでは落ちない。コピー経路そのものでも固定する。
+    it('補完測位の稼働状態と要求結果も載せる', async () => {
+      setLocationHeartbeatState('power-saving');
+      countLocationHeartbeatRequested();
+      countLocationHeartbeatRequested();
+      countLocationHeartbeatFailed(new Error('位置情報を取得できません'));
 
       const { getByTestId } = render(<DevOverlay />);
-      expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
-        'DEPARTED'
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.heartbeat).toEqual({
+        state: 'power-saving',
+        requested: 2,
+        succeeded: 0,
+        failed: 1,
+        abandoned: 0,
+        discarded: 0,
+        teardowns: 0,
+        recentTeardownReasons: [],
+        lastErrorMessage: '位置情報を取得できません',
+      });
+    });
+
+    // filterのskipSmoothingとlineTypeは、判定時に1つのatomへまとめて書かれた組を
+    // そのまま出す。片方をstationAtomから読み直すと、測位と無関係な路線の
+    // 切り替わりで持ち出し時の値だけが進み、両者で検算できなくなる。
+    it('平滑化の判定は結果と入力を同じ組のまま出力する', async () => {
+      setupAtomValues({
+        smoothingDecision: { skipSmoothing: true, lineType: LineType.Subway },
+      });
+      const { getByTestId } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.filter).toMatchObject({
+        skipSmoothing: true,
+        lineType: LineType.Subway,
+      });
+    });
+
+    it('最寄り駅までの距離を到着判定と同じ0.01m精度で持ち出す', async () => {
+      // 既定の1m丸めだと、閾値ぎりぎりのときダンプ上だけ arrivedThreshold との
+      // 大小が逆に見える。到着判定(isPointWithinRadius)は 0.01m 精度・strict `<`。
+      // 実測ダンプの再現: 都営大江戸線 汐留まで 288.84m / 実効到着圏 295.75m
+      setupAtomValues({
+        location: {
+          coords: {
+            speed: 10,
+            accuracy: 2000,
+            latitude: 35.66237384361426,
+            longitude: 139.76338478107792,
+          },
+        },
+      });
+      mockUseNearestStation.mockReturnValue({
+        id: 9930120,
+        name: '汐留',
+        latitude: 35.663703,
+        longitude: 139.760642,
+      } as Station);
+
+      const { getByTestId } = render(<DevOverlay />);
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.state.distanceToNearestStation).toBeCloseTo(288.84, 2);
+      // 1m丸め(289)へ戻ると落ちる
+      expect(Number.isInteger(copied.state.distanceToNearestStation)).toBe(
+        false
       );
-      expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
-        '#5 · 12s ago'
-      );
+    });
+
+    it('押した直後はCOPIED表示になり、一定時間で戻る', async () => {
+      jest.useFakeTimers();
+      try {
+        const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+        expect(getByText('COPY')).toBeTruthy();
+
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+        expect(getByText('COPIED')).toBeTruthy();
+
+        act(() => {
+          jest.advanceTimersByTime(COPIED_FEEDBACK_DURATION_MS);
+        });
+        expect(queryByText('COPIED')).toBeNull();
+        expect(getByText('COPY')).toBeTruthy();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('成功直後にコピーが失敗したらCOPIED表示とタイマーを解除する', async () => {
+      // 成功のタイマーが生きている間に失敗すると、古い表示が残って
+      // 「最後のコピーは失敗しているのにCOPIEDに見える」状態になる
+      jest.useFakeTimers();
+      try {
+        const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+        expect(getByText('COPIED')).toBeTruthy();
+
+        mockCopyTextToClipboard.mockResolvedValue(false);
+        act(() => {
+          jest.advanceTimersByTime(COPIED_FEEDBACK_DURATION_MS / 2);
+        });
+        fireEvent.press(getByTestId('dev-overlay-copy-button'));
+        await act(async () => {});
+
+        expect(queryByText('COPIED')).toBeNull();
+        expect(getByText('COPY')).toBeTruthy();
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('クリップボードへ載せられなかった場合はCOPIEDを出さない', async () => {
+      // 失敗しているのに成功表示を出すと、貼り付けてみるまで気付けない
+      mockCopyTextToClipboard.mockResolvedValue(false);
+      const { getByTestId, getByText, queryByText } = render(<DevOverlay />);
+
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      expect(mockCopyTextToClipboard).toHaveBeenCalledTimes(1);
+      expect(queryByText('COPIED')).toBeNull();
+      expect(getByText('COPY')).toBeTruthy();
     });
   });
 

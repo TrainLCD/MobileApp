@@ -12,7 +12,6 @@ jest.mock('~/lib/remoteConfig', () => ({
   isEtaAssistEnabled: () => mockEtaAssistEnabled,
   getEtaFallbackArrivalConfirmMarginSec: () => 30,
   getMaxPermitAccuracy: () => 1500,
-  isForceNotArrivedOnLowAccuracyEnabled: () => true,
 }));
 
 const METERS_PER_DEG_LAT = 111_320;

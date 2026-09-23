@@ -1,12 +1,15 @@
 import * as Application from 'expo-application';
 import { LinearGradient } from 'expo-linear-gradient';
 import type * as Location from 'expo-location';
+import getDistance from 'geolib/es/getDistance';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
   PanResponder,
+  Platform,
+  Pressable,
   type StyleProp,
   StyleSheet,
   type TextStyle,
@@ -20,20 +23,39 @@ import {
   useLandscapeWindowDimensions,
   useNextStation,
 } from '~/hooks';
+import { useNearestStation } from '~/hooks/useNearestStation';
 import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
+import { useThreshold } from '~/hooks/useThreshold';
 import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import {
+  accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
+  locationAccuracyOutlierAtom,
   locationAtom,
   rawLocationAtom,
+  smoothingDecisionAtom,
 } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import {
+  approachingAtom,
+  arrivedAtom,
+  stationAtom,
+} from '~/store/atoms/station';
+import { getAccuracyBonus } from '~/utils/accuracyBonus';
+import { copyTextToClipboard } from '~/utils/clipboard';
+import { formatDevDiagnosticsSnapshot } from '~/utils/devDiagnosticsSnapshot';
 import {
   getDisplacementSpeed,
   hasMeasuredSpeed,
 } from '~/utils/displacementSpeed';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
+import { isDevApp } from '~/utils/isDevApp';
+import { getLocationHeartbeatStats } from '~/utils/locationHeartbeatStats';
+import {
+  getLocationInputDisplacementHistory,
+  getLocationPipelineCounts,
+} from '~/utils/locationPipelineStats';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
 import Typography from './Typography';
 
@@ -44,6 +66,9 @@ const EXPAND_DURATION = 280;
 // 「GPSが止まっているのに動いて見える」状態を視覚的に区別できるようにする。
 const ACCURACY_CHART_SAMPLE_INTERVAL_MS = 1000;
 const ACCURACY_CHART_LIMIT = 12;
+
+// 「コピーした」表示を出しておく時間(ms)
+const COPIED_FEEDBACK_DURATION_MS = 1500;
 
 const PANEL_BORDER = 'rgba(255,255,255,0.18)';
 const PANEL_BG = 'rgba(7, 11, 24, 0.78)';
@@ -162,6 +187,19 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderWidth: 1,
     minWidth: 72,
+  },
+  copyButton: {
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    minWidth: 72,
+    borderColor: 'rgba(148, 163, 184, 0.45)',
+    backgroundColor: 'rgba(30, 41, 59, 0.55)',
+  },
+  copyButtonPressed: {
+    borderColor: 'rgba(56, 189, 248, 0.6)',
+    backgroundColor: 'rgba(14, 165, 233, 0.28)',
   },
   statusLabel: {
     color: 'rgba(226, 232, 240, 0.78)',
@@ -442,9 +480,24 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const isBackgroundLocationTracking = useAtomValue(
     backgroundLocationTrackingAtom
   );
+  // 平滑化の要否を決めている履歴と、その判定結果。チャート用のchartHistoryとは
+  // 別物なので、診断の持ち出しでは両方を出す。
+  // 判定結果と、その判定に使ったlineTypeは同じatomから取る。lineTypeを
+  // stationAtomから読むと、測位と無関係な路線の切り替わりで持ち出し時の値だけが
+  // 進み、判定時のskipSmoothingと食い違う。
+  const filterAccuracyHistory = useAtomValue(accuracyHistoryAtom);
+  const smoothingDecision = useAtomValue(smoothingDecisionAtom);
   // ETA補助の診断表示。有効フラグ(リモート設定/手動トグル)は非リアクティブなgetter、
   // アンカーはatomから購読する。推定フェーズは常駐タイマーで公開されなくなったため、
   // DevOverlay自身の1秒ティック(nowTick)を評価時刻としてオンデマンド計算する。
+  // GPSが下している判定そのもの。座標と閾値からの逆算は直通運転で成り立たないため、
+  // 判定に使われている値をそのまま持ち出す。
+  const currentStation = useAtomValue(stationAtom);
+  const arrived = useAtomValue(arrivedAtom);
+  const approaching = useAtomValue(approachingAtom);
+  const accuracyOutlier = useAtomValue(locationAccuracyOutlierAtom);
+  const nearestStation = useNearestStation();
+  const { arrivedThreshold, approachingThreshold } = useThreshold();
   const etaAssistEnabled = isEtaAssistEnabled();
   const etaPhase = useMemo(() => getEtaPhaseNow(nowTick), [nowTick]);
   const etaAnchor = useAtomValue(etaAnchorAtom);
@@ -502,6 +555,99 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const versionLabel = `TrainLCD DO ${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`;
   const telemetryValue = isTelemetryEnabled ? 'ON' : 'OFF';
   const backgroundValue = isBackgroundLocationTracking ? 'ON' : 'OFF';
+
+  // 診断情報をクリップボードへ載せたことの一時的なフィードバック。
+  // タイマーはアンマウントと連打で必ず張り直す（残ると解除済みの状態を書きに行く）。
+  const [hasCopied, setHasCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (copiedTimerRef.current !== null) {
+        clearTimeout(copiedTimerRef.current);
+      }
+    },
+    []
+  );
+
+  const handleCopyDiagnostics = async () => {
+    // 到着判定と同じ入力(= locationAtom 側の精度)から実効閾値を組み立てる。
+    // 表示用の accuracy は通常モードでは rawLocation 由来なので、ここで使うと判定と食い違う。
+    const accuracyBonus = getAccuracyBonus(simulatedLocation?.coords?.accuracy);
+    const nearestLatitude = nearestStation?.latitude;
+    const nearestLongitude = nearestStation?.longitude;
+    const distanceToNearestStation =
+      simulatedLocation != null &&
+      nearestLatitude != null &&
+      nearestLongitude != null
+        ? // 到着判定(isPointWithinRadius)と同じ 0.01m 精度で測る。既定の 1m 丸めだと、
+          // 閾値ぎりぎりのときダンプ上だけ大小が逆に見える
+          getDistance(
+            {
+              latitude: simulatedLocation.coords.latitude,
+              longitude: simulatedLocation.coords.longitude,
+            },
+            { latitude: nearestLatitude, longitude: nearestLongitude },
+            0.01
+          )
+        : null;
+
+    // 実際に載ったときだけ COPIED を出す。失敗しているのに成功表示を出すと、
+    // 貼り付けてみるまで気付けない。
+    const copied = await copyTextToClipboard(
+      formatDevDiagnosticsSnapshot({
+        // レンダー中ではなくイベントハンドラ内なので Date.now() を直接読んでよい
+        nowMs: Date.now(),
+        appVersion: Application.nativeApplicationVersion ?? 'unknown',
+        buildNumber: Application.nativeBuildVersion ?? 'unknown',
+        channel: isDevApp ? 'canary' : 'production',
+        platform: Platform.OS,
+        osVersion: Platform.Version,
+        autoModeEnabled,
+        telemetryEnabled: isTelemetryEnabled,
+        backgroundLocationTracking: isBackgroundLocationTracking,
+        rawLocation,
+        filteredLocation: simulatedLocation,
+        accuracyHistory: chartHistory,
+        filterAccuracyHistory,
+        displacementHistory: getLocationInputDisplacementHistory(),
+        accuracyOutlier,
+        pipelineCounts: getLocationPipelineCounts(),
+        heartbeat: getLocationHeartbeatStats(),
+        skipSmoothing: smoothingDecision.skipSmoothing,
+        lineType: smoothingDecision.lineType,
+        effectiveSpeedMps: effectiveSpeed,
+        hasMeasuredSpeed: hasEverMeasuredSpeed,
+        maxPermitAccuracy,
+        etaAssistEnabled,
+        etaPhase,
+        etaAnchor,
+        currentStation,
+        arrived,
+        approaching,
+        nearestStation,
+        distanceToNearestStation,
+        arrivedThreshold: arrivedThreshold + accuracyBonus,
+        approachingThreshold: approachingThreshold + accuracyBonus,
+        nextStation,
+        distanceToNextStation,
+      })
+    );
+    if (copiedTimerRef.current !== null) {
+      clearTimeout(copiedTimerRef.current);
+      copiedTimerRef.current = null;
+    }
+    if (!copied) {
+      // 直前の成功で立てた表示とタイマーをここで落とす。残すと、最後のコピーが
+      // 失敗しているのに前回のタイマーが切れるまでCOPIEDのままになる。
+      setHasCopied(false);
+      return;
+    }
+    setHasCopied(true);
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setHasCopied(false);
+    }, COPIED_FEEDBACK_DURATION_MS);
+  };
   // ETA推定フェーズ(RUNNING/APPROACHING/DWELLING)を表示。フェーズ未推定時は IDLE。
   const etaFallbackValue = etaPhase?.kind ?? 'IDLE';
   // 推定対象の駅ID(走行/接近中は目標駅、停車中は当該駅)。
@@ -850,6 +996,27 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
                 value={backgroundValue}
                 style={statusPillStyle}
               />
+              {/* パネルのPanResponderはcaptureを使っていないため、子のPressableが
+                  先にタッチを取る。展開/折りたたみのトグルとは競合しない。
+                  折りたたみ中は上に載るcollapsedOverlayがタッチを受けるので押せない。 */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="診断情報をコピー"
+                testID="dev-overlay-copy-button"
+                onPress={() => {
+                  void handleCopyDiagnostics();
+                }}
+                style={({ pressed }) => [
+                  styles.copyButton,
+                  statusPillStyle,
+                  pressed && styles.copyButtonPressed,
+                ]}
+              >
+                <Typography style={styles.statusLabel}>DIAGNOSTICS</Typography>
+                <Typography style={styles.statusValue}>
+                  {hasCopied ? 'COPIED' : 'COPY'}
+                </Typography>
+              </Pressable>
             </View>
           </View>
 

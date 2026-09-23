@@ -1,5 +1,5 @@
 {
-  "//": "iOS 本体アプリにだけ埋め込む VOICEVOX CORE の動的フレームワーク。scripts/fetch-voicevox-frameworks.mjs がこの定義どおりに取得・検証し、同じディレクトリへ展開する（展開物は .gitignore 済み）。バージョンを上げるときは url と sha256 を両方更新すること。",
+  "//": "iOS 本体アプリにだけ埋め込む VOICEVOX CORE の動的フレームワークと、その ONNX Runtime を Swift から直接呼ぶためのヘッダ。scripts/fetch-voicevox-frameworks.mjs がこの定義どおりに取得・検証し、同じディレクトリへ展開する（展開物は .gitignore 済み）。バージョンを上げるときは url と sha256 を両方更新すること。",
   "frameworks": [
     {
       "name": "voicevox_core",
@@ -12,6 +12,25 @@
       "version": "1.23.2",
       "url": "https://github.com/VOICEVOX/onnxruntime-builder/releases/download/voicevox_onnxruntime-1.23.2/voicevox_onnxruntime-ios-xcframework-1.23.2.zip",
       "sha256": "c9c33b2653125441d6a2475194ed7971a908687c0d99d8944337b0ca85ea646d"
+    }
+  ],
+  "headers": [
+    {
+      "//": "voicevox_onnxruntime.framework にはヘッダが同梱されていないため、同じ版 (1.23.2) の ONNX Runtime 公式ヘッダ (MIT) を取得して ios/Modules/VitsTTS の Swift から使う。フレームワークが公開するシンボルは OrtGetApiBase だけだが、C API はそこから全関数を引く設計なのでこの 2 ファイルで足りる。framework のバージョンを上げるときはこちらの version と url も必ず揃えること。",
+      "name": "onnxruntime-headers",
+      "version": "1.23.2",
+      "files": [
+        {
+          "path": "onnxruntime_c_api.h",
+          "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.23.2/include/onnxruntime/core/session/onnxruntime_c_api.h",
+          "sha256": "71125e66180a991d65c9bdbad4aa20daaa1f7a48c7a5c0fa5f18f250ac839a02"
+        },
+        {
+          "path": "onnxruntime_ep_c_api.h",
+          "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.23.2/include/onnxruntime/core/session/onnxruntime_ep_c_api.h",
+          "sha256": "b92778f50c36ecdf53d0344e0129a78b306afed653f81bba8a9597e3e6e9546f"
+        }
+      ]
     }
   ]
 }

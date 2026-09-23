@@ -4,18 +4,12 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
-import {
-  getMaxPermitAccuracy,
-  isForceNotArrivedOnLowAccuracyEnabled,
-} from '~/lib/remoteConfig';
-import {
-  locationAccuracyOutlierAtom,
-  locationAtom,
-} from '~/store/atoms/location';
+import { locationAtom } from '~/store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
+import { getAccuracyBonus } from '../utils/accuracyBonus';
 import getIsPass from '../utils/isPass';
 import sendNotificationAsync from '../utils/native/ios/sensitiveNotificationMoudle';
 import { useApproachingStation } from './useApproachingStation';
@@ -27,9 +21,6 @@ import { useThreshold } from './useThreshold';
 import { useWrongDirectionDetector } from './useWrongDirectionDetector';
 
 type NotifyType = 'ARRIVED' | 'APPROACHING';
-
-// GPS精度に応じた閾値補正の上限(m)
-const MAX_ACCURACY_BONUS = 150;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -45,7 +36,6 @@ export const useRefreshStation = (): void => {
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
   const location = useAtomValue(locationAtom);
-  const isAccuracyOutlier = useAtomValue(locationAccuracyOutlierAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
   const accuracy = location?.coords.accuracy;
@@ -72,14 +62,9 @@ export const useRefreshStation = (): void => {
   // isWrongDirection の単なる false 復帰ではリセットせず、次駅が変わるまで保持する。
   const lastNotifiedWrongDirectionStationIdRef = useRef<number | null>(null);
 
-  // GPS精度に応じた実効閾値を算出する
-  // 精度が悪い場合は判定圏を広げることで検知漏れを減らす
-  const accuracyBonus = useMemo(() => {
-    if (accuracy == null || !Number.isFinite(accuracy) || accuracy <= 0) {
-      return 0;
-    }
-    return Math.min(accuracy * 0.5, MAX_ACCURACY_BONUS);
-  }, [accuracy]);
+  // GPS精度に応じた実効閾値を算出する。補正の式はDevOverlayの診断表示と共有する
+  // (呼び出し側で組み直すと、持ち出した実効閾値が実際の判定と食い違う)
+  const accuracyBonus = useMemo(() => getAccuracyBonus(accuracy), [accuracy]);
 
   const effectiveArrivedThreshold = arrivedThreshold + accuracyBonus;
   const effectiveApproachingThreshold = approachingThreshold + accuracyBonus;
@@ -87,23 +72,6 @@ export const useRefreshStation = (): void => {
   const isArrived = useMemo((): boolean => {
     if (latitude == null || longitude == null || !nearestStation) {
       return true;
-    }
-
-    // 現在位置を信用できない状況では到着判定の信頼性が担保できないため、
-    // 強制的に未到着(=走行中)とみなす。次の2系統を区別して検査する:
-    //   1. 継続測位: handleTrackingLocationが最大許容精度超の測位を棄却して
-    //      座標を凍結するため、精度悪化はlocationAtom側には現れない。棄却の事実は
-    //      外れ値フラグ(isAccuracyOutlier)から判定する。
-    //   2. ワンショット取得・手動選択: フィルタを経由せず粗い精度の測位がlocationAtomに
-    //      入りうるため、保持している精度を直接検査する。
-    // この強制未到着はRemote Configのフィーチャートグルで無効化でき、無効時は
-    // 精度に依らず通常の到着判定を行う。
-    if (
-      isForceNotArrivedOnLowAccuracyEnabled() &&
-      (isAccuracyOutlier ||
-        (accuracy != null && accuracy > getMaxPermitAccuracy()))
-    ) {
-      return false;
     }
 
     // グレース期間は到着を引き起こした駅にのみ適用する
@@ -140,14 +108,7 @@ export const useRefreshStation = (): void => {
       lastArrivedStationIdRef.current = nearestStation.id ?? null;
     }
     return arrived;
-  }, [
-    accuracy,
-    isAccuracyOutlier,
-    effectiveArrivedThreshold,
-    latitude,
-    longitude,
-    nearestStation,
-  ]);
+  }, [effectiveArrivedThreshold, latitude, longitude, nearestStation]);
 
   const isApproaching = useMemo((): boolean => {
     if (
