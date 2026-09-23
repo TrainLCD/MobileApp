@@ -205,8 +205,8 @@ budget. Gradle worker processes, R8, Node, and each JVM's own native memory
 So do not read the difference between the ceilings and the runner's RAM as
 available headroom, least of all on the 8 GB tier.
 
-Before raising the Gradle daemon heap to `4096m`, a Build Android Production
-dry-run on `ubuntu-22.04` sampled `free -m` and the RSS of every `java` process
+Before merging the `4096m` Gradle daemon heap, a Build Android Production
+dry-run on `ubuntu-22.04`, already running with that ceiling, sampled `free -m` and the RSS of every `java` process
 every 5 seconds through `./gradlew :app:bundleProdRelease
 :wearable:bundleProdRelease --no-daemon`
 ([run 35844360229](https://github.com/TrainLCD/MobileApp/actions/runs/35844360229)):
