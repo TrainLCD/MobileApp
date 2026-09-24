@@ -298,7 +298,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 ## 注意事項
 
 - **Squash merge 禁止**。これがこのスキルの存在理由の半分。実行時と完了報告で二重に明示する。
-- コード変更が無いため `npm run lint` は走らせない（当スキルは新規コミットを作らない）。
+- 通常の経路は master の先端をそのまま push するだけで新しいコミットを作らないので、`npm run lint` は走らせない。版数ファイルの競合を解決してマージコミットを積む経路では、push の前に `npm run lint` と関連する単体テストを通す（CLAUDE.md の Commit and push gate）。範囲を絞れないときは `npm test` を実行する。
 - `publish-release` 直後に呼ばれるのが典型だが、master が dev より進んでいるタイミングなら単独でも使える（hotfix を master に直接入れた後など）。
 - PR テンプレの節構成は改変しない（CLAUDE.md ルール）。
 - 既に open な dev<-master PR がある場合は新規作成せず既存 URL を返す（手順 2）。

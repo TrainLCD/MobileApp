@@ -92,7 +92,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    ```
 
    - **`git status` の目視確認は省略しない**。`git add -A` や `git add .` で一括投入すると、意図しない未追跡ファイルがそのままコミットに入る。不要なファイルは `.gitignore` に追加してから確定する。
-   - コミット前に `npm run lint` を通す（CLAUDE.md の Commit and push gate）。整形の自動修正が要るときは `npm run format` を使う。
+   - コード変更を含むコミットの前に、`npm run lint` と関連する単体テストを通す（CLAUDE.md の Commit and push gate）。テストの範囲を絞れないときは `npm test` を実行する。整形の自動修正が要るときは `npm run format` を使う。
    - push は新規ブランチなので安全だが、承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
 
    **`base != head` でも、`head` が origin に追いついていなければ手順 2 へ進まない。** ブランチ切り出しが要らないケースでも、`head` が未 push なら手順 2 の `git fetch origin <base> <head>` は `origin/<head>` を解決できずに失敗し、`origin/<head>` が古ければローカルにしか無いコミットが比較から丸ごと漏れる。次で判定する:
