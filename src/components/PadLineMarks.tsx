@@ -20,6 +20,13 @@ type Props = {
   theme?: AppTheme;
 };
 
+// テーマを問わない外枠。路線バーとの間隔をiPadとAndroidタブレットで揃える
+const wrapperStyles = StyleSheet.create({
+  root: {
+    marginTop: 8,
+  },
+});
+
 const stylesNormal = StyleSheet.create({
   lineMarkWrapper: {
     marginTop: 4,
@@ -46,7 +53,9 @@ const stylesWest = StyleSheet.create({
     height: 16,
     backgroundColor: '#212121',
     alignSelf: 'center',
-    marginTop: Platform.select({ android: 16, default: 6 }),
+    // 外側のルート(marginTop: 8)と合わせて、Androidタブレットの黒バー位置を
+    // #5639 で調整した位置(ルート0 + 16)に保つ
+    marginTop: Platform.select({ android: 8, default: 6 }),
   },
   lineMarkWrapper: {
     marginTop: 4,
@@ -114,11 +123,7 @@ const PadLineMarks: React.FC<Props> = ({
   }
 
   return (
-    <View
-      style={{
-        marginTop: Platform.select({ ios: 8, default: 0 }),
-      }}
-    >
+    <View style={wrapperStyles.root}>
       {!!lineMarks.length && theme === APP_THEME.JR_WEST && (
         <View style={styles.topBar} />
       )}
