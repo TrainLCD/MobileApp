@@ -168,14 +168,26 @@ real cause.
 `android/gradle.properties` therefore raises the Metaspace ceiling and pins the
 Kotlin daemon explicitly rather than letting it inherit:
 
-| Property | Heap | Metaspace (before → after) |
+| Property | Heap | Metaspace |
 | --- | --- | --- |
-| `org.gradle.jvmargs` | `-Xmx2048m` | `512m` → `1024m` |
-| `kotlin.daemon.jvmargs` | `-Xmx2048m` | inherited `512m` → `1024m` |
+| `org.gradle.jvmargs` | `-Xmx4096m` | `1024m` |
+| `kotlin.daemon.jvmargs` | `-Xmx2048m` | `1024m` |
 
-**Only the Metaspace ceiling changes.** Both heap ceilings stay at the `2048m`
-the build already ran with — it compiled every native module, `:app`, and R8
-without a heap OOM, so raising `-Xmx` would treat a symptom the build never had.
+The Metaspace ceilings were raised first, from `512m` to `1024m`, when the heap
+had not run out yet. The Gradle daemon heap was raised later, from `2048m` to
+`4096m`, after the v10.16.0 production build stopped in Android lint:
+
+```text
+Execution failed for task ':expo-modules-core:lintVitalAnalyzeRelease'.
+   > Unexpected failure during lint analysis of ColorTypeConverter.kt
+     Message: Java heap space
+```
+
+`lintVitalAnalyze*` tasks run inside the Gradle daemon, not in the Kotlin
+daemon, and `org.gradle.parallel=true` lets several modules' lint tasks run at
+once in that one heap. The same task passed in that day's Canary build of the
+same code, so the failure depends on how the lint tasks happen to overlap.
+Only the Gradle daemon heap changes; the Kotlin daemon keeps `2048m`.
 
 Do not read a heap ceiling as free headroom. Metaspace is committed lazily, so
 its ceiling mostly just converts a runaway allocation into a clear error. A heap
@@ -187,14 +199,29 @@ its own.
 
 This repository is public, so its jobs get the 4-vCPU / 16 GB standard runner
 (the 2-vCPU / 8 GB tier applies to private repositories). The ceilings above
-total 4 GB of heap and 2 GB of Metaspace — but a ceiling is not a memory
+total 6 GB of heap and 2 GB of Metaspace — but a ceiling is not a memory
 budget. Gradle worker processes, R8, Node, and each JVM's own native memory
-(thread stacks, code cache, direct buffers) all sit on top of those numbers,
-and none of that has been measured here. So do not read the difference between
-the ceilings and the runner's RAM as available headroom, least of all on the
-8 GB tier. Before raising any of these values, measure peak RSS across the
-whole build on the runner you actually target, and prefer a larger runner over
-ceilings the runner cannot back.
+(thread stacks, code cache, direct buffers) all sit on top of those numbers.
+So do not read the difference between the ceilings and the runner's RAM as
+available headroom, least of all on the 8 GB tier.
+
+Before merging the `4096m` Gradle daemon heap, a Build Android Production
+dry-run on `ubuntu-22.04`, already running with that ceiling, sampled
+`free -m` and the RSS of every `java` process every 5 seconds through
+`./gradlew :app:bundleProdRelease :wearable:bundleProdRelease --no-daemon`
+([run 35844360229](https://github.com/TrainLCD/MobileApp/actions/runs/35844360229)):
+
+| Measurement | Peak |
+| --- | --- |
+| System memory used (`free -m`, 15988 MB total) | 10289 MB |
+| RSS of all `java` processes | 9019 MB |
+| Gradle daemon RSS, during the lint phase | 5326 MB |
+| Kotlin daemon RSS | 2427 MB |
+| Swap used at the end of the build | 0 MB |
+
+Before raising any of these values again, repeat that measurement on the runner
+you actually target, and prefer a larger runner over ceilings the runner cannot
+back.
 
 Keep `kotlin.daemon.jvmargs` set whenever `org.gradle.jvmargs` changes,
 otherwise the daemon silently picks up the Gradle value again.
