@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import type React from 'react';
+import { StyleSheet } from 'react-native';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import HeaderSaikyo from './HeaderSaikyo';
 
@@ -441,6 +442,48 @@ describe('HeaderSaikyo', () => {
         />
       );
       expect(queryByTestId('NumberingIcon')).toBeNull();
+    });
+  });
+
+  describe('E131系風 (isE131)', () => {
+    it('時計を表示しない', () => {
+      const { queryByTestId } = render(
+        <HeaderSaikyo {...createMockHeaderProps()} isE131 />
+      );
+      expect(queryByTestId('Clock')).toBeNull();
+    });
+
+    it('行先・状態・駅名を白文字にする', () => {
+      const { getByText } = render(
+        <HeaderSaikyo
+          {...createMockHeaderProps({
+            stationText: '那須塩原',
+            stateText: '次は',
+            boundText: '宇都宮 行',
+          })}
+          isE131
+        />
+      );
+      for (const text of ['那須塩原', '次は', '宇都宮 行']) {
+        expect(StyleSheet.flatten(getByText(text).props.style).color).toBe(
+          'white'
+        );
+      }
+    });
+
+    it('isE131を渡さない埼京線風は従来どおり時計と濃い灰色の文字を表示する', () => {
+      const { getByTestId, getByText } = render(
+        <HeaderSaikyo
+          {...createMockHeaderProps({ stationText: '新宿', stateText: '次は' })}
+        />
+      );
+      expect(getByTestId('Clock')).toBeTruthy();
+      expect(StyleSheet.flatten(getByText('新宿').props.style).color).toBe(
+        '#3a3a3a'
+      );
+      expect(StyleSheet.flatten(getByText('次は').props.style).color).toBe(
+        '#3a3a3a'
+      );
     });
   });
 

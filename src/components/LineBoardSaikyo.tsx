@@ -37,6 +37,8 @@ interface Props {
   lineColors: (string | null | undefined)[];
   stations: Station[];
   hasTerminus: boolean;
+  // E131系風: 駅ドットを丸くし、現在地のチェブロンを青にする
+  isE131?: boolean;
 }
 
 // Local style overrides specific to Saikyo
@@ -60,6 +62,7 @@ interface StationNameCellProps {
   lineColors: (string | null | undefined)[];
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
+  isE131: boolean;
 }
 
 const useStationCellState = (
@@ -189,6 +192,7 @@ const BarGradients: React.FC<{
 
 // 旧実装の点滅順(初期=RED、次=WHITE)を保つ
 const SAIKYO_CHEVRON_COLORS = ['RED', 'WHITE'] as const;
+const E131_CHEVRON_COLORS = ['BLUE', 'WHITE'] as const;
 
 const StationNameCellBase: React.FC<StationNameCellProps> = ({
   station,
@@ -198,6 +202,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   lineColors,
   hasTerminus,
   estimatedMinutes,
+  isE131,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
   const dim = useLandscapeWindowDimensions();
@@ -255,6 +260,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           passed={passed}
           estimatedMinutes={estimatedMinutes}
           isLast={stations.length - 1 === index}
+          round={isE131}
         />
         {stations.length - 1 === index && (
           <BarTerminalSaikyo
@@ -281,7 +287,11 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           },
         ]}
       >
-        {showChevron && <BlinkingChevron colors={SAIKYO_CHEVRON_COLORS} />}
+        {showChevron && (
+          <BlinkingChevron
+            colors={isE131 ? E131_CHEVRON_COLORS : SAIKYO_CHEVRON_COLORS}
+          />
+        )}
       </View>
     </>
   );
@@ -295,6 +305,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  isE131 = false,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
@@ -323,6 +334,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
             line={line}
             lineColors={lineColors}
             hasTerminus={hasTerminus}
+            isE131={isE131}
             estimatedMinutes={
               s.id != null ? estimatedMinutesByStationId.get(s.id) : null
             }
@@ -330,7 +342,14 @@ const LineBoardSaikyo: React.FC<Props> = ({
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations, estimatedMinutesByStationId]
+    [
+      hasTerminus,
+      line,
+      lineColors,
+      stations,
+      estimatedMinutesByStationId,
+      isE131,
+    ]
   );
 
   const stationsWithEmpty = useMemo(

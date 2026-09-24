@@ -19,6 +19,11 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // 丸ドットは既定の矩形ドットより幅が狭く、既定の文字サイズでは2桁が円からはみ出す
+  estimatedMinutesTextRound: {
+    fontSize: isTablet ? 24 : 16,
+    lineHeight: isTablet ? 26 : 18,
+  },
   // 見えているドット(chevronGradient)の右にドットと同じ高さで縦中央揃え
   estimatedMinutesUnitContainer: {
     position: 'absolute',
@@ -36,6 +41,8 @@ export type LineDotProps = {
   arrived: boolean;
   passed: boolean;
   isOdakyu?: boolean;
+  // 丸いドットにする(E131系風)。小田急風と違い色は通常のドットのまま
+  round?: boolean;
   estimatedMinutes?: number | null;
   // 最後尾セルのドットのときtrue。ETA表示中は右隣に単位(分/min.)を添える
   isLast?: boolean;
@@ -48,6 +55,7 @@ export const LineDot: React.FC<LineDotProps> = ({
   arrived,
   passed,
   isOdakyu = false,
+  round = false,
   estimatedMinutes,
   isLast = false,
 }) => {
@@ -77,13 +85,14 @@ export const LineDot: React.FC<LineDotProps> = ({
     );
   }
 
-  const dotSizeStyle = isOdakyu
-    ? {
-        width: isTablet ? 36 : 24,
-        height: isTablet ? 36 : 24,
-        borderRadius: isTablet ? 18 : 12,
-      }
-    : null;
+  const dotSizeStyle =
+    isOdakyu || round
+      ? {
+          width: isTablet ? 36 : 24,
+          height: isTablet ? 36 : 24,
+          borderRadius: isTablet ? 18 : 12,
+        }
+      : null;
 
   return (
     <View style={styles.stationArea}>
@@ -117,7 +126,14 @@ export const LineDot: React.FC<LineDotProps> = ({
             ]}
             pointerEvents="none"
           >
-            <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
+            <EstimatedMinutesBadge
+              estimatedMinutes={estimatedMinutes}
+              style={
+                round && !isOdakyu
+                  ? localStyles.estimatedMinutesTextRound
+                  : undefined
+              }
+            />
           </View>
         ) : null}
         {isLast && estimatedMinutes != null ? (

@@ -13,7 +13,7 @@ import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Clock from './Clock';
-import type { CommonHeaderProps } from './Header.types';
+import type { HeaderSaikyoProps } from './Header.types';
 import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
@@ -99,11 +99,27 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
   },
+  // E131系風: 埼京線風の白地を黒地に反転し、文字を白にする
+  textE131: {
+    color: 'white',
+  },
 });
+
+// E131系風の地色。真っ黒ではなく少し明るい黒
+const E131_BACKGROUND_COLOR = '#222';
+
+// 背景グラデーション(上端の影→地色)。E131系風は影を付けず地色一色にする
+const BACKGROUND_COLORS_SAIKYO = ['#aaa', '#fcfcfc'] as const;
+const BACKGROUND_COLORS_E131 = [
+  E131_BACKGROUND_COLOR,
+  E131_BACKGROUND_COLOR,
+] as const;
 
 type HeaderBarProps = {
   lineColor: string;
   height: number;
+  // 両端をぼかす色。ヘッダーの地色に合わせる
+  edgeColor: string;
 };
 
 const headerBarStyles = StyleSheet.create({
@@ -119,16 +135,17 @@ const headerBarStyles = StyleSheet.create({
 const HeaderBar: React.FC<HeaderBarProps> = ({
   lineColor,
   height,
+  edgeColor,
 }: HeaderBarProps) => (
   <View style={[headerBarStyles.root, { height }]}>
     <LinearGradient
       style={headerBarStyles.gradient}
       colors={[
-        '#fcfcfc',
+        edgeColor,
         `${lineColor}bb`,
         `${lineColor}bb`,
         `${lineColor}bb`,
-        '#fcfcfc',
+        edgeColor,
       ]}
       locations={[0, 0.2, 0.5, 0.8, 1]}
       start={[0, 0]}
@@ -137,7 +154,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({
   </View>
 );
 
-const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
+const HeaderSaikyo: React.FC<HeaderSaikyoProps> = (props) => {
   const {
     currentLine,
     selectedBound,
@@ -153,6 +170,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
     connectedLines,
     connectionText,
     isJapaneseState,
+    isE131 = false,
   } = props;
 
   const animation = useHeaderAnimation({
@@ -169,13 +187,15 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
 
   const { right: safeAreaRight } = useSafeAreaInsets();
   const lineColor = currentLine?.color ?? '#00ac9a';
+  const edgeColor = isE131 ? E131_BACKGROUND_COLOR : '#fcfcfc';
+  const textColorStyle = isE131 ? styles.textE131 : null;
 
   return (
     <View style={styles.root}>
-      <HeaderBar height={15} lineColor={lineColor} />
-      <View style={styles.topBar} />
+      <HeaderBar height={15} lineColor={lineColor} edgeColor={edgeColor} />
+      {isE131 ? null : <View style={styles.topBar} />}
       <LinearGradient
-        colors={['#aaa', '#fcfcfc']}
+        colors={isE131 ? BACKGROUND_COLORS_E131 : BACKGROUND_COLORS_SAIKYO}
         locations={[0, 0.2]}
         style={styles.gradientRoot}
       >
@@ -188,12 +208,14 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                 styles.boundTextContainer,
               ]}
             >
-              <Text style={styles.connectedLines}>
+              <Text style={[styles.connectedLines, textColorStyle]}>
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
               </Text>
-              <Text style={styles.boundText}>{boundText}</Text>
+              <Text style={[styles.boundText, textColorStyle]}>
+                {boundText}
+              </Text>
             </RNAnimated.Text>
 
             <RNAnimated.Text
@@ -202,26 +224,36 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                 styles.boundTextContainer,
               ]}
             >
-              <Text style={styles.connectedLines}>
+              <Text style={[styles.connectedLines, textColorStyle]}>
                 {connectedLines?.length && animation.prevIsJapaneseState
                   ? `${animation.prevConnectionText}直通 `
                   : null}
               </Text>
-              <Text style={styles.boundText}>{animation.prevBoundText}</Text>
+              <Text style={[styles.boundText, textColorStyle]}>
+                {animation.prevBoundText}
+              </Text>
             </RNAnimated.Text>
           </View>
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
             <RNAnimated.Text
-              style={[animation.stateTopAnimatedStyles, styles.state]}
+              style={[
+                animation.stateTopAnimatedStyles,
+                styles.state,
+                textColorStyle,
+              ]}
               adjustsFontSizeToFit
               numberOfLines={2}
             >
               {stateText}
             </RNAnimated.Text>
             <RNAnimated.Text
-              style={[animation.stateBottomAnimatedStyles, styles.state]}
+              style={[
+                animation.stateBottomAnimatedStyles,
+                styles.state,
+                textColorStyle,
+              ]}
               adjustsFontSizeToFit
               numberOfLines={2}
             >
@@ -247,6 +279,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                 textStyle={[
                   animation.topNameAnimatedStyles,
                   styles.stationName,
+                  textColorStyle,
                   animation.topNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
@@ -263,6 +296,7 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
                 textStyle={[
                   animation.bottomNameAnimatedStyles,
                   styles.stationName,
+                  textColorStyle,
                   animation.bottomNameAnimatedAnchorStyle,
                   {
                     fontSize: STATION_NAME_FONT_SIZE,
@@ -273,17 +307,20 @@ const HeaderSaikyo: React.FC<CommonHeaderProps> = (props) => {
             </View>
           </View>
         </View>
-        <Clock
-          bold
-          style={[
-            styles.clockOverride,
-            {
-              right: 8 + safeAreaRight,
-            },
-          ]}
-        />
+        {/* E131系の車内表示器には時計が無い */}
+        {isE131 ? null : (
+          <Clock
+            bold
+            style={[
+              styles.clockOverride,
+              {
+                right: 8 + safeAreaRight,
+              },
+            ]}
+          />
+        )}
       </LinearGradient>
-      <HeaderBar height={5} lineColor={lineColor} />
+      <HeaderBar height={5} lineColor={lineColor} edgeColor={edgeColor} />
     </View>
   );
 };

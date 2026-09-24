@@ -184,6 +184,44 @@ describe('LineBoardSaikyo', () => {
     expect(useCurrentLine).toHaveBeenCalled();
   });
 
+  it('isE131の場合、チェブロンを青と白で点滅させ、駅ドットを丸くする', () => {
+    const {
+      BlinkingChevron,
+      LineDot,
+    } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardSaikyo
+        stations={mockStations}
+        lineColors={['#F68B1E', '#F68B1E']}
+        hasTerminus={false}
+        isE131
+      />
+    );
+    expect(BlinkingChevron).toHaveBeenCalledWith(
+      expect.objectContaining({ colors: ['BLUE', 'WHITE'] }),
+      undefined
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ round: true }),
+      undefined
+    );
+  });
+
+  it('isE131を渡さない場合、駅ドットは丸くしない', () => {
+    const { LineDot } = require('./LineBoard/shared/components');
+    render(
+      <LineBoardSaikyo
+        stations={mockStations}
+        lineColors={['#00ac9a', '#00ac9a']}
+        hasTerminus={false}
+      />
+    );
+    expect(LineDot).toHaveBeenCalledWith(
+      expect.objectContaining({ round: false }),
+      undefined
+    );
+  });
+
   it('hasTerminus=trueの場合、BarTerminalSaikyoが正しく表示される', () => {
     const { BarTerminalSaikyo } = require('./BarTerminalSaikyo');
     render(
