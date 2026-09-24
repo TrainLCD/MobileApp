@@ -471,6 +471,41 @@ export const GET_CONNECTED_ROUTES = gql`
   }
 `;
 
+// Same as GET_CONNECTED_ROUTES but ordered by the given sort. Kept as a separate
+// document because declaring $sortBy makes the whole query fail validation on an
+// API that does not know ConnectedRouteSort, even when the variable is omitted.
+// Only the train type list's sort sends it; the route search itself never does.
+export const GET_CONNECTED_ROUTES_SORTED = gql`
+  ${TRAIN_TYPE_ROUTE_FRAGMENT}
+  ${STATION_FRAGMENT}
+  query GetConnectedRoutesSorted(
+    $fromStationGroupId: Int!
+    $toStationGroupId: Int!
+    $viaLineId: Int
+    $sortBy: ConnectedRouteSort!
+  ) {
+    connectedRoutes(
+      fromStationGroupId: $fromStationGroupId
+      toStationGroupId: $toStationGroupId
+      viaLineId: $viaLineId
+      sortBy: $sortBy
+    ) {
+      legs {
+        trainTypes {
+          ...TrainTypeRouteFields
+        }
+        fromStation {
+          ...StationFields
+        }
+        toStation {
+          ...StationFields
+        }
+        stationGroupIds
+      }
+    }
+  }
+`;
+
 // Query for getting train types by station ID (lightweight)
 export const GET_STATION_TRAIN_TYPES_LIGHT = gql`
   ${TRAIN_TYPE_ROUTE_FRAGMENT}

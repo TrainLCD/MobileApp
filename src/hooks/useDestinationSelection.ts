@@ -10,6 +10,10 @@ import {
 } from '~/lib/graphql/queries';
 import lineState, { pendingLineAtom } from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
+import {
+  type ConnectedRoutesVariables,
+  connectedRoutesSourceAtom,
+} from '~/store/atoms/routeSearch';
 import stationState, {
   stationAtom,
   wantedDestinationAtom,
@@ -32,11 +36,7 @@ type GetConnectedRoutesData = {
   connectedRoutes: ConnectedRoute[];
 };
 
-type GetConnectedRoutesVariables = {
-  fromStationGroupId: number;
-  toStationGroupId: number;
-  viaLineId?: number;
-};
+type GetConnectedRoutesVariables = ConnectedRoutesVariables;
 
 type GetLineStationsData = {
   lineStations: Station[];
@@ -94,6 +94,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
+  const setConnectedRoutesSource = useSetAtom(connectedRoutesSourceAtom);
 
   const queryClient = useQueryClient();
 
@@ -229,12 +230,13 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         return;
       }
 
+      const connectedRoutesVariables: ConnectedRoutesVariables = {
+        fromStationGroupId: station.groupId,
+        toStationGroupId: selectedStation.groupId,
+        viaLineId: selectedStation.line.id,
+      };
       const result = await fetchConnectedRoutes({
-        variables: {
-          fromStationGroupId: station.groupId,
-          toStationGroupId: selectedStation.groupId,
-          viaLineId: selectedStation.line.id,
-        },
+        variables: connectedRoutesVariables,
       });
 
       const routes = filterRideableRoutes(result.data?.connectedRoutes ?? []);
@@ -334,6 +336,11 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         ...prev,
         pendingStations: stations,
       }));
+      setConnectedRoutesSource({
+        trainTypes: fetchedTrainTypes,
+        routes,
+        variables: connectedRoutesVariables,
+      });
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes,
@@ -348,6 +355,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
       setNavigationState,
       setStationState,
       setLineState,
+      setConnectedRoutesSource,
     ]
   );
 
