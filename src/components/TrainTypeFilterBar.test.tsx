@@ -6,7 +6,10 @@ import {
   type TrainTypeFilterOptions,
   type TrainTypeFilterState,
 } from '~/utils/trainTypeFilter';
-import { TrainTypeFilterBar } from './TrainTypeFilterBar';
+import {
+  TrainTypeFilterBar,
+  type TrainTypeSortControl,
+} from './TrainTypeFilterBar';
 
 jest.mock('~/translation', () => ({
   isJapanese: true,
@@ -231,5 +234,74 @@ describe('TrainTypeFilterBar', () => {
     fireEvent.press(getByTestId('externalClear'));
 
     expect(getByTestId('trainTypeFilterSearchInput')).not.toBe(input);
+  });
+});
+
+describe('TrainTypeFilterBar - 並べ替え', () => {
+  const setupSort = (overrides: Partial<TrainTypeSortControl> = {}) => {
+    const sort: TrainTypeSortControl = {
+      value: 'Recommended',
+      loading: false,
+      error: false,
+      onChange: jest.fn(),
+      ...overrides,
+    };
+    const utils = render(
+      <TrainTypeFilterBar
+        options={options}
+        filter={EMPTY_TRAIN_TYPE_FILTER}
+        onChange={jest.fn()}
+        sort={sort}
+      />
+    );
+    return { ...utils, sort };
+  };
+
+  it('並べ替えを渡さなければチップを出さない', () => {
+    const { queryByTestId } = setup();
+
+    expect(queryByTestId('trainTypeFilterAxis-sort')).toBeNull();
+  });
+
+  it('チップには今の並び順を出す', () => {
+    const { getByTestId } = setupSort({ value: 'TransferCount' });
+
+    expect(getByTestId('trainTypeFilterAxis-sort')).toHaveTextContent(
+      /trainTypeSortTransferCount/
+    );
+  });
+
+  it('並び順を選ぶと通知してパネルを閉じる', () => {
+    const { getByTestId, queryByText, sort } = setupSort();
+
+    fireEvent.press(getByTestId('trainTypeFilterAxis-sort'));
+    expect(queryByText('trainTypeSortHeading')).toBeTruthy();
+
+    fireEvent.press(getByTestId('trainTypeSortValue-ArrivalTime'));
+
+    expect(sort.onChange).toHaveBeenCalledWith('ArrivalTime');
+    expect(queryByText('trainTypeSortHeading')).toBeNull();
+  });
+
+  it('並べ替えのパネルと絞り込みのパネルは同時に開かない', () => {
+    const { getByTestId, queryByText } = setupSort();
+
+    fireEvent.press(getByTestId('trainTypeFilterAxis-sort'));
+    fireEvent.press(getByTestId('trainTypeFilterAxis-lines'));
+
+    expect(queryByText('trainTypeSortHeading')).toBeNull();
+    expect(queryByText('東武東上線')).toBeTruthy();
+  });
+
+  it('取得中は読み込み中の表示を出す', () => {
+    const { getByTestId } = setupSort({ value: 'ArrivalTime', loading: true });
+
+    expect(getByTestId('trainTypeSortLoading')).toBeTruthy();
+  });
+
+  it('並べ替えられなかったときはその旨を出す', () => {
+    const { getByText } = setupSort({ error: true });
+
+    expect(getByText('trainTypeSortError')).toBeTruthy();
   });
 });

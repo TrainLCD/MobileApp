@@ -13,6 +13,7 @@ import {
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
+import { useRouteTrainTypeSort } from '~/hooks/useRouteTrainTypeSort';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { fetchedTrainTypesAtom } from '~/store/atoms/navigation';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -32,7 +33,10 @@ import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { Heading } from './Heading';
-import { TrainTypeFilterBar } from './TrainTypeFilterBar';
+import {
+  TrainTypeFilterBar,
+  type TrainTypeSortControl,
+} from './TrainTypeFilterBar';
 import Typography from './Typography';
 
 /** ヘッダー・フッターの高さ（リストはこの下に潜って描画される） */
@@ -40,6 +44,8 @@ const HEADER_HEIGHT = 72;
 /**
  * 絞り込みを出す件数のしきい値。
  * 数件しかない駅では絞り込む相手がおらず、ヘッダーがリストを圧迫するだけになる。
+ * 経路検索の結果は並べ替えのために件数によらず出す(経路は最大 6 本で、乗換のある
+ * 経路ばかりだと 5 件以下になりやすい)。
  */
 const FILTER_MIN_TRAIN_TYPE_COUNT = 6;
 /**
@@ -202,26 +208,70 @@ export const TrainTypeListModal = ({
     [trainTypes, line, boardingStation, destination]
   );
 
-  const filterEnabled = rows.length >= FILTER_MIN_TRAIN_TYPE_COUNT;
+  const {
+    sortable,
+    sort,
+    order: sortOrder,
+    loading: sortLoading,
+    error: sortError,
+    changeSort,
+    resetSort,
+  } = useRouteTrainTypeSort(fetchedTrainTypes);
+  // 並べ替える相手が 1 行以下なら出さない(路線が決まらず行が無いときも含む)
+  const sortEnabled = sortable && rows.length > 1;
+  const filterEnabled =
+    rows.length >= FILTER_MIN_TRAIN_TYPE_COUNT || sortEnabled;
   const filterActive = filterEnabled && isTrainTypeFilterActive(filter);
 
+  // 絞り込みのチップは並べ替える前の行から作る。並び順を変えるたびにチップの並びまで
+  // 入れ替わると、選ぼうとしたチップを探し直すことになる
   const filterOptions = useMemo(
     () => buildTrainTypeFilterOptions(rows, isJapanese),
     [rows]
   );
 
-  const visibleRows = useMemo(
-    () => (filterEnabled ? filterTrainTypeRows(rows, filter) : rows),
-    [filterEnabled, rows, filter]
+  const sortControl = useMemo<TrainTypeSortControl | undefined>(
+    () =>
+      sortEnabled
+        ? {
+            value: sort,
+            loading: sortLoading,
+            error: sortError,
+            onChange: changeSort,
+          }
+        : undefined,
+    [sortEnabled, sort, sortLoading, sortError, changeSort]
   );
 
-  // 閉じたら条件を捨てる。次に開いたときに前回の絞り込みが残っていると、
+  // rows は fetchedTrainTypes と同じ順に並ぶので、添字の並びをそのまま当てられる
+  const sortedRows = useMemo(
+    () =>
+      sortEnabled && sortOrder
+        ? sortOrder.flatMap((index) => rows[index] ?? [])
+        : rows,
+    [sortEnabled, sortOrder, rows]
+  );
+
+  // FlashList は並びが入れ替わっても画面上の行の位置を保とうとする
+  // (maintainVisibleContentPosition)。先頭の行がヘッダーの下に潜るので、並び順が
+  // 変わったら作り直して一覧の先頭から見せる。位置の補正はデータの反映後に走るため、
+  // scrollToOffset で先頭へ戻しても上書きされる
+  const listKey = sortEnabled && sortOrder ? sort : 'Recommended';
+
+  const visibleRows = useMemo(
+    () =>
+      filterEnabled ? filterTrainTypeRows(sortedRows, filter) : sortedRows,
+    [filterEnabled, sortedRows, filter]
+  );
+
+  // 閉じたら条件と並び順を捨てる。次に開いたときに前回の絞り込みが残っていると、
   // 種別そのものが減ったように見えてしまう
   useEffect(() => {
     if (!visible) {
       setFilter(EMPTY_TRAIN_TYPE_FILTER);
+      resetSort();
     }
-  }, [visible]);
+  }, [visible, resetSort]);
 
   const handleClearFilter = useCallback(
     () => setFilter(EMPTY_TRAIN_TYPE_FILTER),
@@ -437,11 +487,13 @@ export const TrainTypeListModal = ({
             options={filterOptions}
             filter={filter}
             onChange={setFilter}
+            sort={sortControl}
           />
         ) : null}
       </View>
 
       <FlashList<TrainTypeRow>
+        key={listKey}
         style={StyleSheet.absoluteFill}
         data={visibleRows}
         renderItem={renderItem}
