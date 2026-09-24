@@ -108,11 +108,13 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           />
         );
       case APP_THEME.SAIKYO:
+      case APP_THEME.E131:
         return (
           <LineBoardSaikyo
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
+            isE131={theme === APP_THEME.E131}
           />
         );
       case APP_THEME.E231:
