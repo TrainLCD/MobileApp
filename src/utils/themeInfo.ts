@@ -74,6 +74,11 @@ const APP_THEME_INFO_MAP: Record<AppTheme, ThemeInfoData> = {
     spImage: require('../../assets/images/themes/e231-sp.webp'),
     tabletImage: require('../../assets/images/themes/e231-tablet.webp'),
   },
+  [APP_THEME.E131]: {
+    descriptionKey: 'themeDescriptionE131',
+    spImage: require('../../assets/images/themes/e131-sp.webp'),
+    tabletImage: require('../../assets/images/themes/e131-tablet.webp'),
+  },
   [APP_THEME.LOW_POWER]: {
     descriptionKey: 'themeDescriptionLowPower',
     spImage: require('../../assets/images/themes/low-power-sp.webp'),

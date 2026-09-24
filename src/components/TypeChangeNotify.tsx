@@ -1517,6 +1517,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
 
     switch (theme) {
       case 'SAIKYO':
+      case 'E131':
         return (
           <SaikyoBars
             currentLine={displayCurrentLine}

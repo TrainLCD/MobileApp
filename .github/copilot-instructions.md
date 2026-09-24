@@ -21,7 +21,7 @@ TrainLCD は、日本の鉄道会社の LCD 画面を再現し、リアルタイ
 
 - **コンポーネント**: PascalCase（例: `StationBanner.tsx`）
 - **フック**: `use`プレフィックス（例: `useStationFeed.ts`）
-- **Zustand ストア**: `*Store.ts`サフィックス（例: `navigationStore.ts`）
+- **Jotai atom**: `src/store/atoms/*.ts`に配置（例: `src/store/atoms/navigation.ts`）
 - **GraphQL 操作**: `FeatureVerbQuery`形式（例: `GetStationListQuery`）
 
 ### コードスタイル
@@ -46,7 +46,7 @@ src/
 ├── components/        # 再利用可能なUIコンポーネント
 ├── screens/           # 画面コンポーネント
 ├── hooks/             # カスタムReactフック
-├── store/             # Zustandストアとセレクター
+├── store/             # Jotai atom（atoms/）とセレクター
 ├── stacks/            # React Navigationスタック定義
 ├── providers/         # Contextプロバイダーと統合ラッパー
 ├── lib/               # APIクライアントと共有統合
@@ -72,7 +72,7 @@ src/
 - **TypeScript**: 型安全性と開発者体験の向上
 - **React Navigation**: ナビゲーション管理
 - **Tanstack Query**: データフェッチングとキャッシング
-- **Zustand**: 状態管理
+- **Jotai**: 状態管理（フィールド単位の atom。`docs/state-management.md`参照）
 - **Cloudflare Workers**: バックエンドAPI（認証・TTS・フィードバック・リモート設定）、R2/KVでストレージ
 - **Sentry**: エラートラッキングとパフォーマンス監視
 - **GraphQL**: 型付きクエリとオペレーション
@@ -122,7 +122,7 @@ npm run gql:codegen       # GraphQL型定義再生成
 - [ ] コード変更に関連するテストを更新または追加
 - [ ] `npm run lint`、`npm test`、`npm run typecheck`を実行し、結果を記録
 - [ ] 挙動が変わる場合はドキュメント（README、docs/、インラインコメント）を更新
-- [ ] UI 変更の場合はスクリーンショット/動画をデバイス名とともに記録
+- [ ] UI 変更の場合は画像を添付し、出所（端末名・React Native Web・実装のレンダリングではないイメージ図のいずれか）を明記。画像が無い場合はその理由を記載
 
 ## バージョン管理（Git）
 
@@ -149,7 +149,7 @@ npm run gql:codegen       # GraphQL型定義再生成
 - リグレッションリスクの評価と軽減策
 - ローカルで実行したコマンド（例: `npm run lint && npm test && npm run typecheck`）
 - 関連する Issue またはチケットへのリンク
-- UI/UX 変更の場合はスクリーンショットまたは録画（デバイス名を記載、例: Pixel 8、iPhone 15 Pro）
+- UI/UX 変更の場合は画像と出所ラベル（端末名 例: Pixel 8、React Native Web、またはイメージ図である旨）。画像が無い場合はその理由
 
 CI が失敗した場合は、根本原因のメモと再現手順を追加するか、インフラストラクチャの問題について Issue を作成してからレビューを進めてください。
 
@@ -170,15 +170,6 @@ GitHub Copilot を使用する際は、以下の原則に従ってください�
 4. **再現性の文書化**: 実行したすべてのコマンドを記録し、環境変数やクレデンシャルに関するローカルな前提を記載
 5. **前提の積極的な検証**: キャッシュされた知識に頼らず、ツールのバージョン、ワークフローの期待、環境のニーズを確認
 6. **不確実性の明確化**: 意図を推測するのではなく、ガイダンスを要求するか、TODO ノートを残す
-
-## 標準ワークフロー
-
-1. **取り込み**: Issue、PR ディスカッション、プロンプト全体を読み、コーディング前に成果物と制約を再確認
-2. **偵察**: `rg`、`ls`、`find`で関連ファイルをマッピング。インターフェースと既存パターンを確認して互換性のある変更を計画
-3. **計画**: 個別のステップを概説し、進捗に応じて計画を更新。ブロッカーは早期に報告
-4. **実装**: 対象を絞った編集を実施。小さな論理単位でコミット。必要でない限り大きなファイルの再生成は避ける
-5. **検証**: 必要なコマンド（`npm run lint`、`npm test`、`npm run typecheck`など）のみ実行し、要約された出力を記録
-6. **文書化とハンドオフ**: 挙動が変わる場合は README やドキュメントを更新。変更内容を要約し、実行したコマンドをリストアップ。PR を開く前にアーティファクト（ログ、スクリーンショット）を添付
 
 ## コミュニケーションとインシデント報告
 

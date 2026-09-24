@@ -56,6 +56,7 @@ export const TransfersHeading = ({ theme }: { theme: AppTheme }) => {
         </LinearGradient>
       );
     case APP_THEME.SAIKYO:
+    case APP_THEME.E131:
       return (
         <LinearGradient
           colors={['white', '#ccc', '#ccc', 'white']}

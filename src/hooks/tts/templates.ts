@@ -69,7 +69,7 @@ const TY: ThemeTemplate = {
 //   御礼は終点到着前のみ (「今日も、JR東日本をご利用くださいまして、ありがとうございました。」)。
 // - 通過駅がある場合は「◯◯へおいでのお客様と、◯◯線は、お乗り換えです。」と
 //   「◯◯の次は、◯◯に止まります。」(到着前) が入る。
-// - YAMANOTE / SAIKYO 共通形。JO / JL / E231 テーマもこのテンプレートを流用する。
+// - YAMANOTE / SAIKYO / E131 共通形。JO / JL / E231 テーマもこのテンプレートを流用する。
 const JR_EAST: ThemeTemplate = {
   NEXT: t(
     '{#if firstSpeech}{vehicleJa}は、{jrEastTrainDescJa}、{boundForJa}ゆきです。{/if}',
@@ -304,6 +304,7 @@ export const JA_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JL]: EMPTY_THEME,
   [APP_THEME.ODAKYU]: EMPTY_THEME,
   [APP_THEME.E231]: EMPTY_THEME,
+  [APP_THEME.E131]: JR_EAST,
   [APP_THEME.LOW_POWER]: EMPTY_THEME,
 };
 
@@ -320,5 +321,6 @@ export const EN_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JL]: EMPTY_THEME,
   [APP_THEME.ODAKYU]: EMPTY_THEME,
   [APP_THEME.E231]: EMPTY_THEME,
+  [APP_THEME.E131]: JR_EAST_EN,
   [APP_THEME.LOW_POWER]: EMPTY_THEME,
 };
