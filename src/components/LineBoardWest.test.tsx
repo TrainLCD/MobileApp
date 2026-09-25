@@ -285,4 +285,72 @@ describe('LineBoardWest', () => {
     );
     expect(PadLineMarks).toHaveBeenCalled();
   });
+
+  describe('直通先の路線色に切り替わる位置', () => {
+    const YAMANOTE = '#9acd32';
+    const OEDO = '#b6007a';
+
+    // 路線の色で塗った線を、左端・幅・色で取り出す
+    const getColoredBars = (result: ReturnType<typeof render>) => {
+      const { View } = require('react-native');
+      return result
+        .UNSAFE_getAllByType(View)
+        .map((node) =>
+          Object.assign(
+            {},
+            ...[node.props.style].flat(Number.POSITIVE_INFINITY)
+          )
+        )
+        .filter(
+          (style) =>
+            style.backgroundColor === YAMANOTE || style.backgroundColor === OEDO
+        )
+        .map(({ left, width, backgroundColor }) => ({
+          left,
+          width,
+          color: backgroundColor,
+        }));
+    };
+
+    const threeStations: Station[] = [
+      ...mockStations,
+      { id: 3, groupId: 3, name: '新宿', line: mockLine } as unknown as Station,
+    ];
+
+    it('接続駅のドットの中心で次の駅の路線の色に切り替わる', () => {
+      mockAtoms({ leftStations: threeStations, stations: threeStations });
+      const result = render(
+        <LineBoardWest
+          stations={threeStations}
+          lineColors={[YAMANOTE, YAMANOTE, OEDO]}
+        />
+      );
+      // 画面幅812: 駅名の枠は812/9、ドットの中心は 32 + 812/9 * i + 14。
+      // 終端までの長さは (812 - 48) / 8 * 8 = 764
+      const cell = 812 / 9;
+      const bars = getColoredBars(result);
+      expect(bars.map(({ color }) => color)).toEqual([
+        YAMANOTE,
+        YAMANOTE,
+        OEDO,
+        OEDO,
+      ]);
+      expect(bars[2].left).toBeCloseTo(32 + cell + 14);
+      expect(bars[3].left).toBeCloseTo(32 + cell * 2 + 14);
+      expect(bars[3].left + bars[3].width).toBeCloseTo(764);
+    });
+
+    it('接続駅に着いた後も先頭のドットより手前は着いてきた路線の色で塗る', () => {
+      const result = render(
+        <LineBoardWest
+          stations={mockStations}
+          lineColors={[OEDO, OEDO]}
+          arrivingLineColor={YAMANOTE}
+        />
+      );
+      const bars = getColoredBars(result);
+      expect(bars[0]).toEqual({ left: 0, width: 47, color: YAMANOTE });
+      expect(bars.slice(1).every(({ color }) => color === OEDO)).toBe(true);
+    });
+  });
 });

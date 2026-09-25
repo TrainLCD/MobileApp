@@ -39,10 +39,15 @@ import {
   HORIZONTAL_STATION_NAME_MAX_CHARS,
   STATION_NAME_CONTAINER_BOTTOM,
 } from './LineBoard/shared/styles/commonStyles';
+import {
+  getLineColorBarSegments,
+  getLineDotCenterX,
+} from './LineBoard/shared/utils/lineColorBarSegments';
 import Typography from './Typography';
 
 type Props = {
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   stations: Station[];
   hasTerminus: boolean;
 };
@@ -238,6 +243,7 @@ interface StationNameCellProps {
   stations: Station[];
   line: Line;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
 }
@@ -282,6 +288,7 @@ const FutureBars: React.FC<{
   passed: boolean;
   line: Line;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   barLeft: number;
   barWidth: number;
   stations: Station[];
@@ -292,6 +299,7 @@ const FutureBars: React.FC<{
   passed,
   line,
   lineColors,
+  arrivingLineColor,
   barLeft,
   barWidth,
   stations,
@@ -302,6 +310,16 @@ const FutureBars: React.FC<{
   }
 
   const isMiddle = isMiddleStation(currentStationIndex, index, stations.length);
+  const colorLeft = isMiddle ? barLeft + barWidth / 2.5 : barLeft;
+  const colorSegments = getLineColorBarSegments({
+    left: colorLeft,
+    width: isMiddle ? barWidth / 2.5 : barWidth,
+    // 到着中の駅では灰色の部分がドットまでを表すので、その先は出発する区間の色で塗る
+    splitX: isMiddle ? colorLeft : getLineDotCenterX(false),
+    lineColors,
+    arrivingLineColor,
+    index,
+  });
 
   return (
     <>
@@ -310,23 +328,20 @@ const FutureBars: React.FC<{
         locations={[0.5, 0.5, 0.5, 0.9]}
         style={[styles.bar, { left: barLeft, width: barWidth }]}
       />
-      <LinearGradient
-        colors={
-          line.color
-            ? [
-                `${lineColors[index] || line.color}ff`,
-                `${lineColors[index] || line.color}bb`,
-              ]
-            : ['#000000ff', '#000000bb']
-        }
-        style={[
-          styles.bar,
-          {
-            left: isMiddle ? barLeft + barWidth / 2.5 : barLeft,
-            width: isMiddle ? barWidth / 2.5 : barWidth,
-          },
-        ]}
-      />
+      {colorSegments.map((segment) => (
+        <LinearGradient
+          key={segment.left}
+          colors={
+            line.color
+              ? [
+                  `${segment.color || line.color}ff`,
+                  `${segment.color || line.color}bb`,
+                ]
+              : ['#000000ff', '#000000bb']
+          }
+          style={[styles.bar, { left: segment.left, width: segment.width }]}
+        />
+      ))}
     </>
   );
 };
@@ -373,6 +388,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   stations,
   line,
   lineColors,
+  arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
 }: StationNameCellProps) => {
@@ -477,6 +493,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           passed={passed}
           line={line}
           lineColors={lineColors}
+          arrivingLineColor={arrivingLineColor}
           barLeft={barLeft}
           barWidth={barWidth}
           stations={stations}
@@ -543,6 +560,7 @@ const LineBoardToei: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  arrivingLineColor,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
@@ -587,6 +605,7 @@ const LineBoardToei: React.FC<Props> = ({
             index={i}
             line={line}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
             estimatedMinutes={
               s.id != null ? estimatedMinutesByStationId.get(s.id) : null
@@ -595,7 +614,14 @@ const LineBoardToei: React.FC<Props> = ({
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations, estimatedMinutesByStationId]
+    [
+      arrivingLineColor,
+      hasTerminus,
+      line,
+      lineColors,
+      stations,
+      estimatedMinutesByStationId,
+    ]
   );
 
   const stationsWithEmpty = useMemo(

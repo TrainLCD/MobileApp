@@ -125,4 +125,66 @@ describe('useRefreshLeftStations', () => {
 
     expect(getLeftStationIds(store)).toEqual(ALL_IDS.slice(1));
   });
+
+  describe('接続駅(同じ駅グループが前後の路線の駅として並ぶ駅)', () => {
+    // 大江戸線から代々木で山手線へ乗り換える駅リスト。代々木は両方の路線の駅として並ぶ
+    const shinjuku = createStation(9930128, { groupId: 1130208 });
+    const yoyogiOedo = createStation(9930127, { groupId: 1130207 });
+    const yoyogiYamanote = createStation(1130207, { groupId: 1130207 });
+    const harajuku = createStation(1130206, { groupId: 1130206 });
+    const junctionStations = [shinjuku, yoyogiOedo, yoyogiYamanote, harajuku];
+
+    const renderAt = (
+      station: ReturnType<typeof createStation>,
+      selectedDirection: 'INBOUND' | 'OUTBOUND'
+    ) => {
+      const store = createStore();
+      store.set(themePreferenceAtom, APP_THEME.TOKYO_METRO);
+      store.set(stationState, (prev) => ({
+        ...prev,
+        station,
+        stations: junctionStations,
+        selectedDirection,
+      }));
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <Provider store={store}>{children}</Provider>
+      );
+      renderHook(() => useRefreshLeftStations(), { wrapper });
+      return store;
+    };
+
+    it('着く前は前の路線の駅を並べる', () => {
+      const store = renderAt(shinjuku, 'INBOUND');
+
+      expect(getLeftStationIds(store)).toEqual([
+        shinjuku.id,
+        yoyogiOedo.id,
+        harajuku.id,
+      ]);
+    });
+
+    it.each([
+      ['前の路線の駅', yoyogiOedo],
+      ['次の路線の駅', yoyogiYamanote],
+    ])('%sに着いたら、現在駅を次の路線の駅にする', (_, station) => {
+      const store = renderAt(station, 'INBOUND');
+
+      expect(getLeftStationIds(store)).toEqual([
+        yoyogiYamanote.id,
+        harajuku.id,
+      ]);
+    });
+
+    it('OUTBOUNDで着いたら、現在駅を次の路線の駅にする', () => {
+      // OUTBOUND は配列の逆順に進むので、次の路線は大江戸線になる。
+      // 駅が 8 駅に満たない OUTBOUND では、通ってきた駅も含めて先頭から 8 駅を並べる
+      const store = renderAt(yoyogiYamanote, 'OUTBOUND');
+
+      expect(getLeftStationIds(store)).toEqual([
+        harajuku.id,
+        yoyogiOedo.id,
+        shinjuku.id,
+      ]);
+    });
+  });
 });

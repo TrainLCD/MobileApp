@@ -345,4 +345,64 @@ describe('LineBoardSaikyo', () => {
     expect(useBarStyles).toHaveBeenCalled();
     expect(useCurrentLine).toHaveBeenCalled();
   });
+
+  describe('直通先の路線色に切り替わる位置', () => {
+    const OEDO = '#b6007a';
+    const YAMANOTE = '#9acd32';
+
+    // 路線の色で塗ったバーを、左端・幅・色で取り出す
+    const getColoredBars = (
+      result: ReturnType<typeof render>
+    ): { left: number; width: number; color: string }[] => {
+      const { LinearGradient } = require('expo-linear-gradient');
+      return result
+        .UNSAFE_getAllByType(LinearGradient)
+        .map((node) => {
+          const style = Object.assign(
+            {},
+            ...[node.props.style].flat(Number.POSITIVE_INFINITY)
+          );
+          return {
+            left: style.left,
+            width: style.width,
+            color: String(node.props.colors[0]).slice(0, 7),
+          };
+        })
+        .filter(({ color }) => color === OEDO || color === YAMANOTE);
+    };
+
+    it('E131系風では接続駅の丸いドットの中心で次の路線の色に切り替わる', () => {
+      const result = render(
+        <LineBoardSaikyo
+          stations={mockStations}
+          lineColors={[OEDO, YAMANOTE]}
+          hasTerminus={false}
+          isE131
+        />
+      );
+      // useBarStylesのモックでバーは左端0・幅100、丸いドットの中心は12
+      expect(getColoredBars(result)).toEqual([
+        { left: 0, width: 12, color: OEDO },
+        { left: 12, width: 88, color: YAMANOTE },
+        { left: 0, width: 100, color: YAMANOTE },
+      ]);
+    });
+
+    it('接続駅に着いた後も先頭のドットより手前は着いてきた路線の色で塗る', () => {
+      const result = render(
+        <LineBoardSaikyo
+          stations={mockStations}
+          lineColors={[YAMANOTE, YAMANOTE]}
+          arrivingLineColor={OEDO}
+          hasTerminus={false}
+        />
+      );
+      // 埼京線風は四角いドットで中心は16
+      expect(getColoredBars(result)).toEqual([
+        { left: 0, width: 16, color: OEDO },
+        { left: 16, width: 84, color: YAMANOTE },
+        { left: 0, width: 100, color: YAMANOTE },
+      ]);
+    });
+  });
 });
