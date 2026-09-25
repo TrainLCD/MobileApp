@@ -237,6 +237,11 @@ export const useSimulationMode = (): void => {
   useEffect(() => {
     const segments = trainRouteSegments;
     if (!segments || segments.length === 0) {
+      // 駅リストが変わって新しい trainRoute がまだ無い(取得中・取得失敗)ときに
+      // 旧経路のプロファイル/ジオメトリを残すと、新しい駅リストの位置で旧経路を
+      // 走ってしまう。消しておけば、タイマーは新しいプロファイルが揃うまで停車して待つ
+      speedProfilesRef.current = [];
+      segmentGeometryCacheRef.current = [];
       return;
     }
 
