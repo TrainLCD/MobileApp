@@ -116,6 +116,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         return (
           <LineBoardWest
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             stations={slicedLeftStations}
           />
         );

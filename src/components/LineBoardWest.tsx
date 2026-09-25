@@ -35,6 +35,8 @@ import Typography from './Typography';
 interface Props {
   stations: Station[];
   lineColors: (string | null | undefined)[];
+  // 先頭の駅に着いた区間の路線の色。接続駅に着いた後に先頭のドットより手前を塗る
+  arrivingLineColor?: string | null;
 }
 
 const useBarWidth = () => {
@@ -46,6 +48,22 @@ const useBarWidth = () => {
 };
 
 const styles = commonLineBoardStyles;
+
+// 駅のドットの中心の x 座標(ルートの左端から)。駅名の枠は画面幅の 1/9 で、
+// stationNameWrapper の左余白のあとに並ぶ(タブレットは space-between で両端に揃う)。
+// ドット(lineDotWest)は枠の左端に置かれる
+const getDotCenters = (windowWidth: number, count: number): number[] => {
+  const cellWidth = windowWidth / 9;
+  const marginLeft = styles.stationNameWrapper.marginLeft;
+  const gap =
+    isTablet && count > 1
+      ? (windowWidth - marginLeft - cellWidth * count) / (count - 1)
+      : 0;
+  return Array.from(
+    { length: count },
+    (_, i) => marginLeft + (cellWidth + gap) * i + styles.lineDotWest.width / 2
+  );
+};
 
 interface StationNameProps {
   station: Station;
@@ -428,7 +446,11 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 };
 
-const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
+const LineBoardWest: React.FC<Props> = ({
+  stations,
+  lineColors,
+  arrivingLineColor,
+}: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const arrived = useAtomValue(arrivedAtom);
   const approaching = useAtomValue(approachingAtom);
@@ -456,16 +478,28 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
     [approaching, arrived, isPassing, stations]
   );
 
-  const emptyArray = useMemo(() => {
-    const gap = Math.max(0, 8 - lineColors.length);
-    const last = lineColors.at(-1);
-    return Array.from({ length: gap }, () => last);
-  }, [lineColors]);
-
-  const stationsWithEmpty = useMemo(
-    () => [...lineColors, ...emptyArray],
-    [emptyArray, lineColors]
-  );
+  // 線を駅のドットの中心で区切り、駅 k に着く区間を lineColors[k] で塗る。
+  // 接続駅は到着する側の路線の駅として並ぶので、接続駅のドットの中心で色が変わる。
+  // 最後のドットより先は、終端まで最後の駅の路線の色で塗る
+  const barSegments = useMemo(() => {
+    const boundaries = [
+      0,
+      ...getDotCenters(dim.width, lineColors.length),
+      barWidth * 8,
+    ];
+    const colors = lineColors.length
+      ? [
+          arrivingLineColor || lineColors[0],
+          ...lineColors.slice(1),
+          lineColors.at(-1),
+        ]
+      : [undefined];
+    return colors.map((color, i) => ({
+      left: boundaries[i],
+      width: Math.max(0, boundaries[i + 1] - boundaries[i]),
+      color,
+    }));
+  }, [arrivingLineColor, barWidth, dim.width, lineColors]);
 
   if (!line) {
     return null;
@@ -473,15 +507,17 @@ const LineBoardWest: React.FC<Props> = ({ stations, lineColors }: Props) => {
 
   return (
     <View style={styles.rootWestJO}>
-      {stationsWithEmpty.map((lc, i) => (
+      {barSegments.map((segment, i) => (
         <View
-          key={`${lc}${i.toString()}`}
+          key={`bar-${segment.left}`}
           style={[
             styles.barWest,
             {
-              left: barWidth * i,
-              backgroundColor: lc ?? line?.color ?? '#000',
-              width: barWidth,
+              left: segment.left,
+              backgroundColor: segment.color ?? line?.color ?? '#000',
+              // 境界が物理ピクセルに揃わず白い継ぎ目が出ないよう、右へ 1px 食み出させる
+              // (後の区間が上に描かれるので境界の位置は変わらない)
+              width: segment.width + (i < barSegments.length - 1 ? 1 : 0),
             },
           ]}
         />
