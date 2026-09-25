@@ -65,6 +65,15 @@
       "contributions": [
         "review"
       ]
+    },
+    {
+      "login": "tahodev",
+      "name": "tahodev",
+      "avatar_url": "https://avatars.githubusercontent.com/u/85001874?v=4",
+      "profile": "https://github.com/tahodev/kurashi-skill",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
