@@ -353,7 +353,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   const includesLongStationName = useIncludesLongStationName(stations);
 
-  const paddingBottom = useMemo(() => {
+  // 駅名を路線バーの上へ持ち上げる量。セルの paddingBottom で持ち上げると、
+  // Yoga が駅名の Text を「セルの高さ - paddingBottom - marginBottom」以下の
+  // 高さで測ってしまう。iPhone ではこれが2行分に届かず、iOS は枠に収まらない
+  // 2行目を描かない。相対位置の bottom はレイアウト上の高さを消費しないので、
+  // 見た目の位置を変えずに測定時の高さ制限だけを外せる。
+  const stationNameBottom = useMemo(() => {
     if (isTablet) {
       return 0;
     }
@@ -365,19 +370,20 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       style={[
         styles.stationNameContainerWestJO,
         {
-          paddingBottom,
           width: windowWidth / 9,
         },
       ]}
     >
       <View
-        style={
+        testID="station-name-wrapper-west"
+        style={[
+          { bottom: stationNameBottom },
           isEn || includesLongStationName
             ? {
                 transform: [{ rotate: '-55deg' }],
               }
-            : {}
-        }
+            : null,
+        ]}
       >
         <StationName
           station={station}
