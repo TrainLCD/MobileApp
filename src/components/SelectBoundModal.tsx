@@ -42,6 +42,7 @@ import isTablet from '~/utils/isTablet';
 import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { resolvePresetSaveRoute } from '~/utils/presetRouteEndpoints';
 import { isTransferRouteTrainType } from '~/utils/routeSearch';
+import { getStationName } from '~/utils/station';
 import { showToast } from '~/utils/toast';
 import { buildSavedRouteLegs } from '~/utils/transferRoutePreset';
 import Button from '../components/Button';
@@ -743,13 +744,28 @@ export const SelectBoundModal: React.FC<Props> = ({
     setIsPresetNameModalVisible(true);
   }, [savedRoute, removeCurrentRoute, line]);
 
+  // 乗換経路の名前の既定値に使う乗車駅と行き先。種別名は最初の区間のものなので、
+  // 経路は乗車駅と行き先で表す
+  const transferPresetEndpoints = useMemo(() => {
+    if (!transferLegs || presetWantedDestinationId == null) return null;
+    const from = presetSaveRoute.originStation ?? stations[0];
+    const to = [...stations]
+      .reverse()
+      .find((s) => s.groupId === presetWantedDestinationId);
+    return from && to ? { from, to } : null;
+  }, [
+    transferLegs,
+    presetWantedDestinationId,
+    presetSaveRoute.originStation,
+    stations,
+  ]);
+
   const presetDefaultName = useMemo(() => {
-    // 乗換経路は種別名が最初の区間のものなので、乗り継ぐ路線の名前を並べる
-    if (isTransferRoute) {
-      return (pendingTrainType?.lines ?? [])
-        .map((l) => getLocalizedLineName(l as Line, isJapanese))
-        .filter(Boolean)
-        .join(isJapanese ? '・' : ' / ');
+    if (transferPresetEndpoints) {
+      const { from, to } = transferPresetEndpoints;
+      return isJapanese
+        ? `${getStationName(from)}〜${getStationName(to)}`
+        : `${getStationName(from)} - ${getStationName(to)}`;
     }
     const trainName = pendingTrainType
       ? ((isJapanese ? pendingTrainType.name : pendingTrainType.nameRoman) ??
@@ -757,7 +773,7 @@ export const SelectBoundModal: React.FC<Props> = ({
       : '';
     const lineName = line ? getLocalizedLineName(line, isJapanese) : '';
     return [trainName, lineName].filter(Boolean).join(' ');
-  }, [pendingTrainType, line, isTransferRoute]);
+  }, [pendingTrainType, line, transferPresetEndpoints]);
 
   const handlePresetNameSubmit = useCallback(
     async (name: string, keepEndpointsInput: boolean) => {

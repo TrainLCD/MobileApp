@@ -156,12 +156,14 @@ jest.mock('./SavePresetNameModal', () => ({
     visible,
     onSubmit,
     showKeepEndpointsOption,
+    defaultName,
   }: {
     visible: boolean;
     onSubmit: (name: string, keepEndpoints: boolean) => void;
     showKeepEndpointsOption?: boolean;
+    defaultName?: string;
   }) => {
-    mockSavePresetNameModal({ visible, showKeepEndpointsOption });
+    mockSavePresetNameModal({ visible, showKeepEndpointsOption, defaultName });
     return visible
       ? (() => {
           const { Pressable, View } = require('react-native');
@@ -312,10 +314,34 @@ describe('SelectBoundModal', () => {
   describe('乗換のある経路', () => {
     // 1 区間目(系統 100、路線 10)の駅 2 で、2 区間目(系統 200、路線 20)に乗り換える
     const transferStations = [
-      { id: 1, groupId: 1, line: { id: 10 }, trainType: { groupId: 100 } },
-      { id: 2, groupId: 2, line: { id: 10 }, trainType: { groupId: 100 } },
-      { id: 3, groupId: 2, line: { id: 20 }, trainType: { groupId: 200 } },
-      { id: 4, groupId: 4, line: { id: 20 }, trainType: { groupId: 200 } },
+      {
+        id: 1,
+        groupId: 1,
+        name: '光が丘',
+        line: { id: 10 },
+        trainType: { groupId: 100 },
+      },
+      {
+        id: 2,
+        groupId: 2,
+        name: '代々木',
+        line: { id: 10 },
+        trainType: { groupId: 100 },
+      },
+      {
+        id: 3,
+        groupId: 2,
+        name: '代々木',
+        line: { id: 20 },
+        trainType: { groupId: 200 },
+      },
+      {
+        id: 4,
+        groupId: 4,
+        name: '渋谷',
+        line: { id: 20 },
+        trainType: { groupId: 200 },
+      },
     ];
     const transferLegs = [
       {
@@ -409,9 +435,11 @@ describe('SelectBoundModal', () => {
       );
 
       fireEvent.press(screen.getByText('saveCurrentRoute'));
+      // 種別名は最初の区間のものなので、名前の既定値は乗車駅〜行き先にする
       expect(mockSavePresetNameModal).toHaveBeenLastCalledWith({
         visible: true,
         showKeepEndpointsOption: false,
+        defaultName: '光が丘〜渋谷',
       });
 
       // 端点を捨てる操作が来ても、乗換経路は乗車駅から行き先までで保存する
