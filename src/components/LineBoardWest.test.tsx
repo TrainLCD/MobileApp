@@ -237,6 +237,44 @@ describe('LineBoardWest', () => {
     expect(result.toJSON()).toBeTruthy();
   });
 
+  it('駅名はセルの paddingBottom ではなく相対位置の bottom で持ち上げる', () => {
+    const stations: Station[] = [
+      {
+        ...mockStations[0],
+        stationNumbers: [
+          {
+            lineSymbolColor: '#00a7db',
+            stationNumber: 'JR-A01',
+          },
+        ],
+      } as unknown as Station,
+      mockStations[1],
+    ];
+    const { getAllByTestId } = render(
+      <LineBoardWest stations={stations} lineColors={['#00a7db', '#00a7db']} />
+    );
+
+    const wrappers = getAllByTestId('station-name-wrapper-west');
+    const flatten = (style: unknown): Record<string, unknown> =>
+      Object.assign(
+        {},
+        ...(Array.isArray(style) ? style.flat() : [style]).filter(
+          (s: unknown): s is Record<string, unknown> =>
+            !!s && typeof s === 'object'
+        )
+      );
+
+    // paddingBottom だと Yoga が駅名の Text の高さを削って測り、
+    // iOS で折り返した2行目が描かれなくなる
+    for (const wrapper of wrappers) {
+      expect(
+        flatten(wrapper.parent?.props.style).paddingBottom
+      ).toBeUndefined();
+    }
+    expect(flatten(wrappers[0].props.style).bottom).toBe(110);
+    expect(flatten(wrappers[1].props.style).bottom).toBe(88);
+  });
+
   it('PadLineMarksが正しく表示される', () => {
     const PadLineMarks = require('./PadLineMarks').default;
     render(
