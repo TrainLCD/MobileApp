@@ -225,7 +225,10 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   const isEn = useAtomValue(isEnAtom);
   const dim = useLandscapeWindowDimensions();
   const { widthScale } = useScale();
-  const { left: barLeft, width: barWidth } = useBarStyles({ index });
+  const { left: barLeft, width: barWidth } = useBarStyles({
+    index,
+    stationsLength: stations.length,
+  });
 
   const {
     currentStationIndex,
