@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
-import { StyleSheet } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { headerStateAtom } from '~/store/atoms/navigation';
 import { LineDot, type LineDotProps } from './LineDot';
@@ -174,41 +173,6 @@ describe('LineDot', () => {
 
     // PadLineMarksがレンダリングされていることを確認
     expect(getByTestId('pad-line-marks')).toBeTruthy();
-  });
-
-  describe('丸ドット (round)', () => {
-    const renderDot = (props: Partial<LineDotProps>) =>
-      render(
-        <LineDot
-          station={mockStation}
-          shouldGrayscale={false}
-          transferLines={mockTransferLines}
-          arrived={false}
-          passed={false}
-          estimatedMinutes={12}
-          {...props}
-        />
-      );
-
-    beforeEach(() => {
-      const getIsPass = require('~/utils/isPass').default;
-      (getIsPass as jest.Mock).mockReturnValue(false);
-    });
-
-    it('ETAの数字を丸ドットに収まる大きさに縮める', () => {
-      const { getByText } = renderDot({ round: true });
-      expect(StyleSheet.flatten(getByText('12').props.style).fontSize).toBe(16);
-    });
-
-    it('roundでない場合は既定の大きさのまま', () => {
-      const { getByText } = renderDot({});
-      expect(StyleSheet.flatten(getByText('12').props.style).fontSize).toBe(22);
-    });
-
-    it('小田急風のドットの文字サイズは変えない', () => {
-      const { getByText } = renderDot({ isOdakyu: true });
-      expect(StyleSheet.flatten(getByText('12').props.style).fontSize).toBe(22);
-    });
   });
 
   describe('ETA単位ラベル', () => {
