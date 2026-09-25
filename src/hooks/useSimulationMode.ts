@@ -508,7 +508,12 @@ export const useSimulationMode = (): void => {
 
       // 方面逆転中は新方向の速度プロファイルが再生成されるまで終点で停車して待つ。
       // 旧方向のプロファイル/ジオメトリで step すると位置が飛ぶため、ここで待機する。
-      if (reversingRef.current) {
+      // trainRoute の取得中や取得失敗で速度プロファイルが1区間も無い間も同じく待つ。
+      // 次の停車駅が見つからないので終点に着いたと判定され、1分後に方面が反転してしまう
+      if (
+        reversingRef.current ||
+        !speedProfilesRef.current.some((seg) => seg.length > 0)
+      ) {
         const prev = store.get(locationAtom);
         if (prev) {
           store.set(locationAtom, {
