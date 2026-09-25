@@ -65,7 +65,7 @@ describe('useSavedRoutes', () => {
         }
       );
 
-      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(8));
+      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(9));
       expect(mockDb.execAsync).toHaveBeenNthCalledWith(
         1,
         expect.stringContaining('CREATE TABLE IF NOT EXISTS saved_routes')
@@ -87,6 +87,11 @@ describe('useSavedRoutes', () => {
         expect.stringContaining(
           'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has'
         )
+      );
+      // 乗換経路の区間を保存する列を、既存のテーブルにも追加する
+      expect(mockDb.execAsync).toHaveBeenNthCalledWith(
+        9,
+        'ALTER TABLE saved_routes ADD COLUMN legs TEXT;'
       );
 
       await waitFor(() => expect(result.current.isInitialized).toBe(true));
@@ -239,6 +244,7 @@ describe('useSavedRoutes', () => {
           withType.originStationId,
           withType.direction,
           null,
+          null,
           1,
           saved1Defined.createdAt.toISOString(),
         ]
@@ -326,6 +332,7 @@ describe('useSavedRoutes', () => {
           777,
           'INBOUND',
           '[1,2,3]',
+          null,
           1,
           saved.createdAt.toISOString(),
         ]
@@ -731,6 +738,173 @@ describe('useSavedRoutes', () => {
           trainTypeId: 99,
           wantedDestinationId: null,
           originStationId: null,
+        })
+      ).toBeNull();
+    });
+  });
+
+  describe('乗換経路(legs)', () => {
+    const legs = [
+      {
+        lineGroupId: 900,
+        fromStationId: 101,
+        toStationId: 103,
+        stationGroupIds: [1, 2, 3],
+      },
+      {
+        lineGroupId: 300,
+        fromStationId: 202,
+        toStationId: 204,
+        stationGroupIds: [3, 6, 7],
+      },
+    ];
+    const transferInput: SavedRouteWithTrainTypeInput = {
+      hasTrainType: true,
+      lineId: 99301,
+      trainTypeId: 900,
+      wantedDestinationId: 7,
+      originStationId: 1,
+      direction: 'INBOUND',
+      notifyStationIds: [],
+      legs,
+      name: '都営大江戸線・山手線',
+      createdAt: new Date('2025-03-01T00:00:00.000Z'),
+    };
+
+    const renderSavedRoutes = (presetRoutes: SavedRoute[] = []) => {
+      const store = createStore();
+      store.set(navigationState, {
+        ...initialNavigationState,
+        presetsFetched: true,
+        presetRoutes,
+      });
+      const { result } = renderHook(
+        () => require('./useSavedRoutes').useSavedRoutes(),
+        { wrapper: withJotaiProvider(store) }
+      );
+      return { result };
+    };
+
+    it('save: 区間を JSON で保存し、routes にも区間を持たせる', async () => {
+      const { result } = renderSavedRoutes();
+
+      let saved: SavedRoute | undefined;
+      await act(async () => {
+        saved = await result.current.save(transferInput);
+      });
+      if (!saved) throw new Error('save should return transfer route');
+
+      expect(mockDb.runAsync).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO saved_routes'),
+        [
+          saved.id,
+          transferInput.name,
+          99301,
+          900,
+          7,
+          1,
+          'INBOUND',
+          null,
+          JSON.stringify(legs),
+          1,
+          saved.createdAt.toISOString(),
+        ]
+      );
+      await waitFor(() => expect(result.current.routes.length).toBe(1));
+      expect(result.current.routes[0].legs).toEqual(legs);
+    });
+
+    it('updateRoutes: 区間を復元し、読めない区間を持つ行は読み飛ばす', async () => {
+      const row = {
+        name: 'transfer',
+        lineId: 99301,
+        trainTypeId: 900,
+        wantedDestinationId: 7,
+        originStationId: 1,
+        direction: 'INBOUND',
+        notifyStationIds: null,
+        hasTrainType: 1,
+        createdAt: '2025-03-01T00:00:00.000Z',
+      };
+      mockDb.getAllAsync.mockResolvedValue([
+        { ...row, id: 'transfer-ok', legs: JSON.stringify(legs) },
+        { ...row, id: 'transfer-broken', legs: '{not json' },
+        // 1 区間だけの区間は乗換経路として組み直せない
+        {
+          ...row,
+          id: 'transfer-single',
+          legs: JSON.stringify(legs.slice(0, 1)),
+        },
+        { ...row, id: 'plain', legs: null },
+      ] as unknown[]);
+      const { result } = renderSavedRoutes();
+
+      await act(async () => {
+        await result.current.updateRoutes();
+      });
+
+      await waitFor(() =>
+        expect(result.current.routes.map((r: SavedRoute) => r.id)).toEqual([
+          'transfer-ok',
+          'plain',
+        ])
+      );
+      expect(result.current.routes[0].legs).toEqual(legs);
+      expect(result.current.routes[1].legs).toBeUndefined();
+    });
+
+    it('find: 区間が同じ乗換経路のプリセットを返し、最初の区間の系統だけの検索には当てない', async () => {
+      const transferRoute: SavedRoute = {
+        ...transferInput,
+        id: 'transfer',
+        hasTrainType: true,
+        trainTypeId: 900,
+      };
+      const { result } = renderSavedRoutes([transferRoute]);
+
+      expect(
+        result.current.find({
+          lineId: 99301,
+          trainTypeId: 900,
+          wantedDestinationId: 7,
+          legs: legs.map((leg) => ({ ...leg })),
+        })
+      ).toBe(transferRoute);
+      // 行き先が違えば別のプリセット
+      expect(
+        result.current.find({
+          lineId: 99301,
+          trainTypeId: 900,
+          wantedDestinationId: 6,
+          legs,
+        })
+      ).toBeNull();
+      // 最初の区間の系統(大江戸線)だけの経路とは別物
+      expect(
+        result.current.find({
+          lineId: 99301,
+          trainTypeId: 900,
+          wantedDestinationId: 7,
+        })
+      ).toBeNull();
+    });
+
+    it('find: 区間を指定すると、同じ系統の乗換の無いプリセットには当てない', async () => {
+      const plainRoute: SavedRoute = {
+        ...transferInput,
+        id: 'plain',
+        hasTrainType: true,
+        trainTypeId: 900,
+        legs: undefined,
+      };
+      const { result } = renderSavedRoutes([plainRoute]);
+
+      expect(
+        result.current.find({
+          lineId: 99301,
+          trainTypeId: 900,
+          wantedDestinationId: 7,
+          legs,
         })
       ).toBeNull();
     });

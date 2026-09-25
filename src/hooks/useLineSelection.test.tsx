@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
 import { TransportType } from '~/@types/graphql';
+import type { SavedRoute } from '~/models/SavedRoute';
 import { createLine, createStation } from '~/utils/test/factories';
 import type { LineState } from '../store/atoms/line';
 import type { NavigationState } from '../store/atoms/navigation';
@@ -665,6 +666,175 @@ describe('useLineSelection', () => {
     expect(finalStationState.pendingStations).toEqual(rapidGroupStations);
     expect(finalStationState.pendingStations.at(-1)?.name).toBe('原ノ町');
     expect(finalNavigationState.pendingTrainType).toBe(rapidType);
+  });
+
+  describe('乗換経路のプリセット', () => {
+    // 光が丘(系統 900)から代々木で乗り換え、渋谷(系統 300)へ行く
+    const trainTypeOf = (groupId: number) =>
+      ({
+        id: groupId * 10,
+        groupId,
+        typeId: 1,
+        name: '各駅停車',
+        nameRoman: 'Local',
+        lines: [],
+      }) as unknown as Station['trainType'];
+    const oedoStations = [
+      createStation(101, {
+        groupId: 1,
+        line: { id: 99301 },
+        trainType: trainTypeOf(900),
+      }),
+      createStation(103, {
+        groupId: 3,
+        line: { id: 99301 },
+        trainType: trainTypeOf(900),
+      }),
+    ];
+    const yamanoteStations = [
+      createStation(202, {
+        groupId: 3,
+        line: { id: 11302 },
+        trainType: trainTypeOf(300),
+      }),
+      createStation(204, {
+        groupId: 7,
+        line: { id: 11302 },
+        trainType: trainTypeOf(300),
+      }),
+    ];
+    const route: SavedRoute = {
+      id: 'transfer',
+      name: '大江戸線・山手線',
+      hasTrainType: true,
+      lineId: 99301,
+      trainTypeId: 900,
+      wantedDestinationId: 7,
+      originStationId: 1,
+      direction: 'INBOUND',
+      notifyStationIds: [],
+      legs: [
+        {
+          lineGroupId: 900,
+          fromStationId: 101,
+          toStationId: 103,
+          stationGroupIds: [1, 3],
+        },
+        {
+          lineGroupId: 300,
+          fromStationId: 202,
+          toStationId: 204,
+          stationGroupIds: [3, 7],
+        },
+      ],
+      createdAt: new Date('2025-03-01T00:00:00.000Z'),
+    };
+
+    const renderHookBridge = () => {
+      const hookRef: { current: HookResult } = { current: null };
+      render(
+        <HookBridge
+          onReady={(v) => {
+            hookRef.current = v;
+          }}
+        />
+      );
+      return hookRef;
+    };
+
+    it('区間の系統の駅をつないだ駅リストと経路を表す種別で行先選択を開く', async () => {
+      const { mockSetStationState, mockSetLineState, mockSetNavigationState } =
+        setupMolecules();
+      const { mockFetchByGroupId } = setupQueries();
+      mockFetchByGroupId.mockImplementation(
+        ({ variables }: { variables: { lineGroupId: number } }) =>
+          Promise.resolve({
+            data: {
+              lineGroupStations:
+                variables.lineGroupId === 900 ? oedoStations : yamanoteStations,
+            },
+          })
+      );
+
+      const hookRef = renderHookBridge();
+      await act(async () => {
+        await hookRef.current?.handlePresetPress(route);
+      });
+
+      expect(hookRef.current?.isSelectBoundModalOpen).toBe(true);
+      expect(mockFetchByGroupId).toHaveBeenCalledWith({
+        variables: { lineGroupId: 900 },
+      });
+      expect(mockFetchByGroupId).toHaveBeenCalledWith({
+        variables: { lineGroupId: 300 },
+      });
+
+      const stationResult = mockSetStationState.mock.calls[0][0](
+        createStationState()
+      );
+      expect(stationResult.pendingStations.map((s: Station) => s.id)).toEqual([
+        101, 103, 202, 204,
+      ]);
+      // 位置情報が無ければ経路の先頭から乗る
+      expect(stationResult.pendingStation?.id).toBe(101);
+      expect(stationResult.wantedDestination?.id).toBe(204);
+
+      const lineResult = mockSetLineState.mock.calls[0][0](createLineState());
+      expect(lineResult.pendingLine?.id).toBe(99301);
+
+      const navResult = mockSetNavigationState.mock.calls[0][0](
+        createNavigationState()
+      );
+      expect(navResult.pendingTrainType?.id).toBeLessThan(0);
+      expect(navResult.pendingTrainType?.groupId).toBe(900);
+      expect(navResult.fetchedTrainTypes).toEqual([navResult.pendingTrainType]);
+    });
+
+    it('区間の駅の取得に失敗したらエラーを返し、駅リストを更新しない', async () => {
+      const { mockSetStationState } = setupMolecules();
+      const { mockFetchByGroupId } = setupQueries();
+      const error = new Error('lineGroupStations failed');
+      mockFetchByGroupId.mockImplementation(
+        ({ variables }: { variables: { lineGroupId: number } }) =>
+          Promise.resolve(
+            variables.lineGroupId === 900
+              ? { data: undefined, error }
+              : { data: { lineGroupStations: yamanoteStations } }
+          )
+      );
+
+      const hookRef = renderHookBridge();
+      await act(async () => {
+        await hookRef.current?.handlePresetPress(route);
+      });
+
+      expect(mockSetStationState).not.toHaveBeenCalled();
+      expect(hookRef.current?.fetchStationsByLineGroupIdError).toBe(error);
+    });
+
+    it('保存した区間の駅が見つからなければエラーを返す', async () => {
+      const { mockSetStationState } = setupMolecules();
+      const { mockFetchByGroupId } = setupQueries();
+      mockFetchByGroupId.mockImplementation(
+        ({ variables }: { variables: { lineGroupId: number } }) =>
+          Promise.resolve({
+            data: {
+              lineGroupStations:
+                variables.lineGroupId === 900 ? oedoStations : [],
+            },
+          })
+      );
+
+      const hookRef = renderHookBridge();
+      await act(async () => {
+        await hookRef.current?.handlePresetPress(route);
+      });
+
+      expect(mockSetStationState).not.toHaveBeenCalled();
+      expect(hookRef.current?.fetchStationsByLineGroupIdError).toBeInstanceOf(
+        Error
+      );
+    });
   });
 
   it('handleCloseSelectBoundModal が isSelectBoundModalOpen を false にする', () => {

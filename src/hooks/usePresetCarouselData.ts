@@ -6,8 +6,17 @@ import {
   GET_LINE_LIST_STATIONS_PRESET,
 } from '~/lib/graphql/queries';
 import type { SavedRoute } from '~/models/SavedRoute';
+import { buildSavedRouteStations } from '~/utils/transferRoutePreset';
 import type { LoopItem } from '../store/atoms/navigation';
 import { useSavedRoutes } from './useSavedRoutes';
+
+// プリセットの駅を引く系統。乗換経路は全区間の系統を引く
+const lineGroupIdsOf = (route: SavedRoute): number[] => {
+  if (!route.hasTrainType) return [];
+  return route.legs
+    ? route.legs.map((leg) => leg.lineGroupId)
+    : [route.trainTypeId];
+};
 
 export type UsePresetCarouselDataResult = {
   carouselData: LoopItem[];
@@ -48,7 +57,10 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
 
   useEffect(() => {
     const fetchKey = routes
-      .map((r) => `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}`)
+      .map(
+        (r) =>
+          `${r.id}:${r.lineId}:${r.trainTypeId}:${r.hasTrainType}:${lineGroupIdsOf(r).join(';')}`
+      )
       .join(',');
     const displayKey = routes
       .map(
@@ -67,7 +79,7 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
     // 「取得済み」とみなして空配列のまま確定してしまう
     const hasAllStations = routes.every((r) =>
       r.hasTrainType
-        ? trainTypeStationsCache.has(r.trainTypeId)
+        ? lineGroupIdsOf(r).every((id) => trainTypeStationsCache.has(id))
         : lineStationsCache.has(r.lineId)
     );
 
@@ -89,10 +101,14 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
       const newData = latestRoutes.map((r, i) => ({
         ...r,
         __k: `${r.id}-${i}`,
-        stations:
-          (r.hasTrainType
-            ? trainTypeStationsCache.get(r.trainTypeId)
-            : lineStationsCache.get(r.lineId)) ?? [],
+        stations: r.hasTrainType
+          ? r.legs
+            ? // 乗換経路は区間の駅をつなぎ、始発駅・行き先を経路検索で選んだときと同じ駅にする
+              buildSavedRouteStations(r.legs, (id) =>
+                trainTypeStationsCache.get(id)
+              )
+            : (trainTypeStationsCache.get(r.trainTypeId) ?? [])
+          : (lineStationsCache.get(r.lineId) ?? []),
       }));
       setCarouselData(newData);
       prevDisplayKeyRef.current = latestDisplayKey;
@@ -145,9 +161,11 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
           }
         }
 
-        // hasTrainType のルートを lineGroupListStations で一括取得
+        // hasTrainType のルート(乗換経路は全区間)を lineGroupListStations で一括取得
         if (trainTypeRoutes.length > 0) {
-          const lineGroupIds = trainTypeRoutes.map((r) => r.trainTypeId);
+          const lineGroupIds = [
+            ...new Set(trainTypeRoutes.flatMap(lineGroupIdsOf)),
+          ];
           const result = await gqlClient.query<{
             lineGroupListStations: Station[];
           }>({
