@@ -5,7 +5,9 @@ import { parenthesisRegexp } from '~/constants';
 import { useDisplayCurrentStation } from '../hooks';
 import { APP_THEME } from '../models/Theme';
 import { leftStationsAtom } from '../store/atoms/navigation';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
+import { getArrivingLineColor } from '../utils/arrivingLineColor';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import LineBoardE231 from './LineBoardE231';
@@ -32,6 +34,8 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
   // navigationStateはheaderStateローテーション(数秒間隔)で頻繁に更新されるため、
   // 必要なleftStationsだけを派生atomで購読する
   const leftStations = useAtomValue(leftStationsAtom);
+  const stations = useAtomValue(stationsAtom);
+  const selectedDirection = useAtomValue(selectedDirectionAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const station = useDisplayCurrentStation();
   const isBus = isBusLine(station?.line);
@@ -67,6 +71,11 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     () => slicedLeftStations.map((s) => s.line?.color),
     [slicedLeftStations]
   );
+  // 接続駅に着いた後も、先頭の駅のドットより手前は着いてきた路線の色で塗る
+  const arrivingLineColor = useMemo(
+    () => getArrivingLineColor(stations, selectedDirection, leftStations[0]),
+    [leftStations, selectedDirection, stations]
+  );
 
   // [重要] 依存変数をすべてメモ化しないと山手線iPadテーマのアニメーションが何度も走る。
   // また、コンポーネント関数(useCallback)を<Inner />として描画すると依存が変わるたびに
@@ -81,6 +90,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
           />
         );
       case APP_THEME.ODAKYU:
@@ -89,6 +99,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             isOdakyu
           />
         );
@@ -98,6 +109,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
           />
         );
       case APP_THEME.JR_WEST:
@@ -114,6 +126,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             isE131={theme === APP_THEME.E131}
           />
         );
@@ -123,6 +136,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             stations={slicedLeftStations}
             hasTerminus={hasTerminus}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
           />
         );
       case APP_THEME.YAMANOTE:
@@ -148,6 +162,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
           <LineBoardJRKyushu
             stations={slicedLeftStations}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
           />
         );
@@ -155,6 +170,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         return null;
     }
   }, [
+    arrivingLineColor,
     hasTerminus,
     lineColors,
     slicedLeftStations,

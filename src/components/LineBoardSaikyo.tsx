@@ -32,9 +32,15 @@ import {
   commonLineBoardStyles,
   STATION_NAME_CONTAINER_BOTTOM,
 } from './LineBoard/shared/styles/commonStyles';
+import {
+  getLineColorBarSegments,
+  getLineDotCenterX,
+} from './LineBoard/shared/utils/lineColorBarSegments';
 
 interface Props {
   lineColors: (string | null | undefined)[];
+  // 先頭の駅に着いた区間の路線の色。接続駅に着いた後に先頭の枠のドットより手前を塗る
+  arrivingLineColor?: string | null;
   stations: Station[];
   hasTerminus: boolean;
   // E131系風: 駅ドットを丸くし、現在地のチェブロンを青にする。ETA も表示しない
@@ -60,6 +66,7 @@ interface StationNameCellProps {
   stations: Station[];
   line: Line | null;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
   isE131: boolean;
@@ -116,6 +123,7 @@ const isAtMidStation = (
 const BarGradients: React.FC<{
   line: Line | null;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   index: number;
   barLeft: number;
   barWidth: number;
@@ -123,9 +131,11 @@ const BarGradients: React.FC<{
   stations: Station[];
   arrived: boolean;
   passed: boolean;
+  isE131: boolean;
 }> = ({
   line,
   lineColors,
+  arrivingLineColor,
   index,
   barLeft,
   barWidth,
@@ -133,6 +143,7 @@ const BarGradients: React.FC<{
   stations,
   arrived,
   passed,
+  isE131,
 }) => {
   const showFutureBar = (arrived && currentStationIndex < index + 1) || !passed;
   const isMidStation = isAtMidStation(
@@ -140,6 +151,16 @@ const BarGradients: React.FC<{
     index,
     stations.length
   );
+  const colorLeft = isMidStation ? barLeft + barWidth / 2.5 : barLeft;
+  const colorSegments = getLineColorBarSegments({
+    left: colorLeft,
+    width: isMidStation ? barWidth / 2.5 : barWidth,
+    // 到着中の駅では灰色の部分がドットまでを表すので、その先は出発する区間の色で塗る
+    splitX: isMidStation ? colorLeft : getLineDotCenterX(isE131),
+    lineColors,
+    arrivingLineColor,
+    index,
+  });
 
   return (
     <>
@@ -167,25 +188,21 @@ const BarGradients: React.FC<{
           style={[styles.bar, { left: barLeft, width: barWidth / 2.5 }]}
         />
       )}
-      {showFutureBar && (
-        <LinearGradient
-          colors={
-            line?.color
-              ? [
-                  `${lineColors[index] || line.color}ff`,
-                  `${lineColors[index] || line.color}bb`,
-                ]
-              : ['#000000ff', '#000000bb']
-          }
-          style={[
-            styles.bar,
-            {
-              left: isMidStation ? barLeft + barWidth / 2.5 : barLeft,
-              width: isMidStation ? barWidth / 2.5 : barWidth,
-            },
-          ]}
-        />
-      )}
+      {showFutureBar &&
+        colorSegments.map((segment) => (
+          <LinearGradient
+            key={segment.left}
+            colors={
+              line?.color
+                ? [
+                    `${segment.color || line.color}ff`,
+                    `${segment.color || line.color}bb`,
+                  ]
+                : ['#000000ff', '#000000bb']
+            }
+            style={[styles.bar, { left: segment.left, width: segment.width }]}
+          />
+        ))}
     </>
   );
 };
@@ -200,6 +217,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   stations,
   line,
   lineColors,
+  arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
   isE131,
@@ -244,6 +262,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
         <BarGradients
           line={line}
           lineColors={lineColors}
+          arrivingLineColor={arrivingLineColor}
           index={index}
           barLeft={barLeft}
           barWidth={barWidth}
@@ -251,6 +270,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           stations={stations}
           arrived={arrived}
           passed={passed}
+          isE131={isE131}
         />
         <LineDot
           station={station}
@@ -305,6 +325,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  arrivingLineColor,
   isE131 = false,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
@@ -336,6 +357,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
             index={i}
             line={line}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
             isE131={isE131}
             estimatedMinutes={
@@ -349,6 +371,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
       hasTerminus,
       line,
       lineColors,
+      arrivingLineColor,
       stations,
       estimatedMinutesByStationId,
       isE131,

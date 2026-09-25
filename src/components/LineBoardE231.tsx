@@ -31,11 +31,13 @@ import {
   commonLineBoardStyles,
   STATION_NAME_CONTAINER_BOTTOM,
 } from './LineBoard/shared/styles/commonStyles';
+import { getLineColorBarSegments } from './LineBoard/shared/utils/lineColorBarSegments';
 import PadLineMarks from './PadLineMarks';
 import PassChevronEast from './PassChevronEast';
 
 interface Props {
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   stations: Station[];
   hasTerminus: boolean;
 }
@@ -163,6 +165,7 @@ interface StationNameCellProps {
   stations: Station[];
   line: Line | null;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
 }
@@ -173,6 +176,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   line,
   lineColors,
+  arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
 }: StationNameCellProps) => {
@@ -196,6 +200,14 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     (currentStationIndex < 1 && index === 0) || currentStationIndex === index;
 
   const lineColor = line?.color ? lineColors[index] || line.color : '#000';
+  const barSegments = getLineColorBarSegments({
+    left: barLeft,
+    width: barWidth,
+    splitX: localStyles.dotInner.width / 2,
+    lineColors,
+    arrivingLineColor,
+    index,
+  });
 
   return (
     <>
@@ -221,16 +233,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           />
         </View>
         {/* バー（常に路線色） */}
-        <View
-          style={[
-            localStyles.bar,
-            {
-              left: barLeft,
-              width: barWidth,
-              backgroundColor: lineColor,
-            },
-          ]}
-        />
+        {barSegments.map((segment) => (
+          <View
+            key={segment.left}
+            style={[
+              localStyles.bar,
+              {
+                left: segment.left,
+                width: segment.width,
+                backgroundColor: line?.color
+                  ? segment.color || line.color
+                  : '#000',
+              },
+            ]}
+          />
+        ))}
         {/* 駅ドット */}
         {getIsPass(station) ? (
           <View style={localStyles.stationArea}>
@@ -336,6 +353,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 const LineBoardE231: React.FC<Props> = ({
   stations,
   lineColors,
+  arrivingLineColor,
   hasTerminus,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
@@ -364,6 +382,7 @@ const LineBoardE231: React.FC<Props> = ({
             index={i}
             line={line}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
             estimatedMinutes={
               s.id != null ? estimatedMinutesByStationId.get(s.id) : null
@@ -372,7 +391,14 @@ const LineBoardE231: React.FC<Props> = ({
         </React.Fragment>
       );
     },
-    [hasTerminus, line, lineColors, stations, estimatedMinutesByStationId]
+    [
+      arrivingLineColor,
+      hasTerminus,
+      line,
+      lineColors,
+      stations,
+      estimatedMinutesByStationId,
+    ]
   );
 
   const stationsWithEmpty = useMemo(

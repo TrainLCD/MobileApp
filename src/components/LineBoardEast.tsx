@@ -38,6 +38,10 @@ import {
   STATION_NAME_CONTAINER_BOTTOM,
   commonLineBoardStyles as styles,
 } from './LineBoard/shared/styles/commonStyles';
+import {
+  getLineColorBarSegments,
+  getLineDotCenterX,
+} from './LineBoard/shared/utils/lineColorBarSegments';
 import NumberingIcon from './NumberingIcon';
 
 const localStyles = StyleSheet.create({
@@ -94,6 +98,7 @@ const NumberingIconView: React.FC<{
 
 type Props = {
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   stations: Station[];
   hasTerminus: boolean;
   chevronColorPair?: readonly [ChevronColor, ChevronColor];
@@ -106,6 +111,7 @@ interface StationNameCellProps {
   stations: Station[];
   line: Line;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   hasTerminus: boolean;
   chevronColors: readonly [ChevronColor, ChevronColor];
   isOdakyu?: boolean;
@@ -137,10 +143,9 @@ const getMainBarColors = (line?: Line): readonly [string, string] =>
 
 const getLineBarColors = (
   line: Line,
-  lineColors: (string | null | undefined)[],
-  index: number
+  color: string | null | undefined
 ): readonly [string, string] => {
-  const raw = lineColors[index] || line.color;
+  const raw = color || line.color;
   return raw ? [`${raw}ff`, `${raw}bb`] : ['#000000ff', '#000000bb'];
 };
 
@@ -170,6 +175,7 @@ const renderBarGradients = ({
   barWidth,
   line,
   lineColors,
+  arrivingLineColor,
   index,
   arrived,
   currentStationIndex,
@@ -181,6 +187,7 @@ const renderBarGradients = ({
   barWidth: number;
   line: Line;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   index: number;
   arrived: boolean;
   currentStationIndex: number;
@@ -261,14 +268,25 @@ const renderBarGradients = ({
       index === 0 ? Math.abs(barLeft) + dotCenterOffset : barWidth / 2.5;
     const left = splitHere ? barLeft + splitWidth : barLeft;
     const width = splitHere ? barWidth - splitWidth : barWidth;
-    gradients.push(
-      createBarGradient(
-        'bar-color',
-        getLineBarColors(line, lineColors, index),
-        left,
-        width
-      )
-    );
+    const segments = getLineColorBarSegments({
+      left,
+      width,
+      // 到着中の駅では灰色の部分がドットまでを表すので、その先は出発する区間の色で塗る
+      splitX: splitHere ? left : getLineDotCenterX(!!isOdakyu),
+      lineColors,
+      arrivingLineColor,
+      index,
+    });
+    for (const [segmentIndex, segment] of segments.entries()) {
+      gradients.push(
+        createBarGradient(
+          `bar-color-${segmentIndex}`,
+          getLineBarColors(line, segment.color),
+          segment.left,
+          segment.width
+        )
+      );
+    }
   }
 
   if (isOdakyu) {
@@ -305,6 +323,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   stations,
   line,
   lineColors,
+  arrivingLineColor,
   hasTerminus,
   chevronColors,
   isOdakyu,
@@ -397,6 +416,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           barWidth,
           line,
           lineColors,
+          arrivingLineColor,
           index,
           arrived,
           currentStationIndex,
@@ -481,6 +501,7 @@ const LineBoardEast: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  arrivingLineColor,
   chevronColorPair = DEFAULT_CHEVRON_PAIR,
   isOdakyu,
 }: Props) => {
@@ -562,6 +583,7 @@ const LineBoardEast: React.FC<Props> = ({
             index={i}
             line={line}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
             chevronColors={chevronColors}
             isOdakyu={isOdakyu}
@@ -577,6 +599,7 @@ const LineBoardEast: React.FC<Props> = ({
       hasTerminus,
       line,
       lineColors,
+      arrivingLineColor,
       stations,
       isOdakyu,
       estimatedMinutesByStationId,

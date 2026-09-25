@@ -7,7 +7,10 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import PadLineMarks from '../../../PadLineMarks';
 import PassChevronEast from '../../../PassChevronEast';
-import { commonLineBoardStyles as styles } from '../styles/commonStyles';
+import {
+  ROUND_LINE_DOT_SIZE,
+  commonLineBoardStyles as styles,
+} from '../styles/commonStyles';
 import { EstimatedMinutesBadge } from './EstimatedMinutesBadge';
 import { EstimatedMinutesUnitLabel } from './EstimatedMinutesUnitLabel';
 
@@ -83,9 +86,9 @@ export const LineDot: React.FC<LineDotProps> = ({
   const dotSizeStyle =
     isOdakyu || round
       ? {
-          width: isTablet ? 36 : 24,
-          height: isTablet ? 36 : 24,
-          borderRadius: isTablet ? 18 : 12,
+          width: ROUND_LINE_DOT_SIZE,
+          height: ROUND_LINE_DOT_SIZE,
+          borderRadius: ROUND_LINE_DOT_SIZE / 2,
         }
       : null;
 
