@@ -4,6 +4,7 @@ import {
   buildRouteLegInputs,
   isJoinedLineGroupStations,
 } from './currentLineGroupStations';
+import { concatLegStations } from './routeSearch';
 
 const _station = (id: number, groupId: number | null): Station =>
   ({
@@ -46,7 +47,6 @@ describe('isJoinedLineGroupStations', () => {
 describe('乗換経路の区間指定', () => {
   const OEDO = 99301;
   const SAIKYO = 11321;
-  // 乗換駅(新宿)は次の区間(埼京線)の駅として 1 度だけ持つ
   const stationOn = (
     id: number,
     lineId: number,
@@ -62,7 +62,22 @@ describe('乗換経路の区間指定', () => {
   const tochomae = stationOn(9930100, OEDO, 1000099301);
   const shinjuku = stationOn(1132104, SAIKYO, 170);
   const shibuya = stationOn(1132103, SAIKYO, 170);
-  const joined = [hikarigaoka, tochomae, shinjuku, shibuya];
+
+  // 北斗(函館本線・室蘭本線)から東室蘭ですずらん(室蘭本線)に乗り換える。
+  // 東室蘭は前後の区間で同じ駅なので、concatLegStations は北斗の駅として 1 回だけ並べる
+  const HAKODATE = 11101;
+  const MURORAN = 11104;
+  const HOKUTO = 133;
+  const SUZURAN = 134;
+  const shinHakodateHokuto = stationOn(1110106, HAKODATE, HOKUTO);
+  const higashiMuroranHokuto = stationOn(1110420, MURORAN, HOKUTO);
+  const higashiMuroranSuzuran = stationOn(1110420, MURORAN, SUZURAN);
+  const wanishi = stationOn(1110419, MURORAN, SUZURAN);
+  const bokoi = stationOn(1110417, MURORAN, SUZURAN);
+  const sameStationTransfer = concatLegStations([
+    [shinHakodateHokuto, higashiMuroranHokuto],
+    [higashiMuroranSuzuran, wanishi, bokoi],
+  ]);
 
   describe('buildRouteLegInputs', () => {
     it('乗換駅が前後の路線の駅として 2 回並ぶときは、それぞれの路線の駅を渡す', () => {
@@ -95,27 +110,36 @@ describe('乗換経路の区間指定', () => {
       ]);
     });
 
-    // 乗換駅が 1 回しか無いときは次の区間の駅を渡し、API が同じ駅グループの駅で引き当てる
-    it('区間ごとの系統と乗降駅を並べ、前の区間の降車駅には乗換駅を渡す', () => {
-      expect(buildRouteLegInputs(joined)).toEqual([
-        {
-          lineGroupId: 1000099301,
-          fromStationId: 9930138,
-          toStationId: 1132104,
-        },
-        { lineGroupId: 170, fromStationId: 1132104, toStationId: 1132103 },
+    // 次の範囲の先頭(輪西)を渡すと、北斗の系統に無い駅を降車駅にしてしまい、
+    // trainRoute がエラーを返してオートモードが発車しなかった
+    it('乗換駅が前後の区間で同じ駅なら、その駅を降車駅と次の区間の乗車駅に渡す', () => {
+      expect(sameStationTransfer.map((s) => s.id)).toEqual([
+        1110106, 1110420, 1110419, 1110417,
+      ]);
+      expect(buildRouteLegInputs(sameStationTransfer)).toEqual([
+        { lineGroupId: HOKUTO, fromStationId: 1110106, toStationId: 1110420 },
+        { lineGroupId: SUZURAN, fromStationId: 1110420, toStationId: 1110417 },
+      ]);
+    });
+
+    it('同じ駅での乗換の後に次の区間の通過駅が続いても、乗換駅を渡す', () => {
+      // 輪西を通過する種別。通過駅は種別を持たないので、前の区間の範囲に入る
+      const wanishiPassed = stationOn(1110419, MURORAN, null);
+      const stations = concatLegStations([
+        [shinHakodateHokuto, higashiMuroranHokuto],
+        [higashiMuroranSuzuran, wanishiPassed, bokoi],
+      ]);
+      expect(buildRouteLegInputs(stations)).toEqual([
+        { lineGroupId: HOKUTO, fromStationId: 1110106, toStationId: 1110420 },
+        { lineGroupId: SUZURAN, fromStationId: 1110420, toStationId: 1110417 },
       ]);
     });
 
     // オートモードが終点で折り返したときなど、末尾から先頭へ進む場合
     it('末尾から進むときは区間を逆順にして乗車駅と降車駅を入れ替える', () => {
-      expect(buildRouteLegInputs(joined, true)).toEqual([
-        { lineGroupId: 170, fromStationId: 1132103, toStationId: 1132104 },
-        {
-          lineGroupId: 1000099301,
-          fromStationId: 1132104,
-          toStationId: 9930138,
-        },
+      expect(buildRouteLegInputs(sameStationTransfer, true)).toEqual([
+        { lineGroupId: SUZURAN, fromStationId: 1110417, toStationId: 1110420 },
+        { lineGroupId: HOKUTO, fromStationId: 1110420, toStationId: 1110106 },
       ]);
     });
 
