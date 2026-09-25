@@ -207,6 +207,35 @@ describe('LineBoardSaikyo', () => {
     );
   });
 
+  it('isE131の場合、ETAのクエリを実行せず駅ドットにETAを渡さない', () => {
+    const { LineDot } = require('./LineBoard/shared/components');
+    const { useEstimateArrivalTimes } = require('~/hooks');
+    render(
+      <LineBoardSaikyo
+        stations={mockStations}
+        lineColors={['#F68B1E', '#F68B1E']}
+        hasTerminus={false}
+        isE131
+      />
+    );
+    expect(useEstimateArrivalTimes).toHaveBeenCalledWith({ skip: true });
+    for (const [props] of (LineDot as jest.Mock).mock.calls) {
+      expect(props.estimatedMinutes ?? null).toBeNull();
+    }
+  });
+
+  it('isE131を渡さない場合はETAのクエリを実行する', () => {
+    const { useEstimateArrivalTimes } = require('~/hooks');
+    render(
+      <LineBoardSaikyo
+        stations={mockStations}
+        lineColors={['#00ac9a', '#00ac9a']}
+        hasTerminus={false}
+      />
+    );
+    expect(useEstimateArrivalTimes).toHaveBeenCalledWith({ skip: false });
+  });
+
   it('isE131を渡さない場合、駅ドットは丸くしない', () => {
     const { LineDot } = require('./LineBoard/shared/components');
     render(
