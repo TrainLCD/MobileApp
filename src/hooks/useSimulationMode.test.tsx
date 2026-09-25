@@ -591,24 +591,29 @@ describe('useSimulationMode', () => {
     });
 
     it('終点到達後は即座に折り返さず終点で停車し続ける', () => {
-      // 駅が1つだけ → nextStopStationがない → 即座に終点扱い
-      const stations = [mockStation(1, 1, 35.681, 139.767)];
+      // 終点の駅から開始する → 終点の駅には次の停車駅が無い → 即座に終点扱い
+      const stations = [
+        mockStation(1, 1, 35.691, 139.777),
+        mockStation(2, 2, 35.681, 139.767),
+      ];
 
       setupAtomMocks(
         {
-          station: stations[0],
+          station: stations[1],
           stations,
           selectedDirection: 'INBOUND',
         },
         { autoModeEnabled: true }
       );
 
+      mockTrainRoute(stations);
+
       // dwell処理内でstore.getが呼ばれる
       (store.get as jest.Mock).mockReturnValue(
         mockLocationObject(35.681, 139.767)
       );
 
-      // 速度プロファイルは空（駅が1つで次の駅がない）なので
+      // 終点の駅の速度プロファイルは空（次の停車駅が無い）なので
       // interval tick 1: speeds=[], i(0)>=0 → dwellPending=true
       // interval tick 2以降: dwell handler → nextSegment=-1 → 終点で停車し
       //   TERMINAL_DWELL_TICKS に達するまで方面逆転せず待機し続ける。
@@ -627,8 +632,8 @@ describe('useSimulationMode', () => {
 
       const dwellCalls = locationSetCalls.filter(
         (loc) =>
-          loc?.coords?.latitude === stations[0].latitude &&
-          loc?.coords?.longitude === stations[0].longitude &&
+          loc?.coords?.latitude === stations[1].latitude &&
+          loc?.coords?.longitude === stations[1].longitude &&
           loc?.coords?.speed === 0
       );
       // 終点停車中の複数回の位置更新
@@ -712,6 +717,130 @@ describe('useSimulationMode', () => {
       );
       expect(resetFirstSpeechCalls).toHaveLength(1);
       expect(resetFirstSpeechCalls[0][1]).toBe(4);
+    });
+
+    it('trainRouteの取得に失敗したら終点扱いにせず発車駅で停車し続ける', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        {
+          station: stations[0],
+          stations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+
+      (useGraphQLQuery as jest.Mock).mockReturnValue({
+        data: undefined,
+        loading: false,
+        error: new Error('line group was not found'),
+      });
+      jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 終点の待機時間(約60秒)を超えても方面は逆転しない
+      jest.advanceTimersByTime(70000);
+
+      const directionSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'selectedDirectionAtom'
+      );
+      expect(directionSetCalls).toHaveLength(0);
+      const boundSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0]?.toString?.() === 'selectedBoundAtom'
+      );
+      expect(boundSetCalls).toHaveLength(0);
+
+      // 発車駅の座標で speed=0 のまま留まる
+      const locationSetCalls = (store.set as jest.Mock).mock.calls
+        .filter((call) => call[0] === locationAtom)
+        .map((call) => call[1]);
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+      for (const loc of locationSetCalls) {
+        expect(loc.coords.latitude).toBe(stations[0].latitude);
+        expect(loc.coords.longitude).toBe(stations[0].longitude);
+      }
+      expect(locationSetCalls.at(-1)?.coords.speed).toBe(0);
+    });
+
+    it('駅リストが変わって新しいtrainRouteがまだ無い間は旧経路で走らず停車する', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: true }
+      );
+      mockTrainRoute(stations);
+      jest
+        .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+        .mockReturnValue(new Array(30).fill(10));
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(35.681, 139.767)
+      );
+
+      const { rerender } = renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      // 旧経路では走行している
+      jest.advanceTimersByTime(3000);
+      const isMoving = (call: unknown[]) =>
+        call[0] === locationAtom &&
+        ((call[1] as { coords: { speed: number | null } }).coords.speed ?? 0) >
+          0;
+      expect((store.set as jest.Mock).mock.calls.some(isMoving)).toBe(true);
+
+      // 別の駅リストに変わり、新しい trainRoute はまだ届いていない
+      const nextStations = [
+        mockStation(11, 11, 34.702, 135.495),
+        mockStation(12, 12, 34.712, 135.505),
+      ];
+      setupAtomMocks(
+        {
+          station: nextStations[0],
+          stations: nextStations,
+          selectedDirection: 'INBOUND',
+        },
+        { autoModeEnabled: true }
+      );
+      (useGraphQLQuery as jest.Mock).mockReturnValue({
+        data: undefined,
+        loading: true,
+        error: undefined,
+      });
+      (store.get as jest.Mock).mockReturnValue(
+        mockLocationObject(34.702, 135.495)
+      );
+      (store.set as jest.Mock).mockClear();
+
+      rerender({});
+      jest.advanceTimersByTime(5000);
+
+      const locationSetCalls = (store.set as jest.Mock).mock.calls.filter(
+        (call) => call[0] === locationAtom
+      );
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+      expect(locationSetCalls.some(isMoving)).toBe(false);
+      // 新しい駅リストの発車駅から動かない
+      for (const [, loc] of locationSetCalls) {
+        expect(loc.coords.latitude).toBe(nextStations[0].latitude);
+        expect(loc.coords.longitude).toBe(nextStations[0].longitude);
+      }
     });
 
     it('ループ線では終点でも方面を逆転せず先頭に戻って周回を続ける', () => {
