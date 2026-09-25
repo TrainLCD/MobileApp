@@ -261,9 +261,9 @@ describe('SelectBoundModal', () => {
     ).toBeNull();
   });
 
-  // 乗換のある経路は 1 系統のプリセットに収まらず、保存すると最初の区間だけの
-  // 誤ったプリセットになる
-  it('乗換のある経路を選んでいる間はプリセットの保存を出さず、既存のプリセットとも照合しない', () => {
+  // 区間を組み立てられない駅リスト(区間の駅の種別を引けないなど)で保存すると、
+  // 最初の区間だけの誤ったプリセットになる
+  it('区間を組み立てられない乗換経路ではプリセットの保存を出さず、既存のプリセットとも照合しない', () => {
     // 最初の区間の系統と同じ 1 系統のプリセットが保存済みでも、乗換経路には当てない
     const findSavedRoute = jest.fn(() => ({
       id: 'preset',
@@ -307,6 +307,181 @@ describe('SelectBoundModal', () => {
     expect(findSavedRoute).not.toHaveBeenCalled();
     // clearAllMocks は実装を戻さないので、後続のテストへ持ち越さない
     (useSavedRoutes as jest.Mock).mockImplementation(originalUseSavedRoutes);
+  });
+
+  describe('乗換のある経路', () => {
+    // 1 区間目(系統 100、路線 10)の駅 2 で、2 区間目(系統 200、路線 20)に乗り換える
+    const transferStations = [
+      { id: 1, groupId: 1, line: { id: 10 }, trainType: { groupId: 100 } },
+      { id: 2, groupId: 2, line: { id: 10 }, trainType: { groupId: 100 } },
+      { id: 3, groupId: 2, line: { id: 20 }, trainType: { groupId: 200 } },
+      { id: 4, groupId: 4, line: { id: 20 }, trainType: { groupId: 200 } },
+    ];
+    const transferLegs = [
+      {
+        lineGroupId: 100,
+        fromStationId: 1,
+        toStationId: 2,
+        stationGroupIds: [1, 2],
+      },
+      {
+        lineGroupId: 200,
+        fromStationId: 3,
+        toStationId: 4,
+        stationGroupIds: [2, 4],
+      },
+    ];
+    let originalUseSavedRoutes: (() => unknown) | undefined;
+
+    const mockSavedRoutes = (find: jest.Mock) => {
+      originalUseSavedRoutes = (
+        useSavedRoutes as jest.Mock
+      ).getMockImplementation();
+      (useSavedRoutes as jest.Mock).mockReturnValue({
+        isInitialized: true,
+        find,
+        save: mockSaveRoute,
+        remove: jest.fn(),
+      });
+    };
+
+    beforeEach(() => {
+      mockAtomValues({
+        pendingStation: { id: 1, groupId: 1, lines: [{ id: 10 }] },
+        pendingStations: transferStations,
+        pendingTrainType: {
+          id: -1,
+          groupId: 100,
+          name: '各駅停車',
+          lines: [{ id: 10 }, { id: 20 }],
+        },
+        pendingLine: { id: 10, name: '大江戸線', nameRoman: 'Oedo Line' },
+        selectedLine: { id: 10, name: '大江戸線', nameRoman: 'Oedo Line' },
+      });
+    });
+
+    afterEach(() => {
+      // clearAllMocks は実装を戻さないので、後続のテストへ持ち越さない
+      if (originalUseSavedRoutes) {
+        (useSavedRoutes as jest.Mock).mockImplementation(
+          originalUseSavedRoutes
+        );
+        originalUseSavedRoutes = undefined;
+      }
+    });
+
+    it('区間ごとにプリセットを照合し、行き先を指定していなければ経路の終点を行き先にする', () => {
+      const find = jest.fn(() => null);
+      mockSavedRoutes(find);
+
+      render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+
+      expect(find).toHaveBeenCalledWith({
+        lineId: 10,
+        trainTypeId: 100,
+        wantedDestinationId: 4,
+        legs: transferLegs,
+      });
+    });
+
+    it('区間と乗車駅・行き先をプリセットに保存し、端点を捨てる選択肢は出さない', async () => {
+      mockSavedRoutes(jest.fn(() => null));
+      mockSaveRoute.mockResolvedValue({ id: 'saved' });
+
+      const screen = render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+
+      fireEvent.press(screen.getByText('saveCurrentRoute'));
+      expect(mockSavePresetNameModal).toHaveBeenLastCalledWith({
+        visible: true,
+        showKeepEndpointsOption: false,
+      });
+
+      // 端点を捨てる操作が来ても、乗換経路は乗車駅から行き先までで保存する
+      fireEvent.press(
+        screen.getByTestId('save-preset-submit-without-endpoints')
+      );
+
+      await waitFor(() =>
+        expect(mockSaveRoute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            hasTrainType: true,
+            lineId: 10,
+            trainTypeId: 100,
+            wantedDestinationId: 4,
+            originStationId: 1,
+            direction: 'INBOUND',
+            legs: transferLegs,
+          })
+        )
+      );
+    });
+
+    it('区間が同じプリセットが保存済みなら削除ボタンを出す', () => {
+      mockSavedRoutes(
+        jest.fn(() => ({
+          id: 'transfer-preset',
+          name: '大江戸線・山手線',
+          direction: 'INBOUND',
+          originStationId: 1,
+          legs: transferLegs,
+        }))
+      );
+
+      const screen = render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+
+      expect(screen.getByText('removeFromSavedRoutes')).toBeTruthy();
+    });
+
+    it('区間の駅を取得している間は保存ボタンを無効にして出す', () => {
+      mockSavedRoutes(jest.fn(() => null));
+      mockAtomValues({
+        pendingStation: { id: 1, groupId: 1, lines: [{ id: 10 }] },
+        pendingStations: [],
+        pendingTrainType: { id: -1, groupId: 100, name: '各駅停車' },
+        pendingLine: { id: 10, name: '大江戸線', nameRoman: 'Oedo Line' },
+      });
+
+      const screen = render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={true}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+
+      fireEvent.press(screen.getByText('saveCurrentRoute'));
+      expect(screen.queryByTestId('save-preset-modal')).toBeNull();
+    });
   });
 
   it('終着駅設定中でも RouteInfoModal には全駅が渡される', () => {

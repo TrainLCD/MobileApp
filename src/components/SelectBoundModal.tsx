@@ -43,6 +43,7 @@ import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { resolvePresetSaveRoute } from '~/utils/presetRouteEndpoints';
 import { isTransferRouteTrainType } from '~/utils/routeSearch';
 import { showToast } from '~/utils/toast';
+import { buildSavedRouteLegs } from '~/utils/transferRoutePreset';
 import Button from '../components/Button';
 import { navigationRef } from '../stacks/rootNavigation';
 import lineState, {
@@ -202,12 +203,24 @@ export const SelectBoundModal: React.FC<Props> = ({
     remove: removeCurrentRoute,
   } = useSavedRoutes();
 
-  // 乗換のある経路は今のプリセットの形式(1 系統)では保存も照合もできない
   const isTransferRoute = isTransferRouteTrainType(pendingTrainType);
+  // 乗換のある経路は区間ごとに保存・照合する。駅リストから区間を組み立てられなければ
+  // (区間の駅の取得中など)最初の区間だけの経路にならないよう、保存も照合もしない
+  const transferLegs = useMemo(
+    () => (isTransferRoute ? buildSavedRouteLegs(stations) : null),
+    [isTransferRoute, stations]
+  );
+  const canSaveRoute = !isTransferRoute || !!transferLegs;
+
+  // 保存するプリセットの行き先。乗換経路は行き先で区間を組み立てているので、
+  // 行き先を指定していなくても駅リストの終点(経路検索で選んだ駅)を行き先にする
+  const presetWantedDestinationId =
+    wantedDestination?.groupId ??
+    (transferLegs ? (stations.at(-1)?.groupId ?? null) : null);
 
   useEffect(() => {
     if (!line || line.id == null || !isRoutesDBInitialized) return;
-    if (isTransferRoute) {
+    if (!canSaveRoute) {
       setSavedRoute(null);
       return;
     }
@@ -215,16 +228,18 @@ export const SelectBoundModal: React.FC<Props> = ({
     const route = findSavedRoute({
       lineId: line.id ?? 0,
       trainTypeId: pendingTrainType?.groupId ?? null,
-      wantedDestinationId: wantedDestination?.groupId ?? null,
+      wantedDestinationId: presetWantedDestinationId,
+      legs: transferLegs,
     });
     setSavedRoute(route ?? null);
   }, [
     findSavedRoute,
     line,
     pendingTrainType?.groupId,
-    wantedDestination?.groupId,
+    presetWantedDestinationId,
     isRoutesDBInitialized,
-    isTransferRoute,
+    canSaveRoute,
+    transferLegs,
   ]);
 
   useEffect(() => {
@@ -258,10 +273,10 @@ export const SelectBoundModal: React.FC<Props> = ({
     () =>
       resolvePresetSaveRoute({
         stations,
-        wantedDestinationId: wantedDestination?.groupId ?? null,
+        wantedDestinationId: presetWantedDestinationId,
         currentStation: station ?? confirmedStation,
       }),
-    [stations, wantedDestination?.groupId, station, confirmedStation]
+    [stations, presetWantedDestinationId, station, confirmedStation]
   );
 
   // 保存対象の区間。direction から導くことで、保存する向きと通知駅の絞り込み範囲がズレないようにする
@@ -729,20 +744,29 @@ export const SelectBoundModal: React.FC<Props> = ({
   }, [savedRoute, removeCurrentRoute, line]);
 
   const presetDefaultName = useMemo(() => {
+    // 乗換経路は種別名が最初の区間のものなので、乗り継ぐ路線の名前を並べる
+    if (isTransferRoute) {
+      return (pendingTrainType?.lines ?? [])
+        .map((l) => getLocalizedLineName(l as Line, isJapanese))
+        .filter(Boolean)
+        .join(isJapanese ? '・' : ' / ');
+    }
     const trainName = pendingTrainType
       ? ((isJapanese ? pendingTrainType.name : pendingTrainType.nameRoman) ??
         '')
       : '';
     const lineName = line ? getLocalizedLineName(line, isJapanese) : '';
     return [trainName, lineName].filter(Boolean).join(' ');
-  }, [pendingTrainType, line]);
+  }, [pendingTrainType, line, isTransferRoute]);
 
   const handlePresetNameSubmit = useCallback(
     async (name: string, keepEndpointsInput: boolean) => {
       if (!line) return;
 
-      // 行き先を指定していなければそもそも絞り込みが無く、チェックの有無で結果は変わらない
-      const keepEndpoints = keepEndpointsInput || !wantedDestination;
+      // 行き先を指定していなければそもそも絞り込みが無く、チェックの有無で結果は変わらない。
+      // 乗換経路は区間が乗車駅から行き先までなので、端点を捨てられない
+      const keepEndpoints =
+        keepEndpointsInput || !wantedDestination || !!transferLegs;
 
       const { originStation, direction } = keepEndpoints
         ? presetSaveRoute
@@ -758,7 +782,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         validStationIds.has(id)
       );
       const wantedDestinationId = keepEndpoints
-        ? (wantedDestination?.groupId ?? null)
+        ? presetWantedDestinationId
         : null;
 
       try {
@@ -773,6 +797,7 @@ export const SelectBoundModal: React.FC<Props> = ({
             originStationId: originStation?.groupId ?? null,
             direction,
             notifyStationIds: filteredNotifyStationIds,
+            ...(transferLegs ? { legs: transferLegs } : {}),
             createdAt: new Date(),
           };
           saved = await saveCurrentRoute(newRoute);
@@ -815,6 +840,8 @@ export const SelectBoundModal: React.FC<Props> = ({
       line,
       pendingTrainType,
       wantedDestination,
+      presetWantedDestinationId,
+      transferLegs,
       targetStationIds,
       effectiveStations,
       stations,
@@ -986,7 +1013,8 @@ export const SelectBoundModal: React.FC<Props> = ({
                   : translate('viewStopStations')}
               </Button>
 
-              {isTransferRoute ? null : (
+              {/* 乗換経路の区間の駅を取得している間は、ボタンが後から現れないよう無効にして出す */}
+              {!canSaveRoute && !loading ? null : (
                 <Button
                   outline
                   style={savedRoute ? styles.redOutlinedButton : null}
@@ -994,6 +1022,7 @@ export const SelectBoundModal: React.FC<Props> = ({
                   onPress={handleSaveRoutePress}
                   disabled={
                     !line ||
+                    !canSaveRoute ||
                     !isRoutesDBInitialized ||
                     loading ||
                     isTransitioning
@@ -1112,7 +1141,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         onClose={() => setIsPresetNameModalVisible(false)}
         onSubmit={handlePresetNameSubmit}
         defaultName={presetDefaultName}
-        showKeepEndpointsOption={!!wantedDestination}
+        showKeepEndpointsOption={!!wantedDestination && !transferLegs}
       />
     </>
   );

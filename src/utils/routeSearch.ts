@@ -220,6 +220,28 @@ export const pickLegStationsByGroupIds = (
 };
 
 /**
+ * 系統の駅リストから区間の駅を進行順に拾う。探索が選んだ弧(駅グループの並び)に沿って拾い、
+ * 選んだ種別がその駅グループを持たない(探索で使った系統と別の路線を走る)ときや、弧が
+ * 無いときは乗降駅から切り出す
+ * @param stations 区間の種別の駅リスト
+ * @param stationGroupIds 区間の駅グループ ID の並び
+ * @param from 区間の乗車駅
+ * @param to 区間の降車駅
+ * @returns 進行順の駅。拾えなければ空配列
+ */
+export const pickLegStations = (
+  stations: Station[],
+  stationGroupIds: number[] | null | undefined,
+  from: Station,
+  to: Station
+): Station[] => {
+  const alongPath = stationGroupIds?.length
+    ? pickLegStationsByGroupIds(stations, stationGroupIds)
+    : [];
+  return alongPath.length ? alongPath : sliceLegStations(stations, from, to);
+};
+
+/**
  * 区間ごとの駅をつないで 1 本の駅リストにする。乗換駅は前の区間の降車駅と次の区間の
  * 乗車駅の両方を残す(同じ駅 id なら 1 回だけ)。直通運転の系統でも路線が変わる駅は両方の路線の駅として 2 回並び、
  * Main 画面の各処理(dropEitherJunctionStation・種別変更の案内・直通先の表示など)は
