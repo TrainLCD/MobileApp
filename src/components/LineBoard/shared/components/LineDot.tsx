@@ -19,11 +19,6 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // 丸ドットは既定の矩形ドットより幅が狭く、既定の文字サイズでは2桁が円からはみ出す
-  estimatedMinutesTextRound: {
-    fontSize: isTablet ? 24 : 16,
-    lineHeight: isTablet ? 26 : 18,
-  },
   // 見えているドット(chevronGradient)の右にドットと同じ高さで縦中央揃え
   estimatedMinutesUnitContainer: {
     position: 'absolute',
@@ -126,14 +121,7 @@ export const LineDot: React.FC<LineDotProps> = ({
             ]}
             pointerEvents="none"
           >
-            <EstimatedMinutesBadge
-              estimatedMinutes={estimatedMinutes}
-              style={
-                round && !isOdakyu
-                  ? localStyles.estimatedMinutesTextRound
-                  : undefined
-              }
-            />
+            <EstimatedMinutesBadge estimatedMinutes={estimatedMinutes} />
           </View>
         ) : null}
         {isLast && estimatedMinutes != null ? (

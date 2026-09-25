@@ -37,7 +37,7 @@ interface Props {
   lineColors: (string | null | undefined)[];
   stations: Station[];
   hasTerminus: boolean;
-  // E131系風: 駅ドットを丸くし、現在地のチェブロンを青にする
+  // E131系風: 駅ドットを丸くし、現在地のチェブロンを青にする。ETA も表示しない
   isE131?: boolean;
 }
 
@@ -310,7 +310,10 @@ const LineBoardSaikyo: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
-  const { route: estimatedRoute } = useEstimateArrivalTimes();
+  // E131系の車内表示器にはETAが無いため、E131系風ではクエリごと実行しない
+  const { route: estimatedRoute } = useEstimateArrivalTimes({
+    skip: isE131,
+  });
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
 
