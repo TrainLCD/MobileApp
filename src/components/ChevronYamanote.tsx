@@ -3,7 +3,7 @@ import { Animated, StyleSheet, View } from 'react-native';
 import { LinearGradient, Path, Polygon, Stop, Svg } from 'react-native-svg';
 
 type Props = {
-  backgroundScaleAV?: Animated.Value;
+  backgroundScaleAV?: Animated.Value | Animated.AnimatedInterpolation<number>;
   arrived: boolean;
 };
 

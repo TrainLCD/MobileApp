@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native';
+import { Animated } from 'react-native';
 import type { Line, LineNested, Station } from '~/@types/graphql';
 import { HEADER_E235_TABLET_HEIGHT } from '~/constants';
 import PadArch, { getPadArchLayout } from './PadArch';
@@ -102,6 +103,21 @@ describe('PadArch', () => {
     renderPadArch(mockStations, new Map([[2, 5]]));
     expect(EstimatedMinutesBadge).not.toHaveBeenCalled();
   });
+
+  // Animated.loop は中身が Animated.sequence だと周回ごとに JS スレッドで
+  // 再開するため、JS が詰まるとシェブロンが止まる(#7061)
+  it.each([false, true])(
+    'arrived=%sのループアニメーションはAnimated.sequenceを使わない',
+    (arrived) => {
+      const sequenceSpy = jest.spyOn(Animated, 'sequence');
+      const loopSpy = jest.spyOn(Animated, 'loop');
+      renderPadArch(mockStations, undefined, arrived);
+      expect(loopSpy).toHaveBeenCalled();
+      expect(sequenceSpy).not.toHaveBeenCalled();
+      sequenceSpy.mockRestore();
+      loopSpy.mockRestore();
+    }
+  );
 
   it('到着時の最後から2番目の駅にはestimatedMinutesを表示しない', () => {
     const { EstimatedMinutesBadge } = require('./LineBoard/shared/components');
