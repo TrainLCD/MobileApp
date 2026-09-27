@@ -1,7 +1,18 @@
 import { useAtomValue } from 'jotai';
 import type React from 'react';
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { memo, useCallback, useEffect, useMemo } from 'react';
+import {
+  type LayoutChangeEvent,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, Station } from '~/@types/graphql';
@@ -186,7 +197,9 @@ const Subtitle = memo(
   }
 );
 
-const AnimatedCardChevron = Animated.createAnimatedComponent(View);
+const ACCORDION_DURATION = 250;
+// RN Animated.timing の既定カーブ。Reanimated の既定 (quad) に変わらないよう明示する
+const ACCORDION_EASING = Easing.inOut(Easing.ease);
 
 export const CommonCard: React.FC<Props> = ({
   line,
@@ -242,16 +255,30 @@ export const CommonCard: React.FC<Props> = ({
   const isBus = isBusLine(line);
 
   const hasAccordion = expandableContent != null;
-  const animValue = useRef(new Animated.Value(expanded ? 1 : 0)).current;
-  const [contentHeight, setContentHeight] = useState(0);
+  // 開閉の進捗と中身の実測高さは UI スレッドで補間する。
+  // 高さを JS スレッドで毎フレーム書き換えると、カードの多いリストで開閉がもたつく
+  const progress = useSharedValue(expanded ? 1 : 0);
+  const contentHeight = useSharedValue(0);
 
   useEffect(() => {
-    Animated.timing(animValue, {
-      toValue: expanded ? 1 : 0,
-      duration: 250,
-      useNativeDriver: false,
-    }).start();
-  }, [expanded, animValue]);
+    // アコーディオンを持たないカードでは何も動かさない。
+    // 既に目標値にいるとき（マウント直後など）もアニメーションを走らせない
+    const target = expanded ? 1 : 0;
+    if (!hasAccordion || progress.value === target) {
+      return;
+    }
+    progress.value = withTiming(target, {
+      duration: ACCORDION_DURATION,
+      easing: ACCORDION_EASING,
+    });
+  }, [expanded, hasAccordion, progress]);
+
+  const handleContentLayout = useCallback(
+    (e: LayoutChangeEvent) => {
+      contentHeight.value = e.nativeEvent.layout.height;
+    },
+    [contentHeight]
+  );
 
   const handlePress = useCallback(() => {
     if (hasAccordion) {
@@ -261,15 +288,13 @@ export const CommonCard: React.FC<Props> = ({
     onPress?.();
   }, [hasAccordion, expanded, onExpandedChange, onPress]);
 
-  const animatedHeight = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, contentHeight],
-  });
+  const expandableHeightStyle = useAnimatedStyle(() => ({
+    height: progress.value * contentHeight.value,
+  }));
 
-  const chevronRotation = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
-  });
+  const chevronRotationStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${progress.value * 90}deg` }],
+  }));
 
   const [inboundText, outboundText] = useMemo(() => {
     if (!stations?.length) {
@@ -539,11 +564,9 @@ export const CommonCard: React.FC<Props> = ({
         </View>
         <View style={styles.chevron}>
           {!hideChevron && hasAccordion && (
-            <AnimatedCardChevron
-              style={{ transform: [{ rotate: chevronRotation }] }}
-            >
+            <Animated.View style={chevronRotationStyle}>
               <CardChevron />
-            </AnimatedCardChevron>
+            </Animated.View>
           )}
           {!hideChevron && !hasAccordion && <CardChevron />}
           {hideChevron && !checked && (
@@ -570,14 +593,14 @@ export const CommonCard: React.FC<Props> = ({
           style={[
             styles.expandableWrapper,
             {
-              height: animatedHeight,
               backgroundColor: isLEDTheme ? '#212121' : colors.cardExpanded,
             },
+            expandableHeightStyle,
           ]}
         >
           <View
             style={[styles.expandableContent, styles.expandableMeasure]}
-            onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}
+            onLayout={handleContentLayout}
           >
             {expandableContent}
           </View>
