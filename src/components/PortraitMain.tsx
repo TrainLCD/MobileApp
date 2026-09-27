@@ -840,7 +840,10 @@ const EtaValue = ({
   );
 };
 
-const StopRow = ({
+// 路線の全駅を並べるので、親の再レンダー(ヘッダーの言語切り替えなど)の
+// たびに全行を描き直さないよう memo にする。props はすべて値か安定参照で渡す。
+const StopRow = memo(function StopRow({
+  index,
   station,
   colors,
   isFirst,
@@ -851,10 +854,11 @@ const StopRow = ({
   markerMoving,
   fallbackLineColor,
   elevated,
-  onLayoutTop,
+  onRowLayout,
   showEta,
   estimatedMinutes,
 }: {
+  index: number;
   station: Station;
   colors: AppColors;
   isFirst: boolean;
@@ -865,11 +869,11 @@ const StopRow = ({
   markerMoving: boolean;
   fallbackLineColor: string;
   elevated?: boolean;
-  onLayoutTop?: (y: number) => void;
+  onRowLayout: (index: number, y: number) => void;
   /** ETAが1駅でも取れているか。取れていない路線では列ごと出さない */
   showEta: boolean;
   estimatedMinutes?: number | null;
-}) => {
+}) {
   const isPass = getIsPass(station);
   // 直通運転で路線が変わったら縦棒も直通先のラインカラーで塗る
   const lineColor = station.line?.color ?? fallbackLineColor;
@@ -916,9 +920,7 @@ const StopRow = ({
         elevated && styles.stopRowElevated,
       ]}
       testID={`stop-row-${station.id}`}
-      onLayout={
-        onLayoutTop ? (e) => onLayoutTop(e.nativeEvent.layout.y) : undefined
-      }
+      onLayout={(e) => onRowLayout(index, e.nativeEvent.layout.y)}
     >
       <View style={styles.railColumn}>
         {/* 全駅表示なので上側は始発駅(isFirst)、下側は終点(isLast)でのみ
@@ -1006,7 +1008,7 @@ const StopRow = ({
       </View>
     </View>
   );
-};
+});
 
 // ヘッダーの駅名。長い駅名はフォントサイズを縮小せず、横方向に圧縮(長体)して
 // 1行に収める。自然幅を非表示テキストで測り、スロット幅に収まる scaleX を当てる。
@@ -1574,23 +1576,43 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
     [onTransferPress]
   );
 
-  // rowYs は各行の上端 y を記録する(onLayout は行のレイアウト時にしか発火しないので、
-  // currentIndex 変更でコールバックが別行に移っても再取得できない。全行を記録して
-  // index で引く)。
-  const [rowYs, setRowYs] = useState<Record<number, number>>({});
-  const markerRowY = rowYs[markerRowIndex] ?? 0;
-
   // 到着(ピン=現在駅)・出発(ピン=次駅)のたびに、ピンの行を表示領域の上
   // (1つ前の駅が見える程度に1行分の余白を残した位置)へスクロールする。
+  // ピンの行が変わったときと、その行のレイアウトが確定・変化したときに動かす。
   const scrollRef = useRef<ScrollView>(null);
-  useEffect(() => {
-    if (markerRowY > 0) {
+  // 各行の上端 y を index で記録する(onLayout は行のレイアウト時にしか発火しない
+  // ので、ピンが別の行へ移っても再取得できない。全行を記録して index で引く)。
+  // 描画には使わない値なので state にせず ref に置く。state にすると初回表示で
+  // 行数ぶん親が再レンダーされる。
+  const rowYsRef = useRef(new Map<number, number>());
+  const markerRowIndexRef = useRef(markerRowIndex);
+  // 直近にスクロールの基準にしたピン行の y。同じ位置へ何度も動かさない。
+  const scrolledMarkerRowYRef = useRef(0);
+  const scrollToMarkerRow = useCallback((y: number) => {
+    if (y === scrolledMarkerRowYRef.current) {
+      return;
+    }
+    scrolledMarkerRowYRef.current = y;
+    if (y > 0) {
       scrollRef.current?.scrollTo({
-        y: Math.max(0, STOP_LIST_PADDING_V + markerRowY - STOP_ROW_HEIGHT),
+        y: Math.max(0, STOP_LIST_PADDING_V + y - STOP_ROW_HEIGHT),
         animated: true,
       });
     }
-  }, [markerRowY]);
+  }, []);
+  useEffect(() => {
+    markerRowIndexRef.current = markerRowIndex;
+    scrollToMarkerRow(rowYsRef.current.get(markerRowIndex) ?? 0);
+  }, [markerRowIndex, scrollToMarkerRow]);
+  const handleRowLayout = useCallback(
+    (index: number, y: number) => {
+      rowYsRef.current.set(index, y);
+      if (index === markerRowIndexRef.current) {
+        scrollToMarkerRow(y);
+      }
+    },
+    [scrollToMarkerRow]
+  );
 
   if (!commonData) {
     return (
@@ -1759,6 +1781,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
               return (
                 <StopRow
                   key={station.id}
+                  index={index}
                   station={station}
                   colors={colors}
                   isFirst={index === 0}
@@ -1766,7 +1789,9 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
                   isFocused={index === currentStopIndex}
                   departed={departed}
                   marker={index === markerRowIndex ? markerPosition : null}
-                  markerMoving={markerMoving}
+                  // ピンの無い行では使わないので、発車・到着のたびに全行が
+                  // 描き直されないようピンの行にだけ渡す。
+                  markerMoving={index === markerRowIndex && markerMoving}
                   fallbackLineColor={lineColor}
                   elevated={index === markerRowIndex}
                   // 現在駅とそれより手前の駅は ETA を持たない(相対値が0以下に
@@ -1778,11 +1803,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
                       ? estimatedMinutesByStationId.get(station.id)
                       : null
                   }
-                  onLayoutTop={(y) =>
-                    setRowYs((prev) =>
-                      prev[index] === y ? prev : { ...prev, [index]: y }
-                    )
-                  }
+                  onRowLayout={handleRowLayout}
                 />
               );
             })}
