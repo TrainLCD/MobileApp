@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type { Line, LineNested, Station } from '~/@types/graphql';
-import PadArch from './PadArch';
+import { HEADER_E235_TABLET_HEIGHT } from '~/constants';
+import PadArch, { getPadArchLayout } from './PadArch';
 
 jest.mock('~/utils/isPass', () => ({
   __esModule: true,
@@ -106,5 +107,30 @@ describe('PadArch', () => {
     const { EstimatedMinutesBadge } = require('./LineBoard/shared/components');
     renderPadArch(mockStations, new Map([[2, 5]]), true);
     expect(EstimatedMinutesBadge).not.toHaveBeenCalled();
+  });
+});
+
+describe('getPadArchLayout', () => {
+  it('高さ810以上のウィンドウでは縮小せずそのままの寸法で割り付ける', () => {
+    expect(getPadArchLayout(1366, 1024)).toEqual({
+      width: 1366,
+      height: 1024,
+      scale: 1,
+    });
+    expect(getPadArchLayout(1080, 810)).toEqual({
+      width: 1080,
+      height: 810,
+      scale: 1,
+    });
+  });
+
+  it('高さ600のタブレットでは最下端のシェブロンがヘッダー下に収まるよう縮小する', () => {
+    const { width, height, scale } = getPadArchLayout(960, 600);
+    expect(height).toBe(810);
+    expect(scale).toBeCloseTo(400 / 610);
+    expect(width * scale).toBeCloseTo(960);
+    // 非到着時のシェブロンの下端(ヘッダー下端から 4H/7 + 84 + 54)
+    const chevronBottom = ((4 * height) / 7 + 84 + 54) * scale;
+    expect(chevronBottom).toBeLessThanOrEqual(600 - HEADER_E235_TABLET_HEIGHT);
   });
 });

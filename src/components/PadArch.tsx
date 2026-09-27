@@ -6,6 +6,7 @@ import type { Line, LineNested, Station } from '~/@types/graphql';
 import { useLandscapeWindowDimensions } from '~/hooks';
 import { isBusLine } from '~/utils/line';
 import {
+  HEADER_E235_TABLET_HEIGHT,
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
@@ -51,6 +52,33 @@ type ColorSegment = {
 const STROKE_WIDTH = 128;
 const DOT_RADIUS = 34; // circle width(68) / 2
 const NAME_TOP_OFFSET = 42;
+
+// PadArch は HeaderE235 の下に置かれるが、座標はウィンドウの高さを基準に割り付けている。
+// 最も下に来るのは非到着時のシェブロンで、ヘッダー下端から 4H/7 + 84 + 54
+// (60×45 を -20deg 回転させた外接矩形の下半分) まで伸びる。これがウィンドウ内に
+// 収まるのは H >= 789 のときなので、ホームインジケーター等の分を足した 810 未満の
+// 端末では、810 の画面を想定して割り付けた全体をヘッダー下の高さに合わせて縮小する。
+const MIN_LAYOUT_WINDOW_HEIGHT = 810;
+
+export const getPadArchLayout = (
+  windowWidth: number,
+  windowHeight: number
+): { width: number; height: number; scale: number } => {
+  if (
+    windowHeight >= MIN_LAYOUT_WINDOW_HEIGHT ||
+    windowHeight <= HEADER_E235_TABLET_HEIGHT
+  ) {
+    return { width: windowWidth, height: windowHeight, scale: 1 };
+  }
+  const scale =
+    (windowHeight - HEADER_E235_TABLET_HEIGHT) /
+    (MIN_LAYOUT_WINDOW_HEIGHT - HEADER_E235_TABLET_HEIGHT);
+  return {
+    width: windowWidth / scale,
+    height: MIN_LAYOUT_WINDOW_HEIGHT,
+    scale,
+  };
+};
 
 /** SVG 楕円弧の中心パラメータを算出する (SVG Spec F.6.5) */
 const ARC_EPS = 1e-6;
@@ -190,6 +218,12 @@ const computeColorSegments = (
 };
 
 const styles = StyleSheet.create({
+  scaleRoot: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    transformOrigin: 'top left',
+  },
   stationNames: {
     position: 'absolute',
   },
@@ -434,8 +468,14 @@ const PadArch: React.FC<Props> = ({
   isEn,
   estimatedMinutesByStationId,
 }: Props) => {
-  const { width: windowWidth, height: windowHeight } =
+  const { width: rawWindowWidth, height: rawWindowHeight } =
     useLandscapeWindowDimensions();
+  // 以降の windowWidth / windowHeight は縮小前の割り付け上の寸法
+  const {
+    width: windowWidth,
+    height: windowHeight,
+    scale: layoutScale,
+  } = getPadArchLayout(rawWindowWidth, rawWindowHeight);
 
   // Animated.Value（RN Animated API — Reanimated 4.2 の mapper バグ回避）
   const bgScale = useRef(new Animated.Value(0.95)).current;
@@ -565,6 +605,11 @@ const PadArch: React.FC<Props> = ({
     const chevronY = (4 * windowHeight) / 7 + 84;
     const chevronArrivedY = (4 * windowHeight) / 7;
     return {
+      scaleRoot: {
+        width: windowWidth,
+        height: windowHeight,
+        transform: [{ scale: layoutScale }],
+      },
       arcContainer: { width: windowWidth, height: windowHeight },
       stationNameContainer: { width: windowWidth / 4 },
       stationName: { width: windowWidth / 4 },
@@ -584,7 +629,7 @@ const PadArch: React.FC<Props> = ({
           36,
       },
     };
-  }, [windowWidth, windowHeight, arc]);
+  }, [windowWidth, windowHeight, layoutScale, arc]);
 
   const getDotLeft = useCallback(
     (i: number): number => {
@@ -699,7 +744,7 @@ const PadArch: React.FC<Props> = ({
   );
 
   return (
-    <>
+    <View style={[styles.scaleRoot, dynamicStyles.scaleRoot]}>
       <Transfers
         transferLines={transferLines}
         station={station}
@@ -889,7 +934,7 @@ const PadArch: React.FC<Props> = ({
           );
         })}
       </View>
-    </>
+    </View>
   );
 };
 
