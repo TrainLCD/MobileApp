@@ -13,7 +13,6 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, LineNested } from '~/@types/graphql';
@@ -269,8 +268,7 @@ const SelectLineScreen = () => {
     }
 
     return Array.from({ length: count }).map((_, i) => (
-      <Animated.View
-        layout={LinearTransition.springify()}
+      <View
         // biome-ignore lint/suspicious/noArrayIndexKey: プレースホルダーは静的で順序が変わらないため問題なし
         key={`placeholder-${rowIndex}-${i}`}
         style={{ flex: 1 }}
@@ -283,8 +281,7 @@ const SelectLineScreen = () => {
       return (
         <>
           {rowIndex > 0 && <EmptyLineSeparator />}
-          <Animated.View
-            layout={LinearTransition.springify()}
+          <View
             style={
               isTablet
                 ? {
@@ -297,17 +294,16 @@ const SelectLineScreen = () => {
             {rowLines.map((line, colIndex) => {
               const index = rowIndex * numColumns + colIndex;
               return (
-                <Animated.View
-                  layout={LinearTransition.springify()}
+                <View
                   key={line.id as number}
                   style={isTablet ? { flex: 1 } : undefined}
                 >
                   {renderLineCard(line, index)}
-                </Animated.View>
+                </View>
               );
             })}
             {renderPlaceholders(rowIndex, numColumns - rowLines.length)}
-          </Animated.View>
+          </View>
         </>
       );
     },
