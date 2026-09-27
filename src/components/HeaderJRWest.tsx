@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
     fontSize: RFValue(24),
     top: 32,
     left: 32,
+    right: 16,
   },
   stationNameContainer: {
     marginLeft: isTablet ? 72 * 1.5 : 72,
@@ -514,7 +515,13 @@ const HeaderJRWest: React.FC<CommonHeaderProps> = (props) => {
         </View>
 
         <View style={styles.right}>
-          <Typography style={styles.bound}>{boundText}</Typography>
+          <Typography
+            style={styles.bound}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {boundText}
+          </Typography>
           {currentStationNumber ? (
             <View style={styles.numberingContainer}>
               <NumberingIcon

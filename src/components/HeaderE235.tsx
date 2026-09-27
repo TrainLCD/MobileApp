@@ -1,7 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { STATION_NAME_FONT_SIZE } from '../constants';
+import {
+  HEADER_E235_TABLET_HEIGHT,
+  STATION_NAME_FONT_SIZE,
+} from '../constants';
 import { useLoopLine } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
@@ -16,7 +19,7 @@ const styles = StyleSheet.create({
   gradientRoot: {
     paddingLeft: 24,
     overflow: 'hidden',
-    height: isTablet ? 200 : 128,
+    height: isTablet ? HEADER_E235_TABLET_HEIGHT : 128,
     flexDirection: 'row',
     zIndex: 9999,
   },
@@ -49,7 +52,7 @@ const styles = StyleSheet.create({
   left: {
     flex: 0.3,
     justifyContent: 'center',
-    height: isTablet ? 200 : 128,
+    height: isTablet ? HEADER_E235_TABLET_HEIGHT : 128,
     marginRight: 24,
     position: 'relative',
   },
@@ -57,7 +60,7 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
     justifyContent: 'flex-end',
-    height: isTablet ? 200 : 128,
+    height: isTablet ? HEADER_E235_TABLET_HEIGHT : 128,
   },
   state: {
     position: 'absolute',

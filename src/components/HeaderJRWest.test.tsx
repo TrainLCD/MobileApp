@@ -144,11 +144,23 @@ jest.mock('./Typography', () => {
   return function MockTypography({
     children,
     style,
+    numberOfLines,
+    adjustsFontSizeToFit,
   }: {
     children: React.ReactNode;
     style?: unknown;
+    numberOfLines?: number;
+    adjustsFontSizeToFit?: boolean;
   }) {
-    return <Text style={style}>{children}</Text>;
+    return (
+      <Text
+        style={style}
+        numberOfLines={numberOfLines}
+        adjustsFontSizeToFit={adjustsFontSizeToFit}
+      >
+        {children}
+      </Text>
+    );
   };
 });
 
@@ -162,6 +174,19 @@ describe('HeaderJRWest', () => {
       expect(() => {
         render(<HeaderJRWest {...createMockHeaderProps()} />);
       }).not.toThrow();
+    });
+  });
+
+  describe('Bound text layout (#6075)', () => {
+    it('should keep a long bound text on one shrinking line so it does not overlap the station name', () => {
+      const longBoundText =
+        'for Kokusaikaikan (Kyoto International Conference Center)';
+      const { getByText } = render(
+        <HeaderJRWest {...createMockHeaderProps()} boundText={longBoundText} />
+      );
+      const bound = getByText(longBoundText);
+      expect(bound.props.numberOfLines).toBe(1);
+      expect(bound.props.adjustsFontSizeToFit).toBe(true);
     });
   });
 

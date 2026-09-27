@@ -7,7 +7,10 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import PadLineMarks from '../../../PadLineMarks';
 import PassChevronEast from '../../../PassChevronEast';
-import { commonLineBoardStyles as styles } from '../styles/commonStyles';
+import {
+  ROUND_LINE_DOT_SIZE,
+  commonLineBoardStyles as styles,
+} from '../styles/commonStyles';
 import { EstimatedMinutesBadge } from './EstimatedMinutesBadge';
 import { EstimatedMinutesUnitLabel } from './EstimatedMinutesUnitLabel';
 
@@ -36,6 +39,8 @@ export type LineDotProps = {
   arrived: boolean;
   passed: boolean;
   isOdakyu?: boolean;
+  // 丸いドットにする(E131系風)。小田急風と違い色は通常のドットのまま
+  round?: boolean;
   estimatedMinutes?: number | null;
   // 最後尾セルのドットのときtrue。ETA表示中は右隣に単位(分/min.)を添える
   isLast?: boolean;
@@ -48,6 +53,7 @@ export const LineDot: React.FC<LineDotProps> = ({
   arrived,
   passed,
   isOdakyu = false,
+  round = false,
   estimatedMinutes,
   isLast = false,
 }) => {
@@ -77,13 +83,14 @@ export const LineDot: React.FC<LineDotProps> = ({
     );
   }
 
-  const dotSizeStyle = isOdakyu
-    ? {
-        width: isTablet ? 36 : 24,
-        height: isTablet ? 36 : 24,
-        borderRadius: isTablet ? 18 : 12,
-      }
-    : null;
+  const dotSizeStyle =
+    isOdakyu || round
+      ? {
+          width: ROUND_LINE_DOT_SIZE,
+          height: ROUND_LINE_DOT_SIZE,
+          borderRadius: ROUND_LINE_DOT_SIZE / 2,
+        }
+      : null;
 
   return (
     <View style={styles.stationArea}>

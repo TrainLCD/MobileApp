@@ -331,12 +331,14 @@ describe('useEstimateArrivalTimes', () => {
       expect(hookRef.current?.route?.stops?.length).toBe(1);
     });
     expect(mockGqlRequest).toHaveBeenCalledTimes(1);
+    // 12 と 21 は別の駅グループなので、乗換駅は 12 の 1 回だけ並んでいる
+    // (concatLegStations が同じ駅での乗換を前の区間の駅として 1 回にまとめた形)
     expect(mockGqlRequest.mock.calls[0][1]).toEqual({
       fromStationId: 22,
       toStationId: 11,
       legs: [
-        { lineGroupId: 8, fromStationId: 22, toStationId: 21 },
-        { lineGroupId: 7, fromStationId: 21, toStationId: 11 },
+        { lineGroupId: 8, fromStationId: 22, toStationId: 12 },
+        { lineGroupId: 7, fromStationId: 12, toStationId: 11 },
       ],
     });
   });

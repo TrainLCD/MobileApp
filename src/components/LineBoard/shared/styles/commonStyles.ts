@@ -9,6 +9,9 @@ export const BAR_BOTTOM_JO = isTablet ? 32 : 48;
 export const BAR_HEIGHT_JO = isTablet ? 64 : 40;
 export const BAR_TERMINAL_BOTTOM_JO = isTablet ? 48 : 58;
 
+// 小田急風・E131系風の丸い LineDot の直径
+export const ROUND_LINE_DOT_SIZE = isTablet ? 36 : 24;
+
 // Androidタブレットでは駅名がヘッダーに食い込むのを防ぐためbottomオフセットを縮小する
 export const STATION_NAME_CONTAINER_BOTTOM: number | undefined = isTablet
   ? Platform.select({ android: 64, default: 84 })

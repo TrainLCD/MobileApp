@@ -11,6 +11,7 @@ export const APP_THEME = {
   JR_KYUSHU: 'JR_KYUSHU',
   ODAKYU: 'ODAKYU',
   E231: 'E231',
+  E131: 'E131',
   LOW_POWER: 'LOW_POWER',
 } as const;
 

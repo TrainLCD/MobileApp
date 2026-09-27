@@ -14,6 +14,7 @@ import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
 import { getIsLocal } from '../utils/trainTypeString';
 import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
 
@@ -25,6 +26,8 @@ export const useRefreshLeftStations = (): void => {
 
   const theme = useAtomValue(themeAtom);
   const currentLine = useCurrentLine();
+  // 接続駅に着いた後は次の路線の駅になる(stationAtom は前の路線の駅のことがある)
+  const resolvedCurrentStation = useCurrentStation();
   const trainType = useCurrentTrainType();
   const { isOsakaLoopLine, isYamanoteLine, isMeijoLine, isDisneyResortLine } =
     useLoopLine();
@@ -204,25 +207,38 @@ export const useRefreshLeftStations = (): void => {
     if (currentIndex === -1) {
       return;
     }
-    const leftStations =
+    const slicedStations =
       loopLine && getIsLocal(trainType)
         ? getStationsForLoopLine(currentIndex)
         : getStations(currentIndex);
+    // 接続駅は dropEitherJunctionStation で前の路線の駅だけが残っている。着いた後は
+    // 種別・路線(useCurrentLine)が次の路線に切り替わるので、LineBoard の現在駅も
+    // 次の路線の駅に差し替えて路線色を揃える(#7058)
+    const junctionStation = stations[currentIndex];
+    const leftStations =
+      resolvedCurrentStation &&
+      resolvedCurrentStation.id !== junctionStation.id &&
+      resolvedCurrentStation.groupId != null &&
+      resolvedCurrentStation.groupId === junctionStation.groupId
+        ? slicedStations.map((s) =>
+            s.id === junctionStation.id ? resolvedCurrentStation : s
+          )
+        : slicedStations;
     setNavigation((prev) => {
       // 先頭駅が同じでもリストの中身が変わることがある
       // (例: テーマをJR西日本風/LEDへ切り替えると通過駅が除外される)ため、
-      // 全要素を比較して差分があるときだけ置き換える。
+      // 全要素を比較して差分があるときだけ置き換える。接続駅では同じ駅グループの
+      // 駅を差し替えるので、駅グループではなく駅 id で比べる。
       const isSameList =
         leftStations.length === prev.leftStations.length &&
-        leftStations.every(
-          (s, i) => s.groupId === prev.leftStations[i]?.groupId
-        );
+        leftStations.every((s, i) => s.id === prev.leftStations[i]?.id);
       return isSameList ? prev : { ...prev, leftStations };
     });
   }, [
     getStations,
     getStationsForLoopLine,
     loopLine,
+    resolvedCurrentStation,
     setNavigation,
     station,
     stations,

@@ -51,6 +51,8 @@ export type RouteLegInput = {
  *
  * 乗換駅は前の区間の降車駅と次の区間の乗車駅として 2 回並ぶので、それぞれの路線の駅を
  * 渡す。系統に無い乗降駅は API が同じ駅グループの駅で引き当てる(StationAPI#1687)。
+ * 前後の区間で乗換駅が同じ駅(同じ路線の上で種別だけを乗り換える)なら、concatLegStations は
+ * 前の区間の駅として 1 回だけ並べるので、その駅を両方の区間に渡す。
  * 末尾から先頭へ進むとき(オートモードが終点で折り返したときなど)は、先頭から進むときの
  * 区間を逆順にし、乗車駅と降車駅を入れ替える
  * @param stations 乗車中の駅リスト(格納順)
@@ -65,19 +67,28 @@ export const buildRouteLegInputs = (
   if (ranges.length <= 1) return null;
 
   const legs: RouteLegInput[] = [];
+  // 1 回しか並ばない乗換駅。次の区間の乗車駅にもこの駅を渡す
+  let sharedTransfer: Station | null = null;
   for (const [index, range] of ranges.entries()) {
     const next = ranges[index + 1];
-    const fromStationId = stations[range.start]?.id;
-    // 乗換駅は前の区間の路線の駅(範囲の末尾)と次の区間の路線の駅(次の範囲の先頭)の
-    // 2 回並ぶので、前の区間の降車駅には範囲の末尾を渡す。1 回しか無い駅リストでは
-    // 次の範囲の先頭を渡し、系統に無い駅は API が同じ駅グループの駅で引き当てる
-    const lastStation = stations[range.end];
-    const toStationId =
-      next &&
-      lastStation?.groupId != null &&
-      lastStation.groupId !== stations[next.start]?.groupId
-        ? stations[next.start]?.id
-        : lastStation?.id;
+    const fromStationId = (sharedTransfer ?? stations[range.start])?.id;
+    // 降車駅は範囲の中で最後にこの区間の種別が停まる駅。1 回しか並ばない乗換駅の後に
+    // 次の区間の通過駅が続くと、通過駅は種別を持たないのでこの範囲に入るため、
+    // 範囲の末尾ではなく最後の停車駅を取る
+    let transferIndex = range.end;
+    while (
+      transferIndex > range.start &&
+      stations[transferIndex]?.trainType?.groupId !== range.groupId
+    ) {
+      transferIndex--;
+    }
+    const lastStation = stations[transferIndex];
+    const toStationId = lastStation?.id;
+    // 次の区間の先頭が同じ駅グループなら、乗換駅は次の区間の路線の駅としても並んでいる
+    sharedTransfer =
+      next && lastStation?.groupId !== stations[next.start]?.groupId
+        ? lastStation
+        : null;
     if (range.groupId == null || fromStationId == null || toStationId == null) {
       return null;
     }

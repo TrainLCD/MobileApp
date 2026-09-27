@@ -159,6 +159,18 @@ describe('resolveThemeForLine', () => {
     expect(resolveThemeForLine(makeLine({ id: 11332 }))).toBe(APP_THEME.E231);
   });
 
+  it.each([
+    ['宇都宮線', 11319],
+    ['日光線', 11340],
+    ['相模線', 11309],
+    ['鶴見線', 11304],
+    ['内房線', 11325],
+    ['外房線', 11324],
+    ['鹿島線', 11329],
+  ])('%s(%i)はE131を返す', (_name, id) => {
+    expect(resolveThemeForLine(makeLine({ id }))).toBe(APP_THEME.E131);
+  });
+
   it('不明な路線はTOKYO_METROにフォールバックする', () => {
     expect(
       resolveThemeForLine(

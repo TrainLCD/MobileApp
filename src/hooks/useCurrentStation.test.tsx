@@ -187,4 +187,89 @@ describe('useCurrentStation', () => {
     // OUTBOUND direction, station2 is pass station, should return station3
     expect(result.id).toBe(3);
   });
+
+  describe('接続駅(同じ駅グループが前後の路線の駅として並ぶ駅)', () => {
+    // 大江戸線から代々木で山手線へ乗り換える駅リスト。代々木は両方の路線の駅として並ぶ
+    const shinjuku = createStation(9930128, { groupId: 1130208 });
+    const yoyogiOedo = createStation(9930127, { groupId: 1130207 });
+    const yoyogiYamanote = createStation(1130207, { groupId: 1130207 });
+    const harajuku = createStation(1130206, { groupId: 1130206 });
+    const stations = [shinjuku, yoyogiOedo, yoyogiYamanote, harajuku];
+
+    it('INBOUNDで前の路線の駅に着いたら、次の路線の駅を返す', () => {
+      setAtomValues({
+        stations,
+        station: yoyogiOedo,
+        selectedDirection: 'INBOUND',
+      });
+
+      const { getByTestId } = render(<TestComponent />);
+      const result = JSON.parse(
+        getByTestId('station').props.children as string
+      );
+
+      expect(result.id).toBe(yoyogiYamanote.id);
+    });
+
+    it('INBOUNDで次の路線の駅に着いたら、そのまま返す', () => {
+      setAtomValues({
+        stations,
+        station: yoyogiYamanote,
+        selectedDirection: 'INBOUND',
+      });
+
+      const { getByTestId } = render(<TestComponent />);
+      const result = JSON.parse(
+        getByTestId('station').props.children as string
+      );
+
+      expect(result.id).toBe(yoyogiYamanote.id);
+    });
+
+    it('OUTBOUNDでは配列の前にある駅を次の路線の駅として返す', () => {
+      // OUTBOUND は配列の逆順に進むので、原宿→代々木(山手線)→代々木(大江戸線)→新宿の順になる
+      setAtomValues({
+        stations,
+        station: yoyogiYamanote,
+        selectedDirection: 'OUTBOUND',
+      });
+
+      const { getByTestId } = render(<TestComponent />);
+      const result = JSON.parse(
+        getByTestId('station').props.children as string
+      );
+
+      expect(result.id).toBe(yoyogiOedo.id);
+    });
+
+    it('idが駅リストに無くgroupIdで引いたときも、次の路線の駅を返す', () => {
+      setAtomValues({
+        stations,
+        station: createStation(999, { groupId: 1130207 }),
+        selectedDirection: 'INBOUND',
+      });
+
+      const { getByTestId } = render(<TestComponent />);
+      const result = JSON.parse(
+        getByTestId('station').props.children as string
+      );
+
+      expect(result.id).toBe(yoyogiYamanote.id);
+    });
+
+    it('skipPassStation=trueでも次の路線の駅を返す', () => {
+      setAtomValues({
+        stations,
+        station: yoyogiOedo,
+        selectedDirection: 'INBOUND',
+      });
+
+      const { getByTestId } = render(<TestComponent skipPassStation={true} />);
+      const result = JSON.parse(
+        getByTestId('station').props.children as string
+      );
+
+      expect(result.id).toBe(yoyogiYamanote.id);
+    });
+  });
 });

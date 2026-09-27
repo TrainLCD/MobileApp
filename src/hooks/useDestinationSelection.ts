@@ -10,6 +10,10 @@ import {
 } from '~/lib/graphql/queries';
 import lineState, { pendingLineAtom } from '~/store/atoms/line';
 import navigationState from '~/store/atoms/navigation';
+import {
+  type ConnectedRoutesVariables,
+  connectedRoutesSourceAtom,
+} from '~/store/atoms/routeSearch';
 import stationState, {
   stationAtom,
   wantedDestinationAtom,
@@ -23,8 +27,7 @@ import {
   getStationWithMatchingLine,
   pickDefaultTrainType,
   pickInitialRouteTrainType,
-  pickLegStationsByGroupIds,
-  sliceLegStations,
+  pickLegStations,
 } from '~/utils/routeSearch';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
@@ -32,11 +35,7 @@ type GetConnectedRoutesData = {
   connectedRoutes: ConnectedRoute[];
 };
 
-type GetConnectedRoutesVariables = {
-  fromStationGroupId: number;
-  toStationGroupId: number;
-  viaLineId?: number;
-};
+type GetConnectedRoutesVariables = ConnectedRoutesVariables;
 
 type GetLineStationsData = {
   lineStations: Station[];
@@ -94,6 +93,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
+  const setConnectedRoutesSource = useSetAtom(connectedRoutesSourceAtom);
 
   const queryClient = useQueryClient();
 
@@ -170,16 +170,13 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
           const res = await fetchStationsByLineGroupId({
             variables: { lineGroupId: legTrainType.groupId },
           });
-          const legStations = res.data?.lineGroupStations ?? [];
-          // 探索が選んだ弧(駅グループの並び)に沿って拾う。選んだ種別がその駅グループを
-          // 持たない(探索で使った系統と別の路線を走る)ときは、乗降駅から切り出す
-          const alongPath = leg.stationGroupIds?.length
-            ? pickLegStationsByGroupIds(legStations, leg.stationGroupIds)
-            : [];
           return {
-            stations: alongPath.length
-              ? alongPath
-              : sliceLegStations(legStations, leg.fromStation, leg.toStation),
+            stations: pickLegStations(
+              res.data?.lineGroupStations ?? [],
+              leg.stationGroupIds,
+              leg.fromStation,
+              leg.toStation
+            ),
             error: res.error,
           };
         })
@@ -229,12 +226,13 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         return;
       }
 
+      const connectedRoutesVariables: ConnectedRoutesVariables = {
+        fromStationGroupId: station.groupId,
+        toStationGroupId: selectedStation.groupId,
+        viaLineId: selectedStation.line.id,
+      };
       const result = await fetchConnectedRoutes({
-        variables: {
-          fromStationGroupId: station.groupId,
-          toStationGroupId: selectedStation.groupId,
-          viaLineId: selectedStation.line.id,
-        },
+        variables: connectedRoutesVariables,
       });
 
       const routes = filterRideableRoutes(result.data?.connectedRoutes ?? []);
@@ -334,6 +332,11 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         ...prev,
         pendingStations: stations,
       }));
+      setConnectedRoutesSource({
+        trainTypes: fetchedTrainTypes,
+        routes,
+        variables: connectedRoutesVariables,
+      });
       setNavigationState((prev) => ({
         ...prev,
         fetchedTrainTypes,
@@ -348,6 +351,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
       setNavigationState,
       setStationState,
       setLineState,
+      setConnectedRoutesSource,
     ]
   );
 

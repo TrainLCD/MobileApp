@@ -884,6 +884,8 @@ const MainScreen: React.FC = () => {
           style={[
             StyleSheet.absoluteFill,
             theme === APP_THEME.E231 && { backgroundColor: '#E6E6E6' },
+            // E131系風の路線図エリアは灰色でなく、わずかに青みのある白地
+            theme === APP_THEME.E131 && { backgroundColor: '#F0F4F6' },
           ]}
           onPress={updateBottomState}
         >

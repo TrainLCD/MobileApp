@@ -2,16 +2,35 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Dimensions, Keyboard, StyleSheet } from 'react-native';
-import type { Line, TrainType } from '~/@types/graphql';
+import type { Line, Station, TrainType } from '~/@types/graphql';
 import { LIGHT_APP_COLORS } from '~/constants/colorScheme';
+import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
+import { GET_CONNECTED_ROUTES_SORTED } from '~/lib/graphql/queries';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { fetchedTrainTypesAtom } from '~/store/atoms/navigation';
+import {
+  type ConnectedRoutesSource,
+  connectedRoutesSourceAtom,
+} from '~/store/atoms/routeSearch';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { buildRouteTrainTypes, type ConnectedRoute } from '~/utils/routeSearch';
 import { TrainTypeListModal } from './TrainTypeListModal';
 
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
+}));
+
+// ~/lib/gql は読み込み時に API の URL(.env.local)を検査する。CI には .env.local が無いので
+// 実物を読み込まない
+jest.mock('~/hooks/useLazyGraphQLQuery', () => ({
+  useLazyGraphQLQuery: jest.fn(),
+}));
+
+// FlashList はセルを使い回すので、描画ツリー上の順が表示順と一致しない。
+// 並び順を確かめるため、データの順に描く FlatList に置き換える
+jest.mock('@shopify/flash-list', () => ({
+  FlashList: require('react-native').FlatList,
 }));
 
 jest.mock('@gorhom/portal', () => ({
@@ -76,14 +95,20 @@ const ALL_TRAIN_TYPES = [
   createTrainType(8, '特急', [toyoko, fukutoshin, tojo]),
 ];
 
-const mockAtoms = (trainTypes: TrainType[]) => {
+const mockAtoms = (
+  trainTypes: TrainType[],
+  routesSource: ConnectedRoutesSource | null = null
+) => {
   (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
     if (atom === fetchedTrainTypesAtom) return trainTypes;
+    if (atom === connectedRoutesSourceAtom) return routesSource;
     if (atom === appColorsAtom) return LIGHT_APP_COLORS;
     if (atom === isLEDThemeAtom) return false;
     return undefined;
   });
 };
+
+const mockFetchSortedRoutes = jest.fn();
 
 const setup = (trainTypes: TrainType[] = ALL_TRAIN_TYPES) => {
   mockAtoms(trainTypes);
@@ -102,6 +127,12 @@ type KeyboardListener = (event: { endCoordinates: { height: number } }) => void;
 const keyboardListeners: { event: string; handler: KeyboardListener }[] = [];
 
 beforeEach(() => {
+  (useLazyGraphQLQuery as jest.Mock).mockImplementation((document) => {
+    if (document !== GET_CONNECTED_ROUTES_SORTED) {
+      throw new Error('unexpected query');
+    }
+    return [mockFetchSortedRoutes, {}];
+  });
   keyboardListeners.length = 0;
   // KeyboardEvent 全体を作らずに endCoordinates だけ流したいので、実装ごと差し替える
   jest.spyOn(Keyboard, 'addListener').mockImplementation(((
@@ -267,5 +298,230 @@ describe('TrainTypeListModal - キーボード回避', () => {
     expect(after.content.height).toBe(before.content.height);
     expect(after.container.paddingBottom).toBeUndefined();
     expect(after.content.maxHeight).toBeUndefined();
+  });
+});
+
+describe('TrainTypeListModal - 並べ替え', () => {
+  const directRoute = (trainTypes: TrainType[]): ConnectedRoute => ({
+    legs: [{ trainTypes }],
+  });
+  const station = (id: number, line: Line) =>
+    ({ id, groupId: id, name: `駅${id}`, line }) as unknown as Station;
+  // 東横線 → 副都心線の乗換。種別一覧では 1 行になる
+  const transferRoute: ConnectedRoute = {
+    legs: [
+      {
+        trainTypes: [createTrainType(9, '乗換', [toyoko])],
+        fromStation: station(101, toyoko),
+        toStation: station(102, toyoko),
+      },
+      {
+        trainTypes: [createTrainType(10, '各駅停車', [fukutoshin])],
+        fromStation: station(201, fukutoshin),
+        toStation: station(202, fukutoshin),
+      },
+    ],
+  };
+  const localRoute = directRoute(ALL_TRAIN_TYPES.slice(0, 4));
+  const expressRoute = directRoute(ALL_TRAIN_TYPES.slice(4, 8));
+  const routes = [localRoute, expressRoute, transferRoute];
+  const { trainTypes } = buildRouteTrainTypes(routes);
+  const source: ConnectedRoutesSource = {
+    trainTypes,
+    routes,
+    variables: { fromStationGroupId: 1, toStationGroupId: 2, viaLineId: 1 },
+  };
+  // API から取り直した経路は別のオブジェクトになる
+  const refetched = (route: ConnectedRoute): ConnectedRoute =>
+    JSON.parse(JSON.stringify(route));
+
+  const setupSortable = () => {
+    mockAtoms(trainTypes, source);
+    const props = {
+      line: toyoko,
+      onClose: jest.fn(),
+      onSelect: jest.fn(),
+    };
+    const utils = render(<TrainTypeListModal visible {...props} />);
+    return { ...utils, props };
+  };
+
+  const cardTitles = (cards: { props: { children?: unknown } }[]) =>
+    cards.map((card) => card.props.children);
+
+  const selectSort = async (
+    getByTestId: (id: string) => unknown,
+    value: string
+  ) => {
+    fireEvent.press(getByTestId('trainTypeFilterAxis-sort') as never);
+    await act(async () => {
+      fireEvent.press(getByTestId(`trainTypeSortValue-${value}`) as never);
+    });
+  };
+
+  it('駅の種別一覧では並べ替えを出さない', () => {
+    const { queryByTestId } = setup();
+
+    expect(queryByTestId('trainTypeFilterAxis-sort')).toBeNull();
+  });
+
+  it('経路検索の結果は件数が少なくても絞り込み欄と並べ替えを出す', () => {
+    const fewRoutes = [directRoute(ALL_TRAIN_TYPES.slice(0, 2)), transferRoute];
+    const few = buildRouteTrainTypes(fewRoutes).trainTypes;
+    mockAtoms(few, {
+      trainTypes: few,
+      routes: fewRoutes,
+      variables: source.variables,
+    });
+    const { getByTestId, getAllByTestId } = render(
+      <TrainTypeListModal
+        visible
+        line={toyoko}
+        onClose={jest.fn()}
+        onSelect={jest.fn()}
+      />
+    );
+
+    expect(getAllByTestId('trainTypeCard')).toHaveLength(3);
+    expect(getByTestId('trainTypeFilterSearchInput')).toBeTruthy();
+    expect(getByTestId('trainTypeFilterAxis-sort')).toBeTruthy();
+  });
+
+  it('経路の記録が今の種別一覧のものでなければ並べ替えを出さない', () => {
+    // 経路検索のあとで駅の種別一覧に書き換わった
+    mockAtoms(ALL_TRAIN_TYPES, source);
+    const { queryByTestId } = render(
+      <TrainTypeListModal
+        visible
+        line={toyoko}
+        onClose={jest.fn()}
+        onSelect={jest.fn()}
+      />
+    );
+
+    expect(queryByTestId('trainTypeFilterAxis-sort')).toBeNull();
+  });
+
+  it('並び順を選ぶと経路を取り直し、その順に種別を並べる', async () => {
+    mockFetchSortedRoutes.mockResolvedValue({
+      data: {
+        connectedRoutes: [
+          refetched(transferRoute),
+          refetched(expressRoute),
+          refetched(localRoute),
+        ],
+      },
+      error: undefined,
+    });
+    const { getByTestId, getAllByTestId } = setupSortable();
+
+    expect(cardTitles(getAllByTestId('trainTypeCard'))).toEqual([
+      '各駅停車',
+      '各駅停車',
+      '急行',
+      '急行',
+      '通勤特急',
+      '通勤特急',
+      '特急',
+      '特急',
+      '乗換',
+    ]);
+
+    await selectSort(getByTestId, 'ArrivalTime');
+
+    expect(mockFetchSortedRoutes).toHaveBeenCalledWith({
+      variables: { ...source.variables, sortBy: 'ArrivalTime' },
+    });
+    expect(cardTitles(getAllByTestId('trainTypeCard'))).toEqual([
+      '乗換',
+      '通勤特急',
+      '通勤特急',
+      '特急',
+      '特急',
+      '各駅停車',
+      '各駅停車',
+      '急行',
+      '急行',
+    ]);
+  });
+
+  it('おすすめ順に戻すと取り直さずに元の並びに戻る', async () => {
+    mockFetchSortedRoutes.mockResolvedValue({
+      data: {
+        connectedRoutes: [refetched(transferRoute), refetched(localRoute)],
+      },
+      error: undefined,
+    });
+    const { getByTestId, getAllByTestId } = setupSortable();
+
+    await selectSort(getByTestId, 'TransferCount');
+    await selectSort(getByTestId, 'Recommended');
+
+    expect(mockFetchSortedRoutes).toHaveBeenCalledTimes(1);
+    expect(cardTitles(getAllByTestId('trainTypeCard'))[0]).toBe('各駅停車');
+  });
+
+  it('取り直しに失敗したらおすすめ順のまま、並べ替えられなかったことを出す', async () => {
+    mockFetchSortedRoutes.mockResolvedValue({
+      data: undefined,
+      error: new Error('Unknown type ConnectedRouteSort'),
+    });
+    const { getByTestId, getByText, getAllByTestId } = setupSortable();
+
+    await selectSort(getByTestId, 'ArrivalTime');
+
+    expect(getByText('trainTypeSortError')).toBeTruthy();
+    expect(getByText('trainTypeSortRecommended')).toBeTruthy();
+    expect(cardTitles(getAllByTestId('trainTypeCard'))[0]).toBe('各駅停車');
+  });
+
+  it('先に選んだ並び順の結果が後から届いても、後で選んだ並び順のまま', async () => {
+    let resolveArrival: (value: unknown) => void = () => {};
+    mockFetchSortedRoutes
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveArrival = resolve;
+          })
+      )
+      .mockResolvedValueOnce({
+        data: {
+          connectedRoutes: [refetched(transferRoute), refetched(localRoute)],
+        },
+        error: undefined,
+      });
+    const { getByTestId, getAllByTestId } = setupSortable();
+
+    await selectSort(getByTestId, 'ArrivalTime');
+    await selectSort(getByTestId, 'TransferCount');
+    await act(async () => {
+      resolveArrival({
+        data: { connectedRoutes: [refetched(expressRoute)] },
+        error: undefined,
+      });
+    });
+
+    expect(getByTestId('trainTypeFilterAxis-sort')).toHaveTextContent(
+      /trainTypeSortTransferCount/
+    );
+    expect(cardTitles(getAllByTestId('trainTypeCard'))[0]).toBe('乗換');
+  });
+
+  it('閉じると並び順はおすすめ順に戻る', async () => {
+    mockFetchSortedRoutes.mockResolvedValue({
+      data: {
+        connectedRoutes: [refetched(transferRoute), refetched(localRoute)],
+      },
+      error: undefined,
+    });
+    const { getByTestId, getAllByTestId, rerender, props } = setupSortable();
+
+    await selectSort(getByTestId, 'TransferCount');
+    expect(cardTitles(getAllByTestId('trainTypeCard'))[0]).toBe('乗換');
+
+    rerender(<TrainTypeListModal visible={false} {...props} />);
+    rerender(<TrainTypeListModal visible {...props} />);
+
+    expect(cardTitles(getAllByTestId('trainTypeCard'))[0]).toBe('各駅停車');
   });
 });

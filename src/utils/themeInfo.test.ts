@@ -19,6 +19,7 @@ describe('getThemeInfo', () => {
     APP_THEME.JR_KYUSHU,
     APP_THEME.ODAKYU,
     APP_THEME.E231,
+    APP_THEME.E131,
   ];
 
   it.each(allThemes)('%sテーマに対して正しい構造を返す', (theme) => {
@@ -44,6 +45,7 @@ describe('getThemeInfo', () => {
     [APP_THEME.JR_KYUSHU, 'themeDescriptionJrKyushu'],
     [APP_THEME.ODAKYU, 'themeDescriptionOdakyu'],
     [APP_THEME.E231, 'themeDescriptionE231'],
+    [APP_THEME.E131, 'themeDescriptionE131'],
   ])('%sテーマは正しい翻訳キーを使用する', (theme, expectedKey) => {
     const themeInfo = getThemeInfo(theme);
 

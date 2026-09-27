@@ -220,6 +220,28 @@ export const pickLegStationsByGroupIds = (
 };
 
 /**
+ * 系統の駅リストから区間の駅を進行順に拾う。探索が選んだ弧(駅グループの並び)に沿って拾い、
+ * 選んだ種別がその駅グループを持たない(探索で使った系統と別の路線を走る)ときや、弧が
+ * 無いときは乗降駅から切り出す
+ * @param stations 区間の種別の駅リスト
+ * @param stationGroupIds 区間の駅グループ ID の並び
+ * @param from 区間の乗車駅
+ * @param to 区間の降車駅
+ * @returns 進行順の駅。拾えなければ空配列
+ */
+export const pickLegStations = (
+  stations: Station[],
+  stationGroupIds: number[] | null | undefined,
+  from: Station,
+  to: Station
+): Station[] => {
+  const alongPath = stationGroupIds?.length
+    ? pickLegStationsByGroupIds(stations, stationGroupIds)
+    : [];
+  return alongPath.length ? alongPath : sliceLegStations(stations, from, to);
+};
+
+/**
  * 区間ごとの駅をつないで 1 本の駅リストにする。乗換駅は前の区間の降車駅と次の区間の
  * 乗車駅の両方を残す(同じ駅 id なら 1 回だけ)。直通運転の系統でも路線が変わる駅は両方の路線の駅として 2 回並び、
  * Main 画面の各処理(dropEitherJunctionStation・種別変更の案内・直通先の表示など)は
@@ -278,6 +300,10 @@ export const buildTransferTrainType = (
     lines: uniqBy(lines, 'id') as unknown as TrainType['lines'],
   };
 };
+
+// 乗換のある経路を表す種別の id。実在の種別と重ならないよう、経路の順位から負の値を振る
+const transferRouteTrainTypeId = (routeIndex: number): number =>
+  -(routeIndex + 1);
 
 /**
  * 種別が乗換のある経路を表すものか。buildTransferTrainType は実在の種別と重ならない
@@ -339,7 +365,7 @@ export const buildRouteTrainTypes = (
       return;
     }
 
-    const id = -(index + 1);
+    const id = transferRouteTrainTypeId(index);
     const trainType = buildTransferTrainType(route, id);
     if (!trainType) return;
     trainTypes.push(trainType);
@@ -347,6 +373,78 @@ export const buildRouteTrainTypes = (
   });
 
   return { trainTypes, transferRouteById };
+};
+
+/** connectedRoutes の並び順(API の ConnectedRouteSort) */
+export type ConnectedRouteSort =
+  | 'Recommended'
+  | 'ArrivalTime'
+  | 'TransferCount';
+
+// 経路を見分けるキー。乗降駅の id は路線ごとに違うので、同じ駅グループを通る並行路線
+// (山手線と京浜東北線など)の経路も別のキーになる
+const connectedRouteKey = (route: ConnectedRoute): string =>
+  (route.legs ?? [])
+    .map((leg) =>
+      [
+        leg.fromStation?.id,
+        leg.toStation?.id,
+        (leg.stationGroupIds ?? []).join(','),
+        (leg.trainTypes ?? []).map((tt) => tt.groupId).join(','),
+      ].join(':')
+    )
+    .join('|');
+
+/**
+ * 並べ替えた経路の順に、buildRouteTrainTypes の種別の並びを求める。
+ * 種別そのものは組み立て直さない。乗換のある経路の種別の id は経路の順位から振るので、
+ * 並べ替えた結果で組み立て直すと、選択中の種別の id が別の経路を指してしまう
+ * @param trainTypes buildRouteTrainTypes(routes) の種別
+ * @param routes trainTypes を組み立てた経路(乗車に使える経路、おすすめ順)
+ * @param sortedRoutes 同じ条件で並び順だけを変えて取り直した経路
+ * @returns trainTypes の添字を並べ替えた順に並べたもの。sortedRoutes に見つからない
+ * 種別は、元の順のまま末尾に置く
+ */
+export const sortRouteTrainTypeIndices = (
+  trainTypes: TrainType[],
+  routes: ConnectedRoute[],
+  sortedRoutes: ConnectedRoute[]
+): number[] => {
+  const indicesByKey = new Map<string, number[]>();
+  routes.forEach((route, index) => {
+    const key = connectedRouteKey(route);
+    indicesByKey.set(key, [...(indicesByKey.get(key) ?? []), index]);
+  });
+
+  // buildRouteTrainTypes と同じく、乗換のない経路は種別の系統で、乗換のある経路は
+  // 経路ごとに 1 つ数える。同じ系統が複数の経路に出るときは先に来た経路の順位を使う
+  const rankByKey = new Map<string, number>();
+  for (const sortedRoute of sortedRoutes) {
+    const index = indicesByKey.get(connectedRouteKey(sortedRoute))?.shift();
+    if (index == null) continue;
+    const legs = routes[index].legs ?? [];
+    if (legs.length === 1) {
+      for (const trainType of legs[0].trainTypes ?? []) {
+        const key = `group:${trainType.groupId}`;
+        if (trainType.groupId == null || rankByKey.has(key)) continue;
+        rankByKey.set(key, rankByKey.size);
+      }
+      continue;
+    }
+    rankByKey.set(`route:${transferRouteTrainTypeId(index)}`, rankByKey.size);
+  }
+
+  const rankOf = (trainType: TrainType) =>
+    rankByKey.get(
+      isTransferRouteTrainType(trainType)
+        ? `route:${trainType.id}`
+        : `group:${trainType.groupId}`
+    ) ?? Number.POSITIVE_INFINITY;
+
+  return trainTypes
+    .map((trainType, index) => ({ index, rank: rankOf(trainType) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map(({ index }) => index);
 };
 
 /**

@@ -57,6 +57,12 @@ export const CommonDialogPresenter: React.FC = () => {
 
   return (
     <CommonDialogModal
+      // 待機していた要求は、前の要求の閉じるアニメーション完了と同じ更新で表示に切り替わる。
+      // 同じ CustomModal を使い回すと、アンマウントで破棄されたネイティブの Animated ノードに
+      // 開くアニメーションが走り、Android 実機では透明なまま背景だけがタップを受けて
+      // 後続のダイアログが見えないまま閉じられてしまう。要求ごとに作り直し、
+      // 最初の要求と同じく表示状態でマウントさせる。
+      key={request.id}
       visible={visible}
       emoji={
         request.options.emoji ??

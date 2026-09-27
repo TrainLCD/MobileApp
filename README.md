@@ -3,9 +3,7 @@
 ![Billboard](.github/images/billboard.png)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 ![Code quality](https://github.com/TrainLCD/MobileApp/workflows/Code%20quality/badge.svg)
@@ -295,6 +293,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/kokoa0429"><img src="https://avatars.githubusercontent.com/u/17563842?v=4?s=100" width="100px;" alt="yasuto masuda"/><br /><sub><b>yasuto masuda</b></sub></a><br /><a href="#userTesting-kokoa0429" title="User Testing">📓</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://kataba.me"><img src="https://avatars.githubusercontent.com/u/9818101?v=4?s=100" width="100px;" alt="Katabame Miaya"/><br /><sub><b>Katabame Miaya</b></sub></a><br /><a href="#data-katabame" title="Data">🔣</a> <a href="#userTesting-katabame" title="User Testing">📓</a> <a href="https://github.com/TrainLCD/MobileApp/commits?author=katabame" title="Documentation">📖</a></td>
       <td align="center" valign="top" width="14.28%"><a href="http://coderabbit.ai"><img src="https://avatars.githubusercontent.com/u/132028505?v=4?s=100" width="100px;" alt="CodeRabbit"/><br /><sub><b>CodeRabbit</b></sub></a><br /><a href="https://github.com/TrainLCD/MobileApp/pulls?q=is%3Apr+reviewed-by%3Acoderabbitai" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/tahodev/kurashi-skill"><img src="https://avatars.githubusercontent.com/u/85001874?v=4?s=100" width="100px;" alt="tahodev"/><br /><sub><b>tahodev</b></sub></a><br /><a href="https://github.com/TrainLCD/MobileApp/commits?author=tahodev" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

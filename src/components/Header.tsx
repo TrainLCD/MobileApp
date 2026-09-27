@@ -35,7 +35,8 @@ const Header = () => {
     case APP_THEME.TY:
       return <HeaderTY {...commonData} />;
     case APP_THEME.SAIKYO:
-      return <HeaderSaikyo {...commonData} />;
+    case APP_THEME.E131:
+      return <HeaderSaikyo {...commonData} isE131={theme === APP_THEME.E131} />;
     case APP_THEME.LED:
       return <HeaderLED {...commonData} />;
     case APP_THEME.JL:

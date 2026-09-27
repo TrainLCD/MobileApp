@@ -149,6 +149,71 @@ describe('usePresetCarouselData', () => {
     expect(result.current.carouselData[0].stations).toEqual(stations);
   });
 
+  it('乗換経路は全区間の系統を通常の系統と一緒に取得し、区間の駅をつないだ駅リストにする', async () => {
+    const plainRoute = createTrainTypeRoute('uuid-plain', 200, 300);
+    const transferRoute: SavedRoute = {
+      id: 'uuid-transfer',
+      name: '大江戸線・山手線',
+      lineId: 99301,
+      trainTypeId: 900,
+      hasTrainType: true,
+      notifyStationIds: [],
+      createdAt: new Date('2024-01-01'),
+      wantedDestinationId: 7,
+      originStationId: 1,
+      direction: 'INBOUND',
+      legs: [
+        {
+          lineGroupId: 900,
+          fromStationId: 101,
+          toStationId: 103,
+          stationGroupIds: [1, 2, 3],
+        },
+        {
+          lineGroupId: 300,
+          fromStationId: 202,
+          toStationId: 204,
+          stationGroupIds: [3, 7],
+        },
+      ],
+    };
+    const stationOf = (id: number, groupId: number, lineGroupId: number) =>
+      createStation(id, {
+        groupId,
+        trainType: { groupId: lineGroupId },
+      } as Parameters<typeof createStation>[1]);
+    // 一括取得は通過駅(駅グループ 2)を返さず、並びも保存時と逆のことがある
+    const lineGroupListStations = [
+      stationOf(204, 7, 300),
+      stationOf(202, 3, 300),
+      stationOf(201, 5, 300),
+      stationOf(103, 3, 900),
+      stationOf(101, 1, 900),
+    ];
+    mockQuery.mockResolvedValue({ data: { lineGroupListStations } });
+
+    (useSavedRoutes as jest.Mock).mockReturnValue({
+      routes: [plainRoute, transferRoute],
+      updateRoutes: mockUpdateRoutes,
+      isInitialized: true,
+    });
+
+    const { result } = renderHook(() => usePresetCarouselData());
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(mockQuery).toHaveBeenCalledWith({
+      query: 'GET_LINE_GROUP_LIST_STATIONS_PRESET',
+      variables: { lineGroupIds: [300, 900] },
+    });
+    expect(
+      result.current.carouselData[1].stations.map((station) => station.id)
+    ).toEqual([101, 103, 202, 204]);
+  });
+
   it('同一 routes key の場合は再取得しない', async () => {
     const route = createLineRoute('uuid-1', 100);
     const stations = [createStation(10, { line: { id: 100 } })];

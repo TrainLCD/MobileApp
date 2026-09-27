@@ -49,6 +49,13 @@ export type HeaderE235Props = CommonHeaderProps & {
 };
 
 /**
+ * HeaderSaikyo用Props（isE131を追加）
+ */
+export type HeaderSaikyoProps = CommonHeaderProps & {
+  isE131?: boolean;
+};
+
+/**
  * useHeaderAnimationの戻り値型
  */
 export type HeaderAnimationState = {

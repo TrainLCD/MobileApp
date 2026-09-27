@@ -82,6 +82,10 @@ JS (解決済みの表示用文字列)
 表示用の文字列へ変換してネイティブへ渡す。始発駅・終着駅の解決はアプリ内のプリセットカードと
 共通の `getPresetRouteEndpoints` を使う。
 
+乗換経路のプリセットは、保存した区間(`SavedRoute.legs`)ごとに系統の駅を拾い、つないだ駅リストから
+始発駅・終着駅を求めます(`buildSavedRouteStations`)。ウィジェットに出る路線名・路線色は、
+始発駅の路線(1 区間目の路線)のものです。
+
 同期される項目は `PresetsWidgetItem`(`src/utils/native/presetsWidget.ts`)で、
 `lineColor` と `lineSymbol` は解決できない場合に空文字を渡し、
 ネイティブ側でブランドカラー・路線名の先頭 1 文字へフォールバックさせる。

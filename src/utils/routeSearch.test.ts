@@ -15,6 +15,7 @@ import {
   pickInitialRouteTrainType,
   pickLegStationsByGroupIds,
   sliceLegStations,
+  sortRouteTrainTypeIndices,
 } from './routeSearch';
 
 // 文言そのものは翻訳ファイルの責務なので、
@@ -432,6 +433,84 @@ describe('乗換経路', () => {
       ]);
       expect(transferRouteById.get(-1)).toBe(transferRoute);
       expect(transferRouteById.get(-3)).toBe(otherTransferRoute);
+    });
+  });
+
+  describe('sortRouteTrainTypeIndices', () => {
+    const otherTransferRoute: ConnectedRoute = {
+      legs: [
+        {
+          trainTypes: [oedoLocal],
+          fromStation: hikarigaoka,
+          toStation: tochomae,
+        },
+        transferRoute.legs?.[1] ?? { trainTypes: [] },
+      ],
+    };
+    const routes = [transferRoute, directRoute, otherTransferRoute];
+    const { trainTypes } = buildRouteTrainTypes(routes);
+    // API から取り直した経路は別のオブジェクトになる
+    const refetched = (route: ConnectedRoute): ConnectedRoute =>
+      JSON.parse(JSON.stringify(route));
+    const idsInOrder = (order: number[]) =>
+      order.map((index) => trainTypes[index].id);
+
+    it('取り直した経路の順に種別を並べ、乗換経路の種別の id は変えない', () => {
+      const order = sortRouteTrainTypeIndices(trainTypes, routes, [
+        refetched(otherTransferRoute),
+        refetched(directRoute),
+        refetched(transferRoute),
+      ]);
+
+      expect(idsInOrder(order)).toEqual([
+        -3,
+        saikyoRapid.id,
+        saikyoLocal.id,
+        -1,
+      ]);
+    });
+
+    it('乗降駅が同じでも区間の駅グループが違う経路は取り違えない', () => {
+      const viaNerima: ConnectedRoute = {
+        legs: [
+          {
+            ...(transferRoute.legs?.[0] ?? { trainTypes: [] }),
+            stationGroupIds: [9930138, 2200106, 1130208],
+          },
+          transferRoute.legs?.[1] ?? { trainTypes: [] },
+        ],
+      };
+      const viaTochomae: ConnectedRoute = {
+        legs: [
+          {
+            ...(transferRoute.legs?.[0] ?? { trainTypes: [] }),
+            stationGroupIds: [9930138, 1130225, 1130208],
+          },
+          transferRoute.legs?.[1] ?? { trainTypes: [] },
+        ],
+      };
+      const loopRoutes = [viaNerima, viaTochomae];
+      const loopTrainTypes = buildRouteTrainTypes(loopRoutes).trainTypes;
+
+      const order = sortRouteTrainTypeIndices(loopTrainTypes, loopRoutes, [
+        refetched(viaTochomae),
+        refetched(viaNerima),
+      ]);
+
+      expect(order.map((index) => loopTrainTypes[index].id)).toEqual([-2, -1]);
+    });
+
+    it('取り直した結果に無い種別は元の順のまま末尾に置く', () => {
+      const order = sortRouteTrainTypeIndices(trainTypes, routes, [
+        refetched(otherTransferRoute),
+      ]);
+
+      expect(idsInOrder(order)).toEqual([
+        -3,
+        -1,
+        saikyoRapid.id,
+        saikyoLocal.id,
+      ]);
     });
   });
 });

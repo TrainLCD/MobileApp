@@ -8,9 +8,15 @@ import {
   GET_LINE_STATIONS,
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
-import type { SavedRoute } from '~/models/SavedRoute';
+import type { SavedRoute, SavedRouteLeg } from '~/models/SavedRoute';
+import { findNearestByCoord } from '~/utils/findNearestByCoord';
 import { isBusLine } from '~/utils/line';
+import { concatLegStations } from '~/utils/routeSearch';
 import { beginSelection, isLatestSelection } from '~/utils/selectionGeneration';
+import {
+  buildSavedTransferTrainType,
+  pickSavedRouteLegStations,
+} from '~/utils/transferRoutePreset';
 import lineStateAtom from '../store/atoms/line';
 import { locationAtom } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
@@ -58,6 +64,11 @@ export type UseLineSelectionResult = {
 
 export const useLineSelection = (): UseLineSelectionResult => {
   const [isSelectBoundModalOpen, setIsSelectBoundModalOpen] = useState(false);
+  // 乗換経路のプリセットで、区間の駅の取得に失敗したとき。区間ごとの取得は並行に投げるので、
+  // 最後に投げた取得以外の失敗は useLazyGraphQLQuery の error に残らない
+  const [transferPresetError, setTransferPresetError] = useState<
+    Error | undefined
+  >(undefined);
   const setStationState = useSetAtom(stationState);
   const setLineState = useSetAtom(lineStateAtom);
   const setNavigationState = useSetAtom(navigationState);
@@ -99,6 +110,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
       if (!lineId || !lineStationId) return;
 
       const generation = beginSelection();
+      setTransferPresetError(undefined);
 
       setIsSelectBoundModalOpen(true);
 
@@ -390,10 +402,91 @@ export const useLineSelection = (): UseLineSelectionResult => {
     ]
   );
 
+  // 乗換経路のプリセットを開く。経路検索で選んだときと同じく、区間ごとの系統の駅を
+  // つないだ 1 本の駅リストと、経路を表す種別で行先選択を開く
+  const openModalByTransferLegs = useCallback(
+    async (legs: SavedRouteLeg[], wantedDestinationId: number | null) => {
+      const generation = beginSelection();
+
+      const lineGroupIds = [...new Set(legs.map((leg) => leg.lineGroupId))];
+      const results = await Promise.all(
+        lineGroupIds.map((lineGroupId) =>
+          fetchStationsByLineGroupId({ variables: { lineGroupId } })
+        )
+      );
+      if (!isLatestSelection(generation)) return;
+
+      const error = results.find((result) => result.error)?.error;
+      if (error) {
+        setTransferPresetError(error);
+        return;
+      }
+      const stationsByLineGroupId = new Map(
+        lineGroupIds.map((lineGroupId, index) => [
+          lineGroupId,
+          results[index].data?.lineGroupStations ?? [],
+        ])
+      );
+      const legStations = pickSavedRouteLegStations(legs, (lineGroupId) =>
+        stationsByLineGroupId.get(lineGroupId)
+      );
+      const trainType =
+        legStations && buildSavedTransferTrainType(legs, legStations);
+      if (!legStations || !trainType) {
+        // 保存後にダイヤ改正などで区間の駅が変わり、経路を組み直せなくなった
+        setTransferPresetError(
+          new Error('Failed to rebuild the saved transfer route')
+        );
+        return;
+      }
+      const stations = concatLegStations(legStations);
+
+      // 乗車駅は通常のプリセットと同じく経路の最寄り駅にする
+      const station =
+        findNearestByCoord(latitude, longitude, stations) ?? stations[0];
+      // 乗換駅は前後の区間の駅として 2 回並ぶので、行き先は後ろから探す
+      const wantedDestination =
+        wantedDestinationId != null
+          ? ([...stations]
+              .reverse()
+              .find((s) => s.groupId === wantedDestinationId) ?? null)
+          : null;
+
+      setStationState((prev) => ({
+        ...prev,
+        selectedDirection: null,
+        pendingStation: station,
+        pendingStations: stations,
+        wantedDestination,
+      }));
+      setLineState((prev) => ({
+        ...prev,
+        pendingLine: station?.line ?? null,
+      }));
+      setNavigationState((prev) => ({
+        ...prev,
+        pendingTrainType: trainType,
+        fetchedTrainTypes: [trainType],
+      }));
+    },
+    [
+      fetchStationsByLineGroupId,
+      latitude,
+      longitude,
+      setStationState,
+      setLineState,
+      setNavigationState,
+    ]
+  );
+
   const handlePresetPress = useCallback(
     async (route: SavedRoute) => {
       setIsSelectBoundModalOpen(true);
-      if (route.hasTrainType) {
+      // 前に開いた乗換経路のプリセットの取得エラーを、別のプリセットに持ち越さない
+      setTransferPresetError(undefined);
+      if (route.hasTrainType && route.legs) {
+        await openModalByTransferLegs(route.legs, route.wantedDestinationId);
+      } else if (route.hasTrainType) {
         await openModalByTrainTypeId(
           route.trainTypeId,
           route.wantedDestinationId
@@ -402,7 +495,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
         await openModalByLineId(route.lineId, route.wantedDestinationId);
       }
     },
-    [openModalByLineId, openModalByTrainTypeId]
+    [openModalByLineId, openModalByTrainTypeId, openModalByTransferLegs]
   );
 
   const handleCloseSelectBoundModal = useCallback(() => {
@@ -420,6 +513,7 @@ export const useLineSelection = (): UseLineSelectionResult => {
     fetchStationsByLineGroupIdLoading,
     fetchTrainTypesError,
     fetchStationsByLineIdError,
-    fetchStationsByLineGroupIdError,
+    fetchStationsByLineGroupIdError:
+      fetchStationsByLineGroupIdError ?? transferPresetError,
   };
 };

@@ -67,7 +67,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    - 作業中の変更（staged / unstaged / 直近の未 push コミット）がある場合、**新しいブランチを切ってそこに退避**してから続行する。
    - 何の変更も無い場合は「PR 対象の差分が無い」と報告して中断する。
 
-   **ブランチ名の推論**（`feature/<slug>` 形式が既定。CLAUDE.md とメモのルール: プレフィックスは `feature/` であり `feat/` ではない）:
+   **ブランチ名の推論**（`feature/<slug>` 形式が既定。CLAUDE.md のルール: プレフィックスは `feature/` であり `feat/` ではない）:
 
    | プレフィックス | 採用条件 |
    | ---- | ---- |
@@ -92,7 +92,7 @@ Hot fix の文脈（`head` が `hotfix/` で始まる、または件名に `Hotf
    ```
 
    - **`git status` の目視確認は省略しない**。`git add -A` や `git add .` で一括投入すると、意図しない未追跡ファイルがそのままコミットに入る。不要なファイルは `.gitignore` に追加してから確定する。
-   - コミット前に `npx biome check --unsafe --fix ./src` を実行（メモのルール）。
+   - コード変更を含むコミットの前に、`npm run lint` と関連する単体テストを通す（CLAUDE.md の Commit and push gate）。テストの範囲を絞れないときは `npm test` を実行する。整形の自動修正が要るときは `npm run format` を使う。
    - push は新規ブランチなので安全だが、承認は上の実行前ゲートで取る（ここで二重に取り直さない）。
 
    **`base != head` でも、`head` が origin に追いついていなければ手順 2 へ進まない。** ブランチ切り出しが要らないケースでも、`head` が未 push なら手順 2 の `git fetch origin <base> <head>` は `origin/<head>` を解決できずに失敗し、`origin/<head>` が古ければローカルにしか無いコミットが比較から丸ごと漏れる。次で判定する:

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Keyboard,
   ScrollView,
   StyleSheet,
@@ -13,6 +14,7 @@ import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
+import type { ConnectedRouteSort } from '~/utils/routeSearch';
 import {
   EMPTY_TRAIN_TYPE_FILTER,
   isTrainTypeFilterActive,
@@ -34,7 +36,16 @@ const CLOSED_BOTTOM_INSET = 12;
 /** 展開パネルを背景から一段浮かせる面の色（電光掲示板風テーマ用） */
 const LED_SURFACE_COLOR = '#333';
 
-type AxisKey = 'typeNames' | 'lines';
+type AxisKey = 'sort' | 'typeNames' | 'lines';
+
+const SORT_OPTIONS: {
+  value: ConnectedRouteSort;
+  labelKey: string;
+}[] = [
+  { value: 'Recommended', labelKey: 'trainTypeSortRecommended' },
+  { value: 'ArrivalTime', labelKey: 'trainTypeSortArrivalTime' },
+  { value: 'TransferCount', labelKey: 'trainTypeSortTransferCount' },
+];
 
 const styles = StyleSheet.create({
   root: {
@@ -120,15 +131,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
   },
+  sortErrorText: {
+    marginTop: 8,
+    fontSize: 12,
+  },
 });
+
+/** 並べ替え。経路検索の結果を並べているときだけ渡される */
+export type TrainTypeSortControl = {
+  value: ConnectedRouteSort;
+  loading: boolean;
+  /** 並べ替えられず、おすすめ順に戻したとき */
+  error: boolean;
+  onChange: (value: ConnectedRouteSort) => void;
+};
 
 type Props = {
   options: TrainTypeFilterOptions;
   filter: TrainTypeFilterState;
   onChange: (next: TrainTypeFilterState) => void;
+  sort?: TrainTypeSortControl;
 };
 
-export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
+export const TrainTypeFilterBar = ({
+  options,
+  filter,
+  onChange,
+  sort,
+}: Props) => {
   const colors = useAppColors();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const [openAxis, setOpenAxis] = useState<AxisKey | null>(null);
@@ -179,6 +209,15 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
 
   const filterActive = isTrainTypeFilterActive(filter);
 
+  const sortOptions = useMemo<TrainTypeFilterOption<ConnectedRouteSort>[]>(
+    () =>
+      SORT_OPTIONS.map(({ value, labelKey }) => ({
+        value,
+        label: translate(labelKey),
+      })),
+    []
+  );
+
   const handleQueryChange = useCallback(
     (query: string) => {
       queryChangedByInput.current = true;
@@ -220,7 +259,7 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
   );
 
   const handleResetAxis = useCallback(
-    (axis: AxisKey) =>
+    (axis: Exclude<AxisKey, 'sort'>) =>
       onChange(
         axis === 'typeNames'
           ? { ...filter, typeNames: [] }
@@ -229,8 +268,66 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
     [filter, onChange]
   );
 
+  // 並び順は 1 つしか選べないので、選んだらパネルを閉じて並び替えた一覧を見せる
+  const handleSelectSort = useCallback(
+    (value: ConnectedRouteSort) => {
+      setOpenAxis(null);
+      sort?.onChange(value);
+    },
+    [sort]
+  );
+
+  const renderSortChip = (control: TrainTypeSortControl) => {
+    const open = openAxis === 'sort';
+    // おすすめ順は既定の並びなので、選択中の塗りにしない
+    const on = control.value !== 'Recommended';
+    const color = on ? palette.chipTextOn : palette.chipTextOff;
+    const label =
+      sortOptions.find((option) => option.value === control.value)?.label ?? '';
+
+    return (
+      <TouchableOpacity
+        activeOpacity={1}
+        accessibilityRole="button"
+        accessibilityLabel={`${translate('trainTypeSortHeading')}: ${label}`}
+        accessibilityState={{
+          expanded: open,
+          selected: on,
+          busy: control.loading,
+        }}
+        testID="trainTypeFilterAxis-sort"
+        onPress={() => handleToggleAxis('sort')}
+        style={[
+          styles.chip,
+          {
+            borderColor: palette.chipBorder,
+            backgroundColor: on ? palette.chipFill : palette.surface,
+          },
+        ]}
+      >
+        <Ionicons name="swap-vertical" size={12} color={color} />
+        <Typography numberOfLines={1} style={[styles.chipText, { color }]}>
+          {label}
+        </Typography>
+        {control.loading ? (
+          <ActivityIndicator
+            size="small"
+            color={color}
+            testID="trainTypeSortLoading"
+          />
+        ) : (
+          <Ionicons
+            name={open ? 'chevron-up' : 'chevron-down'}
+            size={12}
+            color={color}
+          />
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   const renderAxisChip = (
-    axis: AxisKey,
+    axis: Exclude<AxisKey, 'sort'>,
     label: string,
     selectedCount: number
   ) => {
@@ -282,14 +379,15 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
   const renderValueChip = <T extends string | number>(
     option: TrainTypeFilterOption<T>,
     selected: boolean,
-    onPress: (value: T) => void
+    onPress: (value: T) => void,
+    testIDPrefix = 'trainTypeFilterValue'
   ) => (
     <TouchableOpacity
       key={String(option.value)}
       activeOpacity={1}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      testID={`trainTypeFilterValue-${option.value}`}
+      testID={`${testIDPrefix}-${option.value}`}
       onPress={() => onPress(option.value)}
       style={[
         styles.valueChip,
@@ -314,9 +412,43 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
     </TouchableOpacity>
   );
 
+  const renderSortPanel = (control: TrainTypeSortControl) => (
+    <View
+      style={[
+        styles.panel,
+        {
+          backgroundColor: palette.panelBackground,
+          borderTopColor: palette.panelBorder,
+        },
+      ]}
+    >
+      <View style={styles.panelHead}>
+        <Typography
+          style={[styles.panelHeadText, { color: palette.panelHeadText }]}
+        >
+          {translate('trainTypeSortHeading')}
+        </Typography>
+      </View>
+      <View style={styles.panelChips}>
+        {sortOptions.map((option) =>
+          renderValueChip(
+            option,
+            control.value === option.value,
+            handleSelectSort,
+            'trainTypeSortValue'
+          )
+        )}
+      </View>
+    </View>
+  );
+
   const renderPanel = () => {
     if (!openAxis) {
       return null;
+    }
+
+    if (openAxis === 'sort') {
+      return sort ? renderSortPanel(sort) : null;
     }
 
     const isTypeAxis = openAxis === 'typeNames';
@@ -414,6 +546,7 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
         showsHorizontalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {sort ? renderSortChip(sort) : null}
         {options.typeNames.length > 1
           ? renderAxisChip(
               'typeNames',
@@ -451,6 +584,17 @@ export const TrainTypeFilterBar = ({ options, filter, onChange }: Props) => {
           </TouchableOpacity>
         ) : null}
       </ScrollView>
+
+      {sort?.error ? (
+        <Typography
+          style={[
+            styles.sortErrorText,
+            { color: isLEDTheme ? '#fff' : colors.secondaryText },
+          ]}
+        >
+          {translate('trainTypeSortError')}
+        </Typography>
+      ) : null}
 
       {renderPanel()}
     </View>

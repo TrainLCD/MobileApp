@@ -207,7 +207,7 @@ describe('useThreshold', () => {
     const { getByTestId } = render(<TestComponent />);
     const result = JSON.parse(getByTestId('thresholds').props.children);
 
-    // 距離/2 > 1000 なので、最大閾値を返す
+    // 距離/2 > APPROACHING_MAX_THRESHOLD なので、最大閾値を返す
     expect(result.approachingThreshold).toBe(APPROACHING_MAX_THRESHOLD);
     expect(result.arrivedThreshold).toBe(ARRIVED_MAX_THRESHOLD);
   });
@@ -235,8 +235,9 @@ describe('useThreshold', () => {
     expect(result.arrivedThreshold).toBe(ARRIVED_MAX_THRESHOLD);
   });
 
-  it('駅間距離がarrivedThreshold上限付近でapproachingThresholdが最大値の場合', () => {
-    // 約2500mの距離を設定 -> 両方とも最大値
+  it('駅間距離がarrivedThreshold上限付近の場合、approachingThresholdは距離/2を返す', () => {
+    // 約2500mの距離を設定 -> approachingThreshold ≈ 1250 (上限2000mの手前),
+    // arrivedThreshold ≈ 625 -> ARRIVED_MAX_THRESHOLD(200) でクランプ
     mockUseCurrentStation.mockReturnValue({
       id: 1,
       groupId: 1,
@@ -253,7 +254,8 @@ describe('useThreshold', () => {
     const { getByTestId } = render(<TestComponent />);
     const result = JSON.parse(getByTestId('thresholds').props.children);
 
-    expect(result.approachingThreshold).toBe(APPROACHING_MAX_THRESHOLD);
+    expect(result.approachingThreshold).toBeGreaterThan(1200);
+    expect(result.approachingThreshold).toBeLessThan(1300);
     expect(result.arrivedThreshold).toBe(ARRIVED_MAX_THRESHOLD);
   });
 
@@ -282,5 +284,49 @@ describe('useThreshold', () => {
     expect(result.approachingThreshold).toBeGreaterThanOrEqual(
       APPROACHING_MIN_THRESHOLD
     );
+  });
+
+  it('長い駅間では到着の1分以上前に「まもなく」となるよう接近閾値を2000mまで広げる', () => {
+    // 室蘭本線 鷲別→幌別(約7.7km)。130km/h・減速度0.69m/s²ではブレーキ開始点が
+    // 駅の約945m手前にあり、上限1000mでは減速開始とほぼ同時に「まもなく」となっていた
+    mockUseCurrentStation.mockReturnValue({
+      id: 1110421,
+      groupId: 1110421,
+      latitude: 42.35953,
+      longitude: 141.042759,
+    } as ReturnType<typeof useCurrentStation>);
+    mockUseNextStation.mockReturnValue({
+      id: 1110422,
+      groupId: 1110422,
+      latitude: 42.409782,
+      longitude: 141.107293,
+    } as ReturnType<typeof useNextStation>);
+
+    const { getByTestId } = render(<TestComponent />);
+    const result = JSON.parse(getByTestId('thresholds').props.children);
+
+    expect(result.approachingThreshold).toBe(2000);
+  });
+
+  it('駅間距離が2〜4kmの場合、接近閾値は1000mで頭打ちにせず距離/2を返す', () => {
+    // 約3kmの駅間 -> approachingThreshold ≈ 1500
+    mockUseCurrentStation.mockReturnValue({
+      id: 1,
+      groupId: 1,
+      latitude: 35.681236,
+      longitude: 139.767125,
+    } as ReturnType<typeof useCurrentStation>);
+    mockUseNextStation.mockReturnValue({
+      id: 2,
+      groupId: 2,
+      latitude: 35.708236, // 約3km北
+      longitude: 139.767125,
+    } as ReturnType<typeof useNextStation>);
+
+    const { getByTestId } = render(<TestComponent />);
+    const result = JSON.parse(getByTestId('thresholds').props.children);
+
+    expect(result.approachingThreshold).toBeGreaterThan(1400);
+    expect(result.approachingThreshold).toBeLessThan(1600);
   });
 });

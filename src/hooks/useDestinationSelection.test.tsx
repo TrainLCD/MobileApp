@@ -8,7 +8,11 @@ import {
   GET_LINE_GROUP_STATIONS,
 } from '~/lib/graphql/queries';
 import { pendingLineAtom } from '~/store/atoms/line';
-import { pendingTrainTypeAtom } from '~/store/atoms/navigation';
+import {
+  fetchedTrainTypesAtom,
+  pendingTrainTypeAtom,
+} from '~/store/atoms/navigation';
+import { connectedRoutesSourceAtom } from '~/store/atoms/routeSearch';
 import { pendingStationsAtom, stationAtom } from '~/store/atoms/station';
 import { createLine, createStation } from '~/utils/test/factories';
 import { useDestinationSelection } from './useDestinationSelection';
@@ -219,6 +223,24 @@ describe('useDestinationSelection', () => {
 
     expect(store.get(pendingStationsAtom)).toEqual([]);
     expect(hookRef.current?.modalError).toBe(failure);
+  });
+
+  // 種別一覧は、記録した種別が今の fetchedTrainTypes と同じ参照のときだけ並べ替えを出す
+  it('並べ替えに使う経路と検索条件を、組み立てた種別と同じ参照で記録する', async () => {
+    const { store, hookRef } = setup(hikarigaoka);
+
+    await act(async () => {
+      await hookRef.current?.handleDestinationSelected(shibuya);
+    });
+
+    const source = store.get(connectedRoutesSourceAtom);
+    expect(source?.trainTypes).toBe(store.get(fetchedTrainTypesAtom));
+    expect(source?.routes).toEqual([transferRoute]);
+    expect(source?.variables).toEqual({
+      fromStationGroupId: hikarigaoka.groupId,
+      toStationGroupId: shibuya.groupId,
+      viaLineId: saikyo.id,
+    });
   });
 
   // 乗車駅が後の区間の路線も持つとき、路線の並び順で選ぶと後の区間の路線になりうる

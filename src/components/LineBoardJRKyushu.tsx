@@ -30,10 +30,15 @@ import {
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
+import {
+  getLineColorBarSegments,
+  getLineDotCenterX,
+} from './LineBoard/shared/utils/lineColorBarSegments';
 import NumberingIcon from './NumberingIcon';
 
 type Props = {
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   stations: Station[];
   hasTerminus: boolean;
 };
@@ -66,6 +71,7 @@ interface StationNameCellProps {
   stations: Station[];
   line: Line;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
 }
@@ -181,6 +187,7 @@ const NumberingIconView: React.FC<{ station: Station }> = ({ station }) => {
 const BarGradients: React.FC<{
   line: Line;
   lineColors: (string | null | undefined)[];
+  arrivingLineColor?: string | null;
   index: number;
   barLeft: number;
   barWidth: number;
@@ -192,6 +199,7 @@ const BarGradients: React.FC<{
 }> = ({
   line,
   lineColors,
+  arrivingLineColor,
   index,
   barLeft,
   barWidth,
@@ -227,24 +235,33 @@ const BarGradients: React.FC<{
       />
     ) : null}
 
-    {showFutureBar ? (
-      <LinearGradient
-        colors={
-          line.color
-            ? [
-                `${lineColors[index] || line.color}ff`,
-                `${lineColors[index] || line.color}bb`,
-              ]
-            : ['#000000ff', '#000000bb']
-        }
-        style={[
-          styles.bar,
-          isSplitPosition
+    {showFutureBar
+      ? getLineColorBarSegments({
+          ...(isSplitPosition
             ? secondHalfBarProps
-            : { left: barLeft, width: barWidth },
-        ]}
-      />
-    ) : null}
+            : { left: barLeft, width: barWidth }),
+          // 到着中の駅では灰色の部分がドットまでを表すので、その先は出発する区間の色で塗る
+          splitX: isSplitPosition
+            ? secondHalfBarProps.left
+            : getLineDotCenterX(false),
+          lineColors,
+          arrivingLineColor,
+          index,
+        }).map((segment) => (
+          <LinearGradient
+            key={segment.left}
+            colors={
+              line.color
+                ? [
+                    `${segment.color || line.color}ff`,
+                    `${segment.color || line.color}bb`,
+                  ]
+                : ['#000000ff', '#000000bb']
+            }
+            style={[styles.bar, { left: segment.left, width: segment.width }]}
+          />
+        ))
+      : null}
   </>
 );
 
@@ -257,6 +274,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   stations,
   line,
   lineColors,
+  arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
 }: StationNameCellProps) => {
@@ -340,6 +358,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
         <BarGradients
           line={line}
           lineColors={lineColors}
+          arrivingLineColor={arrivingLineColor}
           index={index}
           barLeft={barLeft}
           barWidth={barWidth}
@@ -405,6 +424,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   stations,
   hasTerminus,
   lineColors,
+  arrivingLineColor,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
@@ -447,6 +467,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
             index={i}
             line={line}
             lineColors={lineColors}
+            arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
             estimatedMinutes={
               s.id != null ? estimatedMinutesByStationId.get(s.id) : null
@@ -459,6 +480,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       hasTerminus,
       line,
       lineColors,
+      arrivingLineColor,
       stations,
       totalStations,
       estimatedMinutesByStationId,

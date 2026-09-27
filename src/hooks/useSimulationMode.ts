@@ -37,6 +37,26 @@ import { useLoopLine } from './useLoopLine';
 // step のインターバルが1秒間隔のため、ティック数（≒秒数）としてそのまま扱う。
 const TERMINAL_DWELL_TICKS = 60;
 
+// locationAtom は書くたびに新しいオブジェクトへ置き換わり、座標を購読する走行画面の
+// フックが一斉に再評価される。終点での停車や経路の取得待ちの間は毎ティック同じ座標・
+// speed=0 を書くことになるため、座標・速度・方位・精度が前回と同じなら書かない。
+// 実機の iOS も停車中は変位ゲート(distanceInterval)で測位が届かないので、それに揃う。
+const setSimulatedLocation = (next: Location.LocationObject): void => {
+  const prev = store.get(locationAtom)?.coords;
+  const { coords } = next;
+  if (
+    prev &&
+    prev.latitude === coords.latitude &&
+    prev.longitude === coords.longitude &&
+    prev.speed === coords.speed &&
+    prev.heading === coords.heading &&
+    prev.accuracy === coords.accuracy
+  ) {
+    return;
+  }
+  store.set(locationAtom, next);
+};
+
 export const useSimulationMode = (): void => {
   const currentStation = useAtomValue(stationAtom);
   const rawStations = useAtomValue(stationsAtom);
@@ -237,6 +257,11 @@ export const useSimulationMode = (): void => {
   useEffect(() => {
     const segments = trainRouteSegments;
     if (!segments || segments.length === 0) {
+      // 駅リストが変わって新しい trainRoute がまだ無い(取得中・取得失敗)ときに
+      // 旧経路のプロファイル/ジオメトリを残すと、新しい駅リストの位置で旧経路を
+      // 走ってしまう。消しておけば、タイマーは新しいプロファイルが揃うまで停車して待つ
+      speedProfilesRef.current = [];
+      segmentGeometryCacheRef.current = [];
       return;
     }
 
@@ -388,7 +413,7 @@ export const useSimulationMode = (): void => {
         segmentProgressDistanceRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         if (firstStation?.latitude != null && firstStation?.longitude != null) {
-          store.set(locationAtom, {
+          setSimulatedLocation({
             timestamp: Date.now(),
             coords: {
               latitude: firstStation.latitude,
@@ -451,7 +476,7 @@ export const useSimulationMode = (): void => {
         }
       }
 
-      store.set(locationAtom, {
+      setSimulatedLocation({
         timestamp: Date.now(),
         coords: {
           latitude: targetLatitude,
@@ -478,7 +503,7 @@ export const useSimulationMode = (): void => {
     const targetStation = maybeRevsersedStations[targetIndex];
 
     if (targetStation?.latitude != null && targetStation?.longitude != null) {
-      store.set(locationAtom, {
+      setSimulatedLocation({
         timestamp: Date.now(),
         coords: {
           accuracy: null,
@@ -508,10 +533,15 @@ export const useSimulationMode = (): void => {
 
       // 方面逆転中は新方向の速度プロファイルが再生成されるまで終点で停車して待つ。
       // 旧方向のプロファイル/ジオメトリで step すると位置が飛ぶため、ここで待機する。
-      if (reversingRef.current) {
+      // trainRoute の取得中や取得失敗で速度プロファイルが1区間も無い間も同じく待つ。
+      // 次の停車駅が見つからないので終点に着いたと判定され、1分後に方面が反転してしまう
+      if (
+        reversingRef.current ||
+        !speedProfilesRef.current.some((seg) => seg.length > 0)
+      ) {
         const prev = store.get(locationAtom);
         if (prev) {
-          store.set(locationAtom, {
+          setSimulatedLocation({
             timestamp: Date.now(),
             coords: {
               ...prev.coords,
@@ -526,7 +556,7 @@ export const useSimulationMode = (): void => {
       if (dwellPendingRef.current) {
         const prev = store.get(locationAtom);
         if (prev) {
-          store.set(locationAtom, {
+          setSimulatedLocation({
             timestamp: Date.now(),
             coords: {
               ...prev.coords,
@@ -549,7 +579,7 @@ export const useSimulationMode = (): void => {
               firstStation?.latitude != null &&
               firstStation?.longitude != null
             ) {
-              store.set(locationAtom, {
+              setSimulatedLocation({
                 timestamp: Date.now(),
                 coords: {
                   ...prev.coords,
