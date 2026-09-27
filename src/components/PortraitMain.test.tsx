@@ -1,7 +1,7 @@
-import { fireEvent, render, within } from '@testing-library/react-native';
+import { act, fireEvent, render, within } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { getLuminance } from 'polished';
-import { StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 import { type Line, type Station, StopCondition } from '~/@types/graphql';
 import { DARK_APP_COLORS, LIGHT_APP_COLORS } from '~/constants/colorScheme';
 import {
@@ -163,11 +163,14 @@ const renderWithStations = (
   mockedUseCurrentStation.mockReturnValue(currentStation);
   mockedUseTransferTargetStation.mockReturnValue(transferStation);
 
-  return render(
-    <Provider store={store}>
-      <PortraitMain onPress={onPress} onTransferPress={onTransferPress} />
-    </Provider>
-  );
+  return {
+    ...render(
+      <Provider store={store}>
+        <PortraitMain onPress={onPress} onTransferPress={onTransferPress} />
+      </Provider>
+    ),
+    store,
+  };
 };
 
 describe('PortraitMain', () => {
@@ -771,6 +774,75 @@ describe('PortraitMain', () => {
     );
 
     expect(queryByTestId('portrait-card-meta')).toBeNull();
+  });
+
+  describe('停車駅リストの自動スクロール', () => {
+    // ScrollView のモックは scrollTo をプロトタイプに持つ
+    const scrollTo = ScrollView.prototype.scrollTo as jest.Mock;
+    const stations = [
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      buildStation(2, '田町', StopCondition.All, 'JY-27'),
+      buildStation(3, '浜松町', StopCondition.All, 'JY-28'),
+    ];
+    const layoutRow = (
+      getByTestId: ReturnType<typeof renderWithStations>['getByTestId'],
+      id: number,
+      y: number
+    ) =>
+      fireEvent(getByTestId(`stop-row-${id}`), 'layout', {
+        nativeEvent: { layout: { y } },
+      });
+
+    it('ピンの行のレイアウトが確定したら、その行を1行分の余白を残して上端へ寄せる', () => {
+      const { getByTestId } = renderWithStations(stations, {
+        currentStation: stations[1],
+      });
+
+      // ピンの無い行のレイアウトではスクロールしない
+      layoutRow(getByTestId, 1, 0);
+      expect(scrollTo).not.toHaveBeenCalled();
+
+      layoutRow(getByTestId, 2, 52);
+      expect(scrollTo).toHaveBeenCalledTimes(1);
+      expect(scrollTo).toHaveBeenCalledWith({ y: 12, animated: true });
+
+      // 同じ位置のまま再レイアウトされても動かし直さない
+      layoutRow(getByTestId, 2, 52);
+      expect(scrollTo).toHaveBeenCalledTimes(1);
+    });
+
+    it('発車でピンが次の行へ移ると、測ってある位置へスクロールし直す', () => {
+      const { getByTestId, store } = renderWithStations(stations, {
+        currentStation: stations[1],
+      });
+      layoutRow(getByTestId, 1, 0);
+      layoutRow(getByTestId, 2, 52);
+      layoutRow(getByTestId, 3, 104);
+      scrollTo.mockClear();
+
+      act(() => {
+        store.set(arrivedAtom, false);
+      });
+
+      expect(scrollTo).toHaveBeenCalledTimes(1);
+      expect(scrollTo).toHaveBeenCalledWith({ y: 64, animated: true });
+    });
+  });
+
+  it('リストに関わらない更新では停車駅の行を描き直さない', () => {
+    const stations = [
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+      buildStation(2, '田町', StopCondition.All, 'JY-27'),
+    ];
+    const { store } = renderWithStations(stations);
+    // 行の描画ごとに乗換路線のフックが呼ばれる
+    mockedUseTransferLinesFromStation.mockClear();
+
+    act(() => {
+      store.set(bottomStateAtom, 'TYPE_CHANGE');
+    });
+
+    expect(mockedUseTransferLinesFromStation).not.toHaveBeenCalled();
   });
 
   describe('各駅のETA', () => {
