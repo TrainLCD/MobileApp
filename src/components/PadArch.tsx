@@ -6,6 +6,7 @@ import type { Line, LineNested, Station } from '~/@types/graphql';
 import { useLandscapeWindowDimensions } from '~/hooks';
 import { isBusLine } from '~/utils/line';
 import {
+  HEADER_E235_TABLET_HEIGHT,
   MANY_LINES_THRESHOLD,
   MARK_SHAPE,
   NUMBERING_ICON_SIZE,
@@ -51,6 +52,40 @@ type ColorSegment = {
 const STROKE_WIDTH = 128;
 const DOT_RADIUS = 34; // circle width(68) / 2
 const NAME_TOP_OFFSET = 42;
+
+// PadArch は HeaderE235 の下に置かれるが、座標はウィンドウの高さを基準に割り付けている。
+// 最も下に来るのは非到着時のシェブロンで、ヘッダー下端から 4H/7 + 84 + 54
+// (60×45 を -20deg 回転させた外接矩形の下半分) まで伸びる。これがウィンドウ内に
+// 収まるのは H >= 789 のときなので、ホームインジケーター等の分を足した 810 未満の
+// 端末では、810 の画面を想定して割り付けた全体をヘッダー下の高さに合わせて縮小する。
+const MIN_LAYOUT_WINDOW_HEIGHT = 810;
+
+// 前半で 0→0.5、後半で 0.5→1 へそれぞれ inOut(ease) で進む。interpolate で
+// 0.95→0.8→0.95 に振り分けると、往路と復路を別々の timing で動かしたときと同じ
+// 動きになる。終端が 1 なので、ネイティブのループが 0 に戻しても値は連続する。
+const easeInOut = Easing.inOut(Easing.ease);
+const bgScaleEasing = (t: number): number =>
+  t < 0.5 ? easeInOut(t * 2) / 2 : 0.5 + easeInOut(t * 2 - 1) / 2;
+
+export const getPadArchLayout = (
+  windowWidth: number,
+  windowHeight: number
+): { width: number; height: number; scale: number } => {
+  if (
+    windowHeight >= MIN_LAYOUT_WINDOW_HEIGHT ||
+    windowHeight <= HEADER_E235_TABLET_HEIGHT
+  ) {
+    return { width: windowWidth, height: windowHeight, scale: 1 };
+  }
+  const scale =
+    (windowHeight - HEADER_E235_TABLET_HEIGHT) /
+    (MIN_LAYOUT_WINDOW_HEIGHT - HEADER_E235_TABLET_HEIGHT);
+  return {
+    width: windowWidth / scale,
+    height: MIN_LAYOUT_WINDOW_HEIGHT,
+    scale,
+  };
+};
 
 /** SVG 楕円弧の中心パラメータを算出する (SVG Spec F.6.5) */
 const ARC_EPS = 1e-6;
@@ -190,6 +225,12 @@ const computeColorSegments = (
 };
 
 const styles = StyleSheet.create({
+  scaleRoot: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    transformOrigin: 'top left',
+  },
   stationNames: {
     position: 'absolute',
   },
@@ -245,6 +286,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'absolute',
     bottom: 0,
+  },
+  fillContent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   chevron: {
     position: 'absolute',
@@ -434,84 +480,128 @@ const PadArch: React.FC<Props> = ({
   isEn,
   estimatedMinutesByStationId,
 }: Props) => {
-  const { width: windowWidth, height: windowHeight } =
+  const { width: rawWindowWidth, height: rawWindowHeight } =
     useLandscapeWindowDimensions();
+  // 以降の windowWidth / windowHeight は縮小前の割り付け上の寸法
+  const {
+    width: windowWidth,
+    height: windowHeight,
+    scale: layoutScale,
+  } = getPadArchLayout(rawWindowWidth, rawWindowHeight);
 
   // Animated.Value（RN Animated API — Reanimated 4.2 の mapper バグ回避）
-  const bgScale = useRef(new Animated.Value(0.95)).current;
+  // Animated.loop は中身が単一の timing のときだけネイティブ側でループする。
+  // Animated.sequence を挟むと周回ごとの再開が JS スレッド待ちになり、
+  // JS が詰まっている間はシェブロンが終端の位置で止まるので、各ループは
+  // 0→1 のタイムライン1本を interpolate で振り分ける形にしている。
+  const bgScaleTimeline = useRef(new Animated.Value(0)).current;
   const chevronTimeline = useRef(new Animated.Value(0)).current;
-  const fillHeight = useRef(new Animated.Value(0)).current;
+  const fillProgress = useRef(new Animated.Value(0)).current;
 
   // エフェクト: シェブロンと背景のアニメーション制御
   useEffect(() => {
     if (arrived) {
       chevronTimeline.stopAnimation();
       chevronTimeline.setValue(0);
+      bgScaleTimeline.setValue(0);
       Animated.loop(
-        Animated.sequence([
-          Animated.timing(bgScale, {
-            toValue: 0.8,
-            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(bgScale, {
-            toValue: 0.95,
-            duration: YAMANOTE_CHEVRON_SCALE_DURATION,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ])
+        Animated.timing(bgScaleTimeline, {
+          toValue: 1,
+          duration: YAMANOTE_CHEVRON_SCALE_DURATION * 2,
+          easing: bgScaleEasing,
+          useNativeDriver: true,
+        })
       ).start();
     } else {
-      bgScale.stopAnimation();
-      bgScale.setValue(0.95);
+      bgScaleTimeline.stopAnimation();
+      bgScaleTimeline.setValue(0);
+      chevronTimeline.setValue(0);
       Animated.loop(
-        Animated.sequence([
-          Animated.timing(chevronTimeline, {
-            toValue: 1,
-            duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2,
-            easing: Easing.linear,
-            useNativeDriver: true,
-          }),
-          Animated.timing(chevronTimeline, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
-        ])
+        Animated.timing(chevronTimeline, {
+          toValue: 1,
+          duration: YAMANOTE_CHEVRON_MOVE_DURATION * 2,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        })
       ).start();
     }
     return () => {
-      bgScale.stopAnimation();
+      bgScaleTimeline.stopAnimation();
       chevronTimeline.stopAnimation();
     };
-  }, [arrived, bgScale, chevronTimeline]);
+  }, [arrived, bgScaleTimeline, chevronTimeline]);
 
   // エフェクト: 塗りつぶしアニメーション（arrived 切替時にもリセットしたいため依存に含める）
   // biome-ignore lint/correctness/useExhaustiveDependencies: arrived は値変化時にアニメーションを再開するため必要
   useEffect(() => {
-    fillHeight.setValue(0);
-    Animated.timing(fillHeight, {
-      toValue: windowHeight,
+    fillProgress.setValue(0);
+    Animated.timing(fillProgress, {
+      toValue: 1,
       duration: YAMANOTE_LINE_BOARD_FILL_DURATION,
       easing: Easing.out(Easing.ease),
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start();
     return () => {
-      fillHeight.stopAnimation();
+      fillProgress.stopAnimation();
     };
-  }, [arrived, fillHeight, windowHeight]);
+  }, [arrived, fillProgress, windowHeight]);
+
+  // 到着中の背景: 0.95 → 0.8 → 0.95 を1周とする
+  const bgScale = useMemo(
+    () =>
+      bgScaleTimeline.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0.95, 0.8, 0.95],
+      }),
+    [bgScaleTimeline]
+  );
 
   // シェブロン用の補間スタイル（非到着時のみ使用）
-  const chevronOpacity = chevronTimeline.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 1, 0.2],
-  });
-  const chevronTranslateY = chevronTimeline.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, -24, -24],
-  });
+  const chevronOpacity = useMemo(
+    () =>
+      chevronTimeline.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [1, 1, 0.2],
+      }),
+    [chevronTimeline]
+  );
+  const chevronTranslateY = useMemo(
+    () =>
+      chevronTimeline.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: [0, -24, -24],
+      }),
+    [chevronTimeline]
+  );
+
+  // 塗りつぶし: height はネイティブドライバーで動かせないため、クリップ用の
+  // View を下へずらして見える範囲を下端から広げ、中身は逆向きにずらして
+  // アークと同じ位置に留める
+  const fillTransforms = useMemo(
+    () => ({
+      clip: {
+        transform: [
+          {
+            translateY: fillProgress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [windowHeight, 0],
+            }),
+          },
+        ],
+      },
+      content: {
+        transform: [
+          {
+            translateY: fillProgress.interpolate({
+              inputRange: [0, 1],
+              outputRange: [-windowHeight, 0],
+            }),
+          },
+        ],
+      },
+    }),
+    [fillProgress, windowHeight]
+  );
 
   const paths = useMemo(
     () => ({
@@ -565,10 +655,15 @@ const PadArch: React.FC<Props> = ({
     const chevronY = (4 * windowHeight) / 7 + 84;
     const chevronArrivedY = (4 * windowHeight) / 7;
     return {
+      scaleRoot: {
+        width: windowWidth,
+        height: windowHeight,
+        transform: [{ scale: layoutScale }],
+      },
       arcContainer: { width: windowWidth, height: windowHeight },
       stationNameContainer: { width: windowWidth / 4 },
       stationName: { width: windowWidth / 4 },
-      clipViewStyle: { width: windowWidth },
+      clipViewStyle: { width: windowWidth, height: windowHeight },
       chevron: {
         right:
           windowWidth -
@@ -584,7 +679,7 @@ const PadArch: React.FC<Props> = ({
           36,
       },
     };
-  }, [windowWidth, windowHeight, arc]);
+  }, [windowWidth, windowHeight, layoutScale, arc]);
 
   const getDotLeft = useCallback(
     (i: number): number => {
@@ -699,7 +794,7 @@ const PadArch: React.FC<Props> = ({
   );
 
   return (
-    <>
+    <View style={[styles.scaleRoot, dynamicStyles.scaleRoot]}>
       <Transfers
         transferLines={transferLines}
         station={station}
@@ -721,13 +816,57 @@ const PadArch: React.FC<Props> = ({
           style={[
             styles.clipViewStyle,
             dynamicStyles.clipViewStyle,
-            { height: fillHeight },
+            fillTransforms.clip,
           ]}
         >
-          {segmentLayouts.map(
-            ({ seg, containerStyle, svgStyle, darkColor }) => (
+          <Animated.View
+            style={[
+              styles.fillContent,
+              dynamicStyles.clipViewStyle,
+              fillTransforms.content,
+            ]}
+          >
+            {segmentLayouts.map(
+              ({ seg, containerStyle, svgStyle, darkColor }) => (
+                <View
+                  key={`dk-${seg.color}-${seg.yStart}`}
+                  style={containerStyle}
+                >
+                  <Svg
+                    style={svgStyle}
+                    width={windowWidth}
+                    height={windowHeight}
+                    fill="transparent"
+                  >
+                    <Path
+                      d={paths.shadow}
+                      stroke={darkColor}
+                      strokeWidth={strokeWidth}
+                    />
+                  </Svg>
+                </View>
+              )
+            )}
+          </Animated.View>
+        </Animated.View>
+        {/* 主色層: 区間ごとにViewクリッピングで色分け */}
+        <Animated.View
+          style={[
+            styles.clipViewStyle,
+            dynamicStyles.clipViewStyle,
+            fillTransforms.clip,
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.fillContent,
+              dynamicStyles.clipViewStyle,
+              fillTransforms.content,
+            ]}
+          >
+            {segmentLayouts.map(({ seg, containerStyle, svgStyle }) => (
               <View
-                key={`dk-${seg.color}-${seg.yStart}`}
+                key={`mn-${seg.color}-${seg.yStart}`}
                 style={containerStyle}
               >
                 <Svg
@@ -737,39 +876,14 @@ const PadArch: React.FC<Props> = ({
                   fill="transparent"
                 >
                   <Path
-                    d={paths.shadow}
-                    stroke={darkColor}
+                    d={paths.main}
+                    stroke={seg.color}
                     strokeWidth={strokeWidth}
                   />
                 </Svg>
               </View>
-            )
-          )}
-        </Animated.View>
-        {/* 主色層: 区間ごとにViewクリッピングで色分け */}
-        <Animated.View
-          style={[
-            styles.clipViewStyle,
-            dynamicStyles.clipViewStyle,
-            { height: fillHeight },
-          ]}
-        >
-          {segmentLayouts.map(({ seg, containerStyle, svgStyle }) => (
-            <View key={`mn-${seg.color}-${seg.yStart}`} style={containerStyle}>
-              <Svg
-                style={svgStyle}
-                width={windowWidth}
-                height={windowHeight}
-                fill="transparent"
-              >
-                <Path
-                  d={paths.main}
-                  stroke={seg.color}
-                  strokeWidth={strokeWidth}
-                />
-              </Svg>
-            </View>
-          ))}
+            ))}
+          </Animated.View>
         </Animated.View>
       </View>
       <Animated.View
@@ -889,7 +1003,7 @@ const PadArch: React.FC<Props> = ({
           );
         })}
       </View>
-    </>
+    </View>
   );
 };
 
