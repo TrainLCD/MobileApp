@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { type Line, StopCondition, type TrainType } from '~/@types/graphql';
@@ -1504,7 +1504,10 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
     selectedBound,
   ]);
 
-  const BarsComponent = useCallback(() => {
+  // コンポーネント関数(useCallback)を<Bars />として描画すると依存が変わるたびに
+  // 別のコンポーネント型と判定されてバーのサブツリーが再マウントされるため、
+  // useMemoで要素を生成して型を安定させる
+  const bars = useMemo(() => {
     if (
       !currentLine ||
       !displayCurrentLine ||
@@ -1601,7 +1604,7 @@ const TypeChangeNotify: React.FC<TypeChangeNotifyProps> = ({
             {currentTypeFinalStation.nameRoman}
           </Typography>
         ) : null}
-        <BarsComponent />
+        {bars}
       </View>
     </SafeAreaView>
   );

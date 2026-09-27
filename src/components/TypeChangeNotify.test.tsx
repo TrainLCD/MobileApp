@@ -348,6 +348,40 @@ describe('TypeChangeNotify', () => {
     expect(odakyuTexts).toHaveLength(0);
   });
 
+  it('バーの描画に使う値が変わってもバーを再マウントしない', () => {
+    const { useCurrentTrainType, useNextTrainType } = require('~/hooks');
+    const nextLine = {
+      id: 2,
+      nameShort: '次の線',
+      nameRoman: 'Next Line',
+      color: '#0000FF',
+      company: { id: 2, nameShort: '次', nameEnglishShort: 'Next' },
+    };
+    useCurrentTrainType.mockReturnValue({
+      typeId: 1,
+      name: '急行',
+      nameRoman: 'Express',
+      color: '#FF0000',
+    });
+    useNextTrainType.mockReturnValue({
+      typeId: 2,
+      name: '各停',
+      nameRoman: 'Local',
+      color: '#0000FF',
+      line: nextLine,
+    });
+
+    const { getByText, rerender } = render(
+      <TypeChangeNotify getBarGradient={(color) => [color, color]} />
+    );
+    const before = getByText('急行');
+
+    // getBarGradientの参照が変わると要素の依存が変わる。型が変わるとここで再マウントされる
+    rerender(<TypeChangeNotify getBarGradient={(color) => [color, color]} />);
+
+    expect(getByText('急行')).toBe(before);
+  });
+
   describe('種別が変わる駅の特定', () => {
     const jrEast = { id: 1, nameShort: 'JR東日本' };
     const shonanShinjukuLine = {
