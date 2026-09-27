@@ -37,6 +37,26 @@ import { useLoopLine } from './useLoopLine';
 // step のインターバルが1秒間隔のため、ティック数（≒秒数）としてそのまま扱う。
 const TERMINAL_DWELL_TICKS = 60;
 
+// locationAtom は書くたびに新しいオブジェクトへ置き換わり、座標を購読する走行画面の
+// フックが一斉に再評価される。終点での停車や経路の取得待ちの間は毎ティック同じ座標・
+// speed=0 を書くことになるため、座標・速度・方位・精度が前回と同じなら書かない。
+// 実機の iOS も停車中は変位ゲート(distanceInterval)で測位が届かないので、それに揃う。
+const setSimulatedLocation = (next: Location.LocationObject): void => {
+  const prev = store.get(locationAtom)?.coords;
+  const { coords } = next;
+  if (
+    prev &&
+    prev.latitude === coords.latitude &&
+    prev.longitude === coords.longitude &&
+    prev.speed === coords.speed &&
+    prev.heading === coords.heading &&
+    prev.accuracy === coords.accuracy
+  ) {
+    return;
+  }
+  store.set(locationAtom, next);
+};
+
 export const useSimulationMode = (): void => {
   const currentStation = useAtomValue(stationAtom);
   const rawStations = useAtomValue(stationsAtom);
@@ -393,7 +413,7 @@ export const useSimulationMode = (): void => {
         segmentProgressDistanceRef.current = 0;
         const firstStation = maybeRevsersedStations[0];
         if (firstStation?.latitude != null && firstStation?.longitude != null) {
-          store.set(locationAtom, {
+          setSimulatedLocation({
             timestamp: Date.now(),
             coords: {
               latitude: firstStation.latitude,
@@ -456,7 +476,7 @@ export const useSimulationMode = (): void => {
         }
       }
 
-      store.set(locationAtom, {
+      setSimulatedLocation({
         timestamp: Date.now(),
         coords: {
           latitude: targetLatitude,
@@ -483,7 +503,7 @@ export const useSimulationMode = (): void => {
     const targetStation = maybeRevsersedStations[targetIndex];
 
     if (targetStation?.latitude != null && targetStation?.longitude != null) {
-      store.set(locationAtom, {
+      setSimulatedLocation({
         timestamp: Date.now(),
         coords: {
           accuracy: null,
@@ -521,7 +541,7 @@ export const useSimulationMode = (): void => {
       ) {
         const prev = store.get(locationAtom);
         if (prev) {
-          store.set(locationAtom, {
+          setSimulatedLocation({
             timestamp: Date.now(),
             coords: {
               ...prev.coords,
@@ -536,7 +556,7 @@ export const useSimulationMode = (): void => {
       if (dwellPendingRef.current) {
         const prev = store.get(locationAtom);
         if (prev) {
-          store.set(locationAtom, {
+          setSimulatedLocation({
             timestamp: Date.now(),
             coords: {
               ...prev.coords,
@@ -559,7 +579,7 @@ export const useSimulationMode = (): void => {
               firstStation?.latitude != null &&
               firstStation?.longitude != null
             ) {
-              store.set(locationAtom, {
+              setSimulatedLocation({
                 timestamp: Date.now(),
                 coords: {
                   ...prev.coords,

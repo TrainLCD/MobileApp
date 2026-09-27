@@ -19,6 +19,7 @@ import {
 } from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
+import { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import * as trainSpeedModule from '~/utils/trainSpeed';
 
 jest.mock('jotai', () => ({
@@ -137,6 +138,16 @@ const mockLocationObject = (lat: number, lon: number) => ({
   timestamp: 100000,
 });
 
+// store は実物と同じく、書いた値を次の get で読み返せるようにする。
+// useSimulationMode は locationAtom の現在値と比べて変わらない位置を書かないため、
+// 固定値を返す get では「書いた後の状態」と比べられず、書き込みの有無を検証できない。
+const storeValues = new Map<unknown, unknown>();
+
+/** テスト開始時点で store に入っている値を設定するヘルパー */
+const seedStore = (atom: unknown, value: unknown) => {
+  storeValues.set(atom, value);
+};
+
 /** useAtomValueの戻り値を設定するヘルパー */
 const setupAtomMocks = (
   stationStateValue: {
@@ -209,6 +220,16 @@ describe('useSimulationMode', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(100000));
+
+    storeValues.clear();
+    (store.get as jest.Mock).mockImplementation(
+      (atom: unknown) => storeValues.get(atom) ?? null
+    );
+    (store.set as jest.Mock).mockImplementation(
+      (atom: unknown, value: unknown) => {
+        storeValues.set(atom, value);
+      }
+    );
 
     // 各テストは非ループ線を前提とする。ループ線テストで上書きした実装が
     // 後続テストへ漏れないよう毎回明示的にリセットする。
@@ -308,9 +329,7 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.691, 139.777)
-      );
+      seedStore(locationAtom, mockLocationObject(35.691, 139.777));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -346,9 +365,7 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.7, 139.786)
-      );
+      seedStore(locationAtom, mockLocationObject(35.7, 139.786));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -380,9 +397,7 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.681, 139.767)
-      );
+      seedStore(locationAtom, mockLocationObject(35.681, 139.767));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -415,9 +430,7 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.699, 139.786)
-      );
+      seedStore(locationAtom, mockLocationObject(35.699, 139.786));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -454,9 +467,7 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.7, 139.786)
-      );
+      seedStore(locationAtom, mockLocationObject(35.7, 139.786));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -492,9 +503,7 @@ describe('useSimulationMode', () => {
 
       mockTrainRoute([...stations].reverse());
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.691, 139.777)
-      );
+      seedStore(locationAtom, mockLocationObject(35.691, 139.777));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -526,9 +535,7 @@ describe('useSimulationMode', () => {
 
       mockTrainRoute([...stations].reverse());
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.681, 139.767)
-      );
+      seedStore(locationAtom, mockLocationObject(35.681, 139.767));
 
       const { unmount } = renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -571,9 +578,7 @@ describe('useSimulationMode', () => {
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue([2000]);
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.681, 139.767)
-      );
+      seedStore(locationAtom, mockLocationObject(35.681, 139.767));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -609,15 +614,14 @@ describe('useSimulationMode', () => {
       mockTrainRoute(stations);
 
       // dwell処理内でstore.getが呼ばれる
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.681, 139.767)
-      );
+      seedStore(locationAtom, mockLocationObject(35.681, 139.767));
 
       // 終点の駅の速度プロファイルは空（次の停車駅が無い）なので
       // interval tick 1: speeds=[], i(0)>=0 → dwellPending=true
       // interval tick 2以降: dwell handler → nextSegment=-1 → 終点で停車し
       //   TERMINAL_DWELL_TICKS に達するまで方面逆転せず待機し続ける。
       // 待機中は始発駅へワープせず、終点座標で speed=0 のまま留まる。
+      // 位置が変わらない間は locationAtom を書かない。
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
       });
@@ -625,19 +629,25 @@ describe('useSimulationMode', () => {
       // 6秒分進める（待機継続中）
       jest.advanceTimersByTime(6000);
 
-      // 終点座標で speed=0 の位置更新が繰り返しセットされることを確認
       const locationSetCalls = (store.set as jest.Mock).mock.calls
         .filter((call) => call[0] === locationAtom)
         .map((call) => call[1]);
 
+      // 書いた位置はすべて終点座標で、始発駅へワープしない
+      expect(locationSetCalls.length).toBeGreaterThan(0);
+      for (const loc of locationSetCalls) {
+        expect(loc.coords.latitude).toBe(stations[1].latitude);
+        expect(loc.coords.longitude).toBe(stations[1].longitude);
+      }
+      // speed=0 を書くのは停車に入った1回だけで、同じ位置を毎秒書き直さない
       const dwellCalls = locationSetCalls.filter(
-        (loc) =>
-          loc?.coords?.latitude === stations[1].latitude &&
-          loc?.coords?.longitude === stations[1].longitude &&
-          loc?.coords?.speed === 0
+        (loc) => loc?.coords?.speed === 0
       );
-      // 終点停車中の複数回の位置更新
-      expect(dwellCalls.length).toBeGreaterThanOrEqual(2);
+      expect(dwellCalls).toHaveLength(1);
+      expect(
+        (store.get(locationAtom) as ReturnType<typeof mockLocationObject>)
+          .coords.speed
+      ).toBe(0);
 
       // 待機時間(60ティック)未満では方面逆転(selectedDirection書き込み)は起きない
       const directionSetCalls = (store.set as jest.Mock).mock.calls.filter(
@@ -668,13 +678,10 @@ describe('useSimulationMode', () => {
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue([2000]);
 
-      // resetFirstSpeechAtom は非ゼロの数値、それ以外(locationAtom)は位置オブジェクトを返す。
+      // resetFirstSpeechAtom は非ゼロの数値を入れておく。
       // 非ゼロ(3)にすることで「現在値 + 1」を読んでいることを検証できる（固定値1だと通ってしまう）。
-      (store.get as jest.Mock).mockImplementation((atom) =>
-        atom?.toString?.() === 'resetFirstSpeechAtom'
-          ? 3
-          : mockLocationObject(35.691, 139.777)
-      );
+      seedStore(resetFirstSpeechAtom, 3);
+      seedStore(locationAtom, mockLocationObject(35.691, 139.777));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -742,9 +749,7 @@ describe('useSimulationMode', () => {
       });
       jest.spyOn(console, 'error').mockImplementation(() => {});
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.681, 139.767)
-      );
+      seedStore(locationAtom, mockLocationObject(35.681, 139.767));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -789,9 +794,7 @@ describe('useSimulationMode', () => {
       jest
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue(new Array(30).fill(10));
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.681, 139.767)
-      );
+      seedStore(locationAtom, mockLocationObject(35.681, 139.767));
 
       const { rerender } = renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -823,9 +826,7 @@ describe('useSimulationMode', () => {
         loading: true,
         error: undefined,
       });
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(34.702, 135.495)
-      );
+      seedStore(locationAtom, mockLocationObject(34.702, 135.495));
       (store.set as jest.Mock).mockClear();
 
       rerender({});
@@ -867,9 +868,7 @@ describe('useSimulationMode', () => {
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue([2000]);
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.691, 139.777)
-      );
+      seedStore(locationAtom, mockLocationObject(35.691, 139.777));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -914,9 +913,7 @@ describe('useSimulationMode', () => {
 
       mockTrainRoute([...stations].reverse());
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.683, 139.769)
-      );
+      seedStore(locationAtom, mockLocationObject(35.683, 139.769));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -950,9 +947,7 @@ describe('useSimulationMode', () => {
         { autoModeEnabled: true }
       );
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.701, 139.787)
-      );
+      seedStore(locationAtom, mockLocationObject(35.701, 139.787));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -1029,9 +1024,7 @@ describe('useSimulationMode', () => {
         'generateTrainSpeedProfile'
       );
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.701, 139.787)
-      );
+      seedStore(locationAtom, mockLocationObject(35.701, 139.787));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -1075,9 +1068,7 @@ describe('useSimulationMode', () => {
 
       mockTrainRoute(stations);
 
-      (store.get as jest.Mock).mockReturnValue(
-        mockLocationObject(35.681, 139.767)
-      );
+      seedStore(locationAtom, mockLocationObject(35.681, 139.767));
 
       rerender({});
 
@@ -1416,7 +1407,7 @@ describe('useSimulationMode', () => {
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue([2000]);
 
-      (store.get as jest.Mock).mockReturnValue(mockLocationObject(35.1, 139.1));
+      seedStore(locationAtom, mockLocationObject(35.1, 139.1));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
@@ -1475,7 +1466,7 @@ describe('useSimulationMode', () => {
         .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
         .mockReturnValue([2000]);
 
-      (store.get as jest.Mock).mockReturnValue(mockLocationObject(35.1, 139.1));
+      seedStore(locationAtom, mockLocationObject(35.1, 139.1));
 
       renderHook(() => useSimulationMode(), {
         wrapper: ({ children }) => <Provider>{children}</Provider>,
