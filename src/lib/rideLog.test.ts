@@ -11,6 +11,7 @@ jest.mock('expo-sqlite', () => {
 
 import {
   appendRideStop,
+  deleteAllRideLogs,
   insertRideSession,
   type RideStopRecord,
   updateRideStopDeparture,
@@ -114,6 +115,13 @@ describe('rideLog', () => {
     expect(mockDb.runAsync).toHaveBeenCalledWith(
       'UPDATE ride_stops SET departedAt = ? WHERE sessionId = ? AND seq = ?',
       [3_000, 's1', 2]
+    );
+  });
+
+  it('全件削除はセッションを消し、駅の行は外部キーで一緒に消す', async () => {
+    await deleteAllRideLogs();
+    expect(mockDb.execAsync).toHaveBeenLastCalledWith(
+      'DELETE FROM ride_sessions;'
     );
   });
 });

@@ -45,6 +45,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_languages: 'personalize_languages',
   personalize_notifications: 'personalize_notifications',
   personalize_battery: 'personalize_battery',
+  personalize_ride_log: 'personalize_ride_log',
   personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
   about_app_faq: 'about_app_faq',
@@ -64,7 +65,7 @@ type SettingsSectionData = {
 };
 
 type PersonalizeSection = {
-  id: 'display' | 'notifications' | 'device' | 'other';
+  id: 'display' | 'notifications' | 'activity' | 'device' | 'other';
   titleKey: string;
   items: SettingsSectionData[];
 };
@@ -448,6 +449,19 @@ const AppSettingsScreen: React.FC = () => {
                   onPress: () => navigation.navigate('TTSSettings' as never),
                 },
               ]),
+        ],
+      },
+      // 振り返り(#5751)。#7134 で決めた見出しの分け方に合わせ、通知とアナウンスとデバイスのあいだに置く
+      {
+        id: 'activity',
+        titleKey: 'settingsSectionActivity',
+        items: [
+          {
+            id: SETTING_ITEM_ID_MAP.personalize_ride_log,
+            title: translate('rideLogSettings'),
+            color: '#FF2D55',
+            onPress: () => navigation.navigate('RideLogSettings' as never),
+          },
         ],
       },
       {

@@ -250,6 +250,8 @@ describe('AppSettingsScreen', () => {
       'settingsSectionNotifications',
       'notificationSettings',
       'autoAnnounce',
+      'settingsSectionActivity',
+      'rideLogSettings',
       'settingsSectionDevice',
       'batterySettings',
       'aboutApp',
