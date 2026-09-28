@@ -1,6 +1,7 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -103,6 +104,7 @@ const styles = StyleSheet.create({
   pointBullet: { fontSize: 12, lineHeight: 18 },
   pointText: { flex: 1, fontSize: 12, lineHeight: 18 },
   enableButton: { alignSelf: 'center', minWidth: 160, marginTop: 8 },
+  loading: { marginTop: 24 },
 });
 
 const formatDistanceKm = (meters: number): string =>
@@ -173,6 +175,26 @@ const bucketLabel = (
         ? translate('rideReviewMonthLabel', { month })
         : '';
     }
+  }
+};
+
+// 読み上げ用のラベル。グラフの目盛りと違い、どの棒にも日付(年は月)を付ける
+const bucketAccessibilityLabel = (
+  period: RidePeriod,
+  bucket: RideStatsBucket,
+  index: number
+): string => {
+  switch (period) {
+    case 'week': {
+      const weekday = translate('rideReviewWeekdays').split(',')[index] ?? '';
+      return `${formatMonthDay(bucket.start)} ${weekday}`;
+    }
+    case 'month':
+      return formatMonthDay(bucket.start);
+    case 'year':
+      return translate('rideReviewMonthLabel', {
+        month: bucket.start.getMonth() + 1,
+      });
   }
 };
 
@@ -287,7 +309,7 @@ const DistanceChart = ({
         {translate(CHART_TITLE_KEYS[period])}
       </Typography>
       <View style={styles.chart} testID="ride-review-chart">
-        {buckets.map((bucket) => {
+        {buckets.map((bucket, index) => {
           const height =
             max > 0 && bucket.distanceMeters > 0
               ? Math.max(4, (bucket.distanceMeters / max) * CHART_HEIGHT)
@@ -295,6 +317,11 @@ const DistanceChart = ({
           return (
             <View
               key={bucket.start.getTime()}
+              accessible
+              accessibilityLabel={translate('rideReviewChartBarLabel', {
+                label: bucketAccessibilityLabel(period, bucket, index),
+                distance: formatDistanceKm(bucket.distanceMeters),
+              })}
               style={[
                 styles.chartBar,
                 {
@@ -461,7 +488,17 @@ const Report = () => {
           {translate('rideReviewLoadFailed')}
         </Typography>
       ) : null}
-      {/* 期間を切り替えた直後は前の期間の結果を出さない */}
+      {/* 初回の読み込み中と、期間を切り替えた直後(前の期間の結果しか無い間)は
+          読み込み中の表示を出す */}
+      {state.status === 'loading' ||
+      (state.status === 'ready' && state.period !== period) ? (
+        <ActivityIndicator
+          style={styles.loading}
+          color={colors.secondaryText}
+          accessibilityLabel={translate('rideReviewLoading')}
+          testID="ride-review-loading"
+        />
+      ) : null}
       {state.status === 'ready' && state.period === period ? (
         <>
           <Typography

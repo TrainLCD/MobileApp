@@ -17,6 +17,10 @@ jest.mock('jotai', () => ({
   atom: jest.fn((initialValue) => initialValue),
 }));
 
+jest.mock('~/translation', () => ({
+  translate: (key: string) => key,
+}));
+
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 34, left: 0 }),
 }));
@@ -68,6 +72,12 @@ describe('FooterTabBar', () => {
     expect(home.props.accessibilityState.selected).toBe(false);
     expect(review.props.accessibilityState.selected).toBe(true);
     expect(settings.props.accessibilityState.selected).toBe(false);
+  });
+
+  it('振り返りタブにはスクリーンリーダー向けの名前を付ける', () => {
+    const { getAllByRole } = render(<FooterTabBar active="home" />);
+    const [, , review] = getAllByRole('button');
+    expect(review.props.accessibilityLabel).toBe('rideReview');
   });
 
   it('各タブを押すと対応する画面へ replace で遷移する', () => {

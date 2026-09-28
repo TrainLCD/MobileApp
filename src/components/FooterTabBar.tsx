@@ -24,6 +24,7 @@ import { LED_THEME_BG_COLOR } from '~/constants';
 import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { translate } from '~/translation';
 import { LIQUID_GLASS_AVAILABLE } from '~/utils/liquidGlass';
 import NewFeatureDot, { NEW_FEATURE_DOT_SIZE_SMALL } from './NewFeatureDot';
 
@@ -148,6 +149,8 @@ const styles = StyleSheet.create({
 
 type TabButtonProps = {
   active: boolean;
+  // アイコンだけのボタンなので、スクリーンリーダー向けの名前を渡す
+  accessibilityLabel?: string;
   onPress: () => void;
   onLayout?: (event: LayoutChangeEvent) => void;
   buttonRef?: React.Ref<View>;
@@ -156,6 +159,7 @@ type TabButtonProps = {
 
 const TabButton: React.FC<TabButtonProps> = ({
   active,
+  accessibilityLabel,
   onPress,
   onLayout,
   buttonRef,
@@ -180,6 +184,7 @@ const TabButton: React.FC<TabButtonProps> = ({
       ref={buttonRef}
       style={[styles.button, pressAnimatedStyle]}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected: active }}
       onPress={onPress}
       onPressIn={handlePressIn}
@@ -370,6 +375,7 @@ const FooterTabBar: React.FC<Props> = ({
 
       <TabButton
         active={active === 'review'}
+        accessibilityLabel={translate('rideReview')}
         onPress={() => {
           replaceTo('RideReview');
         }}

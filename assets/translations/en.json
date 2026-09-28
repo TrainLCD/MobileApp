@@ -400,6 +400,8 @@
   "rideReviewEnable": "Turn on",
   "rideReviewIntroNote": "You can turn this off at any time from Ride Recap in Settings. Turning it off does not delete saved records.",
   "rideReviewLoadFailed": "Failed to load records.",
+  "rideReviewChartBarLabel": "%{label}, %{distance} km",
+  "rideReviewLoading": "Loading",
   "destinationAgentEntryTitle": "Don't know the station name?",
   "destinationAgentEntrySubtitle": "Ask AI where to go",
   "destinationAgentTitle": "Ask AI for destinations",
