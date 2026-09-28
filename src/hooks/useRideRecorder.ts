@@ -5,6 +5,7 @@ import type { Station } from '~/@types/graphql';
 import {
   appendRideStop,
   insertRideSession,
+  type RideSessionRecord,
   type RideStopKind,
   type RideStopRecord,
   updateRideStopDeparture,
@@ -22,15 +23,22 @@ import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
 
+type RideSessionMeta = Omit<RideSessionRecord, 'id' | 'startedAt' | 'endedAt'>;
+
 type SessionState = {
-  // DB に書いたセッションの ID。乗車が確定するまでは null
-  id: string | null;
   // Main 画面を開いた時刻。出発駅の発車を検出できなかったときの開始時刻に使う
   mountedAt: number;
   // オートモードを一度でも有効にしたら、この画面を抜けるまで記録しない
   tainted: boolean;
   lastStation: Station | null;
   stops: RideStopRecord[];
+  // 乗車が確定した時点の路線・種別・方面。確定するまでは null
+  meta: RideSessionMeta | null;
+  // DB に書けたセッションの ID と、そのうち書けた駅の数
+  persistedId: string | null;
+  persistedCount: number;
+  // 書いた後に発車時刻が変わった駅(seq -> 発車時刻)
+  pendingDepartures: Map<number, number>;
 };
 
 const enqueueWrite = (
@@ -68,13 +76,82 @@ const toStopRecord = (
   };
 };
 
+// 書いた駅の発車時刻が、書いた内容に含まれていれば書き足す必要はない
+const clearWrittenDepartures = (
+  session: SessionState,
+  written: RideStopRecord[]
+) => {
+  for (const stop of written) {
+    if (
+      stop.departedAt != null &&
+      session.pendingDepartures.get(stop.seq) === stop.departedAt
+    ) {
+      session.pendingDepartures.delete(stop.seq);
+    }
+  }
+};
+
+/**
+ * メモリ上の乗車を DB に反映する。書き込みキューから1本ずつ呼ばれる。
+ *
+ * 書く内容はキューに積んだ時点ではなく、実行する時点のメモリから決める。
+ * 先行する書き込みが失敗しても、その間に検出した駅を取りこぼさずに次の実行で
+ * まとめて書き直せるようにするため。失敗したときは状態を進めずに抜ける。
+ */
+const syncRideLog = async (session: SessionState): Promise<void> => {
+  const { meta } = session;
+  if (!meta) {
+    return;
+  }
+
+  if (!session.persistedId) {
+    const stops = session.stops;
+    const lastArrival = [...stops]
+      .reverse()
+      .find((s) => s.kind === 'arrived' && s.arrivedAt != null);
+    // 失敗したセッションの ID は使い回さず、書き直しのたびに振り直す
+    const id = randomUUID();
+    await insertRideSession(
+      {
+        id,
+        startedAt: stops[0]?.departedAt ?? session.mountedAt,
+        endedAt: lastArrival?.arrivedAt ?? session.mountedAt,
+        ...meta,
+      },
+      stops
+    );
+    session.persistedId = id;
+    session.persistedCount = stops.length;
+    clearWrittenDepartures(session, stops);
+  }
+
+  const id = session.persistedId;
+  while (session.persistedCount < session.stops.length) {
+    const stop = session.stops[session.persistedCount];
+    await appendRideStop(id, stop);
+    session.persistedCount += 1;
+    clearWrittenDepartures(session, [stop]);
+  }
+
+  for (const [seq, departedAt] of [...session.pendingDepartures]) {
+    if (seq >= session.persistedCount) {
+      continue;
+    }
+    await updateRideStopDeparture(id, seq, departedAt);
+    if (session.pendingDepartures.get(seq) === departedAt) {
+      session.pendingDepartures.delete(seq);
+    }
+  }
+};
+
 /**
  * 振り返り機能(#5751)の乗車ログを記録する。Main 画面を開いてから抜けるまでを
  * 1回の乗車として扱い、到着・通過を検出した駅を順に書く。
  *
  * 画面を開いただけ・ホームで待っているだけのセッションを数えないよう、出発駅の
  * 次の駅への到着を1回検出するまでは DB に書かずメモリに溜める。確定後は検出の
- * たびに書くので、アプリが終了されても最後の到着までは残る。
+ * たびに書くので、アプリが終了されても最後の到着までは残る。書き込みに失敗した
+ * ときは、次の検出・発車・画面を抜けたときに、溜めた駅ごと書き直す。
  *
  * 駅の検出は useRefreshStation が stationAtom を更新したことで知る。通過駅も
  * 到着圏に入ると stationAtom に入るので、停車条件で到着と通過を分ける。
@@ -91,15 +168,17 @@ export const useRideRecorder = (): void => {
   const { isLoopLine } = useLoopLine();
 
   const sessionRef = useRef<SessionState>({
-    id: null,
     mountedAt: Date.now(),
     tainted: false,
     lastStation: null,
     stops: [],
+    meta: null,
+    persistedId: null,
+    persistedCount: 0,
+    pendingDepartures: new Map(),
   });
   const prevArrivedRef = useRef(arrived);
-  // DB への書き込みは検出した順に反映させる(セッションの INSERT より先に
-  // 駅の INSERT が走らないようにする)
+  // DB への書き込みは1本ずつ順に流す(同じ乗車を二重に書かないため)
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
@@ -107,6 +186,16 @@ export const useRideRecorder = (): void => {
       sessionRef.current.tainted = true;
     }
   }, [autoModeEnabled]);
+
+  // Main 画面を抜けるときに、書き残しがあれば書き直す。最後の到着で書き込みに
+  // 失敗した場合は、これが最後の機会になる
+  useEffect(() => {
+    const session = sessionRef.current;
+    const queueRef = writeQueueRef;
+    return () => {
+      enqueueWrite(queueRef, () => syncRideLog(session));
+    };
+  }, []);
 
   useEffect(() => {
     const session = sessionRef.current;
@@ -128,7 +217,6 @@ export const useRideRecorder = (): void => {
       return;
     }
 
-    const now = Date.now();
     const kind: RideStopKind = getIsPass(station) ? 'passed' : 'arrived';
     const distance = getRideDistanceMeters(
       stations,
@@ -140,7 +228,7 @@ export const useRideRecorder = (): void => {
       station,
       session.stops.length,
       kind,
-      now,
+      Date.now(),
       distance
     );
     if (!stop) {
@@ -149,40 +237,20 @@ export const useRideRecorder = (): void => {
     session.lastStation = station;
     session.stops = [...session.stops, stop];
 
-    const sessionId = session.id;
-    if (sessionId) {
-      enqueueWrite(writeQueueRef, () => appendRideStop(sessionId, stop));
-      return;
-    }
-
     // 通過だけでは乗車を確定しない。確定したら溜めていた通過駅もまとめて書く
-    if (kind !== 'arrived') {
-      return;
+    if (!session.meta) {
+      if (kind !== 'arrived') {
+        return;
+      }
+      session.meta = {
+        lineId: currentLine?.id ?? null,
+        lineName: currentLine?.nameShort ?? null,
+        lineColor: currentLine?.color ?? null,
+        trainTypeId: trainType?.id ?? null,
+        direction: selectedDirection,
+      };
     }
-    const id = randomUUID();
-    session.id = id;
-    const stops = session.stops;
-    const record = {
-      id,
-      startedAt: stops[0]?.departedAt ?? session.mountedAt,
-      endedAt: now,
-      lineId: currentLine?.id ?? null,
-      lineName: currentLine?.nameShort ?? null,
-      lineColor: currentLine?.color ?? null,
-      trainTypeId: trainType?.id ?? null,
-      direction: selectedDirection,
-    };
-    // 書き込みに失敗したら未確定に戻す。ID を残したままだと、以降の追記が外部キー
-    // 違反で失敗し続け、この乗車が1件も残らない。未確定に戻せば、次の到着で
-    // メモリに溜めた駅をまとめて書き直す
-    enqueueWrite(writeQueueRef, () =>
-      insertRideSession(record, stops).catch((err) => {
-        if (sessionRef.current.id === id) {
-          sessionRef.current.id = null;
-        }
-        throw err;
-      })
-    );
+    enqueueWrite(writeQueueRef, () => syncRideLog(session));
   }, [
     autoModeEnabled,
     currentLine,
@@ -208,11 +276,10 @@ export const useRideRecorder = (): void => {
     session.stops = session.stops.map((s) =>
       s.seq === last.seq ? { ...s, departedAt } : s
     );
-    const sessionId = session.id;
-    if (sessionId) {
-      enqueueWrite(writeQueueRef, () =>
-        updateRideStopDeparture(sessionId, last.seq, departedAt)
-      );
+    if (!session.meta) {
+      return;
     }
+    session.pendingDepartures.set(last.seq, departedAt);
+    enqueueWrite(writeQueueRef, () => syncRideLog(session));
   }, [arrived, autoModeEnabled]);
 };
