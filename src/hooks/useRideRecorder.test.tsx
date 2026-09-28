@@ -202,6 +202,38 @@ describe('useRideRecorder', () => {
     );
   });
 
+  it('セッションの書き込みに失敗したら、次の到着で溜めた駅をまとめて書き直す', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    (insertRideSession as jest.Mock).mockRejectedValueOnce(new Error('db'));
+    const { store } = setup();
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, c);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    await flush();
+    expect(insertRideSession).toHaveBeenCalledTimes(1);
+
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, d);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+
+    // 失敗したセッションへの追記ではなく、新しいセッションとして全駅を書く
+    expect(appendRideStop).not.toHaveBeenCalled();
+    expect(insertRideSession).toHaveBeenCalledTimes(2);
+    const [, stops] = (insertRideSession as jest.Mock).mock.calls[1];
+    expect(stops.map((s: { stationId: number }) => s.stationId)).toEqual([
+      1, 3, 4,
+    ]);
+    consoleErrorSpy.mockRestore();
+  });
+
   it('途中の駅を取りこぼしても、あいだの駅をたどった距離で記録する', async () => {
     const { store } = setup();
     act(() => store.set(arrivedAtom, false));
