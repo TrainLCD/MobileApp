@@ -44,6 +44,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_languages: 'personalize_languages',
   personalize_notifications: 'personalize_notifications',
   personalize_battery: 'personalize_battery',
+  personalize_ride_log: 'personalize_ride_log',
   personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
   about_app_faq: 'about_app_faq',
@@ -393,6 +394,12 @@ const AppSettingsScreen: React.FC = () => {
           title: translate('batterySettings'),
           color: '#30B0C7',
           onPress: () => navigation.navigate('BatterySettings' as never),
+        },
+        {
+          id: SETTING_ITEM_ID_MAP.personalize_ride_log,
+          title: translate('rideLogSettings'),
+          color: '#FF2D55',
+          onPress: () => navigation.navigate('RideLogSettings' as never),
         },
         // 試験的機能はカナリアリリース(devアプリ)限定で表示する
         ...(isDevApp
