@@ -18,12 +18,20 @@ type SegmentSum = {
 
 // 駅の並びを順にたどり、隣り合う駅どうしの距離を合計する(メートル)。
 // 線路の長さを覚えている組はそれを使い、無ければ座標の直線距離で代える。
-// 座標を持たない駅は、直線距離で代えるときには飛ばして前後の駅を直接つなぐ。
+//
+// 座標を持たない駅をまたいで線路の長さの無い組があると、その組は直線距離でも
+// 測れない。そのときは、座標のある直近の駅(anchor)から次に座標のある駅までを
+// まとめて直線距離で代え、そのあいだに足した線路の長さは取り消す(二重に数えない)。
 const sumAlong = (path: StationCoords[]): SegmentSum => {
   const sum: SegmentSum = { meters: 0, trackSegments: 0, straightSegments: 0 };
-  // 直線距離でつなぐときの起点(座標のある直近の駅)
   let anchor: (StationCoords & { latitude: number; longitude: number }) | null =
     path[0] && hasCoords(path[0]) ? path[0] : null;
+  // anchor から今の駅までに足した線路の長さ(直線距離で代えるときに取り消す)
+  let pendingTrackMeters = 0;
+  let pendingTrackSegments = 0;
+  // anchor から今の駅までに、線路の長さの無い組があったか
+  let gapOpen = false;
+
   for (let i = 1; i < path.length; i++) {
     const prev = path[i - 1];
     const cur = path[i];
@@ -34,20 +42,34 @@ const sumAlong = (path: StationCoords[]): SegmentSum => {
     if (track != null) {
       sum.meters += track;
       sum.trackSegments += 1;
-      anchor = hasCoords(cur) ? cur : null;
-      continue;
+      pendingTrackMeters += track;
+      pendingTrackSegments += 1;
+    } else {
+      gapOpen = true;
     }
     if (!hasCoords(cur)) {
       continue;
     }
-    if (anchor) {
-      sum.meters += getDistance(
-        { latitude: anchor.latitude, longitude: anchor.longitude },
-        { latitude: cur.latitude, longitude: cur.longitude }
-      );
+    if (gapOpen) {
+      if (anchor) {
+        sum.meters -= pendingTrackMeters;
+        sum.trackSegments -= pendingTrackSegments;
+        sum.meters += getDistance(
+          { latitude: anchor.latitude, longitude: anchor.longitude },
+          { latitude: cur.latitude, longitude: cur.longitude }
+        );
+      }
+      // anchor が無く測れなかった区間も、線路の長さだけで測れたことにはしない
       sum.straightSegments += 1;
     }
     anchor = cur;
+    pendingTrackMeters = 0;
+    pendingTrackSegments = 0;
+    gapOpen = false;
+  }
+  // 末尾まで座標のある駅が現れず、測れないまま終わった区間がある
+  if (gapOpen) {
+    sum.straightSegments += 1;
   }
   return sum;
 };

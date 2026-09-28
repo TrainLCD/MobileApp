@@ -38,6 +38,18 @@ describe('trackDistances', () => {
     expect(getTrackDistance(1, 2)).toBeNull();
   });
 
+  it('あとの応答で null が返った組は、前に覚えた値を消す', () => {
+    rememberTrackDistances([
+      { id: 1, trackDistanceFromPrevious: null },
+      { id: 2, trackDistanceFromPrevious: 806 },
+    ]);
+    rememberTrackDistances([
+      { id: 2, trackDistanceFromPrevious: null },
+      { id: 1, trackDistanceFromPrevious: null },
+    ]);
+    expect(getTrackDistance(1, 2)).toBeNull();
+  });
+
   it('応答から lineStations と lineGroupStations だけを拾う', () => {
     rememberTrackDistancesFromResponse({
       lineStations: [

@@ -29,11 +29,18 @@ export const rememberTrackDistances = (
   for (let i = 1; i < stations.length; i++) {
     const prev = stations[i - 1];
     const cur = stations[i];
-    const meters = cur.trackDistanceFromPrevious;
-    if (prev.id == null || cur.id == null || meters == null) {
+    if (prev.id == null || cur.id == null) {
       continue;
     }
-    distances.set(pairKey(prev.id, cur.id), meters);
+    const key = pairKey(prev.id, cur.id);
+    const meters = cur.trackDistanceFromPrevious;
+    // 線路の長さが無いと返ってきた組は、前に覚えた値を消して直線距離で代えさせる
+    // (データの更新で値が無くなった組を、古い値のまま track として記録しないため)
+    if (meters == null) {
+      distances.delete(key);
+      continue;
+    }
+    distances.set(key, meters);
   }
 };
 

@@ -102,6 +102,45 @@ describe('getRideDistanceMeters', () => {
       });
     });
 
+    it('座標の無い駅のあとで線路の長さが途切れたら、座標のある駅どうしの直線距離でまとめて代える', () => {
+      // a→b は線路の長さあり、b は座標なし、b→c は線路の長さなし
+      const noCoordsB = { id: 2, latitude: null, longitude: null };
+      rememberTrackDistances([
+        { id: 1, trackDistanceFromPrevious: null },
+        { id: 2, trackDistanceFromPrevious: 1500 },
+      ]);
+      expect(measureRideDistance([a, noCoordsB, c], a, c, false)).toEqual({
+        // a→b の線路の長さを足したまま a→c を足すと二重に数えるので、取り消す
+        meters: d2(a, c),
+        source: 'haversine',
+      });
+    });
+
+    it('座標の無い駅の手前で線路の長さが途切れても、同じく直線距離でまとめて代える', () => {
+      // a→b は線路の長さなし、b は座標なし、b→c は線路の長さあり
+      const noCoordsB = { id: 2, latitude: null, longitude: null };
+      rememberTrackDistances([
+        { id: 2, trackDistanceFromPrevious: null },
+        { id: 3, trackDistanceFromPrevious: 1600 },
+      ]);
+      expect(measureRideDistance([a, noCoordsB, c], a, c, false)).toEqual({
+        meters: d2(a, c),
+        source: 'haversine',
+      });
+    });
+
+    it('座標のある駅から先の線路の長さは、直線距離で代えずに使う', () => {
+      // a→b は線路の長さなし(直線距離)、b→c は線路の長さあり
+      rememberTrackDistances([
+        { id: 2, trackDistanceFromPrevious: null },
+        { id: 3, trackDistanceFromPrevious: 1600 },
+      ]);
+      expect(measureRideDistance(stations, a, c, false)).toEqual({
+        meters: d2(a, b) + 1600,
+        source: 'mixed',
+      });
+    });
+
     it('線路の長さを1つも知らなければ haversine', () => {
       expect(measureRideDistance(stations, a, c, false)).toEqual({
         meters: d2(a, b) + d2(b, c),
