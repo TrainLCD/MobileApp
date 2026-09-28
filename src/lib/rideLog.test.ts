@@ -4,6 +4,7 @@ jest.mock('expo-sqlite', () => {
   const db = {
     execAsync: jest.fn(() => Promise.resolve()),
     runAsync: jest.fn(() => Promise.resolve()),
+    getAllAsync: jest.fn(() => Promise.resolve([])),
     withTransactionAsync: jest.fn((task: () => Promise<void>) => task()),
   };
   return { openDatabaseSync: jest.fn(() => db), __mockDb: db };
@@ -13,6 +14,7 @@ import {
   appendRideStop,
   deleteAllRideLogs,
   enqueueRideLogMutation,
+  getRideSessionsStartedBetween,
   insertRideSession,
   type RideStopRecord,
   updateRideStopDeparture,
@@ -21,6 +23,7 @@ import {
 const mockDb = jest.requireMock('expo-sqlite').__mockDb as {
   execAsync: jest.Mock;
   runAsync: jest.Mock;
+  getAllAsync: jest.Mock;
   withTransactionAsync: jest.Mock;
 };
 
@@ -158,5 +161,49 @@ describe('rideLog', () => {
     expect(mockDb.execAsync).toHaveBeenLastCalledWith(
       'DELETE FROM ride_sessions;'
     );
+  });
+
+  it('期間に乗りはじめた乗車を、駅の並び付きで読み出す', async () => {
+    const session = {
+      id: 's1',
+      startedAt: 1_000,
+      endedAt: 5_000,
+      lineId: 11,
+      lineName: '中央線快速',
+      lineColor: '#F15A22',
+      trainTypeId: null,
+      direction: 'INBOUND',
+    };
+    const row = (seq: number, kind: string) => ({
+      sessionId: 's1',
+      ...stop(seq),
+      kind,
+    });
+    mockDb.getAllAsync.mockResolvedValueOnce([session]).mockResolvedValueOnce([
+      row(0, 'arrived'),
+      row(1, 'passed'),
+      // このバージョンが知らない値の行は読み飛ばす
+      row(2, 'unknown'),
+      row(3, 'arrived'),
+    ]);
+
+    const result = await getRideSessionsStartedBetween(0, 10_000);
+
+    expect(mockDb.getAllAsync.mock.calls[0][1]).toEqual([0, 10_000]);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe('s1');
+    expect(result[0].stops.map((s) => [s.seq, s.kind])).toEqual([
+      [0, 'arrived'],
+      [1, 'passed'],
+      [3, 'arrived'],
+    ]);
+    expect(result[0].stops[0]).not.toHaveProperty('sessionId');
+  });
+
+  it('期間に乗車が無ければ駅は読みに行かない', async () => {
+    mockDb.getAllAsync.mockResolvedValueOnce([]);
+    const result = await getRideSessionsStartedBetween(0, 10_000);
+    expect(result).toEqual([]);
+    expect(mockDb.getAllAsync).toHaveBeenCalledTimes(1);
   });
 });
