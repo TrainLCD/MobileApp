@@ -15,6 +15,7 @@
 - [フィードバックからの自動修正 PR](./auto-fix-from-feedback.md)
 - [Firebase Test Lab の Robo テスト](./test-lab-robo.md)
 - [テレメトリの本番オプトイン: リスク評価](./telemetry-production-optin-risk.md)
+- [振り返り機能の乗車ログ](./ride-log.md)
 - [AIエージェント設計書](./spec/ai-agent/architecture.md)
 - [リモートTTS(iOS)設計書](./spec/tts/remote-tts.md)
 - [オンデバイスTTS(VOICEVOX / iOS)設計書](./spec/tts/on-device-tts-ios.md)

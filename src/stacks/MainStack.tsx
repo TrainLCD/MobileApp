@@ -11,6 +11,8 @@ import DestinationAgentScreen from '~/screens/DestinationAgent';
 import ExperimentalSettings from '~/screens/ExperimentalSettings';
 import Licenses from '~/screens/Licenses';
 import NotificationSettings from '~/screens/NotificationSettings';
+import RideLogSettings from '~/screens/RideLogSettings';
+import RideReview from '~/screens/RideReview';
 import RouteSearchScreen from '~/screens/RouteSearchScreen';
 import TTSSettings from '~/screens/TTSSettings';
 import ErrorScreen from '../components/ErrorScreen';
@@ -173,6 +175,18 @@ const MainStack: React.FC = () => {
           options={optionsWithCustomStyle}
           name="BatterySettings"
           component={BatterySettings}
+        />
+        <Stack.Screen
+          layout={operationScreenLayout}
+          options={optionsWithCustomStyle}
+          name="RideLogSettings"
+          component={RideLogSettings}
+        />
+        <Stack.Screen
+          layout={operationScreenLayout}
+          options={optionsWithCustomStyle}
+          name="RideReview"
+          component={RideReview}
         />
         <Stack.Screen
           layout={operationScreenLayout}
