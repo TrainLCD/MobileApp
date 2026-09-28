@@ -19,7 +19,10 @@ import {
   stationsAtom,
 } from '~/store/atoms/station';
 import getIsPass from '~/utils/isPass';
-import { getRideDistanceMeters } from '~/utils/rideDistance';
+import {
+  measureRideDistance,
+  type RideDistanceMeasurement,
+} from '~/utils/rideDistance';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
@@ -54,7 +57,7 @@ const toStopRecord = (
   seq: number,
   kind: RideStopKind,
   arrivedAt: number | null,
-  distanceFromPrevious: number
+  distance: RideDistanceMeasurement
 ): RideStopRecord | null => {
   if (station.id == null) {
     return null;
@@ -70,8 +73,8 @@ const toStopRecord = (
     kind,
     arrivedAt,
     departedAt: null,
-    distanceFromPrevious,
-    distanceSource: 'haversine',
+    distanceFromPrevious: distance.meters,
+    distanceSource: distance.source,
   };
 };
 
@@ -204,7 +207,10 @@ export const useRideRecorder = (): void => {
     }
 
     if (!session.lastStation) {
-      const origin = toStopRecord(station, 0, 'arrived', null, 0);
+      const origin = toStopRecord(station, 0, 'arrived', null, {
+        meters: 0,
+        source: 'haversine',
+      });
       if (!origin) {
         return;
       }
@@ -214,7 +220,7 @@ export const useRideRecorder = (): void => {
     }
 
     const kind: RideStopKind = getIsPass(station) ? 'passed' : 'arrived';
-    const distance = getRideDistanceMeters(
+    const distance = measureRideDistance(
       stations,
       session.lastStation,
       station,

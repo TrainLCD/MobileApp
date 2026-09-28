@@ -308,6 +308,7 @@ export type Station = {
   status: Maybe<OperationStatus>;
   stopCondition: Maybe<StopCondition>;
   threeLetterCode: Maybe<Scalars['String']['output']>;
+  trackDistanceFromPrevious: Maybe<Scalars['Float']['output']>;
   trainType: Maybe<TrainTypeNested>;
   transportType: Maybe<TransportType>;
 };
@@ -339,6 +340,7 @@ export type StationNested = {
   status: Maybe<OperationStatus>;
   stopCondition: Maybe<StopCondition>;
   threeLetterCode: Maybe<Scalars['String']['output']>;
+  trackDistanceFromPrevious: Maybe<Scalars['Float']['output']>;
   trainType: Maybe<TrainTypeNested>;
   transportType: Maybe<TransportType>;
 };

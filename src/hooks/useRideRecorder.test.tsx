@@ -8,6 +8,10 @@ import {
   insertRideSession,
   updateRideStopDeparture,
 } from '~/lib/rideLog';
+import {
+  rememberTrackDistances,
+  resetTrackDistancesForTesting,
+} from '~/lib/trackDistances';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
@@ -343,6 +347,28 @@ describe('useRideRecorder', () => {
     expect(stops[1].distanceFromPrevious).toBe(
       getRideDistanceMeters(stations, a, e, false)
     );
+  });
+
+  it('線路の長さを知っている区間は、線路の長さで記録する', async () => {
+    rememberTrackDistances([
+      { id: 1, trackDistanceFromPrevious: null },
+      { id: 2, trackDistanceFromPrevious: 1200 },
+      { id: 3, trackDistanceFromPrevious: 1300 },
+    ]);
+    const { store } = setup();
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, c);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    const [, stops] = (insertRideSession as jest.Mock).mock.calls[0];
+    expect(stops[1]).toMatchObject({
+      stationId: 3,
+      distanceFromPrevious: 1200 + 1300,
+      distanceSource: 'track',
+    });
+    resetTrackDistancesForTesting();
   });
 
   it('オートモードを一度でも有効にしたら、画面を抜けるまで記録しない', async () => {

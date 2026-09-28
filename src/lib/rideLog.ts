@@ -9,10 +9,11 @@ import * as SQLite from 'expo-sqlite';
 const RIDE_STOP_KINDS = ['arrived', 'passed'] as const;
 export type RideStopKind = (typeof RIDE_STOP_KINDS)[number];
 
-// 距離の求め方。今は隣り合う駅どうしの直線距離の合計だけ。線路の長さに切り替えたとき
-// (#7103)に、記録済みの行と見分けられるよう行ごとに持つ
+// 距離の求め方。haversine は隣り合う駅どうしの直線距離の合計、track は StationAPI の
+// 線路の長さの合計(#7103)、mixed は線路の長さが無い区間だけ直線距離で代えたもの。
+// 線路の長さに切り替える前に記録した行と見分けられるよう、行ごとに持つ
 // 取りうる値はこの配列から型と判定の両方を作る。値を足すときはここに足す
-const RIDE_DISTANCE_SOURCES = ['haversine'] as const;
+const RIDE_DISTANCE_SOURCES = ['haversine', 'track', 'mixed'] as const;
 export type RideDistanceSource = (typeof RIDE_DISTANCE_SOURCES)[number];
 
 export type RideSessionRecord = {
