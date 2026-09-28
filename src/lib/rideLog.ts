@@ -6,11 +6,14 @@ import * as SQLite from 'expo-sqlite';
  * 時刻はエポックミリ秒で持ち、週・月・年への振り分けは集計側が端末のタイムゾーンで行う。
  */
 
-export type RideStopKind = 'arrived' | 'passed';
+const RIDE_STOP_KINDS = ['arrived', 'passed'] as const;
+export type RideStopKind = (typeof RIDE_STOP_KINDS)[number];
 
 // 距離の求め方。今は隣り合う駅どうしの直線距離の合計だけ。線路の長さに切り替えたとき
 // (#7103)に、記録済みの行と見分けられるよう行ごとに持つ
-export type RideDistanceSource = 'haversine';
+// 取りうる値はこの配列から型と判定の両方を作る。値を足すときはここに足す
+const RIDE_DISTANCE_SOURCES = ['haversine'] as const;
+export type RideDistanceSource = (typeof RIDE_DISTANCE_SOURCES)[number];
 
 export type RideSessionRecord = {
   id: string;
@@ -224,3 +227,59 @@ export const deleteAllRideLogs = (): Promise<void> =>
     const db = getDb();
     await db.execAsync('DELETE FROM ride_sessions;');
   });
+
+export type RideSessionWithStops = RideSessionRecord & {
+  stops: RideStopRecord[];
+};
+
+type RideStopRow = Omit<RideStopRecord, 'kind' | 'distanceSource'> & {
+  sessionId: string;
+  kind: string;
+  distanceSource: string;
+};
+
+const isRideStopKind = (value: string): value is RideStopKind =>
+  (RIDE_STOP_KINDS as readonly string[]).includes(value);
+
+const isRideDistanceSource = (value: string): value is RideDistanceSource =>
+  (RIDE_DISTANCE_SOURCES as readonly string[]).includes(value);
+
+/**
+ * 乗りはじめた時刻が [start, end) に入る乗車を、駅の並び付きで読み出す。
+ * 集計(src/utils/rideStats.ts)の入力になる。
+ */
+export const getRideSessionsStartedBetween = async (
+  start: number,
+  end: number
+): Promise<RideSessionWithStops[]> => {
+  await ensureRideLogDbInitialized();
+  const db = getDb();
+  const sessions = await db.getAllAsync<RideSessionRecord>(
+    'SELECT id, startedAt, endedAt, lineId, lineName, lineColor, trainTypeId, direction FROM ride_sessions WHERE startedAt >= ? AND startedAt < ? ORDER BY startedAt',
+    [start, end]
+  );
+  if (sessions.length === 0) {
+    return [];
+  }
+  const rows = await db.getAllAsync<RideStopRow>(
+    `SELECT s.sessionId, s.seq, s.stationId, s.stationGroupId, s.stationName, s.lineId, s.lineName, s.lineColor, s.kind, s.arrivedAt, s.departedAt, s.distanceFromPrevious, s.distanceSource
+    FROM ride_stops s JOIN ride_sessions r ON r.id = s.sessionId
+    WHERE r.startedAt >= ? AND r.startedAt < ?
+    ORDER BY s.sessionId, s.seq`,
+    [start, end]
+  );
+  const stopsBySession = new Map<string, RideStopRecord[]>();
+  for (const { sessionId, kind, distanceSource, ...rest } of rows) {
+    // 想定外の値の行は読み飛ばす(このバージョンが知らない値の行を誤って集計しないため)
+    if (!isRideStopKind(kind) || !isRideDistanceSource(distanceSource)) {
+      continue;
+    }
+    const list = stopsBySession.get(sessionId) ?? [];
+    list.push({ ...rest, kind, distanceSource });
+    stopsBySession.set(sessionId, list);
+  }
+  return sessions.map((session) => ({
+    ...session,
+    stops: stopsBySession.get(session.id) ?? [],
+  }));
+};
