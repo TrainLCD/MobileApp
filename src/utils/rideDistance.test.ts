@@ -1,6 +1,10 @@
 import getDistance from 'geolib/es/getDistance';
+import {
+  rememberTrackDistances,
+  resetTrackDistancesForTesting,
+} from '~/lib/trackDistances';
 import { createStation } from '~/utils/test/factories';
-import { getRideDistanceMeters } from './rideDistance';
+import { getRideDistanceMeters, measureRideDistance } from './rideDistance';
 
 // 経度方向に約1kmずつ離れた駅を並べる
 const at = (id: number, lon: number) =>
@@ -54,5 +58,55 @@ describe('getRideDistanceMeters', () => {
   it('環状線は短い方の回り方をとる', () => {
     // 末尾(d)から先頭(a)へ進んだ場合、配列を逆にたどるより折り返す方が短い
     expect(getRideDistanceMeters(stations, d, a, true)).toBe(d2(d, a));
+  });
+
+  describe('線路の長さ', () => {
+    afterEach(() => {
+      resetTrackDistancesForTesting();
+    });
+
+    // API は a→b→c→d の並びで、直前の駅からの線路の長さを返す
+    const rememberAll = () =>
+      rememberTrackDistances([
+        { id: 1, trackDistanceFromPrevious: null },
+        { id: 2, trackDistanceFromPrevious: 1500 },
+        { id: 3, trackDistanceFromPrevious: 1600 },
+        { id: 4, trackDistanceFromPrevious: 1700 },
+      ]);
+
+    it('隣り合う駅の線路の長さがあればそれを合計する', () => {
+      rememberAll();
+      expect(measureRideDistance(stations, a, d, false)).toEqual({
+        meters: 1500 + 1600 + 1700,
+        source: 'track',
+      });
+    });
+
+    it('並びが API と逆向きでも、同じ組の線路の長さを使う', () => {
+      rememberAll();
+      const reversed = [d, c, b, a];
+      expect(measureRideDistance(reversed, c, a, false)).toEqual({
+        meters: 1600 + 1500,
+        source: 'track',
+      });
+    });
+
+    it('線路の長さが無い区間だけ直線距離で代え、mixed にする', () => {
+      rememberTrackDistances([
+        { id: 1, trackDistanceFromPrevious: null },
+        { id: 2, trackDistanceFromPrevious: 1500 },
+      ]);
+      expect(measureRideDistance(stations, a, c, false)).toEqual({
+        meters: 1500 + d2(b, c),
+        source: 'mixed',
+      });
+    });
+
+    it('線路の長さを1つも知らなければ haversine', () => {
+      expect(measureRideDistance(stations, a, c, false)).toEqual({
+        meters: d2(a, b) + d2(b, c),
+        source: 'haversine',
+      });
+    });
   });
 });
