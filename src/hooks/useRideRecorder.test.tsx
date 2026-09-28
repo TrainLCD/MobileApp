@@ -56,9 +56,12 @@ const d = at(4, 139.733);
 const e = at(5, 139.744);
 const stations = [a, b, c, d, e];
 
+// 書き込みキューは Promise を数段つなぐので、何周か回して流し切る
 const flush = async () => {
   await act(async () => {
-    await Promise.resolve();
+    for (let i = 0; i < 10; i++) {
+      await Promise.resolve();
+    }
   });
 };
 
@@ -202,7 +205,7 @@ describe('useRideRecorder', () => {
     );
   });
 
-  it('セッションの書き込みに失敗したら、次の到着で溜めた駅をまとめて書き直す', async () => {
+  it('セッションの書き込みに失敗したら、次の発車で溜めた駅ごと書き直し、以降は追記する', async () => {
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
@@ -214,24 +217,111 @@ describe('useRideRecorder', () => {
       store.set(arrivedAtom, true);
     });
     await flush();
-    await flush();
     expect(insertRideSession).toHaveBeenCalledTimes(1);
 
+    tick(30_000);
+    const departedAt = now;
+    act(() => store.set(arrivedAtom, false));
+    await flush();
+    expect(insertRideSession).toHaveBeenCalledTimes(2);
+    const [, retried] = (insertRideSession as jest.Mock).mock.calls[1];
+    expect(retried.map((s: { stationId: number }) => s.stationId)).toEqual([
+      1, 3,
+    ]);
+    // 書き直しの時点で分かっている発車時刻は、駅の行に含めて書く
+    expect(retried[1].departedAt).toBe(departedAt);
+    expect(updateRideStopDeparture).not.toHaveBeenCalled();
+
+    act(() => {
+      store.set(stationAtom, d);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    expect(appendRideStop).toHaveBeenCalledWith(
+      'session-1',
+      expect.objectContaining({ seq: 2, stationId: 4 })
+    );
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('最初の書き込み中に着いた駅も、書き込みが失敗したら書き直しに含める', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    let rejectFirst: (err: Error) => void = () => {};
+    (insertRideSession as jest.Mock).mockImplementationOnce(
+      () =>
+        new Promise<void>((_, reject) => {
+          rejectFirst = reject;
+        })
+    );
+    const { store } = setup();
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, c);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    // 最初の書き込みが終わる前に次の駅へ着く
     act(() => store.set(arrivedAtom, false));
     act(() => {
       store.set(stationAtom, d);
       store.set(arrivedAtom, true);
     });
     await flush();
+    expect(insertRideSession).toHaveBeenCalledTimes(1);
 
-    // 失敗したセッションへの追記ではなく、新しいセッションとして全駅を書く
+    await act(async () => {
+      rejectFirst(new Error('db'));
+    });
+    await flush();
+
+    // 失敗したセッションへの追記ではなく、着いた駅まで含めて書き直す
     expect(appendRideStop).not.toHaveBeenCalled();
     expect(insertRideSession).toHaveBeenCalledTimes(2);
-    const [, stops] = (insertRideSession as jest.Mock).mock.calls[1];
-    expect(stops.map((s: { stationId: number }) => s.stationId)).toEqual([
+    const [, retried] = (insertRideSession as jest.Mock).mock.calls[1];
+    expect(retried.map((s: { stationId: number }) => s.stationId)).toEqual([
       1, 3, 4,
     ]);
     consoleErrorSpy.mockRestore();
+  });
+
+  it('最後の到着で書き込みに失敗しても、画面を抜けるときに書き直す', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    (insertRideSession as jest.Mock).mockRejectedValueOnce(new Error('db'));
+    const { store, hook } = setup();
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, c);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    expect(insertRideSession).toHaveBeenCalledTimes(1);
+
+    hook.unmount();
+    await flush();
+    expect(insertRideSession).toHaveBeenCalledTimes(2);
+    const [, retried] = (insertRideSession as jest.Mock).mock.calls[1];
+    expect(retried.map((s: { stationId: number }) => s.stationId)).toEqual([
+      1, 3,
+    ]);
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('書き込みが済んでいれば、画面を抜けても書き直さない', async () => {
+    const { store, hook } = setup();
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, c);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    hook.unmount();
+    await flush();
+    expect(insertRideSession).toHaveBeenCalledTimes(1);
+    expect(appendRideStop).not.toHaveBeenCalled();
   });
 
   it('途中の駅を取りこぼしても、あいだの駅をたどった距離で記録する', async () => {
