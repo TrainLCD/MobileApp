@@ -50,7 +50,7 @@ describe('trackDistances', () => {
     expect(getTrackDistance(1, 2)).toBeNull();
   });
 
-  it('応答から lineStations と lineGroupStations だけを拾う', () => {
+  it('応答から lineStations と lineGroupStations と stations だけを拾う', () => {
     rememberTrackDistancesFromResponse({
       lineStations: [
         { id: 1, trackDistanceFromPrevious: null },
@@ -63,6 +63,14 @@ describe('trackDistances', () => {
         { id: 4, trackDistanceFromPrevious: 200 },
       ],
     });
+    // stations(ids) は ids の並びのまま返る。sids のディープリンクで開いた経路
+    rememberTrackDistancesFromResponse({
+      stations: [
+        { id: 9, trackDistanceFromPrevious: null },
+        { id: 8, trackDistanceFromPrevious: 400 },
+        { id: 7, trackDistanceFromPrevious: 500 },
+      ],
+    });
     rememberTrackDistancesFromResponse({
       stationsByName: [
         { id: 5, trackDistanceFromPrevious: null },
@@ -72,6 +80,8 @@ describe('trackDistances', () => {
     rememberTrackDistancesFromResponse(null);
     expect(getTrackDistance(1, 2)).toBe(100);
     expect(getTrackDistance(3, 4)).toBe(200);
+    expect(getTrackDistance(8, 9)).toBe(400);
+    expect(getTrackDistance(7, 8)).toBe(500);
     expect(getTrackDistance(5, 6)).toBeNull();
   });
 });

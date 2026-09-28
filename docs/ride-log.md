@@ -46,8 +46,9 @@ Main 画面を抜けたときの最後の書き込みが終わってから消す
 乗車中の駅リスト上で2駅のあいだにある駅をたどり、隣り合う駅どうしの距離を合計します（`src/utils/rideDistance.ts`）。
 GPS が途切れて途中の駅を検出できなかった区間も、この方法で埋めます。環状線は、短い方の回り方をとります。
 
-隣り合う駅どうしの距離には、StationAPI が `lineStations` / `lineGroupStations` で返す線路の長さ（`trackDistanceFromPrevious`）を使います。
+隣り合う駅どうしの距離には、StationAPI が `lineStations` / `lineGroupStations` / `stations(ids)` で返す線路の長さ（`trackDistanceFromPrevious`）を使います。
 StationAPI はこの値を「返す並びで直前にある駅からの長さ」として返します。
+`stations(ids)` は、指定した ID の順に駅を返します。`sids` のディープリンクで開いた経路は、この問い合わせで駅を取ります。
 一方アプリは、経路検索で並びを逆にしたり途中の駅を間引いたりしてから駅リストに入れます。
 そのため、`gqlRequest` が応答を受け取った時点で駅の組ごとの表に直して覚え（`src/lib/trackDistances.ts`）、距離を求めるときは組で引きます。
 線路の長さが無い区間は、駅どうしの直線距離で代えます。

@@ -2,11 +2,12 @@
  * 隣り合う2駅のあいだの線路の長さ(m)を、駅の組ごとに覚えておく表。
  * 振り返り機能(#5751)の乗車距離に使う(#7103)。
  *
- * StationAPI は lineStations / lineGroupStations で、返す駅の並びで直前にある駅
- * からの線路の長さを trackDistanceFromPrevious として返す。一方アプリは、その
- * 並びを経路検索で逆向きにしたり、途中の駅を間引いたりしてから stationsAtom に
- * 入れる。並びが変わると「直前の駅」が別の駅を指してしまうため、API の並びの
- * まま受け取った時点で駅の組に直して覚え、乗車ログは組で引く。
+ * StationAPI は lineStations / lineGroupStations / stations(ids) で、返す駅の並びで
+ * 直前にある駅からの線路の長さを trackDistanceFromPrevious として返す
+ * (stations(ids) の並びは指定した ids の順)。一方アプリは、その並びを経路検索で
+ * 逆向きにしたり、途中の駅を間引いたりしてから stationsAtom に入れる。並びが
+ * 変わると「直前の駅」が別の駅を指してしまうため、API の並びのまま受け取った
+ * 時点で駅の組に直して覚え、乗車ログは組で引く。
  */
 
 type StationWithTrackDistance = {
@@ -44,8 +45,15 @@ export const rememberTrackDistances = (
   }
 };
 
-// 線路の長さを返す問い合わせ。ほかの問い合わせは trackDistanceFromPrevious を返さない
-const TRACK_DISTANCE_FIELDS = ['lineStations', 'lineGroupStations'] as const;
+// 線路の長さを返す問い合わせ。ほかの問い合わせは trackDistanceFromPrevious を返さない。
+// stations(ids) は sids のディープリンクが経路の駅を順に渡す。ids の並びで隣り合って
+// いても線路のデータ上で隣り合わない組は null が返るが、その組は lineStations などでも
+// 値が入らないため、覚えた値を消すことはない
+const TRACK_DISTANCE_FIELDS = [
+  'lineStations',
+  'lineGroupStations',
+  'stations',
+] as const;
 
 /**
  * GraphQL の応答から、線路の長さを返す問い合わせの結果を探して覚える。
