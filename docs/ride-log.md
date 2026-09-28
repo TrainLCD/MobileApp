@@ -8,6 +8,12 @@
 `rideLogEnabledAtom`（MMKV キー `@TrainLCD:rideLogEnabled`）が `true` のときだけ、
 Main 画面に記録用の `FxRideRecorder` をマウントします。既定は `false` です。
 
+設定は「設定 > 振り返り」（`src/screens/RideLogSettings.tsx`）で切り替えます。
+オフにしても保存済みの記録は消しません。
+記録を消すのは、同じ画面の「記録をすべて削除」だけです。
+削除は記録の書き込みと同じ列（`enqueueRideLogMutation`）に並べて実行します。
+Main 画面を抜けたときの最後の書き込みが終わってから消すので、削除した乗車が作り直されることはありません。
+
 ## 保存先
 
 端末内の SQLite (`rides.db`) にだけ保存します。サーバには送りません。利用者の位置の座標は保存せず、検出した駅と時刻だけを持ちます。

@@ -43,9 +43,18 @@ export type RideStopRecord = {
   distanceSource: RideDistanceSource;
 };
 
-const db = SQLite.openDatabaseSync('rides.db');
+// DB は最初に使うときに開く。設定画面など記録しない画面からも import されるため、
+// モジュールの読み込みだけでファイルを開かないようにする
+let dbInstance: SQLite.SQLiteDatabase | null = null;
+const getDb = (): SQLite.SQLiteDatabase => {
+  if (!dbInstance) {
+    dbInstance = SQLite.openDatabaseSync('rides.db');
+  }
+  return dbInstance;
+};
 
 const initDb = async (): Promise<void> => {
+  const db = getDb();
   // 外部キー制約は接続ごとの設定なので、開くたびに有効化する
   await db.execAsync('PRAGMA foreign_keys = ON;');
   await db.execAsync(
@@ -97,8 +106,25 @@ export const ensureRideLogDbInitialized = (): Promise<void> => {
   return initPromise;
 };
 
+// 乗車ログへの書き込みと削除を1本の列に並べる。記録用のフックが Main 画面を
+// 抜けるときに積んだ最後の書き込みより先に全件削除が走ると、削除した乗車が
+// その書き込みで作り直されてしまうため、両方をここに通して順序を保つ。
+let mutationQueue: Promise<void> = Promise.resolve();
+
+/**
+ * 乗車ログを変更する処理を、先に積まれた処理が終わってから実行する。
+ * 返り値の Promise は task の結果をそのまま返す。失敗しても後続の処理は止めない。
+ */
+export const enqueueRideLogMutation = (
+  task: () => Promise<void>
+): Promise<void> => {
+  const result = mutationQueue.then(task);
+  mutationQueue = result.catch(() => undefined);
+  return result;
+};
+
 const insertStop = (sessionId: string, stop: RideStopRecord) =>
-  db.runAsync(
+  getDb().runAsync(
     `INSERT INTO ride_stops (sessionId, seq, stationId, stationGroupId, stationName, lineId, lineName, lineColor, kind, arrivedAt, departedAt, distanceFromPrevious, distanceSource)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -127,6 +153,7 @@ export const insertRideSession = async (
   stops: RideStopRecord[]
 ): Promise<void> => {
   await ensureRideLogDbInitialized();
+  const db = getDb();
   await db.withTransactionAsync(async () => {
     await db.runAsync(
       `INSERT INTO ride_sessions (id, startedAt, endedAt, lineId, lineName, lineColor, trainTypeId, direction)
@@ -157,6 +184,7 @@ export const appendRideStop = async (
   stop: RideStopRecord
 ): Promise<void> => {
   await ensureRideLogDbInitialized();
+  const db = getDb();
   await db.withTransactionAsync(async () => {
     await insertStop(sessionId, stop);
     if (stop.kind === 'arrived' && stop.arrivedAt != null) {
@@ -178,8 +206,21 @@ export const updateRideStopDeparture = async (
   departedAt: number
 ): Promise<void> => {
   await ensureRideLogDbInitialized();
+  const db = getDb();
   await db.runAsync(
     'UPDATE ride_stops SET departedAt = ? WHERE sessionId = ? AND seq = ?',
     [departedAt, sessionId, seq]
   );
 };
+
+/**
+ * 保存済みの乗車ログをすべて削除する。設定画面の「記録をすべて削除」から呼ぶ。
+ * 駅の行は外部キーの ON DELETE CASCADE で一緒に消える。
+ * 記録の書き込みと同じ列に並べるので、先に積まれた書き込みが終わってから消す。
+ */
+export const deleteAllRideLogs = (): Promise<void> =>
+  enqueueRideLogMutation(async () => {
+    await ensureRideLogDbInitialized();
+    const db = getDb();
+    await db.execAsync('DELETE FROM ride_sessions;');
+  });
