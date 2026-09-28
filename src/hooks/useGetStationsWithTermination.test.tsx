@@ -28,6 +28,7 @@ const mkStation = (groupId: number, id: number = groupId): StationType => ({
   nameTtsSegments: null,
   nameKorean: undefined,
   threeLetterCode: undefined,
+  trackDistanceFromPrevious: null,
   lines: [],
   prefectureId: 0,
   postalCode: '',
