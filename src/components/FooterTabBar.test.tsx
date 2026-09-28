@@ -56,23 +56,24 @@ describe('FooterTabBar', () => {
     expect(toJSON()).toBeNull();
   });
 
-  it('検索・ホーム・設定の3つのタブボタンをレンダリングする', () => {
+  it('検索・ホーム・振り返り・設定の4つのタブボタンをレンダリングする', () => {
     const { getAllByRole } = render(<FooterTabBar active="home" />);
-    expect(getAllByRole('button')).toHaveLength(3);
+    expect(getAllByRole('button')).toHaveLength(4);
   });
 
   it('アクティブなタブに selected 状態が付与される', () => {
-    const { getAllByRole } = render(<FooterTabBar active="settings" />);
-    const [search, home, settings] = getAllByRole('button');
+    const { getAllByRole } = render(<FooterTabBar active="review" />);
+    const [search, home, review, settings] = getAllByRole('button');
     expect(search.props.accessibilityState.selected).toBe(false);
     expect(home.props.accessibilityState.selected).toBe(false);
-    expect(settings.props.accessibilityState.selected).toBe(true);
+    expect(review.props.accessibilityState.selected).toBe(true);
+    expect(settings.props.accessibilityState.selected).toBe(false);
   });
 
   it('各タブを押すと対応する画面へ replace で遷移する', () => {
     mockRouteName = 'Main';
     const { getAllByRole } = render(<FooterTabBar active="home" />);
-    const [search, home, settings] = getAllByRole('button');
+    const [search, home, review, settings] = getAllByRole('button');
 
     fireEvent.press(search);
     expect(mockDispatch).toHaveBeenLastCalledWith({
@@ -84,6 +85,12 @@ describe('FooterTabBar', () => {
     expect(mockDispatch).toHaveBeenLastCalledWith({
       type: 'REPLACE',
       payload: { name: 'SelectLine' },
+    });
+
+    fireEvent.press(review);
+    expect(mockDispatch).toHaveBeenLastCalledWith({
+      type: 'REPLACE',
+      payload: { name: 'RideReview' },
     });
 
     fireEvent.press(settings);
@@ -116,10 +123,11 @@ describe('FooterTabBar', () => {
       fireEvent(api.getByTestId('footer-active-pill'), 'layout', {
         nativeEvent: { layout: { x: 0, y: 8, width: 48, height: 48 } },
       });
-      const [search, home, settings] = api.getAllByRole('button');
+      const [search, home, review, settings] = api.getAllByRole('button');
       fireEvent(search, 'layout', layoutEvent(20));
       fireEvent(home, 'layout', layoutEvent(84));
-      fireEvent(settings, 'layout', layoutEvent(148));
+      fireEvent(review, 'layout', layoutEvent(148));
+      fireEvent(settings, 'layout', layoutEvent(212));
     };
 
     it('タブバー全体で共有ピルが1つだけ表示される', () => {
