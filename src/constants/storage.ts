@@ -56,6 +56,9 @@ export const STORAGE_KEYS = {
   // 試験的機能: リモートTTSの有効判定を Remote Config より優先して固定する
   // ('auto' | 'on' | 'off')。src/lib/remoteTTSOverride.ts が管理する
   REMOTE_TTS_OVERRIDE: '@TrainLCD:remoteTTSOverride',
+  // 振り返り: 乗車ログを端末内に記録するか。既定はオフ(オプトイン)。
+  // src/store/atoms/rideLog.ts が初期値を読む
+  RIDE_LOG_ENABLED: '@TrainLCD:rideLogEnabled',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

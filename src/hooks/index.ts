@@ -75,6 +75,7 @@ export { usePreviousStation } from './usePreviousStation';
 export { useRefreshLeftStations } from './useRefreshLeftStations';
 export { useRefreshStation } from './useRefreshStation';
 export { useResetMainState } from './useResetMainState';
+export { useRideRecorder } from './useRideRecorder';
 export { useRouteSearchWalkthrough } from './useRouteSearchWalkthrough';
 export { useSavedRoutes } from './useSavedRoutes';
 export { useSelectLineWalkthrough } from './useSelectLineWalkthrough';
