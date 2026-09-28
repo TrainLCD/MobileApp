@@ -4825,6 +4825,13 @@ export type GetTrainRouteQuery = {
           maxAcceleration: number | null | undefined;
           maxDeceleration: number | null | undefined;
           maxSpeed: number | null | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                trackDistanceFromPrevious: number | null | undefined;
+              }
+            | null
+            | undefined;
         }>
       | null
       | undefined;
