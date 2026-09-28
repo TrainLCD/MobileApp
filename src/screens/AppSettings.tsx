@@ -123,6 +123,8 @@ const SettingsItem = ({
         return 'notifications';
       case 'personalize_battery':
         return 'battery-half';
+      case 'personalize_ride_log':
+        return 'stats-chart';
       case 'personalize_experimental':
         return 'flask';
       case 'personalize_android':
