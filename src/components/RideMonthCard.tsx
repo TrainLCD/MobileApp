@@ -70,8 +70,11 @@ export const RideMonthCard: React.FC<Props> = ({ style }: Props) => {
     navigation.dispatch(StackActions.replace('RideReview'));
   }, [navigation]);
 
+  // 読み込み中は「—」、失敗したら記録が無いときと区別できる文言を出す
   let value = '—';
-  if (state.status === 'ready' && state.period === 'month') {
+  if (state.status === 'error') {
+    value = translate('rideReviewLoadFailed');
+  } else if (state.status === 'ready' && state.period === 'month') {
     value =
       state.stats.rideCount === 0
         ? translate('rideMonthCardEmpty')

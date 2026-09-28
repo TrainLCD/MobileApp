@@ -120,6 +120,20 @@ describe('RideMonthCard', () => {
     );
   });
 
+  it('読み込みに失敗したら、記録が無いときと区別できる文言を出す', async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+    mockGetRides.mockRejectedValueOnce(new Error('db'));
+    const { getByTestId } = renderCard();
+    await waitFor(() =>
+      expect(getByTestId('ride-month-card-value').props.children).toBe(
+        'rideReviewLoadFailed'
+      )
+    );
+    consoleErrorSpy.mockRestore();
+  });
+
   it('タップすると振り返りタブへ replace で移る', async () => {
     const { getByTestId } = renderCard();
     await waitFor(() => expect(mockGetRides).toHaveBeenCalled());
