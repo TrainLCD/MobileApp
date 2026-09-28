@@ -162,6 +162,40 @@ describe('RideReviewScreen', () => {
     expect(getByText('中央線快速')).toBeTruthy();
   });
 
+  it('グラフの棒に、日付と距離を読み上げるラベルを付ける', async () => {
+    mockGetRides.mockResolvedValueOnce([sampleRide()]);
+    const { findByTestId, getByLabelText } = renderScreen(true);
+    await findByTestId('ride-review-chart');
+    const { start } = getRidePeriodRange('month', new Date());
+    const label = `${start.getMonth() + 1}/${start.getDate()}`;
+    expect(
+      getByLabelText(
+        `rideReviewChartBarLabel:${JSON.stringify({
+          label,
+          distance: (2.5).toLocaleString(undefined, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          }),
+        })}`
+      )
+    ).toBeTruthy();
+  });
+
+  it('読み込みが終わるまで、読み込み中の表示を出す', async () => {
+    let resolve: (value: RideSessionWithStops[]) => void = () => {};
+    mockGetRides.mockImplementationOnce(
+      () =>
+        new Promise<RideSessionWithStops[]>((r) => {
+          resolve = r;
+        })
+    );
+    const { getByTestId, findByText, queryByTestId } = renderScreen(true);
+    expect(getByTestId('ride-review-loading')).toBeTruthy();
+    resolve([]);
+    await findByText('rideReviewEmptyTitle');
+    expect(queryByTestId('ride-review-loading')).toBeNull();
+  });
+
   it('期間を切り替えると、その期間で読み直す', async () => {
     const { findByText, getByText } = renderScreen(true);
     await findByText('rideReviewEmptyTitle');

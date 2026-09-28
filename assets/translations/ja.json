@@ -397,6 +397,8 @@
   "rideReviewEnable": "有効にする",
   "rideReviewIntroNote": "設定の「振り返り」からいつでもオフにできます。オフにしても、保存済みの記録は残ります。",
   "rideReviewLoadFailed": "記録を読み込めませんでした。",
+  "rideReviewChartBarLabel": "%{label}、%{distance} km",
+  "rideReviewLoading": "読み込み中",
   "destinationAgentEntryTitle": "駅名がわからなくても大丈夫",
   "destinationAgentEntrySubtitle": "AIに行き先を相談する",
   "destinationAgentTitle": "AIに行き先を相談",
