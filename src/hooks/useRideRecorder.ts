@@ -172,7 +172,17 @@ export const useRideRecorder = (): void => {
       trainTypeId: trainType?.id ?? null,
       direction: selectedDirection,
     };
-    enqueueWrite(writeQueueRef, () => insertRideSession(record, stops));
+    // 書き込みに失敗したら未確定に戻す。ID を残したままだと、以降の追記が外部キー
+    // 違反で失敗し続け、この乗車が1件も残らない。未確定に戻せば、次の到着で
+    // メモリに溜めた駅をまとめて書き直す
+    enqueueWrite(writeQueueRef, () =>
+      insertRideSession(record, stops).catch((err) => {
+        if (sessionRef.current.id === id) {
+          sessionRef.current.id = null;
+        }
+        throw err;
+      })
+    );
   }, [
     autoModeEnabled,
     currentLine,
