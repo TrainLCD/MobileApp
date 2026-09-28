@@ -27,6 +27,7 @@ import type {
   RideStats,
   RideStatsBucket,
 } from '~/utils/rideStats';
+import { formatDistanceKm, formatDuration } from '~/utils/rideStatsFormat';
 
 const ACCENT_COLOR = '#0A84FF';
 const CHART_HEIGHT = 96;
@@ -106,21 +107,6 @@ const styles = StyleSheet.create({
   enableButton: { alignSelf: 'center', minWidth: 160, marginTop: 8 },
   loading: { marginTop: 24 },
 });
-
-const formatDistanceKm = (meters: number): string =>
-  (meters / 1000).toLocaleString(undefined, {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
-
-const formatDuration = (ms: number): string => {
-  const totalMinutes = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return hours > 0
-    ? translate('rideReviewDurationHoursMinutes', { hours, minutes })
-    : translate('rideReviewDurationMinutes', { minutes });
-};
 
 const formatMonthDay = (date: Date): string =>
   `${date.getMonth() + 1}/${date.getDate()}`;
