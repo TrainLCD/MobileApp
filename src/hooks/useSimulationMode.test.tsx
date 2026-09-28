@@ -182,9 +182,15 @@ const setupAtomMocks = (
  */
 const mockTrainRoute = (
   stationsInWalkOrder: Station[],
-  overrides: { maxSpeed?: number; accel?: number; decel?: number } = {}
+  overrides: {
+    maxSpeed?: number;
+    accel?: number;
+    decel?: number;
+    // 駅ごとの trackDistanceFromPrevious。省略時は station を返さない(直線距離だけ)
+    trackDistances?: (number | null)[];
+  } = {}
 ) => {
-  const { maxSpeed = 30, accel = 1.0, decel = 1.5 } = overrides;
+  const { maxSpeed = 30, accel = 1.0, decel = 1.5, trackDistances } = overrides;
 
   const segments = stationsInWalkOrder.map((s, i) => {
     const prev = stationsInWalkOrder[i - 1];
@@ -202,6 +208,12 @@ const mockTrainRoute = (
 
     return {
       __typename: 'TrainRouteSegment' as const,
+      station: trackDistances
+        ? {
+            __typename: 'StationNested' as const,
+            trackDistanceFromPrevious: trackDistances[i] ?? null,
+          }
+        : null,
       distanceFromPrevious,
       maxAcceleration: accel,
       maxDeceleration: decel,
@@ -1187,10 +1199,11 @@ describe('useSimulationMode', () => {
       const segment = (
         groupId: number,
         distanceFromPrevious: number,
-        maxSpeed: number
+        maxSpeed: number,
+        trackDistanceFromPrevious: number | null = null
       ) => ({
         __typename: 'TrainRouteSegment' as const,
-        station: { groupId },
+        station: { groupId, trackDistanceFromPrevious },
         distanceFromPrevious,
         maxAcceleration: 1,
         maxDeceleration: 1,
@@ -1240,6 +1253,34 @@ describe('useSimulationMode', () => {
         ]);
         expect(generateSpy.mock.calls.map(([args]) => args.distance)).toEqual([
           1000, 2000, 3000,
+        ]);
+      });
+
+      it('乗換駅は到着する側の区間の線路の長さを使い、線路の長さが無い区間は直線距離で代える', () => {
+        const stations = joinedStations();
+        setupAtomMocks(
+          { station: stations[0], stations, selectedDirection: 'INBOUND' },
+          { autoModeEnabled: false }
+        );
+        // 都庁前は線路の長さが無い。API は区間の先頭(埼京線の新宿)を null で返す
+        mockConnectedTrainRoute([
+          segment(9930138, 0, 10),
+          segment(1130225, 1000, 10),
+          segment(1130208, 2000, 20, 2100),
+          segment(1130208, 0, 99),
+          segment(1130205, 3000, 30, 3300),
+        ]);
+        const generateSpy = jest.spyOn(
+          trainSpeedModule,
+          'generateTrainSpeedProfile'
+        );
+
+        renderHook(() => useSimulationMode(), {
+          wrapper: ({ children }) => <Provider>{children}</Provider>,
+        });
+
+        expect(generateSpy.mock.calls.map(([args]) => args.distance)).toEqual([
+          1000, 2100, 3300,
         ]);
       });
 
@@ -1335,6 +1376,38 @@ describe('useSimulationMode', () => {
       expect(generateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ maxSpeed: 99, accel: 2, decel: 3 })
       );
+    });
+
+    it('線路の長さがあればそれを、無ければ直線距離を走行距離にする', () => {
+      const stations = [
+        mockStation(1, 1, 35.681, 139.767),
+        mockStation(2, 2, 35.691, 139.777),
+        mockStation(3, 3, 35.701, 139.787),
+      ];
+
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: false }
+      );
+
+      mockTrainRoute(stations, { trackDistances: [null, 1600, null] });
+
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(generateSpy.mock.calls.map(([args]) => args.distance)).toEqual([
+        1600,
+        getDistance(
+          { latitude: 35.691, longitude: 139.777 },
+          { latitude: 35.701, longitude: 139.787 }
+        ),
+      ]);
     });
   });
 

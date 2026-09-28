@@ -530,6 +530,9 @@ export const GET_TRAIN_ROUTE = gql`
       lineGroupId: $lineGroupId
     ) {
       segments {
+        station {
+          trackDistanceFromPrevious
+        }
         distanceFromPrevious
         maxAcceleration
         maxDeceleration
@@ -556,6 +559,7 @@ export const GET_CONNECTED_TRAIN_ROUTE = gql`
         station {
           id
           groupId
+          trackDistanceFromPrevious
         }
         distanceFromPrevious
         maxAcceleration
