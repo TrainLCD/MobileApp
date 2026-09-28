@@ -106,6 +106,23 @@ export const ensureRideLogDbInitialized = (): Promise<void> => {
   return initPromise;
 };
 
+// 乗車ログへの書き込みと削除を1本の列に並べる。記録用のフックが Main 画面を
+// 抜けるときに積んだ最後の書き込みより先に全件削除が走ると、削除した乗車が
+// その書き込みで作り直されてしまうため、両方をここに通して順序を保つ。
+let mutationQueue: Promise<void> = Promise.resolve();
+
+/**
+ * 乗車ログを変更する処理を、先に積まれた処理が終わってから実行する。
+ * 返り値の Promise は task の結果をそのまま返す。失敗しても後続の処理は止めない。
+ */
+export const enqueueRideLogMutation = (
+  task: () => Promise<void>
+): Promise<void> => {
+  const result = mutationQueue.then(task);
+  mutationQueue = result.catch(() => undefined);
+  return result;
+};
+
 const insertStop = (sessionId: string, stop: RideStopRecord) =>
   getDb().runAsync(
     `INSERT INTO ride_stops (sessionId, seq, stationId, stationGroupId, stationName, lineId, lineName, lineColor, kind, arrivedAt, departedAt, distanceFromPrevious, distanceSource)
@@ -199,9 +216,11 @@ export const updateRideStopDeparture = async (
 /**
  * 保存済みの乗車ログをすべて削除する。設定画面の「記録をすべて削除」から呼ぶ。
  * 駅の行は外部キーの ON DELETE CASCADE で一緒に消える。
+ * 記録の書き込みと同じ列に並べるので、先に積まれた書き込みが終わってから消す。
  */
-export const deleteAllRideLogs = async (): Promise<void> => {
-  await ensureRideLogDbInitialized();
-  const db = getDb();
-  await db.execAsync('DELETE FROM ride_sessions;');
-};
+export const deleteAllRideLogs = (): Promise<void> =>
+  enqueueRideLogMutation(async () => {
+    await ensureRideLogDbInitialized();
+    const db = getDb();
+    await db.execAsync('DELETE FROM ride_sessions;');
+  });
