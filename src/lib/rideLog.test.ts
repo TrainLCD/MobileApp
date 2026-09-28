@@ -12,6 +12,7 @@ jest.mock('expo-sqlite', () => {
 import {
   appendRideStop,
   deleteAllRideLogs,
+  enqueueRideLogMutation,
   insertRideSession,
   type RideStopRecord,
   updateRideStopDeparture,
@@ -119,6 +120,40 @@ describe('rideLog', () => {
   });
 
   it('全件削除はセッションを消し、駅の行は外部キーで一緒に消す', async () => {
+    await deleteAllRideLogs();
+    expect(mockDb.execAsync).toHaveBeenLastCalledWith(
+      'DELETE FROM ride_sessions;'
+    );
+  });
+
+  it('全件削除は、先に積まれた書き込みが終わってから実行する', async () => {
+    let finishWrite: () => void = () => {};
+    const pendingWrite = enqueueRideLogMutation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishWrite = resolve;
+        })
+    );
+    const deletion = deleteAllRideLogs();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(mockDb.execAsync).not.toHaveBeenCalledWith(
+      'DELETE FROM ride_sessions;'
+    );
+
+    finishWrite();
+    await pendingWrite;
+    await deletion;
+    expect(mockDb.execAsync).toHaveBeenLastCalledWith(
+      'DELETE FROM ride_sessions;'
+    );
+  });
+
+  it('先に積まれた書き込みが失敗しても、全件削除は実行する', async () => {
+    const failed = enqueueRideLogMutation(() =>
+      Promise.reject(new Error('db'))
+    );
+    await expect(failed).rejects.toThrow('db');
     await deleteAllRideLogs();
     expect(mockDb.execAsync).toHaveBeenLastCalledWith(
       'DELETE FROM ride_sessions;'

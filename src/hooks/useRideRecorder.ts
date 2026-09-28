@@ -1,9 +1,10 @@
 import { randomUUID } from 'expo-crypto';
 import { useAtomValue } from 'jotai';
-import { type MutableRefObject, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import {
   appendRideStop,
+  enqueueRideLogMutation,
   insertRideSession,
   type RideSessionRecord,
   type RideStopKind,
@@ -41,11 +42,9 @@ type SessionState = {
   pendingDepartures: Map<number, number>;
 };
 
-const enqueueWrite = (
-  queueRef: MutableRefObject<Promise<void>>,
-  task: () => Promise<void>
-) => {
-  queueRef.current = queueRef.current.then(task).catch((err) => {
+// 書き込みは全件削除と同じ列に並べる(src/lib/rideLog.ts の enqueueRideLogMutation)
+const enqueueWrite = (task: () => Promise<void>) => {
+  enqueueRideLogMutation(task).catch((err) => {
     console.error('useRideRecorder: 乗車ログの書き込みに失敗しました', err);
   });
 };
@@ -178,8 +177,6 @@ export const useRideRecorder = (): void => {
     pendingDepartures: new Map(),
   });
   const prevArrivedRef = useRef(arrived);
-  // DB への書き込みは1本ずつ順に流す(同じ乗車を二重に書かないため)
-  const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     if (autoModeEnabled) {
@@ -191,9 +188,8 @@ export const useRideRecorder = (): void => {
   // 失敗した場合は、これが最後の機会になる
   useEffect(() => {
     const session = sessionRef.current;
-    const queueRef = writeQueueRef;
     return () => {
-      enqueueWrite(queueRef, () => syncRideLog(session));
+      enqueueWrite(() => syncRideLog(session));
     };
   }, []);
 
@@ -250,7 +246,7 @@ export const useRideRecorder = (): void => {
         direction: selectedDirection,
       };
     }
-    enqueueWrite(writeQueueRef, () => syncRideLog(session));
+    enqueueWrite(() => syncRideLog(session));
   }, [
     autoModeEnabled,
     currentLine,
@@ -280,6 +276,6 @@ export const useRideRecorder = (): void => {
       return;
     }
     session.pendingDepartures.set(last.seq, departedAt);
-    enqueueWrite(writeQueueRef, () => syncRideLog(session));
+    enqueueWrite(() => syncRideLog(session));
   }, [arrived, autoModeEnabled]);
 };

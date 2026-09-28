@@ -23,10 +23,17 @@ jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => 'session-1'),
 }));
 
+// 共有キューは実装と同じく1本の列に並べる(書き込みの順序をテストで再現するため)
+let mockMutationQueue: Promise<void> = Promise.resolve();
 jest.mock('~/lib/rideLog', () => ({
   insertRideSession: jest.fn(() => Promise.resolve()),
   appendRideStop: jest.fn(() => Promise.resolve()),
   updateRideStopDeparture: jest.fn(() => Promise.resolve()),
+  enqueueRideLogMutation: jest.fn((task: () => Promise<void>) => {
+    const result = mockMutationQueue.then(task);
+    mockMutationQueue = result.catch(() => undefined);
+    return result;
+  }),
 }));
 
 jest.mock('./useCurrentLine', () => ({
