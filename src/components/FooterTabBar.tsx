@@ -27,7 +27,7 @@ import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { LIQUID_GLASS_AVAILABLE } from '~/utils/liquidGlass';
 import NewFeatureDot, { NEW_FEATURE_DOT_SIZE_SMALL } from './NewFeatureDot';
 
-type FooterTab = 'home' | 'search' | 'settings';
+type FooterTab = 'home' | 'search' | 'review' | 'settings';
 
 export const FOOTER_BASE_HEIGHT = 72; // Figma: h=72px
 
@@ -301,6 +301,13 @@ const FooterTabBar: React.FC<Props> = ({
     [registerSlotLayout]
   );
 
+  const handleReviewButtonLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      registerSlotLayout('review', event);
+    },
+    [registerSlotLayout]
+  );
+
   const handleSettingsButtonLayout = useCallback(
     (event: LayoutChangeEvent) => {
       registerSlotLayout('settings', event);
@@ -358,6 +365,22 @@ const FooterTabBar: React.FC<Props> = ({
           name={active === 'home' ? 'navigate' : 'navigate-outline'}
           size={28}
           color={active === 'home' ? ACTIVE_ICON_COLOR : colors.tabIconInactive}
+        />
+      </TabButton>
+
+      <TabButton
+        active={active === 'review'}
+        onPress={() => {
+          replaceTo('RideReview');
+        }}
+        onLayout={handleReviewButtonLayout}
+      >
+        <Ionicons
+          name={active === 'review' ? 'stats-chart' : 'stats-chart-outline'}
+          size={24}
+          color={
+            active === 'review' ? ACTIVE_ICON_COLOR : colors.tabIconInactive
+          }
         />
       </TabButton>
 
