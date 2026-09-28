@@ -51,7 +51,8 @@ GPS が途切れて途中の駅を検出できなかった区間も、この方�
 
 ## 集計
 
-集計は `src/utils/rideStats.ts` の純関数で行います。読み出しは `getRideSessionsStartedBetween`（`src/lib/rideLog.ts`）です。
+集計は `src/utils/rideStats.ts` の純関数で行い、
+フッターの振り返りタブ（`src/screens/RideReview.tsx`）に表示します。読み出しは `getRideSessionsStartedBetween`（`src/lib/rideLog.ts`）です。
 
 - 期間は今週・今月・今年の3つです。週は月曜日から日曜日までの7日間で、月や年をまたぐ週も7日のまま数えます。
 - 日付は端末のタイムゾーンで区切ります。乗車は、乗りはじめた時刻（`startedAt`）が入る期間と日（年は月）に数えます。
