@@ -382,7 +382,7 @@ const FooterTabBar: React.FC<Props> = ({
         onLayout={handleReviewButtonLayout}
       >
         <Ionicons
-          name={active === 'review' ? 'stats-chart' : 'stats-chart-outline'}
+          name="stats-chart"
           size={24}
           color={
             active === 'review' ? ACTIVE_ICON_COLOR : colors.tabIconInactive
