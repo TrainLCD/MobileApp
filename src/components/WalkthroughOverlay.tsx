@@ -38,6 +38,7 @@ export type WalkthroughStepId =
   | 'savedRoutes'
   | 'selectLine'
   | 'routeSearch'
+  | 'rideReview'
   | 'customize'
   | 'routeSearchIntro'
   | 'routeSearchBar'
