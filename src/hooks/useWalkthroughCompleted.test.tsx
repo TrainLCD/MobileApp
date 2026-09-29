@@ -69,6 +69,13 @@ describe('useWalkthroughCompleted', () => {
       });
 
       expect(result.current.currentStepIndex).toBe(5);
+      expect(result.current.currentStepId).toBe('rideReview');
+
+      act(() => {
+        result.current.nextStep();
+      });
+
+      expect(result.current.currentStepIndex).toBe(6);
       expect(result.current.currentStepId).toBe('customize');
     });
 
@@ -77,7 +84,7 @@ describe('useWalkthroughCompleted', () => {
 
       // 最後のステップまで進む
       act(() => {
-        result.current.goToStep(5);
+        result.current.goToStep(6);
       });
 
       expect(result.current.currentStepId).toBe('customize');
@@ -89,6 +96,10 @@ describe('useWalkthroughCompleted', () => {
       expect(storage.getString(STORAGE_KEYS.WALKTHROUGH_COMPLETED)).toBe(
         'true'
       );
+      // ウォークスルーの中で振り返りタブも案内したので、完了済みユーザー向けの案内は出さない
+      expect(
+        storage.getString(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED)
+      ).toBe('true');
       expect(result.current.isWalkthroughCompleted).toBe(true);
     });
 
@@ -225,7 +236,19 @@ describe('useWalkthroughCompleted', () => {
       expect(result.current.currentStep?.id).toBe('routeSearch');
       expect(result.current.currentStep?.titleKey).toBe('walkthroughTitle6');
 
-      // Step 5: customize
+      // Step 5: rideReview
+      act(() => {
+        result.current.nextStep();
+      });
+      expect(result.current.currentStep?.id).toBe('rideReview');
+      expect(result.current.currentStep?.titleKey).toBe(
+        'walkthroughTitleRideReview'
+      );
+      expect(result.current.currentStep?.descriptionKey).toBe(
+        'walkthroughDescriptionRideReview'
+      );
+
+      // Step 6: customize
       act(() => {
         result.current.nextStep();
       });
@@ -236,7 +259,7 @@ describe('useWalkthroughCompleted', () => {
     it('totalStepsが正しい値を返す', () => {
       const { result } = renderHook(() => useWalkthroughCompleted());
 
-      expect(result.current.totalSteps).toBe(6);
+      expect(result.current.totalSteps).toBe(7);
     });
   });
 
@@ -251,7 +274,7 @@ describe('useWalkthroughCompleted', () => {
 
       // 最後のステップに移動してnextStepを呼ぶ
       act(() => {
-        result.current.goToStep(5);
+        result.current.goToStep(6);
       });
 
       act(() => {
