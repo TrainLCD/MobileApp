@@ -398,7 +398,7 @@
   "rideReviewPrefecturesUnrecorded": "都道府県が分からない乗車（%{count}回）は、この集計に入れていません。都道府県を記録する前の乗車も、これに含まれます。",
   "rideReviewPrefecturesNone": "この期間の乗車は、どれも都道府県が分かりません。都道府県を記録する前の乗車も、これに含まれます。",
   "rideReviewLineValue": "%{distance} km・%{count}回",
-  "rideReviewNote": "到着を検出した駅のあいだを、線路の長さで合計しています。線路の長さが分からない区間は、駅どうしの直線距離で代えています。オートモードの乗車は含みません。",
+  "rideReviewNote": "到着を検出した駅のあいだを、線路の長さで合計しています。オートモードの乗車は含みません。",
   "rideReviewEmptyTitle": "まだ記録がありません",
   "rideReviewEmptyBody": "路線を選んで乗車すると、到着した駅ごとに距離と時間を記録します。振り返りを有効にする前の乗車は集計できません。",
   "rideReviewIntroTitle": "乗車の記録をはじめませんか",
