@@ -116,6 +116,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
+        // 振り返りの移動経路の地図(Google マップ)のキー。キーはリポジトリに置かず、
+        // ビルドする環境の環境変数から渡す(GitHub Actions / EAS はシークレット、手元は .env.local)
+        manifestPlaceholders += [googleMapsApiKey: System.getenv('GOOGLE_MAPS_API_KEY') ?: '']
     }
     signingConfigs {
         debug {

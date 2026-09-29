@@ -2,6 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { AppState } from 'react-native';
 import { getRideSessionsStartedBetween } from '~/lib/rideLog';
+import { buildRideRoutes, type RideRoutes } from '~/utils/rideRoutes';
 import {
   getRidePeriodRange,
   type RidePeriod,
@@ -18,6 +19,8 @@ type RideStatsState =
       period: RidePeriod;
       range: RidePeriodRange;
       stats: RideStats;
+      // 移動経路の地図に描く線
+      routes: RideRoutes;
     };
 
 // setTimeout に渡せる最大の待ち時間(約24.8日)。年の終わりまではこれより長いので、
@@ -86,6 +89,7 @@ export const useRideStats = (
               period,
               range,
               stats: summarizeRides(sessions, period, range),
+              routes: buildRideRoutes(sessions, range),
             });
           })
           .catch((error) => {
