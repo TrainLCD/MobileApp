@@ -31,6 +31,7 @@ export const STORAGE_KEYS = {
   ROUTE_SEARCH_WALKTHROUGH_COMPLETED:
     '@TrainLCD:routeSearchWalkthroughCompleted',
   SETTINGS_WALKTHROUGH_COMPLETED: '@TrainLCD:settingsWalkthroughCompleted',
+  RIDE_REVIEW_WALKTHROUGH_COMPLETED: '@TrainLCD:rideReviewWalkthroughCompleted',
   WRONG_DIRECTION_NOTIFY_ENABLED: '@TrainLCD:wrongDirectionNotifyEnabled',
   PICTURE_IN_PICTURE_ENABLED: '@TrainLCD:pictureInPictureEnabled',
   PORTRAIT_MODE_ENABLED: '@TrainLCD:portraitModeEnabled',
