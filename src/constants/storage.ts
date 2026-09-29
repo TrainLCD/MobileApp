@@ -32,6 +32,8 @@ export const STORAGE_KEYS = {
     '@TrainLCD:routeSearchWalkthroughCompleted',
   SETTINGS_WALKTHROUGH_COMPLETED: '@TrainLCD:settingsWalkthroughCompleted',
   RIDE_REVIEW_WALKTHROUGH_COMPLETED: '@TrainLCD:rideReviewWalkthroughCompleted',
+  // 設定の「振り返り」を開いたか。設定リストとフッターの設定タブの印を消すために使う
+  RIDE_LOG_SETTINGS_SEEN: '@TrainLCD:rideLogSettingsSeen',
   // 振り返りタブの案内を見終えたか。路線選択画面のウォークスルーを完了済みのユーザーに、
   // 後から足した振り返りタブのステップだけを1回出すために使う(#7118)
   RIDE_REVIEW_TAB_INTRO_COMPLETED: '@TrainLCD:rideReviewTabIntroCompleted',

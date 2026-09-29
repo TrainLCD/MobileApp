@@ -260,6 +260,16 @@ describe('AppSettingsScreen', () => {
     ]);
   });
 
+  it('振り返りの設定をまだ開いていなければ、振り返りの行に印を付け、外観の行には付けない', async () => {
+    const { findByTestId, queryByTestId } = render(<AppSettingsScreen />);
+    expect(
+      await findByTestId('new-feature-dot-personalize_ride_log')
+    ).toBeTruthy();
+    expect(
+      queryByTestId('new-feature-dot-personalize_color_scheme')
+    ).toBeNull();
+  });
+
   it('カナリアリリースでは「その他」の見出しの下に試験的機能を出す', async () => {
     mockIsDevApp = true;
     const { toJSON, getByText } = render(<AppSettingsScreen />);

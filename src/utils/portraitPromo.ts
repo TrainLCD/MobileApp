@@ -102,8 +102,8 @@ export const recordPortraitBannerShown = (): void => {
 };
 
 /**
- * 設定リストの印とスポットライト(案C)を出してよいか。
- * 外観画面を一度開いた時点で両方とも消える。
+ * 外観画面のスポットライト(案C)を出してよいか。
+ * 外観画面を一度開いた時点で出さなくなる。
  */
 export const canShowPortraitAppearanceHint = (): boolean => {
   if (isPortraitPromoFinished()) {

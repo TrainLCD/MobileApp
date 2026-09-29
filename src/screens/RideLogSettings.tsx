@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { useAtom, useAtomValue } from 'jotai';
-import React, { useCallback, useRef, useState } from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   Animated as RNAnimated,
@@ -14,7 +14,10 @@ import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
 import { deleteAllRideLogs, hasRideLogs } from '~/lib/rideLog';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
+import {
+  rideLogEnabledAtom,
+  rideLogSettingsSeenAtom,
+} from '~/store/atoms/rideLog';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
@@ -96,6 +99,18 @@ const RideLogSettingsScreen: React.FC = () => {
   const [rideLogEnabled, setRideLogEnabled] = useAtom(rideLogEnabledAtom);
 
   const navigation = useNavigation();
+
+  // 開いた時点で、設定リストとフッターの設定タブの印を消す。永続化と合わせて atom も更新する
+  const setSettingsSeen = useSetAtom(rideLogSettingsSeenAtom);
+  useEffect(() => {
+    setSettingsSeen(true);
+    try {
+      storage.set(STORAGE_KEYS.RIDE_LOG_SETTINGS_SEEN, 'true');
+    } catch (error) {
+      // 保存に失敗しても、このセッションでは atom で印を消しておく
+      console.error('Failed to save ride log settings seen status', error);
+    }
+  }, [setSettingsSeen]);
 
   // 保存済みの記録があるか。読み込み中と読み込みに失敗したときは null にして、
   // 削除を押せるままにする(DB の不具合で記録を消せなくならないようにする)
