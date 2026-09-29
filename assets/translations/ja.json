@@ -365,6 +365,7 @@
   "rideLogDescription": "オンにすると、到着・通過した駅とその時刻をこの端末の中だけに保存し、今週・今月・今年の乗車距離と乗車時間を集計します。位置情報の座標は保存せず、サーバにも送りません。オンにする前の乗車はさかのぼって記録できません。オフにしても、保存済みの記録は消えません。",
   "rideLogDataSection": "記録",
   "rideLogDeleteAll": "記録をすべて削除",
+  "rideLogDeleteAllEmpty": "保存済みの記録はありません。",
   "rideLogDeleteAllConfirm": "保存済みの乗車の記録をすべて削除します。削除した記録は元に戻せません。",
   "rideLogDeleted": "記録をすべて削除しました。",
   "rideLogDeleteFailed": "記録を削除できませんでした。もう一度お試しください。",

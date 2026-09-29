@@ -364,6 +364,7 @@
   "rideLogDescription": "When enabled, the stations you arrive at or pass through and their times are saved only on this device, and your ride distance and time are totaled for this week, month, and year. Your location coordinates are not saved and nothing is sent to a server. Rides taken before you turn this on cannot be recorded. Turning it off does not delete saved records.",
   "rideLogDataSection": "Records",
   "rideLogDeleteAll": "Delete all records",
+  "rideLogDeleteAllEmpty": "There are no saved rides.",
   "rideLogDeleteAllConfirm": "All saved ride records will be deleted. This cannot be undone.",
   "rideLogDeleted": "All records have been deleted.",
   "rideLogDeleteFailed": "Failed to delete records. Please try again.",
