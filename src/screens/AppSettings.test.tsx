@@ -4,7 +4,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react-native';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { CardChevron } from '~/components/CardChevron';
 import type {
   WalkthroughStep,
@@ -21,6 +21,14 @@ jest.mock('@react-navigation/native', () => ({
 
 jest.mock('react-native-app-clip', () => ({
   isClip: () => false,
+}));
+
+let mockIsDevApp = false;
+
+jest.mock('~/utils/isDevApp', () => ({
+  get isDevApp() {
+    return mockIsDevApp;
+  },
 }));
 
 jest.mock('expo-web-browser', () => ({
@@ -142,6 +150,7 @@ describe('AppSettingsScreen', () => {
 
   afterEach(() => {
     mockCurrentStepId = null;
+    mockIsDevApp = false;
     jest.clearAllMocks();
     jest.restoreAllMocks();
   });
@@ -208,5 +217,128 @@ describe('AppSettingsScreen', () => {
 
     await waitFor(() => expect(measureSpy).toHaveBeenCalled());
     expect(mockSetSpotlightArea).not.toHaveBeenCalled();
+  });
+
+  // 画面上の文字列を上から順に集める
+  const collectTexts = (node: unknown): string[] => {
+    if (typeof node === 'string') {
+      return [node];
+    }
+    if (Array.isArray(node)) {
+      return node.flatMap(collectTexts);
+    }
+    if (node && typeof node === 'object' && 'children' in node) {
+      return collectTexts((node as { children: unknown }).children ?? []);
+    }
+    return [];
+  };
+
+  it('パーソナライズの項目を見出しで分け、項目の無い見出しは出さない', async () => {
+    const { toJSON, getByText } = render(<AppSettingsScreen />);
+
+    await waitFor(() =>
+      expect(getByText('settingsSectionDisplay')).toBeTruthy()
+    );
+
+    // jest の Platform.OS は ios のため Android 向けは出ず、
+    // カナリアリリースでもないので試験的機能と「その他」の見出しも出ない
+    expect(collectTexts(toJSON())).toEqual([
+      'settingsSectionDisplay',
+      'selectThemeTitle',
+      'colorSchemeSettings',
+      'displayLanguages',
+      'settingsSectionNotifications',
+      'notificationSettings',
+      'autoAnnounce',
+      'settingsSectionActivity',
+      'rideLogSettings',
+      'settingsSectionDevice',
+      'batterySettings',
+      'aboutApp',
+      'faq',
+      'license',
+    ]);
+  });
+
+  it('カナリアリリースでは「その他」の見出しの下に試験的機能を出す', async () => {
+    mockIsDevApp = true;
+    const { toJSON, getByText } = render(<AppSettingsScreen />);
+
+    await waitFor(() => expect(getByText('settingsSectionOther')).toBeTruthy());
+
+    const texts = collectTexts(toJSON());
+    expect(
+      texts.slice(
+        texts.indexOf('settingsSectionOther'),
+        texts.indexOf('aboutApp')
+      )
+    ).toEqual(['settingsSectionOther', 'experimentalSettings']);
+  });
+
+  describe('ウォークスルーで案内する行までスクロールする', () => {
+    // 測り直しのたびにテーマ設定・外観・自動アナウンス・表示言語の順で測られる。
+    // 自動アナウンスは2つ目の見出しの下にあるため、他の行より下に置く
+    const ROW_Y_IN_MEASURE_ORDER = [120, 196, 500, 272];
+    let scrollToSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      let measureCount = 0;
+      measureSpy.mockImplementation((callback) => {
+        const y = ROW_Y_IN_MEASURE_ORDER[measureCount % 4];
+        measureCount += 1;
+        callback(MEASURED_RECT.x, y, MEASURED_RECT.width, MEASURED_RECT.height);
+      });
+      scrollToSpy = jest
+        .spyOn(ScrollView.prototype, 'scrollTo')
+        .mockImplementation(() => undefined);
+    });
+
+    const renderWithScrollSize = async (
+      contentHeight: number,
+      viewportHeight: number
+    ) => {
+      const utils = render(<AppSettingsScreen />);
+      const scrollView = utils.UNSAFE_getByType(ScrollView);
+      fireEvent(scrollView, 'layout', {
+        nativeEvent: { layout: { height: viewportHeight } },
+      });
+      fireEvent(scrollView, 'contentSizeChange', 0, contentHeight);
+      await waitFor(() => expect(mockSetSpotlightArea).toHaveBeenCalled());
+      return utils;
+    };
+
+    it('下の見出しにある行はテーマ設定の行の高さまで動かして切り抜く', async () => {
+      mockCurrentStepId = 'settingsTts';
+      await renderWithScrollSize(1200, 700);
+
+      await waitFor(() =>
+        expect(scrollToSpy).toHaveBeenLastCalledWith({
+          y: 380,
+          animated: false,
+        })
+      );
+      expect(lastSpotlightArea()?.y).toBe(120);
+    });
+
+    it('スクロールできる量を超えては動かさない', async () => {
+      mockCurrentStepId = 'settingsTts';
+      await renderWithScrollSize(800, 700);
+
+      await waitFor(() =>
+        expect(scrollToSpy).toHaveBeenLastCalledWith({
+          y: 100,
+          animated: false,
+        })
+      );
+      expect(lastSpotlightArea()?.y).toBe(400);
+    });
+
+    it('最初の行を案内するときはスクロールしない', async () => {
+      mockCurrentStepId = 'settingsTheme';
+      await renderWithScrollSize(1200, 700);
+
+      await waitFor(() => expect(lastSpotlightArea()?.y).toBe(120));
+      expect(scrollToSpy).not.toHaveBeenCalled();
+    });
   });
 });
