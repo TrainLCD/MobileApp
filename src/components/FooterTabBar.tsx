@@ -21,7 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
+import { useRideLogSettingsHint } from '~/hooks/useRideLogSettingsHint';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
@@ -216,7 +216,7 @@ const FooterTabBar: React.FC<Props> = ({
   const route = useRoute();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
-  const showPortraitPromoHint = usePortraitPromoAppearanceHint();
+  const showSettingsHint = useRideLogSettingsHint();
 
   // タブ間の移動で履歴を積まないよう navigate ではなく replace で遷移する。
   // 同一画面への replace は画面の再マウントになるだけなので無視する
@@ -415,8 +415,8 @@ const FooterTabBar: React.FC<Props> = ({
           }
         />
         {/* 「設定のどこかに新しいものがある」という道しるべ。目的地(設定リストの
-            「外観」行)側だけを脈打たせ、こちらは静止させて視線を割らない */}
-        {showPortraitPromoHint ? (
+            「振り返り」行)側だけを脈打たせ、こちらは静止させて視線を割らない */}
+        {showSettingsHint ? (
           <View style={styles.tabBadge} testID="footer-settings-badge">
             <NewFeatureDot
               color={ACTIVE_ICON_COLOR}

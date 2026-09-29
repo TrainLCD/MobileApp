@@ -28,7 +28,7 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { FAQ_URL } from '~/constants';
-import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
+import { useRideLogSettingsHint } from '~/hooks/useRideLogSettingsHint';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isBetaBuild } from '~/utils/isBetaBuild';
@@ -193,7 +193,7 @@ const SettingsItem = ({
       </View>
 
       {showNewFeatureDot ? (
-        <View style={{ marginRight: 12 }}>
+        <View style={{ marginRight: 12 }} testID={`new-feature-dot-${item.id}`}>
           <NewFeatureDot color={colors.accent} />
         </View>
       ) : null}
@@ -246,7 +246,7 @@ const AppSettingsScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
   const navigation = useNavigation();
-  const showPortraitPromoHint = usePortraitPromoAppearanceHint();
+  const showRideLogHint = useRideLogSettingsHint();
 
   const themeRef = useRef<View>(null);
   const colorSchemeRef = useRef<View>(null);
@@ -575,8 +575,8 @@ const AppSettingsScreen: React.FC = () => {
                     isLast={index === section.items.length - 1}
                     onPress={item.onPress}
                     showNewFeatureDot={
-                      showPortraitPromoHint &&
-                      item.id === SETTING_ITEM_ID_MAP.personalize_color_scheme
+                      showRideLogHint &&
+                      item.id === SETTING_ITEM_ID_MAP.personalize_ride_log
                     }
                   />
                 );
