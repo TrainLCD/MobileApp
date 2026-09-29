@@ -58,6 +58,7 @@ const at = (id: number, lon: number, pass = false) =>
     longitude: lon,
     stopCondition: pass ? StopCondition.Not : StopCondition.All,
     line: { id: 11, nameShort: '中央線快速', color: '#F15A22' },
+    prefectureId: 13,
   });
 
 const a = at(1, 139.7);
@@ -373,6 +374,40 @@ describe('useRideRecorder', () => {
         { latitude: 35.68, longitude: 139.733 },
       ],
     });
+  });
+
+  it('駅の都道府県を記録し、1〜47 の外の値は記録しない', async () => {
+    const outside = createStation(9, {
+      latitude: 35.68,
+      longitude: 139.755,
+      stopCondition: StopCondition.All,
+      line: { id: 11, nameShort: '中央線快速', color: '#F15A22' },
+      prefectureId: 99,
+    });
+    const { store } = setup();
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, c);
+      store.set(arrivedAtom, true);
+    });
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, outside);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    // 書き込み待ちのあいだに検出した駅はセッションの書き込みにまとめて入るので、
+    // セッションと追記の両方から書いた駅を集める
+    const [, inserted] = (insertRideSession as jest.Mock).mock.calls[0];
+    const appended = (appendRideStop as jest.Mock).mock.calls.map(
+      ([, stop]) => stop
+    );
+    const written = [...inserted, ...appended];
+    expect(written.map((stop) => [stop.stationId, stop.prefectureId])).toEqual([
+      [1, 13],
+      [3, 13],
+      [9, null],
+    ]);
   });
 
   it('線路の長さを知っている区間は、線路の長さで記録する', async () => {
