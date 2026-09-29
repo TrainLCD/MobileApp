@@ -20,13 +20,15 @@ import {
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import { STORAGE_KEYS } from '~/constants';
+import { PREFECTURES_JA, PREFECTURES_ROMAN } from '~/constants/province';
 import { useRideStats } from '~/hooks/useRideStats';
 import { storage } from '~/lib/storage';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import { translate } from '~/translation';
+import { isJapanese, translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
+import type { RidePrefectures } from '~/utils/ridePrefectures';
 import type { RideRoutes } from '~/utils/rideRoutes';
 import type { RidePeriod, RideStats, RideStatsBucket } from '~/utils/rideStats';
 import {
@@ -41,6 +43,9 @@ const CHART_HEIGHT = 96;
 const ROUTE_MAP_HEIGHT = 200;
 const EMPTY_BAR_HEIGHT = 2;
 const TOP_LINES_LIMIT = 5;
+// これを超えたら、残りの都道府県は「すべて表示」を押すまで出さない
+const TOP_PREFECTURES_LIMIT = 5;
+const PREFECTURE_COUNT = 47;
 const PERIODS: RidePeriod[] = ['week', 'month', 'year'];
 
 const PERIOD_LABEL_KEYS: Record<RidePeriod, string> = {
@@ -108,6 +113,15 @@ const styles = StyleSheet.create({
   lineTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
   lineFill: { height: 4, borderRadius: 2 },
   note: { fontSize: 11, lineHeight: 16 },
+  prefectureCountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+  prefectureToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingTop: 8,
+  },
+  prefectureToggleText: { fontSize: 14, fontWeight: 'bold' },
   routeMap: {
     height: ROUTE_MAP_HEIGHT,
     borderRadius: 8,
@@ -503,6 +517,129 @@ const TopLines = ({ stats }: { stats: RideStats }) => {
   );
 };
 
+const prefectureName = (prefectureId: number): string =>
+  (isJapanese ? PREFECTURES_JA : PREFECTURES_ROMAN)[prefectureId - 1] ?? '';
+
+const Prefectures = ({ prefectures }: { prefectures: RidePrefectures }) => {
+  const colors = useAppColors();
+  // 期間を切り替えたら閉じた状態に戻す(呼び出し側で期間を key にする)
+  const [expanded, setExpanded] = useState(false);
+  const all = prefectures.prefectures;
+  const collapsible = all.length > TOP_PREFECTURES_LIMIT;
+  const shown =
+    collapsible && !expanded ? all.slice(0, TOP_PREFECTURES_LIMIT) : all;
+  const max = all[0]?.distanceMeters ?? 0;
+  const toggleColor = ACCENT_COLOR;
+
+  return (
+    <>
+      <Heading>{translate('rideReviewPrefectures')}</Heading>
+      <Card>
+        {all.length === 0 ? (
+          <Typography
+            style={[styles.bodyText, { color: colors.secondaryText }]}
+          >
+            {translate('rideReviewPrefecturesNone')}
+          </Typography>
+        ) : (
+          <>
+            <View
+              style={styles.prefectureCountRow}
+              accessible
+              accessibilityLabel={translate('rideReviewPrefectureCountLabel', {
+                count: all.length,
+                total: PREFECTURE_COUNT,
+              })}
+            >
+              <Typography
+                style={styles.distanceValue}
+                testID="ride-review-prefecture-count"
+              >
+                {all.length}
+              </Typography>
+              <Typography
+                style={[styles.cardTitle, { color: colors.secondaryText }]}
+              >
+                {translate('rideReviewPrefectureTotal', {
+                  total: PREFECTURE_COUNT,
+                })}
+              </Typography>
+            </View>
+            {shown.map((prefecture) => (
+              <View
+                key={prefecture.prefectureId}
+                style={styles.lineBody}
+                testID="ride-review-prefecture"
+              >
+                <View style={styles.lineHeader}>
+                  <Typography numberOfLines={1} style={styles.lineName}>
+                    {prefectureName(prefecture.prefectureId)}
+                  </Typography>
+                  <Typography
+                    style={[styles.lineValue, { color: colors.secondaryText }]}
+                  >
+                    {`${formatDistanceKm(prefecture.distanceMeters)} km`}
+                  </Typography>
+                </View>
+                <View
+                  style={[styles.lineTrack, { backgroundColor: colors.border }]}
+                >
+                  <View
+                    style={[
+                      styles.lineFill,
+                      {
+                        width: `${max > 0 ? (prefecture.distanceMeters / max) * 100 : 0}%`,
+                        backgroundColor: ACCENT_COLOR,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            ))}
+            {collapsible ? (
+              <Pressable
+                onPress={() => setExpanded((prev) => !prev)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded }}
+                hitSlop={8}
+                style={styles.prefectureToggle}
+                testID="ride-review-prefectures-toggle"
+              >
+                <Typography
+                  style={[styles.prefectureToggleText, { color: toggleColor }]}
+                >
+                  {expanded
+                    ? translate('close')
+                    : translate('rideReviewPrefecturesShowAll', {
+                        count: all.length - TOP_PREFECTURES_LIMIT,
+                      })}
+                </Typography>
+                <Ionicons
+                  name={expanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={toggleColor}
+                />
+              </Pressable>
+            ) : null}
+          </>
+        )}
+        {all.length > 0 && prefectures.unrecordedRideCount > 0 ? (
+          <Typography
+            style={[
+              styles.note,
+              { color: colors.secondaryText, fontWeight: 'bold' },
+            ]}
+          >
+            {translate('rideReviewPrefecturesUnrecorded', {
+              count: prefectures.unrecordedRideCount,
+            })}
+          </Typography>
+        ) : null}
+      </Card>
+    </>
+  );
+};
+
 const Intro = () => {
   const colors = useAppColors();
   const setRideLogEnabled = useSetAtom(rideLogEnabledAtom);
@@ -620,6 +757,7 @@ const Report = () => {
                 routes={state.routes}
               />
               <TopLines stats={state.stats} />
+              <Prefectures key={period} prefectures={state.prefectures} />
               <Typography
                 style={[styles.note, { color: colors.secondaryText }]}
               >
