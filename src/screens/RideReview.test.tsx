@@ -2,6 +2,7 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { Polyline } from 'react-native-maps';
 import { STORAGE_KEYS } from '~/constants';
+import { useRideReviewWalkthrough } from '~/hooks/useRideReviewWalkthrough';
 import {
   getRideSessionsStartedBetween,
   type RideSessionWithStops,
@@ -24,6 +25,15 @@ jest.mock('@react-navigation/native', () => {
     CommonActions: {
       navigate: (payload: unknown) => ({ type: 'NAVIGATE', payload }),
     },
+  };
+});
+
+// 実物のフックを包み、案内を始めてよいか(canStart)を記録する
+jest.mock('~/hooks/useRideReviewWalkthrough', () => {
+  const actual = jest.requireActual('~/hooks/useRideReviewWalkthrough');
+  return {
+    ...actual,
+    useRideReviewWalkthrough: jest.fn(actual.useRideReviewWalkthrough),
   };
 });
 
@@ -253,6 +263,31 @@ describe('RideReviewScreen', () => {
     const { findByText, queryByTestId } = renderScreen(true);
     expect(await findByText('rideReviewRouteMapNone')).toBeTruthy();
     expect(queryByTestId('ride-review-route-map-expand')).toBeNull();
+  });
+
+  describe('ウォークスルー(#7117)', () => {
+    const lastCanStart = () => {
+      const calls = (useRideReviewWalkthrough as jest.Mock).mock.calls;
+      return calls[calls.length - 1]?.[0];
+    };
+
+    it('記録があり、案内するカードがそろったら始める', async () => {
+      mockGetRides.mockResolvedValueOnce([sampleRide()]);
+      const { findByTestId } = renderScreen(true);
+      await findByTestId('ride-review-chart');
+      await waitFor(() => expect(lastCanStart()).toBe(true));
+    });
+
+    it('記録が無ければ始めない', async () => {
+      const { findByText } = renderScreen(true);
+      await findByText('rideReviewEmptyTitle');
+      expect(lastCanStart()).toBe(false);
+    });
+
+    it('振り返りが無効なら始めない', () => {
+      renderScreen(false);
+      expect(lastCanStart()).toBe(false);
+    });
   });
 
   it('読み込みが終わるまで、読み込み中の表示を出す', async () => {
