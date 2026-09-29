@@ -108,8 +108,14 @@ export type RideDistanceMeasurement = {
   source: RideDistanceSource;
 };
 
+export type RideSegmentMeasurement = RideDistanceMeasurement & {
+  // from から to までにたどった駅(両端を含む)。距離を測ったのと同じ並び
+  path: StationCoords[];
+};
+
 /**
- * 乗車中に続けて検出した2駅のあいだの乗車距離(メートル)と、その求め方を返す。
+ * 乗車中に続けて検出した2駅のあいだの乗車距離(メートル)と、その求め方、
+ * たどった駅の並びを返す。
  *
  * GPS が途切れて途中の駅を検出できなかった場合も、乗車中の駅リスト上で
  * 2駅のあいだにある駅をたどって間を埋める。隣り合う駅どうしは、StationAPI から
@@ -117,30 +123,47 @@ export type RideDistanceMeasurement = {
  * どちらかの駅がリストに無ければ、2駅の直線距離を返す。
  * 環状線はどちら回りか分からないため、短い方の経路をとる。
  */
+export const measureRideSegment = (
+  stations: StationCoords[],
+  from: StationCoords,
+  to: StationCoords,
+  isLoopLine: boolean
+): RideSegmentMeasurement => {
+  if (from.id != null && from.id === to.id) {
+    return { meters: 0, source: 'haversine', path: [from] };
+  }
+  const fromIndex = stations.findIndex((s) => s.id === from.id);
+  const toIndex = stations.findIndex((s) => s.id === to.id);
+  if (fromIndex === -1 || toIndex === -1) {
+    const path = [from, to];
+    return { ...toMeasurement(sumAlong(path)), path };
+  }
+  if (isLoopLine) {
+    const forwardPath = loopPath(stations, fromIndex, toIndex, 1);
+    const backwardPath = loopPath(stations, fromIndex, toIndex, -1);
+    const forward = sumAlong(forwardPath);
+    const backward = sumAlong(backwardPath);
+    return forward.meters <= backward.meters
+      ? { ...toMeasurement(forward), path: forwardPath }
+      : { ...toMeasurement(backward), path: backwardPath };
+  }
+  const start = Math.min(fromIndex, toIndex);
+  const end = Math.max(fromIndex, toIndex);
+  const slice = stations.slice(start, end + 1);
+  // 駅リストの並びと逆向きに乗ったときも、from から to の向きに並べて返す
+  const path = fromIndex <= toIndex ? slice : [...slice].reverse();
+  return { ...toMeasurement(sumAlong(slice)), path };
+};
+
+/** 距離とその求め方だけが要る呼び出し元向け。中身は measureRideSegment と同じ */
 export const measureRideDistance = (
   stations: StationCoords[],
   from: StationCoords,
   to: StationCoords,
   isLoopLine: boolean
 ): RideDistanceMeasurement => {
-  if (from.id != null && from.id === to.id) {
-    return { meters: 0, source: 'haversine' };
-  }
-  const fromIndex = stations.findIndex((s) => s.id === from.id);
-  const toIndex = stations.findIndex((s) => s.id === to.id);
-  if (fromIndex === -1 || toIndex === -1) {
-    return toMeasurement(sumAlong([from, to]));
-  }
-  if (isLoopLine) {
-    const forward = sumAlong(loopPath(stations, fromIndex, toIndex, 1));
-    const backward = sumAlong(loopPath(stations, fromIndex, toIndex, -1));
-    return toMeasurement(
-      forward.meters <= backward.meters ? forward : backward
-    );
-  }
-  const start = Math.min(fromIndex, toIndex);
-  const end = Math.max(fromIndex, toIndex);
-  return toMeasurement(sumAlong(stations.slice(start, end + 1)));
+  const { meters, source } = measureRideSegment(stations, from, to, isLoopLine);
+  return { meters, source };
 };
 
 // 距離だけが要る呼び出し元向け

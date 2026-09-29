@@ -27,6 +27,19 @@ const mockDb = jest.requireMock('expo-sqlite').__mockDb as {
   withTransactionAsync: jest.Mock;
 };
 
+// 初期化の列の確認(PRAGMA table_info)と、乗車・駅の読み出しを SQL で振り分ける。
+// 初期化はモジュールで1度だけなので、どのテストで走っても読み出しの結果を取り違えない
+const mockReads = (sessions: unknown[], stops: unknown[]) => {
+  mockDb.getAllAsync.mockImplementation((sql: string) => {
+    if (sql.startsWith('PRAGMA')) {
+      return Promise.resolve([]);
+    }
+    return Promise.resolve(
+      sql.includes('FROM ride_sessions') ? sessions : stops
+    );
+  });
+};
+
 const stop = (seq: number, overrides: Partial<RideStopRecord> = {}) => ({
   seq,
   stationId: 100 + seq,
@@ -40,6 +53,9 @@ const stop = (seq: number, overrides: Partial<RideStopRecord> = {}) => ({
   departedAt: null,
   distanceFromPrevious: 500,
   distanceSource: 'haversine' as const,
+  latitude: null,
+  longitude: null,
+  pathFromPrevious: null,
   ...overrides,
 });
 
@@ -72,6 +88,14 @@ describe('rideLog', () => {
     expect(
       sqls.some((q) => q.includes('CREATE TABLE IF NOT EXISTS ride_stops'))
     ).toBe(true);
+    // 座標の列が無い古いテーブル(table_info が列を返さない)には列を足す
+    expect(sqls).toEqual(
+      expect.arrayContaining([
+        'ALTER TABLE ride_stops ADD COLUMN latitude REAL;',
+        'ALTER TABLE ride_stops ADD COLUMN longitude REAL;',
+        'ALTER TABLE ride_stops ADD COLUMN pathFromPrevious TEXT;',
+      ])
+    );
 
     // セッション1行と駅2行を1トランザクションで書く
     expect(mockDb.withTransactionAsync).toHaveBeenCalledTimes(1);
@@ -96,8 +120,54 @@ describe('rideLog', () => {
         null,
         500,
         'haversine',
+        null,
+        null,
+        null,
       ],
     ]);
+  });
+
+  it('駅の座標と、あいだに通った駅の座標を書く', async () => {
+    await appendRideStop(
+      's1',
+      stop(2, {
+        latitude: 35.6812,
+        longitude: 139.7671,
+        pathFromPrevious: [
+          { latitude: 35.6918, longitude: 139.7709 },
+          { latitude: 35.6995, longitude: 139.765 },
+        ],
+      })
+    );
+    const [, params] = mockDb.runAsync.mock.calls[0] as [string, unknown[]];
+    expect(params.slice(-3)).toEqual([
+      35.6812,
+      139.7671,
+      '[[35.6918,139.7709],[35.6995,139.765]]',
+    ]);
+  });
+
+  it('座標の列がすでにあるテーブルには列を足さない', async () => {
+    await jest.isolateModulesAsync(async () => {
+      const db = jest.requireMock('expo-sqlite').__mockDb as typeof mockDb;
+      db.getAllAsync.mockImplementation((sql: string) =>
+        Promise.resolve(
+          sql.startsWith('PRAGMA')
+            ? [
+                { name: 'latitude' },
+                { name: 'longitude' },
+                { name: 'pathFromPrevious' },
+              ]
+            : []
+        )
+      );
+      const { ensureRideLogDbInitialized } = require('./rideLog');
+      await ensureRideLogDbInitialized();
+      const sqls = (db.execAsync.mock.calls as unknown as string[][]).map(
+        ([sql]) => sql
+      );
+      expect(sqls.some((q) => q.startsWith('ALTER TABLE'))).toBe(false);
+    });
   });
 
   it('到着した駅を足すと終了時刻も進める', async () => {
@@ -179,17 +249,23 @@ describe('rideLog', () => {
       ...stop(seq),
       kind,
     });
-    mockDb.getAllAsync.mockResolvedValueOnce([session]).mockResolvedValueOnce([
-      row(0, 'arrived'),
-      row(1, 'passed'),
-      // このバージョンが知らない値の行は読み飛ばす
-      row(2, 'unknown'),
-      row(3, 'arrived'),
-    ]);
+    mockReads(
+      [session],
+      [
+        row(0, 'arrived'),
+        row(1, 'passed'),
+        // このバージョンが知らない値の行は読み飛ばす
+        row(2, 'unknown'),
+        row(3, 'arrived'),
+      ]
+    );
 
     const result = await getRideSessionsStartedBetween(0, 10_000);
 
-    expect(mockDb.getAllAsync.mock.calls[0][1]).toEqual([0, 10_000]);
+    const sessionQuery = mockDb.getAllAsync.mock.calls.find(([sql]) =>
+      (sql as string).includes('FROM ride_sessions WHERE')
+    );
+    expect(sessionQuery?.[1]).toEqual([0, 10_000]);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('s1');
     expect(result[0].stops.map((s) => [s.seq, s.kind])).toEqual([
@@ -200,10 +276,62 @@ describe('rideLog', () => {
     expect(result[0].stops[0]).not.toHaveProperty('sessionId');
   });
 
+  it('経路の座標を読み戻し、壊れた値は経路が無いものとして扱う', async () => {
+    mockReads(
+      [
+        {
+          id: 's1',
+          startedAt: 1_000,
+          endedAt: 5_000,
+          lineId: 11,
+          lineName: null,
+          lineColor: null,
+          trainTypeId: null,
+          direction: null,
+        },
+      ],
+      [
+        {
+          sessionId: 's1',
+          ...stop(0),
+          latitude: 35.6812,
+          longitude: 139.7671,
+          pathFromPrevious: '[]',
+        },
+        {
+          sessionId: 's1',
+          ...stop(1),
+          latitude: 35.6995,
+          longitude: 139.765,
+          pathFromPrevious: '[[35.6918,139.7709]]',
+        },
+        { sessionId: 's1', ...stop(2), pathFromPrevious: 'not json' },
+        { sessionId: 's1', ...stop(3), pathFromPrevious: '[["a", 1]]' },
+      ]
+    );
+
+    const [session] = await getRideSessionsStartedBetween(0, 10_000);
+
+    expect(session.stops.map((s) => s.pathFromPrevious)).toEqual([
+      [],
+      [{ latitude: 35.6918, longitude: 139.7709 }],
+      null,
+      null,
+    ]);
+    expect(session.stops[1]).toMatchObject({
+      latitude: 35.6995,
+      longitude: 139.765,
+    });
+  });
+
   it('期間に乗車が無ければ駅は読みに行かない', async () => {
-    mockDb.getAllAsync.mockResolvedValueOnce([]);
+    mockReads([], []);
     const result = await getRideSessionsStartedBetween(0, 10_000);
     expect(result).toEqual([]);
-    expect(mockDb.getAllAsync).toHaveBeenCalledTimes(1);
+    expect(
+      mockDb.getAllAsync.mock.calls.filter(([sql]) =>
+        (sql as string).includes('FROM ride_stops')
+      )
+    ).toHaveLength(0);
   });
 });

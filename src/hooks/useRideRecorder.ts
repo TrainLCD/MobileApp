@@ -6,6 +6,7 @@ import {
   appendRideStop,
   enqueueRideLogMutation,
   insertRideSession,
+  type RideCoordinate,
   type RideSessionRecord,
   type RideStopKind,
   type RideStopRecord,
@@ -20,8 +21,8 @@ import {
 } from '~/store/atoms/station';
 import getIsPass from '~/utils/isPass';
 import {
-  measureRideDistance,
-  type RideDistanceMeasurement,
+  measureRideSegment,
+  type RideSegmentMeasurement,
 } from '~/utils/rideDistance';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
@@ -52,16 +53,31 @@ const enqueueWrite = (task: () => Promise<void>) => {
   });
 };
 
+type StationCoords = Pick<Station, 'latitude' | 'longitude'>;
+
+const toCoordinate = (station: StationCoords): RideCoordinate | null =>
+  station.latitude != null && station.longitude != null
+    ? { latitude: station.latitude, longitude: station.longitude }
+    : null;
+
+// 両端を除いた、あいだに通った駅の座標。座標の無い駅は飛ばす
+const toIntermediatePath = (path: StationCoords[]): RideCoordinate[] =>
+  path
+    .slice(1, -1)
+    .map(toCoordinate)
+    .filter((c): c is RideCoordinate => c != null);
+
 const toStopRecord = (
   station: Station,
   seq: number,
   kind: RideStopKind,
   arrivedAt: number | null,
-  distance: RideDistanceMeasurement
+  distance: RideSegmentMeasurement
 ): RideStopRecord | null => {
   if (station.id == null) {
     return null;
   }
+  const coordinate = toCoordinate(station);
   return {
     seq,
     stationId: station.id,
@@ -75,6 +91,9 @@ const toStopRecord = (
     departedAt: null,
     distanceFromPrevious: distance.meters,
     distanceSource: distance.source,
+    latitude: coordinate?.latitude ?? null,
+    longitude: coordinate?.longitude ?? null,
+    pathFromPrevious: toIntermediatePath(distance.path),
   };
 };
 
@@ -210,6 +229,7 @@ export const useRideRecorder = (): void => {
       const origin = toStopRecord(station, 0, 'arrived', null, {
         meters: 0,
         source: 'haversine',
+        path: [station],
       });
       if (!origin) {
         return;
@@ -220,7 +240,7 @@ export const useRideRecorder = (): void => {
     }
 
     const kind: RideStopKind = getIsPass(station) ? 'passed' : 'arrived';
-    const distance = measureRideDistance(
+    const distance = measureRideSegment(
       stations,
       session.lastStation,
       station,

@@ -1,5 +1,6 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import { Polyline } from 'react-native-maps';
 import { STORAGE_KEYS } from '~/constants';
 import {
   getRideSessionsStartedBetween,
@@ -10,12 +11,18 @@ import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { getRidePeriodRange } from '~/utils/rideStats';
 import RideReviewScreen from './RideReview';
 
+const mockDispatch = jest.fn();
+
 jest.mock('@react-navigation/native', () => {
   const { useEffect } = require('react');
   return {
     // 画面が表示されたときの読み込みを、マウント時の effect として再現する
     useFocusEffect: (effect: () => undefined | (() => void)) => {
       useEffect(effect, [effect]);
+    },
+    useNavigation: () => ({ dispatch: mockDispatch }),
+    CommonActions: {
+      navigate: (payload: unknown) => ({ type: 'NAVIGATE', payload }),
     },
   };
 });
@@ -69,6 +76,9 @@ const sampleRide = (): RideSessionWithStops => {
     lineColor: '#F15A22',
     departedAt: null,
     distanceSource: 'haversine' as const,
+    latitude: null,
+    longitude: null,
+    pathFromPrevious: null,
   };
   return {
     id: 'r1',
@@ -106,6 +116,24 @@ const sampleRide = (): RideSessionWithStops => {
         distanceFromPrevious: 1500,
       },
     ],
+  };
+};
+
+// sampleRide の3駅に座標を付ける。1駅目と2駅目のあいだは、検出できなかった駅を1つ通る
+const withCoordinates = (ride: RideSessionWithStops): RideSessionWithStops => {
+  const coords = [
+    { latitude: 35.7027, longitude: 139.5607 },
+    { latitude: 35.7031, longitude: 139.5798 },
+    { latitude: 35.7046, longitude: 139.62 },
+  ];
+  return {
+    ...ride,
+    stops: ride.stops.map((stop, i) => ({
+      ...stop,
+      ...coords[i],
+      pathFromPrevious:
+        i === 1 ? [{ latitude: 35.703, longitude: 139.57 }] : [],
+    })),
   };
 };
 
@@ -179,6 +207,52 @@ describe('RideReviewScreen', () => {
         })}`
       )
     ).toBeTruthy();
+  });
+
+  it('駅の座標がある乗車は、移動経路の地図に路線色の線で描く', async () => {
+    mockGetRides.mockResolvedValueOnce([withCoordinates(sampleRide())]);
+    const { findByTestId, getByLabelText, queryByText, UNSAFE_getAllByType } =
+      renderScreen(true);
+    await findByTestId('ride-review-route-map-expand');
+
+    // 線は縁取りと路線色の2本を重ねる。通った駅を含めて4駅をつなぐ
+    const polylines = UNSAFE_getAllByType(Polyline);
+    expect(polylines).toHaveLength(2);
+    const lines = polylines.filter((l) => l.props.strokeColor === '#F15A22');
+    expect(lines).toHaveLength(1);
+    expect(lines[0].props.coordinates).toHaveLength(4);
+    expect(
+      getByLabelText('rideReviewRouteMapLabel:{"lines":"中央線快速"}')
+    ).toBeTruthy();
+    expect(queryByText('rideReviewRouteMapNone')).toBeNull();
+  });
+
+  it('地図の全画面ボタンで、表示中の期間の地図を開く', async () => {
+    mockGetRides.mockResolvedValueOnce([withCoordinates(sampleRide())]);
+    const { findByTestId } = renderScreen(true);
+    fireEvent.press(await findByTestId('ride-review-route-map-expand'));
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: 'NAVIGATE',
+      payload: { name: 'RideRouteMap', params: { period: 'month' } },
+    });
+  });
+
+  it('駅の座標を保存する前の乗車が混ざると、地図に出ていない回数を添える', async () => {
+    mockGetRides.mockResolvedValueOnce([
+      withCoordinates(sampleRide()),
+      { ...sampleRide(), id: 'r2' },
+    ]);
+    const { findByText } = renderScreen(true);
+    expect(
+      await findByText('rideReviewRouteMapUnmapped:{"count":1}')
+    ).toBeTruthy();
+  });
+
+  it('期間の乗車がすべて座標の保存前なら、地図を出さずに理由を出す', async () => {
+    mockGetRides.mockResolvedValueOnce([sampleRide()]);
+    const { findByText, queryByTestId } = renderScreen(true);
+    expect(await findByText('rideReviewRouteMapNone')).toBeTruthy();
+    expect(queryByTestId('ride-review-route-map-expand')).toBeNull();
   });
 
   it('読み込みが終わるまで、読み込み中の表示を出す', async () => {
