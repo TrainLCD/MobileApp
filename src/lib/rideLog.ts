@@ -2,7 +2,7 @@ import * as SQLite from 'expo-sqlite';
 
 /**
  * 振り返り機能(#5751)の乗車ログ。端末内の SQLite にだけ保存し、サーバには送らない。
- * 利用者の位置の座標は保存せず、検出した駅と時刻だけを持つ。
+ * 利用者の位置の座標は保存せず、検出した駅と時刻、その駅の座標だけを持つ。
  * 時刻はエポックミリ秒で持ち、週・月・年への振り分けは集計側が端末のタイムゾーンで行う。
  */
 
@@ -29,6 +29,9 @@ export type RideSessionRecord = {
   direction: string | null;
 };
 
+// 駅の座標。利用者の位置ではなく、StationAPI が返す駅の位置
+export type RideCoordinate = { latitude: number; longitude: number };
+
 export type RideStopRecord = {
   seq: number;
   stationId: number;
@@ -45,6 +48,14 @@ export type RideStopRecord = {
   // 直前に記録した駅からの距離(メートル)。出発駅は 0
   distanceFromPrevious: number;
   distanceSource: RideDistanceSource;
+  // 移動経路の地図に使う駅の座標。座標を保存する前に記録した行と、駅データに
+  // 座標が無い駅は null
+  latitude: number | null;
+  longitude: number | null;
+  // 直前に記録した駅からこの駅までのあいだに通った駅の座標(両端を含まない)。
+  // 検出できなかった駅を、距離と同じく乗車中の駅リストでたどって埋める。
+  // 座標を保存する前に記録した行は null
+  pathFromPrevious: RideCoordinate[] | null;
 };
 
 // DB は最初に使うときに開く。設定画面など記録しない画面からも import されるため、
@@ -88,9 +99,29 @@ const initDb = async (): Promise<void> => {
     departedAt INTEGER,
     distanceFromPrevious REAL NOT NULL DEFAULT 0,
     distanceSource TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
+    pathFromPrevious TEXT,
     PRIMARY KEY (sessionId, seq)
   );`
   );
+  // 移動経路の地図のために後から足した列。それより前に作ったテーブルに足す。
+  // 既存の行は null のままにする(当時の駅リストが残っておらず埋められないため)
+  const columns = await db.getAllAsync<{ name: string }>(
+    "PRAGMA table_info('ride_stops')"
+  );
+  const columnNames = new Set(columns.map((c) => c.name));
+  if (!columnNames.has('latitude')) {
+    await db.execAsync('ALTER TABLE ride_stops ADD COLUMN latitude REAL;');
+  }
+  if (!columnNames.has('longitude')) {
+    await db.execAsync('ALTER TABLE ride_stops ADD COLUMN longitude REAL;');
+  }
+  if (!columnNames.has('pathFromPrevious')) {
+    await db.execAsync(
+      'ALTER TABLE ride_stops ADD COLUMN pathFromPrevious TEXT;'
+    );
+  }
   // 期間ごとの集計は乗りはじめた時刻で絞り込む
   await db.execAsync(
     'CREATE INDEX IF NOT EXISTS idx_ride_sessions_startedAt ON ride_sessions(startedAt);'
@@ -127,10 +158,41 @@ export const enqueueRideLogMutation = (
   return result;
 };
 
+// 経路の座標は [緯度, 経度] の配列の JSON で持つ(行数が多くなる年の読み出しを軽くするため)
+const serializePath = (path: RideCoordinate[]): string =>
+  JSON.stringify(path.map((c) => [c.latitude, c.longitude]));
+
+// 壊れた値や想定外の形の値は、経路が無いものとして扱う
+const parsePath = (value: string | null): RideCoordinate[] | null => {
+  if (value == null) {
+    return null;
+  }
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+    const path: RideCoordinate[] = [];
+    for (const item of parsed) {
+      if (
+        !Array.isArray(item) ||
+        typeof item[0] !== 'number' ||
+        typeof item[1] !== 'number'
+      ) {
+        return null;
+      }
+      path.push({ latitude: item[0], longitude: item[1] });
+    }
+    return path;
+  } catch {
+    return null;
+  }
+};
+
 const insertStop = (sessionId: string, stop: RideStopRecord) =>
   getDb().runAsync(
-    `INSERT INTO ride_stops (sessionId, seq, stationId, stationGroupId, stationName, lineId, lineName, lineColor, kind, arrivedAt, departedAt, distanceFromPrevious, distanceSource)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ride_stops (sessionId, seq, stationId, stationGroupId, stationName, lineId, lineName, lineColor, kind, arrivedAt, departedAt, distanceFromPrevious, distanceSource, latitude, longitude, pathFromPrevious)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       sessionId,
       stop.seq,
@@ -145,6 +207,9 @@ const insertStop = (sessionId: string, stop: RideStopRecord) =>
       stop.departedAt,
       stop.distanceFromPrevious,
       stop.distanceSource,
+      stop.latitude,
+      stop.longitude,
+      stop.pathFromPrevious ? serializePath(stop.pathFromPrevious) : null,
     ]
   );
 
@@ -233,10 +298,14 @@ export type RideSessionWithStops = RideSessionRecord & {
   stops: RideStopRecord[];
 };
 
-type RideStopRow = Omit<RideStopRecord, 'kind' | 'distanceSource'> & {
+type RideStopRow = Omit<
+  RideStopRecord,
+  'kind' | 'distanceSource' | 'pathFromPrevious'
+> & {
   sessionId: string;
   kind: string;
   distanceSource: string;
+  pathFromPrevious: string | null;
 };
 
 const isRideStopKind = (value: string): value is RideStopKind =>
@@ -263,20 +332,31 @@ export const getRideSessionsStartedBetween = async (
     return [];
   }
   const rows = await db.getAllAsync<RideStopRow>(
-    `SELECT s.sessionId, s.seq, s.stationId, s.stationGroupId, s.stationName, s.lineId, s.lineName, s.lineColor, s.kind, s.arrivedAt, s.departedAt, s.distanceFromPrevious, s.distanceSource
+    `SELECT s.sessionId, s.seq, s.stationId, s.stationGroupId, s.stationName, s.lineId, s.lineName, s.lineColor, s.kind, s.arrivedAt, s.departedAt, s.distanceFromPrevious, s.distanceSource, s.latitude, s.longitude, s.pathFromPrevious
     FROM ride_stops s JOIN ride_sessions r ON r.id = s.sessionId
     WHERE r.startedAt >= ? AND r.startedAt < ?
     ORDER BY s.sessionId, s.seq`,
     [start, end]
   );
   const stopsBySession = new Map<string, RideStopRecord[]>();
-  for (const { sessionId, kind, distanceSource, ...rest } of rows) {
+  for (const {
+    sessionId,
+    kind,
+    distanceSource,
+    pathFromPrevious,
+    ...rest
+  } of rows) {
     // 想定外の値の行は読み飛ばす(このバージョンが知らない値の行を誤って集計しないため)
     if (!isRideStopKind(kind) || !isRideDistanceSource(distanceSource)) {
       continue;
     }
     const list = stopsBySession.get(sessionId) ?? [];
-    list.push({ ...rest, kind, distanceSource });
+    list.push({
+      ...rest,
+      kind,
+      distanceSource,
+      pathFromPrevious: parsePath(pathFromPrevious),
+    });
     stopsBySession.set(sessionId, list);
   }
   return sessions.map((session) => ({

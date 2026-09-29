@@ -26,6 +26,9 @@ const stop = (
   departedAt: null,
   distanceFromPrevious: 0,
   distanceSource: 'haversine',
+  latitude: null,
+  longitude: null,
+  pathFromPrevious: null,
   ...overrides,
 });
 

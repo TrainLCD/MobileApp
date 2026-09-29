@@ -36,6 +36,13 @@ export default {
     ],
     'expo-audio',
     [
+      'react-native-maps',
+      {
+        // 振り返りの移動経路の地図。iOS は Apple マップなのでキーは要らない
+        androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         backgroundColor: '#fff',
