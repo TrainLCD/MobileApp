@@ -79,6 +79,7 @@ const sampleRide = (): RideSessionWithStops => {
     latitude: null,
     longitude: null,
     pathFromPrevious: null,
+    prefectureId: null,
   };
   return {
     id: 'r1',
@@ -253,6 +254,77 @@ describe('RideReviewScreen', () => {
     const { findByText, queryByTestId } = renderScreen(true);
     expect(await findByText('rideReviewRouteMapNone')).toBeTruthy();
     expect(queryByTestId('ride-review-route-map-expand')).toBeNull();
+  });
+
+  // sampleRide の3駅に都道府県を付けた乗車。出発駅と到着駅の都道府県を指定する
+  const withPrefectures = (
+    ride: RideSessionWithStops,
+    prefectureIds: number[]
+  ): RideSessionWithStops => ({
+    ...ride,
+    stops: ride.stops.map((stop, i) => ({
+      ...stop,
+      prefectureId: prefectureIds[i] ?? null,
+    })),
+  });
+
+  it('訪れた都道府県の数と、都道府県ごとの距離を出す', async () => {
+    mockGetRides.mockResolvedValueOnce([
+      withPrefectures(sampleRide(), [11, 13, 13]),
+    ]);
+    const { findByTestId, getAllByTestId, getByText, queryByTestId } =
+      renderScreen(true);
+    expect(
+      (await findByTestId('ride-review-prefecture-count')).props.children
+    ).toBe(2);
+    expect(getAllByTestId('ride-review-prefecture')).toHaveLength(2);
+    // PREFECTURES_JA / PREFECTURES_ROMAN のどちらかで名前を出す
+    expect(getByText(/東京都|Tokyo/)).toBeTruthy();
+    expect(queryByTestId('ride-review-prefectures-toggle')).toBeNull();
+  });
+
+  it('6都道府県以上なら上位5件だけを出し、「すべて表示」で開閉する', async () => {
+    const rides = [1, 2, 3, 4, 5, 6, 7].map((prefectureId, i) => ({
+      ...withPrefectures(sampleRide(), [
+        prefectureId,
+        prefectureId,
+        prefectureId,
+      ]),
+      id: `r${i}`,
+    }));
+    mockGetRides.mockResolvedValueOnce(rides);
+    const { findByTestId, getAllByTestId, getByTestId, getByText } =
+      renderScreen(true);
+    expect(
+      (await findByTestId('ride-review-prefecture-count')).props.children
+    ).toBe(7);
+    expect(getAllByTestId('ride-review-prefecture')).toHaveLength(5);
+    expect(getByText('rideReviewPrefecturesShowAll:{"count":2}')).toBeTruthy();
+
+    fireEvent.press(getByTestId('ride-review-prefectures-toggle'));
+    expect(getAllByTestId('ride-review-prefecture')).toHaveLength(7);
+    expect(getByText('close')).toBeTruthy();
+
+    fireEvent.press(getByTestId('ride-review-prefectures-toggle'));
+    expect(getAllByTestId('ride-review-prefecture')).toHaveLength(5);
+  });
+
+  it('都道府県を記録する前の乗車が混ざると、その回数を添える', async () => {
+    mockGetRides.mockResolvedValueOnce([
+      withPrefectures(sampleRide(), [13, 13, 13]),
+      { ...sampleRide(), id: 'old' },
+    ]);
+    const { findByText } = renderScreen(true);
+    expect(
+      await findByText('rideReviewPrefecturesUnrecorded:{"count":1}')
+    ).toBeTruthy();
+  });
+
+  it('期間の乗車がすべて都道府県の記録前なら、理由を出す', async () => {
+    mockGetRides.mockResolvedValueOnce([sampleRide()]);
+    const { findByText, queryByTestId } = renderScreen(true);
+    expect(await findByText('rideReviewPrefecturesNone')).toBeTruthy();
+    expect(queryByTestId('ride-review-prefecture-count')).toBeNull();
   });
 
   it('読み込みが終わるまで、読み込み中の表示を出す', async () => {

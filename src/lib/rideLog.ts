@@ -56,6 +56,10 @@ export type RideStopRecord = {
   // 検出できなかった駅を、距離と同じく乗車中の駅リストでたどって埋める。
   // 座標を保存する前に記録した行は null
   pathFromPrevious: RideCoordinate[] | null;
+  // 駅の都道府県(StationAPI の prefectureId。1〜47 で、src/constants/province.ts の
+  // PREFECTURES_JA などを prefectureId - 1 で引く)。都道府県の列を足す前に記録した行と、
+  // 駅データに都道府県が無い駅は null
+  prefectureId: number | null;
 };
 
 // DB は最初に使うときに開く。設定画面など記録しない画面からも import されるため、
@@ -102,6 +106,7 @@ const initDb = async (): Promise<void> => {
     latitude REAL,
     longitude REAL,
     pathFromPrevious TEXT,
+    prefectureId INTEGER,
     PRIMARY KEY (sessionId, seq)
   );`
   );
@@ -120,6 +125,12 @@ const initDb = async (): Promise<void> => {
   if (!columnNames.has('pathFromPrevious')) {
     await db.execAsync(
       'ALTER TABLE ride_stops ADD COLUMN pathFromPrevious TEXT;'
+    );
+  }
+  // 都道府県ごとの集計(#7123)のために後から足した列
+  if (!columnNames.has('prefectureId')) {
+    await db.execAsync(
+      'ALTER TABLE ride_stops ADD COLUMN prefectureId INTEGER;'
     );
   }
   // 期間ごとの集計は乗りはじめた時刻で絞り込む
@@ -191,8 +202,8 @@ const parsePath = (value: string | null): RideCoordinate[] | null => {
 
 const insertStop = (sessionId: string, stop: RideStopRecord) =>
   getDb().runAsync(
-    `INSERT INTO ride_stops (sessionId, seq, stationId, stationGroupId, stationName, lineId, lineName, lineColor, kind, arrivedAt, departedAt, distanceFromPrevious, distanceSource, latitude, longitude, pathFromPrevious)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ride_stops (sessionId, seq, stationId, stationGroupId, stationName, lineId, lineName, lineColor, kind, arrivedAt, departedAt, distanceFromPrevious, distanceSource, latitude, longitude, pathFromPrevious, prefectureId)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       sessionId,
       stop.seq,
@@ -210,6 +221,7 @@ const insertStop = (sessionId: string, stop: RideStopRecord) =>
       stop.latitude,
       stop.longitude,
       stop.pathFromPrevious ? serializePath(stop.pathFromPrevious) : null,
+      stop.prefectureId,
     ]
   );
 
@@ -332,7 +344,7 @@ export const getRideSessionsStartedBetween = async (
     return [];
   }
   const rows = await db.getAllAsync<RideStopRow>(
-    `SELECT s.sessionId, s.seq, s.stationId, s.stationGroupId, s.stationName, s.lineId, s.lineName, s.lineColor, s.kind, s.arrivedAt, s.departedAt, s.distanceFromPrevious, s.distanceSource, s.latitude, s.longitude, s.pathFromPrevious
+    `SELECT s.sessionId, s.seq, s.stationId, s.stationGroupId, s.stationName, s.lineId, s.lineName, s.lineColor, s.kind, s.arrivedAt, s.departedAt, s.distanceFromPrevious, s.distanceSource, s.latitude, s.longitude, s.pathFromPrevious, s.prefectureId
     FROM ride_stops s JOIN ride_sessions r ON r.id = s.sessionId
     WHERE r.startedAt >= ? AND r.startedAt < ?
     ORDER BY s.sessionId, s.seq`,
