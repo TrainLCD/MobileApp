@@ -34,7 +34,8 @@ Configure these GitHub Actions secrets:
 | `EXPERIMENTAL_TELEMETRY_TOKEN` | Telemetry authentication token |
 | `FONTS_SSH_KEY` | Fonts submodule SSH private key |
 | `SENTRY_DSN` | Sentry runtime DSN (required; the build fails when unset) |
-| `GOOGLE_MAPS_API_KEY` | Maps SDK for Android key (ride review route map) |
+| `DEV_GOOGLE_MAPS_API_KEY` | Canary Maps SDK for Android key |
+| `PRODUCTION_GOOGLE_MAPS_API_KEY` | Production Maps SDK for Android key |
 | `SENTRY_PROPERTIES_BASE64` | Base64-encoded `sentry.properties` |
 | `GOOGLE_SERVICES_JSON_DEV_BASE64` | Canary JSON (Base64) |
 | `GOOGLE_SERVICES_JSON_PROD_BASE64` | Production JSON (Base64) |
@@ -56,8 +57,10 @@ Android builds on EAS Build do not use these secrets. Register
 file to `android/app/google-services.json` and fails the build when the
 variable is missing.
 
-EAS Build reads `GOOGLE_MAPS_API_KEY` as a plain environment variable. Register
-it in each EAS environment as well.
+Both workflows pass their Maps key to the build as `GOOGLE_MAPS_API_KEY`, which
+`android/app/build.gradle` reads. EAS Build reads `GOOGLE_MAPS_API_KEY` as a plain
+environment variable. Register it in each EAS environment with the key for that
+build (`development` for Canary, `production` for Production).
 
 Each `google-services.json` must include the application ID of the flavor it
 builds: `me.tinykitten.trainlcd.dev` for Canary and `me.tinykitten.trainlcd`
