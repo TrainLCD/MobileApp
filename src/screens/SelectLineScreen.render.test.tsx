@@ -173,6 +173,12 @@ jest.mock('~/components/EmptyLineSeparator', () => ({
   },
 }));
 
+// 振り返りタブの案内はナビゲーションに依存するので、この画面のテストでは描かない
+// (中身は RideReviewTabIntro.test.tsx で確かめる)
+jest.mock('~/components/RideReviewTabIntro', () => ({
+  RideReviewTabIntro: () => null,
+}));
+
 jest.mock('~/components/RideMonthCard', () => ({
   RideMonthCard: () => {
     const { View } = require('react-native');
