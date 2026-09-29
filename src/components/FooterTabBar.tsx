@@ -200,6 +200,7 @@ type Props = {
   active?: FooterTab;
   visible?: boolean;
   onSearchButtonLayout?: (layout: ButtonLayout) => void;
+  onReviewButtonLayout?: (layout: ButtonLayout) => void;
   onSettingsButtonLayout?: (layout: ButtonLayout) => void;
 };
 
@@ -207,6 +208,7 @@ const FooterTabBar: React.FC<Props> = ({
   active = 'home',
   visible = true,
   onSearchButtonLayout,
+  onReviewButtonLayout,
   onSettingsButtonLayout,
 }) => {
   const insets = useSafeAreaInsets();
@@ -226,6 +228,7 @@ const FooterTabBar: React.FC<Props> = ({
     [navigation, route.name]
   );
   const searchButtonRef = useRef<View>(null);
+  const reviewButtonRef = useRef<View>(null);
   const settingsButtonRef = useRef<View>(null);
 
   const pillTranslateX = useSharedValue(0);
@@ -309,8 +312,13 @@ const FooterTabBar: React.FC<Props> = ({
   const handleReviewButtonLayout = useCallback(
     (event: LayoutChangeEvent) => {
       registerSlotLayout('review', event);
+      if (onReviewButtonLayout && reviewButtonRef.current) {
+        reviewButtonRef.current.measureInWindow((x, y, width, height) => {
+          onReviewButtonLayout({ x, y, width, height });
+        });
+      }
     },
-    [registerSlotLayout]
+    [onReviewButtonLayout, registerSlotLayout]
   );
 
   const handleSettingsButtonLayout = useCallback(
@@ -374,6 +382,7 @@ const FooterTabBar: React.FC<Props> = ({
       </TabButton>
 
       <TabButton
+        buttonRef={reviewButtonRef}
         active={active === 'review'}
         accessibilityLabel={translate('rideReview')}
         onPress={() => {

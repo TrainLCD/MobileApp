@@ -100,6 +100,38 @@ describe('useSelectLineWalkthrough', () => {
     });
   });
 
+  it('rideReview ステップで reviewButtonLayout が設定されるとスポットライトが設定される', () => {
+    (useWalkthroughCompleted as jest.Mock).mockReturnValue(
+      createMockWalkthrough({ currentStepId: 'rideReview' })
+    );
+
+    const { result } = renderHook(() => useSelectLineWalkthrough());
+
+    act(() => {
+      result.current.setReviewButtonLayout({
+        x: 200,
+        y: 700,
+        width: 48,
+        height: 48,
+      });
+    });
+
+    expect(mockSetSpotlightArea).toHaveBeenCalledWith({
+      x: 200,
+      y: 700,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+    });
+    // 振り返りタブの案内(RideReviewTabIntro)でも同じ位置を使う
+    expect(result.current.reviewButtonLayout).toEqual({
+      x: 200,
+      y: 700,
+      width: 48,
+      height: 48,
+    });
+  });
+
   it('nextStep / goToStep / skipWalkthrough を透過的に公開する', () => {
     const { result } = renderHook(() => useSelectLineWalkthrough());
 

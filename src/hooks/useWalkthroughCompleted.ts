@@ -37,6 +37,13 @@ const WALKTHROUGH_STEPS: WalkthroughStep[] = [
     descriptionKey: 'walkthroughDescription6',
     tooltipPosition: 'top',
   },
+  // フッターのタブの並び(検索・ホーム・振り返り・設定)に合わせ、経路検索と設定のあいだに置く
+  {
+    id: 'rideReview',
+    titleKey: 'walkthroughTitleRideReview',
+    descriptionKey: 'walkthroughDescriptionRideReview',
+    tooltipPosition: 'top',
+  },
   {
     id: 'customize',
     titleKey: 'walkthroughTitle4',
@@ -71,6 +78,9 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
     setIsWalkthroughCompleted(true);
     try {
       storage.set(STORAGE_KEYS.WALKTHROUGH_COMPLETED, 'true');
+      // ウォークスルーの中で振り返りタブも案内したので、完了済みユーザー向けの
+      // 振り返りタブの案内(useRideReviewTabIntro)は出さない
+      storage.set(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED, 'true');
     } catch (error) {
       // ストレージエラーは非ブロッキングとして扱う
       console.error('Failed to save walkthrough completion status:', error);
