@@ -233,7 +233,8 @@ const styles = StyleSheet.create({
     height: BAR_HEIGHT,
     borderTopRightRadius: isTablet ? 6 : 4,
     borderBottomRightRadius: isTablet ? 6 : 4,
-    backgroundColor: SANYO_BAR_COLORS.bottom,
+    // 角丸を上下の塗り分けごと切り抜く
+    overflow: 'hidden',
   },
 });
 
@@ -623,7 +624,11 @@ const LineBoardSanyo: React.FC<Props> = ({ stations, hasTerminus }: Props) => {
             ))}
             <View style={[styles.column, styles.tipColumn]}>
               <View style={styles.tipSpacer} />
-              {hasTerminus ? <View style={styles.terminal} /> : <ArrowTip />}
+              {hasTerminus ? (
+                <BarFill colors={SANYO_BAR_COLORS} style={styles.terminal} />
+              ) : (
+                <ArrowTip />
+              )}
               <View style={styles.transferArea} />
             </View>
           </>
