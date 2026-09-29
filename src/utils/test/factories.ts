@@ -77,6 +77,7 @@ export const createStation = (
     status: OperationStatus.InOperation,
     stopCondition: StopCondition.All,
     threeLetterCode: null,
+    trackDistanceFromPrevious: null,
     trainType: null,
     transportType: null,
     ...stationOverrides,

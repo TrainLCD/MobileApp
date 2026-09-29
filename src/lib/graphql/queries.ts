@@ -338,6 +338,10 @@ export const GET_LINE_STATIONS = gql`
   query GetLineStations($lineId: Int!, $stationId: Int) {
     lineStations(lineId: $lineId, stationId: $stationId) {
       ...StationFields
+      # 並びで直前にある駅からの線路の長さ(m)。振り返り機能の乗車距離に使う
+      # (src/lib/trackDistances.ts)。駅を返すほかの問い合わせでは返らないので、
+      # 返す問い合わせでだけ取る
+      trackDistanceFromPrevious
     }
   }
 `;
@@ -366,6 +370,10 @@ export const GET_LINE_GROUP_STATIONS = gql`
   query GetLineGroupStations($lineGroupId: Int!) {
     lineGroupStations(lineGroupId: $lineGroupId) {
       ...StationFields
+      # 並びで直前にある駅からの線路の長さ(m)。振り返り機能の乗車距離に使う
+      # (src/lib/trackDistances.ts)。駅を返すほかの問い合わせでは返らないので、
+      # 返す問い合わせでだけ取る
+      trackDistanceFromPrevious
     }
   }
 `;
@@ -376,6 +384,9 @@ export const GET_STATIONS_BY_IDS = gql`
   query GetStationsByIds($ids: [Int!]!) {
     stations(ids: $ids) {
       ...StationFields
+      # ids の並びで直前にある駅からの線路の長さ(m)。sids のディープリンクで
+      # 開いた経路の乗車距離に使う(src/lib/trackDistances.ts)
+      trackDistanceFromPrevious
     }
   }
 `;
