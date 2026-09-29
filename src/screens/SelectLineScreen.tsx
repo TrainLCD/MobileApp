@@ -21,6 +21,7 @@ import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { PortraitModePromoBanner } from '~/components/PortraitModePromoBanner';
 import { RideMonthCard } from '~/components/RideMonthCard';
+import { RideReviewTabIntro } from '~/components/RideReviewTabIntro';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
@@ -129,6 +130,8 @@ const SelectLineScreen = () => {
     goToStep,
     skipWalkthrough,
     setSearchButtonLayout,
+    reviewButtonLayout,
+    setReviewButtonLayout,
     setSettingsButtonLayout,
     setNowHeaderLayout,
     lineListRef,
@@ -433,6 +436,7 @@ const SelectLineScreen = () => {
       <FooterTabBar
         active="home"
         onSearchButtonLayout={setSearchButtonLayout}
+        onReviewButtonLayout={setReviewButtonLayout}
         onSettingsButtonLayout={setSettingsButtonLayout}
       />
       {/* モーダル */}
@@ -465,6 +469,11 @@ const SelectLineScreen = () => {
           onSkip={skipWalkthrough}
         />
       )}
+      {/* ウォークスルーを終えたユーザーへの、振り返りタブの案内(#7118) */}
+      <RideReviewTabIntro
+        reviewButtonLayout={reviewButtonLayout}
+        disabled={isWalkthroughActive}
+      />
     </>
   );
 };

@@ -26,6 +26,8 @@ export const useSelectLineWalkthrough = () => {
 
   const [searchButtonLayout, setSearchButtonLayout] =
     useState<ButtonLayout | null>(null);
+  const [reviewButtonLayout, setReviewButtonLayout] =
+    useState<ButtonLayout | null>(null);
   const [settingsButtonLayout, setSettingsButtonLayout] =
     useState<ButtonLayout | null>(null);
   const [nowHeaderLayout, setNowHeaderLayout] = useState<HeaderLayout | null>(
@@ -92,6 +94,19 @@ export const useSelectLineWalkthrough = () => {
     }
   }, [currentStepId, searchButtonLayout, setSpotlightArea]);
 
+  // 振り返りタブのボタンをハイライト
+  useEffect(() => {
+    if (currentStepId === 'rideReview' && reviewButtonLayout) {
+      setSpotlightArea({
+        x: reviewButtonLayout.x,
+        y: reviewButtonLayout.y,
+        width: reviewButtonLayout.width,
+        height: reviewButtonLayout.height,
+        borderRadius: 24,
+      });
+    }
+  }, [currentStepId, reviewButtonLayout, setSpotlightArea]);
+
   // 設定ボタンをハイライト
   useEffect(() => {
     if (currentStepId === 'customize' && settingsButtonLayout) {
@@ -134,6 +149,8 @@ export const useSelectLineWalkthrough = () => {
     goToStep,
     skipWalkthrough,
     setSearchButtonLayout,
+    reviewButtonLayout,
+    setReviewButtonLayout,
     setSettingsButtonLayout,
     setNowHeaderLayout,
     lineListRef,

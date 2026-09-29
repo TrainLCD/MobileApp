@@ -67,6 +67,12 @@ const toIntermediatePath = (path: StationCoords[]): RideCoordinate[] =>
     .map(toCoordinate)
     .filter((c): c is RideCoordinate => c != null);
 
+// 都道府県は 1〜47 だけを受け付ける。範囲外の値は、名前を引けないので記録しない
+const toPrefectureId = (value: number | null | undefined): number | null =>
+  value != null && Number.isInteger(value) && value >= 1 && value <= 47
+    ? value
+    : null;
+
 const toStopRecord = (
   station: Station,
   seq: number,
@@ -94,6 +100,7 @@ const toStopRecord = (
     latitude: coordinate?.latitude ?? null,
     longitude: coordinate?.longitude ?? null,
     pathFromPrevious: toIntermediatePath(distance.path),
+    prefectureId: toPrefectureId(station.prefectureId),
   };
 };
 

@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { useAtomValue, useSetAtom } from 'jotai';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   Animated as RNAnimated,
+  type ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,14 +21,21 @@ import {
 } from '~/components/RideRouteMapView';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
+import WalkthroughOverlay, {
+  type WalkthroughStep,
+  type WalkthroughStepId,
+} from '~/components/WalkthroughOverlay';
 import { STORAGE_KEYS } from '~/constants';
+import { PREFECTURES_JA, PREFECTURES_ROMAN } from '~/constants/province';
+import { useRideReviewWalkthrough } from '~/hooks/useRideReviewWalkthrough';
 import { useRideStats } from '~/hooks/useRideStats';
 import { storage } from '~/lib/storage';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
-import { translate } from '~/translation';
+import { isJapanese, translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
+import type { RidePrefectures } from '~/utils/ridePrefectures';
 import type { RideRoutes } from '~/utils/rideRoutes';
 import type { RidePeriod, RideStats, RideStatsBucket } from '~/utils/rideStats';
 import {
@@ -41,7 +50,29 @@ const CHART_HEIGHT = 96;
 const ROUTE_MAP_HEIGHT = 200;
 const EMPTY_BAR_HEIGHT = 2;
 const TOP_LINES_LIMIT = 5;
+// これを超えたら、残りの都道府県は「すべて表示」を押すまで出さない
+const TOP_PREFECTURES_LIMIT = 5;
+const PREFECTURE_COUNT = 47;
 const PERIODS: RidePeriod[] = ['week', 'month', 'year'];
+// ウォークスルーで切り抜くカードを、見出しのすぐ下(この余白をあけた位置)までスクロールする
+const WALKTHROUGH_TARGET_MARGIN = 16;
+// スクロールが止まってから位置を測り直すまでの待ち時間(ms)
+const WALKTHROUGH_SCROLL_SETTLE_MS = 400;
+// 吹き出しの高さの見積もり。切り抜きの下に収まらなければ上に出す
+const WALKTHROUGH_TOOLTIP_SPACE = 220;
+// 切り抜きの角丸。期間の切り替えは segment の角丸に、ほかはカードの角丸に合わせる
+const WALKTHROUGH_RADIUS: Partial<Record<WalkthroughStepId, number>> = {
+  rideReviewPeriod: 20,
+};
+const WALKTHROUGH_CARD_RADIUS = 12;
+
+type WalkthroughTargetRefs = Record<
+  | 'rideReviewPeriod'
+  | 'rideReviewSummary'
+  | 'rideReviewRouteMap'
+  | 'rideReviewTopLines',
+  React.RefObject<View | null>
+>;
 
 const PERIOD_LABEL_KEYS: Record<RidePeriod, string> = {
   week: 'rideReviewPeriodWeek',
@@ -108,6 +139,15 @@ const styles = StyleSheet.create({
   lineTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
   lineFill: { height: 4, borderRadius: 2 },
   note: { fontSize: 11, lineHeight: 16 },
+  prefectureCountRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+  prefectureToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingTop: 8,
+  },
+  prefectureToggleText: { fontSize: 14, fontWeight: 'bold' },
   routeMap: {
     height: ROUTE_MAP_HEIGHT,
     borderRadius: 8,
@@ -147,6 +187,8 @@ const styles = StyleSheet.create({
   pointText: { flex: 1, fontSize: 12, lineHeight: 18 },
   enableButton: { alignSelf: 'center', minWidth: 160, marginTop: 8 },
   loading: { marginTop: 24 },
+  // 見出しとカードを1つの切り抜きにまとめる。content の gap と同じ間隔をあける
+  walkthroughGroup: { gap: 16 },
 });
 
 // グラフの下に並べるラベル。今週は曜日の下に日付を添える
@@ -503,6 +545,129 @@ const TopLines = ({ stats }: { stats: RideStats }) => {
   );
 };
 
+const prefectureName = (prefectureId: number): string =>
+  (isJapanese ? PREFECTURES_JA : PREFECTURES_ROMAN)[prefectureId - 1] ?? '';
+
+const Prefectures = ({ prefectures }: { prefectures: RidePrefectures }) => {
+  const colors = useAppColors();
+  // 期間を切り替えたら閉じた状態に戻す(呼び出し側で期間を key にする)
+  const [expanded, setExpanded] = useState(false);
+  const all = prefectures.prefectures;
+  const collapsible = all.length > TOP_PREFECTURES_LIMIT;
+  const shown =
+    collapsible && !expanded ? all.slice(0, TOP_PREFECTURES_LIMIT) : all;
+  const max = all[0]?.distanceMeters ?? 0;
+  const toggleColor = ACCENT_COLOR;
+
+  return (
+    <>
+      <Heading>{translate('rideReviewPrefectures')}</Heading>
+      <Card>
+        {all.length === 0 ? (
+          <Typography
+            style={[styles.bodyText, { color: colors.secondaryText }]}
+          >
+            {translate('rideReviewPrefecturesNone')}
+          </Typography>
+        ) : (
+          <>
+            <View
+              style={styles.prefectureCountRow}
+              accessible
+              accessibilityLabel={translate('rideReviewPrefectureCountLabel', {
+                count: all.length,
+                total: PREFECTURE_COUNT,
+              })}
+            >
+              <Typography
+                style={styles.distanceValue}
+                testID="ride-review-prefecture-count"
+              >
+                {all.length}
+              </Typography>
+              <Typography
+                style={[styles.cardTitle, { color: colors.secondaryText }]}
+              >
+                {translate('rideReviewPrefectureTotal', {
+                  total: PREFECTURE_COUNT,
+                })}
+              </Typography>
+            </View>
+            {shown.map((prefecture) => (
+              <View
+                key={prefecture.prefectureId}
+                style={styles.lineBody}
+                testID="ride-review-prefecture"
+              >
+                <View style={styles.lineHeader}>
+                  <Typography numberOfLines={1} style={styles.lineName}>
+                    {prefectureName(prefecture.prefectureId)}
+                  </Typography>
+                  <Typography
+                    style={[styles.lineValue, { color: colors.secondaryText }]}
+                  >
+                    {`${formatDistanceKm(prefecture.distanceMeters)} km`}
+                  </Typography>
+                </View>
+                <View
+                  style={[styles.lineTrack, { backgroundColor: colors.border }]}
+                >
+                  <View
+                    style={[
+                      styles.lineFill,
+                      {
+                        width: `${max > 0 ? (prefecture.distanceMeters / max) * 100 : 0}%`,
+                        backgroundColor: ACCENT_COLOR,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            ))}
+            {collapsible ? (
+              <Pressable
+                onPress={() => setExpanded((prev) => !prev)}
+                accessibilityRole="button"
+                accessibilityState={{ expanded }}
+                hitSlop={8}
+                style={styles.prefectureToggle}
+                testID="ride-review-prefectures-toggle"
+              >
+                <Typography
+                  style={[styles.prefectureToggleText, { color: toggleColor }]}
+                >
+                  {expanded
+                    ? translate('close')
+                    : translate('rideReviewPrefecturesShowAll', {
+                        count: all.length - TOP_PREFECTURES_LIMIT,
+                      })}
+                </Typography>
+                <Ionicons
+                  name={expanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={toggleColor}
+                />
+              </Pressable>
+            ) : null}
+          </>
+        )}
+        {all.length > 0 && prefectures.unrecordedRideCount > 0 ? (
+          <Typography
+            style={[
+              styles.note,
+              { color: colors.secondaryText, fontWeight: 'bold' },
+            ]}
+          >
+            {translate('rideReviewPrefecturesUnrecorded', {
+              count: prefectures.unrecordedRideCount,
+            })}
+          </Typography>
+        ) : null}
+      </Card>
+    </>
+  );
+};
+
 const Intro = () => {
   const colors = useAppColors();
   const setRideLogEnabled = useSetAtom(rideLogEnabledAtom);
@@ -577,14 +742,32 @@ const Empty = () => {
   );
 };
 
-const Report = () => {
+const Report = ({
+  walkthroughRefs,
+  onWalkthroughReadyChange,
+}: {
+  walkthroughRefs: WalkthroughTargetRefs;
+  // 案内するカードがすべて表示されたか。ウォークスルーを始めてよいかに使う
+  onWalkthroughReadyChange: (ready: boolean) => void;
+}) => {
   const colors = useAppColors();
   const [period, setPeriod] = useState<RidePeriod>('month');
   const state = useRideStats(period, true);
+  const walkthroughReady =
+    state.status === 'ready' &&
+    state.period === period &&
+    state.stats.rideCount > 0 &&
+    state.stats.lines.length > 0;
+
+  useEffect(() => {
+    onWalkthroughReadyChange(walkthroughReady);
+  }, [onWalkthroughReadyChange, walkthroughReady]);
 
   return (
     <>
-      <PeriodSegment value={period} onChange={setPeriod} />
+      <View ref={walkthroughRefs.rideReviewPeriod} collapsable={false}>
+        <PeriodSegment value={period} onChange={setPeriod} />
+      </View>
       {state.status === 'error' ? (
         <Typography style={[styles.bodyText, { color: colors.secondaryText }]}>
           {translate('rideReviewLoadFailed')}
@@ -608,18 +791,32 @@ const Report = () => {
           >
             {formatRange(period, state.range)}
           </Typography>
-          <SummaryCard stats={state.stats} />
+          <View ref={walkthroughRefs.rideReviewSummary} collapsable={false}>
+            <SummaryCard stats={state.stats} />
+          </View>
           {state.stats.rideCount === 0 ? (
             <Empty />
           ) : (
             <>
               <DistanceChart period={period} buckets={state.stats.buckets} />
-              <RouteMapCard
-                period={period}
-                stats={state.stats}
-                routes={state.routes}
-              />
-              <TopLines stats={state.stats} />
+              <View
+                ref={walkthroughRefs.rideReviewRouteMap}
+                collapsable={false}
+              >
+                <RouteMapCard
+                  period={period}
+                  stats={state.stats}
+                  routes={state.routes}
+                />
+              </View>
+              <View
+                ref={walkthroughRefs.rideReviewTopLines}
+                collapsable={false}
+                style={styles.walkthroughGroup}
+              >
+                <TopLines stats={state.stats} />
+              </View>
+              <Prefectures key={period} prefectures={state.prefectures} />
               <Typography
                 style={[styles.note, { color: colors.secondaryText }]}
               >
@@ -640,12 +837,120 @@ const RideReviewScreen: React.FC = () => {
   const colors = useAppColors();
   const footerHeight = useFooterHeight();
   const rideLogEnabled = useAtomValue(rideLogEnabledAtom);
+  const { height: windowHeight } = useWindowDimensions();
 
   const handleScroll = useRef(
     RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
       useNativeDriver: true,
     })
   ).current;
+
+  // --- ウォークスルー(#7117) ---
+  const scrollRef = useRef<ScrollView>(null);
+  // スクロール位置。ネイティブで動く scrollY を JS 側でも読めるよう購読する
+  const scrollOffsetRef = useRef(0);
+  useEffect(() => {
+    const id = scrollY.addListener(({ value }) => {
+      scrollOffsetRef.current = value;
+    });
+    return () => scrollY.removeListener(id);
+  }, [scrollY]);
+
+  const periodRef = useRef<View>(null);
+  const summaryRef = useRef<View>(null);
+  const routeMapRef = useRef<View>(null);
+  const topLinesRef = useRef<View>(null);
+  const walkthroughRefs = useRef<WalkthroughTargetRefs>({
+    rideReviewPeriod: periodRef,
+    rideReviewSummary: summaryRef,
+    rideReviewRouteMap: routeMapRef,
+    rideReviewTopLines: topLinesRef,
+  }).current;
+
+  const [walkthroughReady, setWalkthroughReady] = useState(false);
+  const {
+    isWalkthroughActive,
+    currentStepIndex,
+    currentStepId,
+    currentStep,
+    totalSteps,
+    nextStep,
+    goToStep,
+    skipWalkthrough,
+    setSpotlightArea,
+  } = useRideReviewWalkthrough(rideLogEnabled && walkthroughReady);
+  const [tooltipPosition, setTooltipPosition] =
+    useState<WalkthroughStep['tooltipPosition']>('bottom');
+
+  // ステップが変わったら、対象のカードを見出しのすぐ下までスクロールしてから切り抜く
+  useEffect(() => {
+    if (!isWalkthroughActive || !currentStepId || !headerHeight) {
+      return;
+    }
+    const target =
+      walkthroughRefs[currentStepId as keyof WalkthroughTargetRefs]?.current;
+    if (!target) {
+      return;
+    }
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    target.measureInWindow((_x, y) => {
+      if (cancelled) {
+        return;
+      }
+      const nextOffset = Math.max(
+        0,
+        scrollOffsetRef.current + y - (headerHeight + WALKTHROUGH_TARGET_MARGIN)
+      );
+      scrollRef.current?.scrollTo({ y: nextOffset, animated: true });
+      timer = setTimeout(() => {
+        target.measureInWindow((x, measuredY, width, height) => {
+          if (cancelled) {
+            return;
+          }
+          // 画面の終わり近くのカードは見出しの下までスクロールできないので、
+          // 下に吹き出しが収まらなければ上に出す
+          setTooltipPosition(
+            measuredY + height + WALKTHROUGH_TOOLTIP_SPACE >
+              windowHeight - footerHeight
+              ? 'top'
+              : 'bottom'
+          );
+          setSpotlightArea({
+            x,
+            y: measuredY,
+            width,
+            height,
+            borderRadius:
+              WALKTHROUGH_RADIUS[currentStepId] ?? WALKTHROUGH_CARD_RADIUS,
+          });
+        });
+      }, WALKTHROUGH_SCROLL_SETTLE_MS);
+    });
+    return () => {
+      cancelled = true;
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [
+    currentStepId,
+    footerHeight,
+    headerHeight,
+    isWalkthroughActive,
+    setSpotlightArea,
+    walkthroughRefs,
+    windowHeight,
+  ]);
+
+  // 案内を終えたら画面の先頭に戻す
+  const wasWalkthroughActiveRef = useRef(false);
+  useEffect(() => {
+    if (wasWalkthroughActiveRef.current && !isWalkthroughActive) {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }
+    wasWalkthroughActiveRef.current = isWalkthroughActive;
+  }, [isWalkthroughActive]);
 
   return (
     <>
@@ -656,6 +961,7 @@ const RideReviewScreen: React.FC = () => {
         ]}
       >
         <RNAnimated.ScrollView
+          ref={scrollRef}
           style={StyleSheet.absoluteFill}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -665,7 +971,14 @@ const RideReviewScreen: React.FC = () => {
             { paddingBottom: footerHeight + 24 },
           ]}
         >
-          {rideLogEnabled ? <Report /> : <Intro />}
+          {rideLogEnabled ? (
+            <Report
+              walkthroughRefs={walkthroughRefs}
+              onWalkthroughReadyChange={setWalkthroughReady}
+            />
+          ) : (
+            <Intro />
+          )}
         </RNAnimated.ScrollView>
       </SafeAreaView>
       <SettingsHeader
@@ -674,6 +987,18 @@ const RideReviewScreen: React.FC = () => {
         scrollY={scrollY}
       />
       <FooterTabBar active="review" />
+      {/* 切り抜きの位置を測れてから出す(測る前に出すと、暗幕だけが画面を覆う) */}
+      {currentStep?.spotlightArea ? (
+        <WalkthroughOverlay
+          visible={isWalkthroughActive}
+          step={{ ...currentStep, tooltipPosition }}
+          currentStepIndex={currentStepIndex}
+          totalSteps={totalSteps}
+          onNext={nextStep}
+          onGoToStep={goToStep}
+          onSkip={skipWalkthrough}
+        />
+      ) : null}
     </>
   );
 };

@@ -29,6 +29,7 @@ const stop = (
   latitude: null,
   longitude: null,
   pathFromPrevious: null,
+  prefectureId: null,
   ...overrides,
 });
 

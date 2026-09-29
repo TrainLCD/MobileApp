@@ -50,6 +50,7 @@ const ride = (
     latitude: input.at?.latitude ?? null,
     longitude: input.at?.longitude ?? null,
     pathFromPrevious: input.at ? (input.path ?? []) : null,
+    prefectureId: null,
   }));
   return {
     id,
