@@ -20,6 +20,8 @@ import { CommonCard } from '~/components/CommonCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { PortraitModePromoBanner } from '~/components/PortraitModePromoBanner';
+import { RideMonthCard } from '~/components/RideMonthCard';
+import { RideReviewTabIntro } from '~/components/RideReviewTabIntro';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
@@ -37,6 +39,7 @@ import { Heading } from '../components/Heading';
 import navigationState, {
   pendingQuickActionRouteIdAtom,
 } from '../store/atoms/navigation';
+import { rideLogEnabledAtom } from '../store/atoms/rideLog';
 import { stationsCacheAtom } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
@@ -62,6 +65,10 @@ const styles = StyleSheet.create({
   },
   portraitPromoBanner: {
     marginBottom: 24,
+  },
+  // 下の路線の見出しとの間隔を、プリセットの下の余白(32)にそろえる
+  rideMonthCard: {
+    marginBottom: 32,
   },
 });
 
@@ -123,6 +130,8 @@ const SelectLineScreen = () => {
     goToStep,
     skipWalkthrough,
     setSearchButtonLayout,
+    reviewButtonLayout,
+    setReviewButtonLayout,
     setSettingsButtonLayout,
     setNowHeaderLayout,
     lineListRef,
@@ -136,6 +145,7 @@ const SelectLineScreen = () => {
   const pendingQuickActionRouteId = useAtomValue(pendingQuickActionRouteIdAtom);
   const setNavigationState = useSetAtom(navigationState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const rideLogEnabled = useAtomValue(rideLogEnabledAtom);
   const colors = useAppColors();
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
@@ -357,6 +367,11 @@ const SelectLineScreen = () => {
                   onPress={handlePresetPress}
                 />
               </View>
+              {/* 振り返りを有効にしたユーザーにだけ今月の記録を出す(#7100)。
+                  置き場所はプリセットの下(#7124) */}
+              {rideLogEnabled ? (
+                <RideMonthCard style={styles.rideMonthCard} />
+              ) : null}
               <View ref={lineListRef} onLayout={handleLineListLayout}>
                 {stationLines.length > 0 && (
                   <Heading style={styles.heading} singleLine>
@@ -421,6 +436,7 @@ const SelectLineScreen = () => {
       <FooterTabBar
         active="home"
         onSearchButtonLayout={setSearchButtonLayout}
+        onReviewButtonLayout={setReviewButtonLayout}
         onSettingsButtonLayout={setSettingsButtonLayout}
       />
       {/* モーダル */}
@@ -453,6 +469,11 @@ const SelectLineScreen = () => {
           onSkip={skipWalkthrough}
         />
       )}
+      {/* ウォークスルーを終えたユーザーへの、振り返りタブの案内(#7118) */}
+      <RideReviewTabIntro
+        reviewButtonLayout={reviewButtonLayout}
+        disabled={isWalkthroughActive}
+      />
     </>
   );
 };

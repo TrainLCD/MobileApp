@@ -28,7 +28,7 @@ import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { FAQ_URL } from '~/constants';
-import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
+import { useRideLogSettingsHint } from '~/hooks/useRideLogSettingsHint';
 import { useSettingsWalkthrough } from '~/hooks/useSettingsWalkthrough';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isBetaBuild } from '~/utils/isBetaBuild';
@@ -45,6 +45,7 @@ const SETTING_ITEM_ID_MAP = {
   personalize_languages: 'personalize_languages',
   personalize_notifications: 'personalize_notifications',
   personalize_battery: 'personalize_battery',
+  personalize_ride_log: 'personalize_ride_log',
   personalize_experimental: 'personalize_experimental',
   personalize_android: 'personalize_android',
   about_app_faq: 'about_app_faq',
@@ -64,7 +65,7 @@ type SettingsSectionData = {
 };
 
 type PersonalizeSection = {
-  id: 'display' | 'notifications' | 'device' | 'other';
+  id: 'display' | 'notifications' | 'activity' | 'device' | 'other';
   titleKey: string;
   items: SettingsSectionData[];
 };
@@ -129,6 +130,8 @@ const SettingsItem = ({
         return 'notifications';
       case 'personalize_battery':
         return 'battery-half';
+      case 'personalize_ride_log':
+        return 'stats-chart';
       case 'personalize_experimental':
         return 'flask';
       case 'personalize_android':
@@ -190,7 +193,7 @@ const SettingsItem = ({
       </View>
 
       {showNewFeatureDot ? (
-        <View style={{ marginRight: 12 }}>
+        <View style={{ marginRight: 12 }} testID={`new-feature-dot-${item.id}`}>
           <NewFeatureDot color={colors.accent} />
         </View>
       ) : null}
@@ -243,7 +246,7 @@ const AppSettingsScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
   const navigation = useNavigation();
-  const showPortraitPromoHint = usePortraitPromoAppearanceHint();
+  const showRideLogHint = useRideLogSettingsHint();
 
   const themeRef = useRef<View>(null);
   const colorSchemeRef = useRef<View>(null);
@@ -450,6 +453,19 @@ const AppSettingsScreen: React.FC = () => {
               ]),
         ],
       },
+      // 振り返り(#5751)。#7134 で決めた見出しの分け方に合わせ、通知とアナウンスとデバイスのあいだに置く
+      {
+        id: 'activity',
+        titleKey: 'settingsSectionActivity',
+        items: [
+          {
+            id: SETTING_ITEM_ID_MAP.personalize_ride_log,
+            title: translate('rideLogSettings'),
+            color: '#FF2D55',
+            onPress: () => navigation.navigate('RideLogSettings' as never),
+          },
+        ],
+      },
       {
         id: 'device',
         titleKey: 'settingsSectionDevice',
@@ -559,8 +575,8 @@ const AppSettingsScreen: React.FC = () => {
                     isLast={index === section.items.length - 1}
                     onPress={item.onPress}
                     showNewFeatureDot={
-                      showPortraitPromoHint &&
-                      item.id === SETTING_ITEM_ID_MAP.personalize_color_scheme
+                      showRideLogHint &&
+                      item.id === SETTING_ITEM_ID_MAP.personalize_ride_log
                     }
                   />
                 );

@@ -36,6 +36,13 @@ export default {
     ],
     'expo-audio',
     [
+      'react-native-maps',
+      {
+        // 振り返りの移動経路の地図。iOS は Apple マップなのでキーは要らない
+        androidGoogleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         backgroundColor: '#fff',
@@ -57,7 +64,7 @@ export default {
     userInterfaceStyle: 'automatic',
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',
-    buildNumber: '2937',
+    buildNumber: '2942',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV
       ? 'me.tinykitten.trainlcd.dev'
@@ -71,7 +78,7 @@ export default {
         ? 'me.tinykitten.trainlcd.dev'
         : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000815,
+    versionCode: 100000825,
   },
   owner: 'trainlcd',
   experiments: {

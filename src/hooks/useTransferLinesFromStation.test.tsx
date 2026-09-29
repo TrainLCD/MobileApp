@@ -82,6 +82,7 @@ const createStationNested = (id: number): StationNested => ({
   status: undefined,
   stopCondition: undefined,
   threeLetterCode: null,
+  trackDistanceFromPrevious: null,
   trainType: null,
   transportType: undefined,
 });

@@ -86,6 +86,7 @@
     "react-native-gesture-handler": "~2.32.0",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-localize": "^3.3.0",
+    "react-native-maps": "1.27.2",
     "react-native-mmkv": "^4.3.1",
     "react-native-nitro-modules": "^0.35.9",
     "react-native-reanimated": "4.5.1",

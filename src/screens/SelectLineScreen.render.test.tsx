@@ -10,6 +10,7 @@ import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import { pendingQuickActionRouteIdAtom } from '~/store/atoms/navigation';
+import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { stationsCacheAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { createLine, createStation } from '~/utils/test/factories';
@@ -172,6 +173,19 @@ jest.mock('~/components/EmptyLineSeparator', () => ({
   },
 }));
 
+// 振り返りタブの案内はナビゲーションに依存するので、この画面のテストでは描かない
+// (中身は RideReviewTabIntro.test.tsx で確かめる)
+jest.mock('~/components/RideReviewTabIntro', () => ({
+  RideReviewTabIntro: () => null,
+}));
+
+jest.mock('~/components/RideMonthCard', () => ({
+  RideMonthCard: () => {
+    const { View } = require('react-native');
+    return <View testID="ride-month-card" />;
+  },
+}));
+
 jest.mock('./SelectLineScreenPresets', () => ({
   SelectLineScreenPresets: ({
     isPresetsLoading,
@@ -262,6 +276,7 @@ const setupDefaults = ({
   walkthrough = defaultWalkthrough(),
   stationsCache = [] as Station[][],
   pendingQuickActionRouteId = null as string | null,
+  rideLogEnabled = false,
 } = {}) => {
   (useInitialNearbyStation as jest.Mock).mockReturnValue({
     station,
@@ -282,6 +297,7 @@ const setupDefaults = ({
     if (atom === pendingQuickActionRouteIdAtom)
       return pendingQuickActionRouteId;
     if (atom === isLEDThemeAtom) return false;
+    if (atom === rideLogEnabledAtom) return rideLogEnabled;
     return undefined;
   });
 };
@@ -310,6 +326,32 @@ describe('SelectLineScreen', () => {
 
       expect(queryByTestId('skeleton-placeholder')).toBeNull();
       expect(getByTestId('presets')).toBeTruthy();
+    });
+  });
+
+  describe('今月の振り返りカード', () => {
+    it('振り返りが無効なら出さない', () => {
+      setupDefaults({ rideLogEnabled: false });
+
+      const { queryByTestId } = render(<SelectLineScreen />);
+
+      expect(queryByTestId('ride-month-card')).toBeNull();
+    });
+
+    it('振り返りが有効なら、プリセットの下に出す(#7124)', () => {
+      setupDefaults({ rideLogEnabled: true });
+
+      const { getByTestId, UNSAFE_root } = render(<SelectLineScreen />);
+
+      expect(getByTestId('ride-month-card')).toBeTruthy();
+      // findAll は深さ優先で描画ツリーの並び順に返すので、testID の出てくる順で比べる
+      const order = UNSAFE_root.findAll(
+        (node) =>
+          typeof node.type === 'string' &&
+          (node.props.testID === 'presets' ||
+            node.props.testID === 'ride-month-card')
+      ).map((node) => node.props.testID);
+      expect(order).toEqual(['presets', 'ride-month-card']);
     });
   });
 

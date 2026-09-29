@@ -54,6 +54,7 @@ import {
   useRefreshLeftStations,
   useRefreshStation,
   useResetMainState,
+  useRideRecorder,
   useShouldHideTypeChange,
   useSimulationMode,
   useStartBackgroundLocationUpdates,
@@ -75,6 +76,7 @@ import { getLineSymbolImage } from '~/lineSymbolImage';
 import { APP_THEME } from '~/models/Theme';
 import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import lineState from '~/store/atoms/line';
+import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
@@ -205,6 +207,11 @@ const FxAndroidPictureInPicture: React.FC = () => {
   useAndroidPictureInPicture();
   return null;
 };
+// 振り返り機能の乗車ログ。有効にしたユーザーのときだけマウントする
+const FxRideRecorder: React.FC = () => {
+  useRideRecorder();
+  return null;
+};
 // iOS の BackHandler は何も発火しないため、購読するのは Android のときだけにする
 const FxPreventBackInUntouchableMode: React.FC = () => {
   usePreventBackInUntouchableMode();
@@ -212,6 +219,7 @@ const FxPreventBackInUntouchableMode: React.FC = () => {
 };
 
 const MainScreenEffects: React.FC = () => {
+  const rideLogEnabled = useAtomValue(rideLogEnabledAtom);
   return (
     <>
       <FxSimulationMode />
@@ -228,6 +236,7 @@ const MainScreenEffects: React.FC = () => {
       {NEEDS_LOCATION_HEARTBEAT && <FxLocationHeartbeat />}
       <FxTTS />
       <FxUpdateLiveActivities />
+      {rideLogEnabled && <FxRideRecorder />}
       {Platform.OS === 'android' && <FxUpdateWidget />}
       {Platform.OS === 'android' && <FxAndroidPictureInPicture />}
       {Platform.OS === 'android' && <FxPreventBackInUntouchableMode />}
