@@ -51,6 +51,9 @@ const sampleRide = (): RideSessionWithStops => {
     lineName: '中央線快速',
     lineColor: '#F15A22',
     distanceSource: 'haversine' as const,
+    latitude: null,
+    longitude: null,
+    pathFromPrevious: null,
   };
   return {
     id: 'r1',

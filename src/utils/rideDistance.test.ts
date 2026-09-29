@@ -4,7 +4,11 @@ import {
   resetTrackDistancesForTesting,
 } from '~/lib/trackDistances';
 import { createStation } from '~/utils/test/factories';
-import { getRideDistanceMeters, measureRideDistance } from './rideDistance';
+import {
+  getRideDistanceMeters,
+  measureRideDistance,
+  measureRideSegment,
+} from './rideDistance';
 
 // 経度方向に約1kmずつ離れた駅を並べる
 const at = (id: number, lon: number) =>
@@ -147,5 +151,36 @@ describe('getRideDistanceMeters', () => {
         source: 'haversine',
       });
     });
+  });
+});
+
+describe('measureRideSegment', () => {
+  const ids = (path: { id?: number | null }[]) => path.map((s) => s.id);
+
+  it('たどった駅を、進んだ向きに両端を含めて返す', () => {
+    expect(ids(measureRideSegment(stations, a, d, false).path)).toEqual([
+      1, 2, 3, 4,
+    ]);
+    expect(ids(measureRideSegment(stations, d, b, false).path)).toEqual([
+      4, 3, 2,
+    ]);
+  });
+
+  it('距離とその求め方は measureRideDistance と同じ', () => {
+    const { meters, source } = measureRideSegment(stations, d, b, false);
+    expect({ meters, source }).toEqual(
+      measureRideDistance(stations, d, b, false)
+    );
+  });
+
+  it('環状線は、距離を測ったのと同じ短い方の回り方をたどる', () => {
+    expect(ids(measureRideSegment(stations, d, a, true).path)).toEqual([4, 1]);
+  });
+
+  it('リストに無い駅が相手なら、2駅だけを返す', () => {
+    const outside = at(9, 139.8);
+    expect(ids(measureRideSegment(stations, a, outside, false).path)).toEqual([
+      1, 9,
+    ]);
   });
 });

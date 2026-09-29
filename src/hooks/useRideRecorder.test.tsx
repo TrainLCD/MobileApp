@@ -349,6 +349,32 @@ describe('useRideRecorder', () => {
     );
   });
 
+  it('駅の座標と、取りこぼした駅も含めてたどった駅の座標を記録する', async () => {
+    const { store } = setup();
+    act(() => store.set(arrivedAtom, false));
+    act(() => {
+      store.set(stationAtom, e);
+      store.set(arrivedAtom, true);
+    });
+    await flush();
+    const [, stops] = (insertRideSession as jest.Mock).mock.calls[0];
+    expect(stops[0]).toMatchObject({
+      latitude: 35.68,
+      longitude: 139.7,
+      pathFromPrevious: [],
+    });
+    // a と e のあいだにある b・c・d を、進んだ順に持つ
+    expect(stops[1]).toMatchObject({
+      latitude: 35.68,
+      longitude: 139.744,
+      pathFromPrevious: [
+        { latitude: 35.68, longitude: 139.711 },
+        { latitude: 35.68, longitude: 139.722 },
+        { latitude: 35.68, longitude: 139.733 },
+      ],
+    });
+  });
+
   it('線路の長さを知っている区間は、線路の長さで記録する', async () => {
     rememberTrackDistances([
       { id: 1, trackDistanceFromPrevious: null },

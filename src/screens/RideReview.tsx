@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
@@ -11,6 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '~/components/Button';
 import FooterTabBar, { useFooterHeight } from '~/components/FooterTabBar';
 import { Heading } from '~/components/Heading';
+import {
+  RideRouteMapView,
+  useRideRouteMapBackgroundColor,
+} from '~/components/RideRouteMapView';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import Typography from '~/components/Typography';
 import { STORAGE_KEYS } from '~/constants';
@@ -21,16 +27,18 @@ import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
-import type {
-  RidePeriod,
-  RidePeriodRange,
-  RideStats,
-  RideStatsBucket,
-} from '~/utils/rideStats';
-import { formatDistanceKm, formatDuration } from '~/utils/rideStatsFormat';
+import type { RideRoutes } from '~/utils/rideRoutes';
+import type { RidePeriod, RideStats, RideStatsBucket } from '~/utils/rideStats';
+import {
+  formatDistanceKm,
+  formatDuration,
+  formatMonthDay,
+  formatRange,
+} from '~/utils/rideStatsFormat';
 
 const ACCENT_COLOR = '#0A84FF';
 const CHART_HEIGHT = 96;
+const ROUTE_MAP_HEIGHT = 200;
 const EMPTY_BAR_HEIGHT = 2;
 const TOP_LINES_LIMIT = 5;
 const PERIODS: RidePeriod[] = ['week', 'month', 'year'];
@@ -100,6 +108,39 @@ const styles = StyleSheet.create({
   lineTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
   lineFill: { height: 4, borderRadius: 2 },
   note: { fontSize: 11, lineHeight: 16 },
+  routeMap: {
+    height: ROUTE_MAP_HEIGHT,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  routeMapExpand: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  routeMapEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  routeMapEmptyText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
   bodyText: { fontSize: 14, lineHeight: 21 },
   point: { flexDirection: 'row', gap: 8 },
   pointBullet: { fontSize: 12, lineHeight: 18 },
@@ -107,34 +148,6 @@ const styles = StyleSheet.create({
   enableButton: { alignSelf: 'center', minWidth: 160, marginTop: 8 },
   loading: { marginTop: 24 },
 });
-
-const formatMonthDay = (date: Date): string =>
-  `${date.getMonth() + 1}/${date.getDate()}`;
-
-const formatRange = (period: RidePeriod, range: RidePeriodRange): string => {
-  const { start } = range;
-  switch (period) {
-    case 'week': {
-      // 終わりは半開区間の end の前日(日曜日)
-      const lastDay = new Date(
-        range.end.getFullYear(),
-        range.end.getMonth(),
-        range.end.getDate() - 1
-      );
-      return translate('rideReviewRangeWeek', {
-        start: formatMonthDay(start),
-        end: formatMonthDay(lastDay),
-      });
-    }
-    case 'month':
-      return translate('rideReviewRangeMonth', {
-        year: start.getFullYear(),
-        month: start.getMonth() + 1,
-      });
-    case 'year':
-      return translate('rideReviewRangeYear', { year: start.getFullYear() });
-  }
-};
 
 // グラフの下に並べるラベル。今週は曜日の下に日付を添える
 const bucketLabel = (
@@ -335,6 +348,109 @@ const DistanceChart = ({
   );
 };
 
+const RouteMapCard = ({
+  period,
+  stats,
+  routes,
+}: {
+  period: RidePeriod;
+  stats: RideStats;
+  routes: RideRoutes;
+}) => {
+  const colors = useAppColors();
+  const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const navigation = useNavigation();
+  const mapBackgroundColor = useRideRouteMapBackgroundColor();
+  const hasRoutes = routes.lines.length > 0;
+
+  const handleExpand = useCallback(() => {
+    navigation.dispatch(
+      CommonActions.navigate({ name: 'RideRouteMap', params: { period } })
+    );
+  }, [navigation, period]);
+
+  // 地図は読み上げられないので、描いた路線の名前をまとめて伝える
+  const accessibilityLabel = translate('rideReviewRouteMapLabel', {
+    lines: stats.lines
+      .filter((line) => routes.lineIds.includes(line.lineId))
+      .map((line) => line.lineName)
+      .filter((name): name is string => name != null)
+      .join('、'),
+  });
+
+  return (
+    <Card>
+      <Typography style={styles.cardTitle}>
+        {translate('rideReviewRouteMap')}
+      </Typography>
+      <View
+        style={[styles.routeMap, { backgroundColor: mapBackgroundColor }]}
+        testID="ride-review-route-map"
+      >
+        {hasRoutes ? (
+          <>
+            {/* 画面のスクロールと取り合わないよう、カードの地図は触れても反応させない */}
+            <View
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+              accessible
+              accessibilityRole="image"
+              accessibilityLabel={accessibilityLabel}
+            >
+              <RideRouteMapView routes={routes} variant="card" />
+            </View>
+            <Pressable
+              onPress={handleExpand}
+              accessibilityRole="button"
+              accessibilityLabel={translate('rideReviewRouteMapExpand')}
+              hitSlop={8}
+              testID="ride-review-route-map-expand"
+              style={[
+                styles.routeMapExpand,
+                { backgroundColor: isLEDTheme ? '#333' : colors.card },
+              ]}
+            >
+              <Ionicons
+                name="expand"
+                size={18}
+                color={isLEDTheme ? '#fff' : colors.text}
+              />
+            </Pressable>
+          </>
+        ) : (
+          <View style={styles.routeMapEmpty}>
+            <Typography
+              style={[
+                styles.routeMapEmptyText,
+                { color: colors.secondaryText },
+              ]}
+            >
+              {translate('rideReviewRouteMapNone')}
+            </Typography>
+          </View>
+        )}
+      </View>
+      {hasRoutes && routes.unmappedRideCount > 0 ? (
+        <Typography
+          style={[
+            styles.note,
+            { color: colors.secondaryText, fontWeight: 'bold' },
+          ]}
+        >
+          {translate('rideReviewRouteMapUnmapped', {
+            count: routes.unmappedRideCount,
+          })}
+        </Typography>
+      ) : null}
+      {hasRoutes ? (
+        <Typography style={[styles.note, { color: colors.secondaryText }]}>
+          {translate('rideReviewRouteMapNote')}
+        </Typography>
+      ) : null}
+    </Card>
+  );
+};
+
 const TopLines = ({ stats }: { stats: RideStats }) => {
   const colors = useAppColors();
   const lines = stats.lines.slice(0, TOP_LINES_LIMIT);
@@ -498,6 +614,11 @@ const Report = () => {
           ) : (
             <>
               <DistanceChart period={period} buckets={state.stats.buckets} />
+              <RouteMapCard
+                period={period}
+                stats={state.stats}
+                routes={state.routes}
+              />
               <TopLines stats={state.stats} />
               <Typography
                 style={[styles.note, { color: colors.secondaryText }]}
