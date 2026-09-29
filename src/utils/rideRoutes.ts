@@ -165,7 +165,14 @@ export const buildRideRoutes = (
     }
   }
 
-  const maxCount = Math.max(0, ...counts.values());
+  // 区間の数は乗った駅間の数だけ増えて上限が無い。Math.max に展開すると引数の数の
+  // 上限を超えて RangeError になるので、ループで求める
+  let maxCount = 0;
+  for (const count of counts.values()) {
+    if (count > maxCount) {
+      maxCount = count;
+    }
+  }
 
   // 乗車の順に駅間をたどり、色と太さの段階が同じあいだは1本の線につなぐ。
   // 描いた区間は2度描かない(線の数を抑え、重ね塗りで色が濃くならないようにする)
