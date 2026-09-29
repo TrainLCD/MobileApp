@@ -49,7 +49,11 @@ export type WalkthroughStepId =
   | 'settingsColorScheme'
   | 'settingsTts'
   | 'settingsLanguages'
-  | 'portraitMode';
+  | 'portraitMode'
+  | 'rideReviewPeriod'
+  | 'rideReviewSummary'
+  | 'rideReviewRouteMap'
+  | 'rideReviewTopLines';
 
 export type WalkthroughStep = {
   id: WalkthroughStepId;
