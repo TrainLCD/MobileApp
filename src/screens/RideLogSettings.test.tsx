@@ -1,7 +1,7 @@
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { STORAGE_KEYS } from '~/constants';
-import { deleteAllRideLogs } from '~/lib/rideLog';
+import { deleteAllRideLogs, hasRideLogs } from '~/lib/rideLog';
 import { storage } from '~/lib/storage';
 import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import {
@@ -12,14 +12,23 @@ import {
 } from '~/utils/dialogPresentation';
 import RideLogSettingsScreen from './RideLogSettings';
 
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({
-    goBack: jest.fn(),
-  }),
-}));
+jest.mock('@react-navigation/native', () => {
+  const { useEffect } = require('react');
+  return {
+    useNavigation: () => ({
+      goBack: jest.fn(),
+    }),
+    // 画面が表示されたときの読み込みを、マウント時の effect として再現する
+    useFocusEffect: (effect: () => undefined | (() => void)) => {
+      useEffect(effect, [effect]);
+    },
+  };
+});
 
+// 既定では記録があることにして、削除を押せる状態から始める
 jest.mock('~/lib/rideLog', () => ({
   deleteAllRideLogs: jest.fn(() => Promise.resolve()),
+  hasRideLogs: jest.fn(() => Promise.resolve(true)),
 }));
 
 jest.mock('~/components/FooterTabBar', () => () => null);
@@ -136,5 +145,46 @@ describe('RideLogSettingsScreen', () => {
       message: 'rideLogDeleteFailed',
     });
     consoleErrorSpy.mockRestore();
+  });
+  describe('記録が無いとき', () => {
+    const deleteButton = (
+      getByTestId: (id: string) => { props: Record<string, unknown> }
+    ) => getByTestId('ride-log-delete-all');
+
+    it('記録が無ければ「記録をすべて削除」を押せなくする', async () => {
+      (hasRideLogs as jest.Mock).mockResolvedValueOnce(false);
+      const { getByTestId } = renderWithStore(true);
+      await waitFor(() =>
+        expect(
+          deleteButton(getByTestId).props.accessibilityState
+        ).toMatchObject({ disabled: true })
+      );
+      fireEvent.press(getByTestId('ride-log-delete-all'));
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+    });
+
+    it('全件削除したあとは押せなくする', async () => {
+      const { getByTestId } = renderWithStore(true);
+      await waitFor(() => expect(hasRideLogs).toHaveBeenCalled());
+      fireEvent.press(getByTestId('ride-log-delete-all'));
+      await pressDialogButton('OK');
+      expect(deleteAllRideLogs).toHaveBeenCalled();
+      expect(deleteButton(getByTestId).props.accessibilityState).toMatchObject({
+        disabled: true,
+      });
+    });
+
+    it('記録があるかを読めなかったときは押せるままにする', async () => {
+      const consoleSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      (hasRideLogs as jest.Mock).mockRejectedValueOnce(new Error('db'));
+      const { getByTestId } = renderWithStore(true);
+      await waitFor(() => expect(consoleSpy).toHaveBeenCalled());
+      expect(deleteButton(getByTestId).props.accessibilityState).toMatchObject({
+        disabled: false,
+      });
+      consoleSpy.mockRestore();
+    });
   });
 });

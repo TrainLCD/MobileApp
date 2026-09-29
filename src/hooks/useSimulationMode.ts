@@ -153,10 +153,17 @@ export const useSimulationMode = (): void => {
       {
         trainRoute: {
           segments:
-            | (NonNullable<
-                GetTrainRouteQuery['trainRoute']['segments']
-              >[number] & {
-                station: { id?: number | null; groupId?: number | null } | null;
+            | (Omit<
+                NonNullable<
+                  GetTrainRouteQuery['trainRoute']['segments']
+                >[number],
+                'station'
+              > & {
+                station: {
+                  id?: number | null;
+                  groupId?: number | null;
+                  trackDistanceFromPrevious?: number | null;
+                } | null;
               })[]
             | null;
         };
@@ -324,8 +331,11 @@ export const useSimulationMode = (): void => {
       }
 
       // step() で参照する waypoints と累積距離を一度だけ計算してキャッシュする。
-      // 距離は trainRoute の distanceFromPrevious を積算する(直線距離ではなく
-      // 実際の線路長ベースの値をサーバーから取得できる)。
+      // 距離は駅ごとの trackDistanceFromPrevious(直前の駅からの線路の長さ)を積算する。
+      // 線路データの無い区間や乗換経路の各区間の先頭では null になるので、
+      // distanceFromPrevious(駅の座標どうしの直線距離)で代える。
+      // 位置は駅の座標を直線で結んだ上を動かすため、カーブの多い区間では
+      // 報告する速度(coords.speed)より座標の変位の方が小さくなる。
       const waypoints: { latitude: number; longitude: number }[] = [
         {
           latitude: cur.latitude as number,
@@ -339,7 +349,11 @@ export const useSimulationMode = (): void => {
         if (!wp || wp.latitude == null || wp.longitude == null) {
           continue;
         }
-        distanceForNextStation += segments[idx]?.distanceFromPrevious ?? 0;
+        const segment = segments[idx];
+        distanceForNextStation +=
+          segment?.station?.trackDistanceFromPrevious ??
+          segment?.distanceFromPrevious ??
+          0;
         waypoints.push({
           latitude: wp.latitude as number,
           longitude: wp.longitude as number,

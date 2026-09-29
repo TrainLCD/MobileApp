@@ -5,6 +5,7 @@ jest.mock('expo-sqlite', () => {
     execAsync: jest.fn(() => Promise.resolve()),
     runAsync: jest.fn(() => Promise.resolve()),
     getAllAsync: jest.fn(() => Promise.resolve([])),
+    getFirstAsync: jest.fn(() => Promise.resolve(null)),
     withTransactionAsync: jest.fn((task: () => Promise<void>) => task()),
   };
   return { openDatabaseSync: jest.fn(() => db), __mockDb: db };
@@ -15,6 +16,7 @@ import {
   deleteAllRideLogs,
   enqueueRideLogMutation,
   getRideSessionsStartedBetween,
+  hasRideLogs,
   insertRideSession,
   type RideStopRecord,
   updateRideStopDeparture,
@@ -24,6 +26,7 @@ const mockDb = jest.requireMock('expo-sqlite').__mockDb as {
   execAsync: jest.Mock;
   runAsync: jest.Mock;
   getAllAsync: jest.Mock;
+  getFirstAsync: jest.Mock;
   withTransactionAsync: jest.Mock;
 };
 
@@ -349,5 +352,39 @@ describe('rideLog', () => {
         (sql as string).includes('FROM ride_stops')
       )
     ).toHaveLength(0);
+  });
+  describe('hasRideLogs', () => {
+    it('乗車が1件でもあれば true、無ければ false を返す', async () => {
+      mockDb.getFirstAsync.mockResolvedValueOnce({ found: 1 });
+      await expect(hasRideLogs()).resolves.toBe(true);
+      mockDb.getFirstAsync.mockResolvedValueOnce(null);
+      await expect(hasRideLogs()).resolves.toBe(false);
+    });
+
+    it('先に積まれた書き込みが終わってから読む', async () => {
+      let finishWrite: () => void = () => {};
+      const pendingWrite = enqueueRideLogMutation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishWrite = resolve;
+          })
+      );
+      const check = hasRideLogs();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(mockDb.getFirstAsync).not.toHaveBeenCalled();
+
+      finishWrite();
+      await pendingWrite;
+      await check;
+      expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
+        'SELECT 1 AS found FROM ride_sessions LIMIT 1'
+      );
+    });
+
+    it('読み出しに失敗したら reject する', async () => {
+      mockDb.getFirstAsync.mockRejectedValueOnce(new Error('db'));
+      await expect(hasRideLogs()).rejects.toThrow('db');
+    });
   });
 });
