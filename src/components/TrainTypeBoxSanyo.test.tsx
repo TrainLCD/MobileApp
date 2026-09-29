@@ -88,4 +88,9 @@ describe('TrainTypeBoxSanyo', () => {
     const { getByText } = renderBox(null);
     expect(getByText('普通')).toBeTruthy();
   });
+
+  it('種別が無いときも、日本語の表示中は読みを添える', () => {
+    const { getByText } = renderBox(null);
+    expect(getByText('かくえきていしゃ')).toBeTruthy();
+  });
 });

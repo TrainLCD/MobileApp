@@ -18,6 +18,9 @@ type Props = {
   height: number;
 };
 
+// 種別の情報が無いときに上の段へ出す translate('local') の読み
+const LOCAL_KANA = 'かくえきていしゃ';
+
 // 種別色を持たない列車の箱の色
 const FALLBACK_COLOR = '#555';
 
@@ -71,11 +74,15 @@ const TrainTypeBoxSanyo: React.FC<Props> = ({
         return truncateTrainType(trainType?.nameKorean || translate('localKo'));
       default:
         // 実物は日本語の表示中、種別名の読みをひらがなで添える
-        return katakanaToHiragana(trainType?.nameKatakana);
+        if (!trainType?.name) {
+          return LOCAL_KANA;
+        }
+        return katakanaToHiragana(trainType.nameKatakana);
     }
   }, [
     isBus,
     subLangState,
+    trainType?.name,
     trainType?.nameChinese,
     trainType?.nameKatakana,
     trainType?.nameKorean,

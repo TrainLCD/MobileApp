@@ -258,6 +258,9 @@ const HeaderSanyo: React.FC<CommonHeaderProps> = (props) => {
       boundLine2Height: topRowHeight * 0.3,
       boundFontSize,
       boundSuffixFontSize: H * 0.055,
+      // 「ゆき」とその下の訳(「행」など)は、同じ幅の列に中央揃えで置く
+      boundSuffixRight: boundBoxWidth * 0.05,
+      boundSuffixWidth: boundBoxWidth * 0.14,
       boundSubFontSize: H * 0.032,
       mainRowTop: 0,
       // 実物は駅名と下の行の間が画面の高さの約2%あく。ヘッダーの高さを保つため駅名の段を上に寄せた分をここに回す
@@ -337,7 +340,9 @@ const HeaderSanyo: React.FC<CommonHeaderProps> = (props) => {
                     styles.boundText,
                     {
                       position: 'absolute',
-                      right: layout.boundBoxWidth * 0.07,
+                      right: layout.boundSuffixRight,
+                      width: layout.boundSuffixWidth,
+                      textAlign: 'center',
                       fontSize: layout.boundSuffixFontSize,
                     },
                   ]}
@@ -384,7 +389,9 @@ const HeaderSanyo: React.FC<CommonHeaderProps> = (props) => {
                       styles.boundText,
                       {
                         position: 'absolute',
-                        right: layout.boundBoxWidth * 0.08,
+                        right: layout.boundSuffixRight,
+                        width: layout.boundSuffixWidth,
+                        textAlign: 'center',
                         fontSize: layout.boundSubFontSize,
                         fontWeight: 'bold',
                       },
@@ -416,7 +423,8 @@ const HeaderSanyo: React.FC<CommonHeaderProps> = (props) => {
             style={[
               styles.whiteText,
               styles.bold,
-              { fontSize: layout.stateFontSize },
+              // 実物は「つぎは」と下の行を列の中央にそろえる
+              { fontSize: layout.stateFontSize, textAlign: 'center' },
             ]}
           >
             {texts.stateMain}
@@ -486,6 +494,7 @@ const HeaderSanyo: React.FC<CommonHeaderProps> = (props) => {
               {
                 fontSize: layout.subFontSize,
                 lineHeight: layout.subFontSize * 1.2,
+                textAlign: 'center',
               },
             ]}
           >
