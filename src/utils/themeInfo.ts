@@ -79,6 +79,11 @@ const APP_THEME_INFO_MAP: Record<AppTheme, ThemeInfoData> = {
     spImage: require('../../assets/images/themes/e131-sp.webp'),
     tabletImage: require('../../assets/images/themes/e131-tablet.webp'),
   },
+  [APP_THEME.SANYO]: {
+    descriptionKey: 'themeDescriptionSanyo',
+    spImage: require('../../assets/images/themes/sanyo-sp.webp'),
+    tabletImage: require('../../assets/images/themes/sanyo-tablet.webp'),
+  },
   [APP_THEME.LOW_POWER]: {
     descriptionKey: 'themeDescriptionLowPower',
     spImage: require('../../assets/images/themes/low-power-sp.webp'),

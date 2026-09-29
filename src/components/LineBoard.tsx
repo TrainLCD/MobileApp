@@ -17,6 +17,7 @@ import LineBoardJRKyushu from './LineBoardJRKyushu';
 import LineBoardLED from './LineBoardLED';
 import LineBoardLowPower from './LineBoardLowPower';
 import LineBoardSaikyo from './LineBoardSaikyo';
+import LineBoardSanyo from './LineBoardSanyo';
 import LineBoardToei from './LineBoardToei';
 import LineBoardWest from './LineBoardWest';
 import LineBoardYamanotePad from './LineBoardYamanotePad';
@@ -138,6 +139,13 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
             hasTerminus={hasTerminus}
             lineColors={lineColors}
             arrivingLineColor={arrivingLineColor}
+          />
+        );
+      case APP_THEME.SANYO:
+        return (
+          <LineBoardSanyo
+            stations={slicedLeftStations}
+            hasTerminus={hasTerminus}
           />
         );
       case APP_THEME.YAMANOTE:

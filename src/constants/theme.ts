@@ -1,5 +1,8 @@
 import { APP_THEME, type AppTheme } from '../models/Theme';
 
+// 山陽電車風テーマの代表色。テーマ一覧の「使用中」の表示に使う
+export const SANYO_THEME_RED = '#E60012';
+
 export const TYPE_CHANGE_HIDE_THEMES: AppTheme[] = [
   APP_THEME.JR_WEST,
   APP_THEME.YAMANOTE,
@@ -20,6 +23,7 @@ export const IN_USE_COLOR_MAP: Record<AppTheme, string> = {
   ODAKYU: '#0D82C7',
   E231: '#FFD400',
   E131: '#00B9F1',
+  SANYO: SANYO_THEME_RED,
   LOW_POWER: '#FFB000',
 } as const;
 

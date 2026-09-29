@@ -12,6 +12,7 @@ import HeaderLED from './HeaderLED';
 import HeaderLowPower from './HeaderLowPower';
 import HeaderOdakyu from './HeaderOdakyu';
 import HeaderSaikyo from './HeaderSaikyo';
+import HeaderSanyo from './HeaderSanyo';
 import HeaderTokyoMetro from './HeaderTokyoMetro';
 import HeaderTY from './HeaderTY';
 
@@ -47,6 +48,8 @@ const Header = () => {
       return <HeaderOdakyu {...commonData} />;
     case APP_THEME.E231:
       return <HeaderE231 {...commonData} />;
+    case APP_THEME.SANYO:
+      return <HeaderSanyo {...commonData} />;
     case APP_THEME.LOW_POWER:
       return <HeaderLowPower {...commonData} />;
     default:

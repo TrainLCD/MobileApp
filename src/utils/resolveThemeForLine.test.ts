@@ -171,6 +171,13 @@ describe('resolveThemeForLine', () => {
     expect(resolveThemeForLine(makeLine({ id }))).toBe(APP_THEME.E131);
   });
 
+  it.each([
+    ['山陽電鉄本線', 99637],
+    ['山陽電鉄網干線', 99638],
+  ])('%s(%i)はSANYOを返す', (_name, id) => {
+    expect(resolveThemeForLine(makeLine({ id }))).toBe(APP_THEME.SANYO);
+  });
+
   it('不明な路線はTOKYO_METROにフォールバックする', () => {
     expect(
       resolveThemeForLine(
