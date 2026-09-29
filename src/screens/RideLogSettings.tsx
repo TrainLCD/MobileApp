@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
@@ -12,7 +12,7 @@ import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
 import { StatePanel } from '~/components/ToggleButton';
 import Typography from '~/components/Typography';
-import { deleteAllRideLogs } from '~/lib/rideLog';
+import { deleteAllRideLogs, hasRideLogs } from '~/lib/rideLog';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -22,6 +22,8 @@ import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 
 const DESTRUCTIVE_TEXT_COLOR = '#FF3B30';
+// 記録が無いときの「記録をすべて削除」の不透明度
+const DISABLED_OPACITY = 0.4;
 
 const styles = StyleSheet.create({
   root: {
@@ -95,6 +97,31 @@ const RideLogSettingsScreen: React.FC = () => {
 
   const navigation = useNavigation();
 
+  // 保存済みの記録があるか。読み込み中と読み込みに失敗したときは null にして、
+  // 削除を押せるままにする(DB の不具合で記録を消せなくならないようにする)
+  const [hasLogs, setHasLogs] = useState<boolean | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      hasRideLogs()
+        .then((found) => {
+          if (!cancelled) {
+            setHasLogs(found);
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to check ride logs', error);
+          if (!cancelled) {
+            setHasLogs(null);
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [])
+  );
+  const deleteDisabled = hasLogs === false;
+
   const handleToggle = useCallback(() => {
     const flag = !rideLogEnabled;
     setRideLogEnabled(flag);
@@ -122,6 +149,7 @@ const RideLogSettingsScreen: React.FC = () => {
           onPress: async () => {
             try {
               await deleteAllRideLogs();
+              setHasLogs(false);
               showDialog(
                 translate('rideLogDeleteAll'),
                 translate('rideLogDeleted')
@@ -178,12 +206,19 @@ const RideLogSettingsScreen: React.FC = () => {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={translate('rideLogDeleteAll')}
+            accessibilityHint={
+              deleteDisabled ? translate('rideLogDeleteAllEmpty') : undefined
+            }
+            accessibilityState={{ disabled: deleteDisabled }}
+            disabled={deleteDisabled}
             onPress={handleDeleteAll}
+            testID="ride-log-delete-all"
             style={{
               paddingHorizontal: 24,
               paddingVertical: 16,
               backgroundColor: isLEDTheme ? '#333' : colors.card,
               borderRadius: isLEDTheme ? 0 : 12,
+              opacity: deleteDisabled ? DISABLED_OPACITY : 1,
             }}
           >
             <Typography

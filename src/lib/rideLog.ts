@@ -306,6 +306,22 @@ export const deleteAllRideLogs = (): Promise<void> =>
     await db.execAsync('DELETE FROM ride_sessions;');
   });
 
+/**
+ * 保存済みの乗車ログが1件でもあるか。設定画面の「記録をすべて削除」を押せるかに使う。
+ * 記録の書き込みと同じ列に並べ、先に積まれた書き込みが終わってから読む。
+ * Main 画面を抜けた直後に最後の書き込みが残っていても、書いた後の状態を返すため。
+ */
+export const hasRideLogs = (): Promise<boolean> =>
+  new Promise<boolean>((resolve, reject) => {
+    enqueueRideLogMutation(async () => {
+      await ensureRideLogDbInitialized();
+      const row = await getDb().getFirstAsync<{ found: number }>(
+        'SELECT 1 AS found FROM ride_sessions LIMIT 1'
+      );
+      resolve(row != null);
+    }).catch(reject);
+  });
+
 export type RideSessionWithStops = RideSessionRecord & {
   stops: RideStopRecord[];
 };
