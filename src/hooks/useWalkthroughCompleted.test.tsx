@@ -96,11 +96,53 @@ describe('useWalkthroughCompleted', () => {
       expect(storage.getString(STORAGE_KEYS.WALKTHROUGH_COMPLETED)).toBe(
         'true'
       );
-      // ウォークスルーの中で振り返りタブも案内したので、完了済みユーザー向けの案内は出さない
-      expect(
-        storage.getString(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED)
-      ).toBe('true');
       expect(result.current.isWalkthroughCompleted).toBe(true);
+    });
+
+    describe('振り返りタブの案内', () => {
+      it('振り返りタブのステップを表示してから完了したら、案内も済んだことにする', () => {
+        const { result } = renderHook(() => useWalkthroughCompleted());
+        act(() => {
+          result.current.goToStep(5);
+        });
+        expect(result.current.currentStepId).toBe('rideReview');
+        act(() => {
+          result.current.nextStep();
+        });
+        act(() => {
+          result.current.nextStep();
+        });
+        expect(
+          storage.getString(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED)
+        ).toBe('true');
+      });
+
+      it('振り返りタブのステップを見ずにスキップしたら、案内は残す', () => {
+        const { result } = renderHook(() => useWalkthroughCompleted());
+        act(() => {
+          result.current.skipWalkthrough();
+        });
+        expect(storage.getString(STORAGE_KEYS.WALKTHROUGH_COMPLETED)).toBe(
+          'true'
+        );
+        expect(
+          storage.getString(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED)
+        ).toBeUndefined();
+      });
+
+      it('ドットで振り返りタブのステップを飛ばして完了したら、案内は残す', () => {
+        const { result } = renderHook(() => useWalkthroughCompleted());
+        act(() => {
+          result.current.goToStep(6);
+        });
+        act(() => {
+          result.current.nextStep();
+        });
+        expect(result.current.isWalkthroughCompleted).toBe(true);
+        expect(
+          storage.getString(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED)
+        ).toBeUndefined();
+      });
     });
 
     it('goToStepで任意のステップに移動できる', () => {

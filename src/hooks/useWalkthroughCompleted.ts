@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   WalkthroughStep,
   WalkthroughStepId,
@@ -73,14 +73,19 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [spotlightArea, setSpotlightAreaState] =
     useState<WalkthroughStep['spotlightArea']>(undefined);
+  // 振り返りタブのステップを表示したか。スキップやドットでの移動で、見ないまま
+  // 完了することがあるので、完了した時点のステップではなく表示した事実で判断する
+  const hasShownRideReviewRef = useRef(false);
 
   const completeWalkthrough = useCallback(async () => {
     setIsWalkthroughCompleted(true);
     try {
       storage.set(STORAGE_KEYS.WALKTHROUGH_COMPLETED, 'true');
-      // ウォークスルーの中で振り返りタブも案内したので、完了済みユーザー向けの
-      // 振り返りタブの案内(useRideReviewTabIntro)は出さない
-      storage.set(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED, 'true');
+      // ウォークスルーの中で振り返りタブを案内できたときだけ、完了済みユーザー向けの
+      // 振り返りタブの案内(useRideReviewTabIntro)を出さないようにする
+      if (hasShownRideReviewRef.current) {
+        storage.set(STORAGE_KEYS.RIDE_REVIEW_TAB_INTRO_COMPLETED, 'true');
+      }
     } catch (error) {
       // ストレージエラーは非ブロッキングとして扱う
       console.error('Failed to save walkthrough completion status:', error);
@@ -126,6 +131,12 @@ export const useWalkthroughCompleted = (): UseWalkthroughResult => {
     : null;
 
   const currentStepId = currentStep?.id ?? null;
+
+  useEffect(() => {
+    if (currentStepId === 'rideReview') {
+      hasShownRideReviewRef.current = true;
+    }
+  }, [currentStepId]);
 
   return {
     isWalkthroughCompleted,
