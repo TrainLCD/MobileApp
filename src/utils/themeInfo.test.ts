@@ -20,6 +20,7 @@ describe('getThemeInfo', () => {
     APP_THEME.ODAKYU,
     APP_THEME.E231,
     APP_THEME.E131,
+    APP_THEME.SANYO,
   ];
 
   it.each(allThemes)('%sテーマに対して正しい構造を返す', (theme) => {
@@ -46,6 +47,7 @@ describe('getThemeInfo', () => {
     [APP_THEME.ODAKYU, 'themeDescriptionOdakyu'],
     [APP_THEME.E231, 'themeDescriptionE231'],
     [APP_THEME.E131, 'themeDescriptionE131'],
+    [APP_THEME.SANYO, 'themeDescriptionSanyo'],
   ])('%sテーマは正しい翻訳キーを使用する', (theme, expectedKey) => {
     const themeInfo = getThemeInfo(theme);
 

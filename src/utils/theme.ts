@@ -86,6 +86,11 @@ export const getSettingsThemes = (): SettingsTheme[] =>
       devOnly: false,
     },
     {
+      label: translate('sanyoLike'),
+      value: APP_THEME.SANYO,
+      devOnly: false,
+    },
+    {
       label: translate('lowPowerTheme'),
       value: APP_THEME.LOW_POWER,
       // コードネームは低消費電力テーマ(#3697)。まずカナリア版だけで様子を見る

@@ -12,6 +12,7 @@ export const APP_THEME = {
   ODAKYU: 'ODAKYU',
   E231: 'E231',
   E131: 'E131',
+  SANYO: 'SANYO',
   LOW_POWER: 'LOW_POWER',
 } as const;
 

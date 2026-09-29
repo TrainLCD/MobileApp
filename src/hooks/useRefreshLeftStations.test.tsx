@@ -51,7 +51,7 @@ describe('useRefreshLeftStations', () => {
     expect(getLeftStationIds(store)).toEqual(ALL_IDS);
   });
 
-  it.each([APP_THEME.JR_WEST, APP_THEME.LED])(
+  it.each([APP_THEME.JR_WEST, APP_THEME.LED, APP_THEME.SANYO])(
     '%sテーマを最初から選択している場合は通過駅を除外したleftStationsをセットする',
     (theme) => {
       const { store } = renderWithStore(theme);
@@ -97,21 +97,24 @@ describe('useRefreshLeftStations', () => {
     expect(store.get(navigationState).leftStations).toBe(before);
   });
 
-  it('JR西日本風テーマでは通過駅を通過中でもleftStationsを更新しない', () => {
-    const { store } = renderWithStore(APP_THEME.JR_WEST);
-    const before = store.get(navigationState).leftStations;
+  it.each([APP_THEME.JR_WEST, APP_THEME.SANYO])(
+    '%sテーマでは通過駅を通過中でもleftStationsを更新しない',
+    (theme) => {
+      const { store } = renderWithStore(theme);
+      const before = store.get(navigationState).leftStations;
 
-    // 現在駅が通過駅(2駅目)になっても、直前の停車駅(1駅目)基準のまま維持される
-    act(() => {
-      store.set(stationState, (prev) => ({
-        ...prev,
-        station: stations[1],
-      }));
-    });
+      // 現在駅が通過駅(2駅目)になっても、直前の停車駅(1駅目)基準のまま維持される
+      act(() => {
+        store.set(stationState, (prev) => ({
+          ...prev,
+          station: stations[1],
+        }));
+      });
 
-    expect(store.get(navigationState).leftStations).toBe(before);
-    expect(getLeftStationIds(store)).toEqual(STOP_IDS);
-  });
+      expect(store.get(navigationState).leftStations).toBe(before);
+      expect(getLeftStationIds(store)).toEqual(STOP_IDS);
+    }
+  );
 
   it('通常テーマでは次の駅へ進むとleftStationsが先へ進む', () => {
     const { store } = renderWithStore(APP_THEME.TOKYO_METRO);
