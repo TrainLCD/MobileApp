@@ -65,8 +65,9 @@ const styles = StyleSheet.create({
   portraitPromoBanner: {
     marginBottom: 24,
   },
+  // 下の路線の見出しとの間隔を、プリセットの下の余白(32)にそろえる
   rideMonthCard: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
 });
 
@@ -356,10 +357,6 @@ const SelectLineScreen = () => {
               {/* 案B: ポートレートモードの追加を知らせるバナー。
                   条件を満たさないときは自身で null を返す */}
               <PortraitModePromoBanner style={styles.portraitPromoBanner} />
-              {/* 振り返りを有効にしたユーザーにだけ今月の記録を出す(#7100) */}
-              {rideLogEnabled ? (
-                <RideMonthCard style={styles.rideMonthCard} />
-              ) : null}
               <View ref={presetsRef} onLayout={handlePresetsLayout}>
                 <SelectLineScreenPresets
                   carouselData={carouselData}
@@ -367,6 +364,11 @@ const SelectLineScreen = () => {
                   onPress={handlePresetPress}
                 />
               </View>
+              {/* 振り返りを有効にしたユーザーにだけ今月の記録を出す(#7100)。
+                  置き場所はプリセットの下(#7124) */}
+              {rideLogEnabled ? (
+                <RideMonthCard style={styles.rideMonthCard} />
+              ) : null}
               <View ref={lineListRef} onLayout={handleLineListLayout}>
                 {stationLines.length > 0 && (
                   <Heading style={styles.heading} singleLine>
