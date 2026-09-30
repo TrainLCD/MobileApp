@@ -7,6 +7,7 @@ import { storage } from '../lib/storage';
 import { locationAtom, setLocation } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState, { stationAtom } from '../store/atoms/station';
+import { stationResolveFailedAtom } from '../store/atoms/stationSearchPrompt';
 import { translate } from '../translation';
 import { showDialogWhilePresenting } from '../utils/dialogPresentation';
 import { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
@@ -24,6 +25,7 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
   const stationFromAtom = useAtomValue(stationAtom);
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
+  const setStationResolveFailed = useSetAtom(stationResolveFailedAtom);
   const location = useAtomValue(locationAtom);
   const latitude = location?.coords.latitude;
   const longitude = location?.coords.longitude;
@@ -65,6 +67,8 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
       });
 
       const stationFromAPI = data.data?.stationsNearby[0] ?? null;
+      // API失敗と該当駅なしは、どちらも現在駅が確定しないまま残る
+      setStationResolveFailed(stationFromAPI == null);
       setStationState((prev) => ({
         ...prev,
         station: stationFromAPI,
@@ -74,7 +78,13 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
         stationForHeader: stationFromAPI,
       }));
     },
-    [fetchByCoords, fetchCurrentLocation, setNavigationState, setStationState]
+    [
+      fetchByCoords,
+      fetchCurrentLocation,
+      setNavigationState,
+      setStationResolveFailed,
+      setStationState,
+    ]
   );
 
   // バックグラウンド位置更新を停止
@@ -102,6 +112,8 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
         await fetchNearbyAndUpdate(coords);
       } catch (error) {
         console.error(error);
+        // 位置情報の取得失敗(設定ダイアログを断った等)はここに来る
+        setStationResolveFailed(true);
       } finally {
         fetchInFlightRef.current = false;
       }
@@ -119,7 +131,13 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
     return () => {
       clearTimeout(fallbackTimerId);
     };
-  }, [fetchNearbyAndUpdate, latitude, longitude, station]);
+  }, [
+    fetchNearbyAndUpdate,
+    latitude,
+    longitude,
+    station,
+    setStationResolveFailed,
+  ]);
 
   // 初回起動ダイアログ
   useEffect(() => {
@@ -166,10 +184,11 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
       });
     } catch (error) {
       console.error(error);
+      setStationResolveFailed(true);
     } finally {
       fetchInFlightRef.current = false;
     }
-  }, [fetchCurrentLocation, fetchNearbyAndUpdate]);
+  }, [fetchCurrentLocation, fetchNearbyAndUpdate, setStationResolveFailed]);
 
   return { station, nearbyStationLoading, refetch };
 };
