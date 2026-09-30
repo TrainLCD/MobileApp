@@ -47,8 +47,10 @@ const NUMBER_BOX_HEIGHT = Math.round(BAR_HEIGHT * 0.83);
 const NUMBER_BOX_WIDTH = Math.round(NUMBER_BOX_HEIGHT * 1.08);
 // 実物は記号と番号の字の高さがそれぞれ箱の高さの約4割で、2行の間は箱の高さの約5%あく
 const NUMBER_FONT_SIZE = NUMBER_BOX_HEIGHT * 0.5;
-// 実機で測ると、行の高さを箱の高さの39%にしたとき2行の間が写真と同じ約5%になる
-const NUMBER_LINE_HEIGHT = NUMBER_BOX_HEIGHT * 0.39;
+// 実機で測ると、2行の中心の間隔を箱の高さの39%にしたとき2行の間が写真と同じ約5%になる。
+// 行の高さを字より小さくするとiOSは字の上下を切り落とすため、行の高さは字の大きさのままにして、
+// 2行目を負のマージンで引き上げて間隔を詰める
+const NUMBER_LINE_PITCH = NUMBER_BOX_HEIGHT * 0.39;
 const ARROW_TIP_WIDTH = (BAR_HEIGHT * 44) / 48;
 // 実物はバーと右端の飾りの右下に暗い影が落ちている
 // (うっすら落ちる程度で、輪郭がはっきり見えるほど濃くはない)
@@ -193,13 +195,14 @@ const styles = StyleSheet.create({
   // 書体は Typography の既定(太字を指定しなければ Roboto Regular)に任せる
   lineSymbol: {
     fontSize: NUMBER_FONT_SIZE,
-    lineHeight: NUMBER_LINE_HEIGHT,
+    lineHeight: NUMBER_FONT_SIZE,
     textAlign: 'center',
     includeFontPadding: false,
   },
   stationNumber: {
     fontSize: NUMBER_FONT_SIZE,
-    lineHeight: NUMBER_LINE_HEIGHT,
+    lineHeight: NUMBER_FONT_SIZE,
+    marginTop: NUMBER_LINE_PITCH - NUMBER_FONT_SIZE,
     textAlign: 'center',
     includeFontPadding: false,
   },
@@ -528,7 +531,9 @@ const StationColumn: React.FC<StationColumnProps> = ({
         />
       </View>
       <View style={styles.transferArea}>
-        {transferLines.length ? <View style={styles.transferRule} /> : null}
+        {isTablet && transferLines.length ? (
+          <View style={styles.transferRule} />
+        ) : null}
         <PadLineMarks
           shouldGrayscale={shouldGrayscale}
           transferLines={transferLines}
