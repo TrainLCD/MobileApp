@@ -21,6 +21,8 @@ const LINE_ID_TO_THEME: Record<number, AppTheme> = {
   11325: APP_THEME.E131, // 内房線
   11324: APP_THEME.E131, // 外房線
   11329: APP_THEME.E131, // 鹿島線
+  99637: APP_THEME.SANYO, // 山陽電鉄本線
+  99638: APP_THEME.SANYO, // 山陽電鉄網干線
 };
 
 const COMPANY_PREFIX_TO_THEME: [string, AppTheme][] = [

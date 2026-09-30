@@ -32,7 +32,6 @@ import { useAppColors } from '~/providers/AppColorsProvider';
 import { colorSchemePreferenceAtom } from '~/store/atoms/colorScheme';
 import {
   portraitModeEnabledAtom,
-  portraitPromoAppearanceSeenAtom,
   portraitPromoFinishedAtom,
 } from '~/store/atoms/display';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
@@ -198,7 +197,6 @@ const ColorSchemeSettingsScreen: React.FC = () => {
   const [portraitModeEnabled, setPortraitModeEnabled] = useAtom(
     portraitModeEnabledAtom
   );
-  const setAppearanceSeen = useSetAtom(portraitPromoAppearanceSeenAtom);
   const setPromoFinished = useSetAtom(portraitPromoFinishedAtom);
 
   const navigation = useNavigation();
@@ -216,13 +214,10 @@ const ColorSchemeSettingsScreen: React.FC = () => {
   } | null>(null);
   const toggleRef = useRef<View>(null);
 
-  // 画面を開いた時点で印を消す。次からはスポットライトも出さない。
-  // 印を出している画面はここから戻っても再マウントされないので、
-  // 永続化と合わせて atom も更新する
+  // 画面を開いたことを記録し、次からはスポットライトを出さない
   useEffect(() => {
     markPortraitAppearanceSeen();
-    setAppearanceSeen(true);
-  }, [setAppearanceSeen]);
+  }, []);
 
   const measureToggle = useCallback(() => {
     toggleRef.current?.measureInWindow((x, y, width, height) => {

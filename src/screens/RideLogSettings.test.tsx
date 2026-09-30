@@ -3,7 +3,10 @@ import { createStore, Provider } from 'jotai';
 import { STORAGE_KEYS } from '~/constants';
 import { deleteAllRideLogs, hasRideLogs } from '~/lib/rideLog';
 import { storage } from '~/lib/storage';
-import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
+import {
+  rideLogEnabledAtom,
+  rideLogSettingsSeenAtom,
+} from '~/store/atoms/rideLog';
 import {
   completePresentedDialogDismissal,
   dismissPresentedDialog,
@@ -91,13 +94,14 @@ describe('RideLogSettingsScreen', () => {
   });
 
   it('ストレージへの保存に失敗した場合はatom状態をロールバックしエラーを通知する', () => {
-    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
-      throw new Error('storage failure');
-    });
     const consoleErrorSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
     const { getByLabelText, store } = renderWithStore(false);
+    // 画面を開いたときにも既読の保存が走るので、描いた後でトグルの保存だけを失敗させる
+    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw new Error('storage failure');
+    });
 
     fireEvent.press(getByLabelText('rideLogRecordTitle'));
 
@@ -186,5 +190,10 @@ describe('RideLogSettingsScreen', () => {
       });
       consoleSpy.mockRestore();
     });
+  });
+  it('開いた時点で、設定リストとフッターの印を消すために既読を記録する', () => {
+    const { store } = renderWithStore(false);
+    expect(store.get(rideLogSettingsSeenAtom)).toBe(true);
+    expect(storage.getString(STORAGE_KEYS.RIDE_LOG_SETTINGS_SEEN)).toBe('true');
   });
 });

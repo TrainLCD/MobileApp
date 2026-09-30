@@ -118,7 +118,14 @@ StationAPI の `Station.prefectureId`（1〜47）をそのまま入れます。
 地図の表示には `react-native-maps` を使います。地図の地は、Android では Google マップ、iOS では Apple マップです。
 Android の Google マップのキーは、ビルド時の環境変数 `GOOGLE_MAPS_API_KEY` から
 `AndroidManifest.xml` に入れます（`android/app/build.gradle` の `manifestPlaceholders`）。
-キーはリポジトリに置きません。GitHub Actions と EAS ではシークレットに登録し、手元では `.env.local` に書きます。
+キーはリポジトリに置きません。手元では `.env.local` に書きます。
+`.env.local` の値は、`npm run android` / `npm run android:local`（`expo run:android`）で
+ビルドしたときだけ環境変数になり、Gradle に渡ります。
+Android Studio や `./gradlew` を直接実行するときは、`GOOGLE_MAPS_API_KEY` を環境変数として設定してください。
+設定しないとキーが空のままビルドされ、アプリは落ちませんが地図には何も描かれません。
+Canary と本番では別のキーを使います。GitHub Actions では `DEV_GOOGLE_MAPS_API_KEY` と
+`PRODUCTION_GOOGLE_MAPS_API_KEY` に登録し、各ワークフローが `GOOGLE_MAPS_API_KEY` として渡します。
+EAS では環境（`development` / `production`）ごとに `GOOGLE_MAPS_API_KEY` を登録します。
 
 ## 都道府県ごとの集計
 
