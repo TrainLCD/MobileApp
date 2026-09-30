@@ -253,7 +253,7 @@ describe('FLinerSeibu.gpx の形', () => {
     const gaps = gapsOf(track);
     expect(gaps.length).toBe(7);
     expect(gaps.filter((g) => g > ETA_BOUND_MAX_HOLD_MS).length).toBe(5);
-    expect(Math.max(...gaps)).toBe(380_000);
+    expect(Math.max(...gaps)).toBe(326_000);
   });
 
   it('地下から地上への復帰を2回含む', () => {

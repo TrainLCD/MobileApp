@@ -311,7 +311,7 @@ describe('eta_assist_enabled=true でGPXを実パイプラインへ流したと�
         endsAtStop && cond.accuracy > BAD_ACCURACY_THRESHOLD ? 1 : 0;
       // 終着駅は検知できないことがあるだけで、できてはいけないわけではない。
       // 検知できるかは GPX の軌跡で変わる(到着時間推定に合わせて走らせた片町線・
-      // 京王線・総武快速線では、精度劣化帯でも終着駅を検知した)ため、下限で見る。
+      // 京王線の GPX では、精度劣化帯でも終着駅を検知する)ため、下限と上限で見る。
       expect(detectedCount(on.firstDetection)).toBeGreaterThanOrEqual(
         stops.length - undetectableTerminal
       );
