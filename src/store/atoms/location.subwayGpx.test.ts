@@ -249,11 +249,11 @@ describe.each(GPX_FILES)('%s の電波環境', (file) => {
 describe('FLinerSeibu.gpx の形', () => {
   const track = parseGpx(join(GPX_DIR, 'FLinerSeibu.gpx'));
 
-  it('欠測は7件、うち4件がETA棄却の保険を超える', () => {
+  it('欠測は7件、うち5件がETA棄却の保険を超える', () => {
     const gaps = gapsOf(track);
     expect(gaps.length).toBe(7);
-    expect(gaps.filter((g) => g > ETA_BOUND_MAX_HOLD_MS).length).toBe(4);
-    expect(Math.max(...gaps)).toBe(195_000);
+    expect(gaps.filter((g) => g > ETA_BOUND_MAX_HOLD_MS).length).toBe(5);
+    expect(Math.max(...gaps)).toBe(326_000);
   });
 
   it('地下から地上への復帰を2回含む', () => {

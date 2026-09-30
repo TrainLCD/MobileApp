@@ -86,8 +86,12 @@ const usage = `使い方: node scripts/generate-location-gpx.mjs [options]
                       (--line と排他。どちらか一方が必須)
   --from <stationId>  始点の駅 ID (--line では必須。--line-group では既定で経路の先頭)
   --to <stationId>    終点の駅 ID (--line では必須。--line-group では既定で経路の末尾)
-  --max-speed <km/h>  最高速度 (既定: 320)
-  --dwell <sec>       各停車駅での停車時間 (既定: ${DEFAULT_DWELL_SEC})
+  --max-speed <km/h>  最高速度。--line-group で省略すると、trainRoute(model: Estimated) が
+                      返す到着・出発の見込み (estimateArrivalTimes と同じ到着時間推定) に
+                      合わせて区間ごとの速度を決める。指定すると見込みを使わず、この速度で
+                      走らせる (加減速は trainRoute の値)。--line では省略時 320
+  --dwell <sec>       各停車駅での停車時間。--line-group で --max-speed を省略したときの
+                      既定は推定の停車時間、それ以外の既定は ${DEFAULT_DWELL_SEC}
   --skip <ids>        通過駅の ID をカンマ区切りで指定 (停車せず素通りする)
                       --line-group では stopCondition による判定に追加される
   --start <ISO8601>   先頭 waypoint の時刻。タイムゾーン(Z または ±HH:MM)必須
@@ -138,8 +142,8 @@ export const isValidIso8601WithTimezone = (value) => {
 
 export const parseArgs = (argv) => {
   const args = {
-    maxSpeed: 320,
-    dwell: DEFAULT_DWELL_SEC,
+    maxSpeed: undefined,
+    dwell: undefined,
     skip: [],
     signalProfile: DEFAULT_SIGNAL_PROFILE,
     subwayLines: [],
@@ -243,6 +247,7 @@ const fetchLineStations = async (apiUrl, lineId) => {
         nameRoman
         latitude
         longitude
+        trackDistanceFromPrevious
         line {
           id
           nameShort
@@ -270,6 +275,7 @@ const fetchLineGroupStations = async (apiUrl, lineGroupId) => {
         nameRoman
         latitude
         longitude
+        trackDistanceFromPrevious
         stopCondition
         line {
           id
@@ -285,6 +291,36 @@ const fetchLineGroupStations = async (apiUrl, lineGroupId) => {
     throw new Error(`種別グループ ${lineGroupId} の駅が見つかりませんでした`);
   }
   return stations;
+};
+
+// 区間の値を到着時間推定のモデル (model: Estimated) で取る。見込みは、同じ区間の
+// estimateArrivalTimes と同じ値になる。アプリのオートモード (useSimulationMode) は
+// model を渡さない (Legacy) ので、そちらの走り方とは一致しない。
+const fetchTrainRoute = async (apiUrl, fromStationId, toStationId, lineGroupId) => {
+  const data = await queryStationApi(
+    apiUrl,
+    `query GenerateGpxTrainRoute($fromStationId: Int!, $toStationId: Int!, $lineGroupId: Int) {
+      trainRoute(
+        fromStationId: $fromStationId
+        toStationId: $toStationId
+        lineGroupId: $lineGroupId
+        model: Estimated
+      ) {
+        segments {
+          station {
+            id
+          }
+          maxSpeed
+          maxAcceleration
+          maxDeceleration
+          arrivalCumulativeMinutes
+          departureCumulativeMinutes
+        }
+      }
+    }`,
+    { fromStationId, toStationId, lineGroupId }
+  );
+  return data.trainRoute?.segments ?? [];
 };
 
 // lineGroupId は駅からしか辿れないため、--list-train-types の裏側で使う。
@@ -327,17 +363,30 @@ export const distanceBetween = (a, b) => {
 
 // 隣り合う駅の間は直線補間する。実際の線形とは異なるが、折れ点が実際の駅座標
 // なので、各駅の到着判定(ARRIVED_MAX_THRESHOLD)は現実と同じ位置で成立する。
+// 区間の長さは cumulativeDistances が決めるため、線路の長さで伸ばした区間でも
+// 進んだ割合で直線上の位置へ対応づける(座標は直線上、時間は線路の長さで進む)。
 const interpolate = (from, to, ratio) => ({
   latitude: from.latitude + (to.latitude - from.latitude) * ratio,
   longitude: from.longitude + (to.longitude - from.longitude) * ratio,
 });
+
+// 隣り合う駅 prev -> station の区間の長さ(m)。StationAPI が線路の長さ
+// (trackDistanceFromPrevious)を返す区間はそれを使い、返さない区間
+// (線路データが無い、直通の境界で同じ駅が 2 回並ぶなど)は直線距離で代える。
+// 直線距離のままだとカーブ分だけ短くなり、所要時間が実際より短い GPX になる。
+export const segmentLength = (prev, station) => {
+  const track = station.trackDistanceFromPrevious;
+  return Number.isFinite(track) && track > 0
+    ? track
+    : distanceBetween(prev, station);
+};
 
 // 折れ線(全駅)の始点からの累積距離を求める
 export const cumulativeDistances = (polyline) => {
   const cumulative = [0];
   for (let i = 1; i < polyline.length; i++) {
     cumulative.push(
-      cumulative[i - 1] + distanceBetween(polyline[i - 1], polyline[i])
+      cumulative[i - 1] + segmentLength(polyline[i - 1], polyline[i])
     );
   }
   return cumulative;
@@ -428,6 +477,113 @@ export const resolveIsHoliday = async (date) => {
   return (holidayJp.default ?? holidayJp).isHoliday(jstCalendarDate);
 };
 
+// trainRoute の segments を駅へ対応づける。useSimulationMode と同じく、駅 ID ではなく
+// 配列の位置で対応づける。同じ駅 ID が離れた位置に現れる経路(接続駅の再登場)で、
+// ID をキーにすると別の位置の値を拾ってしまうため。並びが食い違っているときは、
+// 別の駅の値で走らせてしまうより止める。
+export const attachTrainRoute = (route, segments) => {
+  if (segments.length !== route.length) {
+    throw new Error(
+      `trainRoute の駅数(${segments.length})が経路の駅数(${route.length})と一致しません`
+    );
+  }
+  return route.map((station, i) => {
+    const segment = segments[i];
+    if (segment.station?.id !== station.id) {
+      throw new Error(
+        `trainRoute の ${i + 1} 駅目(${segment.station?.id})が経路の駅(${station.id} ${station.name})と一致しません`
+      );
+    }
+    return {
+      ...station,
+      motion: {
+        maxSpeed: segment.maxSpeed,
+        accel: segment.maxAcceleration,
+        decel: segment.maxDeceleration,
+      },
+      // バスの駅を含む経路では見込みが返らない (null)
+      timing:
+        Number.isFinite(segment.arrivalCumulativeMinutes) &&
+        Number.isFinite(segment.departureCumulativeMinutes)
+          ? {
+              arrivalSec: segment.arrivalCumulativeMinutes * 60,
+              departureSec: segment.departureCumulativeMinutes * 60,
+            }
+          : null,
+    };
+  });
+};
+
+// 停車駅から次の停車駅までを加速度 accel・減速度 decel の台形(短い区間は三角形)で
+// seconds 秒かけて走る巡航速度(m/s)。台形の所要時間は T(v) = D/v + k·v
+// (k = 1/(2a) + 1/(2b)) なので、T(v) = seconds の 2 根のうち遅い方(巡航のある
+// 台形)を返す。最短時間 2√(D·k) より短い時間を求められたときは解が無いので、
+// 最短時間で走る速度 √(D/k) を返し、shortened を立てる。
+export const cruiseSpeedForDuration = (distance, seconds, accel, decel) => {
+  const valid = (x) => Number.isFinite(x) && x > 0;
+  if (!(valid(distance) && valid(accel) && valid(decel))) {
+    return null;
+  }
+  const k = 0.5 / accel + 0.5 / decel;
+  const fastest = Math.sqrt(distance / k);
+  const discriminant = seconds * seconds - 4 * k * distance;
+  if (!Number.isFinite(seconds) || discriminant <= 0) {
+    return { speed: fastest, shortened: true };
+  }
+  return {
+    speed: (seconds - Math.sqrt(discriminant)) / (2 * k),
+    shortened: false,
+  };
+};
+
+// 停車駅ごとの走行時間と停車時間(秒)を、trainRoute の見込みから組み立てる。
+// legs[j] は stopIndices[j] から stopIndices[j + 1] までの走行 (runSec) と、
+// 着いた駅での停車 (dwellSec。終点は 0)。見込みの無い駅があれば null。
+//
+// GPX の停車駅は、アプリと同じ規則 (isPassStopCondition と --skip) で決める。
+// 推定は平日/休日運転の駅を常に停車扱いにし、--skip も知らないので、GPX では
+// 通過する駅に推定だけが停まることがある。その駅の停車時間 (出発 − 到着) は
+// 走行時間から引く。逆に GPX で停まる駅を推定が通過していると、その駅の停車時間が
+// 見込みに無いので、dwellOverrideSec が無ければ止める (黙って 0 秒で通らないため)。
+export const planLegTimings = (route, stopIndices, dwellOverrideSec) => {
+  if (route.some((station) => station.timing == null)) {
+    return null;
+  }
+  const dwellAt = (i) => route[i].timing.departureSec - route[i].timing.arrivalSec;
+  return stopIndices.slice(1).map((to, j) => {
+    const from = stopIndices[j];
+    let runSec = route[to].timing.arrivalSec - route[from].timing.departureSec;
+    for (let i = from + 1; i < to; i++) {
+      runSec -= dwellAt(i);
+    }
+    const isFinal = j === stopIndices.length - 2;
+    let dwellSec = 0;
+    if (!isFinal) {
+      dwellSec = dwellOverrideSec ?? Math.round(dwellAt(to));
+      if (dwellSec <= 0) {
+        throw new Error(
+          `${route[to].name} は推定では通過扱いで、停車時間の見込みがありません。--dwell で停車時間を指定してください`
+        );
+      }
+    }
+    return { runSec, dwellSec };
+  });
+};
+
+// trackDistanceFromPrevious は API の並びで直前にある駅からの長さ。走らせる向きが
+// API の並びと逆のときは、走る向きで直前になる駅(API の並びで直後の駅)が持つ値へ
+// 付け替える。先頭の駅は区間の起点なので値を持たせない。
+export const alignTrackDistances = (ordered, reversed) =>
+  ordered.map((station, i) => ({
+    ...station,
+    trackDistanceFromPrevious:
+      i === 0
+        ? null
+        : reversed
+          ? (ordered[i - 1].trackDistanceFromPrevious ?? null)
+          : (station.trackDistanceFromPrevious ?? null),
+  }));
+
 // route 上で実際に停車する駅の index を返す。始点と終点は必ず停車する
 // (その駅から発車し、その駅で終着するため)。
 export const resolveStopIndices = ({ route, skippedIds, isHoliday }) =>
@@ -469,14 +625,21 @@ export const isUndergroundStation = (station, subwayLineIds) =>
   station?.line?.lineType === 'Subway' ||
   (station?.line?.id != null && subwayLineIds.has(station.line.id));
 
+// 区間の走らせ方は次のどちらか。どちらも加減速は区間の到着駅の motion
+// (trainRoute の値。無ければ generateTrainSpeedProfile の既定値) を使う。
+// - legTimings (planLegTimings の結果) があれば、区間ごとの走行時間に合う巡航速度で
+//   走り、停車時間もそれに従う。区間ごとの端数は、計画した到着時刻に合わせて
+//   次の区間で吸収するので、終点までに積み上がらない。
+// - 無ければ maxSpeedKmh (無ければ到着駅の motion.maxSpeed) で走り、dwellSec 停まる。
+// 走行中の点には速度 (speed, m/s) を持たせる。GPX には書き出さない。
 export const buildWaypoints = ({
   route,
   stopIndices,
   maxSpeedKmh,
   dwellSec,
+  legTimings = null,
   subwayLineIds = new Set(),
 }) => {
-  const maxSpeed = maxSpeedKmh / 3.6; // m/s
   // stopped は「駅に止まっている点」。電波プロファイル(applySignalProfile)が
   // 駅からの距離を時間で測るために使う。始発駅は停車時間を持たないが、
   // 発車前の 1 点なので駅にいる扱いにする。
@@ -489,16 +652,51 @@ export const buildWaypoints = ({
     },
   ];
   let elapsed = 0;
+  // legTimings に従ったときの、計画上の到着時刻 (始点からの秒)
+  let plannedDepartureSec = 0;
+  const shortenedLegs = [];
 
   for (let leg = 0; leg < stopIndices.length - 1; leg++) {
     const polyline = route.slice(stopIndices[leg], stopIndices[leg + 1] + 1);
     const cumulative = cumulativeDistances(polyline);
     const distance = cumulative.at(-1);
 
-    // 出力を再現可能にするため惰行のランダム性は無効にする
+    const arrivalStation = route[stopIndices[leg + 1]];
+    const motion = arrivalStation.motion;
+    const timing = legTimings?.[leg];
+    const legDwellSec = timing ? timing.dwellSec : dwellSec;
+    let maxSpeed;
+    if (timing) {
+      const plannedArrivalSec = plannedDepartureSec + timing.runSec;
+      plannedDepartureSec = plannedArrivalSec + timing.dwellSec;
+      // 到着点は速度プロファイルの最後の点の 1 秒後に置くので、その 1 秒を除いた
+      // 時間でプロファイルを作る
+      const fitted = cruiseSpeedForDuration(
+        distance,
+        plannedArrivalSec - elapsed - INTERVAL_SEC,
+        motion.accel,
+        motion.decel
+      );
+      maxSpeed = fitted?.speed;
+      if (fitted?.shortened) {
+        shortenedLegs.push(arrivalStation.name);
+      }
+    } else {
+      maxSpeed = maxSpeedKmh !== undefined ? maxSpeedKmh / 3.6 : motion?.maxSpeed; // m/s
+    }
+    if (distance >= 1 && (!Number.isFinite(maxSpeed) || maxSpeed <= 0)) {
+      throw new Error(
+        `${arrivalStation.name} 行きの区間の最高速度が決まりません。--max-speed を指定するか、--line-group で trainRoute の値を使ってください`
+      );
+    }
+
+    // 出力を再現可能にするため惰行のランダム性は無効にする。
+    // 加減速が undefined のときは generateTrainSpeedProfile の既定値になる
     const speedProfile = generateTrainSpeedProfile({
       distance,
       maxSpeed,
+      accel: motion?.accel,
+      decel: motion?.decel,
       interval: INTERVAL_SEC,
       enableRandomCoast: false,
     });
@@ -511,7 +709,7 @@ export const buildWaypoints = ({
     // 停車扱いのまま次へ進める。この分岐を通る境界駅は、旧実装より 1 点(1 秒)短くなる。
     if (distance < 1) {
       const here = polyline.at(-1);
-      const dwellPoints = leg === stopIndices.length - 2 ? 0 : dwellSec;
+      const dwellPoints = leg === stopIndices.length - 2 ? 0 : legDwellSec;
       for (let t = -INTERVAL_SEC; t < dwellPoints; t += INTERVAL_SEC) {
         elapsed += INTERVAL_SEC;
         waypoints.push({
@@ -524,13 +722,23 @@ export const buildWaypoints = ({
       continue;
     }
 
+    // 見込みに合わせて走るときは、速度列の合計距離を区間の距離にそろえる
+    // (useSimulationMode と同じ補正)。1 秒ごとの速度を足すと区間の距離より長く
+    // 進むため、そのままだとプロファイルが終わる前に駅へ着き、残りの点が駅の上で
+    // 止まって、見込みより早く着いたことになる。
+    const profileDistance = speedProfile.reduce((sum, v) => sum + v, 0);
+    const scale =
+      timing && profileDistance > 0 ? distance / profileDistance : 1;
+
     let travelled = 0;
-    for (const speed of speedProfile) {
+    for (const rawSpeed of speedProfile) {
+      const speed = rawSpeed * scale;
       travelled = Math.min(distance, travelled + speed * INTERVAL_SEC);
       elapsed += INTERVAL_SEC;
       waypoints.push({
         ...pointAtDistance(polyline, cumulative, travelled),
         elapsed,
+        speed,
         stopped: false,
         underground: isUndergroundStation(
           stationAtDistance(polyline, cumulative, travelled),
@@ -552,7 +760,7 @@ export const buildWaypoints = ({
     // 終点以外は停車する。停車中も測位は届き続けるので同じ座標を並べる
     const isFinalStop = leg === stopIndices.length - 2;
     if (!isFinalStop) {
-      for (let t = 0; t < dwellSec; t += INTERVAL_SEC) {
+      for (let t = 0; t < legDwellSec; t += INTERVAL_SEC) {
         elapsed += INTERVAL_SEC;
         waypoints.push({
           ...arrival,
@@ -564,6 +772,11 @@ export const buildWaypoints = ({
     }
   }
 
+  if (shortenedLegs.length > 0) {
+    process.stderr.write(
+      `警告: ${shortenedLegs.join('、')} 行きの区間は、見込みの時間では走り切れないため最短時間で走らせました\n`
+    );
+  }
   return waypoints;
 };
 
@@ -765,12 +978,18 @@ const main = async () => {
   // 数値オプションは Number() の結果をそのまま使うため、ここで弾かないと
   // NaN や 0 が速度プロファイル・停車ループへ流れ込み、列車が一切進まない
   // GPX が終了コード 0 で出力されてしまう（壊れていることに気付けない）
-  if (!Number.isFinite(args.maxSpeed) || args.maxSpeed <= 0) {
+  if (
+    args.maxSpeed !== undefined &&
+    (!Number.isFinite(args.maxSpeed) || args.maxSpeed <= 0)
+  ) {
     throw new Error(
       `--max-speed には正の数値を指定してください: ${args.maxSpeed}`
     );
   }
-  if (!Number.isFinite(args.dwell) || args.dwell < 0) {
+  if (
+    args.dwell !== undefined &&
+    (!Number.isFinite(args.dwell) || args.dwell < 0)
+  ) {
     throw new Error(
       `--dwell には 0 以上の数値を指定してください: ${args.dwell}`
     );
@@ -802,10 +1021,13 @@ const main = async () => {
   }
 
   // API の並び順に関わらず、指定された向きで走らせる
-  const ordered =
-    fromIndex < toIndex
-      ? allStations.slice(fromIndex, toIndex + 1)
-      : allStations.slice(toIndex, fromIndex + 1).reverse();
+  const reversed = fromIndex > toIndex;
+  const ordered = alignTrackDistances(
+    reversed
+      ? allStations.slice(toIndex, fromIndex + 1).reverse()
+      : allStations.slice(fromIndex, toIndex + 1),
+    reversed
+  );
 
   const missingCoords = ordered.filter(
     (s) => s.latitude == null || s.longitude == null
@@ -862,11 +1084,37 @@ const main = async () => {
     );
   }
 
+  // --line-group では trainRoute(model: Estimated) の見込みで走らせる。
+  // trainRoute は lineGroupId を要るので、--line では従来どおり --max-speed(既定 320)。
+  const route = useLineGroup
+    ? attachTrainRoute(
+        ordered,
+        await fetchTrainRoute(
+          apiUrl,
+          ordered[0].id,
+          ordered.at(-1).id,
+          args.lineGroup
+        )
+      )
+    : ordered;
+  const maxSpeedKmh = args.maxSpeed ?? (useLineGroup ? undefined : 320);
+  // --max-speed を指定したときは見込みを使わない (速度と時間の両方は守れないため)
+  const legTimings =
+    useLineGroup && args.maxSpeed === undefined
+      ? planLegTimings(route, stopIndices, args.dwell)
+      : null;
+  if (useLineGroup && args.maxSpeed === undefined && legTimings == null) {
+    process.stderr.write(
+      '警告: trainRoute が到着・出発の見込みを返さなかったため (バスの駅を含む経路)、区間ごとの最高速度で走らせます\n'
+    );
+  }
+
   const dense = buildWaypoints({
-    route: ordered,
+    route,
     stopIndices,
-    maxSpeedKmh: args.maxSpeed,
-    dwellSec: args.dwell,
+    maxSpeedKmh,
+    dwellSec: args.dwell ?? DEFAULT_DWELL_SEC,
+    legTimings,
     subwayLineIds,
   });
   const waypoints = applySignalProfile(dense, args.signalProfile);
@@ -874,10 +1122,20 @@ const main = async () => {
 
   if (args.out) {
     writeFileSync(args.out, gpx, 'utf8');
+    // 区間ごとに速度を決めたときは、実際に走った最高速度を出す
+    const topSpeedKmh = Math.round(
+      Math.max(...dense.map((wp) => wp.speed ?? 0)) * 3.6
+    );
     const minutes = (waypoints.at(-1).elapsed / 60).toFixed(1);
     process.stderr.write(
-      `${args.out} を出力しました (経路 ${ordered.length} 駅 / うち停車 ${stopIndices.length} 駅 / ${waypoints.length} 点 / 約 ${minutes} 分 / 最高 ${args.maxSpeed}km/h)\n`
+      `${args.out} を出力しました (経路 ${ordered.length} 駅 / うち停車 ${stopIndices.length} 駅 / ${waypoints.length} 点 / 約 ${minutes} 分 / 最高 ${topSpeedKmh}km/h)\n`
     );
+    if (legTimings) {
+      const estimatedMinutes = (route.at(-1).timing.arrivalSec / 60).toFixed(1);
+      process.stderr.write(
+        `到着時間推定の終点到着: ${estimatedMinutes} 分 (GPX で通過にした駅の停車時間は除く)\n`
+      );
+    }
     if (args.signalProfile === 'subway') {
       // どの路線を地下として扱ったかは生成物から読み取れないので、ここで残す。
       const byLine = new Map();

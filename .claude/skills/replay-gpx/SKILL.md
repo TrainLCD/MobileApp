@@ -32,8 +32,8 @@ Argent の MCP ツールには位置情報を注入するものが無いため�
 | `assets/gpx/SampleJY.gpx` | 山手線。実走行ログ |
 | `assets/gpx/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h |
 | `assets/gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。種別グループから生成 |
-| `assets/gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km・最高 95km/h |
-| `assets/gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。最高 120km/h |
+| `assets/gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km 前後の全駅停車 |
+| `assets/gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。駅間 3.6〜7.6km の全駅停車 |
 | `assets/gpx/FLinerSeibu.gpx` | Fライナー相当 元町・中華街→飯能。地下鉄の電波環境入り |
 
 新しい経路は `npm run gpx:generate` で作る。詳細は `docs/location-simulation.md`。
@@ -52,7 +52,7 @@ npm run gpx:generate -- --line 1004 --from 100418 --to 100411 --max-speed 320 \
 寄せる。詳細と数値の根拠は `docs/location-simulation.md`。
 
 ```bash
-npm run gpx:generate -- --line-group 152 --max-speed 80 \
+npm run gpx:generate -- --line-group 152 \
   --signal-profile subway --subway-lines 99310,22003 \
   --out assets/gpx/FLinerSeibu.gpx
 ```
@@ -62,11 +62,12 @@ npm run gpx:generate -- --line-group 152 --max-speed 80 \
 
 列車種別の停車パターンをそのまま走らせたいときは `--line-group` を使う。通過駅は
 `stopCondition` から自動判定されるので `--skip` を手で並べなくてよく、直通で複数
-路線にまたがる経路もそのまま扱える。`lineGroupId` は駅から辿る。
+路線にまたがる経路もそのまま扱える。`lineGroupId` は駅から辿る。区間の時間は
+StationAPI の到着時間推定 (`trainRoute` の `model: Estimated`) に合わせる。
 
 ```bash
 npm run gpx:generate -- --list-train-types 2400101
-npm run gpx:generate -- --line-group 71 --max-speed 110 --out assets/gpx/KeioSpecialExpress.gpx
+npm run gpx:generate -- --line-group 71 --out assets/gpx/KeioSpecialExpress.gpx
 ```
 
 ### 2. アプリを対象の路線に入れる
