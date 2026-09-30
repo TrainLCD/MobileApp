@@ -4,7 +4,7 @@ import {
   type ListRenderItemInfo,
 } from '@shopify/flash-list';
 import { Orientation } from 'expo-screen-orientation';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import React, {
   useCallback,
   useEffect,
@@ -16,6 +16,7 @@ import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Station } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
+import { CurrentStationPrompt } from '~/components/CurrentStationPrompt';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { EmptyResult } from '~/components/EmptyResult';
 import FooterTabBar from '~/components/FooterTabBar';
@@ -33,6 +34,7 @@ import { useRouteSearchWalkthrough } from '~/hooks/useRouteSearchWalkthrough';
 import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { AgentEntryBanner } from '~/screens/DestinationAgent/AgentEntryBanner';
+import { stationSearchModalVisibleAtom } from '~/store/atoms/stationSearchPrompt';
 import { showDialogWhilePresenting } from '~/utils/dialogPresentation';
 import isTablet from '~/utils/isTablet';
 import { getSearchResultHeadingText } from '~/utils/routeSearch';
@@ -65,6 +67,9 @@ const styles = StyleSheet.create({
   // AI相談バナーは検索バーと検索結果見出しの間の余白(従来 marginBottom: 48)に置く。
   // バナー非表示時に従来と同じ余白を保つため、間隔は見出し側の marginTop で確保する。
   agentEntryBannerContainer: {
+    marginTop: 16,
+  },
+  currentStationPromptContainer: {
     marginTop: 16,
   },
   searchResultHeading: {
@@ -117,6 +122,9 @@ const RouteSearchScreen = () => {
   );
 
   const station = useAtomValue(stationAtom);
+  const setStationSearchModalVisible = useSetAtom(
+    stationSearchModalVisibleAtom
+  );
   // AgentEntryBanner と同じフラグを購読し、バナー表示時の見出し余白を Figma 指定へ切り替える
   const aiAgentEnabled = useAIAgentFeatureEnabled();
 
@@ -194,7 +202,12 @@ const RouteSearchScreen = () => {
 
   const handleSearch = useCallback(
     async (query: string) => {
-      if (!station?.groupId) return;
+      // 現在駅が無いと経路検索の起点が決まらない。無言で終わらせず、
+      // 今いる駅を選ぶモーダルへ案内する
+      if (!station?.groupId) {
+        setStationSearchModalVisible(true);
+        return;
+      }
 
       setSearchResults([]);
 
@@ -214,7 +227,7 @@ const RouteSearchScreen = () => {
 
       setSearchResults(stations);
     },
-    [fetchByName, station?.groupId]
+    [fetchByName, station?.groupId, setStationSearchModalVisible]
   );
 
   useEffect(() => {
@@ -409,6 +422,11 @@ const RouteSearchScreen = () => {
               <View ref={searchBarRef} onLayout={measureSearchBar}>
                 <SearchBar onSearch={handleSearch} />
               </View>
+              {!station?.groupId && (
+                <View style={styles.currentStationPromptContainer}>
+                  <CurrentStationPrompt />
+                </View>
+              )}
               {aiAgentEnabled && (
                 <View
                   ref={agentEntryBannerRef}

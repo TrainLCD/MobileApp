@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, LineNested } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
+import { CurrentStationUnavailableCard } from '~/components/CurrentStationUnavailableCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { PortraitModePromoBanner } from '~/components/PortraitModePromoBanner';
@@ -41,6 +42,7 @@ import navigationState, {
 } from '../store/atoms/navigation';
 import { rideLogEnabledAtom } from '../store/atoms/rideLog';
 import { stationsCacheAtom } from '../store/atoms/station';
+import { stationResolveFailedAtom } from '../store/atoms/stationSearchPrompt';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
@@ -64,6 +66,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   portraitPromoBanner: {
+    marginBottom: 24,
+  },
+  unavailableCard: {
     marginBottom: 24,
   },
   // 下の路線の見出しとの間隔を、プリセットの下の余白(32)にそろえる
@@ -102,6 +107,7 @@ const FxPresetsWidgetSync: React.FC<
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const stationResolveFailed = useAtomValue(stationResolveFailedAtom);
 
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
@@ -360,6 +366,13 @@ const SelectLineScreen = () => {
               {/* 案B: ポートレートモードの追加を知らせるバナー。
                   条件を満たさないときは自身で null を返す */}
               <PortraitModePromoBanner style={styles.portraitPromoBanner} />
+              {/* 現在駅を解決できなかったときは、駅名検索での手動選択を促す */}
+              {!station && stationResolveFailed ? (
+                <CurrentStationUnavailableCard
+                  onRetry={handleRefresh}
+                  style={styles.unavailableCard}
+                />
+              ) : null}
               <View ref={presetsRef} onLayout={handlePresetsLayout}>
                 <SelectLineScreenPresets
                   carouselData={carouselData}
