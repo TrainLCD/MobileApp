@@ -11,11 +11,17 @@ import { execFileSync } from 'node:child_process';
 import { test } from 'node:test';
 
 import {
+  alignTrackDistances,
   applySignalProfile,
+  attachTrainRoute,
   buildDeepLinkQuery,
+  buildWaypoints,
+  cruiseSpeedForDuration,
   cumulativeDistances,
   isPassStopCondition,
   isUndergroundStation,
+  planLegTimings,
+  pointAtDistance,
   resolveIsHoliday,
   resolveStopIndices,
   stationAtDistance,
@@ -430,4 +436,228 @@ test('坑口窓は境界駅が地上側でもその駅を起点に測る', () =>
     '地上側の境界駅は地上帯'
   );
   assert.ok(result[3].accuracy > 200, '発車直後は坑口帯');
+});
+
+test('区間の長さは線路の長さがあればそれを使い、無い区間は直線距離で代える', () => {
+  const a = { latitude: 35.0, longitude: 139.0 };
+  const b = { latitude: 35.01, longitude: 139.0 };
+  const straight = cumulativeDistances([a, b]).at(-1);
+
+  // 線路の長さは直線距離より長い
+  assert.equal(
+    cumulativeDistances([a, { ...b, trackDistanceFromPrevious: 1500 }]).at(-1),
+    1500
+  );
+  // null・0・未定義は直線距離。直通の境界で同じ駅が 2 回並ぶ組は 0 が返る
+  for (const track of [null, 0, undefined]) {
+    assert.equal(
+      cumulativeDistances([a, { ...b, trackDistanceFromPrevious: track }]).at(
+        -1
+      ),
+      straight
+    );
+  }
+});
+
+test('線路の長さで伸ばした区間でも、進んだ割合で直線上の位置へ対応づく', () => {
+  const a = { latitude: 35.0, longitude: 139.0 };
+  const b = {
+    latitude: 35.01,
+    longitude: 139.0,
+    trackDistanceFromPrevious: 2000,
+  };
+  const polyline = [a, b];
+  const cumulative = cumulativeDistances(polyline);
+  const mid = pointAtDistance(polyline, cumulative, 1000);
+  assert.ok(Math.abs(mid.latitude - 35.005) < 1e-9);
+  // 終端は駅の座標に届く
+  assert.deepEqual(pointAtDistance(polyline, cumulative, 2000), {
+    latitude: b.latitude,
+    longitude: b.longitude,
+    trackDistanceFromPrevious: 2000,
+  });
+});
+
+test('走る向きが API の並びと逆でも、線路の長さは同じ駅の組に付く', () => {
+  // API の並び A -> B -> C。B は A から 100m、C は B から 200m
+  const api = [
+    { id: 1, trackDistanceFromPrevious: null },
+    { id: 2, trackDistanceFromPrevious: 100 },
+    { id: 3, trackDistanceFromPrevious: 200 },
+  ];
+  const forward = alignTrackDistances(api, false);
+  assert.deepEqual(
+    forward.map((s) => s.trackDistanceFromPrevious),
+    [null, 100, 200]
+  );
+
+  // C -> B -> A で走る。B は C から 200m、A は B から 100m
+  const reversed = alignTrackDistances([...api].reverse(), true);
+  assert.deepEqual(
+    reversed.map((s) => [s.id, s.trackDistanceFromPrevious]),
+    [
+      [3, null],
+      [2, 200],
+      [1, 100],
+    ]
+  );
+});
+
+test('区間の起点にした駅は、API の並びで前にあった駅からの長さを持ち越さない', () => {
+  // 3 駅目から走り始める。3 駅目の値は 2 駅目からの長さで、走行には使わない
+  const sliced = alignTrackDistances(
+    [
+      { id: 3, trackDistanceFromPrevious: 200 },
+      { id: 4, trackDistanceFromPrevious: 300 },
+    ],
+    false
+  );
+  assert.equal(sliced[0].trackDistanceFromPrevious, null);
+  assert.equal(sliced[1].trackDistanceFromPrevious, 300);
+});
+
+// 台形(短い区間は三角形)の所要時間(秒)
+const trapezoidSeconds = (distance, v, a, b) => {
+  const k = 0.5 / a + 0.5 / b;
+  return distance >= v * v * k
+    ? distance / v + v * k
+    : 2 * Math.sqrt(distance * k);
+};
+
+test('巡航速度は、台形で走ったときに求めた時間になる速度', () => {
+  for (const [distance, seconds] of [
+    [4843, 300],
+    [1627, 150],
+    [300, 60],
+  ]) {
+    const { speed, shortened } = cruiseSpeedForDuration(
+      distance,
+      seconds,
+      0.7,
+      0.9
+    );
+    assert.equal(shortened, false);
+    assert.ok(
+      Math.abs(trapezoidSeconds(distance, speed, 0.7, 0.9) - seconds) < 1e-6
+    );
+  }
+});
+
+test('最短時間より短い時間を求められたら、最短時間で走る速度にする', () => {
+  const distance = 2000;
+  const k = 0.5 / 0.7 + 0.5 / 0.9;
+  const { speed, shortened } = cruiseSpeedForDuration(distance, 10, 0.7, 0.9);
+  assert.equal(shortened, true);
+  assert.ok(Math.abs(speed - Math.sqrt(distance / k)) < 1e-9);
+  // 時間が負や非有限でも最短時間で走る
+  assert.equal(cruiseSpeedForDuration(distance, -1, 0.7, 0.9).shortened, true);
+  // 距離と加減速が正でなければ決められない
+  assert.equal(cruiseSpeedForDuration(0, 60, 0.7, 0.9), null);
+  assert.equal(cruiseSpeedForDuration(1000, 60, 0, 0.9), null);
+});
+
+const timed = (id, arrivalMin, departureMin) => ({
+  id,
+  name: `駅${id}`,
+  timing: { arrivalSec: arrivalMin * 60, departureSec: departureMin * 60 },
+});
+
+test('区間の時間は、次の停車駅の到着とこの駅の出発の差', () => {
+  const route = [timed(1, 0, 0), timed(2, 2, 2.6), timed(3, 5, 5)];
+  assert.deepEqual(planLegTimings(route, [0, 1, 2]), [
+    { runSec: 120, dwellSec: 36 },
+    { runSec: 144, dwellSec: 0 },
+  ]);
+});
+
+test('GPX で通過にした駅に推定だけが停まるときは、その停車時間を走行から引く', () => {
+  // 2 駅目は推定では 0.6 分停まるが、GPX では通過 (平日運転の駅を休日に走るなど)
+  const route = [timed(1, 0, 0), timed(2, 2, 2.6), timed(3, 5, 5)];
+  assert.deepEqual(planLegTimings(route, [0, 2]), [
+    { runSec: 264, dwellSec: 0 },
+  ]);
+});
+
+test('GPX で停まる駅を推定が通過していたら、--dwell が無ければ止める', () => {
+  const route = [timed(1, 0, 0), timed(2, 2, 2), timed(3, 5, 5)];
+  assert.throws(() => planLegTimings(route, [0, 1, 2]), /--dwell/);
+  assert.deepEqual(planLegTimings(route, [0, 1, 2], 30), [
+    { runSec: 120, dwellSec: 30 },
+    { runSec: 180, dwellSec: 0 },
+  ]);
+});
+
+test('見込みの無い駅があれば (バスの経路)、見込みでは走らせない', () => {
+  const route = [timed(1, 0, 0), { id: 2, name: '駅2', timing: null }];
+  assert.equal(planLegTimings(route, [0, 1]), null);
+});
+
+test('trainRoute の見込みを駅へ付け、並びが違えば止める', () => {
+  const route = [{ id: 1 }, { id: 2 }];
+  const segment = (id, arrival, departure) => ({
+    station: { id },
+    maxSpeed: 25,
+    maxAcceleration: 0.7,
+    maxDeceleration: 0.9,
+    arrivalCumulativeMinutes: arrival,
+    departureCumulativeMinutes: departure,
+  });
+  const attached = attachTrainRoute(route, [
+    segment(1, 0, 0),
+    segment(2, 1.5, 1.5),
+  ]);
+  assert.deepEqual(attached[1].timing, { arrivalSec: 90, departureSec: 90 });
+  assert.deepEqual(attached[1].motion, {
+    maxSpeed: 25,
+    accel: 0.7,
+    decel: 0.9,
+  });
+  // Legacy 相当 (見込みが null) なら timing も null
+  assert.equal(
+    attachTrainRoute(route, [segment(1, null, null), segment(2, null, null)])[1]
+      .timing,
+    null
+  );
+  assert.throws(
+    () => attachTrainRoute(route, [segment(2, 0, 0), segment(1, 1, 1)]),
+    /一致しません/
+  );
+  assert.throws(
+    () => attachTrainRoute(route, [segment(1, 0, 0)]),
+    /一致しません/
+  );
+});
+
+test('見込みで走らせると、停車駅に見込みの時刻どおりに着き、見込みの時間だけ停まる', () => {
+  const station = (id, latitude, arrivalMin, departureMin) => ({
+    id,
+    name: `駅${id}`,
+    latitude,
+    longitude: 139.0,
+    motion: { maxSpeed: 30, accel: 0.7, decel: 0.9 },
+    timing: { arrivalSec: arrivalMin * 60, departureSec: departureMin * 60 },
+  });
+  // 3.3km と 2.2km の区間
+  const route = [
+    station(1, 35.0, 0, 0),
+    station(2, 35.03, 4, 4.6),
+    station(3, 35.05, 8, 8),
+  ];
+  const stopIndices = [0, 1, 2];
+  const waypoints = buildWaypoints({
+    route,
+    stopIndices,
+    dwellSec: 60,
+    legTimings: planLegTimings(route, stopIndices),
+  });
+  const firstAt = (s) =>
+    waypoints.find((wp) => wp.latitude === s.latitude && wp.elapsed > 0)
+      .elapsed;
+  // 1 秒刻みなので、着く時刻は見込みから 1 秒以内
+  assert.ok(Math.abs(firstAt(route[1]) - 240) <= 1, `${firstAt(route[1])}`);
+  assert.ok(Math.abs(firstAt(route[2]) - 480) <= 1, `${firstAt(route[2])}`);
+  assert.equal(waypoints.at(-1).elapsed, 480);
+  // 2 駅目では 36 秒停まる (到着点の後に 36 点)
+  const atSecond = waypoints.filter((wp) => wp.latitude === route[1].latitude);
+  assert.ok(atSecond.length >= 37, `${atSecond.length}`);
 });
