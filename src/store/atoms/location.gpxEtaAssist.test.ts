@@ -309,8 +309,14 @@ describe('eta_assist_enabled=true でGPXを実パイプラインへ流したと�
       // 遅れが解けないままトラックが終わるため検知できないことがある。
       const undetectableTerminal =
         endsAtStop && cond.accuracy > BAD_ACCURACY_THRESHOLD ? 1 : 0;
-      expect(detectedCount(on.firstDetection)).toBe(
+      // 終着駅は検知できないことがあるだけで、できてはいけないわけではない。
+      // 検知できるかは GPX の軌跡で変わる(到着時間推定に合わせて走らせた片町線・
+      // 京王線・総武快速線では、精度劣化帯でも終着駅を検知した)ため、下限で見る。
+      expect(detectedCount(on.firstDetection)).toBeGreaterThanOrEqual(
         stops.length - undetectableTerminal
+      );
+      expect(detectedCount(on.firstDetection)).toBeLessThanOrEqual(
+        stops.length
       );
       // ETAは到着判定へ介入しない(棄却が起きなければ入力も到着圏も同一)ため、
       // 検知位置は一致する。R1を持っていた頃の「早まる側にだけずれる」許容ではなく、

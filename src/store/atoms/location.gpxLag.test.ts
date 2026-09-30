@@ -11,6 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type * as Location from 'expo-location';
 import getDistance from 'geolib/es/getPreciseDistance';
+import { ARRIVED_GRACE_PERIOD_MS } from '~/constants/duration';
 import { store } from '..';
 import { locationAtom, resetLocationState, setLocation } from './location';
 
@@ -120,17 +121,24 @@ const METERS_PER_DEG_LAT = 111_132;
  * 指定した更新間隔・精度でパイプラインへ流し、平滑後の軌跡を返す。
  * noiseSigmaMeters を渡すと入力座標へ正規分布のノイズを乗せる。Androidの
  * accuracy は68%信頼半径なので、σ=accuracy が素直なモデルになる。
+ * offsetMs は最初の測位をトラックの先頭から何ms遅らせるか、seed はノイズの種。
  */
 const runPipeline = (
   track: Point[],
   intervalMs: number,
   accuracy: number,
-  noiseSigmaMeters = 0
+  noiseSigmaMeters = 0,
+  offsetMs = 0,
+  seed = 0x5eed
 ) => {
   resetLocationState();
-  const noise = makeNoise(0x5eed);
+  const noise = makeNoise(seed);
   const samples: Point[] = [];
-  for (let t = track[0].t; t <= track[track.length - 1].t; t += intervalMs) {
+  for (
+    let t = track[0].t + offsetMs;
+    t <= track[track.length - 1].t;
+    t += intervalMs
+  ) {
     const truth = truthAt(track, t);
     const input =
       noiseSigmaMeters > 0
@@ -153,9 +161,12 @@ const runPipeline = (
 };
 
 /**
- * 区間ごとに、次駅の到着圏へ入る判定が false→true へ何回変化するかを数える。
+ * 区間ごとに、次駅の到着判定が false→true へ何回変化するかを数える。
  * ノイズで平滑後の座標が判定圏を出入りすると1区間で複数回立ち、到着表示が
  * ばたつく。正常なら区間あたり1回。
+ * 判定は useRefreshStation と同じく、到着圏に入ってから ARRIVED_GRACE_PERIOD_MS の
+ * あいだは圏外の測位でも到着を保つ。座標だけで数えると、停車直後に1回だけ圏外へ
+ * 押し出された測位まで数えてしまい、表示されないばたつきで落ちる。
  */
 const countArrivalChatter = (
   stops: Stop[],
@@ -170,9 +181,12 @@ const countArrivalChatter = (
     const arrivedTh = clamp(dist(from.anchor, to.anchor) / 4, 75, 200) + bonus;
     let prev = false;
     let rises = 0;
+    let lastInsideAt: number | null = null;
     for (const s of samples) {
       if (s.t <= from.departAt || s.t > to.departAt) continue;
-      const inside = dist(s, to.anchor) <= arrivedTh;
+      if (dist(s, to.anchor) <= arrivedTh) lastInsideAt = s.t;
+      const inside =
+        lastInsideAt !== null && s.t - lastInsideAt < ARRIVED_GRACE_PERIOD_MS;
       if (inside && !prev) rises += 1;
       prev = inside;
     }
@@ -247,6 +261,12 @@ const measureTransitions = (
   };
 };
 
+// 測位がトラックのどこに当たるか (最初の測位の遅れ) とノイズの種を変えて測る。
+// 10秒間隔の測位は駅に対して当たる位置が1通りではなく、1通りだけで測ると
+// 結果がその巡り合わせに左右される。
+const OFFSETS_MS = [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
+const SEEDS = [0x5eed, 1, 2, 3, 4];
+
 const CASES = [
   { label: '5s', interval: 5000 },
   { label: '10s', interval: 10000 },
@@ -255,16 +275,16 @@ const ACCURACIES = [30, 60, 250];
 
 const TRACKS = [
   {
-    name: '片町線(学研都市線) 快速 京田辺→木津 / 最高95km/h',
+    name: '片町線(学研都市線) 快速 京田辺→木津',
     path: 'assets/gpx/KatamachiRapid.gpx',
   },
   { name: '山手線 実走ログ', path: 'assets/gpx/SampleJY.gpx' },
   {
-    name: '京王線特急 / 最高110km/h',
+    name: '京王線特急 新宿→京王八王子',
     path: 'assets/gpx/KeioSpecialExpress.gpx',
   },
   {
-    name: '総武快速線 錦糸町→津田沼 / 最高120km/h',
+    name: '総武快速線 錦糸町→津田沼',
     path: 'assets/gpx/SobuRapid.gpx',
   },
 ];
@@ -308,43 +328,63 @@ describe('GPX を実パイプラインへ流したときの表示切り替わり
 
   // 回帰: αを配信間隔で正規化していないと、Δtが倍になると追従遅れも倍になり、
   // 到着判定(=LineBoardの区間進行)が駅の直前まで遅れる(#6916)。
-  // 片町線快速は駅間2.3km・95km/hで、到着圏が最小クランプに張り付く最も不利な条件。
+  // 片町線快速は駅間2.3kmで、到着圏が最小クランプに張り付く最も不利な条件。
+  // 測位の当たり方で値がぶれるので、OFFSETS_MS の中央値で比べる。
   it('片町線快速で到着判定が配信間隔に依存しない', () => {
     const track = parseGpx('assets/gpx/KatamachiRapid.gpx');
     const stops = findStops(track);
     const accuracy = 60;
 
-    const at5s = measureTransitions(
-      track,
-      stops,
-      runPipeline(track, 5000, accuracy),
-      accuracy
+    const at5s = OFFSETS_MS.map((offset) =>
+      measureTransitions(
+        track,
+        stops,
+        runPipeline(track, 5000, accuracy, 0, offset % 5000),
+        accuracy
+      )
     );
-    const at10s = measureTransitions(
-      track,
-      stops,
-      runPipeline(track, 10000, accuracy),
-      accuracy
+    const at10s = OFFSETS_MS.map((offset) =>
+      measureTransitions(
+        track,
+        stops,
+        runPipeline(track, 10000, accuracy, 0, offset),
+        accuracy
+      )
     );
+    const gap = (key: 'arrived' | 'approaching') =>
+      median(at10s.map((r, i) => Math.abs(r[key] - at5s[i][key])));
 
     // 正規化前は10秒間隔で2m手前まで落ち込んでいた
-    expect(at10s.arrived).toBeGreaterThan(150);
+    expect(median(at10s.map((r) => r.arrived))).toBeGreaterThan(150);
     // 5秒と10秒で到着位置がほとんど変わらないこと
-    expect(Math.abs(at10s.arrived - at5s.arrived)).toBeLessThan(50);
+    expect(gap('arrived')).toBeLessThan(50);
     // 「まもなく」も同様に間隔へ依存しないこと
-    expect(at10s.approaching).toBeGreaterThan(800);
-    expect(Math.abs(at10s.approaching - at5s.approaching)).toBeLessThan(100);
+    expect(median(at10s.map((r) => r.approaching))).toBeGreaterThan(800);
+    expect(gap('approaching')).toBeLessThan(100);
   });
 
   // 間隔で正規化するとΔtが大きいときのαが上がり、スムージングは弱くなる。
   // 測位ノイズが素通りして到着判定がばたつかないことを確かめる。
+  // 精度250mでも正規化すると、この条件のほとんどでばたつく (location.ts の
+  // LOW_ACCURACY_ALPHA を残している理由)。
   it.each([30, 60, 250])(
     '精度%dmのノイズを乗せても到着判定が区間内で複数回立たない',
     (accuracy) => {
       const track = parseGpx('assets/gpx/KatamachiRapid.gpx');
       const stops = findStops(track);
-      const samples = runPipeline(track, 10000, accuracy, accuracy);
-      expect(countArrivalChatter(stops, samples, accuracy)).toBe(1);
+      for (const offset of OFFSETS_MS) {
+        for (const seed of SEEDS) {
+          const samples = runPipeline(
+            track,
+            10000,
+            accuracy,
+            accuracy,
+            offset,
+            seed
+          );
+          expect(countArrivalChatter(stops, samples, accuracy)).toBe(1);
+        }
+      }
     }
   );
 });
