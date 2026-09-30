@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useCallback, useMemo, useRef } from 'react';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -19,6 +19,10 @@ import { useAppColors } from '~/providers/AppColorsProvider';
 import { locationAtom } from '~/store/atoms/location';
 import navigationState from '~/store/atoms/navigation';
 import stationState from '~/store/atoms/station';
+import {
+  stationResolveFailedAtom,
+  stationSearchModalVisibleAtom,
+} from '~/store/atoms/stationSearchPrompt';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import isTablet from '~/utils/isTablet';
@@ -111,7 +115,11 @@ export const NowHeader = ({
   onHeaderLayout,
   scrollY,
 }: Props) => {
-  const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+  // 現在駅が無いときの案内カードなど、ヘッダー以外からも開けるよう atom で共有する
+  const [isSearchModalVisible, setIsSearchModalVisible] = useAtom(
+    stationSearchModalVisibleAtom
+  );
+  const stationResolveFailed = useAtomValue(stationResolveFailedAtom);
   const headerCardRef = useRef<View>(null);
 
   const setStationAtom = useSetAtom(stationState);
@@ -163,7 +171,7 @@ export const NowHeader = ({
 
   const handlePress = useCallback(() => {
     setIsSearchModalVisible(true);
-  }, []);
+  }, [setIsSearchModalVisible]);
 
   const handleHeaderLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -204,7 +212,12 @@ export const NowHeader = ({
       });
       setIsSearchModalVisible(false);
     },
-    [setStationAtom, setNavigationAtom, setLocationAtom]
+    [
+      setStationAtom,
+      setNavigationAtom,
+      setLocationAtom,
+      setIsSearchModalVisible,
+    ]
   );
 
   const nowHeaderAdditionalStyle: ViewStyle = useMemo(() => {
@@ -268,7 +281,7 @@ export const NowHeader = ({
                     ) : null}
                   </View>
                 </RNAnimated.View>
-              ) : locationPermissionsGranted ? (
+              ) : locationPermissionsGranted && !stationResolveFailed ? (
                 <SkeletonPlaceholder
                   borderRadius={4}
                   speed={1500}

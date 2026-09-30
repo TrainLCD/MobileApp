@@ -11,6 +11,9 @@ import {
 import { createStation } from '~/utils/test/factories';
 import navigationState from '../store/atoms/navigation';
 import stationState, { stationAtom } from '../store/atoms/station';
+import { stationResolveFailedAtom } from '../store/atoms/stationSearchPrompt';
+import { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
+import { useFetchNearbyStation } from './useFetchNearbyStation';
 import {
   type UseInitialNearbyStationResult,
   useInitialNearbyStation,
@@ -63,6 +66,7 @@ const HookBridge: React.FC<{ onReady: (value: HookResult) => void }> = ({
 describe('useInitialNearbyStation', () => {
   const mockSetStationState = jest.fn();
   const mockSetNavigationState = jest.fn();
+  const mockSetStationResolveFailed = jest.fn();
   const mockUseAtomValue = useAtomValue as unknown as jest.Mock;
   const mockUseSetAtom = useSetAtom as unknown as jest.Mock;
 
@@ -76,6 +80,9 @@ describe('useInitialNearbyStation', () => {
       }
       if (atom === navigationState) {
         return mockSetNavigationState;
+      }
+      if (atom === stationResolveFailedAtom) {
+        return mockSetStationResolveFailed;
       }
       return jest.fn();
     });
@@ -145,6 +152,79 @@ describe('useInitialNearbyStation', () => {
         message: 'firstAlertText',
         buttons: expect.any(Array),
       },
+    });
+  });
+  describe('現在駅の解決失敗フラグ', () => {
+    // 初回の位置取得は 800ms のフォールバックタイマーで始まる
+    const INITIAL_LOCATION_FALLBACK_DELAY_MS = 800;
+    const location = {
+      coords: { latitude: 35.7, longitude: 139.6 },
+    };
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    const runFallbackFetch = async () => {
+      render(<HookBridge onReady={() => {}} />);
+      await jest.advanceTimersByTimeAsync(INITIAL_LOCATION_FALLBACK_DELAY_MS);
+    };
+
+    it('位置情報の取得に失敗したら立てる', async () => {
+      const consoleError = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      (useFetchCurrentLocationOnce as jest.Mock).mockReturnValue({
+        fetchCurrentLocation: jest
+          .fn()
+          .mockRejectedValue(new Error('unsatisfied device settings')),
+      });
+
+      await runFallbackFetch();
+
+      expect(mockSetStationResolveFailed).toHaveBeenCalledWith(true);
+      consoleError.mockRestore();
+    });
+
+    it('最寄り駅が見つからなければ立てる', async () => {
+      (useFetchCurrentLocationOnce as jest.Mock).mockReturnValue({
+        fetchCurrentLocation: jest.fn().mockResolvedValue(location),
+      });
+      (useFetchNearbyStation as jest.Mock).mockReturnValue({
+        stations: [],
+        fetchByCoords: jest
+          .fn()
+          .mockResolvedValue({ data: { stationsNearby: [] } }),
+        isLoading: false,
+        error: null,
+      });
+
+      await runFallbackFetch();
+
+      expect(mockSetStationResolveFailed).toHaveBeenCalledWith(true);
+    });
+
+    it('最寄り駅が取れたら下ろす', async () => {
+      (useFetchCurrentLocationOnce as jest.Mock).mockReturnValue({
+        fetchCurrentLocation: jest.fn().mockResolvedValue(location),
+      });
+      (useFetchNearbyStation as jest.Mock).mockReturnValue({
+        stations: [],
+        fetchByCoords: jest
+          .fn()
+          .mockResolvedValue({ data: { stationsNearby: [createStation(1)] } }),
+        isLoading: false,
+        error: null,
+      });
+
+      await runFallbackFetch();
+
+      expect(mockSetStationResolveFailed).toHaveBeenCalledWith(false);
+      expect(mockSetStationResolveFailed).not.toHaveBeenCalledWith(true);
     });
   });
 });
