@@ -34,6 +34,7 @@ import {
 } from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import { useAutoModeEstimatedEnabled } from './useAutoModeEstimatedEnabled';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
@@ -180,9 +181,10 @@ export const useSimulationMode = (): void => {
     toStationId != null &&
     fromStationId !== toStationId;
 
-  // 区間の値は到着時間推定のモデル(model: Estimated)で取り、ETA と同じ時間で走らせる。
-  // model を知らない StationAPI ではクエリ全体がエラーになるので、そのときだけ
-  // 従来の問い合わせ(Legacy)に戻す
+  // auto_mode_estimated_enabled が true なら、区間の値を到着時間推定のモデル
+  // (model: Estimated)で取り、ETA と同じ時間で走らせる。model を知らない StationAPI では
+  // クエリ全体がエラーになるので、そのときだけ従来の問い合わせ(Legacy)に戻す。
+  // false・未配信なら最初から Legacy で引く
   const singleVariables = {
     fromStationId: fromStationId ?? 0,
     toStationId: toStationId ?? 0,
@@ -195,42 +197,52 @@ export const useSimulationMode = (): void => {
   };
   const skipSingle = !canFetchTrainRoute || !!routeLegs;
   const skipConnected = !canFetchTrainRoute || !routeLegs;
+  const estimatedEnabled = useAutoModeEstimatedEnabled();
 
   const { data: estimatedSingleData, error: estimatedSingleError } =
     useGraphQLQuery<TrainRouteData, GetTrainRouteQueryVariables>(
       GET_ESTIMATED_TRAIN_ROUTE,
-      { variables: singleVariables, skip: skipSingle }
+      { variables: singleVariables, skip: skipSingle || !estimatedEnabled }
     );
   const { data: legacySingleData, error: legacySingleError } = useGraphQLQuery<
     TrainRouteData,
     GetTrainRouteQueryVariables
   >(GET_TRAIN_ROUTE, {
     variables: singleVariables,
-    skip: skipSingle || !estimatedSingleError,
+    skip: skipSingle || (estimatedEnabled && !estimatedSingleError),
   });
   const { data: estimatedConnectedData, error: estimatedConnectedError } =
     useGraphQLQuery<TrainRouteData, ConnectedTrainRouteVariables>(
       GET_ESTIMATED_CONNECTED_TRAIN_ROUTE,
-      { variables: connectedVariables, skip: skipConnected }
+      {
+        variables: connectedVariables,
+        skip: skipConnected || !estimatedEnabled,
+      }
     );
   const { data: legacyConnectedData, error: legacyConnectedError } =
     useGraphQLQuery<TrainRouteData, ConnectedTrainRouteVariables>(
       GET_CONNECTED_TRAIN_ROUTE,
       {
         variables: connectedVariables,
-        skip: skipConnected || !estimatedConnectedError,
+        skip: skipConnected || (estimatedEnabled && !estimatedConnectedError),
       }
     );
 
-  const singleTrainRouteData: TrainRouteData | undefined = estimatedSingleError
+  // skip していても同じ queryKey のキャッシュがあれば data が返るので、どちらを使うかは
+  // フラグとエラーで決める
+  const useLegacySingle = !estimatedEnabled || !!estimatedSingleError;
+  const useLegacyConnected = !estimatedEnabled || !!estimatedConnectedError;
+  const singleTrainRouteData: TrainRouteData | undefined = useLegacySingle
     ? legacySingleData
     : estimatedSingleData;
-  const connectedTrainRouteData = estimatedConnectedError
+  const connectedTrainRouteData = useLegacyConnected
     ? legacyConnectedData
     : estimatedConnectedData;
-  const estimatedTrainRouteError = routeLegs
-    ? estimatedConnectedError
-    : estimatedSingleError;
+  const estimatedTrainRouteError = !estimatedEnabled
+    ? undefined
+    : routeLegs
+      ? estimatedConnectedError
+      : estimatedSingleError;
   const legacyTrainRouteError = routeLegs
     ? legacyConnectedError
     : legacySingleError;

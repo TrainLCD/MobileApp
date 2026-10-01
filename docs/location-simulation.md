@@ -87,6 +87,12 @@ npm run gpx:generate -- \
 ごとの速度を実ダイヤで較正した到着時間推定から出る。アプリのオートモード
 (`useSimulationMode`) も同じ見込みで走るので、GPX・オートモード・ETA の時間がそろう。
 
+オートモードがこの見込みで走るのは、Worker の `/config/remote` が
+`auto_mode_estimated_enabled: true` を配信しているときだけ。`false`・未配信・取得失敗の
+ときは、`model` を渡さない従来の値 (`Legacy`) で区間の最高速度を出して走る。値は Worker の
+KV `config:remote` に入れる。`true` でも StationAPI が `model` を知らずにエラーを返したときは、
+`Legacy` に戻して走る。
+
 - 停車駅から次の停車駅までの時間は「次の停車駅の到着 − この駅の出発」。推定では停まるが
   GPX では通過する駅 (平日運転の駅を休日に走る、`--skip` など) は、その駅の停車時間を
   走行から引く。
