@@ -200,6 +200,29 @@ describe('乗換経路の区間指定', () => {
       ).toEqual(['東京', '京都', '新大阪(東海道)', '新神戸']);
     });
 
+    it('merge を渡すと、同じ駅グループが続く 1 つ目と最後の 1 つから 1 つを作る', () => {
+      // 乗換駅の出発の見込みは、次の区間の乗車側(最後)の行にある
+      const stations = [group(1), group(2), group(3), group(4)];
+      const aligned = alignConnectedTrainRouteSegments(
+        [
+          segment('東京', 1),
+          segment('京都', 2),
+          segment('新大阪(東海道)', 3),
+          segment('新大阪(山陽、系統の中)', 3),
+          segment('新大阪(山陽、次の区間)', 3),
+          segment('新神戸', 4),
+        ],
+        stations,
+        (first, last) => ({ ...first, name: `${first.name}→${last.name}` })
+      );
+      expect(names(aligned)).toEqual([
+        '東京',
+        '京都',
+        '新大阪(東海道)→新大阪(山陽、次の区間)',
+        '新神戸',
+      ]);
+    });
+
     it('駅リストと突き合わせられなければ null を返す', () => {
       const stations = [group(1), group(2), group(3)];
       // 途中の駅が欠けている

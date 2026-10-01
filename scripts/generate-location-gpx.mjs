@@ -9,7 +9,8 @@
 // に登録すると、シミュレータが実際の測位として再生する。
 //
 // 速度プロファイルはアプリ本体の generateTrainSpeedProfile をそのまま使う。
-// 独自の加減速モデルを持たせるとアプリの想定と乖離するため。
+// 独自の加減速モデルを持たせるとアプリの想定と乖離するため。到着時間推定の見込みに
+// 合わせて走る区間は、オートモードと同じ src/utils/trainRouteTiming.ts で作る。
 //
 // 使い方:
 //   node scripts/generate-location-gpx.mjs --line 1004 --from 100418 --to 100411 \
@@ -24,7 +25,14 @@
 
 import { realpathSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import {
+  cruiseSpeedForDuration,
+  planLegTimings as planStopLegTimings,
+  speedProfileForDuration,
+} from '../src/utils/trainRouteTiming.ts';
 import { generateTrainSpeedProfile } from '../src/utils/trainSpeed.ts';
+
+export { cruiseSpeedForDuration };
 
 const DEFAULT_API_URL = 'https://gql.trainlcd.app/';
 // 1 秒間隔。iOS は distanceInterval 基準で概ね 1Hz 配信のため実機に近い。
@@ -294,8 +302,8 @@ const fetchLineGroupStations = async (apiUrl, lineGroupId) => {
 };
 
 // 区間の値を到着時間推定のモデル (model: Estimated) で取る。見込みは、同じ区間の
-// estimateArrivalTimes と同じ値になる。アプリのオートモード (useSimulationMode) は
-// model を渡さない (Legacy) ので、そちらの走り方とは一致しない。
+// estimateArrivalTimes と同じ値になる。アプリのオートモード (useSimulationMode) も
+// 同じ見込みで走るので、GPX・オートモード・ETA の時間がそろう。
 const fetchTrainRoute = async (apiUrl, fromStationId, toStationId, lineGroupId) => {
   const data = await queryStationApi(
     apiUrl,
@@ -514,28 +522,6 @@ export const attachTrainRoute = (route, segments) => {
   });
 };
 
-// 停車駅から次の停車駅までを加速度 accel・減速度 decel の台形(短い区間は三角形)で
-// seconds 秒かけて走る巡航速度(m/s)。台形の所要時間は T(v) = D/v + k·v
-// (k = 1/(2a) + 1/(2b)) なので、T(v) = seconds の 2 根のうち遅い方(巡航のある
-// 台形)を返す。最短時間 2√(D·k) より短い時間を求められたときは解が無いので、
-// 最短時間で走る速度 √(D/k) を返し、shortened を立てる。
-export const cruiseSpeedForDuration = (distance, seconds, accel, decel) => {
-  const valid = (x) => Number.isFinite(x) && x > 0;
-  if (!(valid(distance) && valid(accel) && valid(decel))) {
-    return null;
-  }
-  const k = 0.5 / accel + 0.5 / decel;
-  const fastest = Math.sqrt(distance / k);
-  const discriminant = seconds * seconds - 4 * k * distance;
-  if (!Number.isFinite(seconds) || discriminant <= 0) {
-    return { speed: fastest, shortened: true };
-  }
-  return {
-    speed: (seconds - Math.sqrt(discriminant)) / (2 * k),
-    shortened: false,
-  };
-};
-
 // 停車駅ごとの走行時間と停車時間(秒)を、trainRoute の見込みから組み立てる。
 // legs[j] は stopIndices[j] から stopIndices[j + 1] までの走行 (runSec) と、
 // 着いた駅での停車 (dwellSec。終点は 0)。見込みの無い駅があれば null。
@@ -546,28 +532,21 @@ export const cruiseSpeedForDuration = (distance, seconds, accel, decel) => {
 // 走行時間から引く。逆に GPX で停まる駅を推定が通過していると、その駅の停車時間が
 // 見込みに無いので、dwellOverrideSec が無ければ止める (黙って 0 秒で通らないため)。
 export const planLegTimings = (route, stopIndices, dwellOverrideSec) => {
-  if (route.some((station) => station.timing == null)) {
-    return null;
-  }
-  const dwellAt = (i) => route[i].timing.departureSec - route[i].timing.arrivalSec;
-  return stopIndices.slice(1).map((to, j) => {
-    const from = stopIndices[j];
-    let runSec = route[to].timing.arrivalSec - route[from].timing.departureSec;
-    for (let i = from + 1; i < to; i++) {
-      runSec -= dwellAt(i);
-    }
-    const isFinal = j === stopIndices.length - 2;
-    let dwellSec = 0;
-    if (!isFinal) {
-      dwellSec = dwellOverrideSec ?? Math.round(dwellAt(to));
-      if (dwellSec <= 0) {
+  const legs = planStopLegTimings(
+    route.map((station) => station.timing),
+    stopIndices,
+    dwellOverrideSec
+  );
+  return (
+    legs?.map((leg, j) => {
+      if (leg.dwellSec == null) {
         throw new Error(
-          `${route[to].name} は推定では通過扱いで、停車時間の見込みがありません。--dwell で停車時間を指定してください`
+          `${route[stopIndices[j + 1]].name} は推定では通過扱いで、停車時間の見込みがありません。--dwell で停車時間を指定してください`
         );
       }
-    }
-    return { runSec, dwellSec };
-  });
+      return leg;
+    }) ?? null
+  );
 };
 
 // trackDistanceFromPrevious は API の並びで直前にある駅からの長さ。走らせる向きが
@@ -665,26 +644,40 @@ export const buildWaypoints = ({
     const motion = arrivalStation.motion;
     const timing = legTimings?.[leg];
     const legDwellSec = timing ? timing.dwellSec : dwellSec;
-    let maxSpeed;
+    let timedProfile = null;
     if (timing) {
       const plannedArrivalSec = plannedDepartureSec + timing.runSec;
       plannedDepartureSec = plannedArrivalSec + timing.dwellSec;
       // 到着点は速度プロファイルの最後の点の 1 秒後に置くので、その 1 秒を除いた
-      // 時間でプロファイルを作る
-      const fitted = cruiseSpeedForDuration(
-        distance,
-        plannedArrivalSec - elapsed - INTERVAL_SEC,
-        motion.accel,
-        motion.decel
-      );
-      maxSpeed = fitted?.speed;
-      if (fitted?.shortened) {
-        shortenedLegs.push(arrivalStation.name);
+      // 時間でプロファイルを作る。列の長さはその秒数ちょうどになる
+      if (distance >= 1) {
+        const fitted = speedProfileForDuration({
+          distance,
+          seconds: plannedArrivalSec - elapsed - INTERVAL_SEC,
+          accel: motion.accel,
+          decel: motion.decel,
+        });
+        if (!fitted) {
+          throw new Error(
+            `${arrivalStation.name} 行きの区間の加減速が決まりません`
+          );
+        }
+        timedProfile = fitted.profile;
+        if (fitted.shortened) {
+          shortenedLegs.push(arrivalStation.name);
+        }
       }
-    } else {
-      maxSpeed = maxSpeedKmh !== undefined ? maxSpeedKmh / 3.6 : motion?.maxSpeed; // m/s
     }
-    if (distance >= 1 && (!Number.isFinite(maxSpeed) || maxSpeed <= 0)) {
+    const maxSpeed = timing
+      ? undefined
+      : maxSpeedKmh !== undefined
+        ? maxSpeedKmh / 3.6
+        : motion?.maxSpeed; // m/s
+    if (
+      !timing &&
+      distance >= 1 &&
+      (!Number.isFinite(maxSpeed) || maxSpeed <= 0)
+    ) {
       throw new Error(
         `${arrivalStation.name} 行きの区間の最高速度が決まりません。--max-speed を指定するか、--line-group で trainRoute の値を使ってください`
       );
@@ -692,14 +685,16 @@ export const buildWaypoints = ({
 
     // 出力を再現可能にするため惰行のランダム性は無効にする。
     // 加減速が undefined のときは generateTrainSpeedProfile の既定値になる
-    const speedProfile = generateTrainSpeedProfile({
-      distance,
-      maxSpeed,
-      accel: motion?.accel,
-      decel: motion?.decel,
-      interval: INTERVAL_SEC,
-      enableRandomCoast: false,
-    });
+    const speedProfile =
+      timedProfile ??
+      generateTrainSpeedProfile({
+        distance,
+        maxSpeed,
+        accel: motion?.accel,
+        decel: motion?.decel,
+        interval: INTERVAL_SEC,
+        enableRandomCoast: false,
+      });
 
     // 直通運転では乗り入れの境界駅が路線ごとに 2 回並ぶ(和光市が東京メトロ
     // 副都心線と東武東上線の両方に現れるなど)。同じ地点なので区間長が 0 になり、
