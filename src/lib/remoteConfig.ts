@@ -56,6 +56,9 @@ export const REMOTE_CONFIG_KEYS = {
   // AIエージェント(行き先相談)機能の有効/無効。障害・コスト超過時にサーバー側から
   // エントリポイントごと機能を止められるようにするキルスイッチ。
   AI_AGENT_ENABLED: 'ai_agent_enabled',
+  // オートモードを到着時間推定の見込み(trainRoute の model: Estimated)で走らせるかどうか。
+  // true なら ETA と同じ時間で駅に着いて停まり、false・未配信なら従来の値(Legacy)で走る。
+  AUTO_MODE_ESTIMATED_ENABLED: 'auto_mode_estimated_enabled',
 } as const;
 
 type RemoteConfigResponse = {
@@ -75,6 +78,7 @@ type RemoteConfigResponse = {
   vits_tts_enabled_ios?: boolean;
   vits_tts_manifest_url_ios?: string;
   ai_agent_enabled?: boolean;
+  auto_mode_estimated_enabled?: boolean;
 };
 
 // ETAフォールバック機能自体のフォールバック既定値。安全側に倒し、既定では無効とする。
@@ -98,6 +102,10 @@ const REMOTE_TTS_ENABLED_ANDROID_FALLBACK = false;
 // AIエージェント機能のフォールバック既定値。LLM 利用料が発生する機能のため、
 // 未配信・取得失敗時は安全側に倒して無効とする。
 const AI_AGENT_ENABLED_FALLBACK = false;
+
+// オートモードの走らせ方のフォールバック既定値。未配信・取得失敗時は従来の値(Legacy)で
+// 走らせ、配信で true にしたときだけ到着時間推定の見込みに切り替える。
+const AUTO_MODE_ESTIMATED_ENABLED_FALLBACK = false;
 
 // VOICEVOX フォールバックのフォールバック既定値。約 180MB の辞書・音声モデルを
 // 端末へ取得する機能のため、Remote Config で明示的に有効化されたときだけ動かす。
@@ -149,6 +157,7 @@ let cachedTTSEnabledAndroid: boolean | null = null;
 let cachedRemoteTTSEnabledIOS: boolean | null = null;
 let cachedRemoteTTSEnabledAndroid: boolean | null = null;
 let cachedAIAgentEnabled: boolean | null = null;
+let cachedAutoModeEstimatedEnabled: boolean | null = null;
 let cachedVoicevoxTTSEnabledIOS: boolean | null = null;
 let cachedVoicevoxTTSManifestUrlIOS: string | null = null;
 let cachedVoicevoxTTSStyleIdIOS: number | null = null;
@@ -185,6 +194,7 @@ export const resetRemoteConfigCache = (): void => {
   cachedRemoteTTSEnabledIOS = null;
   cachedRemoteTTSEnabledAndroid = null;
   cachedAIAgentEnabled = null;
+  cachedAutoModeEstimatedEnabled = null;
   cachedVoicevoxTTSEnabledIOS = null;
   cachedVoicevoxTTSManifestUrlIOS = null;
   cachedVoicevoxTTSStyleIdIOS = null;
@@ -238,6 +248,9 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   if (typeof data.ai_agent_enabled === 'boolean') {
     cachedAIAgentEnabled = data.ai_agent_enabled;
+  }
+  if (typeof data.auto_mode_estimated_enabled === 'boolean') {
+    cachedAutoModeEstimatedEnabled = data.auto_mode_estimated_enabled;
   }
   if (typeof data.voicevox_tts_enabled_ios === 'boolean') {
     cachedVoicevoxTTSEnabledIOS = data.voicevox_tts_enabled_ios;
@@ -356,6 +369,16 @@ export const isAIAgentFeatureEnabled = (): boolean => {
     return cachedAIAgentEnabled;
   }
   return AI_AGENT_ENABLED_FALLBACK;
+};
+
+// オートモードを到着時間推定の見込み(trainRoute の model: Estimated)で走らせるかどうかを
+// 同期的に取得する。setupRemoteConfig 完了後は取得済みのリモート値を、未設定・取得失敗時は
+// フォールバック(false=従来の値で走る)を返す。
+export const isAutoModeEstimatedEnabled = (): boolean => {
+  if (cachedAutoModeEstimatedEnabled != null) {
+    return cachedAutoModeEstimatedEnabled;
+  }
+  return AUTO_MODE_ESTIMATED_ENABLED_FALLBACK;
 };
 
 /**
