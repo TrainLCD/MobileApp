@@ -114,13 +114,16 @@ export const buildRouteLegInputs = (
  * 件数の推定で揃えると、区間の切り出し方が API とずれたときに位置がずれる
  * @param segments trainRoute の segments(進行順の区間ごとに連結されたもの)
  * @param stations 進行順の駅リスト(同じ駅グループが続かないもの)
+ * @param merge 同じ駅グループが続くとき、残す 1 つ目と最後の 1 つから 1 つを作る。
+ *   乗換駅の出発の見込みは乗車側(最後)の行にあるので、それを拾うために使う
  * @returns 駅リストと同じ長さの segments。突き合わせられなければ null
  */
 export const alignConnectedTrainRouteSegments = <
   T extends { station?: { groupId?: number | null } | null },
 >(
   segments: T[],
-  stations: Station[]
+  stations: Station[],
+  merge?: (first: T, last: T) => T
 ): T[] | null => {
   const aligned: T[] = [];
   let cursor = 0;
@@ -132,11 +135,13 @@ export const alignConnectedTrainRouteSegments = <
     ) {
       return null;
     }
-    aligned.push(segment);
+    let last = segment;
     cursor++;
     while (segments[cursor]?.station?.groupId === station.groupId) {
+      last = segments[cursor];
       cursor++;
     }
+    aligned.push(merge && last !== segment ? merge(segment, last) : segment);
   }
   return cursor === segments.length ? aligned : null;
 };

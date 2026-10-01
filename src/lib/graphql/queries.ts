@@ -581,6 +581,67 @@ export const GET_CONNECTED_TRAIN_ROUTE = gql`
   }
 `;
 
+// Same as GET_TRAIN_ROUTE / GET_CONNECTED_TRAIN_ROUTE but with the arrival estimation's
+// model (model: Estimated): the arrival/departure estimates equal estimateArrivalTimes,
+// so the auto mode runs on the same times as the ETA. Kept as separate documents because
+// declaring model makes the whole query fail validation on an API that does not know
+// TrainRouteModel; useSimulationMode falls back to the queries above on an error.
+export const GET_ESTIMATED_TRAIN_ROUTE = gql`
+  query GetEstimatedTrainRoute(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $lineGroupId: Int
+  ) {
+    trainRoute(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      lineGroupId: $lineGroupId
+      model: Estimated
+    ) {
+      segments {
+        station {
+          trackDistanceFromPrevious
+        }
+        distanceFromPrevious
+        maxAcceleration
+        maxDeceleration
+        maxSpeed
+        arrivalCumulativeMinutes
+        departureCumulativeMinutes
+      }
+    }
+  }
+`;
+
+export const GET_ESTIMATED_CONNECTED_TRAIN_ROUTE = gql`
+  query GetEstimatedConnectedTrainRoute(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $legs: [RouteLegInput!]!
+  ) {
+    trainRoute(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      legs: $legs
+      model: Estimated
+    ) {
+      segments {
+        station {
+          id
+          groupId
+          trackDistanceFromPrevious
+        }
+        distanceFromPrevious
+        maxAcceleration
+        maxDeceleration
+        maxSpeed
+        arrivalCumulativeMinutes
+        departureCumulativeMinutes
+      }
+    }
+  }
+`;
+
 // Query for estimating arrival times between two stations
 export const ESTIMATE_ARRIVAL_TIMES = gql`
   query EstimateArrivalTimes(
