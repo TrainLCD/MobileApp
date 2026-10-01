@@ -7,6 +7,7 @@ import {
   getVoicevoxTTSManifestUrl,
   getVoicevoxTTSStyleId,
   isAIAgentFeatureEnabled,
+  isAutoModeEstimatedEnabled,
   isEtaAssistEnabled,
   isRemoteTTSEnabled,
   isTTSFeatureEnabled,
@@ -593,6 +594,38 @@ describe('isAIAgentFeatureEnabled（サーバー側キルスイッチ）', () =>
       'remote config fetch failed: 503'
     );
     expect(isAIAgentFeatureEnabled()).toBe(false);
+  });
+});
+
+describe('isAutoModeEstimatedEnabled（オートモードの走らせ方）', () => {
+  it('取得前は従来の値(false)', () => {
+    expect(isAutoModeEstimatedEnabled()).toBe(false);
+  });
+
+  it('true が配信されたら到着時間推定の見込みで走る', async () => {
+    mockRemoteConfig({ auto_mode_estimated_enabled: true });
+    await setupRemoteConfig();
+    expect(isAutoModeEstimatedEnabled()).toBe(true);
+  });
+
+  it('false が配信されたら従来の値で走る', async () => {
+    mockRemoteConfig({ auto_mode_estimated_enabled: false });
+    await setupRemoteConfig();
+    expect(isAutoModeEstimatedEnabled()).toBe(false);
+  });
+
+  it('真偽値でなければ従来の値に倒す', async () => {
+    mockRemoteConfig({ auto_mode_estimated_enabled: 'true' });
+    await setupRemoteConfig();
+    expect(isAutoModeEstimatedEnabled()).toBe(false);
+  });
+
+  it('取得に失敗したら従来の値に倒す', async () => {
+    mockRemoteConfig({}, false);
+    await expect(setupRemoteConfig()).rejects.toThrow(
+      'remote config fetch failed: 503'
+    );
+    expect(isAutoModeEstimatedEnabled()).toBe(false);
   });
 });
 

@@ -9,6 +9,7 @@ import {
   StopCondition,
 } from '~/@types/graphql';
 import { YAMANOTE_LINE_ID } from '~/constants';
+import { useAutoModeEstimatedEnabled } from '~/hooks/useAutoModeEstimatedEnabled';
 import * as useCurrentTrainTypeModule from '~/hooks/useCurrentTrainType';
 import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
 import { useLoopLine } from '~/hooks/useLoopLine';
@@ -59,6 +60,12 @@ jest.mock('~/store', () => ({
 
 jest.mock('~/store/atoms/location', () => ({
   locationAtom: { toString: () => 'locationAtom' },
+}));
+
+// オートモードの走らせ方のフラグ(auto_mode_estimated_enabled)。各テストの既定は
+// 到着時間推定の見込みで走る側(true)で、従来の値で走る側は個別に false にする
+jest.mock('~/hooks/useAutoModeEstimatedEnabled', () => ({
+  useAutoModeEstimatedEnabled: jest.fn(() => true),
 }));
 
 jest.mock('~/hooks/useLoopLine', () => ({
@@ -258,6 +265,7 @@ describe('useSimulationMode', () => {
     // 各テストは非ループ線を前提とする。ループ線テストで上書きした実装が
     // 後続テストへ漏れないよう毎回明示的にリセットする。
     (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: false });
+    (useAutoModeEstimatedEnabled as jest.Mock).mockReturnValue(true);
 
     jest
       .spyOn(useCurrentTrainTypeModule, 'useCurrentTrainType')
@@ -1802,6 +1810,72 @@ describe('useSimulationMode', () => {
       expect(useGraphQLQuery).toHaveBeenCalledWith(
         GET_TRAIN_ROUTE,
         expect.objectContaining({ skip: true })
+      );
+    });
+
+    it('auto_mode_estimated_enabled が false なら、model: Estimated を引かずに従来の値で走る', () => {
+      (useAutoModeEstimatedEnabled as jest.Mock).mockReturnValue(false);
+      const stations = timedStations();
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: true }
+      );
+      // 従来の問い合わせは見込みのフィールドを選ばないので、区間の最高速度だけが返る
+      mockTrainRoute(stations, { accel: 0.7, decel: 0.9 });
+      const generateSpy = jest.spyOn(
+        trainSpeedModule,
+        'generateTrainSpeedProfile'
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(useGraphQLQuery).toHaveBeenCalledWith(
+        GET_ESTIMATED_TRAIN_ROUTE,
+        expect.objectContaining({ skip: true })
+      );
+      expect(useGraphQLQuery).toHaveBeenCalledWith(
+        GET_TRAIN_ROUTE,
+        expect.objectContaining({ skip: false })
+      );
+      // 見込みではなく区間の最高速度で速度プロファイルを作る
+      expect(generateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ maxSpeed: 30 })
+      );
+    });
+
+    it('auto_mode_estimated_enabled が false なら、乗換経路も従来の問い合わせで引く', () => {
+      (useAutoModeEstimatedEnabled as jest.Mock).mockReturnValue(false);
+      const withTrainType = (station: Station, groupId: number): Station => ({
+        ...station,
+        trainType: { groupId } as Station['trainType'],
+      });
+      const stations = [
+        withTrainType(mockStation(9930138, 9930138, 35.76, 139.63, 99301), 7),
+        withTrainType(mockStation(9930128, 1130208, 35.69, 139.7, 99301), 7),
+        withTrainType(mockStation(1132104, 1130208, 35.69, 139.7, 11321), 170),
+        withTrainType(
+          mockStation(1132103, 1130205, 35.658, 139.701, 11321),
+          170
+        ),
+      ];
+      setupAtomMocks(
+        { station: stations[0], stations, selectedDirection: 'INBOUND' },
+        { autoModeEnabled: true }
+      );
+
+      renderHook(() => useSimulationMode(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(useGraphQLQuery).toHaveBeenCalledWith(
+        GET_ESTIMATED_CONNECTED_TRAIN_ROUTE,
+        expect.objectContaining({ skip: true })
+      );
+      expect(useGraphQLQuery).toHaveBeenCalledWith(
+        GET_CONNECTED_TRAIN_ROUTE,
+        expect.objectContaining({ skip: false })
       );
     });
 
