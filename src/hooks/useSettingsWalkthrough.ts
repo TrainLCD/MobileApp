@@ -6,6 +6,7 @@ import type {
 import { STORAGE_KEYS } from '../constants/storage';
 import { storage } from '../lib/storage';
 
+// 設定画面の行の並び（表示 → 通知とアナウンス）と同じ順に案内する
 const SETTINGS_WALKTHROUGH_STEPS: WalkthroughStep[] = [
   {
     id: 'settingsWelcome',
@@ -26,15 +27,15 @@ const SETTINGS_WALKTHROUGH_STEPS: WalkthroughStep[] = [
     tooltipPosition: 'bottom',
   },
   {
-    id: 'settingsTts',
-    titleKey: 'settingsWalkthroughTitle3',
-    descriptionKey: 'settingsWalkthroughDescription3',
-    tooltipPosition: 'bottom',
-  },
-  {
     id: 'settingsLanguages',
     titleKey: 'settingsWalkthroughTitle4',
     descriptionKey: 'settingsWalkthroughDescription4',
+    tooltipPosition: 'bottom',
+  },
+  {
+    id: 'settingsTts',
+    titleKey: 'settingsWalkthroughTitle3',
+    descriptionKey: 'settingsWalkthroughDescription3',
     tooltipPosition: 'bottom',
   },
 ];

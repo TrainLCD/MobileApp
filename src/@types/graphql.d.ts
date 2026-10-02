@@ -308,6 +308,7 @@ export type Station = {
   status: Maybe<OperationStatus>;
   stopCondition: Maybe<StopCondition>;
   threeLetterCode: Maybe<Scalars['String']['output']>;
+  trackDistanceFromPrevious: Maybe<Scalars['Float']['output']>;
   trainType: Maybe<TrainTypeNested>;
   transportType: Maybe<TransportType>;
 };
@@ -339,6 +340,7 @@ export type StationNested = {
   status: Maybe<OperationStatus>;
   stopCondition: Maybe<StopCondition>;
   threeLetterCode: Maybe<Scalars['String']['output']>;
+  trackDistanceFromPrevious: Maybe<Scalars['Float']['output']>;
   trainType: Maybe<TrainTypeNested>;
   transportType: Maybe<TransportType>;
 };
@@ -4825,6 +4827,13 @@ export type GetTrainRouteQuery = {
           maxAcceleration: number | null | undefined;
           maxDeceleration: number | null | undefined;
           maxSpeed: number | null | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                trackDistanceFromPrevious: number | null | undefined;
+              }
+            | null
+            | undefined;
         }>
       | null
       | undefined;

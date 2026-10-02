@@ -116,6 +116,9 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
+        // 振り返りの移動経路の地図(Google マップ)のキー。キーはリポジトリに置かず、
+        // ビルドする環境の環境変数から渡す(GitHub Actions / EAS はシークレット、手元は .env.local)
+        manifestPlaceholders += [googleMapsApiKey: System.getenv('GOOGLE_MAPS_API_KEY') ?: '']
     }
     signingConfigs {
         debug {
@@ -167,13 +170,13 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000813
-            versionName "10.17.0"
+            versionCode 100000837
+            versionName "10.18.0"
         }
         prod {
             dimension "environment"
-            versionCode 100000813
-            versionName "10.17.0"
+            versionCode 100000837
+            versionName "10.18.0"
         }
         // ストア配信する dev (Canary) と applicationId を分けた、ローカル検証専用のフレーバー。
         // ストアの Canary 版を消さずに同居させるためだけに存在し、配信には使わない
@@ -183,8 +186,8 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.local"
             versionNameSuffix "-local"
-            versionCode 100000813
-            versionName "10.17.0"
+            versionCode 100000837
+            versionName "10.18.0"
         }
     }
 }

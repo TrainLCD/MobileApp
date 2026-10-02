@@ -47,6 +47,7 @@ const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
   if (
     theme === APP_THEME.LED ||
     theme === APP_THEME.ODAKYU ||
+    theme === APP_THEME.SANYO ||
     theme === APP_THEME.LOW_POWER
   )
     return APP_THEME.TOKYO_METRO;

@@ -13,6 +13,7 @@ import {
   STAGING_API_URL,
 } from 'react-native-dotenv';
 import { isDevApp } from '~/utils/isDevApp';
+import { rememberTrackDistancesFromResponse } from './trackDistances';
 
 const assertUrl = (name: string, value?: string | null): string => {
   if (value === undefined || value === null || value.trim() === '') {
@@ -77,7 +78,15 @@ export const gqlRequest = <TData>(
   document: DocumentNode,
   variables?: object
 ): Promise<TData> =>
-  graphQLClient.request<TData>(document, variables as Variables);
+  graphQLClient
+    .request<TData>(document, variables as Variables)
+    .then((data) => {
+      // 駅の並びを返す問い合わせから、隣り合う駅のあいだの線路の長さを覚える。
+      // 呼び出し側が並べ替える前の、API の並びのまま受け取れるのはここだけなので
+      // (src/lib/trackDistances.ts)
+      rememberTrackDistancesFromResponse(data);
+      return data;
+    });
 
 // Apollo Client の client.query 互換ファサード。フック外からの命令的フェッチ用。
 // queryClient.fetchQuery 経由なのでキャッシュ済みなら再フェッチしない。

@@ -338,6 +338,10 @@ export const GET_LINE_STATIONS = gql`
   query GetLineStations($lineId: Int!, $stationId: Int) {
     lineStations(lineId: $lineId, stationId: $stationId) {
       ...StationFields
+      # 並びで直前にある駅からの線路の長さ(m)。振り返り機能の乗車距離に使う
+      # (src/lib/trackDistances.ts)。駅を返すほかの問い合わせでは返らないので、
+      # 返す問い合わせでだけ取る
+      trackDistanceFromPrevious
     }
   }
 `;
@@ -366,6 +370,10 @@ export const GET_LINE_GROUP_STATIONS = gql`
   query GetLineGroupStations($lineGroupId: Int!) {
     lineGroupStations(lineGroupId: $lineGroupId) {
       ...StationFields
+      # 並びで直前にある駅からの線路の長さ(m)。振り返り機能の乗車距離に使う
+      # (src/lib/trackDistances.ts)。駅を返すほかの問い合わせでは返らないので、
+      # 返す問い合わせでだけ取る
+      trackDistanceFromPrevious
     }
   }
 `;
@@ -376,6 +384,9 @@ export const GET_STATIONS_BY_IDS = gql`
   query GetStationsByIds($ids: [Int!]!) {
     stations(ids: $ids) {
       ...StationFields
+      # ids の並びで直前にある駅からの線路の長さ(m)。sids のディープリンクで
+      # 開いた経路の乗車距離に使う(src/lib/trackDistances.ts)
+      trackDistanceFromPrevious
     }
   }
 `;
@@ -530,6 +541,9 @@ export const GET_TRAIN_ROUTE = gql`
       lineGroupId: $lineGroupId
     ) {
       segments {
+        station {
+          trackDistanceFromPrevious
+        }
         distanceFromPrevious
         maxAcceleration
         maxDeceleration
@@ -556,11 +570,73 @@ export const GET_CONNECTED_TRAIN_ROUTE = gql`
         station {
           id
           groupId
+          trackDistanceFromPrevious
         }
         distanceFromPrevious
         maxAcceleration
         maxDeceleration
         maxSpeed
+      }
+    }
+  }
+`;
+
+// Same as GET_TRAIN_ROUTE / GET_CONNECTED_TRAIN_ROUTE but with the arrival estimation's
+// model (model: Estimated): the arrival/departure estimates equal estimateArrivalTimes,
+// so the auto mode runs on the same times as the ETA. Kept as separate documents because
+// declaring model makes the whole query fail validation on an API that does not know
+// TrainRouteModel; useSimulationMode falls back to the queries above on an error.
+export const GET_ESTIMATED_TRAIN_ROUTE = gql`
+  query GetEstimatedTrainRoute(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $lineGroupId: Int
+  ) {
+    trainRoute(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      lineGroupId: $lineGroupId
+      model: Estimated
+    ) {
+      segments {
+        station {
+          trackDistanceFromPrevious
+        }
+        distanceFromPrevious
+        maxAcceleration
+        maxDeceleration
+        maxSpeed
+        arrivalCumulativeMinutes
+        departureCumulativeMinutes
+      }
+    }
+  }
+`;
+
+export const GET_ESTIMATED_CONNECTED_TRAIN_ROUTE = gql`
+  query GetEstimatedConnectedTrainRoute(
+    $fromStationId: Int!
+    $toStationId: Int!
+    $legs: [RouteLegInput!]!
+  ) {
+    trainRoute(
+      fromStationId: $fromStationId
+      toStationId: $toStationId
+      legs: $legs
+      model: Estimated
+    ) {
+      segments {
+        station {
+          id
+          groupId
+          trackDistanceFromPrevious
+        }
+        distanceFromPrevious
+        maxAcceleration
+        maxDeceleration
+        maxSpeed
+        arrivalCumulativeMinutes
+        departureCumulativeMinutes
       }
     }
   }

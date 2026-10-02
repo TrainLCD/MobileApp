@@ -27,6 +27,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -92,6 +93,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -157,6 +159,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -225,6 +228,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -290,6 +294,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -355,6 +360,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -420,6 +426,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -485,6 +492,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -550,6 +558,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -615,6 +624,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',
@@ -680,6 +690,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    trackDistanceFromPrevious: null,
     lines: [],
     line: {
       __typename: 'LineNested',

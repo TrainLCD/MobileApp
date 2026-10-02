@@ -25,6 +25,9 @@
     </intent>
   </queries>
   <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true" android:enableOnBackInvokedCallback="false">
+    <!-- 振り返りの移動経路の地図(react-native-maps / Google マップ)のキー。値はビルド時の環境変数 GOOGLE_MAPS_API_KEY から入る。
+         未設定でもアプリは落ちないが、地図には何も描かれない -->
+    <meta-data android:name="com.google.android.geo.API_KEY" android:value="${googleMapsApiKey}"/>
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>

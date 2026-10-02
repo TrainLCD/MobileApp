@@ -11,6 +11,7 @@ import type {
 } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
+import { useAIAgentFeatureEnabled } from '~/hooks/useAIAgentFeatureEnabled';
 import { useFetchCurrentLocationOnce } from '~/hooks/useFetchCurrentLocationOnce';
 import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
@@ -20,6 +21,8 @@ import {
 } from '~/lib/graphql/queries';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { locationAtom, setLocation } from '~/store/atoms/location';
+import { stationAtom } from '~/store/atoms/station';
+import { stationResolveFailedAtom } from '~/store/atoms/stationSearchPrompt';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { showDialogWhilePresenting } from '~/utils/dialogPresentation';
@@ -32,6 +35,7 @@ import { EmptyLineSeparator } from './EmptyLineSeparator';
 import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
 import { SearchBar } from './SearchBar';
+import Typography from './Typography';
 
 type GetStationsNearbyData = {
   stationsNearby: Station[];
@@ -102,12 +106,25 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 24,
   },
+  titleWithHint: {
+    marginBottom: 8,
+  },
+  hint: {
+    width: '100%',
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 16,
+  },
   flatListContentContainer: {
     paddingHorizontal: 24,
     paddingTop: 150,
     paddingBottom: 72,
   },
 });
+
+// 現在駅が無いときのヒント(最大2行)ぶんだけヘッダーを広げる。
+// title の marginBottom を 24→8 に詰め、hint(16*2) + marginBottom(16) を足した差分
+const HINT_EXTRA_HEIGHT = 40;
 
 type Props = {
   visible: boolean;
@@ -132,6 +149,16 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
 
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const insets = useSafeAreaInsets();
+  const aiEnabled = useAIAgentFeatureEnabled();
+  const currentStation = useAtomValue(stationAtom);
+  // 現在駅が無いまま開いたときは、選ぶと何が使えるようになるかを添える
+  const showHint = !currentStation?.groupId;
+  const stationResolveFailed = useAtomValue(stationResolveFailedAtom);
+  // 位置情報が取れず手動で駅を選びに来たときは、開くたびに位置情報を取り直さない。
+  // 取り直すと端末の位置情報設定のダイアログが再び出て、断った直後の操作を妨げる。
+  // 再取得は路線選択画面の「位置情報を再取得」から明示的に行う
+  const skipLocationRefresh = showHint && stationResolveFailed;
+  const headerHeight = 150 + (showHint ? HINT_EXTRA_HEIGHT : 0);
 
   const {
     data: stationsNearbyData,
@@ -166,6 +193,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     }
     if (wasVisibleRef.current) return;
     wasVisibleRef.current = true;
+    if (skipLocationRefresh) return;
 
     let active = true;
     const refreshLocation = async () => {
@@ -186,7 +214,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     return () => {
       active = false;
     };
-  }, [visible, fetchCurrentLocation]);
+  }, [visible, fetchCurrentLocation, skipLocationRefresh]);
 
   useEffect(() => {
     if (fetchStationsByNameError || fetchStationsNearbyError) {
@@ -267,9 +295,12 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   const dynamicMinHeight = useMemo(() => {
     // ローディング中・エラー時はSkeleton2つ分の高さを最低限確保
     const count = Math.max(isLoading ? 2 : 0, stations?.length ?? 0);
-    const content = 150 + count * 80 + Math.max(0, count - 1) * 8 + 72;
-    return Math.min(Math.max(content, 390), windowHeight * 0.75);
-  }, [stations?.length, windowHeight, isLoading]);
+    const content = headerHeight + count * 80 + Math.max(0, count - 1) * 8 + 72;
+    return Math.min(
+      Math.max(content, 390 + (showHint ? HINT_EXTRA_HEIGHT : 0)),
+      windowHeight * 0.75
+    );
+  }, [stations?.length, windowHeight, isLoading, headerHeight, showHint]);
 
   return (
     <CustomModal
@@ -314,11 +345,24 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         <Heading
           style={[
             styles.title,
+            showHint && styles.titleWithHint,
             !isLEDTheme && { color: colors.modalHeadingText },
           ]}
         >
           {translate('searchByStationName')}
         </Heading>
+        {showHint ? (
+          <Typography
+            numberOfLines={2}
+            style={[styles.hint, { color: colors.secondaryText }]}
+          >
+            {translate(
+              aiEnabled
+                ? 'currentStationPromptSubtitle'
+                : 'currentStationPromptSubtitleNoAI'
+            )}
+          </Typography>
+        ) : null}
         <SearchBar onSearch={handleSearchStations} nameSearch />
       </View>
 
@@ -329,8 +373,11 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={EmptyLineSeparator}
         scrollEventThrottle={16}
-        contentContainerStyle={styles.flatListContentContainer}
-        scrollIndicatorInsets={{ top: 150, bottom: 72 }}
+        contentContainerStyle={[
+          styles.flatListContentContainer,
+          { paddingTop: headerHeight },
+        ]}
+        scrollIndicatorInsets={{ top: headerHeight, bottom: 72 }}
         ListEmptyComponent={
           <EmptyResult
             loading={fetchStationsNearbyLoading || fetchStationsByNameLoading}

@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
-import { APP_THEME } from '../models/Theme';
+import { APP_THEME, type AppTheme } from '../models/Theme';
 import navigationState from '../store/atoms/navigation';
 import {
   selectedDirectionAtom,
@@ -17,6 +17,13 @@ import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
+
+// 路線図に通過駅を出さないテーマ。山陽電車風は実物が停車駅だけを並べるため
+const PASS_HIDDEN_THEMES: AppTheme[] = [
+  APP_THEME.JR_WEST,
+  APP_THEME.LED,
+  APP_THEME.SANYO,
+];
 
 export const useRefreshLeftStations = (): void => {
   const setNavigation = useSetAtom(navigationState);
@@ -35,7 +42,7 @@ export const useRefreshLeftStations = (): void => {
   const stations = useMemo(
     () =>
       dropEitherJunctionStation(
-        theme === APP_THEME.JR_WEST || theme === APP_THEME.LED
+        PASS_HIDDEN_THEMES.includes(theme)
           ? normalStations.filter((s) => !getIsPass(s))
           : normalStations,
         selectedDirection
@@ -43,10 +50,9 @@ export const useRefreshLeftStations = (): void => {
     [normalStations, selectedDirection, theme]
   );
   const station = useMemo(() => {
-    // JRWもしくはLEDテーマでは通過駅を表示しないので、
-    // 通過駅を通過する際に駅情報のアプデを行わない
+    // 通過駅を表示しないテーマでは、通過駅を通過する際に駅情報のアプデを行わない
     if (
-      (theme === APP_THEME.JR_WEST || theme === APP_THEME.LED) &&
+      PASS_HIDDEN_THEMES.includes(theme) &&
       getIsPass(normalStation ?? undefined)
     ) {
       const stations =

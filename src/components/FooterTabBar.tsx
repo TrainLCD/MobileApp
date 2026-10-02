@@ -21,13 +21,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LED_THEME_BG_COLOR } from '~/constants';
-import { usePortraitPromoAppearanceHint } from '~/hooks/usePortraitPromoAppearanceHint';
+import { useRideLogSettingsHint } from '~/hooks/useRideLogSettingsHint';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { translate } from '~/translation';
 import { LIQUID_GLASS_AVAILABLE } from '~/utils/liquidGlass';
 import NewFeatureDot, { NEW_FEATURE_DOT_SIZE_SMALL } from './NewFeatureDot';
 
-type FooterTab = 'home' | 'search' | 'settings';
+type FooterTab = 'home' | 'search' | 'review' | 'settings';
 
 export const FOOTER_BASE_HEIGHT = 72; // Figma: h=72px
 
@@ -148,6 +149,8 @@ const styles = StyleSheet.create({
 
 type TabButtonProps = {
   active: boolean;
+  // アイコンだけのボタンなので、スクリーンリーダー向けの名前を渡す
+  accessibilityLabel?: string;
   onPress: () => void;
   onLayout?: (event: LayoutChangeEvent) => void;
   buttonRef?: React.Ref<View>;
@@ -156,6 +159,7 @@ type TabButtonProps = {
 
 const TabButton: React.FC<TabButtonProps> = ({
   active,
+  accessibilityLabel,
   onPress,
   onLayout,
   buttonRef,
@@ -180,6 +184,7 @@ const TabButton: React.FC<TabButtonProps> = ({
       ref={buttonRef}
       style={[styles.button, pressAnimatedStyle]}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected: active }}
       onPress={onPress}
       onPressIn={handlePressIn}
@@ -195,6 +200,7 @@ type Props = {
   active?: FooterTab;
   visible?: boolean;
   onSearchButtonLayout?: (layout: ButtonLayout) => void;
+  onReviewButtonLayout?: (layout: ButtonLayout) => void;
   onSettingsButtonLayout?: (layout: ButtonLayout) => void;
 };
 
@@ -202,6 +208,7 @@ const FooterTabBar: React.FC<Props> = ({
   active = 'home',
   visible = true,
   onSearchButtonLayout,
+  onReviewButtonLayout,
   onSettingsButtonLayout,
 }) => {
   const insets = useSafeAreaInsets();
@@ -209,7 +216,7 @@ const FooterTabBar: React.FC<Props> = ({
   const route = useRoute();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
-  const showPortraitPromoHint = usePortraitPromoAppearanceHint();
+  const showSettingsHint = useRideLogSettingsHint();
 
   // タブ間の移動で履歴を積まないよう navigate ではなく replace で遷移する。
   // 同一画面への replace は画面の再マウントになるだけなので無視する
@@ -221,6 +228,7 @@ const FooterTabBar: React.FC<Props> = ({
     [navigation, route.name]
   );
   const searchButtonRef = useRef<View>(null);
+  const reviewButtonRef = useRef<View>(null);
   const settingsButtonRef = useRef<View>(null);
 
   const pillTranslateX = useSharedValue(0);
@@ -301,6 +309,18 @@ const FooterTabBar: React.FC<Props> = ({
     [registerSlotLayout]
   );
 
+  const handleReviewButtonLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      registerSlotLayout('review', event);
+      if (onReviewButtonLayout && reviewButtonRef.current) {
+        reviewButtonRef.current.measureInWindow((x, y, width, height) => {
+          onReviewButtonLayout({ x, y, width, height });
+        });
+      }
+    },
+    [onReviewButtonLayout, registerSlotLayout]
+  );
+
   const handleSettingsButtonLayout = useCallback(
     (event: LayoutChangeEvent) => {
       registerSlotLayout('settings', event);
@@ -362,6 +382,24 @@ const FooterTabBar: React.FC<Props> = ({
       </TabButton>
 
       <TabButton
+        buttonRef={reviewButtonRef}
+        active={active === 'review'}
+        accessibilityLabel={translate('rideReview')}
+        onPress={() => {
+          replaceTo('RideReview');
+        }}
+        onLayout={handleReviewButtonLayout}
+      >
+        <Ionicons
+          name="stats-chart"
+          size={24}
+          color={
+            active === 'review' ? ACTIVE_ICON_COLOR : colors.tabIconInactive
+          }
+        />
+      </TabButton>
+
+      <TabButton
         buttonRef={settingsButtonRef}
         active={active === 'settings'}
         onPress={() => {
@@ -377,8 +415,8 @@ const FooterTabBar: React.FC<Props> = ({
           }
         />
         {/* 「設定のどこかに新しいものがある」という道しるべ。目的地(設定リストの
-            「外観」行)側だけを脈打たせ、こちらは静止させて視線を割らない */}
-        {showPortraitPromoHint ? (
+            「振り返り」行)側だけを脈打たせ、こちらは静止させて視線を割らない */}
+        {showSettingsHint ? (
           <View style={styles.tabBadge} testID="footer-settings-badge">
             <NewFeatureDot
               color={ACTIVE_ICON_COLOR}

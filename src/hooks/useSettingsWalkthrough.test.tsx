@@ -27,8 +27,8 @@ describe('useSettingsWalkthrough', () => {
       'settingsWelcome',
       'settingsTheme',
       'settingsColorScheme',
-      'settingsTts',
       'settingsLanguages',
+      'settingsTts',
     ]);
   });
 

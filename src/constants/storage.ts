@@ -31,6 +31,12 @@ export const STORAGE_KEYS = {
   ROUTE_SEARCH_WALKTHROUGH_COMPLETED:
     '@TrainLCD:routeSearchWalkthroughCompleted',
   SETTINGS_WALKTHROUGH_COMPLETED: '@TrainLCD:settingsWalkthroughCompleted',
+  RIDE_REVIEW_WALKTHROUGH_COMPLETED: '@TrainLCD:rideReviewWalkthroughCompleted',
+  // 設定の「振り返り」を開いたか。設定リストとフッターの設定タブの印を消すために使う
+  RIDE_LOG_SETTINGS_SEEN: '@TrainLCD:rideLogSettingsSeen',
+  // 振り返りタブの案内を見終えたか。路線選択画面のウォークスルーを完了済みのユーザーに、
+  // 後から足した振り返りタブのステップだけを1回出すために使う(#7118)
+  RIDE_REVIEW_TAB_INTRO_COMPLETED: '@TrainLCD:rideReviewTabIntroCompleted',
   WRONG_DIRECTION_NOTIFY_ENABLED: '@TrainLCD:wrongDirectionNotifyEnabled',
   PICTURE_IN_PICTURE_ENABLED: '@TrainLCD:pictureInPictureEnabled',
   PORTRAIT_MODE_ENABLED: '@TrainLCD:portraitModeEnabled',
@@ -56,6 +62,9 @@ export const STORAGE_KEYS = {
   // 試験的機能: リモートTTSの有効判定を Remote Config より優先して固定する
   // ('auto' | 'on' | 'off')。src/lib/remoteTTSOverride.ts が管理する
   REMOTE_TTS_OVERRIDE: '@TrainLCD:remoteTTSOverride',
+  // 振り返り: 乗車ログを端末内に記録するか。既定はオフ(オプトイン)。
+  // src/store/atoms/rideLog.ts が初期値を読む
+  RIDE_LOG_ENABLED: '@TrainLCD:rideLogEnabled',
 } as const;
 
 export type StorageKeys = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];

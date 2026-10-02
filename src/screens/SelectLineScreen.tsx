@@ -17,9 +17,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, LineNested } from '~/@types/graphql';
 import { CommonCard } from '~/components/CommonCard';
+import { CurrentStationUnavailableCard } from '~/components/CurrentStationUnavailableCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
 import { NowHeader } from '~/components/NowHeader';
 import { PortraitModePromoBanner } from '~/components/PortraitModePromoBanner';
+import { RideMonthCard } from '~/components/RideMonthCard';
+import { RideReviewTabIntro } from '~/components/RideReviewTabIntro';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
@@ -37,7 +40,9 @@ import { Heading } from '../components/Heading';
 import navigationState, {
   pendingQuickActionRouteIdAtom,
 } from '../store/atoms/navigation';
+import { rideLogEnabledAtom } from '../store/atoms/rideLog';
 import { stationsCacheAtom } from '../store/atoms/station';
+import { stationResolveFailedAtom } from '../store/atoms/stationSearchPrompt';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
 import { generateLineTestId } from '../utils/generateTestID';
@@ -62,6 +67,13 @@ const styles = StyleSheet.create({
   },
   portraitPromoBanner: {
     marginBottom: 24,
+  },
+  unavailableCard: {
+    marginBottom: 24,
+  },
+  // 下の路線の見出しとの間隔を、プリセットの下の余白(32)にそろえる
+  rideMonthCard: {
+    marginBottom: 32,
   },
 });
 
@@ -95,6 +107,7 @@ const FxPresetsWidgetSync: React.FC<
 const SelectLineScreen = () => {
   const [nowHeaderHeight, setNowHeaderHeight] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const stationResolveFailed = useAtomValue(stationResolveFailedAtom);
 
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
@@ -123,6 +136,8 @@ const SelectLineScreen = () => {
     goToStep,
     skipWalkthrough,
     setSearchButtonLayout,
+    reviewButtonLayout,
+    setReviewButtonLayout,
     setSettingsButtonLayout,
     setNowHeaderLayout,
     lineListRef,
@@ -136,6 +151,7 @@ const SelectLineScreen = () => {
   const pendingQuickActionRouteId = useAtomValue(pendingQuickActionRouteIdAtom);
   const setNavigationState = useSetAtom(navigationState);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
+  const rideLogEnabled = useAtomValue(rideLogEnabledAtom);
   const colors = useAppColors();
   const scrollY = useRef(new RNAnimated.Value(0)).current;
 
@@ -350,6 +366,13 @@ const SelectLineScreen = () => {
               {/* 案B: ポートレートモードの追加を知らせるバナー。
                   条件を満たさないときは自身で null を返す */}
               <PortraitModePromoBanner style={styles.portraitPromoBanner} />
+              {/* 現在駅を解決できなかったときは、駅名検索での手動選択を促す */}
+              {!station && stationResolveFailed ? (
+                <CurrentStationUnavailableCard
+                  onRetry={handleRefresh}
+                  style={styles.unavailableCard}
+                />
+              ) : null}
               <View ref={presetsRef} onLayout={handlePresetsLayout}>
                 <SelectLineScreenPresets
                   carouselData={carouselData}
@@ -357,6 +380,11 @@ const SelectLineScreen = () => {
                   onPress={handlePresetPress}
                 />
               </View>
+              {/* 振り返りを有効にしたユーザーにだけ今月の記録を出す(#7100)。
+                  置き場所はプリセットの下(#7124) */}
+              {rideLogEnabled ? (
+                <RideMonthCard style={styles.rideMonthCard} />
+              ) : null}
               <View ref={lineListRef} onLayout={handleLineListLayout}>
                 {stationLines.length > 0 && (
                   <Heading style={styles.heading} singleLine>
@@ -421,6 +449,7 @@ const SelectLineScreen = () => {
       <FooterTabBar
         active="home"
         onSearchButtonLayout={setSearchButtonLayout}
+        onReviewButtonLayout={setReviewButtonLayout}
         onSettingsButtonLayout={setSettingsButtonLayout}
       />
       {/* モーダル */}
@@ -453,6 +482,11 @@ const SelectLineScreen = () => {
           onSkip={skipWalkthrough}
         />
       )}
+      {/* ウォークスルーを終えたユーザーへの、振り返りタブの案内(#7118) */}
+      <RideReviewTabIntro
+        reviewButtonLayout={reviewButtonLayout}
+        disabled={isWalkthroughActive}
+      />
     </>
   );
 };

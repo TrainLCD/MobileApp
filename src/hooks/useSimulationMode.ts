@@ -2,13 +2,12 @@ import * as Location from 'expo-location';
 import getDistance from 'geolib/es/getDistance';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import type {
-  GetTrainRouteQuery,
-  GetTrainRouteQueryVariables,
-} from '~/@types/graphql';
+import type { GetTrainRouteQueryVariables } from '~/@types/graphql';
 import { LOCATION_TASK_NAME } from '~/constants';
 import {
   GET_CONNECTED_TRAIN_ROUTE,
+  GET_ESTIMATED_CONNECTED_TRAIN_ROUTE,
+  GET_ESTIMATED_TRAIN_ROUTE,
   GET_TRAIN_ROUTE,
 } from '~/lib/graphql/queries';
 import { store } from '~/store';
@@ -20,6 +19,12 @@ import {
   buildRouteLegInputs,
   type RouteLegInput,
 } from '~/utils/currentLineGroupStations';
+import {
+  planLegTimings,
+  type StopTiming,
+  speedProfileForDuration,
+  toStopTiming,
+} from '~/utils/trainRouteTiming';
 import { generateTrainSpeedProfile } from '~/utils/trainSpeed';
 import {
   selectedBoundAtom,
@@ -29,6 +34,7 @@ import {
 } from '../store/atoms/station';
 import dropEitherJunctionStation from '../utils/dropJunctionStation';
 import getIsPass from '../utils/isPass';
+import { useAutoModeEstimatedEnabled } from './useAutoModeEstimatedEnabled';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useGraphQLQuery } from './useGraphQLQuery';
 import { useLoopLine } from './useLoopLine';
@@ -36,6 +42,43 @@ import { useLoopLine } from './useLoopLine';
 // 終点到着後、方面を逆転して折り返すまでの待機時間。
 // step のインターバルが1秒間隔のため、ティック数（≒秒数）としてそのまま扱う。
 const TERMINAL_DWELL_TICKS = 60;
+
+// 途中の停車駅で止まるティック数の下限。到着の判定を通すため、駅に着いたら
+// 少なくともこれだけ止まる。見込みの無い区間(Legacy の値で走る区間や、推定が
+// 通過扱いにしている駅)では、この値だけ止まる(見込みに合わせる前と同じ長さ)。
+const MIN_DWELL_TICKS = 2;
+
+type TrainRouteSegment = {
+  station?: {
+    id?: number | null;
+    groupId?: number | null;
+    trackDistanceFromPrevious?: number | null;
+  } | null;
+  distanceFromPrevious?: number | null;
+  maxAcceleration?: number | null;
+  maxDeceleration?: number | null;
+  maxSpeed?: number | null;
+  arrivalCumulativeMinutes?: number | null;
+  departureCumulativeMinutes?: number | null;
+};
+type TrainRouteData = {
+  trainRoute: { segments?: TrainRouteSegment[] | null };
+};
+type ConnectedTrainRouteVariables = {
+  fromStationId: number;
+  toStationId: number;
+  legs: RouteLegInput[];
+};
+
+// 乗換駅は前の区間の降車と次の区間の乗車の 2 行で返る。駅リストには降車の行を残し、
+// 出発の見込みだけを乗車の行から取る。乗換の徒歩と待ち時間は、その駅での停車になる
+const mergeJunctionSegments = (
+  first: TrainRouteSegment,
+  last: TrainRouteSegment
+): TrainRouteSegment => ({
+  ...first,
+  departureCumulativeMinutes: last.departureCumulativeMinutes,
+});
 
 // locationAtom は書くたびに新しいオブジェクトへ置き換わり、座標を購読する走行画面の
 // フックが一斉に再評価される。終点での停車や経路の取得待ちの間は毎ティック同じ座標・
@@ -72,6 +115,8 @@ export const useSimulationMode = (): void => {
   const segmentIndexRef = useRef(0);
   const childIndexRef = useRef(0);
   const speedProfilesRef = useRef<number[][]>([]);
+  // 区間ごとの、着いた駅で止まるティック数(終点は使わない)
+  const dwellTicksRef = useRef<number[]>([]);
   const segmentProgressDistanceRef = useRef(0);
   const dwellPendingRef = useRef(false);
   // 終点到着後、方面を逆転して折り返すまで終点で停車し続けたティック数
@@ -136,52 +181,84 @@ export const useSimulationMode = (): void => {
     toStationId != null &&
     fromStationId !== toStationId;
 
-  const { data: singleTrainRouteData, error: singleTrainRouteError } =
-    useGraphQLQuery<GetTrainRouteQuery, GetTrainRouteQueryVariables>(
-      GET_TRAIN_ROUTE,
+  // auto_mode_estimated_enabled が true なら、区間の値を到着時間推定のモデル
+  // (model: Estimated)で取り、ETA と同じ時間で走らせる。model を知らない StationAPI では
+  // クエリ全体がエラーになるので、そのときだけ従来の問い合わせ(Legacy)に戻す。
+  // false・未配信なら最初から Legacy で引く
+  const singleVariables = {
+    fromStationId: fromStationId ?? 0,
+    toStationId: toStationId ?? 0,
+    lineGroupId: trainType?.groupId,
+  };
+  const connectedVariables: ConnectedTrainRouteVariables = {
+    fromStationId: routeLegs?.[0]?.fromStationId ?? 0,
+    toStationId: routeLegs?.at(-1)?.toStationId ?? 0,
+    legs: routeLegs ?? [],
+  };
+  const skipSingle = !canFetchTrainRoute || !!routeLegs;
+  const skipConnected = !canFetchTrainRoute || !routeLegs;
+  const estimatedEnabled = useAutoModeEstimatedEnabled();
+
+  const { data: estimatedSingleData, error: estimatedSingleError } =
+    useGraphQLQuery<TrainRouteData, GetTrainRouteQueryVariables>(
+      GET_ESTIMATED_TRAIN_ROUTE,
+      { variables: singleVariables, skip: skipSingle || !estimatedEnabled }
+    );
+  const { data: legacySingleData, error: legacySingleError } = useGraphQLQuery<
+    TrainRouteData,
+    GetTrainRouteQueryVariables
+  >(GET_TRAIN_ROUTE, {
+    variables: singleVariables,
+    skip: skipSingle || (estimatedEnabled && !estimatedSingleError),
+  });
+  const { data: estimatedConnectedData, error: estimatedConnectedError } =
+    useGraphQLQuery<TrainRouteData, ConnectedTrainRouteVariables>(
+      GET_ESTIMATED_CONNECTED_TRAIN_ROUTE,
       {
-        variables: {
-          fromStationId: fromStationId ?? 0,
-          toStationId: toStationId ?? 0,
-          lineGroupId: trainType?.groupId,
-        },
-        skip: !canFetchTrainRoute || !!routeLegs,
+        variables: connectedVariables,
+        skip: skipConnected || !estimatedEnabled,
       }
     );
-  const { data: connectedTrainRouteData, error: connectedTrainRouteError } =
-    useGraphQLQuery<
+  const { data: legacyConnectedData, error: legacyConnectedError } =
+    useGraphQLQuery<TrainRouteData, ConnectedTrainRouteVariables>(
+      GET_CONNECTED_TRAIN_ROUTE,
       {
-        trainRoute: {
-          segments:
-            | (NonNullable<
-                GetTrainRouteQuery['trainRoute']['segments']
-              >[number] & {
-                station: { id?: number | null; groupId?: number | null } | null;
-              })[]
-            | null;
-        };
-      },
-      { fromStationId: number; toStationId: number; legs: RouteLegInput[] }
-    >(GET_CONNECTED_TRAIN_ROUTE, {
-      variables: {
-        fromStationId: routeLegs?.[0]?.fromStationId ?? 0,
-        toStationId: routeLegs?.at(-1)?.toStationId ?? 0,
-        legs: routeLegs ?? [],
-      },
-      skip: !canFetchTrainRoute || !routeLegs,
-    });
-  const trainRouteError = routeLegs
-    ? connectedTrainRouteError
-    : singleTrainRouteError;
+        variables: connectedVariables,
+        skip: skipConnected || (estimatedEnabled && !estimatedConnectedError),
+      }
+    );
+
+  // skip していても同じ queryKey のキャッシュがあれば data が返るので、どちらを使うかは
+  // フラグとエラーで決める
+  const useLegacySingle = !estimatedEnabled || !!estimatedSingleError;
+  const useLegacyConnected = !estimatedEnabled || !!estimatedConnectedError;
+  const singleTrainRouteData: TrainRouteData | undefined = useLegacySingle
+    ? legacySingleData
+    : estimatedSingleData;
+  const connectedTrainRouteData = useLegacyConnected
+    ? legacyConnectedData
+    : estimatedConnectedData;
+  const estimatedTrainRouteError = !estimatedEnabled
+    ? undefined
+    : routeLegs
+      ? estimatedConnectedError
+      : estimatedSingleError;
+  const legacyTrainRouteError = routeLegs
+    ? legacyConnectedError
+    : legacySingleError;
 
   // 区間を渡した trainRoute は乗換駅などを 2 回含むので、進行順の駅リストに揃えてから使う
-  const trainRouteSegments = useMemo(() => {
+  const trainRouteSegments = useMemo((): TrainRouteSegment[] | null => {
     if (!routeLegs) {
       return singleTrainRouteData?.trainRoute?.segments ?? null;
     }
     const segments = connectedTrainRouteData?.trainRoute?.segments;
     return segments
-      ? alignConnectedTrainRouteSegments(segments, maybeRevsersedStations)
+      ? alignConnectedTrainRouteSegments(
+          segments,
+          maybeRevsersedStations,
+          mergeJunctionSegments
+        )
       : null;
   }, [
     routeLegs,
@@ -244,15 +321,24 @@ export const useSimulationMode = (): void => {
     stopLocationUpdates();
   }, [enabled]);
 
-  // trainRoute クエリのエラーをログに記録
+  // trainRoute クエリのエラーをログに記録。Estimated のエラーは Legacy に戻して
+  // 走り続けられるので警告に留める
   useEffect(() => {
-    if (trainRouteError) {
-      console.error(
-        '[useSimulationMode] trainRoute query error:',
-        trainRouteError
+    if (estimatedTrainRouteError) {
+      console.warn(
+        '[useSimulationMode] trainRoute(model: Estimated) query error; falling back to Legacy:',
+        estimatedTrainRouteError
       );
     }
-  }, [trainRouteError]);
+  }, [estimatedTrainRouteError]);
+  useEffect(() => {
+    if (legacyTrainRouteError) {
+      console.error(
+        '[useSimulationMode] trainRoute query error:',
+        legacyTrainRouteError
+      );
+    }
+  }, [legacyTrainRouteError]);
 
   useEffect(() => {
     const segments = trainRouteSegments;
@@ -261,6 +347,7 @@ export const useSimulationMode = (): void => {
       // 旧経路のプロファイル/ジオメトリを残すと、新しい駅リストの位置で旧経路を
       // 走ってしまう。消しておけば、タイマーは新しいプロファイルが揃うまで停車して待つ
       speedProfilesRef.current = [];
+      dwellTicksRef.current = [];
       segmentGeometryCacheRef.current = [];
       return;
     }
@@ -273,11 +360,38 @@ export const useSimulationMode = (): void => {
     const segmentGeometry: SegmentGeometry[] = new Array(
       maybeRevsersedStations.length
     );
+    const dwellTicks: number[] = new Array(maybeRevsersedStations.length).fill(
+      MIN_DWELL_TICKS
+    );
     const emptyGeometry: SegmentGeometry = {
       waypoints: [],
       cumulativeDistances: [],
       totalDistance: 0,
     };
+
+    // 到着・出発の見込み(model: Estimated)があれば、停車駅から次の停車駅までを
+    // その時間で走り切る巡航速度で走り、推定の停車時間だけ止まる。ETA と同じ時間に
+    // なる。1 駅でも見込みが無ければ(Legacy の値・バスの経路)、従来どおり
+    // 区間の最高速度で走る
+    const stopIndices: number[] = [];
+    maybeRevsersedStations.forEach((s, i) => {
+      if (s && !getIsPass(s)) {
+        stopIndices.push(i);
+      }
+    });
+    const timings: (StopTiming | null)[] = segments.map(toStopTiming);
+    const legTimings =
+      timings.length === maybeRevsersedStations.length
+        ? planLegTimings(timings, stopIndices)
+        : null;
+    const legTimingByStart = new Map(
+      (legTimings ?? []).map((leg, j) => [stopIndices[j], leg])
+    );
+    // 始点の出発からの、計画上の出発時刻と、実際に走らせた時間(秒 = ティック)。
+    // 区間ごとの 1 秒未満の端数は、計画上の到着時刻に合わせて次の区間で吸収するので、
+    // 終点までに積み上がらない
+    let plannedDepartureSec = 0;
+    let elapsedSec = 0;
 
     for (
       let curMapIndex = 0;
@@ -320,12 +434,21 @@ export const useSimulationMode = (): void => {
       ) {
         speedProfiles[curMapIndex] = [];
         segmentGeometry[curMapIndex] = emptyGeometry;
+        // 走らせない区間のぶん、計画の時刻を進めて次の区間の基準にする
+        const skippedLeg = legTimingByStart.get(curMapIndex);
+        if (skippedLeg) {
+          plannedDepartureSec += skippedLeg.runSec + (skippedLeg.dwellSec ?? 0);
+          elapsedSec = plannedDepartureSec;
+        }
         continue;
       }
 
       // step() で参照する waypoints と累積距離を一度だけ計算してキャッシュする。
-      // 距離は trainRoute の distanceFromPrevious を積算する(直線距離ではなく
-      // 実際の線路長ベースの値をサーバーから取得できる)。
+      // 距離は駅ごとの trackDistanceFromPrevious(直前の駅からの線路の長さ)を積算する。
+      // 線路データの無い区間や乗換経路の各区間の先頭では null になるので、
+      // distanceFromPrevious(駅の座標どうしの直線距離)で代える。
+      // 位置は駅の座標を直線で結んだ上を動かすため、カーブの多い区間では
+      // 報告する速度(coords.speed)より座標の変位の方が小さくなる。
       const waypoints: { latitude: number; longitude: number }[] = [
         {
           latitude: cur.latitude as number,
@@ -339,7 +462,11 @@ export const useSimulationMode = (): void => {
         if (!wp || wp.latitude == null || wp.longitude == null) {
           continue;
         }
-        distanceForNextStation += segments[idx]?.distanceFromPrevious ?? 0;
+        const segment = segments[idx];
+        distanceForNextStation +=
+          segment?.station?.trackDistanceFromPrevious ??
+          segment?.distanceFromPrevious ??
+          0;
         waypoints.push({
           latitude: wp.latitude as number,
           longitude: wp.longitude as number,
@@ -353,13 +480,39 @@ export const useSimulationMode = (): void => {
         totalDistance: distanceForNextStation,
       };
 
-      const speedProfile = generateTrainSpeedProfile({
-        distance: distanceForNextStation,
-        maxSpeed: arrivalSegment.maxSpeed,
-        accel: arrivalSegment.maxAcceleration,
-        decel: arrivalSegment.maxDeceleration,
-        interval: 1,
-      });
+      const legTiming = legTimingByStart.get(curMapIndex);
+      const isFinalLeg = nextStationIndex === stopIndices.at(-1);
+      let timedProfile: number[] | null = null;
+      if (legTiming) {
+        const plannedArrivalSec = plannedDepartureSec + legTiming.runSec;
+        plannedDepartureSec = plannedArrivalSec + (legTiming.dwellSec ?? 0);
+        timedProfile =
+          speedProfileForDuration({
+            distance: distanceForNextStation,
+            seconds: plannedArrivalSec - elapsedSec,
+            accel: arrivalSegment.maxAcceleration,
+            decel: arrivalSegment.maxDeceleration,
+          })?.profile ?? null;
+        // 推定が通過扱いにしている駅では停車時間の見込みが無いので、下限だけ止まる
+        if (!isFinalLeg) {
+          dwellTicks[curMapIndex] = Math.max(
+            MIN_DWELL_TICKS,
+            legTiming.dwellSec ?? 0
+          );
+        }
+      }
+
+      const speedProfile =
+        timedProfile ??
+        generateTrainSpeedProfile({
+          distance: distanceForNextStation,
+          maxSpeed: arrivalSegment.maxSpeed,
+          accel: arrivalSegment.maxAcceleration,
+          decel: arrivalSegment.maxDeceleration,
+          interval: 1,
+        });
+      elapsedSec +=
+        speedProfile.length + (isFinalLeg ? 0 : dwellTicks[curMapIndex]);
 
       let profileDistance = 0;
       for (let i = 0; i < speedProfile.length; i++) {
@@ -379,6 +532,7 @@ export const useSimulationMode = (): void => {
 
     segmentIndexRef.current = resolveStartIndex();
     speedProfilesRef.current = speedProfiles;
+    dwellTicksRef.current = dwellTicks;
     segmentGeometryCacheRef.current = segmentGeometry;
     childIndexRef.current = 0;
     segmentProgressDistanceRef.current = 0;
@@ -631,6 +785,21 @@ export const useSimulationMode = (): void => {
       }
 
       if (i >= speeds.length) {
+        // 駅に着いてから dwellTicks だけ止まる。最後の 2 ティックは、停車の印を立てる
+        // ティックと次の区間へ移るティック(上の dwellPendingRef の分岐)にあたる
+        const dwell =
+          dwellTicksRef.current[segmentIndexRef.current] ?? MIN_DWELL_TICKS;
+        if (i - speeds.length < dwell - MIN_DWELL_TICKS) {
+          const prev = store.get(locationAtom);
+          if (prev) {
+            setSimulatedLocation({
+              timestamp: Date.now(),
+              coords: { ...prev.coords, speed: 0, heading: null },
+            });
+          }
+          childIndexRef.current += 1;
+          return;
+        }
         dwellPendingRef.current = true;
         return;
       }
