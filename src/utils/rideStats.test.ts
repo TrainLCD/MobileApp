@@ -200,7 +200,7 @@ describe('summarizeRides', () => {
     expect(year.buckets[1].distanceMeters).toBe(1000);
   });
 
-  it('路線ごとの距離は到着した側の駅の路線に数え、長い順に並べる', () => {
+  it('路線ごとの距離は到着した側の駅の路線に数え、同じ回数なら長い順に並べる', () => {
     const start = at('2026-09-28T08:00:00Z');
     // 中央線快速から総武線へ直通する乗車(中央線 1000m・総武線 2000m)
     const through = ride('through', start, [
@@ -217,20 +217,25 @@ describe('summarizeRides', () => {
     ]);
   });
 
-  it('同じ距離の路線は乗った回数の多い順に並べる', () => {
-    const start = at('2026-09-28T08:00:00Z');
-    const through = ride('through', start, [
-      {},
-      { lineId: 22, lineName: '総武線', lineColor: '#FFD400' },
-      { lineId: 22, lineName: '総武線', lineColor: '#FFD400' },
-    ]);
-    const chuo = ride('chuo', at('2026-09-29T08:00:00Z'), [{}]);
-    const stats = summarizeRides([through, chuo], 'week', week);
+  it('距離が短くても乗った回数の多い路線を先に並べる', () => {
+    // 総武線を1回で5000m、中央線快速を2回で計2000m
+    const sobu = ride(
+      'sobu',
+      at('2026-09-28T08:00:00Z'),
+      Array.from({ length: 5 }, () => ({
+        lineId: 22,
+        lineName: '総武線',
+        lineColor: '#FFD400',
+      }))
+    );
+    const chuo1 = ride('chuo1', at('2026-09-29T08:00:00Z'), [{}]);
+    const chuo2 = ride('chuo2', at('2026-09-30T08:00:00Z'), [{}]);
+    const stats = summarizeRides([sobu, chuo1, chuo2], 'week', week);
     expect(
       stats.lines.map((l) => [l.lineId, l.distanceMeters, l.rideCount])
     ).toEqual([
       [11, 2000, 2],
-      [22, 2000, 1],
+      [22, 5000, 1],
     ]);
   });
 });

@@ -128,7 +128,7 @@ export type RideStats = {
   rideCount: number;
   // グラフ用。週は曜日ごとの7つ、月は日ごとの日数ぶん、年は月ごとの12個
   buckets: RideStatsBucket[];
-  // 距離の長い順。同じ距離なら乗った回数の多い順
+  // 乗った回数の多い順。同じ回数なら距離の長い順
   lines: RideLineStats[];
 };
 
@@ -220,7 +220,7 @@ export const summarizeRides = (
     rideCount,
     buckets,
     lines: [...lines.values()].sort(
-      (a, b) => b.distanceMeters - a.distanceMeters || b.rideCount - a.rideCount
+      (a, b) => b.rideCount - a.rideCount || b.distanceMeters - a.distanceMeters
     ),
   };
 };
