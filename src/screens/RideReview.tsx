@@ -496,7 +496,7 @@ const RouteMapCard = ({
 const TopLines = ({ stats }: { stats: RideStats }) => {
   const colors = useAppColors();
   const lines = stats.lines.slice(0, TOP_LINES_LIMIT);
-  const max = lines[0]?.distanceMeters ?? 0;
+  const max = lines[0]?.rideCount ?? 0;
   if (lines.length === 0) {
     return null;
   }
@@ -530,7 +530,7 @@ const TopLines = ({ stats }: { stats: RideStats }) => {
                     style={[
                       styles.lineFill,
                       {
-                        width: `${max > 0 ? (line.distanceMeters / max) * 100 : 0}%`,
+                        width: `${max > 0 ? (line.rideCount / max) * 100 : 0}%`,
                         backgroundColor: color,
                       },
                     ]}
