@@ -16,6 +16,7 @@ import { useApproachingStation } from './useApproachingStation';
 import { useCanGoForward } from './useCanGoForward';
 import { useNearestStation } from './useNearestStation';
 import { useNextStation } from './useNextStation';
+import { usePassedStation } from './usePassedStation';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 import { useThreshold } from './useThreshold';
 import { useWrongDirectionDetector } from './useWrongDirectionDetector';
@@ -53,6 +54,8 @@ export const useRefreshStation = (): void => {
     useAtomValue(notifyState);
 
   const nearestStation = useNearestStation();
+  // 到着圏を取りこぼしたまま通り過ぎた通過駅。現在駅が後方に取り残されたときの自己修復に使う
+  const passedStation = usePassedStation();
   const canGoForward = useCanGoForward();
   const getStationNumberIndex = useStationNumberIndexFunc();
   const { arrivedThreshold, approachingThreshold } = useThreshold();
@@ -239,10 +242,19 @@ export const useRefreshStation = (): void => {
     setStation((prev) => {
       const approaching =
         !isArrived && !getIsPass(nearestStation) && isApproaching;
-      const station =
-        isArrived && prev.station?.id !== nearestStation.id
-          ? nearestStation
-          : prev.station;
+      // 到着していない間に、到着圏を取りこぼした通過駅を通り過ぎていたら現在駅を進める。
+      // 到着は扱わない(arrivedはfalseのまま)ので、到着通知・ETAの基準駅は動かない。
+      const station = (() => {
+        if (isArrived) {
+          return prev.station?.id !== nearestStation.id
+            ? nearestStation
+            : prev.station;
+        }
+        if (passedStation && prev.station?.id !== passedStation.id) {
+          return passedStation;
+        }
+        return prev.station;
+      })();
       if (
         prev.approaching === approaching &&
         prev.arrived === isArrived &&
@@ -260,5 +272,12 @@ export const useRefreshStation = (): void => {
           : prev
       );
     }
-  }, [isApproaching, isArrived, nearestStation, setNavigation, setStation]);
+  }, [
+    isApproaching,
+    isArrived,
+    nearestStation,
+    passedStation,
+    setNavigation,
+    setStation,
+  ]);
 };
