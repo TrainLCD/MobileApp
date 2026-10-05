@@ -6,6 +6,37 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-10-05 — ビルドに入っていなかった expo-task-manager のパッチを削除
+
+対象バージョン: v10.18.0 時点の `dev`
+
+### 内容
+
+- `patches/expo-task-manager+57.0.13.patch` を削除した。`TaskManagerUtils.createJobInfo` の API 31+ 分岐で
+  `setExpedited(true)` を `setMinimumLatency(0)` と `setOverrideDeadline` に置き換えるパッチだった。
+- `expo-task-manager` はビルド済みの AAR（`local-maven-repo`）を同梱し、`expo-module.config.json` に `publication` を持つ。
+  `buildFromSource` に入っていないため、Gradle は AAR を使い、`node_modules` のソースへのパッチはビルドに入らない。
+  このパッチを作った時点の 14.0.9 から 57.0.13 まで、どの版も同じ構成だった。
+- #5163 で `app.json` の `expo.android.autolinking.buildFromSource` に `expo-task-manager` を加えていた。
+  `expo-modules-autolinking` が読むのは `package.json` の `expo.autolinking` だけなので、この設定は使われていなかった。
+  その後 #5173 で `app.config.ts` へ移行したときに設定自体もなくなっている。
+- ストア版の本番 APK（v10.18.0）を逆アセンブルし、`createJobInfo` が上流のまま（API 31+ は `setExpedited(true)`）であることを確かめた。
+  パッチを消しても、ビルドに入るコードは変わらない。
+
+### 確認
+
+- `./gradlew :app:dependencies --configuration prodReleaseRuntimeClasspath` で、
+  `expo-task-manager` が `host.exp.exponent:expo.modules.taskmanager:57.0.13`（AAR）として解決されることを確かめた。
+- Sentry の直近 90 日間で、このパッチが対象にしていた `JobInfo.Builder.build()` の
+  `You're trying to build a job with no constraints` は 0 件だった。
+
+### 学び
+
+- Expo のモジュールへのネイティブのパッチは、`package.json` の `expo.autolinking.android.buildFromSource` に加えないとビルドに入らない。
+  `app.json` に書いても読まれない。
+- 「2026-08-26 — Expo SDK 57 系の依存を推奨バージョンへ更新」の項にある、このパッチの挙動の説明は、
+  パッチがビルドに入っていた前提で書かれている。実際の出荷物は上流の実装のままだった。
+
 ## 2026-09-23 — Android リリースビルドの Gradle デーモンのヒープ上限を 4096m に引き上げ
 
 対象バージョン: v10.16.0 の本番ビルド失敗への対応
