@@ -55,6 +55,20 @@ const stopTime = (
   session: RideSessionWithStops
 ): number => stop.arrivedAt ?? stop.departedAt ?? session.startedAt;
 
+/**
+ * 直通運転の接続駅は、駅リストに前の路線の駅と次の路線の駅として2回並ぶ
+ * (src/utils/dropJunctionStation.ts)。到着判定がこの2つを行き来すると、同じ駅を
+ * 続けて記録することがある。その2つ目は乗った駅間ではないので、路線の集計に数えない。
+ * 間に駅を挟んで同じ駅に戻った記録(大江戸線の都庁前など)は、乗った駅間として残す。
+ */
+export const isJunctionDuplicate = (
+  prev: RideStopRecord,
+  stop: RideStopRecord
+): boolean =>
+  prev.stationGroupId != null &&
+  prev.stationGroupId === stop.stationGroupId &&
+  (stop.pathFromPrevious?.length ?? 0) === 0;
+
 export type RideMeasurement = {
   distanceMeters: number;
   durationMs: number;
@@ -69,6 +83,7 @@ export type RideMeasurement = {
  * 最後の到着より後に通過だけを検出した駅は数えない。時間は乗りはじめた時刻から
  * 最後の到着まで。駅の検出が MAX_STOP_GAP_MS を超えて途切れたら、その手前で
  * 乗車が終わったとみなし、後ろの駅は距離にも時間にも入れない。
+ * 接続駅を続けて記録しただけの到着(isJunctionDuplicate)は、最後の到着に数えない。
  */
 export const measureRide = (session: RideSessionWithStops): RideMeasurement => {
   const ordered = [...session.stops].sort((a, b) => a.seq - b.seq);
@@ -84,9 +99,18 @@ export const measureRide = (session: RideSessionWithStops): RideMeasurement => {
   }
   const kept = ordered.slice(0, cut);
 
+  // 接続駅の2つ目の記録は、前の記録が通過だったときだけ到着として扱う
+  // (同じ駅を行き来しただけの記録で、乗車を数えないため)
   let lastArrival = -1;
   for (let i = kept.length - 1; i >= 1; i--) {
-    if (kept[i].kind === 'arrived' && kept[i].arrivedAt != null) {
+    const isRepeatedArrival =
+      isJunctionDuplicate(kept[i - 1], kept[i]) &&
+      kept[i - 1].kind === 'arrived';
+    if (
+      kept[i].kind === 'arrived' &&
+      kept[i].arrivedAt != null &&
+      !isRepeatedArrival
+    ) {
       lastArrival = i;
       break;
     }
@@ -131,20 +155,6 @@ export type RideStats = {
   // 乗った回数の多い順。同じ回数なら距離の長い順
   lines: RideLineStats[];
 };
-
-/**
- * 直通運転の接続駅は、駅リストに前の路線の駅と次の路線の駅として2回並ぶ
- * (src/utils/dropJunctionStation.ts)。到着判定がこの2つを行き来すると、同じ駅を
- * 続けて記録することがある。その2つ目は乗った駅間ではないので、路線の集計に数えない。
- * 間に駅を挟んで同じ駅に戻った記録(大江戸線の都庁前など)は、乗った駅間として残す。
- */
-export const isJunctionDuplicate = (
-  prev: RideStopRecord,
-  stop: RideStopRecord
-): boolean =>
-  prev.stationGroupId != null &&
-  prev.stationGroupId === stop.stationGroupId &&
-  (stop.pathFromPrevious?.length ?? 0) === 0;
 
 const createBuckets = (
   period: RidePeriod,

@@ -120,6 +120,41 @@ describe('measureRide', () => {
     expect(result.durationMs).toBe(6 * MIN);
   });
 
+  it('接続駅を続けて記録しただけの到着は、乗車に数えない', () => {
+    const start = at('2026-09-28T08:00:00Z');
+    // 出発駅を次の路線の駅としても記録しただけの乗車
+    const result = measureRide(
+      ride('r', start, [
+        {
+          stationId: 300,
+          stationGroupId: 200,
+          lineId: 22,
+          distanceFromPrevious: 30,
+          pathFromPrevious: [],
+        },
+      ])
+    );
+    expect(result).toEqual({ distanceMeters: 0, durationMs: 0, stops: [] });
+  });
+
+  it('通過で記録した接続駅に停車した記録は、到着として数える', () => {
+    const start = at('2026-09-28T08:00:00Z');
+    const result = measureRide(
+      ride('r', start, [
+        { kind: 'passed' },
+        {
+          stationId: 301,
+          stationGroupId: 201,
+          lineId: 22,
+          distanceFromPrevious: 30,
+          pathFromPrevious: [],
+        },
+      ])
+    );
+    expect(result.distanceMeters).toBe(1030);
+    expect(result.durationMs).toBe(6 * MIN);
+  });
+
   it('到着を1つも検出していない乗車は距離も時間も0', () => {
     const start = at('2026-09-28T08:00:00Z');
     const result = measureRide(ride('r', start, [{ kind: 'passed' }]));
