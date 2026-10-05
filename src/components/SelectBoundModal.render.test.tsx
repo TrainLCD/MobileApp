@@ -625,6 +625,21 @@ describe('SelectBoundModal', () => {
 
       expect(getLastCurrentStation()).toBeNull();
     });
+
+    it('最寄り駅の id・groupId が null でも、同じく null の別の駅を最寄り駅とみなさない', () => {
+      mockAtomValues({
+        pendingStation: { id: null, groupId: null, lines: [{ id: 10 }] },
+        pendingStations: [
+          ...routeStations,
+          { id: null, groupId: null, line: { id: 10 }, lines: [{ id: 10 }] },
+        ],
+        pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      });
+
+      renderModal();
+
+      expect(getLastCurrentStation()).toBeNull();
+    });
   });
 
   // 乗車駅が未設定だと effectiveStation は stations[0] へ倒れるため、
