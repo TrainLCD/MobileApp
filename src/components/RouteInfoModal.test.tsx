@@ -85,7 +85,7 @@ describe('RouteInfoModal', () => {
     mockFlashListOnLoad.current = null;
   });
 
-  it('一覧の初回レイアウト後に現在の最寄り駅までヘッダーの高さだけずらしてスクロールする', () => {
+  it('一覧の初回レイアウト後に現在の最寄り駅までヘッダーの高さだけずらしてアニメーションでスクロールする', () => {
     render(renderModal({ visible: true, currentStation: stations[3] }));
     expect(mockScrollToIndex).not.toHaveBeenCalled();
 
@@ -94,7 +94,7 @@ describe('RouteInfoModal', () => {
     expect(mockScrollToIndex).toHaveBeenCalledTimes(1);
     const [params] = mockScrollToIndex.mock.calls[0];
     expect(params.index).toBe(3);
-    expect(params.animated).toBe(false);
+    expect(params.animated).toBe(true);
     expect(params.viewOffset).toBeLessThan(0);
   });
 
