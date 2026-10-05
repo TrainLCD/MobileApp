@@ -37,6 +37,39 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 - 「2026-08-26 — Expo SDK 57 系の依存を推奨バージョンへ更新」の項にある、このパッチの挙動の説明は、
   パッチがビルドに入っていた前提で書かれている。実際の出荷物は上流の実装のままだった。
 
+## 2026-10-05 — Android で一覧から消して開き直すと端末内蔵 TTS が鳴らない不具合を修正
+
+対象バージョン: v10.18.0 の本番で発生
+
+### 内容
+
+- 走行中にアプリを Android の「最近使ったアプリ」の一覧から消すと、MainActivity が破棄され、
+  `expo-speech` の `OnActivityDestroys` が `TextToSpeech.shutdown()` を呼ぶ。プロセスはキャッシュとして残る。
+- 残ったプロセスのまま開き直すと、`expo-speech` は `by lazy` で作った shutdown 済みのインスタンスを使い続ける。
+  `getVoices` と `speak` は `not bound to TTS engine` で失敗し続け、プロセスが終わるまで鳴らない。
+- Android の本番は Remote Config の `remote_tts_enabled_android=false` で端末内蔵 TTS を使うため、この経路に当たった。
+- `patches/expo-speech+57.0.1.patch` で、破棄したら参照を捨て、次に前面へ戻ってから作り直すようにした。
+  破棄から前面へ戻るまでは `speak` を受け付けず、一覧から消したアプリが読み上げないようにしている。
+  TTS の状態は AsyncFunction と同じ `modulesQueue` のスレッドだけで扱い、ロックを使わない。
+- `expo-speech` は Android ではビルド済みの AAR（`local-maven-repo`）から取り込まれる。
+  パッチをビルドに入れるため、`package.json` の `expo.autolinking.android.buildFromSource` に `expo-speech` を加えた。
+- 以前の `patches/expo-speech+57.0.1.patch`（#6457・#6804）も同じ理由でビルドに入っておらず、本番のバイナリに
+  含まれていなかった。今回のパッチには含めていない。
+
+### 確認
+
+- `prodRelease`（署名だけ debug 鍵に差し替え）を Android 13 の実機に入れ、走行中に一覧から消して開き直す操作を 2 回行った。
+  消したあとの合成要求は 0 件で、開き直したあとは同じプロセスのまま日本語・英語とも合成された。
+- `buildFromSource` を外して作った同じ版では、同じ手順で `speak failed: not bound to TTS engine` になった。
+- `npm run lint`・`npm test`・`npm run typecheck` は成功した。
+
+### 学び
+
+- patch-package で `node_modules` のネイティブのソースを書き換えても、Expo のモジュールがビルド済みの AAR を
+  同梱していればビルドに入らない。ネイティブのパッチは `buildFromSource` に加え、APK の中にパッチの
+  コードがあることまで確かめる。
+- patch-package はパッチを作るときに `android/build` などの生成物も差分に含める。作る前に生成物を消す。
+
 ## 2026-09-23 — Android リリースビルドの Gradle デーモンのヒープ上限を 4096m に引き上げ
 
 対象バージョン: v10.16.0 の本番ビルド失敗への対応

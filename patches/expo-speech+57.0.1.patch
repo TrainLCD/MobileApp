@@ -1,157 +1,239 @@
 diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-index 9ca869c..077cb21 100644
+index 9ca869c..d85cdc3 100644
 --- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
 +++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-@@ -4,6 +4,7 @@ import android.os.Bundle
- import android.speech.tts.TextToSpeech
- import android.speech.tts.UtteranceProgressListener
- import android.speech.tts.Voice
-+import android.util.Log
- import expo.modules.kotlin.Promise
+@@ -8,6 +8,7 @@ import expo.modules.kotlin.Promise
  import expo.modules.kotlin.modules.Module
  import expo.modules.kotlin.modules.ModuleDefinition
-@@ -17,6 +18,9 @@ const val speakingDoneEvent = "Exponent.speakingDone"
- const val speakingStoppedEvent = "Exponent.speakingStopped"
- const val speakingErrorEvent = "Exponent.speakingError"
+ import java.util.ArrayDeque
++import kotlinx.coroutines.launch
+ import java.util.Locale
+ import java.util.Queue
  
-+// TrainLCD patch: voice / language 解決の診断ログ用タグ。
-+const val PATCH_LOG_TAG = "TrainLCDSpeech"
-+
- class SpeechModule : Module() {
-   private val delayedUtterances: Queue<Utterance> = ArrayDeque()
-   private val delayedGetVoices: Queue<Promise> = ArrayDeque()
-@@ -83,6 +87,14 @@ class SpeechModule : Module() {
-       throw SpeechUnableToGetVoicesException(err)
+@@ -36,12 +37,34 @@ class SpeechModule : Module() {
+       TextToSpeech.getMaxSpeechInputLength()
      }
  
-+    // TrainLCD patch: 端末設定で選ばれているエンジン既定音声を JS 側へ伝える。
-+    // 一部エンジンは defaultVoice の取得で例外を投げるため防御する。
-+    val defaultVoiceName = try {
-+      textToSpeech.defaultVoice?.name
-+    } catch (_: Exception) {
-+      null
++    // TrainLCD patch: 元の実装は shutdown したインスタンスを使い続けるため、Android の
++    // 「最近使ったアプリ」の一覧からアプリを消したあと、キャッシュに残ったプロセスで
++    // 開き直すと、発話がすべて "not bound to TTS engine" で失敗していた。破棄したら
++    // 参照を捨て、次に Activity が前面へ戻ってから作り直す。
++    // JS 側の画面のアンマウントはこの通知より後に非同期で走るため、その間に届いた
++    // speak でエンジンを作り直すと、消したアプリが読み上げてしまう。前面へ戻るまでは
++    // 発話を受け付けない（expo-modules-core の AppContext.hostWasDestroyed と同じ区切り）。
++    // TTS の状態は AsyncFunction と同じ modulesQueue のスレッドだけで扱い、ロックを使わない。
+     OnActivityDestroys {
+-      textToSpeech.shutdown()
++      appContext.modulesQueue.launch {
++        hostDestroyed = true
++        _textToSpeech?.shutdown()
++        _textToSpeech = null
++        _ttsReady = false
++        stopDelayedUtterances()
++        resolveDelayedGetVoicesWithEmptyList()
++      }
+     }
+ 
++    OnActivityEntersForeground {
++      appContext.modulesQueue.launch {
++        hostDestroyed = false
++      }
 +    }
 +
-     return nativeVoices.map {
-       val quality = if (it.quality > Voice.QUALITY_NORMAL) {
-         VoiceQuality.ENHANCED
-@@ -90,11 +102,28 @@ class SpeechModule : Module() {
-         VoiceQuality.DEFAULT
++    // TrainLCD patch: isSpeaking / stop のためだけにエンジンへ接続し直さない
+     AsyncFunction<Boolean>("isSpeaking") {
+-      textToSpeech.isSpeaking
++      _textToSpeech?.isSpeaking ?: false
+     }
+ 
+     AsyncFunction("getVoices") { promise: Promise ->
+@@ -56,7 +79,8 @@ class SpeechModule : Module() {
+     }
+ 
+     AsyncFunction<Unit>("stop") {
+-      textToSpeech.stop()
++      _textToSpeech?.stop()
++      Unit
+     }
+ 
+     AsyncFunction("speak") { id: String, text: String, options: SpeechOptions ->
+@@ -64,7 +88,10 @@ class SpeechModule : Module() {
+         throw SpeechInputIsToLongException()
        }
  
-+      // TrainLCD patch: features / isNetworkConnectionRequired はエンジン実装に
-+      // よっては例外を投げうるため、取得できない場合は保守的な既定値へ倒す。
-+      val networkRequired = try {
-+        it.isNetworkConnectionRequired
-+      } catch (_: Exception) {
-+        false
-+      }
-+      val notInstalled = try {
-+        it.features?.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) == true
-+      } catch (_: Exception) {
-+        false
-+      }
-+
-       VoiceRecord(
-         identifier = it.name,
-         name = it.name,
-         quality = quality,
--        language = LanguageUtils.getISOCode(it.locale)
-+        language = LanguageUtils.getISOCode(it.locale),
-+        qualityScore = it.quality,
-+        isDefault = defaultVoiceName != null && it.name == defaultVoiceName,
-+        networkRequired = networkRequired,
-+        notInstalled = notInstalled
-       )
-     }
-   }
-@@ -103,24 +132,48 @@ class SpeechModule : Module() {
-     options.pitch?.let(textToSpeech::setPitch)
-     options.rate?.let(textToSpeech::setSpeechRate)
+-      if (isTextToSpeechReady) {
++      if (hostDestroyed) {
++        // 受け付けなかったことを JS へ返し、完了待ちのまま残さない
++        sendEvent(speakingStoppedEvent, idToMap(id))
++      } else if (isTextToSpeechReady) {
+         speakOut(id, text, options)
+       } else {
+         delayedUtterances.add(Utterance(id, text, options))
+@@ -143,50 +170,114 @@ class SpeechModule : Module() {
+   private val isTextToSpeechReady
+     get() = _ttsReady
  
--    textToSpeech.language = options.language?.let {
--      val locale = Locale(it)
--      val languageAvailable = textToSpeech.isLanguageAvailable(locale)
+-  private val textToSpeech: TextToSpeech by lazy {
+-    val newTtsInstance = TextToSpeech(appContext.reactContext) { status: Int ->
+-      if (status == TextToSpeech.SUCCESS) {
+-        // synchronize because in some cases this runs on another thread and _textToSpeech is null
+-        synchronized(this@SpeechModule) {
+-          _ttsReady = true
+-          _textToSpeech!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
 -
--      return@let if (
--        languageAvailable != TextToSpeech.LANG_MISSING_DATA &&
--        languageAvailable != TextToSpeech.LANG_NOT_SUPPORTED
--      ) {
--        locale
--      } else {
--        Locale.getDefault()
-+    // TrainLCD patch: voice 指定がある場合は voice を最優先で適用する。
-+    // Voice は自身の Locale を持つため setLanguage は不要で、呼ぶとエンジンに
-+    // よっては直後の setVoice と競合して直前の音声（別言語）のまま合成される
-+    // ことがある。voice が見つからない場合のみ language から解決する。
-+    // 一部エンジンで getVoices が発話中に例外を投げることがあるため防御する。
-+    val matchedVoice = options.voice?.let { voiceName ->
-+      try {
-+        textToSpeech.voices?.firstOrNull { it.name == voiceName }
-+      } catch (_: Exception) {
-+        null
+-            override fun onStart(utteranceId: String) {
+-              sendEvent(speakingStartedEvent, idToMap(utteranceId))
+-            }
+-
+-            override fun onRangeStart(utteranceId: String, start: Int, end: Int, frame: Int) {
+-              val map = Bundle().apply {
+-                putString("id", utteranceId)
+-                putInt("charIndex", start)
+-                putInt("charLength", end - start)
+-              }
+-              sendEvent(speakingWillSayNextStringEvent, map)
+-            }
+-
+-            override fun onDone(utteranceId: String) {
+-              sendEvent(speakingDoneEvent, idToMap(utteranceId))
+-            }
+-
+-            override fun onStop(utteranceId: String, interrupted: Boolean) {
+-              sendEvent(speakingStoppedEvent, idToMap(utteranceId))
+-            }
+-
+-            override fun onError(utteranceId: String) {
+-              sendEvent(speakingErrorEvent, idToMap(utteranceId))
+-            }
+-          })
+-          for ((id, text, options) in delayedUtterances) {
+-            speakOut(id, text, options)
+-          }
+-          for (promise in delayedGetVoices) {
+-            promise.resolve(getVoices())
+-          }
+-        }
++  // TrainLCD patch: by lazy では shutdown 後に作り直せないため、破棄されていれば作り直す。
++  // modulesQueue のスレッドからだけ呼ぶ
++  private val textToSpeech: TextToSpeech
++    get() = _textToSpeech ?: createTextToSpeech()
++
++  private fun createTextToSpeech(): TextToSpeech {
++    lateinit var newTtsInstance: TextToSpeech
++    newTtsInstance = TextToSpeech(appContext.reactContext) { status: Int ->
++      // TrainLCD patch: この通知は TextToSpeech が内部のロックを持ったまま呼ぶ（メインスレッド、
++      // バインダーのスレッド、またはコンストラクタの中）。ここでは状態に触れず modulesQueue へ回す
++      appContext.modulesQueue.launch {
++        onTextToSpeechInit(newTtsInstance, status)
        }
--    } ?: Locale.getDefault()
+     }
+     _textToSpeech = newTtsInstance
+-    newTtsInstance
++    return newTtsInstance
++  }
++
++  private fun onTextToSpeechInit(tts: TextToSpeech, status: Int) {
++    // 初期化を待つ間に破棄された古いインスタンス。接続が後から確立するので、ここで切る
++    if (tts !== _textToSpeech) {
++      tts.shutdown()
++      return
++    }
++    if (status != TextToSpeech.SUCCESS) {
++      // 捨てておけば、次の呼び出しで作り直す
++      tts.shutdown()
++      _textToSpeech = null
++      _ttsReady = false
++      failDelayedRequests()
++      return
 +    }
 +
-+    if (matchedVoice != null) {
-+      textToSpeech.setVoice(matchedVoice)
-+    } else {
-+      // TrainLCD patch: Locale(String) は 'en-US' のような BCP 47 タグ全体を
-+      // language として扱う不正な Locale を生成し、isLanguageAvailable が常に
-+      // 失敗して Locale.getDefault()（端末既定言語）で合成されてしまう。
-+      // forLanguageTag で正しく解釈し、地域付きタグの音声データが無い端末では
-+      // 言語のみの Locale へ段階的にフォールバックする。
-+      val resolvedLocale = options.language?.let {
-+        val exactLocale = Locale.forLanguageTag(it.replace('_', '-'))
-+        val languageOnlyLocale = Locale(exactLocale.language)
++    _ttsReady = true
++    tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
 +
-+        val isUsable = { locale: Locale ->
-+          val availability = textToSpeech.isLanguageAvailable(locale)
-+          availability != TextToSpeech.LANG_MISSING_DATA &&
-+            availability != TextToSpeech.LANG_NOT_SUPPORTED
++      override fun onStart(utteranceId: String) {
++        sendEvent(speakingStartedEvent, idToMap(utteranceId))
++      }
++
++      override fun onRangeStart(utteranceId: String, start: Int, end: Int, frame: Int) {
++        val map = Bundle().apply {
++          putString("id", utteranceId)
++          putInt("charIndex", start)
++          putInt("charLength", end - start)
 +        }
++        sendEvent(speakingWillSayNextStringEvent, map)
++      }
++
++      override fun onDone(utteranceId: String) {
++        sendEvent(speakingDoneEvent, idToMap(utteranceId))
++      }
++
++      override fun onStop(utteranceId: String, interrupted: Boolean) {
++        sendEvent(speakingStoppedEvent, idToMap(utteranceId))
++      }
++
++      override fun onError(utteranceId: String) {
++        sendEvent(speakingErrorEvent, idToMap(utteranceId))
++      }
++    })
++    // 作り直したときに前の発話を流し直さないよう、取り出しながら消化する
++    if (hostDestroyed) {
++      stopDelayedUtterances()
++    }
++    // この消化は modulesQueue.launch の中で動き、例外を受け止める仕組みが無いとプロセスごと
++    // 落ちる。1 件ずつ受け止め、残りの要求を待たせたままにしない
++    while (true) {
++      val (id, text, options) = delayedUtterances.poll() ?: break
++      try {
++        speakOut(id, text, options)
++      } catch (e: Exception) {
++        sendEvent(speakingErrorEvent, idToMap(id))
++      }
++    }
++    while (true) {
++      val promise = delayedGetVoices.poll() ?: break
++      try {
++        promise.resolve(getVoices())
++      } catch (e: SpeechUnableToGetVoicesException) {
++        promise.reject(e)
++      }
++    }
++  }
++
++  // 読み上げずに捨てる発話。JS 側が完了を待ち続けないよう停止として通知する
++  private fun stopDelayedUtterances() {
++    while (true) {
++      val utterance = delayedUtterances.poll() ?: break
++      sendEvent(speakingStoppedEvent, idToMap(utterance.id))
++    }
++  }
++
++  // 初期化に失敗した回の要求を待たせたままにしない。上流 58.0.0 の #49228 と同じく、
++  // 発話はエラーとして通知し、音声一覧は空で返す
++  private fun failDelayedRequests() {
++    while (true) {
++      val utterance = delayedUtterances.poll() ?: break
++      sendEvent(speakingErrorEvent, idToMap(utterance.id))
++    }
++    resolveDelayedGetVoicesWithEmptyList()
++  }
++
++  private fun resolveDelayedGetVoicesWithEmptyList() {
++    while (true) {
++      val promise = delayedGetVoices.poll() ?: break
++      promise.resolve(emptyList<VoiceRecord>())
++    }
+   }
  
--    options.voice?.let { voiceName ->
--      textToSpeech.voices
--        .firstOrNull { it.name == voiceName }
--        ?.let(textToSpeech::setVoice)
-+        when {
-+          isUsable(exactLocale) -> exactLocale
-+          isUsable(languageOnlyLocale) -> languageOnlyLocale
-+          else -> Locale.getDefault()
-+        }
-+      } ?: Locale.getDefault()
-+      val languageResult = textToSpeech.setLanguage(resolvedLocale)
-+      Log.d(
-+        PATCH_LOG_TAG,
-+        "speak id=$id engine=${textToSpeech.defaultEngine} requestedVoice=${options.voice} requestedLanguage=${options.language} setLanguage=$resolvedLocale result=$languageResult"
-+      )
-     }
+   // Helpers
+@@ -200,7 +291,10 @@ class SpeechModule : Module() {
+     val options: SpeechOptions
+   )
  
-     val params = Bundle().apply {
-diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt
-index 480ce46..e85ad12 100644
---- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt
-+++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/VoiceRecord.kt
-@@ -15,5 +15,19 @@ data class VoiceRecord(
-   @Field val identifier: String,
-   @Field val name: String,
-   @Field val quality: VoiceQuality,
--  @Field val language: String
-+  @Field val language: String,
-+  // TrainLCD patch: 音声選択の精度を上げるための Android 固有メタデータ。
-+  // quality は ENHANCED / DEFAULT の 2 値へ丸められており、ローカル音声同士の
-+  // 優劣を判定できない（Google TTS の日本語ローカル音声は軒並み QUALITY_NORMAL
-+  // に並ぶ）。android.speech.tts.Voice が持つ生の情報を併せて渡すことで、
-+  // JS 側が識別子のアルファベット順という無根拠なタイブレークに頼らずに済む。
-+  //
-+  // - qualityScore: Voice.getQuality() の生値 (QUALITY_VERY_LOW=100 〜 VERY_HIGH=500)
-+  // - isDefault: 端末設定で選ばれているエンジン既定音声か
-+  // - networkRequired: 合成にネットワーク接続が必要か（識別子の 'network' 判定より正確）
-+  // - notInstalled: 音声データが未ダウンロードで、指定しても合成できない状態か
-+  @Field val qualityScore: Int,
-+  @Field val isDefault: Boolean,
-+  @Field val networkRequired: Boolean,
-+  @Field val notInstalled: Boolean
- ) : Record
+-  // do not refer to these - they're only needed when initializing `textToSpeech`
++  // TrainLCD patch: 以下の状態と待ち行列は modulesQueue のスレッドだけで読み書きする
+   private var _textToSpeech: TextToSpeech? = null
+   private var _ttsReady = false
++
++  // TrainLCD patch: Activity が破棄されてから次に前面へ戻るまでの間か
++  private var hostDestroyed = false
+ }
