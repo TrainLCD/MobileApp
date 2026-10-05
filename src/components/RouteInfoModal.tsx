@@ -1,7 +1,7 @@
-import { FlashList } from '@shopify/flash-list';
+import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Station, TrainType } from '~/@types/graphql';
@@ -100,6 +100,8 @@ type Props = {
   wantedDestinationGroupId?: number | null;
   /** 終着駅の設定トグル */
   onToggleDestination?: (station: Station) => void;
+  /** 開いたときにスクロールして見せる駅(現在の最寄り駅) */
+  currentStation?: Station | null;
 };
 
 export const RouteInfoModal = ({
@@ -113,6 +115,7 @@ export const RouteInfoModal = ({
   onToggleNotification,
   wantedDestinationGroupId,
   onToggleDestination,
+  currentStation,
 }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAtomValue(appColorsAtom);
@@ -253,6 +256,51 @@ export const RouteInfoModal = ({
     [stations]
   );
 
+  const currentStationIndex = useMemo(() => {
+    if (!currentStation) return -1;
+    // 乗換駅は前後どちらかの区間の行が間引かれているので、ID で見つからなければ groupId で探す
+    // id・groupId は null になりうる。null どうしを同じ駅とみなさない
+    const byId =
+      currentStation.id != null
+        ? deduppedStations.findIndex((s) => s.id === currentStation.id)
+        : -1;
+    if (byId !== -1 || currentStation.groupId == null) return byId;
+    return deduppedStations.findIndex(
+      (s) => s.groupId === currentStation.groupId
+    );
+  }, [currentStation, deduppedStations]);
+
+  const listRef = useRef<FlashListRef<Station>>(null);
+  // CustomModal は閉じると中身をアンマウントするので、開くたびに一覧の初回レイアウトを待ってからスクロールする
+  const [isListLoaded, setIsListLoaded] = useState(false);
+  const hasScrolledToCurrentRef = useRef(false);
+  const headerHeightRef = useRef(headerHeight);
+  headerHeightRef.current = headerHeight;
+
+  useEffect(() => {
+    if (!visible) {
+      setIsListLoaded(false);
+      hasScrolledToCurrentRef.current = false;
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || !isListLoaded || hasScrolledToCurrentRef.current) return;
+    if (currentStationIndex <= 0) return;
+    hasScrolledToCurrentRef.current = true;
+    // 一覧の上端はヘッダーの裏に潜るので、ヘッダーの高さだけずらしてヘッダーの直下に出す。
+    // 末尾付近の駅は FlashList が最大スクロール量で止める。
+    // どこまで進んだかが目で追えるようアニメーションさせる。遠い駅では FlashList が
+    // 手前(画面2枚分)まで一気に飛んでから残りをアニメーションする
+    listRef.current?.scrollToIndex({
+      index: currentStationIndex,
+      animated: true,
+      viewOffset: -headerHeightRef.current,
+    });
+  }, [visible, isListLoaded, currentStationIndex]);
+
+  const handleListLoad = useCallback(() => setIsListLoaded(true), []);
+
   const dynamicMinHeight = useMemo(() => {
     const count = deduppedStations.length;
     const content = headerHeight + count * 80 + Math.max(0, count - 1) * 8 + 72;
@@ -315,7 +363,9 @@ export const RouteInfoModal = ({
       </View>
 
       <FlashList<Station>
+        ref={listRef}
         data={deduppedStations}
+        onLoad={handleListLoad}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
         ItemSeparatorComponent={EmptyLineSeparator}

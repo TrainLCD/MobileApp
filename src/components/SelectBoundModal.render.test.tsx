@@ -542,6 +542,106 @@ describe('SelectBoundModal', () => {
     expect(props.stations.map((station) => station.groupId)).toEqual([1, 2, 3]);
   });
 
+  describe('停車駅一覧を開いたときに見せる駅', () => {
+    const getLastCurrentStation = () => {
+      const lastCall =
+        mockRouteInfoModal.mock.calls[mockRouteInfoModal.mock.calls.length - 1];
+      return (lastCall?.[0] as { currentStation: { id: number } | null })
+        .currentStation;
+    };
+    const renderModal = () =>
+      render(
+        <SelectBoundModal
+          visible={true}
+          onClose={jest.fn()}
+          loading={false}
+          error={null}
+          onTrainTypeSelect={jest.fn()}
+          onBoundSelect={jest.fn()}
+        />
+      );
+    const routeStations = [1, 2, 3, 4, 5].map((id) => ({
+      id,
+      groupId: id,
+      line: { id: 10 },
+      lines: [{ id: 10 }],
+    }));
+    const getIsPassMock = jest.requireMock('~/utils/isPass')
+      .default as jest.Mock;
+
+    afterEach(() => {
+      getIsPassMock.mockImplementation(() => false);
+    });
+
+    it('最寄り駅に停車するならその駅を渡す', () => {
+      mockAtomValues({
+        pendingStation: { id: 3, groupId: 3, lines: [{ id: 10 }] },
+        pendingStations: routeStations,
+        pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      });
+
+      renderModal();
+
+      expect(getLastCurrentStation()?.id).toBe(3);
+    });
+
+    it('最寄り駅を通過するなら経路上で最も近い停車駅を渡す', () => {
+      // 2・3・5 を通過。3 からは 4 が最も近い
+      getIsPassMock.mockImplementation((s?: { id: number }) =>
+        [2, 3, 5].includes(s?.id ?? -1)
+      );
+      mockAtomValues({
+        pendingStation: { id: 3, groupId: 3, lines: [{ id: 10 }] },
+        pendingStations: routeStations,
+        pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      });
+
+      renderModal();
+
+      expect(getLastCurrentStation()?.id).toBe(4);
+    });
+
+    it('前後の停車駅が等距離なら手前の駅を渡す', () => {
+      getIsPassMock.mockImplementation((s?: { id: number }) => s?.id === 3);
+      mockAtomValues({
+        pendingStation: { id: 3, groupId: 3, lines: [{ id: 10 }] },
+        pendingStations: routeStations,
+        pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      });
+
+      renderModal();
+
+      expect(getLastCurrentStation()?.id).toBe(2);
+    });
+
+    it('最寄り駅が経路外なら何も渡さない', () => {
+      mockAtomValues({
+        pendingStation: { id: 99, groupId: 99, lines: [{ id: 10 }] },
+        pendingStations: routeStations,
+        pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      });
+
+      renderModal();
+
+      expect(getLastCurrentStation()).toBeNull();
+    });
+
+    it('最寄り駅の id・groupId が null でも、同じく null の別の駅を最寄り駅とみなさない', () => {
+      mockAtomValues({
+        pendingStation: { id: null, groupId: null, lines: [{ id: 10 }] },
+        pendingStations: [
+          ...routeStations,
+          { id: null, groupId: null, line: { id: 10 }, lines: [{ id: 10 }] },
+        ],
+        pendingLine: { id: 10, name: '山手線', nameRoman: 'Yamanote Line' },
+      });
+
+      renderModal();
+
+      expect(getLastCurrentStation()).toBeNull();
+    });
+  });
+
   // 乗車駅が未設定だと effectiveStation は stations[0] へ倒れるため、
   // そこから向きを決めると常に INBOUND になってしまう
   it('乗車駅が未設定の場合はGPS確定駅の座標から保存する向きを決める', async () => {

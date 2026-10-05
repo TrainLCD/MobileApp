@@ -146,6 +146,13 @@
           "react-native-watch-connectivity"
         ]
       }
+    },
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-speech"
+        ]
+      }
     }
   },
   "jest": {
@@ -178,5 +185,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.18.0"
+  "version": "10.18.1"
 }

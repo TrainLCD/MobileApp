@@ -253,6 +253,7 @@ npm run gpx:generate -- \
 | `assets/gpx/SampleJY.gpx` | 山手線。外部ツールで記録した実走行ログ |
 | `assets/gpx/SampleTohokuShinkansen.gpx` | 東北新幹線 盛岡→仙台。最高 320km/h、一ノ関に停車、通過駅 5 駅を経由 |
 | `assets/gpx/KeioSpecialExpress.gpx` | 京王線 特急 新宿→京王八王子。到着時間推定に合わせて走る |
+| `assets/gpx/HitachiShinagawaSendai.gpx` | 特急ひたち 品川→仙台。到着時間推定に合わせて走る |
 | `assets/gpx/KatamachiRapid.gpx` | 片町線 快速 京田辺→木津。駅間 2.3km 前後の全駅停車 |
 | `assets/gpx/SobuRapid.gpx` | 総武快速線 錦糸町→津田沼。駅間 3.6〜7.6km (線路の長さ) の全駅停車 |
 | `assets/gpx/FLinerSeibu.gpx` | Fライナー相当 元町・中華街→飯能。地下鉄の電波環境付き |
@@ -265,6 +266,15 @@ npm run gpx:generate -- \
 (経路 32 駅 / うち停車 12 駅) をそのまま走る。StationAPI のデータが変わらなければ、
 同じコマンドを再実行するとバイト単位で同じ内容が得られる。京王線の特急は到着時間
 推定の較正テーブルに無いので、所要時間は一般則による推定値になる。
+
+`HitachiShinagawaSendai.gpx` は、通過駅が長く続く在来線特急のサンプル。東海道線・上野東京ライン・
+常磐快速線・常磐線の 4 路線を直通し、経路 94 駅のうち 30 駅に停車する。`--line-group 116` で
+生成した。約 307 分・18394 点と同梱のサンプルで最も長い。巡航速度は到着時間推定に合わせて
+決まり、最高でも 82km/h にとどまる。
+
+停車駅は StationAPI の `stopCondition` に従う。列車によって停まる駅は一部停車 (`PartialStop`)・
+一部通過 (`Partial`) になっており、生成時はどちらも停車として扱う (柏・土浦など 9 駅)。
+そのため、実在するどの 1 本の停車パターンとも一致しない。
 
 `FLinerSeibu.gpx` は地下鉄の電波環境を持つ唯一のサンプル。いわゆる F ライナーだが、
 StationAPI に「F ライナー」という種別は無く、みなとみらい線・東急東横線が特急、

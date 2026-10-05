@@ -910,6 +910,28 @@ export const SelectBoundModal: React.FC<Props> = ({
     [stations]
   );
 
+  // 停車駅一覧を開いたときに見せる駅。最寄り駅を通過する種別では一覧に出ないので、
+  // 経路上で最も近い停車駅で代える(等距離なら手前の駅)
+  const routeInfoCurrentStation = useMemo(() => {
+    if (!station) return null;
+    // id・groupId は null になりうる。null どうしを同じ駅とみなさない
+    const byId =
+      station.id != null ? stations.findIndex((s) => s.id === station.id) : -1;
+    const index =
+      byId !== -1 || station.groupId == null
+        ? byId
+        : stations.findIndex((s) => s.groupId === station.groupId);
+    if (index === -1) return null;
+    if (!getIsPass(stations[index])) return stations[index];
+    for (let distance = 1; distance < stations.length; distance++) {
+      const before = stations[index - distance];
+      if (before && !getIsPass(before)) return before;
+      const after = stations[index + distance];
+      if (after && !getIsPass(after)) return after;
+    }
+    return null;
+  }, [station, stations]);
+
   const isBus = isBusLine(line);
 
   const trainTypeModalLine = useMemo(() => {
@@ -1106,6 +1128,7 @@ export const SelectBoundModal: React.FC<Props> = ({
         onToggleNotification={handleToggleNotification}
         wantedDestinationGroupId={wantedDestination?.groupId ?? null}
         onToggleDestination={handleToggleDestination}
+        currentStation={routeInfoCurrentStation}
       />
       <SelectBoundSettingListModal
         visible={selectBoundSettingListModalVisible}

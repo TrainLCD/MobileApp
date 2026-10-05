@@ -6,6 +6,7 @@ import * as useApproachingStationModule from '~/hooks/useApproachingStation';
 import * as useCanGoForwardModule from '~/hooks/useCanGoForward';
 import * as useNearestStationModule from '~/hooks/useNearestStation';
 import * as useNextStationModule from '~/hooks/useNextStation';
+import * as usePassedStationModule from '~/hooks/usePassedStation';
 import { useRefreshStation } from '~/hooks/useRefreshStation';
 import * as useThresholdModule from '~/hooks/useThreshold';
 import * as useWrongDirectionDetectorModule from '~/hooks/useWrongDirectionDetector';
@@ -85,6 +86,9 @@ describe('useRefreshStation', () => {
     jest
       .spyOn(useApproachingStationModule, 'useApproachingStation')
       .mockReturnValue(mockStation);
+    jest
+      .spyOn(usePassedStationModule, 'usePassedStation')
+      .mockReturnValue(undefined);
   });
 
   afterEach(() => {
@@ -394,5 +398,81 @@ describe('useRefreshStation', () => {
   it('ETAが停車中の自駅を指していても到着圏を広げない', () => {
     const { nextState } = setupEtaDwelling('AT_STATION');
     expect(nextState.arrived).toBe(false);
+  });
+
+  describe('通過駅の取りこぼしからの自己修復', () => {
+    const passedStation = {
+      ...mockStation,
+      id: 40,
+      groupId: 40,
+      latitude: 35.2,
+      longitude: 135.0,
+      stopCondition: StopCondition.Not,
+    };
+    const stalePrevStation = { ...mockStation, id: 50, groupId: 50 };
+
+    const renderWithLocation = (latitude: number) => {
+      mockUseAtomValue
+        .mockReturnValueOnce({
+          coords: { latitude, longitude: 135.0 },
+        }) // locationAtom
+        .mockReturnValue({ targetStationIds: [] }); // notifyState
+
+      const setStation = jest.fn();
+      const setNavigation = jest.fn();
+      mockUseSetAtom
+        .mockReturnValueOnce(setStation)
+        .mockReturnValueOnce(setNavigation)
+        .mockReturnValue(jest.fn());
+
+      jest
+        .spyOn(useNearestStationModule, 'useNearestStation')
+        .mockReturnValue(mockStation);
+      jest
+        .spyOn(useNextStationModule, 'useNextStation')
+        .mockReturnValue(mockStation);
+      jest
+        .spyOn(usePassedStationModule, 'usePassedStation')
+        .mockReturnValue(passedStation);
+      jest
+        .spyOn(useCanGoForwardModule, 'useCanGoForward')
+        .mockReturnValue(true);
+      jest.spyOn(useThresholdModule, 'useThreshold').mockReturnValue({
+        arrivedThreshold: 100,
+        approachingThreshold: 300,
+      });
+      jest
+        .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
+        .mockReturnValue({
+          isWrongDirection: false,
+          isLoopLineWrongDirection: false,
+        });
+
+      renderHook(() => useRefreshStation(), {
+        wrapper: ({ children }) => <Provider>{children}</Provider>,
+      });
+
+      expect(setStation).toHaveBeenCalled();
+      const updater = setStation.mock.calls[0][0] as (prev: any) => any;
+      return {
+        nextState: updater({ station: stalePrevStation }),
+        setNavigation,
+      };
+    };
+
+    it('到着していなければ、通り過ぎた通過駅へ現在駅を進める(到着は扱わない)', () => {
+      // 最寄り駅(35.0,135.0)から約55km北。到着圏の外
+      const { nextState, setNavigation } = renderWithLocation(35.5);
+      expect(nextState.station).toBe(passedStation);
+      expect(nextState.arrived).toBe(false);
+      // ヘッダーの駅(停車駅)は動かさない
+      expect(setNavigation).not.toHaveBeenCalled();
+    });
+
+    it('到着中は到着した最寄り駅が優先される', () => {
+      const { nextState } = renderWithLocation(35.0);
+      expect(nextState.station).toBe(mockStation);
+      expect(nextState.arrived).toBe(true);
+    });
   });
 });
