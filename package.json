@@ -146,6 +146,13 @@
           "react-native-watch-connectivity"
         ]
       }
+    },
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-speech"
+        ]
+      }
     }
   },
   "jest": {
