@@ -285,10 +285,12 @@ export const RouteInfoModal = ({
     if (currentStationIndex <= 0) return;
     hasScrolledToCurrentRef.current = true;
     // 一覧の上端はヘッダーの裏に潜るので、ヘッダーの高さだけずらしてヘッダーの直下に出す。
-    // 末尾付近の駅は FlashList が最大スクロール量で止める
+    // 末尾付近の駅は FlashList が最大スクロール量で止める。
+    // どこまで進んだかが目で追えるようアニメーションさせる。遠い駅では FlashList が
+    // 手前(画面2枚分)まで一気に飛んでから残りをアニメーションする
     listRef.current?.scrollToIndex({
       index: currentStationIndex,
-      animated: false,
+      animated: true,
       viewOffset: -headerHeightRef.current,
     });
   }, [visible, isListLoaded, currentStationIndex]);
