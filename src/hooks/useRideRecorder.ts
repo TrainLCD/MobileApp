@@ -24,9 +24,15 @@ import {
   measureRideSegment,
   type RideSegmentMeasurement,
 } from '~/utils/rideDistance';
+import {
+  estimateRideEtaMinutes,
+  type RideEtaAnchor,
+  type RideEtaStop,
+} from '~/utils/rideEta';
 import { isJunctionDuplicate } from '~/utils/rideStats';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
+import { useEstimateArrivalTimesRoute } from './useEstimateArrivalTimesRoute';
 import { useLoopLine } from './useLoopLine';
 
 type RideSessionMeta = Omit<RideSessionRecord, 'id' | 'startedAt' | 'endedAt'>;
@@ -38,6 +44,8 @@ type SessionState = {
   tainted: boolean;
   lastStation: Station | null;
   stops: RideStopRecord[];
+  // ETA 上の所要時間を数える起点。ETA を引けた最後の駅(はじめは出発駅)
+  etaAnchor: RideEtaAnchor | null;
   // 乗車が確定した時点の路線・種別・方面。確定するまでは null
   meta: RideSessionMeta | null;
   // DB に書けたセッションの ID と、そのうち書けた駅の数
@@ -79,7 +87,8 @@ const toStopRecord = (
   seq: number,
   kind: RideStopKind,
   arrivedAt: number | null,
-  distance: RideSegmentMeasurement
+  distance: RideSegmentMeasurement,
+  etaMinutesFromPrevious: number | null
 ): RideStopRecord | null => {
   if (station.id == null) {
     return null;
@@ -102,6 +111,7 @@ const toStopRecord = (
     longitude: coordinate?.longitude ?? null,
     pathFromPrevious: toIntermediatePath(distance.path),
     prefectureId: toPrefectureId(station.prefectureId),
+    etaMinutesFromPrevious,
   };
 };
 
@@ -195,12 +205,17 @@ export const useRideRecorder = (): void => {
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
   const { isLoopLine } = useLoopLine();
+  // 駅を検出したときに読むだけなので、経路が変わっても記録の effect は動かさない
+  const { route: etaRoute } = useEstimateArrivalTimesRoute();
+  const etaStopsRef = useRef<readonly RideEtaStop[] | null>(null);
+  etaStopsRef.current = etaRoute?.stops ?? null;
 
   const sessionRef = useRef<SessionState>({
     mountedAt: Date.now(),
     tainted: false,
     lastStation: null,
     stops: [],
+    etaAnchor: null,
     meta: null,
     persistedId: null,
     persistedCount: 0,
@@ -234,16 +249,24 @@ export const useRideRecorder = (): void => {
     }
 
     if (!session.lastStation) {
-      const origin = toStopRecord(station, 0, 'arrived', null, {
-        meters: 0,
-        source: 'haversine',
-        path: [station],
-      });
+      const origin = toStopRecord(
+        station,
+        0,
+        'arrived',
+        null,
+        { meters: 0, source: 'haversine', path: [station] },
+        null
+      );
       if (!origin) {
         return;
       }
       session.lastStation = station;
       session.stops = [origin];
+      session.etaAnchor = {
+        stationId: origin.stationId,
+        stationGroupId: origin.stationGroupId,
+        isOrigin: true,
+      };
       return;
     }
 
@@ -254,12 +277,24 @@ export const useRideRecorder = (): void => {
       station,
       isLoopLine
     );
+    const stationIds = {
+      stationId: station.id ?? 0,
+      stationGroupId: station.groupId ?? null,
+    };
+    const etaMinutes = session.etaAnchor
+      ? estimateRideEtaMinutes(
+          etaStopsRef.current,
+          session.etaAnchor,
+          stationIds
+        )
+      : null;
     const stop = toStopRecord(
       station,
       session.stops.length,
       kind,
       Date.now(),
-      distance
+      distance,
+      etaMinutes
     );
     if (!stop) {
       return;
@@ -277,6 +312,9 @@ export const useRideRecorder = (): void => {
     }
     session.lastStation = station;
     session.stops = [...session.stops, stop];
+    if (etaMinutes != null) {
+      session.etaAnchor = { ...stationIds, isOrigin: false };
+    }
 
     // 通過だけでは乗車を確定しない。確定したら溜めていた通過駅もまとめて書く
     if (!session.meta) {

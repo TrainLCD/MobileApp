@@ -30,6 +30,7 @@ const stop = (
   longitude: null,
   pathFromPrevious: null,
   prefectureId: null,
+  etaMinutesFromPrevious: null,
   ...overrides,
 });
 
@@ -153,6 +154,36 @@ describe('measureRide', () => {
     );
     expect(result.distanceMeters).toBe(1030);
     expect(result.durationMs).toBe(6 * MIN);
+  });
+
+  it('ETA 上の所要時間より短く検出した乗車は、ETA の時間にする', () => {
+    const start = at('2026-09-28T08:00:00Z');
+    // 検出では1分ずつ。ETA では駅1まで2分、駅2まで2.5分
+    const result = measureRide(
+      ride(
+        'r',
+        start,
+        [{ etaMinutesFromPrevious: 2 }, { etaMinutesFromPrevious: 2.5 }],
+        MIN
+      )
+    );
+    expect(result.durationMs).toBe(4.5 * MIN);
+  });
+
+  it('ETA より長く検出した乗車(遅れたとき)は、検出した時間のままにする', () => {
+    const start = at('2026-09-28T08:00:00Z');
+    const result = measureRide(
+      ride('r', start, [{ etaMinutesFromPrevious: 2 }], 5 * MIN)
+    );
+    expect(result.durationMs).toBe(5 * MIN);
+  });
+
+  it('最後の駅で ETA を引けていなければ、検出した時間のままにする', () => {
+    const start = at('2026-09-28T08:00:00Z');
+    const result = measureRide(
+      ride('r', start, [{ etaMinutesFromPrevious: 5 }, {}], MIN)
+    );
+    expect(result.durationMs).toBe(2 * MIN);
   });
 
   it('到着を1つも検出していない乗車は距離も時間も0', () => {

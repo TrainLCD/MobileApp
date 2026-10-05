@@ -46,6 +46,17 @@ jest.mock('./useCurrentLine', () => ({
 jest.mock('./useCurrentTrainType', () => ({
   useCurrentTrainType: () => null,
 }));
+let mockEtaStops: {
+  stationId: number;
+  stationGroupId: number;
+  cumulativeMinutes: number | null;
+  departureCumulativeMinutes: number | null;
+}[] = [];
+jest.mock('./useEstimateArrivalTimesRoute', () => ({
+  useEstimateArrivalTimesRoute: () => ({
+    route: mockEtaStops.length ? { id: 1, stops: mockEtaStops } : null,
+  }),
+}));
 jest.mock('./useLoopLine', () => ({
   useLoopLine: () => ({ isLoopLine: false }),
 }));
@@ -97,6 +108,7 @@ const tick = (ms: number) => {
 
 describe('useRideRecorder', () => {
   beforeEach(() => {
+    mockEtaStops = [];
     now = 1_000;
     jest.spyOn(Date, 'now').mockImplementation(() => now);
   });
@@ -430,6 +442,73 @@ describe('useRideRecorder', () => {
       distanceSource: 'track',
     });
     resetTrackDistancesForTesting();
+  });
+
+  describe('ETA 上の所要時間', () => {
+    const etaStop = (
+      id: number,
+      cumulativeMinutes: number | null,
+      departureCumulativeMinutes: number | null = cumulativeMinutes
+    ) => ({
+      stationId: id,
+      stationGroupId: id,
+      cumulativeMinutes,
+      departureCumulativeMinutes,
+    });
+
+    it('出発駅は発車から、それ以外は到着(通過)から次の駅までを記録する', async () => {
+      // 出発駅は 0.5 分に発車、駅3には 2.0 分に着いて 2.5 分に発車する
+      mockEtaStops = [
+        etaStop(1, 0, 0.5),
+        etaStop(2, 1.5),
+        etaStop(3, 2.0, 2.5),
+        etaStop(4, 4.0),
+      ];
+      const { store } = setup();
+      act(() => store.set(arrivedAtom, false));
+      act(() => store.set(stationAtom, b));
+      act(() => {
+        store.set(stationAtom, c);
+        store.set(arrivedAtom, true);
+      });
+      await flush();
+      expect(
+        (insertRideSession as jest.Mock).mock.calls[0][1].map(
+          (s: { etaMinutesFromPrevious: number | null }) =>
+            s.etaMinutesFromPrevious
+        )
+      ).toEqual([null, 1.0, 0.5]);
+
+      act(() => store.set(arrivedAtom, false));
+      act(() => {
+        store.set(stationAtom, d);
+        store.set(arrivedAtom, true);
+      });
+      await flush();
+      // 駅3の停車時間を含めて、到着から数える
+      expect(appendRideStop).toHaveBeenCalledWith(
+        'session-1',
+        expect.objectContaining({ stationId: 4, etaMinutesFromPrevious: 2.0 })
+      );
+    });
+
+    it('ETA を引けない駅は null にし、次の駅は前に引けた駅から数える', async () => {
+      mockEtaStops = [etaStop(1, 0, 0.5), etaStop(2, null), etaStop(3, 3.0)];
+      const { store } = setup();
+      act(() => store.set(arrivedAtom, false));
+      act(() => store.set(stationAtom, b));
+      act(() => {
+        store.set(stationAtom, c);
+        store.set(arrivedAtom, true);
+      });
+      await flush();
+      expect(
+        (insertRideSession as jest.Mock).mock.calls[0][1].map(
+          (s: { etaMinutesFromPrevious: number | null }) =>
+            s.etaMinutesFromPrevious
+        )
+      ).toEqual([null, null, 2.5]);
+    });
   });
 
   describe('直通運転の接続駅', () => {

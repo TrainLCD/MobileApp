@@ -77,11 +77,28 @@ export type RideMeasurement = {
 };
 
 /**
+ * ETA 上の、出発から最後の駅までの所要時間。各駅の etaMinutesFromPrevious は前に ETA を
+ * 引けた駅から数えているので、足せば出発からになる。最後の駅で ETA を引けていなければ
+ * 末尾が欠けるので null(列を足す前に記録した乗車も null)。
+ */
+const etaDurationMs = (stops: RideStopRecord[]): number | null => {
+  if (stops[stops.length - 1]?.etaMinutesFromPrevious == null) {
+    return null;
+  }
+  const minutes = stops
+    .slice(1)
+    .reduce((sum, stop) => sum + (stop.etaMinutesFromPrevious ?? 0), 0);
+  return minutes * 60 * 1000;
+};
+
+/**
  * 1回の乗車の距離と時間を求める。
  *
  * 距離は、出発駅から最後に到着を検出した駅までの distanceFromPrevious の合計。
  * 最後の到着より後に通過だけを検出した駅は数えない。時間は乗りはじめた時刻から
- * 最後の到着まで。駅の検出が MAX_STOP_GAP_MS を超えて途切れたら、その手前で
+ * 最後の到着まで。ただし ETA 上の所要時間より短ければ、そちらを使う。駅の検出は
+ * 到着圏を出入りした時刻なので、発車直後と停車直前の時間が抜けて短く出るため。
+ * 遅れたときは検出した時間の方が長くなるので、そのまま使う。駅の検出が MAX_STOP_GAP_MS を超えて途切れたら、その手前で
  * 乗車が終わったとみなし、後ろの駅は距離にも時間にも入れない。
  * 接続駅を続けて記録しただけの到着(isJunctionDuplicate)は、最後の到着に数えない。
  */
@@ -124,9 +141,10 @@ export const measureRide = (session: RideSessionWithStops): RideMeasurement => {
     .slice(1)
     .reduce((sum, stop) => sum + stop.distanceFromPrevious, 0);
   const endedAt = stops[stops.length - 1].arrivedAt as number;
+  const measuredMs = Math.max(0, endedAt - session.startedAt);
   return {
     distanceMeters,
-    durationMs: Math.max(0, endedAt - session.startedAt),
+    durationMs: Math.max(measuredMs, etaDurationMs(stops) ?? 0),
     stops,
   };
 };
