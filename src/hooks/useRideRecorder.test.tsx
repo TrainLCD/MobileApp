@@ -432,6 +432,87 @@ describe('useRideRecorder', () => {
     resetTrackDistancesForTesting();
   });
 
+  describe('直通運転の接続駅', () => {
+    // 接続駅 c は、駅リストに前の路線の駅(c)と次の路線の駅(c2)として2回並ぶ
+    const nextLine = { id: 22, nameShort: '総武線', color: '#FFD400' };
+    const c2 = createStation(30, {
+      groupId: c.groupId,
+      latitude: c.latitude,
+      longitude: c.longitude,
+      stopCondition: StopCondition.All,
+      line: nextLine,
+      prefectureId: 13,
+    });
+    const d2 = createStation(40, {
+      latitude: 35.68,
+      longitude: 139.733,
+      stopCondition: StopCondition.All,
+      line: nextLine,
+      prefectureId: 13,
+    });
+    const throughStations = [a, b, c, c2, d2];
+
+    it('前の路線の駅と次の路線の駅を行き来しても、同じ駅を2度書かない', async () => {
+      const { store } = setup();
+      act(() => store.set(stationsAtom, throughStations));
+      act(() => store.set(arrivedAtom, false));
+      act(() => {
+        store.set(stationAtom, c);
+        store.set(arrivedAtom, true);
+      });
+      act(() => store.set(stationAtom, c2));
+      act(() => store.set(stationAtom, c));
+      act(() => store.set(stationAtom, c2));
+      await flush();
+      expect(insertRideSession).toHaveBeenCalledTimes(1);
+      expect(
+        (insertRideSession as jest.Mock).mock.calls[0][1].map(
+          (s: { stationId: number }) => s.stationId
+        )
+      ).toEqual([1, 3]);
+      expect(appendRideStop).not.toHaveBeenCalled();
+
+      act(() => store.set(arrivedAtom, false));
+      act(() => {
+        store.set(stationAtom, d2);
+        store.set(arrivedAtom, true);
+      });
+      await flush();
+      expect(appendRideStop).toHaveBeenCalledTimes(1);
+      expect(appendRideStop).toHaveBeenCalledWith(
+        'session-1',
+        expect.objectContaining({
+          seq: 2,
+          stationId: 40,
+          lineId: 22,
+          distanceFromPrevious: getRideDistanceMeters(
+            throughStations,
+            c2,
+            d2,
+            false
+          ),
+        })
+      );
+    });
+
+    it('出発駅で前の路線の駅と次の路線の駅を行き来しても、乗車を確定しない', async () => {
+      const a2 = createStation(10, {
+        groupId: a.groupId,
+        latitude: a.latitude,
+        longitude: a.longitude,
+        stopCondition: StopCondition.All,
+        line: nextLine,
+        prefectureId: 13,
+      });
+      const { store } = setup();
+      act(() => store.set(stationsAtom, [a, a2, b, c]));
+      act(() => store.set(stationAtom, a2));
+      act(() => store.set(stationAtom, a));
+      await flush();
+      expect(insertRideSession).not.toHaveBeenCalled();
+    });
+  });
+
   it('オートモードを一度でも有効にしたら、画面を抜けるまで記録しない', async () => {
     const { store } = setup();
     act(() => store.set(autoModeEnabledAtom, true));

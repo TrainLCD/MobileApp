@@ -132,6 +132,20 @@ export type RideStats = {
   lines: RideLineStats[];
 };
 
+/**
+ * 直通運転の接続駅は、駅リストに前の路線の駅と次の路線の駅として2回並ぶ
+ * (src/utils/dropJunctionStation.ts)。到着判定がこの2つを行き来すると、同じ駅を
+ * 続けて記録することがある。その2つ目は乗った駅間ではないので、路線の集計に数えない。
+ * 間に駅を挟んで同じ駅に戻った記録(大江戸線の都庁前など)は、乗った駅間として残す。
+ */
+export const isJunctionDuplicate = (
+  prev: RideStopRecord,
+  stop: RideStopRecord
+): boolean =>
+  prev.stationGroupId != null &&
+  prev.stationGroupId === stop.stationGroupId &&
+  (stop.pathFromPrevious?.length ?? 0) === 0;
+
 const createBuckets = (
   period: RidePeriod,
   range: RidePeriodRange
@@ -194,9 +208,13 @@ export const summarizeRides = (
 
     // 駅間の距離は、到着した側の駅の路線に数える(直通運転で路線が変わるため)
     const usedLines = new Set<number>();
-    for (const stop of measured.stops.slice(1)) {
-      if (stop.lineId == null) {
-        continue;
+    measured.stops.forEach((stop, index) => {
+      if (
+        index === 0 ||
+        stop.lineId == null ||
+        isJunctionDuplicate(measured.stops[index - 1], stop)
+      ) {
+        return;
       }
       const line = lines.get(stop.lineId) ?? {
         lineId: stop.lineId,
@@ -211,7 +229,7 @@ export const summarizeRides = (
         line.rideCount += 1;
       }
       lines.set(stop.lineId, line);
-    }
+    });
   }
 
   return {

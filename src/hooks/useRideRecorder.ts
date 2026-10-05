@@ -24,6 +24,7 @@ import {
   measureRideSegment,
   type RideSegmentMeasurement,
 } from '~/utils/rideDistance';
+import { isJunctionDuplicate } from '~/utils/rideStats';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentTrainType } from './useCurrentTrainType';
 import { useLoopLine } from './useLoopLine';
@@ -261,6 +262,17 @@ export const useRideRecorder = (): void => {
       distance
     );
     if (!stop) {
+      return;
+    }
+    // 接続駅の前の路線の駅と次の路線の駅を行き来しただけなら、同じ駅なので書かない。
+    // 次の駅間は今の駅から測る。通過で記録した駅に停車したと分かったときは、
+    // 到着を残すために書く(集計は isJunctionDuplicate で路線に数えない)
+    const last = session.stops[session.stops.length - 1];
+    if (
+      isJunctionDuplicate(last, stop) &&
+      !(last.kind === 'passed' && kind === 'arrived')
+    ) {
+      session.lastStation = station;
       return;
     }
     session.lastStation = station;

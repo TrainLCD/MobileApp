@@ -217,6 +217,46 @@ describe('summarizeRides', () => {
     ]);
   });
 
+  it('直通運転の接続駅を続けて記録していても、次の路線に乗ったとは数えない', () => {
+    const start = at('2026-09-28T08:00:00Z');
+    // 中央線快速で駅2(接続駅)に着き、同じ駅を総武線の駅としても記録した乗車
+    const junction = ride('junction', start, [
+      {},
+      {},
+      {
+        stationId: 302,
+        stationGroupId: 202,
+        lineId: 22,
+        lineName: '総武線',
+        lineColor: '#FFD400',
+        distanceFromPrevious: 30,
+        pathFromPrevious: [],
+      },
+    ]);
+    const stats = summarizeRides([junction], 'week', week);
+    expect(
+      stats.lines.map((l) => [l.lineId, l.distanceMeters, l.rideCount])
+    ).toEqual([[11, 2000, 1]]);
+  });
+
+  it('あいだに駅を挟んで同じ駅に戻った駅間は、乗った駅間として数える', () => {
+    const start = at('2026-09-28T08:00:00Z');
+    // 都庁前(駅1)から新宿を取りこぼし、もう一方の都庁前に着いた乗車
+    const loop = ride('loop', start, [
+      {},
+      {
+        stationId: 301,
+        stationGroupId: 201,
+        distanceFromPrevious: 1600,
+        pathFromPrevious: [{ latitude: 35.69, longitude: 139.7 }],
+      },
+    ]);
+    const stats = summarizeRides([loop], 'week', week);
+    expect(
+      stats.lines.map((l) => [l.lineId, l.distanceMeters, l.rideCount])
+    ).toEqual([[11, 2600, 1]]);
+  });
+
   it('距離が短くても乗った回数の多い路線を先に並べる', () => {
     // 総武線を1回で5000m、中央線快速を2回で計2000m
     const sobu = ride(
