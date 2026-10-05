@@ -55,6 +55,20 @@ const stopTime = (
   session: RideSessionWithStops
 ): number => stop.arrivedAt ?? stop.departedAt ?? session.startedAt;
 
+/**
+ * 直通運転の接続駅は、駅リストに前の路線の駅と次の路線の駅として2回並ぶ
+ * (src/utils/dropJunctionStation.ts)。到着判定がこの2つを行き来すると、同じ駅を
+ * 続けて記録することがある。その2つ目は乗った駅間ではないので、路線の集計に数えない。
+ * 間に駅を挟んで同じ駅に戻った記録(大江戸線の都庁前など)は、乗った駅間として残す。
+ */
+export const isJunctionDuplicate = (
+  prev: RideStopRecord,
+  stop: RideStopRecord
+): boolean =>
+  prev.stationGroupId != null &&
+  prev.stationGroupId === stop.stationGroupId &&
+  (stop.pathFromPrevious?.length ?? 0) === 0;
+
 export type RideMeasurement = {
   distanceMeters: number;
   durationMs: number;
@@ -63,12 +77,30 @@ export type RideMeasurement = {
 };
 
 /**
+ * ETA 上の、出発から最後の駅までの所要時間。各駅の etaMinutesFromPrevious は前に ETA を
+ * 引けた駅から数えているので、足せば出発からになる。最後の駅で ETA を引けていなければ
+ * 末尾が欠けるので null(列を足す前に記録した乗車も null)。
+ */
+const etaDurationMs = (stops: RideStopRecord[]): number | null => {
+  if (stops[stops.length - 1]?.etaMinutesFromPrevious == null) {
+    return null;
+  }
+  const minutes = stops
+    .slice(1)
+    .reduce((sum, stop) => sum + (stop.etaMinutesFromPrevious ?? 0), 0);
+  return minutes * 60 * 1000;
+};
+
+/**
  * 1回の乗車の距離と時間を求める。
  *
  * 距離は、出発駅から最後に到着を検出した駅までの distanceFromPrevious の合計。
  * 最後の到着より後に通過だけを検出した駅は数えない。時間は乗りはじめた時刻から
- * 最後の到着まで。駅の検出が MAX_STOP_GAP_MS を超えて途切れたら、その手前で
+ * 最後の到着まで。ただし ETA 上の所要時間より短ければ、そちらを使う。駅の検出は
+ * 到着圏を出入りした時刻なので、発車直後と停車直前の時間が抜けて短く出るため。
+ * 遅れたときは検出した時間の方が長くなるので、そのまま使う。駅の検出が MAX_STOP_GAP_MS を超えて途切れたら、その手前で
  * 乗車が終わったとみなし、後ろの駅は距離にも時間にも入れない。
+ * 接続駅を続けて記録しただけの到着(isJunctionDuplicate)は、最後の到着に数えない。
  */
 export const measureRide = (session: RideSessionWithStops): RideMeasurement => {
   const ordered = [...session.stops].sort((a, b) => a.seq - b.seq);
@@ -84,9 +116,18 @@ export const measureRide = (session: RideSessionWithStops): RideMeasurement => {
   }
   const kept = ordered.slice(0, cut);
 
+  // 接続駅の2つ目の記録は、前の記録が通過だったときだけ到着として扱う
+  // (同じ駅を行き来しただけの記録で、乗車を数えないため)
   let lastArrival = -1;
   for (let i = kept.length - 1; i >= 1; i--) {
-    if (kept[i].kind === 'arrived' && kept[i].arrivedAt != null) {
+    const isRepeatedArrival =
+      isJunctionDuplicate(kept[i - 1], kept[i]) &&
+      kept[i - 1].kind === 'arrived';
+    if (
+      kept[i].kind === 'arrived' &&
+      kept[i].arrivedAt != null &&
+      !isRepeatedArrival
+    ) {
       lastArrival = i;
       break;
     }
@@ -100,9 +141,10 @@ export const measureRide = (session: RideSessionWithStops): RideMeasurement => {
     .slice(1)
     .reduce((sum, stop) => sum + stop.distanceFromPrevious, 0);
   const endedAt = stops[stops.length - 1].arrivedAt as number;
+  const measuredMs = Math.max(0, endedAt - session.startedAt);
   return {
     distanceMeters,
-    durationMs: Math.max(0, endedAt - session.startedAt),
+    durationMs: Math.max(measuredMs, etaDurationMs(stops) ?? 0),
     stops,
   };
 };
@@ -194,9 +236,13 @@ export const summarizeRides = (
 
     // 駅間の距離は、到着した側の駅の路線に数える(直通運転で路線が変わるため)
     const usedLines = new Set<number>();
-    for (const stop of measured.stops.slice(1)) {
-      if (stop.lineId == null) {
-        continue;
+    measured.stops.forEach((stop, index) => {
+      if (
+        index === 0 ||
+        stop.lineId == null ||
+        isJunctionDuplicate(measured.stops[index - 1], stop)
+      ) {
+        return;
       }
       const line = lines.get(stop.lineId) ?? {
         lineId: stop.lineId,
@@ -211,7 +257,7 @@ export const summarizeRides = (
         line.rideCount += 1;
       }
       lines.set(stop.lineId, line);
-    }
+    });
   }
 
   return {

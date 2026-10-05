@@ -55,6 +55,7 @@ const sampleRide = (): RideSessionWithStops => {
     longitude: null,
     pathFromPrevious: null,
     prefectureId: null,
+    etaMinutesFromPrevious: null,
   };
   return {
     id: 'r1',
