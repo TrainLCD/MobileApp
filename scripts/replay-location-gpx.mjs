@@ -9,6 +9,10 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
+// 開発用のスクリプトなので、既定ではステージングの StationAPI に問い合わせる。
+// GQL_API_URL があればそちらを使う。
+const DEFAULT_API_URL = 'https://gql-stg.trainlcd.app/';
+
 const argv = process.argv.slice(2);
 const opt = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
@@ -170,6 +174,35 @@ if (startSec * 1000 > totalMs) {
   );
 }
 
+// --- 行先 -----------------------------------------------------------------
+// 座標だけでは再生中にどこへ向かっているのか分からないので、終点の座標に
+// いちばん近い駅を行先として表示する。生成した GPX の終点は駅の座標そのもの。
+// 行先が分からないまま再生しても検証に使えないので、引けなければ再生を始めない。
+async function fetchDestination() {
+  const last = points[points.length - 1];
+  const res = await fetch(process.env.GQL_API_URL ?? DEFAULT_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `query ReplayGpxDestination($latitude: Float!, $longitude: Float!) {
+        stationsNearby(latitude: $latitude, longitude: $longitude, limit: 1) {
+          name
+        }
+      }`,
+      variables: { latitude: last.lat, longitude: last.lon },
+    }),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (json.errors) {
+    throw new Error(json.errors.map((e) => e.message).join(', '));
+  }
+  const name = json.data?.stationsNearby?.[0]?.name;
+  if (!name) throw new Error('終点の座標の近くに駅が見つかりません');
+  return name;
+}
+
 // --- テストプロバイダの準備 ----------------------------------------------
 const loc = (...rest) => adb('shell', 'cmd', 'location', 'providers', ...rest);
 
@@ -328,11 +361,20 @@ async function play(skipSec) {
     await push(p, acc);
 
     const elapsed = ((p.offset - originOffset) / 1000).toFixed(0);
+    // 開始時の行先表示はログに流されて見えなくなるので、進捗行にも載せる。
     process.stdout.write(
-      `\r[${i + 1}/${points.length}] +${elapsed}s  ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}  acc=${acc}m  再登録${reregistrations}回   `
+      `\r[${i + 1}/${points.length}] ${destination}行  +${elapsed}s  ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}  acc=${acc}m  再登録${reregistrations}回   `
     );
   }
 }
+
+// テストプロバイダを有効にする前に引く。問い合わせを待つあいだ端末の測位が
+// 止まったままにならず、失敗して終了するときに後始末も要らない。
+const destination = await fetchDestination().catch((e) => {
+  console.error(`行先を取得できませんでした: ${e.message}`);
+  process.exit(1);
+});
+console.log(`行先: ${destination}`);
 
 let exitCode = 0;
 try {
