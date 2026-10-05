@@ -329,6 +329,12 @@ npm run gpx:replay -- --gpx assets/gpx/SampleTohokuShinkansen.gpx --serial <seri
 | `--start` | GPX 先頭からのスキップ秒数 |
 | `--provider` | テストプロバイダ名。既定 `gps,network,fused` |
 
+再生を始める前に、GPX の終点の座標でステージングの StationAPI
+(`https://gql-stg.trainlcd.app/`) に 1 回だけ問い合わせ、いちばん近い駅を行先として
+表示する。行先は進捗行にも `京王八王子行` のように出る。環境変数 `GQL_API_URL` が
+あればそちらへ問い合わせる。行先を引けなかったときは、テストプロバイダを有効にする前に
+異常終了する。
+
 Xcode と違い精度を指定できるので、`--accuracy 100,300` のように渡せば
 `getSmoothingAlpha` の低精度分岐も実機で観測できる。一方で `coords.speed` を
 渡す手段が無いため、DEV OVERLAY の `CURRENT SPEED` は常に 0km/h を表示する。

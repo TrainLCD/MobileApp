@@ -60,6 +60,7 @@ const stop = (seq: number, overrides: Partial<RideStopRecord> = {}) => ({
   longitude: null,
   pathFromPrevious: null,
   prefectureId: null,
+  etaMinutesFromPrevious: null,
   ...overrides,
 });
 
@@ -99,6 +100,7 @@ describe('rideLog', () => {
         'ALTER TABLE ride_stops ADD COLUMN longitude REAL;',
         'ALTER TABLE ride_stops ADD COLUMN pathFromPrevious TEXT;',
         'ALTER TABLE ride_stops ADD COLUMN prefectureId INTEGER;',
+        'ALTER TABLE ride_stops ADD COLUMN etaMinutesFromPrevious REAL;',
       ])
     );
 
@@ -129,6 +131,7 @@ describe('rideLog', () => {
         null,
         null,
         null,
+        null,
       ],
     ]);
   });
@@ -146,7 +149,7 @@ describe('rideLog', () => {
       })
     );
     const [, params] = mockDb.runAsync.mock.calls[0] as [string, unknown[]];
-    expect(params.slice(-4, -1)).toEqual([
+    expect(params.slice(-5, -2)).toEqual([
       35.6812,
       139.7671,
       '[[35.6918,139.7709],[35.6995,139.765]]',
@@ -164,6 +167,7 @@ describe('rideLog', () => {
                 { name: 'longitude' },
                 { name: 'pathFromPrevious' },
                 { name: 'prefectureId' },
+                { name: 'etaMinutesFromPrevious' },
               ]
             : []
         )
@@ -180,7 +184,14 @@ describe('rideLog', () => {
   it('駅の都道府県を書く', async () => {
     await appendRideStop('s1', stop(2, { prefectureId: 13 }));
     const [, params] = mockDb.runAsync.mock.calls[0] as [string, unknown[]];
-    expect(params.at(-1)).toBe(13);
+    expect(params.at(-2)).toBe(13);
+  });
+
+  it('ETA 上の所要時間を書く', async () => {
+    await appendRideStop('s1', stop(2, { etaMinutesFromPrevious: 2.5 }));
+    const [sql, params] = mockDb.runAsync.mock.calls[0] as [string, unknown[]];
+    expect(sql).toContain('etaMinutesFromPrevious');
+    expect(params.at(-1)).toBe(2.5);
   });
 
   it('到着した駅を足すと終了時刻も進める', async () => {
