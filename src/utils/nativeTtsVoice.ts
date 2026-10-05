@@ -24,10 +24,10 @@ import { type Voice, VoiceQuality } from 'expo-speech';
 // QUALITY_NORMAL へ並ぶため、expo-speech が返す 2 値の quality だけでは優劣を
 // 判定できず、識別子のアルファベット順という無根拠なタイブレークで音声が決まって
 // しまう（'ja-jp-x-htm-local' が常に勝ち、ユーザーが端末設定で選んだ音声も無視
-// される）。そのため expo-speech の Android 実装へ patch を当てて生の
-// Voice メタデータ（qualityScore / isDefault / networkRequired / notInstalled）
-// を受け取り、それらを優先順の判断材料にする。iOS ではこれらのフィールドは
-// 返らないため、従来どおり識別子と quality で判定する。
+// される）。生の Voice メタデータ（qualityScore / isDefault / networkRequired /
+// notInstalled）が届けば優先順の判断材料にするが、現在の expo-speech はどの
+// プラットフォームでも返さないため、識別子と quality で判定することになる
+// （docs/spec/tts/remote-tts.md「端末内蔵 TTS の音声選択」）。
 //
 // 注意: expo-speech の iOS 実装は AVSpeechSynthesisVoiceQuality.premium を
 // "Default" として報告する（native 側が enhanced 以外を一律 Default に落とす）ため、
@@ -35,8 +35,8 @@ import { type Voice, VoiceQuality } from 'expo-speech';
 // `com.apple.voice.premium.ja-JP.Kyoko` / `com.apple.ttsbundle.Kyoko-premium` の
 // ように品質を含む命名になっているので、識別子でも判定して補完する。
 
-// expo-speech の Voice 型は Android patch で追加したフィールドを含まないため、
-// アプリ側で拡張して扱う。iOS ではいずれも返らないので optional にしている。
+// expo-speech の Voice 型はこれらのフィールドを含まないため、アプリ側で拡張して扱う。
+// 現在はどのプラットフォームでも返らないので optional にしている。
 export type NativeVoice = Voice & {
   // android.speech.tts.Voice.getQuality() の生値 (VERY_LOW=100 〜 VERY_HIGH=500)
   qualityScore?: number;
