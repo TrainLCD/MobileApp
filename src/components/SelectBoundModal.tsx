@@ -914,9 +914,11 @@ export const SelectBoundModal: React.FC<Props> = ({
   // 経路上で最も近い停車駅で代える(等距離なら手前の駅)
   const routeInfoCurrentStation = useMemo(() => {
     if (!station) return null;
-    const byId = stations.findIndex((s) => s.id === station.id);
+    // id・groupId は null になりうる。null どうしを同じ駅とみなさない
+    const byId =
+      station.id != null ? stations.findIndex((s) => s.id === station.id) : -1;
     const index =
-      byId !== -1
+      byId !== -1 || station.groupId == null
         ? byId
         : stations.findIndex((s) => s.groupId === station.groupId);
     if (index === -1) return null;

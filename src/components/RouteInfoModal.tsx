@@ -259,8 +259,12 @@ export const RouteInfoModal = ({
   const currentStationIndex = useMemo(() => {
     if (!currentStation) return -1;
     // 乗換駅は前後どちらかの区間の行が間引かれているので、ID で見つからなければ groupId で探す
-    const byId = deduppedStations.findIndex((s) => s.id === currentStation.id);
-    if (byId !== -1) return byId;
+    // id・groupId は null になりうる。null どうしを同じ駅とみなさない
+    const byId =
+      currentStation.id != null
+        ? deduppedStations.findIndex((s) => s.id === currentStation.id)
+        : -1;
+    if (byId !== -1 || currentStation.groupId == null) return byId;
     return deduppedStations.findIndex(
       (s) => s.groupId === currentStation.groupId
     );

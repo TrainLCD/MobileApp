@@ -117,6 +117,24 @@ describe('RouteInfoModal', () => {
     expect(mockScrollToIndex).not.toHaveBeenCalled();
   });
 
+  it('最寄り駅の id・groupId が null でも、同じく null の別の駅の行へスクロールしない', () => {
+    const nullIdStation = {
+      ...stations[0],
+      id: null,
+      groupId: null,
+    } as unknown as Station;
+    render(
+      renderModal({
+        visible: true,
+        currentStation: { id: null, groupId: null } as unknown as Station,
+        stations: [...stations, nullIdStation],
+      })
+    );
+    act(() => mockFlashListOnLoad.current?.());
+
+    expect(mockScrollToIndex).not.toHaveBeenCalled();
+  });
+
   it('乗換駅の行が間引かれていても groupId で同じ駅の行へスクロールする', () => {
     // 3 と 30 は同じ乗換駅。手前の区間の 3 は一覧から間引かれる
     const transferStations = [
