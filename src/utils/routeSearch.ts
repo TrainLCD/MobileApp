@@ -60,6 +60,7 @@ export const computeCurrentStationInRoutes = (
 
 /** connectedRoutes の 1 区間 */
 export type ConnectedRouteLeg = {
+  recommendedGroupId?: number | null;
   trainTypes: TrainType[] | null | undefined;
   fromStation?: Station | null;
   toStation?: Station | null;
@@ -69,6 +70,7 @@ export type ConnectedRouteLeg = {
 
 /** connectedRoutes の 1 経路(API の順位順に並ぶ) */
 export type ConnectedRoute = {
+  totalSeconds?: number | null;
   legs: ConnectedRouteLeg[] | null | undefined;
 };
 
@@ -85,6 +87,14 @@ export const pickDefaultTrainType = (
   return findLocalType(selectable) ?? selectable[0] ?? null;
 };
 
+/** Use the service evaluated by the API; retain local preference for legacy APIs. */
+export const pickLegTrainType = (leg: ConnectedRouteLeg): TrainType | null =>
+  leg.recommendedGroupId == null
+    ? pickDefaultTrainType(leg.trainTypes)
+    : (leg.trainTypes?.find(
+        (type) => type.groupId === leg.recommendedGroupId
+      ) ?? null);
+
 /**
  * 乗車に使える経路だけを残す。乗換のない経路は種別が 1 つでもあれば使える。
  * 乗換のある経路は、全区間の乗降駅と種別が揃っていないと駅をつなげないので除く
@@ -96,12 +106,12 @@ export const filterRideableRoutes = (
 ): ConnectedRoute[] =>
   routes.filter((route) => {
     const legs = route.legs ?? [];
-    if (legs.length === 1) return !!pickDefaultTrainType(legs[0].trainTypes);
+    if (legs.length === 1) return !!pickLegTrainType(legs[0]);
     return (
       legs.length > 1 &&
       legs.every(
         (leg) =>
-          !!pickDefaultTrainType(leg.trainTypes)?.groupId &&
+          !!pickLegTrainType(leg)?.groupId &&
           !!leg.fromStation &&
           !!leg.toStation
       )
@@ -273,7 +283,7 @@ export const buildTransferTrainType = (
   id: number
 ): TrainType | null => {
   const legs = route.legs ?? [];
-  const legTrainTypes = legs.map((leg) => pickDefaultTrainType(leg.trainTypes));
+  const legTrainTypes = legs.map((leg) => pickLegTrainType(leg));
   const [firstTrainType] = legTrainTypes;
   if (!firstTrainType) return null;
 
@@ -317,7 +327,8 @@ export const isTransferRouteTrainType = (
 
 /**
  * 行き先を選んだときに既定で選ぶ種別。API の順位が最も高い経路が乗換のある経路なら
- * その経路を表す種別、乗換のない経路なら直通の種別から各停(無ければ先頭)を選ぶ。
+ * その経路を表す種別、乗換のない経路なら API が評価した推奨系統を選ぶ。
+ * 推奨 ID のない旧 API では各停を優先する。
  * 直通に各停が無いとき、後ろの乗換経路の「各駅停車」を拾わないよう乗換経路は除いて探す
  * @param routes 乗車に使える経路(API の順位順)
  * @param trainTypes buildRouteTrainTypes の種別
@@ -332,13 +343,16 @@ export const pickInitialRouteTrainType = (
   trainTypes.find(
     (tt) => tt.id != null && transferRouteById.get(tt.id) === routes[0]
   ) ??
-  pickDefaultTrainType(
-    trainTypes.filter((tt) => !isTransferRouteTrainType(tt))
-  );
+  (routes[0]?.legs?.length === 1 && routes[0].legs[0].recommendedGroupId != null
+    ? pickLegTrainType(routes[0].legs[0])
+    : pickDefaultTrainType(
+        trainTypes.filter((tt) => !isTransferRouteTrainType(tt))
+      ));
 
 /**
  * 経路検索の結果を種別一覧に並べる種別へまとめる。乗換のない経路は区間で乗れる
- * 種別をそのまま、乗換のある経路は経路ごとに 1 種別として、API の順位順に並べる
+ * 推奨系統で、乗換のある経路は経路ごとに 1 種別として、API の順位順に並べる。
+ * 直通経路の手動選択用の他種別は、全推奨経路の後ろに並べる
  * @param routes 乗車に使える経路(API の順位順)
  * @returns 種別一覧に並べる種別と、経路を表す種別の id から経路を引く表
  */
@@ -351,11 +365,26 @@ export const buildRouteTrainTypes = (
   const trainTypes: TrainType[] = [];
   const transferRouteById = new Map<number, ConnectedRoute>();
   const seenGroupIds = new Set<number>();
+  const manualTypes: TrainType[] = [];
 
   routes.forEach((route, index) => {
     const legs = route.legs ?? [];
     if (legs.length === 1) {
-      for (const trainType of legs[0].trainTypes ?? []) {
+      const leg = legs[0];
+      const preferred = pickLegTrainType(leg);
+      if (leg.recommendedGroupId != null) {
+        if (!preferred) return;
+        manualTypes.push(
+          ...(leg.trainTypes ?? []).filter(
+            (tt) => tt.groupId !== preferred.groupId
+          )
+        );
+      }
+      for (const trainType of leg.recommendedGroupId == null
+        ? (leg.trainTypes ?? [])
+        : preferred
+          ? [preferred]
+          : []) {
         // groupId の無い種別は選んでも駅リストを引けないので並べない
         if (trainType.groupId == null) continue;
         if (seenGroupIds.has(trainType.groupId)) continue;
@@ -372,6 +401,11 @@ export const buildRouteTrainTypes = (
     transferRouteById.set(id, route);
   });
 
+  for (const type of manualTypes) {
+    if (type.groupId == null || seenGroupIds.has(type.groupId)) continue;
+    seenGroupIds.add(type.groupId);
+    trainTypes.push(type);
+  }
   return { trainTypes, transferRouteById };
 };
 
@@ -389,6 +423,7 @@ const connectedRouteKey = (route: ConnectedRoute): string =>
       [
         leg.fromStation?.id,
         leg.toStation?.id,
+        leg.recommendedGroupId,
         (leg.stationGroupIds ?? []).join(','),
         (leg.trainTypes ?? []).map((tt) => tt.groupId).join(','),
       ].join(':')
@@ -419,6 +454,7 @@ export const sortRouteTrainTypeIndices = (
   // buildRouteTrainTypes と同じく、乗換のない経路は種別の系統で、乗換のある経路は
   // 経路ごとに 1 つ数える。同じ系統が複数の経路に出るときは先に来た経路の順位を使う
   const rankByKey = new Map<string, number>();
+  const manualKeys: string[] = [];
   for (const sortedRoute of sortedRoutes) {
     const index = indicesByKey.get(connectedRouteKey(sortedRoute))?.shift();
     if (index == null) continue;
@@ -427,11 +463,22 @@ export const sortRouteTrainTypeIndices = (
       for (const trainType of legs[0].trainTypes ?? []) {
         const key = `group:${trainType.groupId}`;
         if (trainType.groupId == null || rankByKey.has(key)) continue;
+        if (
+          legs[0].recommendedGroupId != null &&
+          trainType.groupId !== legs[0].recommendedGroupId
+        ) {
+          manualKeys.push(key);
+          continue;
+        }
         rankByKey.set(key, rankByKey.size);
       }
       continue;
     }
     rankByKey.set(`route:${transferRouteTrainTypeId(index)}`, rankByKey.size);
+  }
+
+  for (const key of manualKeys) {
+    if (!rankByKey.has(key)) rankByKey.set(key, rankByKey.size);
   }
 
   const rankOf = (trainType: TrainType) =>

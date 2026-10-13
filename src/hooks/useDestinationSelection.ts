@@ -25,9 +25,9 @@ import {
   concatLegStations,
   filterRideableRoutes,
   getStationWithMatchingLine,
-  pickDefaultTrainType,
   pickInitialRouteTrainType,
   pickLegStations,
+  pickLegTrainType,
 } from '~/utils/routeSearch';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
@@ -163,7 +163,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
 
       const results = await Promise.all(
         (route.legs ?? []).map(async (leg) => {
-          const legTrainType = pickDefaultTrainType(leg.trainTypes);
+          const legTrainType = pickLegTrainType(leg);
           if (!legTrainType?.groupId || !leg.fromStation || !leg.toStation) {
             return { stations: [], error: undefined };
           }
@@ -371,9 +371,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
       const route =
         trainType.id != null ? transferRouteById.get(trainType.id) : undefined;
       const lineGroupIds = route
-        ? (route.legs ?? []).map(
-            (leg) => pickDefaultTrainType(leg.trainTypes)?.groupId
-          )
+        ? (route.legs ?? []).map((leg) => pickLegTrainType(leg)?.groupId)
         : [trainType.groupId];
       for (const lineGroupId of lineGroupIds) {
         if (lineGroupId == null) continue;

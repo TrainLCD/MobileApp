@@ -14,6 +14,7 @@ import {
   pickDefaultTrainType,
   pickInitialRouteTrainType,
   pickLegStationsByGroupIds,
+  pickLegTrainType,
   sliceLegStations,
   sortRouteTrainTypeIndices,
 } from './routeSearch';
@@ -998,5 +999,48 @@ describe('経路検索見出しの翻訳キー', () => {
       expect(typeof ja[key]).toBe('string');
       expect(typeof en[key]).toBe('string');
     }
+  });
+});
+
+describe('API-evaluated service selection', () => {
+  const local = {
+    id: 1,
+    groupId: 100,
+    kind: TrainTypeKind.Default,
+  } as TrainType;
+  const rapid = { id: 2, groupId: 200, kind: TrainTypeKind.Rapid } as TrainType;
+  const leg = { trainTypes: [local, rapid], recommendedGroupId: 200 };
+  it('uses the evaluated rapid instead of silently substituting a local', () => {
+    expect(pickLegTrainType(leg)).toBe(rapid);
+    expect(pickLegTrainType({ trainTypes: [local, rapid] })).toBe(local);
+    expect(pickLegTrainType({ ...leg, recommendedGroupId: 999 })).toBeNull();
+    expect(
+      filterRideableRoutes([{ legs: [{ ...leg, recommendedGroupId: 999 }] }])
+    ).toEqual([]);
+  });
+  it('keeps manually selectable sibling services after every ranked route', () => {
+    const routes = [
+      { legs: [leg] },
+      {
+        legs: [
+          {
+            trainTypes: [{ ...rapid, id: 3, groupId: 300 }],
+            recommendedGroupId: 300,
+          },
+        ],
+      },
+    ];
+    const built = buildRouteTrainTypes(routes);
+    expect(built.trainTypes.map((tt) => tt.groupId)).toEqual([200, 300, 100]);
+    expect(
+      pickInitialRouteTrainType(
+        routes,
+        built.trainTypes,
+        built.transferRouteById
+      )
+    ).toBe(rapid);
+    expect(
+      sortRouteTrainTypeIndices(built.trainTypes, routes, [...routes].reverse())
+    ).toEqual([1, 0, 2]);
   });
 });
