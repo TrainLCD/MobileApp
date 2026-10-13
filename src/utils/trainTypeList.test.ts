@@ -355,3 +355,42 @@ describe('buildTrainTypeRow', () => {
     expect(row.viaLines.map((l) => l.id)).toEqual([fukutoshin.id, tokyu.id]);
   });
 });
+
+describe('transfer rows preserve repeated lines and ride order', () => {
+  it('keeps later rides when the destination line appears earlier in the route', () => {
+    const local = {
+      typeId: 1,
+      groupId: 100,
+      name: '各駅停車',
+      nameRoman: 'Local',
+    };
+    const rapid = { typeId: 2, groupId: 200, name: '快速', nameRoman: 'Rapid' };
+    const lines = [
+      createLine(1, { trainType: local } as Partial<Line>),
+      createLine(2, { trainType: local } as Partial<Line>),
+      createLine(1, { trainType: rapid } as Partial<Line>),
+      createLine(2, { trainType: local } as Partial<Line>),
+    ];
+    const tt = {
+      id: -1,
+      name: '各駅停車',
+      nameRoman: 'Local',
+      lines,
+    } as TrainType;
+    const row = buildTrainTypeRow(
+      tt,
+      lines[0],
+      null,
+      createDestination(lines[3]),
+      true
+    );
+    expect(
+      row.viaLines.map((line) => [line.id, line.trainType?.groupId])
+    ).toEqual([
+      [2, 100],
+      [1, 200],
+      [2, 100],
+    ]);
+    expect(row.subtitle).toBe('路線2 各駅停車\n路線1 快速\n路線2 各駅停車');
+  });
+});

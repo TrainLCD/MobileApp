@@ -18,6 +18,7 @@ import {
   sliceLegStations,
   sortRouteTrainTypeIndices,
 } from './routeSearch';
+import { buildTrainTypeRow } from './trainTypeList';
 
 // 文言そのものは翻訳ファイルの責務なので、
 // ここでは「どのキーをどの駅名で引くか」だけを検証できるようにモックする
@@ -375,6 +376,54 @@ describe('乗換経路', () => {
       expect(isTransferRouteTrainType(trainType)).toBe(true);
       expect(isTransferRouteTrainType(oedoLocal)).toBe(false);
     });
+  });
+
+  it('同一路線で各停から快速に乗り換えると両区間の系統と表示種別を保持する', () => {
+    const a = station(1, 1, 'A', saikyoLine);
+    const b = station(2, 2, 'B', saikyoLine);
+    const c = station(3, 3, 'C', saikyoLine);
+    const local = { ...saikyoLocal, typeId: 100 } as TrainType;
+    const rapid = {
+      ...saikyoRapid,
+      typeId: 200,
+      nameRoman: 'Rapid',
+    } as TrainType;
+    const route: ConnectedRoute = {
+      legs: [
+        {
+          trainTypes: [rapid, local],
+          recommendedGroupId: local.groupId,
+          fromStation: a,
+          toStation: b,
+        },
+        {
+          trainTypes: [local, rapid],
+          recommendedGroupId: rapid.groupId,
+          fromStation: b,
+          toStation: c,
+        },
+      ],
+    };
+    const tt = buildTransferTrainType(route, -1);
+    if (!tt) throw new Error('Expected a transfer train type');
+    expect(
+      tt.lines?.map((line) => [
+        line.id,
+        line.trainType?.groupId,
+        line.trainType?.name,
+      ])
+    ).toEqual([
+      [saikyoLine.id, local.groupId, '各駅停車'],
+      [saikyoLine.id, rapid.groupId, '快速'],
+    ]);
+    const row = buildTrainTypeRow(tt, saikyoLine, a, c, true);
+    expect(row.title).toBe('各駅停車');
+    expect(row.subtitle).toBe('埼京線 快速');
+    expect(row.searchText).toContain('快速');
+    expect(row.searchText).toContain('rapid');
+    expect(buildTrainTypeRow(tt, saikyoLine, a, c, false).subtitle).toContain(
+      'Rapid'
+    );
   });
 
   describe('pickInitialRouteTrainType', () => {

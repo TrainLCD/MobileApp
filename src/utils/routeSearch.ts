@@ -289,17 +289,21 @@ export const buildTransferTrainType = (
 
   const lines = legs.flatMap((leg, index) => {
     const trainType = legTrainTypes[index];
-    return [leg.fromStation?.line, leg.toStation?.line]
-      .filter((line): line is NonNullable<Station['line']> => !!line)
-      .map((line) => ({
-        ...line,
-        trainType: (trainType?.lines?.find((l) => l.id === line.id)
-          ?.trainType ?? {
-          typeId: trainType?.typeId,
-          name: trainType?.name,
-          nameRoman: trainType?.nameRoman,
-        }) as Line['trainType'],
-      }));
+    return uniqBy(
+      [leg.fromStation?.line, leg.toStation?.line].filter(
+        (line): line is NonNullable<Station['line']> => !!line
+      ),
+      'id'
+    ).map((line) => ({
+      ...line,
+      trainType: (trainType?.lines?.find((l) => l.id === line.id)
+        ?.trainType ?? {
+        groupId: trainType?.groupId,
+        typeId: trainType?.typeId,
+        name: trainType?.name,
+        nameRoman: trainType?.nameRoman,
+      }) as Line['trainType'],
+    }));
   });
 
   return {
@@ -307,7 +311,8 @@ export const buildTransferTrainType = (
     id,
     line: (legs.at(-1)?.toStation?.line ??
       firstTrainType.line) as TrainType['line'],
-    lines: uniqBy(lines, 'id') as unknown as TrainType['lines'],
+    // Deduplicate endpoints within each leg, preserving repeated lines across rides.
+    lines: lines as unknown as TrainType['lines'],
   };
 };
 
