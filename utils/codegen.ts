@@ -15,6 +15,7 @@ const config: CodegenConfig = {
     'src/@types/graphql.d.ts': {
       plugins: ['typescript', 'typescript-operations'],
       config: {
+        scalars: { UInt32: { input: 'number', output: 'number' } },
         avoidOptionals: true,
         preResolveTypes: true,
         skipTypename: false,
