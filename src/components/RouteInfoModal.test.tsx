@@ -1,9 +1,10 @@
 import { act, render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
-import type { Station } from '~/@types/graphql';
+import type { Station, TrainType } from '~/@types/graphql';
 import { LIGHT_APP_COLORS } from '~/constants/colorScheme';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
+import { pendingLineAtom } from '~/store/atoms/line';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { RouteInfoModal } from './RouteInfoModal';
 
@@ -83,6 +84,34 @@ describe('RouteInfoModal', () => {
   afterEach(() => {
     jest.clearAllMocks();
     mockFlashListOnLoad.current = null;
+  });
+
+  it('副都心線の停車駅が急行なら系統の代表名が普通でも急行と表示する', () => {
+    const fukutoshin = { id: 28010, nameShort: '東京メトロ副都心線' };
+    const express = { groupId: 500, name: '急行', nameRoman: 'Express' };
+    (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+      if (atom === appColorsAtom) return LIGHT_APP_COLORS;
+      if (atom === isLEDThemeAtom) return false;
+      if (atom === pendingLineAtom) return fukutoshin;
+      return null;
+    });
+    const stops = stations.slice(0, 4).map((s) => ({
+      ...s,
+      line: fukutoshin,
+      trainType: express,
+    })) as unknown as Station[];
+    const { getByText, queryByText } = render(
+      <RouteInfoModal
+        visible
+        trainType={{ groupId: 500, name: '普通' } as TrainType}
+        stations={stops}
+        currentStation={stops[0]}
+        loading={false}
+        onClose={jest.fn()}
+      />
+    );
+    expect(getByText('急行')).toBeTruthy();
+    expect(queryByText('普通')).toBeNull();
   });
 
   it('一覧の初回レイアウト後に現在の最寄り駅までヘッダーの高さだけずらしてアニメーションでスクロールする', () => {
