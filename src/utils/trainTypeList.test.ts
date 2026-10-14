@@ -355,3 +355,113 @@ describe('buildTrainTypeRow', () => {
     expect(row.viaLines.map((l) => l.id)).toEqual([fukutoshin.id, tokyu.id]);
   });
 });
+
+describe('transfer rows preserve repeated lines and ride order', () => {
+  it.each([true, false])(
+    'keeps individual line names and repeated segments within a service (ja=%s)',
+    (ja) => {
+      const service = {
+        typeId: 2,
+        groupId: 200,
+        name: '快速',
+        nameRoman: 'Rapid',
+      };
+      const boardingLine = createLine(9);
+      const tojo = createLine(1, {
+        nameShort: '東上線',
+        nameRoman: 'Tojo Line',
+        company: { id: 11, nameShort: '東武', nameEnglishShort: 'Tobu' },
+        trainType: service,
+      } as Partial<Line>);
+      const ogose = createLine(2, {
+        nameShort: '越生線',
+        nameRoman: 'Ogose Line',
+        company: tojo.company,
+        trainType: service,
+      } as Partial<Line>);
+      const metro = createLine(3, {
+        nameShort: '副都心線',
+        nameRoman: 'Fukutoshin Line',
+        company: { id: 20, nameShort: 'メトロ', nameEnglishShort: 'Metro' },
+        trainType: service,
+      } as Partial<Line>);
+
+      // Both all-one-company deduplication and mixed-company abbreviation
+      // used to lose this route's individual segments in the subtitle.
+      for (const viaLines of [
+        [tojo, ogose, tojo],
+        [tojo, ogose, tojo, metro],
+      ]) {
+        const trainType = {
+          id: -1,
+          name: '各駅停車',
+          nameRoman: 'Local',
+          lines: [boardingLine, ...viaLines],
+        } as TrainType;
+        const row = buildTrainTypeRow(trainType, boardingLine, null, null, ja);
+        const expectedNames = ja
+          ? '東上線 越生線 東上線'
+          : 'Tojo Line, Ogose Line, Tojo Line';
+        const lastName =
+          viaLines.length === 4 ? (ja ? ' 副都心線' : ', Fukutoshin Line') : '';
+        expect(row.subtitle).toBe(
+          `${expectedNames}${lastName} ${ja ? '快速' : 'Rapid'}`
+        );
+        expect(row.viaLines).toEqual(viaLines);
+        expect(row.searchText).toContain('越生線');
+        expect(row.searchText).toContain('ogose line');
+
+        // A normal service still uses the existing compact company display.
+        if (viaLines.length === 4) {
+          const normalRow = buildTrainTypeRow(
+            { ...trainType, id: 1 },
+            boardingLine,
+            null,
+            null,
+            ja
+          );
+          expect(normalRow.subtitle).toBe(
+            ja ? '東武線 副都心線 直通' : 'Via Tobu Line, Fukutoshin Line'
+          );
+        }
+      }
+    }
+  );
+
+  it('keeps later rides when the destination line appears earlier in the route', () => {
+    const local = {
+      typeId: 1,
+      groupId: 100,
+      name: '各駅停車',
+      nameRoman: 'Local',
+    };
+    const rapid = { typeId: 2, groupId: 200, name: '快速', nameRoman: 'Rapid' };
+    const lines = [
+      createLine(1, { trainType: local } as Partial<Line>),
+      createLine(2, { trainType: local } as Partial<Line>),
+      createLine(1, { trainType: rapid } as Partial<Line>),
+      createLine(2, { trainType: local } as Partial<Line>),
+    ];
+    const tt = {
+      id: -1,
+      name: '各駅停車',
+      nameRoman: 'Local',
+      lines,
+    } as TrainType;
+    const row = buildTrainTypeRow(
+      tt,
+      lines[0],
+      null,
+      createDestination(lines[3]),
+      true
+    );
+    expect(
+      row.viaLines.map((line) => [line.id, line.trainType?.groupId])
+    ).toEqual([
+      [2, 100],
+      [1, 200],
+      [2, 100],
+    ]);
+    expect(row.subtitle).toBe('路線2 各駅停車\n路線1 快速\n路線2 各駅停車');
+  });
+});

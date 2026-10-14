@@ -466,7 +466,9 @@ export const GET_CONNECTED_ROUTES = gql`
       toStationGroupId: $toStationGroupId
       viaLineId: $viaLineId
     ) {
+      totalSeconds
       legs {
+        recommendedGroupId
         trainTypes {
           ...TrainTypeRouteFields
         }
@@ -501,7 +503,9 @@ export const GET_CONNECTED_ROUTES_SORTED = gql`
       viaLineId: $viaLineId
       sortBy: $sortBy
     ) {
+      totalSeconds
       legs {
+        recommendedGroupId
         trainTypes {
           ...TrainTypeRouteFields
         }
