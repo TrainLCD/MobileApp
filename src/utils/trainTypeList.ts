@@ -202,7 +202,14 @@ export const buildTrainTypeRow = (
   const viaLines = transfer
     ? lines.slice(1)
     : getViaLines(lines, boardingLine, destination);
-  const title = (ja ? trainType.name : trainType.nameRoman) ?? '';
+  // 経路検索ではカードと同じ乗車路線の種別名を使う。選択・駅取得に使う
+  // trainType の id/groupId は代表のまま保持し、表示名だけを路線上の表記にする。
+  const displayTrainType =
+    destination || transfer ? (boardingLine.trainType ?? trainType) : trainType;
+  const title =
+    (ja
+      ? (displayTrainType.name ?? trainType.name)
+      : (displayTrainType.nameRoman ?? trainType.nameRoman)) ?? '';
 
   // 乗換経路は隣り合う同一系統・種別だけをまとめ、乗車区間の順序を保つ。
   // 通常の種別は従来どおり同じ typeId の路線をまとめる。
@@ -267,6 +274,7 @@ export const buildTrainTypeRow = (
     [
       trainType.name ?? '',
       trainType.nameRoman ?? '',
+      title,
       subtitle,
       ...viaLines.flatMap((l) => [l.nameShort ?? '', l.nameRoman ?? '']),
       ...(transfer
