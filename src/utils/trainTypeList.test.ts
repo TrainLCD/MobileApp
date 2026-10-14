@@ -324,23 +324,91 @@ describe('buildTrainTypeRow', () => {
     minatomirai,
   ]);
 
-  it('カードの路線は経由が違っても全種別で選択中の路線に揃う', () => {
+  it('経路検索ではカードの路線を各経路の乗車路線にする', () => {
     const rows = [viaSeibu, viaTobu].map((tt) =>
       buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, minatomiraiStation, true)
     );
     expect(rows.map((r) => r.cardLine.id)).toEqual([
       seibuIkebukuro.id,
-      seibuIkebukuro.id,
+      tobuTojo.id,
     ]);
   });
 
-  it('ナンバリングも選択中の路線の乗車駅基準で揃う', () => {
+  it('経路検索のナンバリングも各経路の乗車路線で揃う', () => {
     const rows = [viaSeibu, viaTobu].map((tt) =>
       buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, minatomiraiStation, true)
     );
     expect(
       rows.map((r) => r.cardLineStation?.stationNumbers?.[0]?.stationNumber)
+    ).toEqual(['SI-01', 'TJ-01']);
+  });
+
+  it('行先のない通常の種別選択では選択路線のデザインを保つ', () => {
+    const rows = [viaSeibu, viaTobu].map((tt) =>
+      buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, null, true)
+    );
+    expect(rows.map((row) => row.cardLine.id)).toEqual([
+      seibuIkebukuro.id,
+      seibuIkebukuro.id,
+    ]);
+    expect(
+      rows.map((row) => row.cardLineStation?.stationNumbers?.[0]?.stationNumber)
     ).toEqual(['SI-01', 'SI-01']);
+  });
+
+  it('丸ノ内線が選択中でも湘南新宿ラインの色・記号・番号を使う', () => {
+    const metro = createLine(28002, {
+      color: '#f62e36',
+      lineSymbols: [
+        {
+          __typename: 'LineSymbol',
+          symbol: 'M',
+          color: '#f62e36',
+          shape: 'ROUND',
+        },
+      ],
+    });
+    const shonan = createLine(11333, {
+      color: '#f68b1e',
+      lineSymbols: [
+        {
+          __typename: 'LineSymbol',
+          symbol: 'JS',
+          color: '#f68b1e',
+          shape: 'SQUARE',
+        },
+      ],
+    });
+    const boarding = createBoardingStation([
+      { id: metro.id, station: createNestedStation('M-25', 'M') },
+      { id: shonan.id, station: createNestedStation('JS-21', 'JS') },
+    ]);
+    const row = buildTrainTypeRow(
+      createTrainType(3, '特別快速', [shonan]),
+      metro,
+      boarding,
+      createDestination(shonan),
+      true
+    );
+    expect(row.cardLine.color).toBe(shonan.color);
+    expect(row.cardLine.lineSymbols?.[0]?.symbol).toBe('JS');
+    expect(row.cardLineStation?.stationNumbers?.[0]?.stationNumber).toBe(
+      'JS-21'
+    );
+  });
+
+  it('乗換経路では乗車駅が後の区間の路線も持っていても最初の路線を使う', () => {
+    const row = buildTrainTypeRow(
+      createTrainType(-1, '普通', [seibuIkebukuro, tobuTojo]),
+      fukutoshin,
+      createBoardingStation([
+        { id: tobuTojo.id, station: createNestedStation('TJ-01', 'TJ') },
+      ]),
+      createDestination(tobuTojo),
+      true
+    );
+    expect(row.cardLine.id).toBe(seibuIkebukuro.id);
+    expect(row.cardLineStation).toBeNull();
   });
 
   it('経由路線は種別ごとの乗車路線を起点に切り出したままにする', () => {
