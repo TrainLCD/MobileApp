@@ -357,6 +357,77 @@ describe('buildTrainTypeRow', () => {
 });
 
 describe('transfer rows preserve repeated lines and ride order', () => {
+  it.each([true, false])(
+    'keeps individual line names and repeated segments within a service (ja=%s)',
+    (ja) => {
+      const service = {
+        typeId: 2,
+        groupId: 200,
+        name: '快速',
+        nameRoman: 'Rapid',
+      };
+      const boardingLine = createLine(9);
+      const tojo = createLine(1, {
+        nameShort: '東上線',
+        nameRoman: 'Tojo Line',
+        company: { id: 11, nameShort: '東武', nameEnglishShort: 'Tobu' },
+        trainType: service,
+      } as Partial<Line>);
+      const ogose = createLine(2, {
+        nameShort: '越生線',
+        nameRoman: 'Ogose Line',
+        company: tojo.company,
+        trainType: service,
+      } as Partial<Line>);
+      const metro = createLine(3, {
+        nameShort: '副都心線',
+        nameRoman: 'Fukutoshin Line',
+        company: { id: 20, nameShort: 'メトロ', nameEnglishShort: 'Metro' },
+        trainType: service,
+      } as Partial<Line>);
+
+      // Both all-one-company deduplication and mixed-company abbreviation
+      // used to lose this route's individual segments in the subtitle.
+      for (const viaLines of [
+        [tojo, ogose, tojo],
+        [tojo, ogose, tojo, metro],
+      ]) {
+        const trainType = {
+          id: -1,
+          name: '各駅停車',
+          nameRoman: 'Local',
+          lines: [boardingLine, ...viaLines],
+        } as TrainType;
+        const row = buildTrainTypeRow(trainType, boardingLine, null, null, ja);
+        const expectedNames = ja
+          ? '東上線 越生線 東上線'
+          : 'Tojo Line, Ogose Line, Tojo Line';
+        const lastName =
+          viaLines.length === 4 ? (ja ? ' 副都心線' : ', Fukutoshin Line') : '';
+        expect(row.subtitle).toBe(
+          `${expectedNames}${lastName} ${ja ? '快速' : 'Rapid'}`
+        );
+        expect(row.viaLines).toEqual(viaLines);
+        expect(row.searchText).toContain('越生線');
+        expect(row.searchText).toContain('ogose line');
+
+        // A normal service still uses the existing compact company display.
+        if (viaLines.length === 4) {
+          const normalRow = buildTrainTypeRow(
+            { ...trainType, id: 1 },
+            boardingLine,
+            null,
+            null,
+            ja
+          );
+          expect(normalRow.subtitle).toBe(
+            ja ? '東武線 副都心線 直通' : 'Via Tobu Line, Fukutoshin Line'
+          );
+        }
+      }
+    }
+  );
+
   it('keeps later rides when the destination line appears earlier in the route', () => {
     const local = {
       typeId: 1,

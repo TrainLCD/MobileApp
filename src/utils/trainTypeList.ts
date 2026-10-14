@@ -241,7 +241,14 @@ export const buildTrainTypeRow = (
           : ''
       : groupedViaLines
           .map((group) => {
-            const names = formatLineNames(group, ja);
+            // Transfer subtitles describe the ride sequence, so company
+            // abbreviations and name deduplication would hide route segments.
+            const names = transfer
+              ? group
+                  .map((line) => (ja ? line.nameShort : line.nameRoman))
+                  .filter(Boolean)
+                  .join(ja ? ' ' : ', ')
+              : formatLineNames(group, ja);
             const typeName = ja
               ? (group[0]?.trainType?.name ?? '')
               : (group[0]?.trainType?.nameRoman ?? '');
