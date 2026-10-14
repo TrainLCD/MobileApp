@@ -153,9 +153,9 @@ export const formatLineNames = (lines: Line[], ja: boolean): string => {
 /** 種別一覧の 1 行分。表示に必要な値と、絞り込みに使う値をまとめて持つ */
 export type TrainTypeRow = {
   trainType: TrainType;
-  /** カードの配色・路線記号・ナンバリングに使う路線。全種別で共通 */
+  /** カードの配色・路線記号・ナンバリングに使う路線。経路検索では各経路の乗車路線 */
   cardLine: Line;
-  /** ナンバリング表示に使うカード路線側の駅。全種別で共通 */
+  /** ナンバリング表示に使うカード路線側の駅 */
   cardLineStation: StationNested | null;
   /** カードの見出し（＝種別名）。種別での絞り込みのキーも兼ねる */
   title: string;
@@ -196,12 +196,9 @@ export const buildTrainTypeRow = (
 
   // 経由路線は乗車駅で実際に乗車する路線から先を出したいので、種別ごとに乗車路線を
   // 求めて起点にする（経路の途中駅から乗る場合、終端路線は乗車路線と一致しない）。
-  const boardingLine = getBoardingLine(
-    lines,
-    boardingStation,
-    selectedLine,
-    destination
-  );
+  const boardingLine = transfer
+    ? (lines[0] ?? selectedLine)
+    : getBoardingLine(lines, boardingStation, selectedLine, destination);
   const viaLines = transfer
     ? lines.slice(1)
     : getViaLines(lines, boardingLine, destination);
@@ -256,11 +253,9 @@ export const buildTrainTypeRow = (
           })
           .join('\n');
 
-  // カードの配色・路線記号・ナンバリングは全種別で選択中の路線に揃える。行ごとに
-  // 乗車路線を推定して切り替えると、同じ駅から同じように乗るのに種別ごとに色と記号が
-  // 変わり、一覧として並べたときに種別の違いが読み取りづらくなるため。
-  // 駅番号も同じ路線を基準に引くので CommonCard の路線記号一致が必ず成立する。
-  const cardLine = selectedLine;
+  // 経路検索では経路ごとの乗車路線で配色・記号・駅番号を揃える。
+  // 通常の種別選択は、選択路線上で種別を比べるため従来どおり同じ路線に揃える。
+  const cardLine = destination || transfer ? boardingLine : selectedLine;
   const cardLineStation = getBoardingLineStation(
     boardingStation,
     cardLine,
