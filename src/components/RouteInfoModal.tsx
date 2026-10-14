@@ -124,9 +124,30 @@ export const RouteInfoModal = ({
 
   const pendingLine = useAtomValue(pendingLineAtom);
   const lineName = getLocalizedLineName(pendingLine, isJapanese);
+  // 系統全体の代表名ではなく、見出しの路線上で停車する駅の種別を表示する。
+  // 同じ系統でも路線をまたぐと「普通」から「急行」などへ種別が変わる。
+  const sectionTrainType = useMemo(() => {
+    if (!trainType || pendingLine?.id == null) return trainType;
+    const onSection = stations.filter(
+      (s) =>
+        s.line?.id === pendingLine.id &&
+        s.trainType &&
+        (trainType.groupId == null || s.trainType.groupId === trainType.groupId)
+    );
+    const boarding =
+      currentStation?.groupId != null
+        ? onSection.find((s) => s.groupId === currentStation.groupId)
+        : undefined;
+    return (
+      boarding?.trainType ??
+      onSection[0]?.trainType ??
+      trainType.lines?.find((l) => l.id === pendingLine.id)?.trainType ??
+      trainType
+    );
+  }, [trainType, pendingLine?.id, stations, currentStation?.groupId]);
   const trainTypeName = isJapanese
-    ? (trainType?.name ?? '普通/各駅停車')
-    : (trainType?.nameRoman ?? 'Local');
+    ? (sectionTrainType?.name ?? trainType?.name ?? '普通/各駅停車')
+    : (sectionTrainType?.nameRoman ?? trainType?.nameRoman ?? 'Local');
 
   const stationSubtitles = useMemo(
     () =>

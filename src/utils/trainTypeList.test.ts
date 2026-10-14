@@ -356,6 +356,35 @@ describe('buildTrainTypeRow', () => {
     ).toEqual(['SI-01', 'SI-01']);
   });
 
+  it('副都心線の経路カードでは代表名の普通ではなく急行と表示する', () => {
+    const expressLine = createLine(fukutoshin.id ?? 0, {
+      trainType: { groupId: 500, name: '急行', nameRoman: 'Express' },
+    } as Partial<Line>);
+    const tt = {
+      ...createTrainType(4, '普通', [expressLine, tokyu]),
+      groupId: 500,
+    };
+    const row = buildTrainTypeRow(
+      tt,
+      seibuIkebukuro,
+      ikebukuro,
+      createDestination(tokyu),
+      true
+    );
+    expect(row.title).toBe('急行');
+    expect(row.searchText).toContain('急行');
+    expect(row.trainType).toBe(tt);
+    expect(
+      buildTrainTypeRow(
+        tt,
+        seibuIkebukuro,
+        ikebukuro,
+        createDestination(tokyu),
+        false
+      ).title
+    ).toBe('Express');
+  });
+
   it('丸ノ内線が選択中でも湘南新宿ラインの色・記号・番号を使う', () => {
     const metro = createLine(28002, {
       color: '#f62e36',
