@@ -258,4 +258,47 @@ describe('useDestinationSelection', () => {
 
     expect(store.get(pendingLineAtom)?.id).toBe(oedo.id);
   });
+
+  it('丸ノ内線から湘南新宿ラインの種別へ選び直すと乗車路線も更新する', async () => {
+    const metro = createLine(28002, { nameShort: '東京メトロ丸ノ内線' });
+    const shonan = createLine(11333, { nameShort: '湘南新宿ライン' });
+    const boarding = createStation(2800202, {
+      groupId: ikebukuro.groupId ?? 0,
+      line: { id: metro.id, nameShort: metro.nameShort },
+      lines: [metro, saikyo, shonan] as never,
+    });
+    const { store, hookRef } = setup(boarding);
+    act(() => store.set(pendingLineAtom, metro));
+    const shonanStation = { ...ikebukuro, line: shonan } as Station;
+    fetchLineGroupStations.mockResolvedValue({
+      data: { lineGroupStations: [shonanStation, shibuya] },
+    });
+
+    await act(async () => {
+      await hookRef.current?.handleTrainTypeSelected({
+        ...saikyoLocal,
+        groupId: 200,
+        name: '特別快速',
+        // 行先側の路線を乗車路線として使ってはいけない。
+        line: saikyo,
+      } as TrainType);
+    });
+
+    expect(store.get(pendingLineAtom)?.nameShort).toBe('湘南新宿ライン');
+    expect(store.get(stationAtom)?.line?.id).toBe(shonan.id);
+    expect(store.get(pendingStationsAtom)[0].line?.id).toBe(shonan.id);
+  });
+
+  it('乗換経路へ選び直すと最初の区間の乗車路線へ更新する', async () => {
+    const { store, hookRef } = setup(hikarigaoka);
+    await act(async () => {
+      await hookRef.current?.handleDestinationSelected(shibuya);
+    });
+    const transferType = store.get(fetchedTrainTypesAtom)[0];
+    act(() => store.set(pendingLineAtom, saikyo));
+    await act(async () => {
+      await hookRef.current?.handleTrainTypeSelected(transferType);
+    });
+    expect(store.get(pendingLineAtom)?.id).toBe(oedo.id);
+  });
 });
