@@ -25,9 +25,9 @@ import {
   concatLegStations,
   filterRideableRoutes,
   getStationWithMatchingLine,
-  pickDefaultTrainType,
   pickInitialRouteTrainType,
   pickLegStations,
+  pickLegTrainType,
 } from '~/utils/routeSearch';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
@@ -163,7 +163,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
 
       const results = await Promise.all(
         (route.legs ?? []).map(async (leg) => {
-          const legTrainType = pickDefaultTrainType(leg.trainTypes);
+          const legTrainType = pickLegTrainType(leg);
           if (!legTrainType?.groupId || !leg.fromStation || !leg.toStation) {
             return { stations: [], error: undefined };
           }
@@ -371,9 +371,7 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
       const route =
         trainType.id != null ? transferRouteById.get(trainType.id) : undefined;
       const lineGroupIds = route
-        ? (route.legs ?? []).map(
-            (leg) => pickDefaultTrainType(leg.trainTypes)?.groupId
-          )
+        ? (route.legs ?? []).map((leg) => pickLegTrainType(leg)?.groupId)
         : [trainType.groupId];
       for (const lineGroupId of lineGroupIds) {
         if (lineGroupId == null) continue;
@@ -386,12 +384,34 @@ export const useDestinationSelection = (): UseDestinationSelectionResult => {
         trainType,
         transferRouteById
       );
+      // 初回の経路で決めた路線を残さず、選び直した系統の乗車駅から引き直す。
+      // trainType.line は行先側の路線なので、取得した駅一覧の路線を使う。
+      // 乗換経路では最初の区間の乗車路線を優先し、後の区間との共通路線を選ばない。
+      const boardingStation =
+        station?.groupId != null
+          ? pendingStations.find((s) => s.groupId === station.groupId)
+          : undefined;
+      const boardingLine =
+        route?.legs?.[0]?.fromStation?.line ?? boardingStation?.line;
+      if (boardingLine) {
+        setLineState((prev) => ({ ...prev, pendingLine: boardingLine }));
+      }
       setStationState((prev) => ({
         ...prev,
         pendingStations,
+        ...(boardingStation && boardingLine
+          ? {
+              pendingStation: { ...boardingStation, line: boardingLine },
+              station: prev.station
+                ? { ...prev.station, line: boardingLine }
+                : prev.station,
+            }
+          : {}),
       }));
     },
     [
+      station,
+      setLineState,
       fetchStationsForTrainType,
       transferRouteById,
       setStationState,

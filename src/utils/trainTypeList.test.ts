@@ -324,23 +324,120 @@ describe('buildTrainTypeRow', () => {
     minatomirai,
   ]);
 
-  it('カードの路線は経由が違っても全種別で選択中の路線に揃う', () => {
+  it('経路検索ではカードの路線を各経路の乗車路線にする', () => {
     const rows = [viaSeibu, viaTobu].map((tt) =>
       buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, minatomiraiStation, true)
     );
     expect(rows.map((r) => r.cardLine.id)).toEqual([
       seibuIkebukuro.id,
-      seibuIkebukuro.id,
+      tobuTojo.id,
     ]);
   });
 
-  it('ナンバリングも選択中の路線の乗車駅基準で揃う', () => {
+  it('経路検索のナンバリングも各経路の乗車路線で揃う', () => {
     const rows = [viaSeibu, viaTobu].map((tt) =>
       buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, minatomiraiStation, true)
     );
     expect(
       rows.map((r) => r.cardLineStation?.stationNumbers?.[0]?.stationNumber)
+    ).toEqual(['SI-01', 'TJ-01']);
+  });
+
+  it('行先のない通常の種別選択では選択路線のデザインを保つ', () => {
+    const rows = [viaSeibu, viaTobu].map((tt) =>
+      buildTrainTypeRow(tt, seibuIkebukuro, ikebukuro, null, true)
+    );
+    expect(rows.map((row) => row.cardLine.id)).toEqual([
+      seibuIkebukuro.id,
+      seibuIkebukuro.id,
+    ]);
+    expect(
+      rows.map((row) => row.cardLineStation?.stationNumbers?.[0]?.stationNumber)
     ).toEqual(['SI-01', 'SI-01']);
+  });
+
+  it('副都心線の経路カードでは代表名の普通ではなく急行と表示する', () => {
+    const expressLine = createLine(fukutoshin.id ?? 0, {
+      trainType: { groupId: 500, name: '急行', nameRoman: 'Express' },
+    } as Partial<Line>);
+    const tt = {
+      ...createTrainType(4, '普通', [expressLine, tokyu]),
+      groupId: 500,
+    };
+    const row = buildTrainTypeRow(
+      tt,
+      seibuIkebukuro,
+      ikebukuro,
+      createDestination(tokyu),
+      true
+    );
+    expect(row.title).toBe('急行');
+    expect(row.searchText).toContain('急行');
+    expect(row.trainType).toBe(tt);
+    expect(
+      buildTrainTypeRow(
+        tt,
+        seibuIkebukuro,
+        ikebukuro,
+        createDestination(tokyu),
+        false
+      ).title
+    ).toBe('Express');
+  });
+
+  it('丸ノ内線が選択中でも湘南新宿ラインの色・記号・番号を使う', () => {
+    const metro = createLine(28002, {
+      color: '#f62e36',
+      lineSymbols: [
+        {
+          __typename: 'LineSymbol',
+          symbol: 'M',
+          color: '#f62e36',
+          shape: 'ROUND',
+        },
+      ],
+    });
+    const shonan = createLine(11333, {
+      color: '#f68b1e',
+      lineSymbols: [
+        {
+          __typename: 'LineSymbol',
+          symbol: 'JS',
+          color: '#f68b1e',
+          shape: 'SQUARE',
+        },
+      ],
+    });
+    const boarding = createBoardingStation([
+      { id: metro.id, station: createNestedStation('M-25', 'M') },
+      { id: shonan.id, station: createNestedStation('JS-21', 'JS') },
+    ]);
+    const row = buildTrainTypeRow(
+      createTrainType(3, '特別快速', [shonan]),
+      metro,
+      boarding,
+      createDestination(shonan),
+      true
+    );
+    expect(row.cardLine.color).toBe(shonan.color);
+    expect(row.cardLine.lineSymbols?.[0]?.symbol).toBe('JS');
+    expect(row.cardLineStation?.stationNumbers?.[0]?.stationNumber).toBe(
+      'JS-21'
+    );
+  });
+
+  it('乗換経路では乗車駅が後の区間の路線も持っていても最初の路線を使う', () => {
+    const row = buildTrainTypeRow(
+      createTrainType(-1, '普通', [seibuIkebukuro, tobuTojo]),
+      fukutoshin,
+      createBoardingStation([
+        { id: tobuTojo.id, station: createNestedStation('TJ-01', 'TJ') },
+      ]),
+      createDestination(tobuTojo),
+      true
+    );
+    expect(row.cardLine.id).toBe(seibuIkebukuro.id);
+    expect(row.cardLineStation).toBeNull();
   });
 
   it('経由路線は種別ごとの乗車路線を起点に切り出したままにする', () => {
@@ -353,5 +450,115 @@ describe('buildTrainTypeRow', () => {
     );
     // 乗車路線(東武東上線)は経由に含めず、そこから行先までの間だけを出す
     expect(row.viaLines.map((l) => l.id)).toEqual([fukutoshin.id, tokyu.id]);
+  });
+});
+
+describe('transfer rows preserve repeated lines and ride order', () => {
+  it.each([true, false])(
+    'keeps individual line names and repeated segments within a service (ja=%s)',
+    (ja) => {
+      const service = {
+        typeId: 2,
+        groupId: 200,
+        name: '快速',
+        nameRoman: 'Rapid',
+      };
+      const boardingLine = createLine(9);
+      const tojo = createLine(1, {
+        nameShort: '東上線',
+        nameRoman: 'Tojo Line',
+        company: { id: 11, nameShort: '東武', nameEnglishShort: 'Tobu' },
+        trainType: service,
+      } as Partial<Line>);
+      const ogose = createLine(2, {
+        nameShort: '越生線',
+        nameRoman: 'Ogose Line',
+        company: tojo.company,
+        trainType: service,
+      } as Partial<Line>);
+      const metro = createLine(3, {
+        nameShort: '副都心線',
+        nameRoman: 'Fukutoshin Line',
+        company: { id: 20, nameShort: 'メトロ', nameEnglishShort: 'Metro' },
+        trainType: service,
+      } as Partial<Line>);
+
+      // Both all-one-company deduplication and mixed-company abbreviation
+      // used to lose this route's individual segments in the subtitle.
+      for (const viaLines of [
+        [tojo, ogose, tojo],
+        [tojo, ogose, tojo, metro],
+      ]) {
+        const trainType = {
+          id: -1,
+          name: '各駅停車',
+          nameRoman: 'Local',
+          lines: [boardingLine, ...viaLines],
+        } as TrainType;
+        const row = buildTrainTypeRow(trainType, boardingLine, null, null, ja);
+        const expectedNames = ja
+          ? '東上線 越生線 東上線'
+          : 'Tojo Line, Ogose Line, Tojo Line';
+        const lastName =
+          viaLines.length === 4 ? (ja ? ' 副都心線' : ', Fukutoshin Line') : '';
+        expect(row.subtitle).toBe(
+          `${expectedNames}${lastName} ${ja ? '快速' : 'Rapid'}`
+        );
+        expect(row.viaLines).toEqual(viaLines);
+        expect(row.searchText).toContain('越生線');
+        expect(row.searchText).toContain('ogose line');
+
+        // A normal service still uses the existing compact company display.
+        if (viaLines.length === 4) {
+          const normalRow = buildTrainTypeRow(
+            { ...trainType, id: 1 },
+            boardingLine,
+            null,
+            null,
+            ja
+          );
+          expect(normalRow.subtitle).toBe(
+            ja ? '東武線 副都心線 直通' : 'Via Tobu Line, Fukutoshin Line'
+          );
+        }
+      }
+    }
+  );
+
+  it('keeps later rides when the destination line appears earlier in the route', () => {
+    const local = {
+      typeId: 1,
+      groupId: 100,
+      name: '各駅停車',
+      nameRoman: 'Local',
+    };
+    const rapid = { typeId: 2, groupId: 200, name: '快速', nameRoman: 'Rapid' };
+    const lines = [
+      createLine(1, { trainType: local } as Partial<Line>),
+      createLine(2, { trainType: local } as Partial<Line>),
+      createLine(1, { trainType: rapid } as Partial<Line>),
+      createLine(2, { trainType: local } as Partial<Line>),
+    ];
+    const tt = {
+      id: -1,
+      name: '各駅停車',
+      nameRoman: 'Local',
+      lines,
+    } as TrainType;
+    const row = buildTrainTypeRow(
+      tt,
+      lines[0],
+      null,
+      createDestination(lines[3]),
+      true
+    );
+    expect(
+      row.viaLines.map((line) => [line.id, line.trainType?.groupId])
+    ).toEqual([
+      [2, 100],
+      [1, 200],
+      [2, 100],
+    ]);
+    expect(row.subtitle).toBe('路線2 各駅停車\n路線1 快速\n路線2 各駅停車');
   });
 });

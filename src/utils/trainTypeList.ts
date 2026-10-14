@@ -1,5 +1,6 @@
 import uniqBy from 'lodash/uniqBy';
 import type { Line, Station, StationNested, TrainType } from '~/@types/graphql';
+import { isTransferRouteTrainType } from './routeSearch';
 
 /**
  * 各種別が始発（出発駅）で乗車する起点路線を lines から特定する。
@@ -152,9 +153,9 @@ export const formatLineNames = (lines: Line[], ja: boolean): string => {
 /** 種別一覧の 1 行分。表示に必要な値と、絞り込みに使う値をまとめて持つ */
 export type TrainTypeRow = {
   trainType: TrainType;
-  /** カードの配色・路線記号・ナンバリングに使う路線。全種別で共通 */
+  /** カードの配色・路線記号・ナンバリングに使う路線。経路検索では各経路の乗車路線 */
   cardLine: Line;
-  /** ナンバリング表示に使うカード路線側の駅。全種別で共通 */
+  /** ナンバリング表示に使うカード路線側の駅 */
   cardLineStation: StationNested | null;
   /** カードの見出し（＝種別名）。種別での絞り込みのキーも兼ねる */
   title: string;
@@ -186,24 +187,43 @@ export const buildTrainTypeRow = (
   destination: Station | null | undefined,
   ja: boolean
 ): TrainTypeRow => {
-  const lines = uniqBy(trainType.lines ?? [], 'id');
+  const transfer = isTransferRouteTrainType(trainType);
+  // Synthetic transfer lines already follow the rides; repeated line IDs may
+  // carry different services and must remain in the display and search text.
+  const lines = transfer
+    ? (trainType.lines ?? [])
+    : uniqBy(trainType.lines ?? [], 'id');
 
   // 経由路線は乗車駅で実際に乗車する路線から先を出したいので、種別ごとに乗車路線を
   // 求めて起点にする（経路の途中駅から乗る場合、終端路線は乗車路線と一致しない）。
-  const boardingLine = getBoardingLine(
-    lines,
-    boardingStation,
-    selectedLine,
-    destination
-  );
-  const viaLines = getViaLines(lines, boardingLine, destination);
-  const title = (ja ? trainType.name : trainType.nameRoman) ?? '';
+  const boardingLine = transfer
+    ? (lines[0] ?? selectedLine)
+    : getBoardingLine(lines, boardingStation, selectedLine, destination);
+  const viaLines = transfer
+    ? lines.slice(1)
+    : getViaLines(lines, boardingLine, destination);
+  // 経路検索ではカードと同じ乗車路線の種別名を使う。選択・駅取得に使う
+  // trainType の id/groupId は代表のまま保持し、表示名だけを路線上の表記にする。
+  const displayTrainType =
+    destination || transfer ? (boardingLine.trainType ?? trainType) : trainType;
+  const title =
+    (ja
+      ? (displayTrainType.name ?? trainType.name)
+      : (displayTrainType.nameRoman ?? trainType.nameRoman)) ?? '';
 
-  // 同じ種別の路線をグループ化（連続していなくても同じtypeIdなら同一グループ）
+  // 乗換経路は隣り合う同一系統・種別だけをまとめ、乗車区間の順序を保つ。
+  // 通常の種別は従来どおり同じ typeId の路線をまとめる。
   const groupedViaLines = viaLines.reduce<Line[][]>((groups, l) => {
     const typeId = l.trainType?.typeId;
-    const existingGroup =
-      typeId !== null && typeId !== undefined
+    const last = groups.at(-1);
+    const groupId = l.trainType?.groupId;
+    const existingGroup = transfer
+      ? groupId != null &&
+        last?.[0]?.trainType?.groupId === groupId &&
+        last[0]?.trainType?.typeId === typeId
+        ? last
+        : undefined
+      : typeId != null
         ? groups.find((g) => g[0]?.trainType?.typeId === typeId)
         : undefined;
     if (existingGroup) {
@@ -216,27 +236,33 @@ export const buildTrainTypeRow = (
 
   const isSingleGroup = groupedViaLines.length <= 1;
 
-  const subtitle = isSingleGroup
-    ? ja
-      ? `${formatLineNames(viaLines, ja)}${viaLines.length ? ' 直通' : ''}`
-      : viaLines.length
-        ? `Via ${formatLineNames(viaLines, ja)}`
-        : ''
-    : groupedViaLines
-        .map((group) => {
-          const names = formatLineNames(group, ja);
-          const typeName = ja
-            ? (group[0]?.trainType?.name ?? '')
-            : (group[0]?.trainType?.nameRoman ?? '');
-          return typeName ? `${names} ${typeName}` : names;
-        })
-        .join('\n');
+  const subtitle =
+    !transfer && isSingleGroup
+      ? ja
+        ? `${formatLineNames(viaLines, ja)}${viaLines.length ? ' 直通' : ''}`
+        : viaLines.length
+          ? `Via ${formatLineNames(viaLines, ja)}`
+          : ''
+      : groupedViaLines
+          .map((group) => {
+            // Transfer subtitles describe the ride sequence, so company
+            // abbreviations and name deduplication would hide route segments.
+            const names = transfer
+              ? group
+                  .map((line) => (ja ? line.nameShort : line.nameRoman))
+                  .filter(Boolean)
+                  .join(ja ? ' ' : ', ')
+              : formatLineNames(group, ja);
+            const typeName = ja
+              ? (group[0]?.trainType?.name ?? '')
+              : (group[0]?.trainType?.nameRoman ?? '');
+            return typeName ? `${names} ${typeName}` : names;
+          })
+          .join('\n');
 
-  // カードの配色・路線記号・ナンバリングは全種別で選択中の路線に揃える。行ごとに
-  // 乗車路線を推定して切り替えると、同じ駅から同じように乗るのに種別ごとに色と記号が
-  // 変わり、一覧として並べたときに種別の違いが読み取りづらくなるため。
-  // 駅番号も同じ路線を基準に引くので CommonCard の路線記号一致が必ず成立する。
-  const cardLine = selectedLine;
+  // 経路検索では経路ごとの乗車路線で配色・記号・駅番号を揃える。
+  // 通常の種別選択は、選択路線上で種別を比べるため従来どおり同じ路線に揃える。
+  const cardLine = destination || transfer ? boardingLine : selectedLine;
   const cardLineStation = getBoardingLineStation(
     boardingStation,
     cardLine,
@@ -248,8 +274,15 @@ export const buildTrainTypeRow = (
     [
       trainType.name ?? '',
       trainType.nameRoman ?? '',
+      title,
       subtitle,
       ...viaLines.flatMap((l) => [l.nameShort ?? '', l.nameRoman ?? '']),
+      ...(transfer
+        ? viaLines.flatMap((l) => [
+            l.trainType?.name ?? '',
+            l.trainType?.nameRoman ?? '',
+          ])
+        : []),
     ].join(' ')
   );
 
