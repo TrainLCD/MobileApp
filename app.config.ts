@@ -64,7 +64,7 @@ export default {
     userInterfaceStyle: 'automatic',
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',
-    buildNumber: '2957',
+    buildNumber: '2958',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV
       ? 'me.tinykitten.trainlcd.dev'
@@ -78,7 +78,7 @@ export default {
         ? 'me.tinykitten.trainlcd.dev'
         : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000855,
+    versionCode: 100000857,
   },
   owner: 'trainlcd',
   experiments: {
