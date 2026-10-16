@@ -29,7 +29,27 @@ permissions:
   contents: read
 
 jobs:
+  verify-promotion:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify dev to canary merge before publishing
+        if: ${{ github.event_name == 'push' || inputs.publish_to_testflight }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/verify-canary-promotion.mjs
+
   build:
+    needs: verify-promotion
     runs-on: macos-26
     timeout-minutes: 60
     steps:

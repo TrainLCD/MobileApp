@@ -38,3 +38,12 @@ PR が open された瞬間に `pull_request: opened` トリガでこの workflo
 - fetch 後もローカル `dev` が `origin/dev` より先行している場合は **push を促さずに中断する**。`dev` は protected で直接 push できず（前掲「バージョン bump の取り扱い」）、先行分は PR 経由でしか `dev` に入らないため、このスキルでは解消できない。先行コミットの一覧（`git log --oneline origin/dev..dev`）を提示し、別ブランチへ切り出して PR を出すのかをユーザーに確認する。`create-pr` 側の「未 push なら push 可否を確認」ガードより、こちらの中断判断を優先する。
 - 変更の種類の自動判定・Assignee・テンプレ節構成の遵守は `create-pr` の手順に従う。このスキルで独自に本文を組み立て直さない。
 - 既に open な dev→canary PR がある場合は新規作成せず、既存 URL を再利用する（`create-pr` 側のガードに任せる）。既存 PR にはすでに `pull_request: opened` 起点で bump PR が作られているはずなので、`gh pr list --head "auto-version-bump-<canary_pr_number>" --base dev --state all --json number,url,state` でブランチ名一致で確認する（`--search` だとタイトル / 本文の曖昧一致になり別 PR を拾う可能性があるため `--head` / `--base` を使う。ここは GitHub 側のブランチ名を指す）。マッチが 0 件のときに限り `gh workflow run bump_version_on_canary_pr.yml -f pr_number=<canary_pr_number> -f head_ref=dev` で手動補填する。マッチがあれば結果（PR URL と state）をそのままユーザーに報告するだけで良い。
+
+## マージ時の必須条件
+
+- 昇格元は常に `dev`、昇格先は `canary` にします。別ブランチに差し替えません。
+- CI の成功と mergeable を確認し、PR の head SHA を取得して `gh pr merge <number> --merge --match-head-commit <full-head-sha>` で取り込みます。
+- `dev` 向け PR の squash 制約と Canary のマージ方式を混同しません。Canary の squash、rebase、管理者バイパス、ルール変更での迂回は禁止します。
+- 競合またはマージ拒否があれば停止して対象ブランチ・ルール・エラーを確認します。修正は dev 向け PR で行い、昇格 PR の head は dev のまま維持します。解消できない場合は原因と必要な判断をユーザーに報告します。
+- マージ後は取り込んだ head SHA が Canary の第2親であることと、両コミットの Git tree が一致することを確認します。後から進んだ dev の先端とは比較しません。
+- 配信ワークフローの `verify-promotion` が失敗した場合も迂回しません。検証処理は `.github/scripts/verify-canary-promotion.mjs` にあります。

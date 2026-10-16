@@ -10,6 +10,24 @@ Both workflows preserve the iOS build number committed to
 value together with `app.config.ts`; build workflows must not replace it with a
 GitHub Actions run number.
 
+
+## Canary promotion verification
+
+Canary publishing requires a merged PR from this repository's `dev` branch to
+`canary`, with a two-parent merge commit. The second parent must be the PR's
+recorded head commit, and the resulting Git tree must match that dev snapshot.
+The verifier uses the merged snapshot rather than the current dev tip, so later
+dev changes do not invalidate an existing release.
+
+Both Canary workflows run this check before the build job and before loading
+signing credentials or the private Fonts submodule. A failed GitHub API request
+also stops publishing. Manual build-only dry-runs remain available on other
+branches; manual runs that upload must pass the same verification as a push.
+
+If verification fails, resolve the cause through dev and the normal
+dev-to-canary merge. Do not replace the source branch, squash the promotion,
+bypass the rules, or disable the verifier.
+
 ## Prerequisites
 
 - A GitHub-hosted `macos-26` runner with Node.js 24 and CocoaPods available.
