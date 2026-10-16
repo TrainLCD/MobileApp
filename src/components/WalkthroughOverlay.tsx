@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { ViewInstance } from 'react-native';
 import {
   Platform,
   Pressable,
@@ -199,7 +200,7 @@ const WalkthroughOverlay: React.FC<Props> = ({
   const colors = useAppColors();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const maskId = useId();
-  const overlayRef = useRef<View>(null);
+  const overlayRef = useRef<ViewInstance>(null);
   const [overlayOffset, setOverlayOffset] = useState({ x: 0, y: 0 });
 
   const { spotlightArea, tooltipPosition = 'bottom' } = step;

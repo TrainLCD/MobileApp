@@ -10,6 +10,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import type { ViewInstance } from 'react-native';
 import {
   Pressable,
   Animated as RNAnimated,
@@ -212,7 +213,7 @@ const ColorSchemeSettingsScreen: React.FC = () => {
     width: number;
     height: number;
   } | null>(null);
-  const toggleRef = useRef<View>(null);
+  const toggleRef = useRef<ViewInstance>(null);
 
   // 画面を開いたことを記録し、次からはスポットライトを出さない
   useEffect(() => {

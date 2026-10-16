@@ -378,10 +378,10 @@ describe('LineBoardJO', () => {
       ).find((node) => node.props.pointerEvents === 'none');
       expect(unitContainer).toBeTruthy();
       const style = StyleSheet.flatten(unitContainer?.props.style as ViewStyle);
-      expect(style.position).toBe('absolute');
-      expect(style.left).toBe(36); // ドット幅32px + 間隔4px
-      expect(style.top).toBe(0);
-      expect(style.height).toBe(32); // ドットと同じ高さで縦中央揃え
+      expect(style?.position).toBe('absolute');
+      expect(style?.left).toBe(36); // ドット幅32px + 間隔4px
+      expect(style?.top).toBe(0);
+      expect(style?.height).toBe(32); // ドットと同じ高さで縦中央揃え
     });
   });
 

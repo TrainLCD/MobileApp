@@ -1,4 +1,4 @@
-import type { StyleProp, TextStyle } from 'react-native';
+import type { Animated, StyleProp, TextStyle } from 'react-native';
 import type { Line, Station, StationNumber, TrainType } from '~/@types/graphql';
 import type {
   HeaderLangState,
@@ -68,14 +68,18 @@ export type HeaderAnimationState = {
   prevIsJapaneseState: boolean;
 
   // アニメーションスタイル
-  stateTopAnimatedStyles: StyleProp<TextStyle>;
-  stateBottomAnimatedStyles: StyleProp<TextStyle>;
-  stateTopAnimatedStylesRight: StyleProp<TextStyle>;
-  stateBottomAnimatedStylesRight: StyleProp<TextStyle>;
-  topNameAnimatedAnchorStyle: StyleProp<TextStyle>;
-  bottomNameAnimatedAnchorStyle: StyleProp<TextStyle>;
-  topNameAnimatedStyles: StyleProp<TextStyle>;
-  bottomNameAnimatedStyles: StyleProp<TextStyle>;
-  boundTopAnimatedStyles: StyleProp<TextStyle>;
-  boundBottomAnimatedStyles: StyleProp<TextStyle>;
+  stateTopAnimatedStyles: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
+  stateBottomAnimatedStyles: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
+  stateTopAnimatedStylesRight: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
+  stateBottomAnimatedStylesRight: Animated.WithAnimatedValue<
+    StyleProp<TextStyle>
+  >;
+  topNameAnimatedAnchorStyle: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
+  bottomNameAnimatedAnchorStyle: Animated.WithAnimatedValue<
+    StyleProp<TextStyle>
+  >;
+  topNameAnimatedStyles: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
+  bottomNameAnimatedStyles: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
+  boundTopAnimatedStyles: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
+  boundBottomAnimatedStyles: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
 };

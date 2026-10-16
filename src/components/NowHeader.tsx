@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
+import type { ViewInstance } from 'react-native';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -120,7 +121,7 @@ export const NowHeader = ({
     stationSearchModalVisibleAtom
   );
   const stationResolveFailed = useAtomValue(stationResolveFailedAtom);
-  const headerCardRef = useRef<View>(null);
+  const headerCardRef = useRef<ViewInstance>(null);
 
   const setStationAtom = useSetAtom(stationState);
   const setNavigationAtom = useSetAtom(navigationState);

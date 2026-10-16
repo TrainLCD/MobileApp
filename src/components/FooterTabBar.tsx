@@ -7,6 +7,7 @@ import {
 import { GlassView } from 'expo-glass-effect';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useRef } from 'react';
+import type { ViewInstance } from 'react-native';
 import {
   type LayoutChangeEvent,
   Platform,
@@ -153,7 +154,7 @@ type TabButtonProps = {
   accessibilityLabel?: string;
   onPress: () => void;
   onLayout?: (event: LayoutChangeEvent) => void;
-  buttonRef?: React.Ref<View>;
+  buttonRef?: React.Ref<ViewInstance>;
   children: React.ReactNode;
 };
 
@@ -227,9 +228,9 @@ const FooterTabBar: React.FC<Props> = ({
     },
     [navigation, route.name]
   );
-  const searchButtonRef = useRef<View>(null);
-  const reviewButtonRef = useRef<View>(null);
-  const settingsButtonRef = useRef<View>(null);
+  const searchButtonRef = useRef<ViewInstance>(null);
+  const reviewButtonRef = useRef<ViewInstance>(null);
+  const settingsButtonRef = useRef<ViewInstance>(null);
 
   const pillTranslateX = useSharedValue(0);
   // 0 → 1 でピルがスケールインする。初回マウント時の出現にのみ使い、

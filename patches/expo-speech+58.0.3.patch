@@ -1,5 +1,5 @@
 diff --git a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
-index 9ca869c..d85cdc3 100644
+index af958a56b..f063284fb 100644
 --- a/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
 +++ b/node_modules/expo-speech/android/src/main/java/expo/modules/speech/SpeechModule.kt
 @@ -8,6 +8,7 @@ import expo.modules.kotlin.Promise
@@ -7,10 +7,18 @@ index 9ca869c..d85cdc3 100644
  import expo.modules.kotlin.modules.ModuleDefinition
  import java.util.ArrayDeque
 +import kotlinx.coroutines.launch
+ import java.util.IllformedLocaleException
  import java.util.Locale
  import java.util.Queue
+@@ -21,7 +22,6 @@ const val speakingErrorEvent = "Exponent.speakingError"
+ class SpeechModule : Module() {
+   private val delayedUtterances: Queue<Utterance> = ArrayDeque()
+   private val delayedGetVoices: Queue<Promise> = ArrayDeque()
+-  private var ttsState = TtsState.PENDING
  
-@@ -36,12 +37,34 @@ class SpeechModule : Module() {
+   override fun definition() = ModuleDefinition {
+     Name("ExpoSpeech")
+@@ -38,29 +38,50 @@ class SpeechModule : Module() {
        TextToSpeech.getMaxSpeechInputLength()
      }
  
@@ -32,14 +40,14 @@ index 9ca869c..d85cdc3 100644
 +        stopDelayedUtterances()
 +        resolveDelayedGetVoicesWithEmptyList()
 +      }
-     }
- 
++    }
++
 +    OnActivityEntersForeground {
 +      appContext.modulesQueue.launch {
 +        hostDestroyed = false
 +      }
-+    }
-+
+     }
+ 
 +    // TrainLCD patch: isSpeaking / stop のためだけにエンジンへ接続し直さない
      AsyncFunction<Boolean>("isSpeaking") {
 -      textToSpeech.isSpeaking
@@ -47,7 +55,23 @@ index 9ca869c..d85cdc3 100644
      }
  
      AsyncFunction("getVoices") { promise: Promise ->
-@@ -56,7 +79,8 @@ class SpeechModule : Module() {
+-      when (ttsState) {
+-        TtsState.READY -> promise.resolve(getVoices())
+-        TtsState.FAILED -> promise.resolve(emptyList<VoiceRecord>())
+-        TtsState.PENDING -> {
+-          delayedGetVoices.add(promise)
+-
+-          // Init TTS, the promise will be fulfilled after onInit
+-          textToSpeech
+-        }
++      if (isTextToSpeechReady) {
++        promise.resolve(getVoices())
++      } else {
++        delayedGetVoices.add(promise)
++
++        // Init TTS, the promise will be fulfilled after onInit
++        textToSpeech
+       }
      }
  
      AsyncFunction<Unit>("stop") {
@@ -57,28 +81,41 @@ index 9ca869c..d85cdc3 100644
      }
  
      AsyncFunction("speak") { id: String, text: String, options: SpeechOptions ->
-@@ -64,7 +88,10 @@ class SpeechModule : Module() {
+@@ -68,15 +89,16 @@ class SpeechModule : Module() {
          throw SpeechInputIsToLongException()
        }
  
--      if (isTextToSpeechReady) {
+-      when (ttsState) {
+-        TtsState.READY -> speakOut(id, text, options)
+-        TtsState.FAILED -> sendEvent(speakingErrorEvent, idToMap(id))
+-        TtsState.PENDING -> {
+-          delayedUtterances.add(Utterance(id, text, options))
 +      if (hostDestroyed) {
 +        // 受け付けなかったことを JS へ返し、完了待ちのまま残さない
 +        sendEvent(speakingStoppedEvent, idToMap(id))
 +      } else if (isTextToSpeechReady) {
-         speakOut(id, text, options)
-       } else {
-         delayedUtterances.add(Utterance(id, text, options))
-@@ -143,50 +170,114 @@ class SpeechModule : Module() {
-   private val isTextToSpeechReady
-     get() = _ttsReady
++        speakOut(id, text, options)
++      } else {
++        delayedUtterances.add(Utterance(id, text, options))
+ 
+-          // init TTS, speaking will be available only after onInit
+-          textToSpeech
+-        }
++        // init TTS, speaking will be available only after onInit
++        textToSpeech
+       }
+       Unit
+     }
+@@ -150,56 +172,117 @@ class SpeechModule : Module() {
+ 
+   // TextToSpeech object related code
  
 -  private val textToSpeech: TextToSpeech by lazy {
 -    val newTtsInstance = TextToSpeech(appContext.reactContext) { status: Int ->
 -      if (status == TextToSpeech.SUCCESS) {
 -        // synchronize because in some cases this runs on another thread and _textToSpeech is null
 -        synchronized(this@SpeechModule) {
--          _ttsReady = true
+-          ttsState = TtsState.READY
 -          _textToSpeech!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
 -
 -            override fun onStart(utteranceId: String) {
@@ -113,6 +150,15 @@ index 9ca869c..d85cdc3 100644
 -            promise.resolve(getVoices())
 -          }
 -        }
+-      } else {
+-        synchronized(this@SpeechModule) {
+-          ttsState = TtsState.FAILED
+-          delayedGetVoices.forEach { it.resolve(emptyList<VoiceRecord>()) }
+-          delayedUtterances.forEach { sendEvent(speakingErrorEvent, idToMap(it.id)) }
+-        }
++  private val isTextToSpeechReady
++    get() = _ttsReady
++
 +  // TrainLCD patch: by lazy では shutdown 後に作り直せないため、破棄されていれば作り直す。
 +  // modulesQueue のスレッドからだけ呼ぶ
 +  private val textToSpeech: TextToSpeech
@@ -225,14 +271,20 @@ index 9ca869c..d85cdc3 100644
    }
  
    // Helpers
-@@ -200,7 +291,10 @@ class SpeechModule : Module() {
+@@ -213,12 +296,10 @@ class SpeechModule : Module() {
      val options: SpeechOptions
    )
  
--  // do not refer to these - they're only needed when initializing `textToSpeech`
+-  private enum class TtsState {
+-    PENDING,
+-    READY,
+-    FAILED
+-  }
+-
+-  // do not refer to this - it's only needed when initializing `textToSpeech`
 +  // TrainLCD patch: 以下の状態と待ち行列は modulesQueue のスレッドだけで読み書きする
    private var _textToSpeech: TextToSpeech? = null
-   private var _ttsReady = false
++  private var _ttsReady = false
 +
 +  // TrainLCD patch: Activity が破棄されてから次に前面へ戻るまでの間か
 +  private var hostDestroyed = false
