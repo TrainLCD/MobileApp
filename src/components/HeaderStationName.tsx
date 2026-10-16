@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  type Animated,
   type LayoutChangeEvent,
-  type NativeSyntheticEvent,
   type StyleProp,
   StyleSheet,
   Text,
-  type TextLayoutEventData,
+  type TextLayoutEvent,
   type TextProps,
   type TextStyle,
   View,
@@ -21,7 +21,7 @@ const MEASURED_TEXT_WIDTH_BUFFER = 8;
 type Props = {
   text: string;
   containerStyle?: StyleProp<ViewStyle>;
-  textStyle: StyleProp<TextStyle>;
+  textStyle: Animated.WithAnimatedValue<StyleProp<TextStyle>>;
   textProps?: Omit<TextProps, 'children' | 'onLayout' | 'style'>;
   TextComponent?: React.ComponentType<TextProps>;
 };
@@ -58,8 +58,11 @@ const HeaderStationName: React.FC<Props> = ({
   containerStyle,
   textStyle,
   textProps,
-  TextComponent = Text,
+  TextComponent: TextComponentProp = Text,
 }) => {
+  const TextComponent = TextComponentProp as React.ComponentType<
+    Animated.AnimatedProps<TextProps>
+  >;
   const [containerWidth, setContainerWidth] = useState(0);
   const [measuredText, setMeasuredText] = useState({ text: '', width: 0 });
   const measuredTextWidth = measuredText.text === text ? measuredText.width : 0;
@@ -71,7 +74,7 @@ const HeaderStationName: React.FC<Props> = ({
   }, []);
 
   const handleTextLayout = useCallback(
-    (event: NativeSyntheticEvent<TextLayoutEventData>) => {
+    (event: TextLayoutEvent) => {
       const measuredWidth = event.nativeEvent.lines.reduce(
         (maxWidth, line) => Math.max(maxWidth, line.width),
         0

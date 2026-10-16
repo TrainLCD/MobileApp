@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { ScrollViewInstance, ViewInstance } from 'react-native';
 import {
   ActivityIndicator,
   Pressable,
   Animated as RNAnimated,
-  type ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -71,7 +71,7 @@ type WalkthroughTargetRefs = Record<
   | 'rideReviewSummary'
   | 'rideReviewRouteMap'
   | 'rideReviewTopLines',
-  React.RefObject<View | null>
+  React.RefObject<ViewInstance | null>
 >;
 
 const PERIOD_LABEL_KEYS: Record<RidePeriod, string> = {
@@ -846,7 +846,7 @@ const RideReviewScreen: React.FC = () => {
   ).current;
 
   // --- ウォークスルー(#7117) ---
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   // スクロール位置。ネイティブで動く scrollY を JS 側でも読めるよう購読する
   const scrollOffsetRef = useRef(0);
   useEffect(() => {
@@ -856,10 +856,10 @@ const RideReviewScreen: React.FC = () => {
     return () => scrollY.removeListener(id);
   }, [scrollY]);
 
-  const periodRef = useRef<View>(null);
-  const summaryRef = useRef<View>(null);
-  const routeMapRef = useRef<View>(null);
-  const topLinesRef = useRef<View>(null);
+  const periodRef = useRef<ViewInstance>(null);
+  const summaryRef = useRef<ViewInstance>(null);
+  const routeMapRef = useRef<ViewInstance>(null);
+  const topLinesRef = useRef<ViewInstance>(null);
   const walkthroughRefs = useRef<WalkthroughTargetRefs>({
     rideReviewPeriod: periodRef,
     rideReviewSummary: summaryRef,

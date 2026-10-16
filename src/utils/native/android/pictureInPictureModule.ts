@@ -23,8 +23,7 @@ export const addPictureInPictureModeChangeListener = (
     return { remove: () => undefined };
   }
 
-  return new NativeEventEmitter(PictureInPictureModule).addListener(
-    EVENT_NAME,
-    listener
-  );
+  return new NativeEventEmitter<{
+    [EVENT_NAME]: [PictureInPictureModeChangedEvent];
+  }>(PictureInPictureModule).addListener(EVENT_NAME, listener);
 };

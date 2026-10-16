@@ -6,6 +6,39 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-10-16 — Expo SDK 58 へ移行
+
+### 内容
+
+- Expo を 58.0.13、React Native を 0.88.0、React を 19.3.0 へ更新し、Expo が指定する関連パッケージを揃えました。
+- WSL の npm ci で不足を検出した任意依存パッケージ @emnapi/core と @emnapi/runtime をロックファイルに補いました。既存パッケージの解決済みバージョンは変更していません。
+- React Native の Strict TypeScript API に合わせて、画面・入力欄・スクロール領域の参照型、テキスト計測イベント、アニメーションスタイル、ネイティブイベントの型を更新しました。
+- iOS 本体と両 App Clip で ExpoReactNativeFactoryProvider と SceneDelegate を使い、各 Info.plist にシーン設定を追加しました。Firebase の初期化は React Native の起動より前に維持しました。
+- Expo Modules V2 の Promise から PromiseHandle への変更に対して古い AAR が残る上流不具合を、expo/expo#51693 の修正版で解消しました。expo-haptics 58.0.7、expo-crypto 58.0.7、expo-application 58.1.2 を使います。Haptics のソースビルド追加や無効化は行いません。
+- AGP 9 の名前空間重複検査は、MMKV 2.4.0 と annotation AAR が同じ名前空間を持つため、AGP 8 と同じ設定を維持しました。
+- Android は SDK 58 の公式テンプレートに合わせて Gradle 9.4.1 と AGP 9 の互換設定を適用しました。
+- Activity 破棄後から前面復帰までに音声一覧を求められた場合は、空の一覧を返します。#7184 の TTS 再接続の制限を getVoices にも適用し、破棄後にエンジンへ接続し直すことを防ぎました。
+- expo-speech のパッチを 58.0.3 へ移しました。#7184 の Activity 破棄後の再初期化・前面復帰までの発話停止を維持し、58 系の言語処理も残しました。
+- 音声ファイルは File.writeSync() で保存し、#6685 の保存完了後に再生パスを返す動作を維持しました。保存失敗時に失敗結果をキャッシュしない回帰テストを追加しました。
+- Jest 設定を jest.config.js へ移しました。Jest 30、React Native の独立した Jest preset、React 19.3.0 用の test renderer を使用します。jest-expo の依存する jest-watch-typeahead 3 は Jest 30 を要求するため、Expo の旧 Jest 29 推奨値の検査から jest と @types/jest だけを除外しました。
+- jest-expo が参照する expo-modules-core は Expo 自身の依存先から解決します。SDK 58 の公開 AssetRegistry に、従来のアセットモックを共有しました。ディープリンクのテストでは、実装が使用する4つの状態更新関数にモックを揃えました。既存の期待値は維持しています。
+
+### 確認
+
+- expo-doctor: 19/19 項目を通過しました。既存の appConfigFieldsNotSyncedCheck 無効設定を維持しています。
+- Windows と WSL で npm ci が成功し、4件のパッチが自動適用されました。修正後のロックファイルは Windows でも npm ci --dry-run が通過しました。
+- npm run lint と npm run typecheck は Windows と WSL の両方で通過しました。
+- 2026-10-17 に WSL の Ubuntu 上で npm test -- --runInBand を実行し、全328ファイル・3677件が通過しました。Windows で失敗した scripts/fetch-voicevox-frameworks.test.js の署名テストも通過しました。Windows での ENOENT は更新前の Jest 29 でも再現し、対象スクリプトとテストは変更していません。
+- 追加した音声保存失敗の回帰テストを含む ttsSpeechFetcher.test.ts の29件は通過しました。
+- WSL の Java 25 と Gradle 9.4.1 で :app:assembleLocalDebug が成功しました。Android 13 の T12_ROW へ me.tinykitten.trainlcd.local をインストールし、開発サーバー経由での起動と路線表示を確認しました。公式修正版の Haptics で長押しメニューが開き、Android の振動履歴にアプリからの実行が記録されることも確認しました。iOS のビルド・実機確認と Android の音声再生の確認は実施していません。
+
+### 参照
+
+- [Expo Modules V2 の配布バイナリ修正](https://github.com/expo/expo/pull/51693)
+- [Expo SDK 58 リリースノート](https://expo.dev/changelog/sdk-58)
+- [iOS のシーン移行手順](https://github.com/expo/fyi/blob/main/ios-scene-lifecycle.md)
+- ネイティブ設定は expo-template-bare-minimum@58.0.21 と照合しました。
+
 ## 2026-10-05 — ビルドに入っていなかった expo-task-manager のパッチを削除
 
 対象バージョン: v10.18.0 時点の `dev`

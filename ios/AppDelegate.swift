@@ -3,8 +3,8 @@ import React
 import ReactAppDependencyProvider
 import FirebaseCore
 
-@UIApplicationMain
-internal class AppDelegate: ExpoAppDelegate {
+@main
+internal class AppDelegate: ExpoAppDelegate, ExpoReactNativeFactoryProvider {
   var window: UIWindow?
 
   var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
@@ -24,14 +24,6 @@ internal class AppDelegate: ExpoAppDelegate {
     // Firebase Analytics。ターゲットごとに Schemes/{Dev,Prod}/GoogleService-Info.plist を同梱している。
     // JS 側から default app を参照する前に初期化を済ませるため、React Native の起動より前に呼ぶ
     FirebaseApp.configure()
-
-#if os(iOS) || os(tvOS)
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions)
-#endif
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -72,3 +64,7 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 #endif
   }
 }
+
+// SDK 58: UIKit creates the window and starts React Native when the scene connects.
+@objc(SceneDelegate)
+internal class SceneDelegate: ExpoAppSceneDelegate {}

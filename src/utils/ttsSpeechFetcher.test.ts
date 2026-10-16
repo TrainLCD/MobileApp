@@ -1,4 +1,8 @@
-import { mockFetch, mockFileDelete } from '~/utils/test/ttsMocks';
+import {
+  mockFetch,
+  mockFileDelete,
+  mockFileWriteSync,
+} from '~/utils/test/ttsMocks';
 import {
   clearFetchCache,
   fetchSpeechAudio,
@@ -196,6 +200,27 @@ describe('fetchSpeechAudio', () => {
 
     const result = await fetchSpeechAudio(defaultOptions);
     expect(result).toBeNull();
+  });
+
+  it('ファイル保存に失敗した音声をキャッシュせず、次の要求で再取得する', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({
+        id: 'tts-write-error',
+        jaAudioContent: 'QQ==',
+        enAudioContent: 'QQ==',
+      })
+    );
+    mockFileWriteSync.mockImplementationOnce(() => {
+      throw new Error('Disk full');
+    });
+
+    expect(await fetchSpeechAudio(defaultOptions)).toBeNull();
+    expect(await fetchSpeechAudio(defaultOptions)).toEqual({
+      id: 'tts-write-error',
+      pathJa: '/tmp/tts-write-error_ja.wav',
+      pathEn: '/tmp/tts-write-error_en.wav',
+    });
+    expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
   it('リクエストがハングした場合はタイムアウトで中断して null を返す', async () => {

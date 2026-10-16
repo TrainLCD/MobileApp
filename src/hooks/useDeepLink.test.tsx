@@ -106,7 +106,7 @@ describe('useDeepLink', () => {
   const mockAddEventListener = Linking.addEventListener as jest.Mock;
 
   // Relies on useDeepLink calling useSetAtom in this exact order:
-  // stationState, navigationState, lineState (matching the hook's declaration order).
+  // stationState, navigationState, lineState, themePreferenceAtom.
   const setupAtoms = () => {
     const mockSetStationState = jest.fn();
     const mockSetNavigationState = jest.fn();
@@ -115,10 +115,11 @@ describe('useDeepLink', () => {
       mockSetStationState,
       mockSetNavigationState,
       mockSetLineState,
+      jest.fn(),
     ];
     let atomCallIdx = 0;
     mockUseSetAtom.mockImplementation(() => {
-      const result = setters[atomCallIdx % 3];
+      const result = setters[atomCallIdx % setters.length];
       atomCallIdx++;
       return result;
     });

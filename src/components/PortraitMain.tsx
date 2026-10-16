@@ -18,13 +18,13 @@ import {
   useRef,
   useState,
 } from 'react';
+import type { ScrollViewInstance } from 'react-native';
 import {
   type LayoutChangeEvent,
-  type NativeSyntheticEvent,
   Pressable,
   ScrollView,
   StyleSheet,
-  type TextLayoutEventData,
+  type TextLayoutEvent,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -1035,9 +1035,7 @@ const StationName = ({
       ? availableWidth / renderWidth
       : 1;
 
-  const handleTextLayout = (
-    e: NativeSyntheticEvent<TextLayoutEventData>
-  ): void => {
+  const handleTextLayout = (e: TextLayoutEvent): void => {
     const width = e.nativeEvent.lines.reduce(
       (max, line) => Math.max(max, line.width),
       0
@@ -1579,7 +1577,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   // 到着(ピン=現在駅)・出発(ピン=次駅)のたびに、ピンの行を表示領域の上
   // (1つ前の駅が見える程度に1行分の余白を残した位置)へスクロールする。
   // ピンの行が変わったときと、その行のレイアウトが確定・変化したときに動かす。
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   // 各行の上端 y を index で記録する(onLayout は行のレイアウト時にしか発火しない
   // ので、ピンが別の行へ移っても再取得できない。全行を記録して index で引く)。
   // 描画には使わない値なので state にせず ref に置く。state にすると初回表示で

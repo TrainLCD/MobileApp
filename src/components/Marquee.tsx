@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
+import type { ViewInstance } from 'react-native';
 import {
   Animated,
   Easing,
@@ -12,7 +13,6 @@ import {
   ScrollView,
   type StyleProp,
   StyleSheet,
-  type View,
   type ViewStyle,
 } from 'react-native';
 import { useLandscapeWindowDimensions } from '~/hooks';
@@ -30,7 +30,7 @@ const PIXELS_PER_SECOND = 400;
 const Marquee = ({ children }: Props) => {
   const dim = useLandscapeWindowDimensions();
 
-  const wrapperViewRef = useRef<View>(null);
+  const wrapperViewRef = useRef<ViewInstance>(null);
   const offsetX = useRef(new Animated.Value(dim.width)).current;
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const contentWidthRef = useRef(0);
