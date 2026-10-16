@@ -1,11 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { ScrollViewInstance, TextInputInstance } from 'react-native';
 import {
   AccessibilityInfo,
   ScrollView,
   StyleSheet,
-  type TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -174,8 +174,8 @@ const DestinationAgentScreen = () => {
     Record<string, SuggestionState>
   >({});
 
-  const scrollRef = useRef<ScrollView>(null);
-  const inputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const entryIdRef = useRef(0);
   // 多重送信の最終防衛線。state 更新の非同期性に依存しないよう ref でも持つ
   const sendingRef = useRef(false);

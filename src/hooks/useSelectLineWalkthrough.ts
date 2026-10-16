@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 import type { ButtonLayout } from '~/components/FooterTabBar';
 import type { HeaderLayout } from '~/components/NowHeader';
 import { useWalkthroughCompleted } from './useWalkthroughCompleted';
@@ -35,8 +35,8 @@ export const useSelectLineWalkthrough = () => {
   );
   const [lineListLayout, setLineListLayout] = useState<Layout | null>(null);
   const [presetsLayout, setPresetsLayout] = useState<Layout | null>(null);
-  const lineListRef = useRef<View>(null);
-  const presetsRef = useRef<View>(null);
+  const lineListRef = useRef<ViewInstance>(null);
+  const presetsRef = useRef<ViewInstance>(null);
 
   // NowHeader をハイライト
   useEffect(() => {

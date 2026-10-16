@@ -11,10 +11,10 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import type { ScrollViewInstance, ViewInstance } from 'react-native';
 import {
   Platform,
   Animated as RNAnimated,
-  type ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -236,7 +236,7 @@ const AppSettingsScreen: React.FC = () => {
   const [viewportHeight, setViewportHeight] = useState(0);
 
   const scrollY = useRef(new RNAnimated.Value(0)).current;
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
   // ウォークスルー中は背景の Pressable が画面全体のタッチを受けるため、ユーザーは
   // スクロールできない。スクロール位置はウォークスルーが動かした値だけになるので、
   // それを覚えておき、各行の位置をスクロールしていないときの座標にそろえて持つ
@@ -248,10 +248,10 @@ const AppSettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const showRideLogHint = useRideLogSettingsHint();
 
-  const themeRef = useRef<View>(null);
-  const colorSchemeRef = useRef<View>(null);
-  const ttsRef = useRef<View>(null);
-  const languagesRef = useRef<View>(null);
+  const themeRef = useRef<ViewInstance>(null);
+  const colorSchemeRef = useRef<ViewInstance>(null);
+  const ttsRef = useRef<ViewInstance>(null);
+  const languagesRef = useRef<ViewInstance>(null);
 
   const {
     isWalkthroughActive,

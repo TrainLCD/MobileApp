@@ -103,7 +103,7 @@ const AppContent: React.FC = () => {
   return (
     <>
       {Platform.OS === 'ios' ? (
-        <StatusBar hidden translucent backgroundColor="transparent" />
+        <StatusBar hidden />
       ) : (
         <SystemBars hidden style="auto" />
       )}

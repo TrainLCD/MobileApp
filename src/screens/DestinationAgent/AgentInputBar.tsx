@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useAtomValue } from 'jotai';
 import { type RefObject, useCallback, useMemo } from 'react';
+import type { TextInputInstance } from 'react-native';
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, {
   FadeIn,
@@ -69,7 +70,7 @@ type Props = {
   sending: boolean;
   /** 429(日次上限)到達。入力自体を受け付けない */
   rateLimited: boolean;
-  inputRef?: RefObject<TextInput | null>;
+  inputRef?: RefObject<TextInputInstance | null>;
 };
 
 export const AgentInputBar = ({
