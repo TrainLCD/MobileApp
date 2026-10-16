@@ -203,12 +203,11 @@ jobs:
         run: |
           export_options_path="$RUNNER_TEMP/ArtifactExportOptions.plist"
           plutil -create xml1 "$export_options_path"
-          plutil -insert method -string app-store-connect "$export_options_path"
+          plutil -insert method -string release-testing "$export_options_path"
           plutil -insert destination -string export "$export_options_path"
           plutil -insert signingStyle -string automatic "$export_options_path"
           plutil -insert teamID -string E6R2G33Z36 "$export_options_path"
           plutil -insert manageAppVersionAndBuildNumber -bool false "$export_options_path"
-          plutil -insert uploadSymbols -bool true "$export_options_path"
 
           xcodebuild \
             -exportArchive \
