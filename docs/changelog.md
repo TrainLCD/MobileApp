@@ -30,7 +30,7 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 - npm run lint と npm run typecheck は Windows と WSL の両方で通過しました。
 - 2026-10-17 に WSL の Ubuntu 上で npm test -- --runInBand を実行し、全328ファイル・3677件が通過しました。Windows で失敗した scripts/fetch-voicevox-frameworks.test.js の署名テストも通過しました。Windows での ENOENT は更新前の Jest 29 でも再現し、対象スクリプトとテストは変更していません。
 - 追加した音声保存失敗の回帰テストを含む ttsSpeechFetcher.test.ts の29件は通過しました。
-- WSL の Java 25 と Gradle 9.4.1 で :app:assembleLocalDebug が成功しました。Android 13 の T12_ROW へ me.tinykitten.trainlcd.local をインストールし、開発サーバー経由での起動と路線表示を確認しました。iOS のビルド・実機確認と Android の音声再生の確認は実施していません。
+- WSL の Java 25 と Gradle 9.4.1 で :app:assembleLocalDebug が成功しました。Android 13 の T12_ROW へ me.tinykitten.trainlcd.local をインストールし、開発サーバー経由での起動と路線表示を確認しました。公式修正版の Haptics で長押しメニューが開き、Android の振動履歴にアプリからの実行が記録されることも確認しました。iOS のビルド・実機確認と Android の音声再生の確認は実施していません。
 
 ### 参照
 
