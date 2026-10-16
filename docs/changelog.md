@@ -15,6 +15,7 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 - React Native の Strict TypeScript API に合わせて、画面・入力欄・スクロール領域の参照型、テキスト計測イベント、アニメーションスタイル、ネイティブイベントの型を更新しました。
 - iOS 本体と両 App Clip で ExpoReactNativeFactoryProvider と SceneDelegate を使い、各 Info.plist にシーン設定を追加しました。Firebase の初期化は React Native の起動より前に維持しました。
 - Android は SDK 58 の公式テンプレートに合わせて Gradle 9.4.1 と AGP 9 の互換設定を適用しました。
+- Activity 破棄後から前面復帰までに音声一覧を求められた場合は、空の一覧を返します。#7184 の TTS 再接続の制限を getVoices にも適用し、破棄後にエンジンへ接続し直すことを防ぎました。
 - expo-speech のパッチを 58.0.3 へ移しました。#7184 の Activity 破棄後の再初期化・前面復帰までの発話停止を維持し、58 系の言語処理も残しました。
 - 音声ファイルは File.writeSync() で保存し、#6685 の保存完了後に再生パスを返す動作を維持しました。保存失敗時に失敗結果をキャッシュしない回帰テストを追加しました。
 - Jest 設定を jest.config.js へ移しました。Jest 30、React Native の独立した Jest preset、React 19.3.0 用の test renderer を使用します。jest-expo の依存する jest-watch-typeahead 3 は Jest 30 を要求するため、Expo の旧 Jest 29 推奨値の検査から jest と @types/jest だけを除外しました。

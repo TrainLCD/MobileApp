@@ -18,7 +18,7 @@ index af958a56b..f063284fb 100644
  
    override fun definition() = ModuleDefinition {
      Name("ExpoSpeech")
-@@ -38,29 +38,50 @@ class SpeechModule : Module() {
+@@ -38,29 +38,52 @@ class SpeechModule : Module() {
        TextToSpeech.getMaxSpeechInputLength()
      }
  
@@ -64,7 +64,9 @@ index af958a56b..f063284fb 100644
 -          // Init TTS, the promise will be fulfilled after onInit
 -          textToSpeech
 -        }
-+      if (isTextToSpeechReady) {
++      if (hostDestroyed) {
++        promise.resolve(emptyList<VoiceRecord>())
++      } else if (isTextToSpeechReady) {
 +        promise.resolve(getVoices())
 +      } else {
 +        delayedGetVoices.add(promise)
@@ -81,7 +83,7 @@ index af958a56b..f063284fb 100644
      }
  
      AsyncFunction("speak") { id: String, text: String, options: SpeechOptions ->
-@@ -68,15 +89,16 @@ class SpeechModule : Module() {
+@@ -68,15 +91,16 @@ class SpeechModule : Module() {
          throw SpeechInputIsToLongException()
        }
  
@@ -106,7 +108,7 @@ index af958a56b..f063284fb 100644
        }
        Unit
      }
-@@ -150,56 +172,117 @@ class SpeechModule : Module() {
+@@ -150,56 +174,117 @@ class SpeechModule : Module() {
  
    // TextToSpeech object related code
  
@@ -271,7 +273,7 @@ index af958a56b..f063284fb 100644
    }
  
    // Helpers
-@@ -213,12 +296,10 @@ class SpeechModule : Module() {
+@@ -213,12 +298,10 @@ class SpeechModule : Module() {
      val options: SpeechOptions
    )
  
