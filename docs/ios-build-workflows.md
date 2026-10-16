@@ -2,8 +2,22 @@
 
 The iOS Canary and Production GitHub Actions workflows archive signed apps and
 optionally upload them to TestFlight. A push to `canary` or `master` uploads the
-corresponding build automatically. A manual run defaults to an archive-only
-dry-run.
+corresponding build automatically. A manual run defaults to skipping TestFlight
+upload. Canary manual runs also export and save an IPA; Production manual runs
+archive the app and save dSYMs.
+
+Canary runs also export an Ad Hoc-signed IPA (`release-testing`) without uploading it
+and save it as the `app-canary-ipa` Actions artifact. This includes manual runs
+with TestFlight upload disabled. Register each test device's UDID in the Apple
+Developer account before exporting. The device must be included in the signing
+profiles for the app and its embedded targets. The exported IPA can then be
+installed on those devices without re-signing. Automatic signing updates the
+profiles during export; export fails if suitable profiles cannot be created.
+TestFlight uploads continue to use a separate App Store Connect export.
+If IPA export or artifact upload fails, the job fails, but TestFlight upload
+still runs when requested, provided archiving succeeded and the run was not
+cancelled.
+Production runs continue to preserve only dSYMs as artifacts.
 
 Both workflows preserve the iOS build number committed to
 `ios/TrainLCD.xcodeproj/project.pbxproj`. The version bump workflow updates that
@@ -59,6 +73,8 @@ the archive starts so a missing private key fails with a targeted error.
 3. Leave **Upload the archive to TestFlight** disabled.
 4. Run the workflow and confirm that dependency installation, environment
    validation, signing, archive creation, and dSYM upload succeed.
+   For Canary, also confirm that IPA export and the `app-canary-ipa` artifact
+   upload succeed.
 5. Confirm that **Upload to TestFlight** is skipped and that
    **Remove signing credentials** runs even if an earlier step fails.
 
