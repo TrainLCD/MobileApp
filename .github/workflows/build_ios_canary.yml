@@ -178,6 +178,7 @@ jobs:
           fi
 
       - name: Archive canary
+        id: archive
         env:
           APP_VARIANT: "dev"
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
@@ -227,7 +228,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload to TestFlight
-        if: github.event_name == 'push' || inputs.publish_to_testflight
+        if: ${{ !cancelled() && steps.archive.outcome == 'success' && (github.event_name == 'push' || inputs.publish_to_testflight) }}
         env:
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
