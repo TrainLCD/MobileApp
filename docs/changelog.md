@@ -12,11 +12,12 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 - React Native 0.88 の iOS Release 起動で、Nitro 0.35.9 の `installJSIBindingsWithRuntime:` が呼ばれず、JavaScript の読み込み中に例外が発生することをシミュレーターで再現しました。
 - React Native 0.87 以降の `callInvoker:` を受け取る初期化メソッドを実装した Nitro 0.36.5 へ更新しました。MMKV の同期読み取りと既存設定の移行は維持します。
-- Release ビルドを起動し、画面と実行ログを保存する診断ワークフローを追加しました。
+- 一時的な診断ワークフローで Release ビルドの画面と実行ログを取得しました。PR でフォント用秘密鍵を使う構成を残さないため、この診断ワークフローは最終差分から削除しました。
 
 ### 確認
 
 - WSL で lint、型検査、全328テストファイル・3677件が通過しました。
+- WSL で Android の `assembleLocalDebug` が成功しました。
 - expo-doctor は18/19項目が通過しました。残る1項目は Expo 58.0.14 と関連5パッケージの新しいパッチ版の案内です。今回の変更では Nitro 以外の依存バージョンを変更していません。
 
 ### 参照
