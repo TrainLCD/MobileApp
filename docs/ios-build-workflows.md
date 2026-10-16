@@ -5,6 +5,12 @@ optionally upload them to TestFlight. A push to `canary` or `master` uploads the
 corresponding build automatically. A manual run defaults to an archive-only
 dry-run.
 
+Canary runs also export an App Store Connect-signed IPA without uploading it
+and save it as the `app-canary-ipa` Actions artifact. This includes manual runs
+with TestFlight upload disabled. The IPA requires re-signing before installation
+directly on a device; it is not a development or Ad Hoc export. Production runs
+continue to preserve only dSYMs as artifacts.
+
 Both workflows preserve the iOS build number committed to
 `ios/TrainLCD.xcodeproj/project.pbxproj`. The version bump workflow updates that
 value together with `app.config.ts`; build workflows must not replace it with a
