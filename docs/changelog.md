@@ -6,6 +6,24 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-10-17 — iOS の Nitro 初期化に対応
+
+### 内容
+
+- React Native 0.88 の iOS Release 起動で、Nitro 0.35.9 の `installJSIBindingsWithRuntime:` が呼ばれず、JavaScript の読み込み中に例外が発生することをシミュレーターで再現しました。
+- React Native 0.87 以降の `callInvoker:` を受け取る初期化メソッドを実装した Nitro 0.36.5 へ更新しました。MMKV の同期読み取りと既存設定の移行は維持します。
+- Release ビルドを起動し、画面と実行ログを保存する診断ワークフローを追加しました。
+
+### 確認
+
+- WSL で lint、型検査、全328テストファイル・3677件が通過しました。
+- expo-doctor は18/19項目が通過しました。残る1項目は Expo 58.0.14 と関連5パッケージの新しいパッチ版の案内です。今回の変更では Nitro 以外の依存バージョンを変更していません。
+
+### 参照
+
+- [Nitro の React Native 0.87 以降への対応](https://github.com/margelo/nitro/pull/1437)
+- [修正前の iOS Release 起動診断](https://github.com/TrainLCD/MobileApp/actions/runs/38970695163)
+
 ## 2026-10-16 — Expo SDK 58 へ移行
 
 ### 内容

@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - '.github/workflows/diagnose_ios_startup.yml'
+      - 'package.json'
+      - 'package-lock.json'
 
 permissions:
   contents: read
@@ -69,6 +71,10 @@ jobs:
           xcrun simctl spawn "$DEVICE_ID" log show --last 3m --style compact \
             --predicate 'process == "CanaryTrainLCD" OR eventMessage CONTAINS "SceneDelegate"' \
             > "$RUNNER_TEMP/startup-runtime.log" 2>&1
+          if grep -q 'Unhandled JS Exception:' "$RUNNER_TEMP/startup-runtime.log"; then
+            echo '::error::Release startup raised an unhandled JavaScript exception. Inspect the sanitized runtime artifact.'
+            exit 1
+          fi
       - name: Sanitize diagnostic logs
         if: always()
         run: |
