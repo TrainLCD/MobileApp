@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
 import { createStation } from '~/utils/test/factories';
+import { CommonCard } from './CommonCard';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 
 jest.mock('jotai', () => ({
@@ -16,6 +17,13 @@ jest.mock('../translation', () => ({
   translate: (key: string) => key,
   isJapanese: false,
 }));
+
+jest.mock('../hooks', () => ({
+  useBounds: jest.fn(() => ({ bounds: [[], []] })),
+  useGetLineMark: jest.fn(() => jest.fn(() => null)),
+}));
+
+jest.mock('./TransferLineMark', () => () => null);
 
 const defaultProps = {
   visible: true,
@@ -177,6 +185,10 @@ describe('現在駅の手動指定', () => {
     );
     fireEvent.press(ui.getByText('specifyStation'));
     expect(ui.queryByText('autoModeSettings')).toBeNull();
+    const card = ui.UNSAFE_getByType(CommonCard);
+    expect(card.props.targetStation).toBe(station);
+    expect(card.props.line).toBe(station.line);
+    expect(ui.getByText('Test Line')).toBeTruthy();
     fireEvent.press(ui.getByText('Toshimaen'));
     expect(onStationSelect).toHaveBeenCalledWith(station);
     expect(onClose).toHaveBeenCalledTimes(1);

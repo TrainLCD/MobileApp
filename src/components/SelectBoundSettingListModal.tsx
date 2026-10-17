@@ -24,9 +24,13 @@ import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { isLEDThemeAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
+import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
+
+// CommonCard の最小高さ72pxに、カード間の余白8pxを加える。
+const STATION_CARD_HEIGHT = 80;
 
 const styles = StyleSheet.create({
   contentView: {
@@ -94,6 +98,8 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? RFValue(12) : RFValue(14),
     fontWeight: 'bold',
   },
+  stationListContent: { paddingHorizontal: 24, paddingVertical: 8, gap: 8 },
+  stationButtonText: { textAlign: 'left' },
   heading: { width: '100%' },
 });
 
@@ -191,7 +197,10 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
           borderRadius: isLEDTheme ? 0 : 8,
         },
         selectingStation && {
-          height: Math.min(136 + stations.length * 56, windowHeight * 0.8),
+          height: Math.min(
+            136 + stations.length * STATION_CARD_HEIGHT,
+            windowHeight * 0.8
+          ),
         },
         isTablet && {
           width: '80%',
@@ -209,23 +218,31 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
           </Heading>
           <FlatList
             style={{ flex: 1 }}
+            contentContainerStyle={styles.stationListContent}
             data={stations}
             keyExtractor={(station) => String(station.id)}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                accessibilityRole="button"
-                style={{ paddingHorizontal: 24, paddingVertical: 16 }}
-                onPress={() => {
-                  onStationSelect?.(item);
-                  onClose();
-                }}
-              >
-                <Typography>
-                  {isJapanese ? item.name : (item.nameRoman ?? item.name)}
-                </Typography>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) =>
+              item.line ? (
+                <CommonCard
+                  line={item.line}
+                  targetStation={item}
+                  title={
+                    (isJapanese ? item.name : item.nameRoman || item.name) ||
+                    undefined
+                  }
+                  subtitle={
+                    (isJapanese
+                      ? item.line.nameShort
+                      : item.line.nameRoman || item.line.nameShort) || undefined
+                  }
+                  onPress={() => {
+                    onStationSelect?.(item);
+                    onClose();
+                  }}
+                />
+              ) : null
+            }
           />
         </View>
       ) : (
@@ -315,7 +332,11 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
                 disabled={stations.length === 0}
                 onPress={() => setSelectingStation(true)}
                 style={styles.trainTypeButton}
-                textStyle={[styles.trainTypeLabel, { color: colors.accent }]}
+                textStyle={[
+                  styles.trainTypeLabel,
+                  styles.stationButtonText,
+                  { color: colors.accent },
+                ]}
               >
                 {translate('specifyStation')}
               </Button>
