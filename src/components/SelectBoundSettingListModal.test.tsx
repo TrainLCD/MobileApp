@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import type React from 'react';
+import { createStation } from '~/utils/test/factories';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 
 jest.mock('jotai', () => ({
@@ -155,5 +156,43 @@ describe('SelectBoundSettingListModal', () => {
       fireEvent.press(getByText('theme'));
       expect(onThemePress).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('現在駅の手動指定', () => {
+  it('駅一覧に切り替え、選択してモーダルを閉じる', () => {
+    const station = createStation(1, {
+      name: '豊島園',
+      nameRoman: 'Toshimaen',
+    });
+    const onStationSelect = jest.fn();
+    const onClose = jest.fn();
+    const ui = render(
+      <SelectBoundSettingListModal
+        {...defaultProps}
+        stations={[station]}
+        onStationSelect={onStationSelect}
+        onClose={onClose}
+      />
+    );
+    fireEvent.press(ui.getByText('specifyStation'));
+    expect(ui.queryByText('autoModeSettings')).toBeNull();
+    fireEvent.press(ui.getByText('Toshimaen'));
+    expect(onStationSelect).toHaveBeenCalledWith(station);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('一覧を閉じて開き直すと設定に戻る', () => {
+    const props = {
+      ...defaultProps,
+      stations: [createStation(1)],
+      onStationSelect: jest.fn(),
+    };
+    const ui = render(<SelectBoundSettingListModal {...props} />);
+    fireEvent.press(ui.getByText('specifyStation'));
+    ui.rerender(<SelectBoundSettingListModal {...props} visible={false} />);
+    ui.rerender(<SelectBoundSettingListModal {...props} visible />);
+    expect(ui.getByText('autoModeSettings')).toBeTruthy();
+    expect(props.onStationSelect).not.toHaveBeenCalled();
   });
 });
