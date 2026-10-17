@@ -1,10 +1,12 @@
 import * as Notifications from 'expo-notifications';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
 import { locationAtom } from '~/store/atoms/location';
+import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
+import { stationsAtom } from '~/store/atoms/station';
 import navigationState from '../store/atoms/navigation';
 import notifyState from '../store/atoms/notify';
 import stationState from '../store/atoms/station';
@@ -34,6 +36,7 @@ Notifications.setNotificationHandler({
 });
 
 export const useRefreshStation = (): void => {
+  const store = useStore();
   const setStation = useSetAtom(stationState);
   const setNavigation = useSetAtom(navigationState);
   const location = useAtomValue(locationAtom);
@@ -237,6 +240,15 @@ export const useRefreshStation = (): void => {
       return;
     }
 
+    const correction = store.get(manualStationCorrectionAtom);
+    if (
+      correction &&
+      correction.location === location &&
+      correction.stations === store.get(stationsAtom)
+    ) {
+      return;
+    }
+
     // 値が変わらない場合はprevをそのまま返し、新オブジェクト生成による
     // 全購読者への不要な再レンダー通知を避ける
     setStation((prev) => {
@@ -277,6 +289,8 @@ export const useRefreshStation = (): void => {
     isArrived,
     nearestStation,
     passedStation,
+    location,
+    store,
     setNavigation,
     setStation,
   ]);

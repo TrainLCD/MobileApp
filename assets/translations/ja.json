@@ -1,4 +1,5 @@
 {
+  "specifyStation": "駅を指定する",
   "errorTitle": "エラー",
   "failedToFetchStation": "駅情報の取得に失敗しました。",
   "nowStoppingAt": "ただいま",

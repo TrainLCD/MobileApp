@@ -1,4 +1,5 @@
 {
+  "specifyStation": "Set current station",
   "errorTitle": "Error",
   "failedToFetchStation": "Failed to get station information.",
   "nowStoppingAt": "ただいま",
