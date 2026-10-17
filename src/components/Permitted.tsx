@@ -43,6 +43,7 @@ import {
   useWarningInfo,
   useWrongDirectionDetectorEffect,
 } from '../hooks';
+import { useManualCurrentStation } from '../hooks/useManualCurrentStation';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
@@ -158,6 +159,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     closeTrainTypeModal,
     handleTrainTypeModalSelect,
   } = useTrainTypeModal();
+
+  const { selectableStations, selectStation } = useManualCurrentStation();
 
   const viewShotRef = useRef<ViewShotRef>(null);
 
@@ -736,6 +739,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         themeLabel={themeLabel}
         themeColor={themeRowColor}
         onThemePress={handleThemePress}
+        stations={selectableStations}
+        onStationSelect={selectedBound ? selectStation : undefined}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}
