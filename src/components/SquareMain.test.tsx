@@ -17,6 +17,10 @@ import type { SquareMainViewProps } from './SquareMainView';
 
 jest.mock('~/hooks', () => ({
   useHeaderCommonData: jest.fn(),
+  useBoundText: jest.fn(() => ({
+    JA: '品川・東京方面',
+    EN: 'For Shinagawa & Tokyo',
+  })),
   useEstimateArrivalTimesAllStops: jest.fn(() => ({ route: null })),
   useEstimatedMinutesByStationId: jest.requireActual(
     '~/hooks/useEstimatedMinutesByStationId'
@@ -32,7 +36,10 @@ jest.mock('~/hooks', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock('~/translation', () => ({ translate: (key: string) => key }));
+jest.mock('~/translation', () => ({
+  isJapanese: true,
+  translate: (key: string) => key,
+}));
 const mockNumbering = jest.fn();
 jest.mock('./NumberingIcon', () => (props: unknown) => {
   mockNumbering(props);
@@ -84,6 +91,7 @@ const data = {
 };
 beforeEach(() => {
   jest.clearAllMocks();
+  require('~/translation').isJapanese = true;
   (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
     route: null,
   });
@@ -125,7 +133,7 @@ it('uses API numbering shape, color and three-letter code, and existing settings
   expect(r.open).toHaveBeenCalledTimes(1);
   expect(latest().lineColor).toBe('#80C241');
 });
-it('uses the header language for line and transfer text, independently of app locale', () => {
+it('cycles C station text while keeping the header and transfers in the app language', () => {
   (useHeaderCommonData as jest.Mock).mockReturnValue({
     ...data,
     headerLangState: 'EN',
@@ -137,14 +145,14 @@ it('uses the header language for line and transfer text, independently of app lo
   ]);
   setup();
   expect(latest()).toMatchObject({
-    lineName: 'Yamanote Line',
+    lineName: '山手線',
     stateText: 'Next',
     stationText: 'Ebisu',
-    transferHeading: 'Transfers at Ebisu',
-    transferLabel: 'Transfers',
+    transferHeading: '恵比寿での乗換',
+    transferLabel: 'のりかえ',
   });
-  expect(latest().transfers[0].name).toBe('Saikyo Line');
-  expect(latest().stops[0].name).toBe('Shibuya');
+  expect(latest().transfers[0].name).toBe('埼京線');
+  expect(latest().stops[0].name).toBe('渋谷');
 });
 it('orders ordinary and loop lines in the existing travel direction and wraps a loop', () => {
   (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: true });
@@ -302,5 +310,83 @@ it.each([undefined, { id: 99 }])(
       true,
       true,
     ]);
+  }
+);
+
+it.each([true, false])(
+  'fixes all B text to the app language (Japanese: %s)',
+  (japanese) => {
+    require('~/translation').isJapanese = japanese;
+    (useHeaderCommonData as jest.Mock).mockReturnValue({
+      ...data,
+      headerLangState: 'KO',
+      stationText: '에비스',
+      boundText: '한국어',
+    });
+    const r = setup();
+    act(() => latest().onShowStopsChange?.(true));
+    expect(latest()).toMatchObject({
+      showStops: true,
+      lineName: japanese ? '山手線' : 'Yamanote Line',
+      boundText: japanese ? '品川・東京方面' : 'For Shinagawa & Tokyo',
+      transferLabel: japanese ? 'のりかえ' : 'Transfers',
+    });
+    expect(latest().stops.map((s) => s.name)).toEqual(
+      japanese
+        ? ['渋谷', '恵比寿', '目黒', '五反田']
+        : ['Shibuya', 'Ebisu', 'Meguro', 'Gotanda']
+    );
+    for (const headerLangState of ['JA', 'KANA', 'EN', 'ZH', 'KO']) {
+      (useHeaderCommonData as jest.Mock).mockReturnValue({
+        ...data,
+        headerLangState,
+        stationText: '에비스',
+      });
+      act(() => r.store.set(stationsAtom, [...stations]));
+      expect(latest().showStops).toBe(true);
+      expect(latest().lineName).toBe(japanese ? '山手線' : 'Yamanote Line');
+      expect(latest().stops[1].name).toBe(japanese ? '恵比寿' : 'Ebisu');
+      expect(latest().transferLabel).toBe(japanese ? 'のりかえ' : 'Transfers');
+    }
+    act(() => latest().onShowStopsChange?.(false));
+    expect(latest()).toMatchObject({
+      showStops: false,
+      stationText: '에비스',
+      transferLabel: japanese ? 'のりかえ' : 'Transfers',
+    });
+  }
+);
+
+it.each([true, false])(
+  'fixes C transfer headings, route and station names (Japanese: %s)',
+  (japanese) => {
+    require('~/translation').isJapanese = japanese;
+    (useHeaderCommonData as jest.Mock).mockReturnValue({
+      ...data,
+      headerLangState: 'ZH',
+      stationText: '惠比寿',
+    });
+    (useTransferLines as jest.Mock).mockReturnValue([
+      {
+        id: 2,
+        nameShort: '埼京線',
+        nameRoman: 'Saikyo Line',
+        color: '#00AC9A',
+        station: { ...stations[0], stationNumbers: [] },
+      },
+    ]);
+    setup();
+    expect(latest()).toMatchObject({
+      showStops: false,
+      stationText: '惠比寿',
+      lineName: japanese ? '山手線' : 'Yamanote Line',
+      boundText: japanese ? '品川・東京方面' : 'For Shinagawa & Tokyo',
+      transferHeading: japanese ? '恵比寿での乗換' : 'Transfers at Ebisu',
+      noTransfersText: japanese ? '乗換路線はありません' : 'No transfers',
+    });
+    expect(latest().transfers[0]).toMatchObject({
+      name: japanese ? '埼京線' : 'Saikyo Line',
+      stationName: japanese ? '渋谷' : 'Shibuya',
+    });
   }
 );

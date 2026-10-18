@@ -23,6 +23,8 @@ export type SquareStop = {
   estimatedMinutes?: number | null;
 };
 export type SquareMainViewProps = {
+  showStops?: boolean;
+  onShowStopsChange?: (show: boolean) => void;
   etaUnit?: string;
   etaSoon?: string;
   dark: boolean;
@@ -64,11 +66,15 @@ const PALETTE = {
 };
 
 export const SquareMainView = memo((props: SquareMainViewProps) => {
-  const [showStops, setShowStops] = useState(false);
+  const [localShowStops, setLocalShowStops] = useState(false);
+  const showStops = props.showStops ?? localShowStops;
   const dragged = useRef(false);
   const colors = PALETTE[props.dark ? 'dark' : 'light'];
   const toggle = () => {
-    if (!props.disabled && !dragged.current) setShowStops((prev) => !prev);
+    if (!props.disabled && !dragged.current) {
+      setLocalShowStops(!showStops);
+      props.onShowStopsChange?.(!showStops);
+    }
   };
   const textStyle = { color: colors.text };
   const secondaryStyle = { color: colors.secondary };
