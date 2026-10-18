@@ -184,6 +184,26 @@ const SquareMain = ({
       station.id != null &&
       minutesByStation.get(station.id) != null
   );
+  // B案の状態も駅名と同じ環境言語に固定し、C案の言語タイマーには追従しない。
+  const stopStateKeys = isJapanese
+    ? {
+        CURRENT: 'nowStoppingAt',
+        NEXT: data.isLast ? 'nextLast' : 'next',
+        ARRIVING: data.isLast ? 'soonLast' : 'soon',
+      }
+    : {
+        CURRENT: 'nowStoppingAtEn',
+        NEXT: data.isLast ? 'nextEnLast' : 'nextEn',
+        ARRIVING: data.isLast ? 'soonEnLast' : 'soonEn',
+      };
+  const stoppingState = data.headerState.split(
+    '_'
+  )[0] as keyof typeof stopStateKeys;
+  const stopStateText = stopStateKeys[stoppingState]
+    ? translate(stopStateKeys[stoppingState], {
+        locale: isJapanese ? 'ja' : 'en',
+      }).replaceAll('\n', ' ')
+    : '';
   const numbering = data.currentStationNumber;
 
   return (
@@ -278,6 +298,7 @@ const SquareMain = ({
           focused,
           passed,
           label: pass ? copy.pass : '',
+          stateText: focused ? stopStateText : undefined,
           numberColor: focused
             ? accentColorFor(station.line?.color || lineColor, colors.isDark)
             : pass
