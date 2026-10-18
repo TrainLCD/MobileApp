@@ -132,7 +132,6 @@ const SquareMain = ({
   const insets = useSafeAreaInsets();
   const { route } = useEstimateArrivalTimesAllStops();
   const minutesByStation = useEstimatedMinutesByStationId(route);
-  const hasEta = Array.from(minutesByStation.values()).some((m) => m != null);
   const ordered = useMemo(() => {
     const list = dropEitherJunctionStation(
       allStations.filter((s): s is Station => !!s),
@@ -162,6 +161,15 @@ const SquareMain = ({
   const visible = isLoopLine
     ? [...ordered.slice(start), ...ordered.slice(0, start)]
     : ordered.slice(start);
+  // 列の有無も各行と同じ対象で判定し、通過駅だけのETAで「--」を並べない。
+  const isEtaTarget = (station: Station, index: number) =>
+    index > currentIndex - start && !getIsPass(station);
+  const hasEta = visible.some(
+    (station, index) =>
+      isEtaTarget(station, index) &&
+      station.id != null &&
+      minutesByStation.get(station.id) != null
+  );
   const numbering = data.currentStationNumber;
 
   return (
@@ -261,8 +269,7 @@ const SquareMain = ({
                 ? colors.strongBorder
                 : '#C2C2C2'
               : colors.secondaryText,
-          showEta:
-            hasEta && !pass && !passed && station.id !== currentStation?.id,
+          showEta: hasEta && isEtaTarget(station, index),
           estimatedMinutes:
             station.id != null ? minutesByStation.get(station.id) : null,
         };

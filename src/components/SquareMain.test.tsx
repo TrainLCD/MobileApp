@@ -226,4 +226,16 @@ it('keeps pass labels without ETA and preserves API numbering', () => {
     label: '通過',
     number: 'JY-22',
   });
+  expect(latest().stops.every((s) => !s.showEta)).toBe(true);
 });
+
+it.each([1, 99])(
+  'hides ETA when only current or undisplayed station %i has a value',
+  (stationId) => {
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: { stops: [{ stationId, cumulativeMinutes: 5 }] },
+    });
+    setup();
+    expect(latest().stops.every((s) => !s.showEta)).toBe(true);
+  }
+);
