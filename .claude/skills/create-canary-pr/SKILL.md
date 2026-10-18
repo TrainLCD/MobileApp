@@ -1,15 +1,67 @@
 ---
 name: create-canary-pr
-description: Cut a dev→canary release pull request for TrainLCD MobileApp. This is a thin preset over create-pr with release-specific defaults. Use when the user asks to open a canary release PR, dev→canary PR, or similar phrasing.
+description: Cut a dev→canary release pull request for TrainLCD MobileApp. Prepare build numbers before opening the PR and skip the automatic bump workflow. Use when the user asks to open a canary release PR, dev→canary PR, or similar phrasing.
 ---
 
 # create-canary-pr
 
-`dev` から `canary` へのリリース PR を作るためのプリセット。PR 作成ロジック本体は **`create-pr`** スキルに委譲する。ここではリリース固有の既定値だけを定義する。
+`dev` から `canary` へのリリース PR を作成する。
+先にビルド番号を `dev` へ反映し、canary PR の自動 bump をスキップする。
+PR 作成本体は **`create-pr`** スキルに委譲する。
 
-## 委譲先
+## 事前確認
 
-`create-pr` スキルを以下の入力で呼び出す:
+- `git status --porcelain` で作業ツリーを確認する。未コミットの変更は混ぜず、必要なら別 worktree を使う。
+- **判定前に `git fetch origin dev canary` を実行する**。失敗したら中断し、古い参照で比較しない。
+- `git show-ref --verify --quiet refs/heads/dev` でローカル `dev` の有無を確認する。
+  無ければ先行判定は不要。存在する場合は `git log --oneline origin/dev..dev` を確認する。
+  先行コミットがあれば一覧を提示し、別ブランチへ切り出して PR にするか確認する。
+  `dev` は protected のため直接 push を促さない。この判定は `create-pr` の push 手順より優先する。
+- 以下で既存 canary PR を確認する。存在する場合は「既存 canary PR」を優先する。
+
+  ```bash
+  gh pr list --base canary --head dev --state open --json number,url,labels
+  ```
+
+## 事前 bump
+
+canary リリースでは semver を据え置き、iOS ビルド番号と Android `versionCode` を更新する。
+採番とファイル更新は `scripts/bump-version.js` に任せる。
+Android アプリは +2、Wear OS は更新後のアプリ +1 に揃う。
+
+1. `origin/dev` と `origin/canary` の以下の定義を比較する。
+   各定義が整合し、両 OS の番号が canary より大きい場合は準備済みとして再 bump しない。
+   片方だけ更新済み、定義の不一致、番号の逆転がある場合は中断して報告する。
+
+   - `app.config.ts` の `ios.buildNumber` と `android.versionCode`
+   - `ios/TrainLCD.xcodeproj/project.pbxproj` の `CURRENT_PROJECT_VERSION`
+   - `android/app/build.gradle` の各フレーバーの `versionCode`
+   - `android/wearable/build.gradle.kts` の各フレーバーの `versionCode`
+
+2. 両 OS とも dev と canary の番号が一致する場合、最新の `origin/dev` から
+   `release/canary-build-<origin/canary の短縮 SHA>` を切り出す。
+   同名のローカル・リモートブランチや dev 向け PR があれば内容を確認して再利用する。
+   bump 済みなら手順 3 を飛ばす。再 bump や上書きはしない。
+   リモート参照の通信・認証エラーを「存在しない」とみなさない。
+3. `npm run version:bump -- --no-version-increment` を実行する。
+   `git diff` で semver が変わらず、変更が手順 1 のビルド番号定義だけであることを確認する。
+4. `npm run lint` と `npm test -- --runInBand scripts/bump-version.test.js` を実行する。
+   失敗した場合は commit / push しない。確認したファイルだけを stage し、日本語の単文で commit する。
+   準備ブランチを push し、`dev` へ直接 push しない。
+5. `create-pr` に委譲し、準備ブランチから `dev` へ bump 専用 PR を作成する。
+   既存 PR があれば再利用する。テスト欄は実行結果に合わせ、未実行の項目を ON にしない。
+   必要な CI が成功してマージ可能になったら、**bump 専用 PR だけを squash merge** する。
+   リリース依頼でマージまで承認されている場合は追加確認せず進める。
+   それ以外は bump PR の URL を提示してマージ承認を待ち、canary PR はまだ作成しない。
+6. `git fetch origin dev canary` を再実行する。
+   リモートの `dev` に bump が反映され、各定義が整合して両 OS の番号が canary より大きいことを確認する。
+   取り込み中に canary が進んだ場合は再比較する。
+   ローカルの commit や bump PR の作成だけで反映済みとみなさない。
+7. open な dev→canary PR を再確認して重複を避け、「canary PR 作成」へ進む。
+
+## canary PR 作成
+
+事前 bump を完了してから、`create-pr` を以下の入力で呼び出す。
 
 | 項目 | 値 |
 | ---- | ---- |
@@ -18,23 +70,37 @@ description: Cut a dev→canary release pull request for TrainLCD MobileApp. Thi
 | `title` | `canary` |
 | `summary` | 省略（テンプレのコメントのみ） |
 | `related_issue` | 省略 |
-| `skip_checks` | `false`（テスト 3 項目は全て ON） |
-| `labels` | 未指定（付与しない） |
+| `skip_checks` | `false`（`create-pr` の判定に従う） |
+| `labels` | `["skip-version-bump"]` |
 
-## バージョン bump の取り扱い
+**`skip-version-bump` は作成と同時に付与する**。
+`gh pr create --label skip-version-bump` を使い、作成後のラベル追加にしない。
+後付けでは `pull_request: opened` に間に合わない。
+`.github/workflows/bump_version_on_canary_pr.yml` はこのラベルで自動 bump をスキップする。
+スキルから `workflow_dispatch` を起動しない。
+スキルを使わずラベルなしで開く PR の自動 bump は従来どおり残す。
 
-canary リリースでは semver は据え置きで iOS ビルド番号 / Android `versionCode` のみを上げる。`dev` は protected で直接 push できないため、bump 自体は `.github/workflows/bump_version_on_canary_pr.yml` に任せる。
+## 既存 canary PR
 
-PR が open された瞬間に `pull_request: opened` トリガでこの workflow が走り、`auto-version-bump-<canary_pr_number> → dev` の bump PR を自動生成する。スキル側で追加でラベルを付けたり `workflow_dispatch` を叩いたりする必要はない（過去にラベル `skip-version-bump` を付与して別途 `workflow_dispatch` を叩く実装にしていた時期があるが、両者を相殺しているだけだったので撤去した）。
+- 新しい canary PR は作らず、既存 URL を再利用する。再実行だけを理由に番号を上げない。
+- `skip-version-bump` 付きの PR は事前 bump の反映を確認する。
+  不足している場合だけ「事前 bump」の手順 1〜6 で補い、自動 bump の手動起動はしない。
+- ラベルなしの既存 PR は旧手順として扱う。以下で対応する自動 bump PR を確認する。
+  `--search` の曖昧一致ではなく、`--head` / `--base` のブランチ名一致を使う。
 
-完了報告では「`auto-version-bump-<canary_pr_number>` が間もなく自動で作成される。それを `dev` にマージすると canary PR 側にもビルド番号差分が反映される」旨を案内する。
+  ```bash
+  gh pr list --head "auto-version-bump-<canary_pr_number>" --base dev \
+    --state all --json number,url,state,mergedAt
+  ```
+
+  open ならその PR を利用し、手動 bump を重ねない。マージ済みかどうかと実際の番号を確認する。
+  未作成で workflow が待機中・実行中なら完了を待ち、手動 bump と競合させない。
+  実行終了後も bump が不足している場合だけ「事前 bump」の手順 1〜6 で補う。
 
 ## リリース特有の注意
 
-- タイトルは過去運用（PR #5811〜 #5826）にならい常に `canary` 固定。ユーザーが別タイトルを希望した場合は確認する。
-- `dev` / `canary` 両ブランチとも origin 前提。canary PR は head が `dev` そのものなので、PR に載るのは `origin/dev` の内容だけ。
-- **判定の前に `git fetch origin dev` を実行する**（このスキルは `create-pr` へ委譲する前に先行判定を行うため、`create-pr` 側の fetch には間に合わない）。古い `origin/dev` のまま比較すると、push 済みのコミットをローカル先行と誤判定して canary PR の作成を止めてしまう。fetch が失敗したら判定不能として中断する（「先行なし」とみなさない）。
-- **ローカルに `dev` ブランチが無ければこの先行判定自体を行わない**（`git show-ref --verify --quiet refs/heads/dev` で確認する）。worktree では `dev` を持たないことがあり、`git log origin/dev..dev` が ref 解決エラーで落ちる。その場合は `origin/dev` の内容がそのまま canary PR に載るので、先行の懸念は無い。
-- fetch 後もローカル `dev` が `origin/dev` より先行している場合は **push を促さずに中断する**。`dev` は protected で直接 push できず（前掲「バージョン bump の取り扱い」）、先行分は PR 経由でしか `dev` に入らないため、このスキルでは解消できない。先行コミットの一覧（`git log --oneline origin/dev..dev`）を提示し、別ブランチへ切り出して PR を出すのかをユーザーに確認する。`create-pr` 側の「未 push なら push 可否を確認」ガードより、こちらの中断判断を優先する。
-- 変更の種類の自動判定・Assignee・テンプレ節構成の遵守は `create-pr` の手順に従う。このスキルで独自に本文を組み立て直さない。
-- 既に open な dev→canary PR がある場合は新規作成せず、既存 URL を再利用する（`create-pr` 側のガードに任せる）。既存 PR にはすでに `pull_request: opened` 起点で bump PR が作られているはずなので、`gh pr list --head "auto-version-bump-<canary_pr_number>" --base dev --state all --json number,url,state` でブランチ名一致で確認する（`--search` だとタイトル / 本文の曖昧一致になり別 PR を拾う可能性があるため `--head` / `--base` を使う。ここは GitHub 側のブランチ名を指す）。マッチが 0 件のときに限り `gh workflow run bump_version_on_canary_pr.yml -f pr_number=<canary_pr_number> -f head_ref=dev` で手動補填する。マッチがあれば結果（PR URL と state）をそのままユーザーに報告するだけで良い。
+- タイトルは従来どおり `canary` 固定。ユーザーが別タイトルを希望した場合は確認する。
+- canary PR の head は `dev` そのもの。ローカルの変更ではなく `origin/dev` の内容が PR に載る。
+- 変更の種類・Assignee・テンプレ節構成は `create-pr` に従い、独自に本文を組み立て直さない。
+- **canary PR は squash merge せず、通常の merge commit でマージする**。
+- 完了報告では canary PR の URL、反映済みのビルド番号、`skip-version-bump` の有無を簡潔に示す。
