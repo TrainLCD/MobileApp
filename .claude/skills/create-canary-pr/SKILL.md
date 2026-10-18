@@ -5,7 +5,7 @@ description: Create a canary release PR for TrainLCD MobileApp by branching from
 
 # create-canary-pr
 
-最新の `origin/dev` からリリースブランチを切り、ビルド番号の更新を含めて `canary` へ PR を作成する。
+dev の履歴を保ってリリースブランチを切り、ビルド番号の更新を含めて `canary` へ PR を作成する。
 bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキルに委譲する。
 
 ## 事前確認
@@ -14,8 +14,12 @@ bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキル
 - **判定前に `git fetch origin dev canary` を実行する**。失敗したら中断し、古い参照で比較しない。
 - ローカル `dev` がある場合だけ `git log --oneline origin/dev..dev` で先行コミットを確認する。
   先行していれば一覧を提示し、リリースに含めるか確認する。
-  含める場合は対象の SHA を古い順に記録し、切り出し後に取り込む。
-  含めない場合は `origin/dev` 起点の内容だけを使う。`dev` への直接 push は行わない。
+  含める場合はローカル `dev` の SHA、含めない場合や先行がない場合は `origin/dev` の SHA を起点にする。
+  回答前に依存する準備を進めない。選んだ SHA を `source_sha` として記録する。
+  ローカル `dev` を選ぶ際は、最新の `origin/dev` がその祖先であることも確認する。
+  分岐していれば取り込み方を確認し、リモートの変更を黙って除外しない。
+  リリースブランチへの cherry-pick や `dev` への直接 push は行わない。
+  ローカル `dev` がない場合の起点は `origin/dev` とする。
 - 以下で既存 canary PR を確認する。head を `dev` に限定しない。
 
   ```bash
@@ -28,7 +32,8 @@ bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキル
 
 ## リリースブランチとビルド番号の準備
 
-1. `origin/dev` と `origin/canary` の SHA、dev の semver、以下のビルド番号を記録する。
+1. `source_sha`、`origin/dev` と `origin/canary` の SHA を記録する。
+   起点の semver と、起点・canary 双方のビルド番号を記録する。
    `app.config.ts` と各ネイティブ定義が整合していることを確認する。
    不一致や数値でない定義があれば中断し、推測で採番しない。
 
@@ -37,20 +42,18 @@ bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキル
    - `android/app/build.gradle` の各フレーバーの `versionCode`
    - `android/wearable/build.gradle.kts` の各フレーバーの `versionCode`
 
-2. 最新の `origin/dev` から `release/canary-<dev SHA の短縮値>-<canary SHA の短縮値>` を切り出す。
+2. 記録した `source_sha` から次のブランチを切り出す。
+   `release/canary-<source_sha の短縮値>-<canary SHA の短縮値>` とし、元のコミット履歴を保つ。
    同名のローカル・リモートブランチがあれば内容を確認して再利用し、上書きしない。
    リモート参照の通信・認証エラーを「存在しない」とみなさない。
-   事前確認で先行コミットを含めると承認された場合は、記録した SHA を古い順に `git cherry-pick` する。
-   再実行では取り込み済みのコミットを重ねない。競合やマージコミットがあれば中断して報告する。
-   取り込み後の semver とビルド番号を再確認し、手順 1 で記録した dev 側の基準値を更新する。
 3. 過去の canary の bump が dev に入っていない場合でもマージできるよう、canary の履歴を取り込む。
    `origin/canary` が HEAD の祖先でなければ、
    `git merge --no-ff --no-commit origin/canary` を行う。
-   競合の有無にかかわらず semver は手順 1 で記録した dev の値に揃える。
-   ビルド番号の競合箇所は一旦 dev の値で解消し、競合マーカーを残さない。次の手順で採番し直す。
+   競合の有無にかかわらず semver は手順 1 で記録した起点の値に揃える。
+   ビルド番号の競合箇所は一旦起点の値で解消し、競合マーカーを残さない。次の手順で採番し直す。
    ファイル全体を ours / theirs で置き換えない。その他の競合は中断して報告する。
-4. dev と canary の両方を基準に、配信済みの番号と衝突しない次の値を計算する。
-   dev の番号だけを基準にしない。bump を dev へ戻す PR は作らない。
+4. 起点と canary の両方を基準に、配信済みの番号と衝突しない次の値を計算する。
+   起点の番号だけを基準にしない。bump を dev へ戻す PR は作らない。
 
    - iOS: 両ブランチの iOS ビルド番号の最大値 +1。
    - Android アプリ: 両ブランチのアプリと Wear OS の `versionCode` の最大値 +1。
@@ -62,12 +65,13 @@ bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキル
    ```
 
    採番とファイル更新は `scripts/bump-version.js` に任せる。
-   semver が dev の値から変わらず、手順 1 の各定義が次の番号に揃ったことを確認する。
+   semver が起点の値から変わらず、手順 1 の各定義が次の番号に揃ったことを確認する。
    `git diff` と `git diff --cached` の両方を確認し、無関係な変更を混ぜない。
 5. `npm run lint` と `npm test -- --runInBand scripts/bump-version.test.js` を実行する。
    失敗した場合は commit / push しない。確認したパスだけを stage し、日本語の単文で commit する。
    手順 3 のマージが未完了なら、この commit で完了する。リリースブランチを push する。
 6. PR 作成直前に dev と canary を再 fetch する。手順 1 の SHA から進んでいれば再比較する。
+   承認された起点を別のローカル `dev` の SHA へ黙って差し替えない。
    新たな canary の番号を超えていることと、PR がマージ可能であることを確認する。
    他のリリース PR ができていれば重複作成せず、対象を確認する。
 
