@@ -34,7 +34,7 @@ const props: SquareMainViewProps = {
       color: '#80C241',
       focused: false,
       passed: true,
-      label: '通過済み',
+      label: '',
     },
     {
       key: '2',

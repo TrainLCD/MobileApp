@@ -83,7 +83,6 @@ const labels = {
     transfer: 'での乗換',
     shortTransfer: 'のりかえ',
     empty: '乗換路線はありません',
-    passed: '通過済み',
     pass: '通過',
     toggle: '駅一覧と乗換案内を切り替える',
   },
@@ -91,7 +90,6 @@ const labels = {
     transfer: 'Transfers at ',
     shortTransfer: 'Transfers',
     empty: 'No transfers',
-    passed: 'Passed',
     pass: 'Pass',
     toggle: 'Switch between stops and transfers',
   },
@@ -99,7 +97,6 @@ const labels = {
     transfer: '换乘',
     shortTransfer: '换乘',
     empty: '无换乘线路',
-    passed: '已过',
     pass: '通过',
     toggle: '切换车站与换乘信息',
   },
@@ -107,7 +104,6 @@ const labels = {
     transfer: ' 환승',
     shortTransfer: '환승',
     empty: '환승 노선 없음',
-    passed: '지남',
     pass: '통과',
     toggle: '역 목록과 환승 안내 전환',
   },
@@ -250,9 +246,7 @@ const SquareMain = ({
             ? data.stateText.replaceAll('\n', ' ')
             : pass
               ? copy.pass
-              : passed
-                ? copy.passed
-                : '',
+              : '',
         };
       })}
     />
