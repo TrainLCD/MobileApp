@@ -266,3 +266,41 @@ it('does not enable ETA from a value belonging only to the healed current statio
   setup();
   expect(latest().stops.every((s) => !s.showEta)).toBe(true);
 });
+
+it.each([false, true])(
+  'excludes intervening stations after a multi-station correction (downstream ETA: %s)',
+  (hasDownstreamEta) => {
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[2]);
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: {
+        stops: [
+          { stationId: 2, cumulativeMinutes: 0 },
+          ...(hasDownstreamEta ? [{ stationId: 4, cumulativeMinutes: 5 }] : []),
+        ],
+      },
+    });
+    setup();
+    expect(latest().stops.map((s) => s.showEta)).toEqual([
+      false,
+      false,
+      false,
+      hasDownstreamEta,
+    ]);
+  }
+);
+it.each([undefined, { id: 99 }])(
+  'falls back to the recorded current station when the display station is unavailable: %p',
+  (displayStation) => {
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(displayStation);
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: { stops: [{ stationId: 4, cumulativeMinutes: 5 }] },
+    });
+    setup();
+    expect(latest().stops.map((s) => s.showEta)).toEqual([
+      false,
+      true,
+      true,
+      true,
+    ]);
+  }
+);

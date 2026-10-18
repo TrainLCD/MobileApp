@@ -163,12 +163,15 @@ const SquareMain = ({
   const visible = isLoopLine
     ? [...ordered.slice(start), ...ordered.slice(0, start)]
     : ordered.slice(start);
+  const displayCurrentIndex =
+    displayCurrentStation?.id == null
+      ? -1
+      : visible.findIndex((station) => station.id === displayCurrentStation.id);
+  const etaStartIndex =
+    displayCurrentIndex >= 0 ? displayCurrentIndex : currentIndex - start;
   // 列の有無も各行と同じ対象で判定し、通過駅だけのETAで「--」を並べない。
   const isEtaTarget = (station: Station, index: number) =>
-    index > currentIndex - start &&
-    (displayCurrentStation?.id == null ||
-      station.id !== displayCurrentStation.id) &&
-    !getIsPass(station);
+    index > etaStartIndex && !getIsPass(station);
   const hasEta = visible.some(
     (station, index) =>
       isEtaTarget(station, index) &&
