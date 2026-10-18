@@ -185,10 +185,11 @@ struct PresetsWidgetRow: View {
           .font(.system(size: 18, weight: .bold))
           .lineLimit(1)
           .minimumScaleFactor(0.8)
-          .layoutPriority(1)
         Text(preset.lineName)
           .font(.system(size: 12, weight: .semibold))
           .lineLimit(1)
+          // 長いプリセット名でも路線を識別できる幅を先に確保する。
+          .layoutPriority(1)
       }
       if preset.hasStations {
         WidgetStations(from: preset.fromStationName, to: preset.toStationName,
