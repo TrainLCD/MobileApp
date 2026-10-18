@@ -113,8 +113,8 @@ class RideWidgetProvider : AppWidgetProvider() {
                     inlineViews(context, lineName, lineColor)
                 // 4x2のような横長は高さが足りていても横長レイアウトを使う
                 minHeightDp >= SMALL_MIN_HEIGHT_DP && minWidthDp <= minHeightDp ->
-                    stationViews(context, state, lineName, boundFor, lineSymbol, lineColor, true)
-                else -> stationViews(context, state, lineName, boundFor, lineSymbol, lineColor, false)
+                    fittingStationViews(context, state, lineName, boundFor, lineSymbol, lineColor, minWidthDp, minHeightDp, true)
+                else -> fittingStationViews(context, state, lineName, boundFor, lineSymbol, lineColor, minWidthDp, minHeightDp, false)
             }
 
             views.setContentDescription(R.id.widget_root, listOf(lineName, if (state.loaded) state.stationName else "", if (state.loaded) state.nextStationName else "", boundFor).filter { it.isNotEmpty() }.joinToString(" / "))
@@ -169,6 +169,43 @@ class RideWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_inline_text, lineName)
                 setTextColor(R.id.widget_inline_text, WidgetTheme.onLineColor(lineColor))
             }
+
+        /**
+         * XMLの余白と実際の文字サイズを含めて測定し、見切れない表示を選ぶ。
+         * サイズ未取得時は従来のレイアウトを保ち、正方形が収まらなければ横長、
+         * 横長も収まらなければ駅情報を持たない既存の1行表示へ切り替える。
+         */
+        private fun fittingStationViews(
+            context: Context,
+            state: WidgetState,
+            lineName: String,
+            boundFor: String,
+            lineSymbol: String,
+            lineColor: Int,
+            widthDp: Int,
+            heightDp: Int,
+            vertical: Boolean
+        ): RemoteViews {
+            val candidate = stationViews(context, state, lineName, boundFor, lineSymbol, lineColor, vertical)
+            if (widthDp <= 0 || heightDp <= 0) return candidate
+
+            val density = context.resources.displayMetrics.density
+            fun fits(views: RemoteViews): Boolean {
+                val view = views.apply(context, null)
+                view.measure(
+                    View.MeasureSpec.makeMeasureSpec((widthDp * density).toInt(), View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+                )
+                return view.measuredHeight <= heightDp * density
+            }
+
+            if (fits(candidate)) return candidate
+            if (vertical) {
+                val horizontal = stationViews(context, state, lineName, boundFor, lineSymbol, lineColor, false)
+                if (fits(horizontal)) return horizontal
+            }
+            return inlineViews(context, lineName, lineColor)
+        }
 
         private fun stationViews(
             context: Context,
