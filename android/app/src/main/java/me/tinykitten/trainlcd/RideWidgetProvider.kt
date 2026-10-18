@@ -5,7 +5,10 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.util.SizeF
+import androidx.core.os.BundleCompat
 import android.view.View
 import android.widget.RemoteViews
 
@@ -62,18 +65,29 @@ class RideWidgetProvider : AppWidgetProvider() {
             appWidgetId: Int
         ) {
             val options: Bundle? = appWidgetManager.getAppWidgetOptions(appWidgetId)
-            val minWidthDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0) ?: 0
-            val minHeightDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) ?: 0
+            val state = WidgetStateStore.load(context)
+            val sizes = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && options != null) {
+                BundleCompat.getParcelableArrayList(options, AppWidgetManager.OPTION_APPWIDGET_SIZES, SizeF::class.java)
+                    ?.filter { it.width > 0 && it.height > 0 && it.width.isFinite() && it.height.isFinite() }
+                    ?.distinct()
+            } else null
 
-            appWidgetManager.updateAppWidget(
-                appWidgetId,
-                buildRemoteViews(
-                    context,
-                    WidgetStateStore.load(context),
-                    minWidthDp,
-                    minHeightDp
-                )
-            )
+            val views = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !sizes.isNullOrEmpty()) {
+                RemoteViews(sizes.associateWith { size ->
+                    buildRemoteViews(context, state, size.width.toInt(), size.height.toInt())
+                })
+            } else {
+                // 旧形式の範囲は同時に表示される一組のサイズではない。
+                // 縦は最小幅×最大高、横は最大幅×最小高として個別に判定する。
+                val minWidth = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0) ?: 0
+                val minHeight = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0) ?: 0
+                val maxWidth = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0) ?: 0
+                val maxHeight = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0) ?: 0
+                val portrait = buildRemoteViews(context, state, minWidth, maxHeight)
+                val landscape = buildRemoteViews(context, state, maxWidth, minHeight)
+                RemoteViews(landscape, portrait)
+            }
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
         private fun buildRemoteViews(
