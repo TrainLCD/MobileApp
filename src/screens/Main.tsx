@@ -9,7 +9,6 @@ import React, {
   useState,
 } from 'react';
 import {
-  Dimensions,
   Linking,
   Platform,
   Pressable,
@@ -92,6 +91,7 @@ import SquareMain from '../components/SquareMain';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
+import { useAndroidScreenDimensions } from '../hooks/useAndroidScreenDimensions';
 import navigationState, {
   bottomStateAtom,
   leftStationsAtom,
@@ -272,6 +272,7 @@ const MainScreen: React.FC = () => {
   const nextStation = useNextStation();
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const screenDimensions = useAndroidScreenDimensions();
 
   // OS 側で orientation lock せず、物理的に portrait のときはコンテンツ側を 90deg
   // 回転して横長レイアウトを維持する。端末の回転ロック ON でも横表示を保てる。
@@ -836,7 +837,7 @@ const MainScreen: React.FC = () => {
     windowWidth,
     windowHeight,
     portraitModeEnabled,
-    Platform.OS === 'android' ? Dimensions.get('screen') : undefined
+    screenDimensions
   );
   if (runningLayout === 'square') {
     return (
