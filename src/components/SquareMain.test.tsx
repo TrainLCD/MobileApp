@@ -133,7 +133,7 @@ it('uses API numbering shape, color and three-letter code, and existing settings
   expect(r.open).toHaveBeenCalledTimes(1);
   expect(latest().lineColor).toBe('#80C241');
 });
-it('cycles the C header while keeping transfer text in the app language', () => {
+it('cycles C station text while keeping the header and transfers in the app language', () => {
   (useHeaderCommonData as jest.Mock).mockReturnValue({
     ...data,
     headerLangState: 'EN',
@@ -145,7 +145,7 @@ it('cycles the C header while keeping transfer text in the app language', () => 
   ]);
   setup();
   expect(latest()).toMatchObject({
-    lineName: 'Yamanote Line',
+    lineName: '山手線',
     stateText: 'Next',
     stationText: 'Ebisu',
     transferHeading: '恵比寿での乗換',
@@ -379,6 +379,8 @@ it.each([true, false])(
     expect(latest()).toMatchObject({
       showStops: false,
       stationText: '惠比寿',
+      lineName: japanese ? '山手線' : 'Yamanote Line',
+      boundText: japanese ? '品川・東京方面' : 'For Shinagawa & Tokyo',
       transferHeading: japanese ? '恵比寿での乗換' : 'Transfers at Ebisu',
       noTransfersText: japanese ? '乗換路線はありません' : 'No transfers',
     });

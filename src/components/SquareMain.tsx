@@ -192,12 +192,10 @@ const SquareMain = ({
       dark={colors.isDark}
       disabled={disabled}
       insets={insets}
-      lineName={squareName(data.currentLine, lang)}
+      lineName={squareName(data.currentLine, transferLang)}
       lineColor={lineColor}
-      boundText={
-        showStops ? boundTextMap[isJapanese ? 'JA' : 'EN'] : data.boundText
-      }
-      trainTypeName={squareName(data.trainType, lang)}
+      boundText={boundTextMap[transferLang]}
+      trainTypeName={squareName(data.trainType, transferLang)}
       trainTypeColor={trainTypeColor}
       trainTypeTextColor={getTrainTypeTextColor(trainTypeColor)}
       stateText={data.stateText}
