@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import {
+  useBoundText,
   useCurrentStation,
   useDisplayCurrentStation,
   useEstimateArrivalTimesAllStops,
@@ -21,7 +22,7 @@ import { useRunningSettings } from '~/providers/RunningSettingsContext';
 import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import { selectedDirectionAtom, stationsAtom } from '~/store/atoms/station';
 import { untouchableModeEnabledAtom } from '~/store/atoms/tuning';
-import { translate } from '~/translation';
+import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
 import { accentColorFor } from '~/utils/stopListAccentColor';
@@ -118,7 +119,9 @@ const SquareMain = ({
 }: {
   onTransferPress?: (station?: Station) => void;
 }) => {
+  const [showStops, setShowStops] = useState(false);
   const data = useHeaderCommonData();
+  const boundTextMap = useBoundText();
   const colors = useAtomValue(resolvedAppColorsAtom);
   const disabled = useAtomValue(untouchableModeEnabledAtom);
   const allStations = useAtomValue(stationsAtom);
@@ -146,13 +149,15 @@ const SquareMain = ({
 
   if (!data)
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
-  const lang = data.headerLangState;
+  const lang = showStops ? (isJapanese ? 'JA' : 'EN') : data.headerLangState;
   const copy = labels[lang === 'KANA' ? 'JA' : lang];
-  const targetName = squareName(target, lang);
+  const transferLang = isJapanese ? 'JA' : 'EN';
+  const transferCopy = labels[transferLang];
+  const targetName = squareName(target, transferLang);
   const transferHeading =
-    lang === 'EN'
-      ? `${copy.transfer}${targetName}`
-      : `${targetName}${copy.transfer}`;
+    transferLang === 'EN'
+      ? `${transferCopy.transfer}${targetName}`
+      : `${targetName}${transferCopy.transfer}`;
   const trainTypeColor = normalizeTrainTypeColor(
     data.trainType?.color ?? undefined
   );
@@ -182,12 +187,16 @@ const SquareMain = ({
 
   return (
     <SquareMainView
+      showStops={showStops}
+      onShowStopsChange={setShowStops}
       dark={colors.isDark}
       disabled={disabled}
       insets={insets}
       lineName={squareName(data.currentLine, lang)}
       lineColor={lineColor}
-      boundText={data.boundText}
+      boundText={
+        showStops ? boundTextMap[isJapanese ? 'JA' : 'EN'] : data.boundText
+      }
       trainTypeName={squareName(data.trainType, lang)}
       trainTypeColor={trainTypeColor}
       trainTypeTextColor={getTrainTypeTextColor(trainTypeColor)}
@@ -206,8 +215,8 @@ const SquareMain = ({
         ) : null
       }
       transferHeading={transferHeading}
-      transferLabel={copy.shortTransfer}
-      noTransfersText={copy.empty}
+      transferLabel={transferCopy.shortTransfer}
+      noTransfersText={transferCopy.empty}
       settingsLabel={translate('settings')}
       toggleLabel={copy.toggle}
       etaUnit={translate('portraitEtaUnit', {
@@ -224,10 +233,10 @@ const SquareMain = ({
         });
         return {
           key: `${line.id}-${index}`,
-          name: squareName(line, lang),
+          name: squareName(line, transferLang),
           stationName:
             line.station && line.station.groupId !== target?.groupId
-              ? squareName(line.station, lang)
+              ? squareName(line.station, transferLang)
               : undefined,
           mark: (
             <FitMark size={30}>
@@ -264,7 +273,7 @@ const SquareMain = ({
         const number = station.stationNumbers?.[getNumberIndex(station)];
         return {
           key: `${station.id}-${index}`,
-          name: focused ? data.stationText : squareName(station, lang),
+          name: squareName(station, isJapanese ? 'JA' : 'EN'),
           number: number?.stationNumber ?? '',
           color: station.line?.color || lineColor,
           focused,
