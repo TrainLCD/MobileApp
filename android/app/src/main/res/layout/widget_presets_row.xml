@@ -1,75 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  プリセットウィジェットの1行。iOS版(PresetsWidget.swift)のPresetsWidgetRowに対応する。
-
-  AbsListView.LayoutParamsはマージンを持たないため、行間は外側のFrameLayoutのパディングで作る。
-  カードの下敷き(widget_preset_row_background)は内側に敷き、余白まで塗らないようにする
--->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingBottom="6dp">
-
-    <LinearLayout
+    android:paddingBottom="8dp">
+    <FrameLayout
         android:id="@+id/widget_preset_row"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/widget_preset_row_background"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="5dp">
-
-        <FrameLayout
-            android:layout_width="@dimen/widget_preset_circle_size"
-            android:layout_height="@dimen/widget_preset_circle_size">
-
-            <ImageView
-                android:id="@+id/widget_preset_badge"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@null"
-                android:src="@drawable/widget_numbering_badge" />
-
-            <TextView
-                android:id="@+id/widget_preset_symbol"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:text="@string/widget_line_symbol_placeholder"
-                android:textColor="@color/widget_brand"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/widget_preset_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/widget_preset_row_background"
+            android:scaleType="fitXY"
+            android:contentDescription="@null" />
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/widget_preset_row_shade"
+            android:scaleType="fitXY"
+            android:contentDescription="@null" />
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_weight="1"
+            android:minHeight="72dp"
+            android:padding="12dp"
+            android:gravity="center_vertical"
             android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/widget_preset_name"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <FrameLayout
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="8dp">
+                    <ImageView
+                        android:id="@+id/widget_preset_badge"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/widget_numbering_badge"
+                        android:contentDescription="@null" />
+                    <TextView
+                        android:id="@+id/widget_preset_symbol"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+                </FrameLayout>
+                <TextView
+                    android:id="@+id/widget_preset_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/widget_preset_line"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
                 android:maxLines="1"
+                android:ellipsize="end"
                 android:textColor="@color/widget_on_line_primary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
             <TextView
                 android:id="@+id/widget_preset_route"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="18sp"
+                android:autoSizeStepGranularity="1sp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
+                android:includeFontPadding="false"
                 android:maxLines="1"
-                android:textColor="@color/widget_on_line_secondary"
-                android:textSize="11sp" />
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
         </LinearLayout>
-    </LinearLayout>
+    </FrameLayout>
 </FrameLayout>
