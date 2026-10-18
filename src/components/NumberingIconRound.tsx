@@ -72,6 +72,10 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: 'white',
   },
+  // 細い記号も文字幅に依存させず、円の内側全幅を描画領域にする。
+  symbolBox: {
+    width: '100%',
+  },
   lineSymbol: {
     color: '#221714',
     fontSize: SYMBOL_SIZE,
@@ -197,11 +201,12 @@ const NumberingIconRound: React.FC<Props> = ({
     return (
       <View style={[styles.rootTiny, { borderColor: lineColor }]}>
         <Typography
-          style={
+          style={[
+            styles.symbolBox,
             lineSymbol.length === 2
               ? styles.lineSymbolTinyLong
-              : styles.lineSymbolTiny
-          }
+              : styles.lineSymbolTiny,
+          ]}
         >
           {lineSymbol}
         </Typography>
@@ -213,11 +218,12 @@ const NumberingIconRound: React.FC<Props> = ({
     return (
       <View style={[styles.rootMedium, { borderColor: lineColor }]}>
         <Typography
-          style={
+          style={[
+            styles.symbolBox,
             lineSymbol.length === 2
               ? styles.lineSymbolMediumLong
-              : styles.lineSymbolMedium
-          }
+              : styles.lineSymbolMedium,
+          ]}
         >
           {lineSymbol}
         </Typography>
@@ -230,6 +236,7 @@ const NumberingIconRound: React.FC<Props> = ({
       <View style={[styles.root, { borderColor: lineColor }]}>
         <Typography
           style={[
+            styles.symbolBox,
             isLongSymbol ? styles.lineSymbolLong : styles.lineSymbol,
             glyphLift,
           ]}
