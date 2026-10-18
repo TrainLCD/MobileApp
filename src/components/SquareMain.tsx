@@ -6,6 +6,7 @@ import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import {
   useCurrentStation,
+  useDisplayCurrentStation,
   useEstimateArrivalTimesAllStops,
   useEstimatedMinutesByStationId,
   useGetLineMark,
@@ -124,6 +125,7 @@ const SquareMain = ({
   const direction = useAtomValue(selectedDirectionAtom);
   const { isLoopLine } = useLoopLine();
   const currentStation = useCurrentStation();
+  const displayCurrentStation = useDisplayCurrentStation();
   const target = useTransferTargetStation();
   const transfers = useTransferLines();
   const getMark = useGetLineMark();
@@ -163,7 +165,10 @@ const SquareMain = ({
     : ordered.slice(start);
   // 列の有無も各行と同じ対象で判定し、通過駅だけのETAで「--」を並べない。
   const isEtaTarget = (station: Station, index: number) =>
-    index > currentIndex - start && !getIsPass(station);
+    index > currentIndex - start &&
+    (displayCurrentStation?.id == null ||
+      station.id !== displayCurrentStation.id) &&
+    !getIsPass(station);
   const hasEta = visible.some(
     (station, index) =>
       isEtaTarget(station, index) &&

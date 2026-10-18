@@ -3,6 +3,7 @@ import { createStore, Provider } from 'jotai';
 import { type Station, StopCondition } from '~/@types/graphql';
 import {
   useCurrentStation,
+  useDisplayCurrentStation,
   useEstimateArrivalTimesAllStops,
   useHeaderCommonData,
   useLoopLine,
@@ -21,6 +22,7 @@ jest.mock('~/hooks', () => ({
     '~/hooks/useEstimatedMinutesByStationId'
   ).useEstimatedMinutesByStationId,
   useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useLoopLine: jest.fn(() => ({ isLoopLine: false })),
   useTransferLines: jest.fn(() => []),
   useTransferTargetStation: jest.fn(),
@@ -87,6 +89,7 @@ beforeEach(() => {
   });
   (useHeaderCommonData as jest.Mock).mockReturnValue(data);
   (useCurrentStation as jest.Mock).mockReturnValue(stations[0]);
+  (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[0]);
   (useTransferTargetStation as jest.Mock).mockReturnValue(stations[1]);
   (useTransferLines as jest.Mock).mockReturnValue([]);
   (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: false });
@@ -239,3 +242,27 @@ it.each([1, 99])(
     expect(latest().stops.every((s) => !s.showEta)).toBe(true);
   }
 );
+
+it('excludes the healed current station while retaining downstream ETA and missing values', () => {
+  (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[1]);
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: { stops: [{ stationId: 4, cumulativeMinutes: 5 }] },
+  });
+  setup();
+  expect(latest().stops.map((s) => s.showEta)).toEqual([
+    false,
+    false,
+    true,
+    true,
+  ]);
+  expect(latest().stops[2].estimatedMinutes).toBeUndefined();
+  expect(latest().stops[3].estimatedMinutes).toBe(5);
+});
+it('does not enable ETA from a value belonging only to the healed current station', () => {
+  (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[1]);
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: { stops: [{ stationId: 2, cumulativeMinutes: 0 }] },
+  });
+  setup();
+  expect(latest().stops.every((s) => !s.showEta)).toBe(true);
+});
