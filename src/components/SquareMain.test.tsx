@@ -130,6 +130,7 @@ it('uses the header language for line and transfer text, independently of app lo
     stateText: 'Next',
     stationText: 'Ebisu',
     transferHeading: 'Transfers at Ebisu',
+    transferLabel: 'Transfers',
   });
   expect(latest().transfers[0].name).toBe('Saikyo Line');
   expect(latest().stops[0].name).toBe('Shibuya');

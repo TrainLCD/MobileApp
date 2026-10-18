@@ -81,6 +81,7 @@ export const squareName = (
 const labels = {
   JA: {
     transfer: 'での乗換',
+    shortTransfer: 'のりかえ',
     empty: '乗換路線はありません',
     passed: '通過済み',
     pass: '通過',
@@ -88,6 +89,7 @@ const labels = {
   },
   EN: {
     transfer: 'Transfers at ',
+    shortTransfer: 'Transfers',
     empty: 'No transfers',
     passed: 'Passed',
     pass: 'Pass',
@@ -95,6 +97,7 @@ const labels = {
   },
   ZH: {
     transfer: '换乘',
+    shortTransfer: '换乘',
     empty: '无换乘线路',
     passed: '已过',
     pass: '通过',
@@ -102,6 +105,7 @@ const labels = {
   },
   KO: {
     transfer: ' 환승',
+    shortTransfer: '환승',
     empty: '환승 노선 없음',
     passed: '지남',
     pass: '통과',
@@ -184,6 +188,7 @@ const SquareMain = ({
         ) : null
       }
       transferHeading={transferHeading}
+      transferLabel={copy.shortTransfer}
       noTransfersText={copy.empty}
       settingsLabel={translate('settings')}
       toggleLabel={copy.toggle}

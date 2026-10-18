@@ -31,6 +31,7 @@ export type SquareMainViewProps = {
   stationText: string;
   numbering: ReactNode;
   transferHeading: string;
+  transferLabel: string;
   noTransfersText: string;
   settingsLabel: string;
   toggleLabel: string;
@@ -215,6 +216,11 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
               }}
               contentContainerStyle={styles.marks}
             >
+              {!!props.transfers.length && (
+                <Text style={[styles.caption, secondaryStyle]}>
+                  {props.transferLabel}
+                </Text>
+              )}
               {props.transfers.map((line) => (
                 <View key={line.key} accessibilityLabel={line.name}>
                   {line.mark}

@@ -16,6 +16,7 @@ const props: SquareMainViewProps = {
   stationText: '恵比寿',
   numbering: <Text>JY 21</Text>,
   transferHeading: '恵比寿での乗換',
+  transferLabel: 'のりかえ',
   noTransfersText: '乗換路線はありません',
   settingsLabel: '設定',
   toggleLabel: '表示切替',
@@ -47,13 +48,14 @@ const props: SquareMainViewProps = {
   ],
 };
 afterEach(() => jest.clearAllMocks());
-it('starts with C and switches to B and back; B footer contains only marks', () => {
+it('starts with C and switches to B and back; B footer contains a transfer label and marks', () => {
   const r = render(<SquareMainView {...props} />);
   expect(r.getByTestId('square-transfers')).toBeTruthy();
   expect(r.queryByTestId('square-stops')).toBeNull();
   fireEvent.press(r.getByTestId('square-station-tap'));
   expect(r.getByTestId('square-stops')).toBeTruthy();
   const footer = within(r.getByTestId('square-transfer-marks'));
+  expect(footer.getByText('のりかえ')).toBeTruthy();
   expect(footer.getByText('JA')).toBeTruthy();
   expect(footer.queryByText('埼京線')).toBeNull();
   expect(footer.queryByText('恵比寿での乗換')).toBeNull();
@@ -66,12 +68,16 @@ it('does not reset B when the existing language or arrival state changes', () =>
   r.rerender(
     <SquareMainView
       {...props}
+      transferLabel="Transfers"
       stateText="Next"
       stationText="Ebisu"
       boundText="For Tokyo"
     />
   );
   expect(r.getByTestId('square-stops')).toBeTruthy();
+  expect(
+    within(r.getByTestId('square-transfer-marks')).getByText('Transfers')
+  ).toBeTruthy();
   fireEvent.press(r.getByTestId('square-stops-tap'));
   expect(r.getByTestId('square-station-name').props.children).toBe('Ebisu');
   expect(r.getByTestId('square-state').props.children).toBe('Next');
