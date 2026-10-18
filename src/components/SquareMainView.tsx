@@ -1,6 +1,21 @@
 import { Image } from 'expo-image';
-import { memo, type ReactNode, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  memo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  AccessibilityInfo,
+  Pressable,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { FONTS } from '~/constants';
 
 export type SquareTransfer = {
@@ -70,6 +85,50 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
   const [localShowStops, setLocalShowStops] = useState(false);
   const showStops = props.showStops ?? localShowStops;
   const dragged = useRef(false);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const rowYs = useRef(new Map<string, number>());
+  const lastScroll = useRef<{ key: string; y: number } | null>(null);
+  const reduceMotion = useRef(true);
+  useEffect(() => {
+    let active = true;
+    let changed = false;
+    const subscription = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      (enabled) => {
+        changed = true;
+        reduceMotion.current = enabled;
+      }
+    );
+    void AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => {
+        if (active && !changed) reduceMotion.current = enabled;
+      })
+      .catch(() => {
+        /* 取得できない場合はアニメーションを抑えたままにする。 */
+      });
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
+  const focusedKey = props.stops.find((stop) => stop.focused)?.key;
+  const scrollToFocused = useCallback((key: string | undefined) => {
+    const rowY = key == null ? undefined : rowYs.current.get(key);
+    if (key == null || rowY == null || !scrollRef.current) return;
+    // ポートレートと同じく、1駅前が見える余白を残す。
+    const y = Math.max(0, rowY - 54);
+    if (lastScroll.current?.key === key && lastScroll.current.y === y) return;
+    scrollRef.current.scrollTo({ y, animated: !reduceMotion.current });
+    lastScroll.current = { key, y };
+  }, []);
+  const attachScroll = useCallback((node: ScrollViewInstance | null) => {
+    scrollRef.current = node;
+    rowYs.current.clear();
+    lastScroll.current = null;
+  }, []);
+  useEffect(() => {
+    if (showStops) scrollToFocused(focusedKey);
+  }, [focusedKey, showStops, scrollToFocused]);
   const colors = PALETTE[props.dark ? 'dark' : 'light'];
   const toggle = () => {
     if (!props.disabled && !dragged.current) {
@@ -150,6 +209,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
         <>
           <ScrollView
             key={props.stops[0]?.key}
+            ref={attachScroll}
             testID="square-stops"
             style={styles.flex}
             onScrollBeginDrag={() => {
@@ -168,6 +228,10 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                 <View
                   key={stop.key}
                   testID={`square-stop-${stop.key}`}
+                  onLayout={({ nativeEvent: { layout } }) => {
+                    rowYs.current.set(stop.key, layout.y);
+                    if (stop.key === focusedKey) scrollToFocused(focusedKey);
+                  }}
                   style={[
                     styles.stopRow,
                     stop.focused && styles.focusRow,

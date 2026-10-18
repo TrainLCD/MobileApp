@@ -154,19 +154,19 @@ it('cycles C station text while keeping the header and transfers in the app lang
   expect(latest().transfers[0].name).toBe('埼京線');
   expect(latest().stops[0].name).toBe('渋谷');
 });
-it('orders ordinary and loop lines in the existing travel direction and wraps a loop', () => {
+it('orders loop lines in the existing travel direction', () => {
   (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: true });
   (useCurrentStation as jest.Mock).mockReturnValue(stations[0]);
   (useTransferTargetStation as jest.Mock).mockReturnValue(stations[3]);
   setup();
   expect(latest().stops.map((s) => s.number)).toEqual(['', '', '', '']);
   expect(latest().stops.map((s) => s.key.split('-')[0])).toEqual([
-    '1',
     '4',
     '3',
     '2',
+    '1',
   ]);
-  expect(latest().stops[1].focused).toBe(true);
+  expect(latest().stops[0].focused).toBe(true);
 });
 it('does not mark a stopping station as departed', () => {
   (useHeaderCommonData as jest.Mock).mockReturnValue({
@@ -442,5 +442,104 @@ it.each([
         .stops.filter((s) => !s.focused)
         .every((s) => s.stateText === undefined)
     ).toBe(true);
+  }
+);
+
+it.each([false, true])(
+  'keeps every station before the current station (arrived: %s)',
+  (arrived) => {
+    (useCurrentStation as jest.Mock).mockReturnValue(stations[2]);
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[2]);
+    (useTransferTargetStation as jest.Mock).mockReturnValue(stations[3]);
+    (useHeaderCommonData as jest.Mock).mockReturnValue({
+      ...data,
+      currentStation: stations[2],
+      arrived,
+      headerState: arrived ? 'CURRENT' : 'NEXT',
+    });
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: { stops: [{ stationId: 4, cumulativeMinutes: 5 }] },
+    });
+    const r = setup();
+    expect(latest().stops.map((s) => s.key.split('-')[0])).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+    ]);
+    expect(
+      latest()
+        .stops.slice(0, 2)
+        .every((s) => s.passed && !s.showEta)
+    ).toBe(true);
+    expect(latest().stops[2]).toMatchObject({
+      focused: arrived,
+      passed: !arrived,
+      showEta: false,
+    });
+    expect(latest().stops[3].showEta).toBe(true);
+    const keys = latest().stops.map((s) => s.key);
+    (useCurrentStation as jest.Mock).mockReturnValue(stations[3]);
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[3]);
+    act(() => r.store.set(stationsAtom, [...stations]));
+    expect(latest().stops.map((s) => s.key)).toEqual(keys);
+  }
+);
+it('keeps the full outbound order and all stations behind the current station', () => {
+  (useCurrentStation as jest.Mock).mockReturnValue(stations[1]);
+  const r = setup();
+  act(() => r.store.set(selectedDirectionAtom, 'OUTBOUND'));
+  expect(latest().stops.map((s) => s.key.split('-')[0])).toEqual([
+    '4',
+    '3',
+    '2',
+    '1',
+  ]);
+  expect(
+    latest()
+      .stops.slice(0, 2)
+      .every((s) => s.passed)
+  ).toBe(true);
+});
+it('does not rotate loop stations around the current station', () => {
+  (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: true });
+  (useCurrentStation as jest.Mock).mockReturnValue(stations[2]);
+  setup();
+  expect(latest().stops.map((s) => s.key.split('-')[0])).toEqual([
+    '4',
+    '3',
+    '2',
+    '1',
+  ]);
+});
+
+it.each([stations[2], undefined, { id: 99 }])(
+  'uses the ETA progress anchor for passed styling with a fallback: %p',
+  (displayStation) => {
+    (useCurrentStation as jest.Mock).mockReturnValue(stations[0]);
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(displayStation);
+    (useTransferTargetStation as jest.Mock).mockReturnValue(stations[3]);
+    (useHeaderCommonData as jest.Mock).mockReturnValue({
+      ...data,
+      headerState: 'ARRIVING',
+    });
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: { stops: [{ stationId: 4, cumulativeMinutes: 5 }] },
+    });
+    setup();
+    const healed = displayStation?.id === stations[2].id;
+    expect(latest().stops.map((s) => s.passed)).toEqual([
+      true,
+      healed,
+      healed,
+      false,
+    ]);
+    expect(latest().stops.map((s) => s.showEta)).toEqual([
+      false,
+      !healed,
+      !healed,
+      true,
+    ]);
+    expect(latest().stops[3].focused).toBe(true);
   }
 );
