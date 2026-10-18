@@ -26,6 +26,38 @@ describe('getRunningLayout', () => {
       'square'
     );
   });
+  it.each([
+    [360, 180, 360, 374, 'landscape'],
+    [180, 360, 374, 360, 'portrait'],
+    [360, 251, 360, 360, 'landscape'],
+    [251, 360, 360, 360, 'portrait'],
+    [500, 360, 360, 360, 'landscape'],
+  ])(
+    'uses the window layout for reduced or mismatched windows (%i × %i)',
+    (width, height, screenWidth, screenHeight, expected) => {
+      const screen = { width: screenWidth, height: screenHeight };
+      expect(getRunningLayout(width, height, true, screen)).toBe(expected);
+      expect(getRunningLayout(width, height, false, screen)).toBe('landscape');
+    }
+  );
+  it('includes the 70% decor correction boundary in either orientation', () => {
+    expect(getRunningLayout(360, 252, false, { width: 360, height: 360 })).toBe(
+      'square'
+    );
+    expect(getRunningLayout(252, 360, true, { width: 360, height: 360 })).toBe(
+      'square'
+    );
+  });
+  it('does not let screen correction override invalid window dimensions', () => {
+    for (const width of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(
+        getRunningLayout(width, 360, false, { width: 360, height: 374 })
+      ).not.toBe('square');
+      expect(
+        getRunningLayout(360, width, false, { width: 374, height: 360 })
+      ).not.toBe('square');
+    }
+  });
   it('returns to the existing phone layout when the display changes', () => {
     expect(getRunningLayout(360, 800, true, { width: 360, height: 844 })).toBe(
       'portrait'

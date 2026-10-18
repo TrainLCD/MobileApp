@@ -11,11 +11,17 @@ export const getRunningLayout = (
   screen?: { width: number; height: number }
 ): 'square' | 'portrait' | 'landscape' => {
   // 正方形と、その前後20%までを同じ情報設計で扱う。向きには依存させない。
-  // Androidのカバー画面はシステムバーや切欠きでwindowの比率が変わる。
-  // #7234のwindow判定に加え、装飾領域を含む現在のscreenも判定する。
+  // #7234のscreen補正は、各辺で画面の70%以上を使うwindowに限定する。
+  // 360×374から360×280への縮小を許容し、半画面への縮小は補正しない。
+  // これは装飾領域の上限を定めるUI上の方針で、OSの分割画面判定ではない。
   if (
     isSquare(width, height) ||
-    (screen && isSquare(screen.width, screen.height))
+    (screen &&
+      isSquare(screen.width, screen.height) &&
+      width >= screen.width * 0.7 &&
+      width <= screen.width &&
+      height >= screen.height * 0.7 &&
+      height <= screen.height)
   ) {
     return 'square';
   }
