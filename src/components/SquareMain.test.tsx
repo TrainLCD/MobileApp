@@ -390,3 +390,29 @@ it.each([true, false])(
     });
   }
 );
+
+it.each([
+  ['CURRENT_EN', 'nowStoppingAtEn'],
+  ['CURRENT_ZH', 'nowStoppingAtZh'],
+  ['CURRENT_KO', 'nowStoppingAtKo'],
+])(
+  'fills the stopping state for %s just like portrait',
+  (headerState, expected) => {
+    (useHeaderCommonData as jest.Mock).mockReturnValue({
+      ...data,
+      headerState,
+      stateText: '',
+    });
+    setup();
+    expect(latest().stateText).toBe(expected);
+  }
+);
+it('preserves supplied state text when supplementing stopping labels', () => {
+  (useHeaderCommonData as jest.Mock).mockReturnValue({
+    ...data,
+    headerState: 'CURRENT_EN',
+    stateText: 'already supplied',
+  });
+  setup();
+  expect(latest().stateText).toBe('already supplied');
+});

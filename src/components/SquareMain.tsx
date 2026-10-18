@@ -25,6 +25,7 @@ import { untouchableModeEnabledAtom } from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
+import { resolveRunningStateText } from '~/utils/resolveRunningStateText';
 import { accentColorFor } from '~/utils/stopListAccentColor';
 import {
   getTrainTypeTextColor,
@@ -198,7 +199,7 @@ const SquareMain = ({
       trainTypeName={squareName(data.trainType, transferLang)}
       trainTypeColor={trainTypeColor}
       trainTypeTextColor={getTrainTypeTextColor(trainTypeColor)}
-      stateText={data.stateText}
+      stateText={resolveRunningStateText(data.stateText, data.headerState)}
       stationText={data.stationText}
       numbering={
         numbering ? (
