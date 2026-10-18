@@ -17,7 +17,9 @@ PR 作成本体は **`create-pr`** スキルに委譲する。
   無ければ先行判定は不要。存在する場合は `git log --oneline origin/dev..dev` を確認する。
   先行コミットがあれば一覧を提示し、別ブランチへ切り出して PR にするか確認する。
   `dev` は protected のため直接 push を促さない。この判定は `create-pr` の push 手順より優先する。
-- 以下で既存 canary PR を確認する。存在する場合は「既存 canary PR」を優先する。
+- 以下で既存 canary PR を確認する。
+  存在する場合は「事前 bump」へ進まず、「既存 canary PR」の処理だけを実行する。
+  存在しない場合に限り、次の「事前 bump」へ進む。
 
   ```bash
   gh pr list --base canary --head dev --state open --json number,url,labels
