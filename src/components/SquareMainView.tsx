@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import {
+  AccessibilityInfo,
   Pressable,
   ScrollView,
   type ScrollViewInstance,
@@ -86,21 +87,44 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
   const dragged = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const rowYs = useRef(new Map<string, number>());
-  const lastScrollY = useRef<number | null>(null);
+  const lastScroll = useRef<{ key: string; y: number } | null>(null);
+  const reduceMotion = useRef(true);
+  useEffect(() => {
+    let active = true;
+    let changed = false;
+    const subscription = AccessibilityInfo.addEventListener(
+      'reduceMotionChanged',
+      (enabled) => {
+        changed = true;
+        reduceMotion.current = enabled;
+      }
+    );
+    void AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => {
+        if (active && !changed) reduceMotion.current = enabled;
+      })
+      .catch(() => {
+        /* 取得できない場合はアニメーションを抑えたままにする。 */
+      });
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
   const focusedKey = props.stops.find((stop) => stop.focused)?.key;
   const scrollToFocused = useCallback((key: string | undefined) => {
     const rowY = key == null ? undefined : rowYs.current.get(key);
-    if (rowY == null || !scrollRef.current) return;
+    if (key == null || rowY == null || !scrollRef.current) return;
     // ポートレートと同じく、1駅前が見える余白を残す。
     const y = Math.max(0, rowY - 54);
-    if (lastScrollY.current === y) return;
-    scrollRef.current.scrollTo({ y, animated: true });
-    lastScrollY.current = y;
+    if (lastScroll.current?.key === key && lastScroll.current.y === y) return;
+    scrollRef.current.scrollTo({ y, animated: !reduceMotion.current });
+    lastScroll.current = { key, y };
   }, []);
   const attachScroll = useCallback((node: ScrollViewInstance | null) => {
     scrollRef.current = node;
     rowYs.current.clear();
-    lastScrollY.current = null;
+    lastScroll.current = null;
   }, []);
   useEffect(() => {
     if (showStops) scrollToFocused(focusedKey);
