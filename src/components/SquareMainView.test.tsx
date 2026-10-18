@@ -124,3 +124,30 @@ it('supports dark appearance, no numbering and no transfers', () => {
   fireEvent.press(r.getByTestId('square-empty-transfers'));
   expect(r.getByTestId('square-stops')).toBeTruthy();
 });
+
+it.each([
+  [2.6, '3', true],
+  [0.4, 'まもなく', false],
+  [null, '--', false],
+])('renders portrait ETA formatting for %s', (minutes, text, unit) => {
+  const r = render(
+    <SquareMainView
+      {...props}
+      etaUnit="分"
+      etaSoon="まもなく"
+      stops={[
+        {
+          ...props.stops[1],
+          label: '',
+          showEta: true,
+          estimatedMinutes: minutes as number | null,
+        },
+      ]}
+    />
+  );
+  fireEvent.press(r.getByTestId('square-station-tap'));
+  const eta = within(r.getByTestId('square-eta-2'));
+  expect(eta.getByText(text as string)).toBeTruthy();
+  expect(!!eta.queryByText('分')).toBe(unit);
+  expect(r.getByTestId('square-number-2').props.children).toBe('JY-21');
+});

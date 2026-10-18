@@ -18,8 +18,13 @@ export type SquareStop = {
   focused: boolean;
   passed: boolean;
   label: string;
+  numberColor?: string;
+  showEta?: boolean;
+  estimatedMinutes?: number | null;
 };
 export type SquareMainViewProps = {
+  etaUnit?: string;
+  etaSoon?: string;
   dark: boolean;
   lineName: string;
   lineColor: string;
@@ -171,11 +176,6 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                       },
                     ]}
                   />
-                  {!!stop.number && (
-                    <Text style={[styles.stopNumber, secondaryStyle]}>
-                      {stop.number.replace('-', ' ')}
-                    </Text>
-                  )}
                   <Text
                     numberOfLines={1}
                     adjustsFontSizeToFit
@@ -188,6 +188,54 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                   >
                     {stop.name}
                   </Text>
+                  {!!stop.number && (
+                    <Text
+                      testID={`square-number-${stop.key}`}
+                      style={[
+                        styles.stopNumber,
+                        {
+                          color: stop.numberColor ?? colors.secondary,
+                          opacity: stop.passed ? 0.4 : 1,
+                        },
+                      ]}
+                    >
+                      {stop.number}
+                    </Text>
+                  )}
+                  {stop.showEta && (
+                    <View
+                      testID={`square-eta-${stop.key}`}
+                      style={styles.etaColumn}
+                    >
+                      <Text
+                        style={[
+                          styles.etaValue,
+                          stop.focused && styles.etaFocused,
+                          stop.estimatedMinutes != null &&
+                            Math.round(stop.estimatedMinutes) < 1 &&
+                            styles.etaSoon,
+                          { color: stop.numberColor ?? colors.secondary },
+                        ]}
+                      >
+                        {stop.estimatedMinutes == null
+                          ? '--'
+                          : Math.round(stop.estimatedMinutes) < 1
+                            ? props.etaSoon
+                            : Math.round(stop.estimatedMinutes)}
+                      </Text>
+                      {stop.estimatedMinutes != null &&
+                        Math.round(stop.estimatedMinutes) >= 1 && (
+                          <Text
+                            style={[
+                              styles.etaUnit,
+                              { color: stop.numberColor ?? colors.secondary },
+                            ]}
+                          >
+                            {props.etaUnit}
+                          </Text>
+                        )}
+                    </View>
+                  )}
                   {!!stop.label && (
                     <Text
                       numberOfLines={2}
@@ -426,7 +474,18 @@ const styles = StyleSheet.create({
   },
   focusRow: { minHeight: 90 },
   stopBar: { width: 4, alignSelf: 'stretch', borderRadius: 2 },
-  stopNumber: { fontFamily: FONTS.RobotoBold, fontSize: 12, width: 48 },
+  stopNumber: { fontFamily: FONTS.RobotoBold, fontSize: 10 },
+  etaColumn: {
+    minWidth: 46,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'flex-end',
+    gap: 2,
+  },
+  etaValue: { fontFamily: FONTS.RobotoBold, fontSize: 13 },
+  etaFocused: { fontSize: 15 },
+  etaSoon: { fontSize: 10 },
+  etaUnit: { fontFamily: FONTS.RobotoBold, fontSize: 9 },
   stopName: {
     flex: 1,
     fontFamily: FONTS.RobotoBold,

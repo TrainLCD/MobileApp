@@ -6,6 +6,8 @@ import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '~/constants';
 import {
   useCurrentStation,
+  useEstimateArrivalTimesAllStops,
+  useEstimatedMinutesByStationId,
   useGetLineMark,
   useHeaderCommonData,
   useLoopLine,
@@ -21,6 +23,7 @@ import { untouchableModeEnabledAtom } from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
+import { accentColorFor } from '~/utils/stopListAccentColor';
 import {
   getTrainTypeTextColor,
   normalizeTrainTypeColor,
@@ -127,6 +130,9 @@ const SquareMain = ({
   const getNumberIndex = useStationNumberIndexFunc();
   const openSettings = useRunningSettings();
   const insets = useSafeAreaInsets();
+  const { route } = useEstimateArrivalTimesAllStops();
+  const minutesByStation = useEstimatedMinutesByStationId(route);
+  const hasEta = Array.from(minutesByStation.values()).some((m) => m != null);
   const ordered = useMemo(() => {
     const list = dropEitherJunctionStation(
       allStations.filter((s): s is Station => !!s),
@@ -188,6 +194,12 @@ const SquareMain = ({
       noTransfersText={copy.empty}
       settingsLabel={translate('settings')}
       toggleLabel={copy.toggle}
+      etaUnit={translate('portraitEtaUnit', {
+        locale: lang === 'JA' || lang === 'KANA' ? 'ja' : 'en',
+      })}
+      etaSoon={translate('portraitEtaSoon', {
+        locale: lang === 'JA' || lang === 'KANA' ? 'ja' : 'en',
+      })}
       onSettings={openSettings ?? undefined}
       transfers={transfers.map((line: Line, index) => {
         const mark = getMark({
@@ -233,8 +245,7 @@ const SquareMain = ({
           !focused &&
           (station.id === currentStation?.id || index < currentIndex - start);
         const pass = getIsPass(station);
-        const number =
-          station.stationNumbers?.[getNumberIndex(station, station.line)];
+        const number = station.stationNumbers?.[getNumberIndex(station)];
         return {
           key: `${station.id}-${index}`,
           name: focused ? data.stationText : squareName(station, lang),
@@ -242,11 +253,18 @@ const SquareMain = ({
           color: station.line?.color || lineColor,
           focused,
           passed,
-          label: focused
-            ? data.stateText.replaceAll('\n', ' ')
+          label: pass ? copy.pass : '',
+          numberColor: focused
+            ? accentColorFor(station.line?.color || lineColor, colors.isDark)
             : pass
-              ? copy.pass
-              : '',
+              ? colors.isDark
+                ? colors.strongBorder
+                : '#C2C2C2'
+              : colors.secondaryText,
+          showEta:
+            hasEta && !pass && !passed && station.id !== currentStation?.id,
+          estimatedMinutes:
+            station.id != null ? minutesByStation.get(station.id) : null,
         };
       })}
     />
