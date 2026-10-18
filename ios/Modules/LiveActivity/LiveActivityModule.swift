@@ -32,6 +32,8 @@ class LiveActivityModule: NSObject {
       "lineName": dic["lineName"] as? String ?? "",
       "lineSymbol": dic["lineSymbol"] as? String ?? "",
       "boundStationName": dic["boundStationName"] as? String ?? "",
+      "stationName": dic["stationName"] as? String ?? "",
+      "nextStationName": dic["nextStationName"] as? String ?? "",
     ]
     if state == lastWidgetState {
       return

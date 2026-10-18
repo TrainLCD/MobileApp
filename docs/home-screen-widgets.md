@@ -7,7 +7,7 @@ TrainLCD は iOS / Android の双方でホーム画面ウィジェットを提�
 
 | ウィジェット | 表示内容 | iOS | Android |
 | --- | --- | --- | --- |
-| 乗車中 | 乗車中の路線・方面 | `HomeScreenWidget` | `RideWidgetProvider` |
+| 乗車中 | 乗車中の路線・現在駅・次駅（駅情報がない場合は方面） | `HomeScreenWidget` | `RideWidgetProvider` |
 | プリセット | 登録済みプリセット一覧 | `PresetsWidget` | `PresetsWidgetProvider` |
 
 iOS の kind 文字列は型名と同じ(`HomeScreenWidget` / `PresetsWidget`)。
@@ -51,12 +51,13 @@ iOS の kind 文字列は型名と同じ(`HomeScreenWidget` / `PresetsWidget`)�
   ウィジェットギャラリーのプレビュー用の既定値でしかない。実際の色は `RideWidgetProvider` が
   `setTextColor` / `setColorFilter` で実行時に上書きする。既定値はブランドカラー
   (`@color/widget_brand`、未乗車時の色)に揃えてある。
-- 背景が常に路線色になったので、端末のダークテーマで色を変える必要はない
-  (`values-night` の widget 用カラーは廃止済み)。
+- 路線色とその上の文字色はテーマによらず共通です。プリセット一覧の外側は不透明にし、
+  ライトでは白、ダークでは暗いグレーを使います。
 
-プリセットウィジェットはプリセットごとに路線が違うため、一覧では面の色をブランドカラーに固定し、
-路線色は行のバッジで見せる。1 件しか表示しない iOS の `systemSmall` だけは、その 1 件の路線色を
-そのまま面に使う。
+プリセット一覧は各行をその路線色で表示します。プリセット名は18pt/spの太字にします。
+iOSの小・中サイズは先頭の1件を表示し、ウィジェット全体をその路線色にします。
+正方形では駅名の間に下向き矢印を置き、横長では駅名を横に並べます。
+乗車中にも同じ路線見出しと駅名のレイアウトを使います。
 
 ## データ経路
 
@@ -73,6 +74,19 @@ JS (解決済みの表示用文字列)
 - Android の SharedPreferences 名は `me.tinykitten.trainlcd.widget`。
 - 表示内容に差分が無い更新は書き込まない。iOS は WidgetKit のリロードバジェット、
   Android は再描画ブロードキャストを無駄に消費しないため。
+
+## 乗車中の駅情報
+
+現在駅はライブアクティビティと同じ停車駅基準です。走行中は最後の停車駅を表示します。
+次駅は表示用の次駅を使い、現在駅と同じ駅になった遷移では記録基準の次駅に戻します。
+iOSでは既存のライブアクティビティの値をApp Groupへ保存します。
+Androidでは`useUpdateWidget`で同じ選択規則を使います。
+
+`stationName`と`nextStationName`も差分比較に含めます。駅が変わった場合に更新し、
+駅名が変わらない更新ではネイティブ側の再描画を抑えます。
+終点などで次駅がない場合は矢印と次駅を表示しません。
+旧保存データなど両方の駅名がない場合は従来の方面を表示します。
+降車時は従来どおり未乗車表示へ戻します。
 
 ## プリセットウィジェット
 
@@ -123,10 +137,10 @@ iOS は WidgetKit にスクロールが無いため、表示できる件数は�
 ファミリーごとに件数を決め打ちすると端末サイズ差で余白が出たり見切れたりするため、
 `GeometryReader` で実際の描画高を測り、`rowHeight` / `rowSpacing` から収まる行数を求める。
 
-行数計算が予約する高さと実際の描画がずれると最終行が見切れるため、行とヘッダーは
-`.frame(height:)` で `rowHeight` / `headerHeight` に固定し、Dynamic Type や長い
-ローカライズ文字列で伸びないようにしている。見た目を変えたらこれらの定数も合わせること
-(ヘッダーを `LineColorChip` に載せた際も、カプセルの上下パディングぶん `headerHeight` を広げている)。
+iOSの大サイズは行高72pt・行間8ptから表示件数を求めます。
+名前と駅名を大きくするため、従来の40ptの行と一覧ヘッダーを置き換えています。
+表示件数は減りますが、行全体のタップと保存順は維持します。
+Androidは従来どおりスクロールで全件に到達できます。
 
 Android の行は `AbsListView.LayoutParams` がマージンを持たないため、行間は行レイアウト外側の
 `FrameLayout` のパディングで作り、カードの下敷き(`widget_preset_row_background`)は
@@ -135,7 +149,7 @@ Android の行は `AbsListView.LayoutParams` がマージンを持たないた�
 | ファミリー | 表示 | タップ |
 | --- | --- | --- |
 | `systemSmall` | 1 件を縦に積んで表示 | `widgetURL` でウィジェット全体 |
-| `systemMedium` | 収まるだけの行 | 行ごとの `Link` |
+| `systemMedium` | 1 件を横並びで表示 | `widgetURL` でウィジェット全体 |
 | `systemLarge` | 収まるだけの行 | 行ごとの `Link` |
 
 `systemSmall` はウィジェット全体が単一のタップ領域で、行ごとの `Link` が個別のタップ先に

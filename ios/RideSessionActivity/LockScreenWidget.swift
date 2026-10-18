@@ -35,6 +35,8 @@ struct LockScreenEntry: TimelineEntry {
   let lineName: String
   let lineSymbol: String
   let boundFor: String
+  var stationName: String = ""
+  var nextStationName: String = ""
 
   // Color(hex:)は空文字を渡すとほぼ透明になるため、描画に使う路線色は必ずここを経由する
   var displayLineColor: String {
@@ -83,7 +85,9 @@ struct LockScreenEntry: TimelineEntry {
       lineColor: defaults.string(forKey: "lineColor") ?? "",
       lineName: lineName,
       lineSymbol: lineSymbol.isEmpty ? String(lineName.prefix(1)) : lineSymbol,
-      boundFor: defaults.string(forKey: "boundStationName") ?? ""
+      boundFor: defaults.string(forKey: "boundStationName") ?? "",
+      stationName: defaults.string(forKey: "stationName") ?? "",
+      nextStationName: defaults.string(forKey: "nextStationName") ?? ""
     )
   }
 }

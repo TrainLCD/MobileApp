@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
+import android.view.View
 import android.widget.RemoteViews
 
 /**
@@ -112,11 +113,11 @@ class RideWidgetProvider : AppWidgetProvider() {
                     inlineViews(context, lineName, lineColor)
                 // 4x2のような横長は高さが足りていても横長レイアウトを使う
                 minHeightDp >= SMALL_MIN_HEIGHT_DP && minWidthDp <= minHeightDp ->
-                    smallViews(context, lineName, boundFor, lineSymbol, lineColor)
-                else -> rectangularViews(context, lineName, boundFor, lineSymbol, lineColor)
+                    stationViews(context, state, lineName, boundFor, lineSymbol, lineColor, true)
+                else -> stationViews(context, state, lineName, boundFor, lineSymbol, lineColor, false)
             }
 
-            views.setContentDescription(R.id.widget_root, "$lineName / $boundFor")
+            views.setContentDescription(R.id.widget_root, listOf(lineName, if (state.loaded) state.stationName else "", if (state.loaded) state.nextStationName else "", boundFor).filter { it.isNotEmpty() }.joinToString(" / "))
             createContentIntent(context)?.let {
                 views.setOnClickPendingIntent(R.id.widget_root, it)
             }
@@ -169,48 +170,32 @@ class RideWidgetProvider : AppWidgetProvider() {
                 setTextColor(R.id.widget_inline_text, WidgetTheme.onLineColor(lineColor))
             }
 
-        private fun smallViews(
+        private fun stationViews(
             context: Context,
+            state: WidgetState,
             lineName: String,
             boundFor: String,
             lineSymbol: String,
-            lineColor: Int
+            lineColor: Int,
+            vertical: Boolean
         ): RemoteViews =
-            RemoteViews(context.packageName, R.layout.widget_ride_small).apply {
+            RemoteViews(context.packageName, if (vertical) R.layout.widget_ride_small else R.layout.widget_ride_rectangular).apply {
                 applyBackground(lineColor)
                 applyNumberingBadge(lineSymbol, lineColor)
                 applyTextColors(lineColor)
-                setInt(
-                    R.id.widget_brand_icon,
-                    "setColorFilter",
-                    WidgetTheme.onLineColorSecondary(lineColor)
-                )
                 setTextViewText(R.id.widget_line_name, lineName)
                 setTextViewText(R.id.widget_bound_for, boundFor)
-            }
-
-        private fun rectangularViews(
-            context: Context,
-            lineName: String,
-            boundFor: String,
-            lineSymbol: String,
-            lineColor: Int
-        ): RemoteViews =
-            RemoteViews(context.packageName, R.layout.widget_ride_rectangular).apply {
-                applyBackground(lineColor)
-                applyNumberingBadge(lineSymbol, lineColor)
-                applyTextColors(lineColor)
-                // ブランド行のカプセルは前景色を薄く敷いたもの。色と不透明度は分けて与える
-                setInt(R.id.widget_brand_chip, "setColorFilter", WidgetTheme.onLineColor(lineColor))
-                setInt(
-                    R.id.widget_brand_chip,
-                    "setImageAlpha",
-                    (WidgetTheme.CHIP_ALPHA * 255).toInt()
-                )
-                setInt(R.id.widget_brand_icon, "setColorFilter", WidgetTheme.onLineColor(lineColor))
-                setTextColor(R.id.widget_brand_label, WidgetTheme.onLineColor(lineColor))
-                setTextViewText(R.id.widget_line_name, lineName)
-                setTextViewText(R.id.widget_bound_for, boundFor)
+                val hasStations = state.loaded && (state.stationName.isNotEmpty() || state.nextStationName.isNotEmpty())
+                setViewVisibility(R.id.widget_stations, if (hasStations) View.VISIBLE else View.GONE)
+                setViewVisibility(R.id.widget_bound_for, if (hasStations) View.GONE else View.VISIBLE)
+                setTextViewText(R.id.widget_current_station, state.stationName)
+                setTextViewText(R.id.widget_next_station, state.nextStationName)
+                setViewVisibility(R.id.widget_current_station, if (state.stationName.isNotEmpty()) View.VISIBLE else View.GONE)
+                setViewVisibility(R.id.widget_next_station, if (state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
+                setViewVisibility(R.id.widget_station_arrow, if (state.stationName.isNotEmpty() && state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
+                listOf(R.id.widget_current_station, R.id.widget_next_station, R.id.widget_station_arrow).forEach {
+                    setTextColor(it, WidgetTheme.onLineColor(lineColor))
+                }
             }
 
         private fun createContentIntent(context: Context): PendingIntent? {

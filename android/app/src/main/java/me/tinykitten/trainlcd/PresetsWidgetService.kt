@@ -42,12 +42,6 @@ private class PresetsRemoteViewsFactory(
         val preset = presets.getOrNull(position)
             ?: return RemoteViews(context.packageName, R.layout.widget_presets_row)
 
-        // iOS版と同様に、路線記号が無い路線では路線名の先頭1文字で代替する
-        val lineSymbol = when {
-            preset.lineSymbol.isNotEmpty() -> preset.lineSymbol
-            preset.lineName.isNotEmpty() -> preset.lineName.take(1)
-            else -> context.getString(R.string.widget_line_symbol_placeholder)
-        }
         val lineColor = WidgetStateStore.parseColor(
             preset.lineColor.ifEmpty { WidgetStateStore.PLACEHOLDER_LINE_COLOR },
             WidgetStateStore.parseColor(WidgetStateStore.PLACEHOLDER_LINE_COLOR, 0)
@@ -64,15 +58,15 @@ private class PresetsRemoteViewsFactory(
         }
 
         return RemoteViews(context.packageName, R.layout.widget_presets_row).apply {
-            // 乗車中ウィジェットのナンバリングバッジと同じく、バッジを前景色で塗り潰して
-            // 記号を路線色へ反転させ、路線色が明るくても記号が読めるようにする
-            setInt(
-                R.id.widget_preset_badge,
-                "setColorFilter",
-                WidgetTheme.onLineColor(lineColor)
-            )
+            val lineSymbol = preset.lineSymbol.ifEmpty { preset.lineName.take(1).ifEmpty { "?" } }
+            setInt(R.id.widget_preset_badge, "setColorFilter", WidgetTheme.onLineColor(lineColor))
             setTextViewText(R.id.widget_preset_symbol, lineSymbol)
             setTextColor(R.id.widget_preset_symbol, lineColor)
+            setInt(R.id.widget_preset_background, "setColorFilter", lineColor)
+            setTextColor(R.id.widget_preset_name, WidgetTheme.onLineColor(lineColor))
+            setTextColor(R.id.widget_preset_line, WidgetTheme.onLineColor(lineColor))
+            setTextColor(R.id.widget_preset_route, WidgetTheme.onLineColor(lineColor))
+            setTextViewText(R.id.widget_preset_line, preset.lineName)
             setTextViewText(R.id.widget_preset_name, preset.name)
             setTextViewText(R.id.widget_preset_route, route)
             setContentDescription(R.id.widget_preset_row, "${preset.name} / $route")

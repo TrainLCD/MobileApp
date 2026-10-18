@@ -1,98 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  iOSのホーム画面ウィジェット(systemSmall)に相当するレイアウト。
-  正方形にブランド行を入れる余裕は無いので、乗車中かどうかはアイコンだけで示す
--->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
     <ImageView
         android:id="@+id/widget_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@null"
-        android:scaleType="fitXY"
         android:src="@drawable/widget_background"
+        android:scaleType="fitXY"
+        android:contentDescription="@null"
         android:tint="@color/widget_brand" />
-
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@null"
+        android:src="@drawable/widget_background_shade"
         android:scaleType="fitXY"
-        android:src="@drawable/widget_background_shade" />
-
+        android:contentDescription="@null" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="12dp">
-
+        android:padding="12dp"
+        android:orientation="vertical">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
             <FrameLayout
-                android:layout_width="48dp"
-                android:layout_height="48dp">
-
+                android:layout_width="28dp"
+                android:layout_height="28dp">
                 <ImageView
                     android:id="@+id/widget_numbering_badge"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:src="@drawable/widget_numbering_badge" />
-
+                    android:src="@drawable/widget_numbering_badge"
+                    android:contentDescription="@null" />
                 <TextView
                     android:id="@+id/widget_line_symbol"
-                    android:layout_width="wrap_content"
+                android:text="@string/widget_line_symbol_placeholder"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:ellipsize="end"
+                    android:includeFontPadding="false"
                     android:maxLines="1"
-                    android:paddingStart="9dp"
-                    android:paddingEnd="9dp"
-                    android:text="@string/widget_line_symbol_placeholder"
-                    android:textColor="@color/widget_brand"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_gravity="center" />
             </FrameLayout>
-
-            <ImageView
-                android:id="@+id/widget_brand_icon"
+            <TextView
+                android:id="@+id/widget_line_name"
+                android:text="@string/widget_line_not_set"
                 android:layout_width="0dp"
-                android:layout_height="14dp"
-                android:layout_weight="1"
-                android:contentDescription="@null"
-                android:scaleType="fitEnd"
-                android:src="@drawable/ic_notification_live_update"
-                android:tint="@color/widget_on_line_secondary" />
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1" />
         </LinearLayout>
-
         <TextView
-            android:id="@+id/widget_line_name"
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+        <LinearLayout
+            android:id="@+id/widget_stations"
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:text="@string/widget_line_not_set"
-            android:textColor="@color/widget_on_line_primary"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
+            android:orientation="vertical"
+            android:gravity="center_vertical">
+            <TextView
+                android:id="@+id/widget_current_station"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="22sp"
+                android:autoSizeStepGranularity="1sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/widget_station_arrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp"
+                android:paddingEnd="8dp"
+                android:text="↓" />
+            <TextView
+                android:id="@+id/widget_next_station"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="22sp"
+                android:autoSizeStepGranularity="1sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
         <TextView
             android:id="@+id/widget_bound_for"
+                android:text="@string/widget_destination_not_set"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:includeFontPadding="false"
+            android:maxLines="1"
             android:ellipsize="end"
-            android:maxLines="2"
-            android:text="@string/widget_destination_not_set"
-            android:textColor="@color/widget_on_line_secondary"
-            android:textSize="12sp" />
+            android:textColor="@color/widget_on_line_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxHeight="44dp" />
+        <TextView
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
     </LinearLayout>
 </FrameLayout>
