@@ -36,7 +36,9 @@ class WidgetModule(reactContext: ReactApplicationContext) :
             lineName = state.optString("lineName"),
             lineColor = state.optString("lineColor"),
             lineSymbol = state.optString("lineSymbol"),
-            boundStationName = state.optString("boundStationName")
+            boundStationName = state.optString("boundStationName"),
+            stationName = state.optString("stationName"),
+            nextStationName = state.optString("nextStationName")
         )
         if (changed) {
             RideWidgetProvider.updateAll(reactApplicationContext)

@@ -15,6 +15,7 @@ import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
+import { RunningSettingsContext } from '~/providers/RunningSettingsContext';
 import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
@@ -721,7 +722,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.container}>
-          {children}
+          <RunningSettingsContext.Provider value={openSettingListModal}>
+            {children}
+          </RunningSettingsContext.Provider>
           {warningPanel}
         </View>
       </LongPressGestureHandler>

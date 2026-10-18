@@ -11,6 +11,8 @@ export type WidgetState = {
   lineColor: string;
   lineSymbol: string;
   boundStationName: string;
+  stationName?: string;
+  nextStationName?: string;
 };
 
 export const updateWidget = (state: WidgetState) => {

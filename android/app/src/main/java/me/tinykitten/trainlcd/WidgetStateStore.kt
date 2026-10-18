@@ -12,7 +12,9 @@ data class WidgetState(
     val lineName: String,
     val lineColor: String,
     val lineSymbol: String,
-    val boundStationName: String
+    val boundStationName: String,
+    val stationName: String = "",
+    val nextStationName: String = ""
 )
 
 /**
@@ -26,6 +28,8 @@ object WidgetStateStore {
     private const val KEY_LINE_NAME = "lineName"
     private const val KEY_LINE_COLOR = "lineColor"
     private const val KEY_LINE_SYMBOL = "lineSymbol"
+    private const val KEY_STATION_NAME = "stationName"
+    private const val KEY_NEXT_STATION_NAME = "nextStationName"
     private const val KEY_BOUND_STATION_NAME = "boundStationName"
 
     /** 未乗車時にiOS版が使っているプレースホルダー色に合わせる */
@@ -43,14 +47,18 @@ object WidgetStateStore {
         lineName: String,
         lineColor: String,
         lineSymbol: String,
-        boundStationName: String
+        boundStationName: String,
+        stationName: String = "",
+        nextStationName: String = ""
     ): Boolean {
         val prefs = prefs(context)
         val unchanged = prefs.getBoolean(KEY_LOADED, false) &&
             prefs.getString(KEY_LINE_NAME, "") == lineName &&
             prefs.getString(KEY_LINE_COLOR, "") == lineColor &&
             prefs.getString(KEY_LINE_SYMBOL, "") == lineSymbol &&
-            prefs.getString(KEY_BOUND_STATION_NAME, "") == boundStationName
+            prefs.getString(KEY_BOUND_STATION_NAME, "") == boundStationName &&
+            prefs.getString(KEY_STATION_NAME, "") == stationName &&
+            prefs.getString(KEY_NEXT_STATION_NAME, "") == nextStationName
         if (unchanged) {
             return false
         }
@@ -61,6 +69,8 @@ object WidgetStateStore {
             .putString(KEY_LINE_COLOR, lineColor)
             .putString(KEY_LINE_SYMBOL, lineSymbol)
             .putString(KEY_BOUND_STATION_NAME, boundStationName)
+            .putString(KEY_STATION_NAME, stationName)
+            .putString(KEY_NEXT_STATION_NAME, nextStationName)
             .apply()
         return true
     }
@@ -82,7 +92,9 @@ object WidgetStateStore {
             lineName = prefs.getString(KEY_LINE_NAME, "").orEmpty(),
             lineColor = prefs.getString(KEY_LINE_COLOR, "").orEmpty(),
             lineSymbol = prefs.getString(KEY_LINE_SYMBOL, "").orEmpty(),
-            boundStationName = prefs.getString(KEY_BOUND_STATION_NAME, "").orEmpty()
+            boundStationName = prefs.getString(KEY_BOUND_STATION_NAME, "").orEmpty(),
+            stationName = prefs.getString(KEY_STATION_NAME, "").orEmpty(),
+            nextStationName = prefs.getString(KEY_NEXT_STATION_NAME, "").orEmpty()
         )
     }
 

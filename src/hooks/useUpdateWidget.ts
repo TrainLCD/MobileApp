@@ -1,15 +1,25 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { getLocalizedLineName } from '~/utils/line';
-import { selectedBoundAtom, stationsAtom } from '../store/atoms/station';
+import {
+  approachingAtom,
+  arrivedAtom,
+  selectedBoundAtom,
+  stationsAtom,
+} from '../store/atoms/station';
 import { isJapanese } from '../translation';
+import getIsPass from '../utils/isPass';
 import {
   clearWidget,
   updateWidget,
 } from '../utils/native/android/widgetModule';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
+import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
+import { pickLiveActivityNextStation } from './useUpdateLiveActivities';
 
 /**
  * Androidのホーム画面ウィジェットへ乗車中の路線情報を同期する。
@@ -17,12 +27,32 @@ import { useNumbering } from './useNumbering';
  * iOSはライブアクティビティの更新ついでにウィジェット用のApp Groupへ書き込んでいるが、
  * Android側の同等フック(useUpdateLiveActivities)はiOSでしかマウントされないため、
  * ウィジェットが必要とする低頻度の項目だけを購読する専用フックとして分離している。
- * 駅の到着・通過など毎秒変化する状態は購読しない。
+ * 駅の表示に必要な到着・接近状態を購読し、座標そのものは購読しない。
  */
 export const useUpdateWidget = (): void => {
   const selectedBound = useAtomValue(selectedBoundAtom);
   const stations = useAtomValue(stationsAtom);
   const currentLine = useCurrentLine();
+  const arrived = useAtomValue(arrivedAtom);
+  const approaching = useAtomValue(approachingAtom);
+  const previousStation = useCurrentStation(true);
+  const currentStation = useCurrentStation(false, true);
+  const displayNextStation = useDisplayNextStation();
+  const recordNextStation = useNextStation();
+  // ライブアクティビティと同じ停車駅基準と同駅への折り返し防止を使う。
+  const stoppedStation =
+    arrived && !approaching && !getIsPass(currentStation)
+      ? currentStation
+      : previousStation;
+  const nextStation = pickLiveActivityNextStation(
+    displayNextStation,
+    recordNextStation,
+    stoppedStation
+  );
+  const stationName =
+    (isJapanese ? stoppedStation?.name : stoppedStation?.nameRoman) ?? '';
+  const nextStationName =
+    (isJapanese ? nextStation?.name : nextStation?.nameRoman) ?? '';
   const [currentNumbering] = useNumbering();
   const { directionalStops } = useBounds(stations);
 
@@ -41,8 +71,16 @@ export const useUpdateWidget = (): void => {
       lineColor: currentLine?.color ?? '',
       lineSymbol: currentNumbering?.lineSymbol ?? '',
       boundStationName,
+      stationName,
+      nextStationName,
     }),
-    [boundStationName, currentLine, currentNumbering?.lineSymbol]
+    [
+      boundStationName,
+      currentLine,
+      currentNumbering?.lineSymbol,
+      stationName,
+      nextStationName,
+    ]
   );
 
   useEffect(() => {

@@ -13,4 +13,6 @@
   <color name="widget_on_line_secondary">#D9FFFFFF</color>
   <!-- プリセットウィジェットの面に使うブランドカラー。iOS版のLockScreenEntry.fallbackLineColorと揃える -->
   <color name="widget_brand">#FF277BC0</color>
+  <color name="widget_surface">#FFFFFFFF</color>
+  <color name="widget_surface_text">#FF1C1C1E</color>
 </resources>

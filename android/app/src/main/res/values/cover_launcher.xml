@@ -1,0 +1,7 @@
+<resources>
+    <string name="cover_launcher_title">TrainLCD カバー画面</string>
+    <string name="cover_launcher_description">カバー画面でTrainLCDを開きます</string>
+    <string name="cover_launcher_open">タップしてTrainLCDを開く</string>
+    <color name="cover_launcher_background">#FFFFFF</color>
+    <color name="cover_launcher_foreground">#202124</color>
+</resources>
