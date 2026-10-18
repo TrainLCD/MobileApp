@@ -171,6 +171,8 @@ const SquareMain = ({
       : ordered.findIndex((station) => station.id === displayCurrentStation.id);
   const etaStartIndex =
     displayCurrentIndex >= 0 ? displayCurrentIndex : currentIndex;
+  const progressStation =
+    displayCurrentIndex >= 0 ? displayCurrentStation : currentStation;
   // 列の有無も各行と同じ対象で判定し、通過駅だけのETAで「--」を並べない。
   const isEtaTarget = (station: Station, index: number) =>
     index > etaStartIndex && !getIsPass(station);
@@ -283,7 +285,7 @@ const SquareMain = ({
         const focused = station.id === focusStation?.id;
         const passed =
           !focused &&
-          (station.id === currentStation?.id || index < currentIndex);
+          (station.id === progressStation?.id || index < etaStartIndex);
         const pass = getIsPass(station);
         const number = station.stationNumbers?.[getNumberIndex(station)];
         return {

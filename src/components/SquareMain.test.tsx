@@ -512,3 +512,34 @@ it('does not rotate loop stations around the current station', () => {
     '1',
   ]);
 });
+
+it.each([stations[2], undefined, { id: 99 }])(
+  'uses the ETA progress anchor for passed styling with a fallback: %p',
+  (displayStation) => {
+    (useCurrentStation as jest.Mock).mockReturnValue(stations[0]);
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(displayStation);
+    (useTransferTargetStation as jest.Mock).mockReturnValue(stations[3]);
+    (useHeaderCommonData as jest.Mock).mockReturnValue({
+      ...data,
+      headerState: 'ARRIVING',
+    });
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: { stops: [{ stationId: 4, cumulativeMinutes: 5 }] },
+    });
+    setup();
+    const healed = displayStation?.id === stations[2].id;
+    expect(latest().stops.map((s) => s.passed)).toEqual([
+      true,
+      healed,
+      healed,
+      false,
+    ]);
+    expect(latest().stops.map((s) => s.showEta)).toEqual([
+      false,
+      !healed,
+      !healed,
+      true,
+    ]);
+    expect(latest().stops[3].focused).toBe(true);
+  }
+);
