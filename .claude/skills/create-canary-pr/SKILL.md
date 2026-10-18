@@ -13,7 +13,9 @@ bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキル
 - `git status --porcelain` で作業ツリーを確認する。未コミットの変更は混ぜず、必要なら別 worktree を使う。
 - **判定前に `git fetch origin dev canary` を実行する**。失敗したら中断し、古い参照で比較しない。
 - ローカル `dev` がある場合だけ `git log --oneline origin/dev..dev` で先行コミットを確認する。
-  先行していれば一覧を提示し、リリースに含めるか確認する。`dev` への直接 push は行わない。
+  先行していれば一覧を提示し、リリースに含めるか確認する。
+  含める場合は対象の SHA を古い順に記録し、切り出し後に取り込む。
+  含めない場合は `origin/dev` 起点の内容だけを使う。`dev` への直接 push は行わない。
 - 以下で既存 canary PR を確認する。head を `dev` に限定しない。
 
   ```bash
@@ -38,6 +40,9 @@ bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキル
 2. 最新の `origin/dev` から `release/canary-<dev SHA の短縮値>-<canary SHA の短縮値>` を切り出す。
    同名のローカル・リモートブランチがあれば内容を確認して再利用し、上書きしない。
    リモート参照の通信・認証エラーを「存在しない」とみなさない。
+   事前確認で先行コミットを含めると承認された場合は、記録した SHA を古い順に `git cherry-pick` する。
+   再実行では取り込み済みのコミットを重ねない。競合やマージコミットがあれば中断して報告する。
+   取り込み後の semver とビルド番号を再確認し、手順 1 で記録した dev 側の基準値を更新する。
 3. 過去の canary の bump が dev に入っていない場合でもマージできるよう、canary の履歴を取り込む。
    `origin/canary` が HEAD の祖先でなければ、
    `git merge --no-ff --no-commit origin/canary` を行う。

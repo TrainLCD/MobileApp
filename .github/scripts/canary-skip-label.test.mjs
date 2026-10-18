@@ -18,6 +18,11 @@ const script = gate
   .map((line) => line.replace(/^ {10}/, ''))
   .join('\n');
 
+/**
+ * Execute the workflow's actual shell gate with mocked gh and sleep commands.
+ * labelAt controls delayed label visibility; failAt simulates an API failure.
+ * Return the gate output and API call log without making requests or waiting.
+ */
 function runGate({ labelAt = 0, failAt = 0 } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'canary-label-'));
   try {
