@@ -9,6 +9,7 @@ import React, {
   useState,
 } from 'react';
 import {
+  Dimensions,
   Linking,
   Platform,
   Pressable,
@@ -834,7 +835,8 @@ const MainScreen: React.FC = () => {
   const runningLayout = getRunningLayout(
     windowWidth,
     windowHeight,
-    portraitModeEnabled
+    portraitModeEnabled,
+    Platform.OS === 'android' ? Dimensions.get('screen') : undefined
   );
   if (runningLayout === 'square') {
     return (

@@ -25,3 +25,33 @@ B案の下段には「のりかえ」と乗換路線の記号を表示します�
 - `runningLayout.test.ts`: 正方形の境界と既存の縦横画面判定を確認します。
 - `SquareMain.test.tsx`: 言語・駅順・環状線・ナンバリングと設定の接続を確認します。
 - `SquareMainView.test.tsx`: C案とB案の切替・乗換ラベルと記号の下段・タッチロックと操作の分離を確認します。
+
+## Galaxy Z Flipのカバー画面
+
+SamsungのFlex Window向けに「TrainLCD カバー画面」ウィジェットを追加しています。
+カバー画面のウィジェット一覧で有効にし、タップするとカバー画面を指定してアプリを開きます。
+既存のホーム画面ウィジェットの登録と起動先は変更しません。
+起動後は既存のナビゲーションを使います。乗車中であれば走行画面を表示します。
+
+ウィジェットにはSamsung指定の`sub_screen`メタデータと`keyguard`カテゴリを設定しています。
+起動には`ActivityOptions.launchDisplayId = 1`を使います。
+端末のロックとOSの起動制限には従います。
+Good LockのMultiStarからアプリを起動する方法もSamsungが案内しています。
+
+Androidではウィンドウだけでなく、装飾領域を含む画面の縦横比も正方形判定に使います。
+システムバーや切欠きでウィンドウが横長になった場合も、画面自体が正方形ならC案とB案を使います。
+描画領域では既存のSafe Areaを使い、画面の上下左右のインセットを確保します。
+MainActivityには既にリサイズ許可と画面サイズ変更への追従設定があります。
+
+仕様の出典:
+
+- [Samsung Flex Window: ウィジェット登録と起動先の指定](https://developer.samsung.com/galaxy-z/flex_window.html)
+- [Samsung: Good Lockからの起動と画面サイズへの対応](https://developer.samsung.com/sdp/blog/en/2024/01/09/best-practices-of-app-development-for-various-screen-sizespowered-by-good-lock)
+
+実機確認の項目:
+
+- カバー画面の一覧にウィジェットが現れ、タップでカバー画面にアプリが開くこと。
+- 本体画面で乗車を開始してから、カバー画面でも同じ乗車状態を表示すること。
+- C案とB案の切替、日英切替、設定画面が使えること。
+- カメラ部分とシステムバーに文字や操作部分が隠れないこと。
+- 開閉後に画面サイズと操作領域が更新されること。

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cover_launcher_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cover_launcher_background"
+    android:contentDescription="@string/cover_launcher_open"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="12dp"
+        android:importantForAccessibility="no"
+        android:src="@mipmap/ic_launcher"
+        android:scaleType="fitCenter" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:importantForAccessibility="no"
+        android:text="@string/widget_brand"
+        android:textColor="@color/cover_launcher_foreground"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:text="@string/cover_launcher_open"
+        android:textColor="@color/cover_launcher_foreground"
+        android:textSize="16sp" />
+</LinearLayout>

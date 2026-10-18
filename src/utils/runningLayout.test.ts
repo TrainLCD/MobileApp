@@ -18,6 +18,22 @@ describe('getRunningLayout', () => {
     expect(getRunningLayout(768, 1024, true)).toBe('portrait');
     expect(getRunningLayout(400, 481, true)).toBe('portrait');
   });
+  it('keeps the square UI when system decor reduces a square display window', () => {
+    expect(getRunningLayout(360, 280, false, { width: 360, height: 374 })).toBe(
+      'square'
+    );
+    expect(getRunningLayout(280, 360, true, { width: 374, height: 360 })).toBe(
+      'square'
+    );
+  });
+  it('returns to the existing phone layout when the display changes', () => {
+    expect(getRunningLayout(360, 800, true, { width: 360, height: 844 })).toBe(
+      'portrait'
+    );
+    expect(getRunningLayout(360, 800, false, { width: 360, height: 844 })).toBe(
+      'landscape'
+    );
+  });
   it.each([
     [0, 0],
     [0, 360],

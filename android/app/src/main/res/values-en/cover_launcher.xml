@@ -1,0 +1,5 @@
+<resources>
+    <string name="cover_launcher_title">TrainLCD cover screen</string>
+    <string name="cover_launcher_description">Open TrainLCD on the cover screen</string>
+    <string name="cover_launcher_open">Tap to open TrainLCD</string>
+</resources>
