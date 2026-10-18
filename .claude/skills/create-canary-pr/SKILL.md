@@ -75,10 +75,12 @@ Android アプリは +2、Wear OS は更新後のアプリ +1 に揃う。
 | `skip_checks` | `false`（`create-pr` の判定に従う） |
 | `labels` | `["skip-version-bump"]` |
 
-**`skip-version-bump` は作成と同時に付与する**。
-`gh pr create --label skip-version-bump` を使い、作成後のラベル追加にしない。
-後付けでは `pull_request: opened` に間に合わない。
-`.github/workflows/bump_version_on_canary_pr.yml` はこのラベルで自動 bump をスキップする。
+`gh pr create --label skip-version-bump` で PR 作成時にラベルを指定する。
+GitHub CLI は PR 作成後、別の API 操作でラベルを付与するため、`opened` 時点のラベルは確定値ではない。
+`.github/workflows/bump_version_on_canary_pr.yml` はジョブ開始後にラベルを再取得する。
+5 秒間隔で最大 12 回確認し、ラベルがあれば checkout 以降をスキップする。
+最後の確認でもラベルがなければ従来どおり bump する。取得エラー時はジョブを失敗させ、bump しない。
+PR 本文のマーカーは判定に使わない。
 スキルから `workflow_dispatch` を起動しない。
 スキルを使わずラベルなしで開く PR の自動 bump は従来どおり残す。
 
