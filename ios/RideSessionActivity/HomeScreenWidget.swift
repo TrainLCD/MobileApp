@@ -150,14 +150,23 @@ struct WidgetLineHeader: View {
   let lineColor: String
   let lineSymbol: String
   let lineName: String
+  var boundFor: String = ""
 
   var body: some View {
     HStack(spacing: 8) {
       LineNumberingBadge(lineColor: lineColor, lineSymbol: lineSymbol, diameter: 28)
-      Text(lineName)
-        .font(.system(size: 12, weight: .semibold))
-        .lineLimit(2)
-        .minimumScaleFactor(0.8)
+      VStack(alignment: .leading, spacing: 4) {
+        Text(lineName)
+          .font(.system(size: 12, weight: .semibold))
+          .lineLimit(2)
+          .minimumScaleFactor(0.8)
+        if !boundFor.isEmpty {
+          Text(boundFor)
+            .font(.system(size: 14))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        }
+      }
     }
   }
 }
@@ -167,13 +176,14 @@ struct WidgetStations: View {
   let to: String
   let vertical: Bool
   var fontSize: CGFloat = 22
+  var compactHorizontal = false
 
   private func station(_ name: String) -> some View {
     Text(name)
       .font(.system(size: fontSize, weight: .bold))
       .lineLimit(1)
       .minimumScaleFactor(0.6)
-      .frame(maxWidth: .infinity, alignment: .leading)
+      .frame(maxWidth: vertical || !compactHorizontal ? .infinity : nil, alignment: .leading)
   }
 
   var body: some View {
@@ -202,15 +212,18 @@ struct HomeScreenWidgetEntryView: View {
   @Environment(\.widgetFamily) var family
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
+    VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
       WidgetLineHeader(
         lineColor: entry.displayLineColor,
         lineSymbol: entry.displayLineSymbol,
-        lineName: entry.lineName)
-      Spacer(minLength: 0)
+        lineName: entry.lineName,
+        boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
+          ? entry.boundFor : "")
       if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22)
+                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22,
+                       compactHorizontal: true)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。
         Text(entry.boundFor)
