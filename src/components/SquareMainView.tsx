@@ -1,6 +1,20 @@
 import { Image } from 'expo-image';
-import { memo, type ReactNode, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  memo,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  Pressable,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { FONTS } from '~/constants';
 
 export type SquareTransfer = {
@@ -70,6 +84,27 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
   const [localShowStops, setLocalShowStops] = useState(false);
   const showStops = props.showStops ?? localShowStops;
   const dragged = useRef(false);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const rowYs = useRef(new Map<string, number>());
+  const lastScrollY = useRef<number | null>(null);
+  const focusedKey = props.stops.find((stop) => stop.focused)?.key;
+  const scrollToFocused = useCallback((key: string | undefined) => {
+    const rowY = key == null ? undefined : rowYs.current.get(key);
+    if (rowY == null || !scrollRef.current) return;
+    // ポートレートと同じく、1駅前が見える余白を残す。
+    const y = Math.max(0, rowY - 54);
+    if (lastScrollY.current === y) return;
+    scrollRef.current.scrollTo({ y, animated: true });
+    lastScrollY.current = y;
+  }, []);
+  const attachScroll = useCallback((node: ScrollViewInstance | null) => {
+    scrollRef.current = node;
+    rowYs.current.clear();
+    lastScrollY.current = null;
+  }, []);
+  useEffect(() => {
+    if (showStops) scrollToFocused(focusedKey);
+  }, [focusedKey, showStops, scrollToFocused]);
   const colors = PALETTE[props.dark ? 'dark' : 'light'];
   const toggle = () => {
     if (!props.disabled && !dragged.current) {
@@ -150,6 +185,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
         <>
           <ScrollView
             key={props.stops[0]?.key}
+            ref={attachScroll}
             testID="square-stops"
             style={styles.flex}
             onScrollBeginDrag={() => {
@@ -168,6 +204,10 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                 <View
                   key={stop.key}
                   testID={`square-stop-${stop.key}`}
+                  onLayout={({ nativeEvent: { layout } }) => {
+                    rowYs.current.set(stop.key, layout.y);
+                    if (stop.key === focusedKey) scrollToFocused(focusedKey);
+                  }}
                   style={[
                     styles.stopRow,
                     stop.focused && styles.focusRow,

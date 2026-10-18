@@ -1,5 +1,5 @@
 import { fireEvent, render, within } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 import { SquareMainView, type SquareMainViewProps } from './SquareMainView';
 
 const transferPress = jest.fn();
@@ -179,3 +179,67 @@ it.each(['つぎは', 'まもなく', 'ただいま', 'Now stopping at'])(
     expect(r.queryByTestId('square-stop-state-1')).toBeNull();
   }
 );
+
+it('follows focused row layout and station changes without resetting manual scrolling on language updates', () => {
+  const scrollTo = ScrollView.prototype.scrollTo as jest.Mock;
+  scrollTo.mockClear();
+  const stops = [
+    ...props.stops,
+    { ...props.stops[1], key: '3', name: '目黒', focused: false },
+  ];
+  const r = render(<SquareMainView {...props} showStops stops={stops} />);
+  const layout = (key: string, y: number) =>
+    fireEvent(r.getByTestId(`square-stop-${key}`), 'layout', {
+      nativeEvent: { layout: { x: 0, y, width: 328, height: 54 } },
+    });
+  layout('1', 0);
+  layout('2', 108);
+  layout('3', 198);
+  expect(scrollTo).toHaveBeenLastCalledWith({ y: 54, animated: true });
+  scrollTo.mockClear();
+  fireEvent.scroll(r.getByTestId('square-stops'), {
+    nativeEvent: { contentOffset: { y: 200 } },
+  });
+  r.rerender(
+    <SquareMainView {...props} showStops stops={stops} stateText="Next" />
+  );
+  layout('2', 108);
+  expect(scrollTo).not.toHaveBeenCalled();
+  r.rerender(
+    <SquareMainView
+      {...props}
+      showStops
+      stops={stops.map((s) => ({ ...s, focused: s.key === '3' }))}
+    />
+  );
+  expect(scrollTo).toHaveBeenLastCalledWith({ y: 144, animated: true });
+  layout('3', 210);
+  expect(scrollTo).toHaveBeenLastCalledWith({ y: 156, animated: true });
+});
+it('reacquires row positions when reopening B and scrolls to the top when the first row is focused', () => {
+  const scrollTo = ScrollView.prototype.scrollTo as jest.Mock;
+  scrollTo.mockClear();
+  const r = render(<SquareMainView {...props} />);
+  fireEvent.press(r.getByTestId('square-station-tap'));
+  fireEvent(r.getByTestId('square-stop-2'), 'layout', {
+    nativeEvent: { layout: { y: 120 } },
+  });
+  expect(scrollTo).toHaveBeenLastCalledWith({ y: 66, animated: true });
+  fireEvent.press(r.getByTestId('square-stops-tap'));
+  fireEvent.press(r.getByTestId('square-station-tap'));
+  scrollTo.mockClear();
+  fireEvent(r.getByTestId('square-stop-2'), 'layout', {
+    nativeEvent: { layout: { y: 120 } },
+  });
+  expect(scrollTo).toHaveBeenLastCalledWith({ y: 66, animated: true });
+  r.rerender(
+    <SquareMainView
+      {...props}
+      stops={props.stops.map((s) => ({ ...s, focused: s.key === '1' }))}
+    />
+  );
+  fireEvent(r.getByTestId('square-stop-1'), 'layout', {
+    nativeEvent: { layout: { y: 0 } },
+  });
+  expect(scrollTo).toHaveBeenLastCalledWith({ y: 0, animated: true });
+});
