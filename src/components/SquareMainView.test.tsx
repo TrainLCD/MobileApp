@@ -151,3 +151,31 @@ it.each([
   expect(!!eta.queryByText('分')).toBe(unit);
   expect(r.getByTestId('square-number-2').props.children).toBe('JY-21');
 });
+
+it.each(['つぎは', 'まもなく', 'ただいま', 'Now stopping at'])(
+  'shows focused state above the station alongside numbering and ETA: %s',
+  (stateText) => {
+    const r = render(
+      <SquareMainView
+        {...props}
+        showStops
+        stops={props.stops.map((s) => ({
+          ...s,
+          label: '',
+          stateText,
+          showEta: s.focused,
+          estimatedMinutes: 3,
+        }))}
+        etaUnit="分"
+      />
+    );
+    const row = within(r.getByTestId('square-stop-2'));
+    expect(row.getByTestId('square-stop-state-2').props.children).toBe(
+      stateText
+    );
+    expect(row.getByText('恵比寿')).toBeTruthy();
+    expect(row.getByText('JY-21')).toBeTruthy();
+    expect(row.getByTestId('square-eta-2')).toBeTruthy();
+    expect(r.queryByTestId('square-stop-state-1')).toBeNull();
+  }
+);
