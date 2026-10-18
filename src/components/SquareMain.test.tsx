@@ -1,8 +1,10 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { type Station, StopCondition } from '~/@types/graphql';
 import {
   useCurrentStation,
+  useDisplayCurrentStation,
+  useEstimateArrivalTimesAllStops,
   useHeaderCommonData,
   useLoopLine,
   useTransferLines,
@@ -15,7 +17,12 @@ import type { SquareMainViewProps } from './SquareMainView';
 
 jest.mock('~/hooks', () => ({
   useHeaderCommonData: jest.fn(),
+  useEstimateArrivalTimesAllStops: jest.fn(() => ({ route: null })),
+  useEstimatedMinutesByStationId: jest.requireActual(
+    '~/hooks/useEstimatedMinutesByStationId'
+  ).useEstimatedMinutesByStationId,
   useCurrentStation: jest.fn(),
+  useDisplayCurrentStation: jest.fn(),
   useLoopLine: jest.fn(() => ({ isLoopLine: false })),
   useTransferLines: jest.fn(() => []),
   useTransferTargetStation: jest.fn(),
@@ -77,8 +84,12 @@ const data = {
 };
 beforeEach(() => {
   jest.clearAllMocks();
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: null,
+  });
   (useHeaderCommonData as jest.Mock).mockReturnValue(data);
   (useCurrentStation as jest.Mock).mockReturnValue(stations[0]);
+  (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[0]);
   (useTransferTargetStation as jest.Mock).mockReturnValue(stations[1]);
   (useTransferLines as jest.Mock).mockReturnValue([]);
   (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: false });
@@ -164,3 +175,132 @@ it('renders safely before station data is available', () => {
   setup();
   expect(mockView).not.toHaveBeenCalled();
 });
+
+it('replaces next labels with ETA through the final station and hides the current station ETA', () => {
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: {
+      stops: [
+        { stationId: 2, cumulativeMinutes: 2.6 },
+        { stationId: 4, cumulativeMinutes: 8 },
+      ],
+    },
+  });
+  setup();
+  expect(latest().stops.map((s) => s.showEta)).toEqual([
+    false,
+    true,
+    true,
+    true,
+  ]);
+  expect(latest().stops.map((s) => s.label)).toEqual(['', '', '', '']);
+  expect(latest().stops[1].estimatedMinutes).toBe(2.6);
+  expect(latest().stops[2].estimatedMinutes).toBeUndefined();
+  expect(latest().stops[3].estimatedMinutes).toBe(8);
+});
+it('hides the ETA column when every estimate is null', () => {
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: { stops: [{ stationId: 2, cumulativeMinutes: null }] },
+  });
+  setup();
+  expect(latest().stops.every((s) => !s.showEta)).toBe(true);
+});
+
+it('keeps pass labels without ETA and preserves API numbering', () => {
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: { stops: [{ stationId: 3, cumulativeMinutes: 5 }] },
+  });
+  const r = setup();
+  act(() =>
+    r.store.set(
+      stationsAtom,
+      stations.map((s, i) =>
+        i === 2
+          ? ({
+              ...s,
+              stopCondition: StopCondition.Not,
+              stationNumbers: [{ stationNumber: 'JY-22' }],
+            } as Station)
+          : s
+      )
+    )
+  );
+  expect(latest().stops[2]).toMatchObject({
+    showEta: false,
+    label: '通過',
+    number: 'JY-22',
+  });
+  expect(latest().stops.every((s) => !s.showEta)).toBe(true);
+});
+
+it.each([1, 99])(
+  'hides ETA when only current or undisplayed station %i has a value',
+  (stationId) => {
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: { stops: [{ stationId, cumulativeMinutes: 5 }] },
+    });
+    setup();
+    expect(latest().stops.every((s) => !s.showEta)).toBe(true);
+  }
+);
+
+it('excludes the healed current station while retaining downstream ETA and missing values', () => {
+  (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[1]);
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: { stops: [{ stationId: 4, cumulativeMinutes: 5 }] },
+  });
+  setup();
+  expect(latest().stops.map((s) => s.showEta)).toEqual([
+    false,
+    false,
+    true,
+    true,
+  ]);
+  expect(latest().stops[2].estimatedMinutes).toBeUndefined();
+  expect(latest().stops[3].estimatedMinutes).toBe(5);
+});
+it('does not enable ETA from a value belonging only to the healed current station', () => {
+  (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[1]);
+  (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+    route: { stops: [{ stationId: 2, cumulativeMinutes: 0 }] },
+  });
+  setup();
+  expect(latest().stops.every((s) => !s.showEta)).toBe(true);
+});
+
+it.each([false, true])(
+  'excludes intervening stations after a multi-station correction (downstream ETA: %s)',
+  (hasDownstreamEta) => {
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(stations[2]);
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: {
+        stops: [
+          { stationId: 2, cumulativeMinutes: 0 },
+          ...(hasDownstreamEta ? [{ stationId: 4, cumulativeMinutes: 5 }] : []),
+        ],
+      },
+    });
+    setup();
+    expect(latest().stops.map((s) => s.showEta)).toEqual([
+      false,
+      false,
+      false,
+      hasDownstreamEta,
+    ]);
+  }
+);
+it.each([undefined, { id: 99 }])(
+  'falls back to the recorded current station when the display station is unavailable: %p',
+  (displayStation) => {
+    (useDisplayCurrentStation as jest.Mock).mockReturnValue(displayStation);
+    (useEstimateArrivalTimesAllStops as jest.Mock).mockReturnValue({
+      route: { stops: [{ stationId: 4, cumulativeMinutes: 5 }] },
+    });
+    setup();
+    expect(latest().stops.map((s) => s.showEta)).toEqual([
+      false,
+      true,
+      true,
+      true,
+    ]);
+  }
+);
