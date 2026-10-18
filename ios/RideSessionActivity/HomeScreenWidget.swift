@@ -176,13 +176,14 @@ struct WidgetStations: View {
   let to: String
   let vertical: Bool
   var fontSize: CGFloat = 22
+  var compactHorizontal = false
 
   private func station(_ name: String) -> some View {
     Text(name)
       .font(.system(size: fontSize, weight: .bold))
       .lineLimit(1)
       .minimumScaleFactor(0.6)
-      .frame(maxWidth: .infinity, alignment: .leading)
+      .frame(maxWidth: vertical || !compactHorizontal ? .infinity : nil, alignment: .leading)
   }
 
   var body: some View {
@@ -221,7 +222,8 @@ struct HomeScreenWidgetEntryView: View {
           ? entry.boundFor : "")
       if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22)
+                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22,
+                       compactHorizontal: true)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。
         Text(entry.boundFor)
