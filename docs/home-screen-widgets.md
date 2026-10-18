@@ -7,7 +7,7 @@ TrainLCD は iOS / Android の双方でホーム画面ウィジェットを提�
 
 | ウィジェット | 表示内容 | iOS | Android |
 | --- | --- | --- | --- |
-| 乗車中 | 乗車中の路線・現在駅・次駅（駅情報がない場合は方面） | `HomeScreenWidget` | `RideWidgetProvider` |
+| 乗車中 | 乗車中の路線・方面・現在駅・次駅 | `HomeScreenWidget` | `RideWidgetProvider` |
 | プリセット | 登録済みプリセット一覧 | `PresetsWidget` | `PresetsWidgetProvider` |
 
 iOS の kind 文字列は型名と同じ(`HomeScreenWidget` / `PresetsWidget`)。
@@ -58,6 +58,8 @@ iOS の kind 文字列は型名と同じ(`HomeScreenWidget` / `PresetsWidget`)�
 iOSの小・中サイズは先頭の1件を表示し、ウィジェット全体をその路線色にします。
 正方形では駅名の間に下向き矢印を置き、横長では駅名を横に並べます。
 乗車中にも同じ路線見出しと駅名のレイアウトを使います。
+乗車中は路線名の下に方面を表示します。iOSの乗車中・プリセットの小／中サイズと、
+Androidの乗車中の正方形／横長は、見出しから駅名までの内容全体を上下中央に揃えます。
 
 ## データ経路
 

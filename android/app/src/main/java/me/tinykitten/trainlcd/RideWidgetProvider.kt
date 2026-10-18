@@ -187,7 +187,7 @@ class RideWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_bound_for, boundFor)
                 val hasStations = state.loaded && (state.stationName.isNotEmpty() || state.nextStationName.isNotEmpty())
                 setViewVisibility(R.id.widget_stations, if (hasStations) View.VISIBLE else View.GONE)
-                setViewVisibility(R.id.widget_bound_for, if (hasStations) View.GONE else View.VISIBLE)
+                setViewVisibility(R.id.widget_bound_for, if (boundFor.isNotEmpty()) View.VISIBLE else View.GONE)
                 setTextViewText(R.id.widget_current_station, state.stationName)
                 setTextViewText(R.id.widget_next_station, state.nextStationName)
                 setViewVisibility(R.id.widget_current_station, if (state.stationName.isNotEmpty()) View.VISIBLE else View.GONE)

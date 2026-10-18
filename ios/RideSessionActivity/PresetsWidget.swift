@@ -214,7 +214,7 @@ struct PresetsWidgetFeatured: View {
   var vertical = true
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: vertical ? 8 : 12) {
       VStack(alignment: .leading, spacing: 4) {
         WidgetLineHeader(
           lineColor: preset.displayLineColor,
@@ -225,7 +225,6 @@ struct PresetsWidgetFeatured: View {
           .lineLimit(1)
           .minimumScaleFactor(0.8)
       }
-      Spacer(minLength: 0)
       if preset.hasStations {
         WidgetStations(
           from: preset.fromStationName, to: preset.toStationName,

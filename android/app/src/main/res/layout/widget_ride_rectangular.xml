@@ -22,6 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="12dp"
+        android:gravity="center_vertical"
         android:orientation="vertical">
         <LinearLayout
             android:layout_width="match_parent"
@@ -51,26 +52,40 @@
                     android:gravity="center"
                     android:layout_gravity="center" />
             </FrameLayout>
-            <TextView
-                android:id="@+id/widget_line_name"
-                android:text="@string/widget_line_not_set"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textColor="@color/widget_on_line_primary"
-                android:textSize="12sp"
-                android:textStyle="bold"
+                android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:layout_weight="1" />
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/widget_line_name"
+                    android:text="@string/widget_line_not_set"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/widget_bound_for"
+                    android:text="@string/widget_destination_not_set"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="14sp"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
         </LinearLayout>
-        <TextView
-            android:layout_width="1dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+
         <LinearLayout
             android:id="@+id/widget_stations"
+            android:layout_marginTop="12dp"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -121,21 +136,6 @@
                 android:textStyle="bold"
                 android:layout_weight="1" />
         </LinearLayout>
-        <TextView
-            android:id="@+id/widget_bound_for"
-                android:text="@string/widget_destination_not_set"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:includeFontPadding="false"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:textColor="@color/widget_on_line_primary"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:maxHeight="44dp" />
-        <TextView
-            android:layout_width="1dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+
     </LinearLayout>
 </FrameLayout>
