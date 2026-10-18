@@ -52,36 +52,35 @@
                     android:gravity="center"
                     android:layout_gravity="center" />
             </FrameLayout>
-            <LinearLayout
+            <TextView
+                android:id="@+id/widget_line_name"
+                android:text="@string/widget_line_not_set"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:orientation="vertical">
-                <TextView
-                    android:id="@+id/widget_line_name"
-                    android:text="@string/widget_line_not_set"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textColor="@color/widget_on_line_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-                <TextView
-                    android:id="@+id/widget_bound_for"
-                    android:text="@string/widget_destination_not_set"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:includeFontPadding="false"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:textColor="@color/widget_on_line_primary"
-                    android:textSize="14sp"
-                    android:layout_marginTop="4dp" />
-            </LinearLayout>
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
         </LinearLayout>
+        <TextView
+            android:id="@+id/widget_bound_for"
+            android:text="@string/widget_destination_not_set"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/widget_on_line_primary"
+            android:textSize="14sp"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="12sp"
+            android:autoSizeMaxTextSize="14sp"
+            android:autoSizeStepGranularity="1sp"
+            android:layout_marginTop="4dp" />
 
         <LinearLayout
             android:id="@+id/widget_stations"
