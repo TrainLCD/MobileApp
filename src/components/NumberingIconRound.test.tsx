@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { NUMBERING_ICON_SIZE } from '~/constants';
 import NumberingIconRound from './NumberingIconRound';
 
@@ -10,6 +11,30 @@ jest.mock('~/utils/isTablet', () => ({
 describe('NumberingIconRound', () => {
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it.each([
+    NUMBERING_ICON_SIZE.LARGE,
+    NUMBERING_ICON_SIZE.MEDIUM,
+    NUMBERING_ICON_SIZE.SMALL,
+  ])('三田線のIに円の内側全幅を確保する（%s）', (size) => {
+    const { getByText, queryByText } = render(
+      <NumberingIconRound
+        lineColor="#0079c2"
+        stationNumber="I-18"
+        size={size}
+      />
+    );
+    expect(StyleSheet.flatten(getByText('I').props.style)).toMatchObject({
+      width: '100%',
+      textAlign: 'center',
+      color: '#221714',
+    });
+    if (size === NUMBERING_ICON_SIZE.LARGE) {
+      expect(getByText('18')).toBeTruthy();
+    } else {
+      expect(queryByText('18')).toBeNull();
+    }
   });
 
   it('通常サイズでレンダリングされる', () => {

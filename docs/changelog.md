@@ -6,6 +6,32 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-10-18 — Android の起動時に必要なコンストラクターを保持
+
+### 内容
+
+- Canary のビルド `100000871` の配布用 AAB を解析しました。WorkManager 2.9.1 と Room 2.5.0 が含まれており、マニフェストに `WorkManagerInitializer` が登録されています。
+- DEX では `WorkDatabase_Impl`、`OverwritingInputMerger`、`ArrayCreatingInputMerger` の引数なしコンストラクターが欠落していました。Expo #51337 で報告された、R8 による起動時初期化の破損と同じ欠落です。
+- アプリの ProGuard ルールに RoomDatabase と InputMerger の派生クラスの引数なしコンストラクターを保持するルールを追加しました。Expo #51349 と同じルールです。
+- #5121 の Expo モジュール保持ルールは維持し、その対象外だった AndroidX のコンストラクターを補います。R8 の最適化とリソース縮小は継続します。
+
+### 確認
+
+- `npm run lint`、`npm run typecheck`、`npm test -- --runInBand` が成功しました。333テストファイル・3722件が通過しました。
+- 修正前の配布 AAB の解析と、修正ルールの Expo #51349 との照合を実施しました。修正後の Android Release ビルドと実機起動は実施していません。
+
+### Release の回帰確認手順
+
+1. `:app:bundleDevRelease` で AAB をビルドします。
+2. AAB 内の DEX で、上記3クラスに引数なしの `<init>()V` が残っていることを確認します。
+3. Release ビルドを Galaxy Z Flip5 にインストールし、強制停止後の起動で画面が表示されることを確認します。Debug ビルドや JavaScript の単体テストでは R8 による削除を検証できません。
+
+### 参照
+
+- [解析した Canary ビルド](https://github.com/TrainLCD/MobileApp/actions/runs/38992827702)
+- [Expo の不具合報告](https://github.com/expo/expo/issues/51337)
+- [Expo の保持ルール修正](https://github.com/expo/expo/pull/51349)
+
 ## 2026-10-17 — iOS の Nitro 初期化に対応
 
 ### 内容

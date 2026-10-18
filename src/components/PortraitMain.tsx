@@ -1,13 +1,10 @@
+import { accentColorFor } from '~/utils/stopListAccentColor';
+
+export { accentColorFor } from '~/utils/stopListAccentColor';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import {
-  darken,
-  getLuminance,
-  mix,
-  parseToHsl,
-  rgba,
-  setLightness,
-} from 'polished';
+import { mix, rgba } from 'polished';
 import type React from 'react';
 import {
   memo,
@@ -101,38 +98,6 @@ const FALLBACK_ACCENT = '#888888';
 const PASS_TEXT_LIGHT = '#C2C2C2';
 const passTextColor = (colors: AppColors): string =>
   colors.isDark ? colors.strongBorder : PASS_TEXT_LIGHT;
-
-// 白基調の地の上に文字色として置いても読めるよう、明るい路線色は暗めに倒す。
-const LIGHT_ACCENT_MAX_LUMINANCE = 0.5;
-
-// 暗い地の上では逆に路線色が沈むため、HSL の明度に下限を設けて起こす。
-// 輝度ではなく明度で測って明度を直すのは、変換の前後が同じ尺度で読めるため。
-const DARK_ACCENT_MIN_LIGHTNESS = 0.62;
-
-const readableAccentColor = (color: string): string => {
-  try {
-    return getLuminance(color) > LIGHT_ACCENT_MAX_LUMINANCE
-      ? darken(0.25, color)
-      : color;
-  } catch {
-    return FALLBACK_ACCENT;
-  }
-};
-
-const luminousAccentColor = (color: string): string => {
-  try {
-    const { lightness } = parseToHsl(color);
-    return lightness >= DARK_ACCENT_MIN_LIGHTNESS
-      ? color
-      : setLightness(DARK_ACCENT_MIN_LIGHTNESS, color);
-  } catch {
-    return FALLBACK_ACCENT;
-  }
-};
-
-/** 配色スキームに合わせて地の上で読める路線色に直す */
-export const accentColorFor = (color: string, isDark: boolean): string =>
-  isDark ? luminousAccentColor(color) : readableAccentColor(color);
 
 // 発車済み区間の縦棒・ドット用に地へ寄せた色。opacity で半透明フェードすると
 // 縦棒とリングの重なり部分だけ二重合成で濃くなって不自然なので、不透明のまま
