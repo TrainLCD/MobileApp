@@ -416,3 +416,31 @@ it('preserves supplied state text when supplementing stopping labels', () => {
   setup();
   expect(latest().stateText).toBe('already supplied');
 });
+
+it.each([
+  [true, 'NEXT_EN', false, 'next'],
+  [true, 'ARRIVING_KO', false, 'soon'],
+  [true, 'CURRENT_ZH', false, 'nowStoppingAt'],
+  [false, 'NEXT_KANA', false, 'nextEn'],
+  [false, 'ARRIVING', true, 'soonEnLast'],
+  [false, 'CURRENT', false, 'nowStoppingAtEn'],
+  [true, 'NEXT', true, 'nextLast'],
+])(
+  'provides focused state in the environment language: %s %s',
+  (japanese, headerState, isLast, expected) => {
+    require('~/translation').isJapanese = japanese;
+    (useHeaderCommonData as jest.Mock).mockReturnValue({
+      ...data,
+      headerState,
+      isLast,
+    });
+    setup();
+    const focused = latest().stops.find((s) => s.focused);
+    expect(focused?.stateText).toBe(expected);
+    expect(
+      latest()
+        .stops.filter((s) => !s.focused)
+        .every((s) => s.stateText === undefined)
+    ).toBe(true);
+  }
+);

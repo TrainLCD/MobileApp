@@ -18,6 +18,7 @@ export type SquareStop = {
   focused: boolean;
   passed: boolean;
   label: string;
+  stateText?: string;
   numberColor?: string;
   showEta?: boolean;
   estimatedMinutes?: number | null;
@@ -182,18 +183,31 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                       },
                     ]}
                   />
-                  <Text
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.35}
-                    style={[
-                      styles.stopName,
-                      { color: stop.passed ? colors.secondary : colors.text },
-                      stop.focused && styles.focusName,
-                    ]}
-                  >
-                    {stop.name}
-                  </Text>
+                  <View style={styles.stopNameColumn}>
+                    {stop.focused && !!stop.stateText && (
+                      <Text
+                        testID={`square-stop-state-${stop.key}`}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.5}
+                        style={[styles.stopState, secondaryStyle]}
+                      >
+                        {stop.stateText}
+                      </Text>
+                    )}
+                    <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.35}
+                      style={[
+                        styles.stopName,
+                        { color: stop.passed ? colors.secondary : colors.text },
+                        stop.focused && styles.focusName,
+                      ]}
+                    >
+                      {stop.name}
+                    </Text>
+                  </View>
                   {!!stop.number && (
                     <Text
                       testID={`square-number-${stop.key}`}
@@ -492,8 +506,9 @@ const styles = StyleSheet.create({
   etaFocused: { fontSize: 15 },
   etaSoon: { fontSize: 10 },
   etaUnit: { fontFamily: FONTS.RobotoBold, fontSize: 9 },
+  stopNameColumn: { flex: 1, gap: 2, justifyContent: 'center' },
+  stopState: { fontFamily: FONTS.RobotoBold, fontSize: 18, lineHeight: 23 },
   stopName: {
-    flex: 1,
     fontFamily: FONTS.RobotoBold,
     fontWeight: 'bold',
     fontSize: 23,
