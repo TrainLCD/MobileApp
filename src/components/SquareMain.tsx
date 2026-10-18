@@ -164,21 +164,19 @@ const SquareMain = ({
   );
   const lineColor = data.currentLine?.color || '#888888';
   const currentIndex = ordered.findIndex((s) => s.id === currentStation?.id);
-  const start = Math.max(0, currentIndex - (data.arrived ? 1 : 0));
-  // 環状線の配列末尾でも次の駅を表示する。途中終着は既存の駅データを使う。
-  const visible = isLoopLine
-    ? [...ordered.slice(start), ...ordered.slice(0, start)]
-    : ordered.slice(start);
+  // ポートレートと同じく全駅を進行方向順に保持し、現在位置へはスクロールで追従する。
   const displayCurrentIndex =
     displayCurrentStation?.id == null
       ? -1
-      : visible.findIndex((station) => station.id === displayCurrentStation.id);
+      : ordered.findIndex((station) => station.id === displayCurrentStation.id);
   const etaStartIndex =
-    displayCurrentIndex >= 0 ? displayCurrentIndex : currentIndex - start;
+    displayCurrentIndex >= 0 ? displayCurrentIndex : currentIndex;
+  const progressStation =
+    displayCurrentIndex >= 0 ? displayCurrentStation : currentStation;
   // 列の有無も各行と同じ対象で判定し、通過駅だけのETAで「--」を並べない。
   const isEtaTarget = (station: Station, index: number) =>
     index > etaStartIndex && !getIsPass(station);
-  const hasEta = visible.some(
+  const hasEta = ordered.some(
     (station, index) =>
       isEtaTarget(station, index) &&
       station.id != null &&
@@ -280,14 +278,14 @@ const SquareMain = ({
             : undefined,
         };
       })}
-      stops={visible.map((station, index) => {
+      stops={ordered.map((station, index) => {
         const focusStation = data.headerState.startsWith('CURRENT')
           ? data.currentStation
           : target;
         const focused = station.id === focusStation?.id;
         const passed =
           !focused &&
-          (station.id === currentStation?.id || index < currentIndex - start);
+          (station.id === progressStation?.id || index < etaStartIndex);
         const pass = getIsPass(station);
         const number = station.stationNumbers?.[getNumberIndex(station)];
         return {
