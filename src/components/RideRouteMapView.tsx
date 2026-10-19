@@ -31,6 +31,11 @@ const FALLBACK_LINE_COLOR = '#888888';
 // メートル指定なので、拡大しても画面上の大きさが変わらないよう表示範囲に合わせる。
 // 全画面は地図の高さがカードの4倍ほどあるので、割合を小さくして同じくらいの点にする
 const STATION_RADIUS_RATIO = { card: 0.012, fullscreen: 0.005 } as const;
+// 1段で表示範囲が2倍になるズームを4分割する。点の半径のずれは約9%以内に収まる。
+const quantizeLatitudeDelta = (delta: number): number =>
+  Number.isFinite(delta) && delta > 0
+    ? 2 ** (Math.round(Math.log2(delta) * 4) / 4)
+    : 0;
 const METERS_PER_LATITUDE_DEGREE = 111_000;
 // 駅名を出す駅の上限。年の表示で端の駅が多くなっても地図を埋めないようにする
 const MAX_STATION_LABELS = 30;
@@ -95,10 +100,10 @@ export const RideRouteMapView = ({ routes, variant, mapPadding }: Props) => {
     [routes.bounds]
   );
   const [latitudeDelta, setLatitudeDelta] = useState(
-    initialRegion?.latitudeDelta ?? 0
+    quantizeLatitudeDelta(initialRegion?.latitudeDelta ?? 0)
   );
   const handleRegionChangeComplete = useCallback((region: Region) => {
-    setLatitudeDelta(region.latitudeDelta);
+    setLatitudeDelta(quantizeLatitudeDelta(region.latitudeDelta));
   }, []);
   // Android の react-native-maps は、GoogleMap の用意ができる前に mapPadding を
   // 受け取ると null の地図を触って落ちる(MapView.applyBaseMapPadding)。

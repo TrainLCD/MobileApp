@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 import type { Line, Station } from '~/@types/graphql';
 import LineBoardEast from './LineBoardEast';
 
@@ -121,6 +121,32 @@ describe('LineBoardEast', () => {
       />
     );
     expect(result.toJSON()).toBeTruthy();
+    expect(useDisplayCurrentStation).toHaveBeenCalledTimes(1);
+  });
+
+  it('測位が変わっても表示駅が同じなら駅セルを再描画しない', () => {
+    const { useState } = require('react');
+    const { StationName } = require('./LineBoard/shared/components');
+    let updateLocation: (tick: number) => void = () => {};
+    useDisplayCurrentStation.mockImplementation(() => {
+      const [tick, setTick] = useState(0);
+      updateLocation = setTick;
+      return tick < 2 ? mockStations[0] : mockStations[1];
+    });
+    const view = render(
+      <LineBoardEast
+        stations={mockStations}
+        lineColors={['#9acd32', '#9acd32']}
+        hasTerminus={false}
+      />
+    );
+    const count = StationName.mock.calls.length;
+    act(() => updateLocation(1));
+    expect(StationName.mock.calls.length).toBe(count);
+    act(() => updateLocation(2));
+    expect(StationName.mock.calls.length).toBeGreaterThan(count);
+    expect(view.toJSON()).toBeTruthy();
+    useDisplayCurrentStation.mockImplementation(() => mockStations[0]);
   });
 
   it('空の駅の場合、EmptyStationNameCellがレンダリングされる', () => {

@@ -32,6 +32,10 @@ import {
   STATION_NAME_CONTAINER_BOTTOM,
 } from './LineBoard/shared/styles/commonStyles';
 import { getLineColorBarSegments } from './LineBoard/shared/utils/lineColorBarSegments';
+import {
+  LineBoardCurrentStationContext,
+  useLineBoardCurrentStation,
+} from './LineBoardCurrentStation';
 import PadLineMarks from './PadLineMarks';
 import PassChevronEast from './PassChevronEast';
 
@@ -127,7 +131,7 @@ const useStationCellState = (
 ) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
-  const currentStation = useDisplayCurrentStation();
+  const currentStation = useLineBoardCurrentStation();
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
     omitRepeatingLine: true,
@@ -428,4 +432,14 @@ const LineBoardE231: React.FC<Props> = ({
   );
 };
 
-export default React.memo(LineBoardE231);
+const MemoLineBoardE231 = React.memo(LineBoardE231);
+const LineBoardE231WithCurrentStation = (props: Props) => {
+  const station = useDisplayCurrentStation();
+  return (
+    <LineBoardCurrentStationContext value={station}>
+      <MemoLineBoardE231 {...props} />
+    </LineBoardCurrentStationContext>
+  );
+};
+
+export default React.memo(LineBoardE231WithCurrentStation);
