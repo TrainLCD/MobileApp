@@ -13,7 +13,6 @@ import Animated, {
   FadeIn,
   FadeInDown,
   FadeOut,
-  LinearTransition,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
@@ -38,6 +37,7 @@ import { stationAtom } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
+import { createFrameTextBatcher } from '~/utils/frameTextBatcher';
 import isTablet from '~/utils/isTablet';
 import { dedupeStationsByGroupId } from '~/utils/station';
 import { showToast } from '~/utils/toast';
@@ -182,6 +182,10 @@ const DestinationAgentScreen = () => {
   // 会話の世代。リセット時にインクリメントし、リセット前に送った
   // リクエストの遅延応答が新しい(空の)会話へ紛れ込むのを防ぐ
   const conversationGenRef = useRef(0);
+  const deltaBatchRef = useRef<ReturnType<
+    typeof createFrameTextBatcher
+  > | null>(null);
+  useEffect(() => () => deltaBatchRef.current?.cancel(), []);
 
   const {
     value: keyboardBottomInset,
@@ -335,6 +339,18 @@ const DestinationAgentScreen = () => {
 
       // 会話リセット後に届いた delta / done は捨てる
       const isStale = () => conversationGenRef.current !== conversationGen;
+      const deltaBatch = createFrameTextBatcher((delta) => {
+        if (isStale()) return;
+        setSearching(false);
+        setEntries((prev) =>
+          prev.map((entry) =>
+            entry.id === streamingEntry.id
+              ? { ...entry, content: entry.content + delta }
+              : entry
+          )
+        );
+      });
+      deltaBatchRef.current = deltaBatch;
 
       // sendMessages は reject しない設計だが、万一の例外でも送信フラグが
       // 立ったままにならないよう finally で解除する
@@ -349,15 +365,7 @@ const DestinationAgentScreen = () => {
               if (isStale()) {
                 return;
               }
-              // 本文が流れ始めたら検索中表示を畳む(以降はバブルが伸びていく)
-              setSearching(false);
-              setEntries((prev) =>
-                prev.map((entry) =>
-                  entry.id === streamingEntry.id
-                    ? { ...entry, content: entry.content + delta }
-                    : entry
-                )
-              );
+              deltaBatch.append(delta);
             },
             // 駅検索の tool use ループは数秒かかるため、その間は
             // タイピングインジケータに検索中である旨を添える
@@ -365,6 +373,7 @@ const DestinationAgentScreen = () => {
               if (isStale()) {
                 return;
               }
+              deltaBatch.flush();
               setSearching(true);
               if (!searchingAnnounced) {
                 searchingAnnounced = true;
@@ -376,6 +385,9 @@ const DestinationAgentScreen = () => {
           }
         );
       } finally {
+        deltaBatch.flush();
+        deltaBatch.cancel();
+        deltaBatchRef.current = null;
         sendingRef.current = false;
         setSending(false);
         setSearching(false);
@@ -459,6 +471,7 @@ const DestinationAgentScreen = () => {
           style: 'destructive',
           onPress: () => {
             conversationGenRef.current += 1;
+            deltaBatchRef.current?.cancel();
             setEntries([]);
             setSuggestionStates({});
             setInputText('');
@@ -623,7 +636,6 @@ const DestinationAgentScreen = () => {
                   key={entry.id}
                   entering={FadeInDown.duration(250)}
                   exiting={FadeOut.duration(150)}
-                  layout={LinearTransition.springify()}
                   style={
                     entries[index - 1]?.role === entry.role
                       ? styles.sameSpeakerSpacing

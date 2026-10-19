@@ -36,6 +36,10 @@ import {
   getLineColorBarSegments,
   getLineDotCenterX,
 } from './LineBoard/shared/utils/lineColorBarSegments';
+import {
+  LineBoardCurrentStationContext,
+  useLineBoardCurrentStation,
+} from './LineBoardCurrentStation';
 
 interface Props {
   lineColors: (string | null | undefined)[];
@@ -79,7 +83,7 @@ const useStationCellState = (
 ) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
-  const currentStation = useDisplayCurrentStation();
+  const currentStation = useLineBoardCurrentStation();
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
     omitRepeatingLine: true,
@@ -404,4 +408,14 @@ const LineBoardSaikyo: React.FC<Props> = ({
   );
 };
 
-export default React.memo(LineBoardSaikyo);
+const MemoLineBoardSaikyo = React.memo(LineBoardSaikyo);
+const LineBoardSaikyoWithCurrentStation = (props: Props) => {
+  const station = useDisplayCurrentStation();
+  return (
+    <LineBoardCurrentStationContext value={station}>
+      <MemoLineBoardSaikyo {...props} />
+    </LineBoardCurrentStationContext>
+  );
+};
+
+export default React.memo(LineBoardSaikyoWithCurrentStation);
