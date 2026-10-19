@@ -1,6 +1,8 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 import { getRideSessionsStartedBetween } from '~/lib/rideLog';
+import * as ridePrefectures from '~/utils/ridePrefectures';
+import * as rideRoutes from '~/utils/rideRoutes';
 import { useRideStats } from './useRideStats';
 
 jest.mock('@react-navigation/native', () => {
@@ -144,6 +146,26 @@ describe('useRideStats', () => {
     if (result.current.status === 'ready') {
       expect(result.current.stats.rideCount).toBe(0);
     }
+  });
+
+  it('カード用の集計では経路・都道府県を計算せず距離と時間を返す', async () => {
+    const routes = jest.spyOn(rideRoutes, 'buildRideRoutes');
+    const prefectures = jest.spyOn(ridePrefectures, 'summarizeRidePrefectures');
+    const { result } = renderHook(() => useRideStats('month', true, false));
+    await flushPromises();
+    expect(result.current).toMatchObject({
+      status: 'ready',
+      stats: { distanceMeters: 0, durationMs: 0 },
+    });
+    expect(routes).not.toHaveBeenCalled();
+    expect(prefectures).not.toHaveBeenCalled();
+    expect(result.current).not.toHaveProperty('routes');
+    await act(async () => {
+      appStateHandler?.('active');
+    });
+    await flushPromises();
+    expect(routes).not.toHaveBeenCalled();
+    expect(prefectures).not.toHaveBeenCalled();
   });
 
   it('無効のときは読みに行かない', async () => {

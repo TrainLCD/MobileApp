@@ -43,6 +43,10 @@ import {
   getLineColorBarSegments,
   getLineDotCenterX,
 } from './LineBoard/shared/utils/lineColorBarSegments';
+import {
+  LineBoardCurrentStationContext,
+  useLineBoardCurrentStation,
+} from './LineBoardCurrentStation';
 import Typography from './Typography';
 
 type Props = {
@@ -394,7 +398,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
 }: StationNameCellProps) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
-  const currentStation = useDisplayCurrentStation();
+  const currentStation = useLineBoardCurrentStation();
   const isEn = useAtomValue(isEnAtom);
   const enabledLanguages = useAtomValue(enabledLanguagesAtom);
   const isKoEnabled = enabledLanguages.includes('KO');
@@ -647,4 +651,14 @@ const LineBoardToei: React.FC<Props> = ({
   );
 };
 
-export default React.memo(LineBoardToei);
+const MemoLineBoardToei = React.memo(LineBoardToei);
+const LineBoardToeiWithCurrentStation = (props: Props) => {
+  const station = useDisplayCurrentStation();
+  return (
+    <LineBoardCurrentStationContext value={station}>
+      <MemoLineBoardToei {...props} />
+    </LineBoardCurrentStationContext>
+  );
+};
+
+export default React.memo(LineBoardToeiWithCurrentStation);

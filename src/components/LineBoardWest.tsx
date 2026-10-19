@@ -29,6 +29,10 @@ import isTablet from '~/utils/isTablet';
 import { ChevronJRWest } from './ChevronJRWest';
 import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
+import {
+  LineBoardCurrentStationContext,
+  useLineBoardCurrentStation,
+} from './LineBoardCurrentStation';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
 
@@ -190,7 +194,7 @@ const useStationProgress = (
   const station = useCurrentStation();
   // 現在地基準の現在駅。到着取りこぼしで記録上の現在駅が古いとき、ヘッダーの
   // 「まもなく」と一致する側へ前方補正された駅が返る。
-  const displayStation = useDisplayCurrentStation();
+  const displayStation = useLineBoardCurrentStation();
   const prevStation = usePreviousStation(false);
   // 前方補正が効いている(displayStation が記録上の現在駅より進んでいる)ときだけ
   // 走行中アンカーを補正後の駅へ切り替える。通常運行では従来どおり prevStation を使い、
@@ -541,4 +545,14 @@ const LineBoardWest: React.FC<Props> = ({
   );
 };
 
-export default React.memo(LineBoardWest);
+const MemoLineBoardWest = React.memo(LineBoardWest);
+const LineBoardWestWithCurrentStation = (props: Props) => {
+  const station = useDisplayCurrentStation();
+  return (
+    <LineBoardCurrentStationContext value={station}>
+      <MemoLineBoardWest {...props} />
+    </LineBoardCurrentStationContext>
+  );
+};
+
+export default React.memo(LineBoardWestWithCurrentStation);

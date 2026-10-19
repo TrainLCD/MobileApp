@@ -1,6 +1,6 @@
 import * as WebBrowser from 'expo-web-browser';
 import { useAtomValue } from 'jotai';
-import { useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Typography from '~/components/Typography';
 import type { AgentMessageRole } from '~/hooks/useDestinationAgent';
@@ -125,9 +125,17 @@ type Props = {
   content: string;
 };
 
-export const AgentMessageBubble = ({ role, content }: Props) => {
+export const AgentMessageBubble = memo(({ role, content }: Props) => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
+  const segments = useMemo(
+    () =>
+      parseBoldSegments(content).map((segment) => ({
+        ...segment,
+        parts: splitUrls(segment.text),
+      })),
+    [content]
+  );
   const isUser = role === 'user';
   const onColoredBubble = isUser || isLEDTheme;
 
@@ -139,8 +147,12 @@ export const AgentMessageBubble = ({ role, content }: Props) => {
     });
   }, []);
 
-  const renderParts = (text: string, bold: boolean, segmentIndex: number) =>
-    splitUrls(text).map((part, partIndex) => {
+  const renderParts = (
+    parts: TextPart[],
+    bold: boolean,
+    segmentIndex: number
+  ) =>
+    parts.map((part, partIndex) => {
       const key = `${segmentIndex}-${partIndex}-${part.text}`;
       if (part.url) {
         const url = part.url;
@@ -195,10 +207,10 @@ export const AgentMessageBubble = ({ role, content }: Props) => {
       ]}
     >
       <Typography style={[styles.text, onColoredBubble && styles.userText]}>
-        {parseBoldSegments(content).flatMap((segment, index) =>
-          renderParts(segment.text, segment.bold, index)
+        {segments.flatMap((segment, index) =>
+          renderParts(segment.parts, segment.bold, index)
         )}
       </Typography>
     </View>
   );
-};
+});

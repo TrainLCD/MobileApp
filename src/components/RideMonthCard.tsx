@@ -63,7 +63,7 @@ export const RideMonthCard: React.FC<Props> = ({ style }: Props) => {
   const navigation = useNavigation();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
-  const state = useRideStats('month', true);
+  const state = useRideStats('month', true, false);
 
   // フッターのタブと同じく、履歴を積まないよう replace で振り返りタブへ移る
   const handlePress = useCallback(() => {

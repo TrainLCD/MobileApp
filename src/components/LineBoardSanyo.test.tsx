@@ -39,7 +39,7 @@ describe('LineBoardSanyo', () => {
   const { useAtomValue } = require('jotai');
   const { useDisplayCurrentStation } = require('~/hooks');
   const { arrivedAtom, stationsAtom } = require('~/store/atoms/station');
-  const { headerStateAtom } = require('~/store/atoms/navigation');
+  const { headerIsEnglishAtom } = require('~/store/atoms/navigation');
 
   // 直通先の阪神本線。路線色は山陽のバーの色と異なる
   const hanshinLine = {
@@ -105,8 +105,8 @@ describe('LineBoardSanyo', () => {
     useAtomValue.mockImplementation((a: unknown) =>
       a === arrivedAtom
         ? arrived
-        : a === headerStateAtom
-          ? headerState
+        : a === headerIsEnglishAtom
+          ? headerState.endsWith('_EN')
           : a === stationsAtom
             ? allStations
             : false

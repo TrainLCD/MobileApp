@@ -66,6 +66,9 @@ export const trainTypeAtom = atom<TrainType | null>(
 export const headerStateAtom = atom<HeaderTransitionState>(
   initialNavigationState.headerState
 );
+export const headerIsEnglishAtom = atom((get) =>
+  get(headerStateAtom).endsWith('_EN')
+);
 export const bottomStateAtom = atom<BottomTransitionState>(
   initialNavigationState.bottomState
 );

@@ -1,6 +1,12 @@
+import getDistance from 'geolib/es/getDistance';
 import { StopCondition } from '~/@types/graphql';
 import { createStation } from '~/utils/test/factories';
 import { findPassedStation } from './passedStation';
+
+jest.mock('geolib/es/getDistance', () => ({
+  __esModule: true,
+  default: jest.fn(jest.requireActual('geolib/es/getDistance').default),
+}));
 
 // 東海道新幹線 上り(三島→新横浜)。のぞみは熱海・小田原を通過する。
 const mishima = createStation(100206, {
@@ -98,5 +104,27 @@ describe('findPassedStation', () => {
         7
       )
     ).toBeUndefined();
+  });
+  it('同じ駅配列では駅間距離を再計算せず、各測位から各駅までの距離も一度だけ求める', () => {
+    const stations = [...nozomi];
+    const distance = jest.mocked(getDistance);
+    distance.mockClear();
+    const { latitude, longitude } = BETWEEN_ODAWARA_AND_SHIN_YOKOHAMA;
+    expect(findPassedStation(stations, mishima, latitude, longitude, 7)).toBe(
+      odawara
+    );
+    expect(distance).toHaveBeenCalledTimes(
+      stations.length - 1 + stations.length
+    );
+    distance.mockClear();
+    expect(findPassedStation(stations, mishima, latitude, longitude, 7)).toBe(
+      odawara
+    );
+    expect(distance).toHaveBeenCalledTimes(stations.length);
+    distance.mockClear();
+    findPassedStation([...stations], mishima, latitude, longitude, 7);
+    expect(distance).toHaveBeenCalledTimes(
+      stations.length - 1 + stations.length
+    );
   });
 });
