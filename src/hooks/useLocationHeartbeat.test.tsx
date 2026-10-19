@@ -9,6 +9,7 @@ import {
 import {
   getMsSinceLastTrackedLocation,
   handleTrackingLocation,
+  isNewTrackingLocation,
 } from '../utils/handleTrackingLocation';
 import {
   getLocationHeartbeatStats,
@@ -47,6 +48,7 @@ jest.mock('../utils/monotonicNow', () => ({
 
 jest.mock('../utils/handleTrackingLocation', () => ({
   handleTrackingLocation: jest.fn(),
+  isNewTrackingLocation: jest.fn(() => true),
   getMsSinceLastTrackedLocation: jest.fn(() => null),
 }));
 
@@ -171,6 +173,7 @@ describe('useLocationHeartbeat', () => {
     mockGetMsSinceLastTrackedLocation.mockReturnValue(
       LOCATION_HEARTBEAT_STALE_THRESHOLD
     );
+    (isNewTrackingLocation as jest.Mock).mockReturnValue(true);
     watches = [];
     setWatchBehavior(() => makeLocation(NOW));
     mockMonotonicNow.mockImplementation(() => Date.now());
@@ -190,6 +193,44 @@ describe('useLocationHeartbeat', () => {
     expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
     // 重複排除・精度フィルタ・EMAを継続測位と共有するため、必ずこの入口を通す
     expect(mockHandleTrackingLocation).toHaveBeenCalledWith(makeLocation(NOW));
+  });
+
+  it.each(['stale', 'duplicate'] as const)(
+    '%s の初回配信では閉じず、同じ購読で新しい測位を待つ',
+    async (kind) => {
+      setWatchBehavior(null);
+      await startHeartbeat();
+      await advanceBy(1);
+      const watch = watches[0];
+      if (kind === 'duplicate') {
+        (isNewTrackingLocation as jest.Mock).mockReturnValue(false);
+      }
+      await act(async () => {
+        watch.emit(makeLocation(kind === 'stale' ? NOW - 65_000 : Date.now()));
+      });
+      expect(watch.remove).not.toHaveBeenCalled();
+      expect(mockHandleTrackingLocation).not.toHaveBeenCalled();
+      expect(getLocationHeartbeatStats().succeeded).toBe(0);
+
+      (isNewTrackingLocation as jest.Mock).mockReturnValue(true);
+      const fresh = makeLocation(Date.now());
+      await act(async () => watch.emit(fresh));
+      expect(watch.remove).toHaveBeenCalledTimes(1);
+      expect(mockHandleTrackingLocation).toHaveBeenCalledWith(fresh);
+      expect(getLocationHeartbeatStats().succeeded).toBe(1);
+    }
+  );
+
+  it('古い測位だけが続いても30秒で購読を閉じて再試行する', async () => {
+    setWatchBehavior(() => makeLocation(NOW - 65_000));
+    await startHeartbeat();
+    await advanceBy(1);
+    await advanceBy(LOCATION_HEARTBEAT_MAX_PENDING);
+    expect(watches[0].remove).toHaveBeenCalledTimes(1);
+    expect(watches).toHaveLength(2);
+    expect(getLocationHeartbeatStats().abandoned).toBe(1);
+    expect(getLocationHeartbeatStats().succeeded).toBe(0);
+    expect(mockHandleTrackingLocation).not.toHaveBeenCalled();
   });
 
   it('直近に配信が届いている間は取得しない', async () => {

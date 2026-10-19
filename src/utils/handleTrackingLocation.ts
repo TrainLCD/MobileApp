@@ -42,6 +42,14 @@ export const resetTrackingLocationDedup = () => {
 export const getMsSinceLastTrackedLocation = (): number | null =>
   lastProcessedAtMs === null ? null : monotonicNow() - lastProcessedAtMs;
 
+// 補完測位は重複を受け取っても購読を閉じず、新しい測位を待つ。
+// 時計が巻き戻った場合は共通入口と同じ条件で過去の基準を無効にする。
+export const isNewTrackingLocation = (timestamp: number): boolean =>
+  timestamp >
+  (lastProcessedTimestampMs > Date.now() + CLOCK_ROLLBACK_TOLERANCE_MS
+    ? 0
+    : lastProcessedTimestampMs);
+
 // watchPositionAsync / startLocationUpdatesAsync 双方の継続測位の共通入口。
 // 経路ごとにMAX_PERMIT_ACCURACYの適用漏れが起きないよう、精度フィルタをここへ集約する。
 // （getCurrentPositionAsyncによるワンショット取得や手動選択はsetLocationを直接呼ぶため対象外）
