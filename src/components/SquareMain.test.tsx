@@ -639,3 +639,68 @@ it('falls back to station IDs when group IDs are missing without matching missin
   act(() => r.store.set(stationsAtom, [...stations]));
   expect(latest().stops.every((s) => !s.focused)).toBe(true);
 });
+
+it.each([
+  ['INBOUND', false, true],
+  ['OUTBOUND', false, false],
+  ['INBOUND', true, false],
+  ['OUTBOUND', true, true],
+] as const)(
+  'tracks consecutive pass stations without jumping to the transfer target (%s, loop: %s, Japanese: %s)',
+  (direction, loop, japanese) => {
+    require('~/translation').isJapanese = japanese;
+    (useLoopLine as jest.Mock).mockReturnValue({ isLoopLine: loop });
+    const route = stations.map((s, i) =>
+      i === 1 || i === 2 ? { ...s, stopCondition: StopCondition.Not } : s
+    );
+    const travel = (loop ? direction === 'INBOUND' : direction === 'OUTBOUND')
+      ? [...route].reverse()
+      : route;
+    (useTransferTargetStation as jest.Mock).mockReturnValue(travel[3]);
+    const r = setup();
+    const update = (index: number, headerState: string) => {
+      // 接続駅と同じく、現在駅のIDと一覧のIDが異なっても一致させる。
+      const current = { ...travel[index], id: index + 100 };
+      (useCurrentStation as jest.Mock).mockReturnValue(current);
+      (useDisplayCurrentStation as jest.Mock).mockReturnValue(current);
+      (useHeaderCommonData as jest.Mock).mockReturnValue({
+        ...data,
+        currentStation: current,
+        headerState,
+        isLast: true,
+      });
+      act(() => {
+        r.store.set(selectedDirectionAtom, direction);
+        r.store.set(stationsAtom, [...route]);
+      });
+    };
+    update(0, 'NEXT');
+    expect(latest().stops.filter((s) => s.focused)).toEqual([
+      expect.objectContaining({
+        key: `${travel[1].id}-1`,
+        stateText: japanese ? 'next' : 'nextEn',
+      }),
+    ]);
+    for (const index of [1, 2]) {
+      for (const headerState of ['NEXT_EN', 'ARRIVING_KO', 'CURRENT']) {
+        update(index, headerState);
+        expect(latest().stops.filter((s) => s.focused)).toEqual([
+          expect.objectContaining({
+            key: `${travel[index].id}-${index}`,
+            stateText: japanese ? '通過中' : 'Passing',
+            passed: false,
+            showEta: false,
+          }),
+        ]);
+        expect(latest().transferHeading).toContain(
+          japanese ? travel[3].name : travel[3].nameRoman
+        );
+      }
+    }
+    update(3, 'CURRENT');
+    expect(latest().stops[3]).toMatchObject({
+      focused: true,
+      stateText: japanese ? 'nowStoppingAt' : 'nowStoppingAtEn',
+    });
+  }
+);
