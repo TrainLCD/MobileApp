@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
-  getMsSinceLastTrackedLocation,
+  getTrackedLocationAgeMs,
   handleTrackingLocation,
   isNewTrackingLocation,
 } from '~/utils/handleTrackingLocation';
@@ -180,7 +180,8 @@ const resolveInactiveState = ({
 };
 
 /**
- * 継続測位の配信が途絶えたときだけ、測位を自前で取りに行く補完測位。
+ * 継続測位が古くなったときだけ、測位を自前で取りに行く補完測位。
+ * 遅延配信を受け取った場合も、受信時刻でなく測位時刻を基準に点検する。
  *
  * iOSはtimeIntervalが無視され、変位ゲート(LOCATION_DISTANCE_INTERVAL=10m)に達するまで
  * CoreLocationがそもそもデリゲートを呼ばない。地下鉄のようにGPSが失われ、測位が
@@ -305,15 +306,16 @@ export const useLocationHeartbeat = (): void => {
         return;
       }
 
+      // 遅延配信の受信時刻ではなく、測位そのものの古さで判定する。
       // nullは「起動後まだ一度も配信が無い」状態。基準をeffect開始時刻に置き換え、
       // 起動直後は継続測位へ譲りつつ、届かないままなら途絶として取りに行く。
-      const sinceDeliveryMs =
-        getMsSinceLastTrackedLocation() ?? now - effectStartedAtMs;
+      const locationAgeMs =
+        getTrackedLocationAgeMs() ?? now - effectStartedAtMs;
       if (
-        sinceDeliveryMs >= 0 &&
-        sinceDeliveryMs < LOCATION_HEARTBEAT_STALE_THRESHOLD
+        locationAgeMs >= 0 &&
+        locationAgeMs < LOCATION_HEARTBEAT_STALE_THRESHOLD
       ) {
-        schedule(LOCATION_HEARTBEAT_STALE_THRESHOLD - sinceDeliveryMs);
+        schedule(LOCATION_HEARTBEAT_STALE_THRESHOLD - locationAgeMs);
         return;
       }
 

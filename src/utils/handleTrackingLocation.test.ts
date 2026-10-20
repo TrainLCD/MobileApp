@@ -7,6 +7,7 @@ import {
 } from '~/store/atoms/location';
 import {
   getMsSinceLastTrackedLocation,
+  getTrackedLocationAgeMs,
   handleTrackingLocation,
   isNewTrackingLocation,
   resetTrackingLocationDedup,
@@ -174,9 +175,8 @@ describe('handleTrackingLocation', () => {
     });
   });
 
-  // 補完測位(useLocationHeartbeat)は「最後に配信を処理してからの経過時間」だけを見て、
-  // 継続測位が途絶えたかを判断する。経過時間は端末の時計の変更に影響されない
-  // monotonicNowで測る。
+  // 配信からの経過時間は測位そのものの古さとは分けて記録する。
+  // 受信後の経過時間は端末時計の変更に影響されないmonotonicNowで測る。
   describe('配信時刻の記録', () => {
     beforeEach(() => {
       jest.useFakeTimers();
@@ -219,6 +219,60 @@ describe('handleTrackingLocation', () => {
       expect(getMsSinceLastTrackedLocation()).toBe(5_000);
     });
   });
+  describe('補完測位用の測位時刻', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(1_700_000_000_000);
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('未配信とリセット後はnullを返す', () => {
+      expect(getTrackedLocationAgeMs()).toBeNull();
+      handleTrackingLocation(makeLocation(30, Date.now()));
+      resetTrackingLocationDedup();
+      expect(getTrackedLocationAgeMs()).toBeNull();
+    });
+
+    it('34秒古い測位を今受信しても古さをリセットしない', () => {
+      handleTrackingLocation(makeLocation(30, Date.now() - 34_000));
+      expect(getMsSinceLastTrackedLocation()).toBe(0);
+      expect(getTrackedLocationAgeMs()).toBe(34_000);
+      jest.advanceTimersByTime(5_000);
+      expect(getTrackedLocationAgeMs()).toBe(39_000);
+    });
+
+    it('受信後に端末時計が変わっても単調時計で古さを測る', () => {
+      handleTrackingLocation(makeLocation(30, Date.now() - 2_000));
+      jest.setSystemTime(Date.now() - 60_000);
+      jest.advanceTimersByTime(3_000);
+      expect(getTrackedLocationAgeMs()).toBe(5_000);
+    });
+
+    it('新しい精度外れ値でも古さを更新し、精度だけを理由に補完を続けない', () => {
+      handleTrackingLocation(makeLocation(30, Date.now() - 34_000));
+      handleTrackingLocation(makeLocation(MAX_PERMIT_ACCURACY + 1, Date.now()));
+      expect(getTrackedLocationAgeMs()).toBe(0);
+    });
+
+    it('重複配信で古さを巻き戻さない', () => {
+      const location = makeLocation(30, Date.now() - 2_000);
+      handleTrackingLocation(location);
+      jest.advanceTimersByTime(5_000);
+      handleTrackingLocation(location);
+      expect(getTrackedLocationAgeMs()).toBe(7_000);
+    });
+
+    it('未来の時刻を受け取っても待ち時間を延長しない', () => {
+      handleTrackingLocation(makeLocation(30, Date.now() + 2_000));
+      expect(getTrackedLocationAgeMs()).toBe(0);
+      jest.advanceTimersByTime(10_000);
+      expect(getTrackedLocationAgeMs()).toBe(10_000);
+    });
+  });
+
   // 診断用の集計。判定には使わないが、判定箇所そのもので数えていないと
   // 「どの門で落ちたか」を読み違えるため、実挙動と突き合わせて固定する。
   describe('パイプラインの集計(診断用)', () => {
