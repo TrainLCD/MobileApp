@@ -23,21 +23,17 @@ const CLOCK_ROLLBACK_TOLERANCE_MS = 5_000;
 // これ以下のタイムスタンプの測位を重複・遅延再配信として破棄する基準に使う。
 let lastProcessedTimestampMs = 0;
 
-// 最後に本関数が測位を処理した時刻(monotonicNow基準)。配信からの経過時間を記録する。
-// 精度フィルタで棄却される測位も配信は届いているので、棄却の前に記録する。
-// 補完測位はこの経過時間に受信時の古さを足し、測位が更新されているかを判定する。
+// 最後に本関数が測位を処理した時刻(monotonicNow基準)。継続測位の配信が途絶えたかの
+// 判定に使う(useLocationHeartbeat)。測位側のtimestampではなく処理時刻を持つのは、
+// 判定したいのが「測位がいつのものか」ではなく「どれだけ配信が来ていないか」だからで、
+// OSが古いtimestampの測位を配信し続けるあいだも無配信とは見なさないため。
+// 精度フィルタで棄却される測位も配信は届いているので、棄却の前にここで記録する。
 let lastProcessedAtMs: number | null = null;
-
-// 受信時点で測位が既に何ms古かったか。配信の経過時間とは分けて持つ。
-// #6969の配信記録は維持しつつ、補完測位では遅延配信を復旧と誤認しない。
-// Date.nowとの比較は受信時だけ行い、その後は単調時計で経過を加算する。
-let lastLocationAgeAtDeliveryMs = 0;
 
 // テスト用: モジュール内部の重複排除状態をリセットする
 export const resetTrackingLocationDedup = () => {
   lastProcessedTimestampMs = 0;
   lastProcessedAtMs = null;
-  lastLocationAgeAtDeliveryMs = 0;
 };
 
 // 継続測位を最後に処理してからの経過時間(ms)。一度も処理していなければnull。
@@ -45,16 +41,6 @@ export const resetTrackingLocationDedup = () => {
 // しまう余地を無くすため。
 export const getMsSinceLastTrackedLocation = (): number | null =>
   lastProcessedAtMs === null ? null : monotonicNow() - lastProcessedAtMs;
-
-// iOS補完測位の途絶判定用。配信が来た直後でも、測位自体が古ければ取得を待たない。
-// 単調時計のフォールバックが巻き戻った場合は負値をそのまま返し、既存の復旧経路へ渡す。
-export const getTrackedLocationAgeMs = (): number | null => {
-  const sinceDeliveryMs = getMsSinceLastTrackedLocation();
-  if (sinceDeliveryMs === null || sinceDeliveryMs < 0) {
-    return sinceDeliveryMs;
-  }
-  return lastLocationAgeAtDeliveryMs + sinceDeliveryMs;
-};
 
 // 補完測位は重複を受け取っても購読を閉じず、新しい測位を待つ。
 // 時計が巻き戻った場合は共通入口と同じ条件で過去の基準を無効にする。
@@ -85,9 +71,6 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
   }
   lastProcessedTimestampMs = location.timestamp;
   lastProcessedAtMs = monotonicNow();
-  lastLocationAgeAtDeliveryMs = Number.isFinite(location.timestamp)
-    ? Math.max(0, Date.now() - location.timestamp)
-    : Number.POSITIVE_INFINITY;
 
   // 診断用の飛び幅記録。精度フィルタより前に置くのが要点で、地下で最も知りたい
   // 「棄却された生座標がどれだけ飛んでいたか」はここでしか観測できない
