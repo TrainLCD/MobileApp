@@ -190,6 +190,22 @@ const SquareMain = ({
       station.id != null &&
       minutesByStation.get(station.id) != null
   );
+  // 乗換対象は次の停車駅だが、一覧では通過駅も順に追う。
+  // 通過駅が現在駅の間は、停車駅向けのヘッダー状態にかかわらずその駅を示す。
+  const passing = !!currentStation && getIsPass(currentStation);
+  const nextIndex = currentIndex + 1;
+  const immediateNext =
+    currentIndex < 0
+      ? undefined
+      : (ordered[nextIndex] ?? (isLoopLine ? ordered[0] : undefined));
+  const upcomingPass = immediateNext && getIsPass(immediateNext);
+  const focusStation = passing
+    ? currentStation
+    : data.headerState.startsWith('CURRENT')
+      ? data.currentStation
+      : upcomingPass
+        ? immediateNext
+        : target;
   // B案の状態も駅名と同じ環境言語に固定し、C案の言語タイマーには追従しない。
   const stopStateKeys = isJapanese
     ? {
@@ -205,11 +221,19 @@ const SquareMain = ({
   const stoppingState = data.headerState.split(
     '_'
   )[0] as keyof typeof stopStateKeys;
-  const stopStateText = stopStateKeys[stoppingState]
-    ? translate(stopStateKeys[stoppingState], {
-        locale: isJapanese ? 'ja' : 'en',
-      }).replaceAll('\n', ' ')
-    : '';
+  const stopStateText = passing
+    ? isJapanese
+      ? '通過中'
+      : 'Passing'
+    : upcomingPass && !data.headerState.startsWith('CURRENT')
+      ? translate(isJapanese ? 'next' : 'nextEn', {
+          locale: isJapanese ? 'ja' : 'en',
+        }).replaceAll('\n', ' ')
+      : stopStateKeys[stoppingState]
+        ? translate(stopStateKeys[stoppingState], {
+            locale: isJapanese ? 'ja' : 'en',
+          }).replaceAll('\n', ' ')
+        : '';
   const numbering = data.currentStationNumber;
 
   return (
@@ -287,9 +311,6 @@ const SquareMain = ({
         };
       })}
       stops={ordered.map((station, index) => {
-        const focusStation = data.headerState.startsWith('CURRENT')
-          ? data.currentStation
-          : target;
         const focused = isSameStation(station, focusStation);
         const passed =
           !focused &&
