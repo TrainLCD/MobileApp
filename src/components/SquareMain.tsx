@@ -115,6 +115,13 @@ const labels = {
   },
 };
 
+// 直通の接続駅は路線ごとにIDが異なるため、駅グループで同じ駅を照合する。
+// グループが欠ける場合だけ駅IDを使い、未取得同士を一致させない。
+const isSameStation = (station: Station, target: Station | undefined) =>
+  station.groupId != null && target?.groupId != null
+    ? station.groupId === target.groupId
+    : station.id != null && target?.id != null && station.id === target.id;
+
 const SquareMain = ({
   onTransferPress,
 }: {
@@ -163,12 +170,13 @@ const SquareMain = ({
     data.trainType?.color ?? undefined
   );
   const lineColor = data.currentLine?.color || '#888888';
-  const currentIndex = ordered.findIndex((s) => s.id === currentStation?.id);
+  const currentIndex = ordered.findIndex((s) =>
+    isSameStation(s, currentStation)
+  );
   // ポートレートと同じく全駅を進行方向順に保持し、現在位置へはスクロールで追従する。
-  const displayCurrentIndex =
-    displayCurrentStation?.id == null
-      ? -1
-      : ordered.findIndex((station) => station.id === displayCurrentStation.id);
+  const displayCurrentIndex = ordered.findIndex((station) =>
+    isSameStation(station, displayCurrentStation)
+  );
   const etaStartIndex =
     displayCurrentIndex >= 0 ? displayCurrentIndex : currentIndex;
   const progressStation =
@@ -182,6 +190,22 @@ const SquareMain = ({
       station.id != null &&
       minutesByStation.get(station.id) != null
   );
+  // 乗換対象は次の停車駅だが、一覧では通過駅も順に追う。
+  // 通過駅が現在駅の間は、停車駅向けのヘッダー状態にかかわらずその駅を示す。
+  const passing = !!currentStation && getIsPass(currentStation);
+  const nextIndex = currentIndex + 1;
+  const immediateNext =
+    currentIndex < 0
+      ? undefined
+      : (ordered[nextIndex] ?? (isLoopLine ? ordered[0] : undefined));
+  const upcomingPass = immediateNext && getIsPass(immediateNext);
+  const focusStation = passing
+    ? currentStation
+    : data.headerState.startsWith('CURRENT')
+      ? data.currentStation
+      : upcomingPass
+        ? immediateNext
+        : target;
   // B案の状態も駅名と同じ環境言語に固定し、C案の言語タイマーには追従しない。
   const stopStateKeys = isJapanese
     ? {
@@ -197,11 +221,19 @@ const SquareMain = ({
   const stoppingState = data.headerState.split(
     '_'
   )[0] as keyof typeof stopStateKeys;
-  const stopStateText = stopStateKeys[stoppingState]
-    ? translate(stopStateKeys[stoppingState], {
-        locale: isJapanese ? 'ja' : 'en',
-      }).replaceAll('\n', ' ')
-    : '';
+  const stopStateText = passing
+    ? isJapanese
+      ? '通過中'
+      : 'Passing'
+    : upcomingPass && !data.headerState.startsWith('CURRENT')
+      ? translate(isJapanese ? 'next' : 'nextEn', {
+          locale: isJapanese ? 'ja' : 'en',
+        }).replaceAll('\n', ' ')
+      : stopStateKeys[stoppingState]
+        ? translate(stopStateKeys[stoppingState], {
+            locale: isJapanese ? 'ja' : 'en',
+          }).replaceAll('\n', ' ')
+        : '';
   const numbering = data.currentStationNumber;
 
   return (
@@ -279,13 +311,10 @@ const SquareMain = ({
         };
       })}
       stops={ordered.map((station, index) => {
-        const focusStation = data.headerState.startsWith('CURRENT')
-          ? data.currentStation
-          : target;
-        const focused = station.id === focusStation?.id;
+        const focused = isSameStation(station, focusStation);
         const passed =
           !focused &&
-          (station.id === progressStation?.id || index < etaStartIndex);
+          (isSameStation(station, progressStation) || index < etaStartIndex);
         const pass = getIsPass(station);
         const number = station.stationNumbers?.[getNumberIndex(station)];
         return {
