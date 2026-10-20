@@ -6,6 +6,7 @@ import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   getMsSinceLastTrackedLocation,
   handleTrackingLocation,
+  isNewTrackingLocation,
 } from '~/utils/handleTrackingLocation';
 import {
   countLocationHeartbeatAbandoned,
@@ -69,6 +70,18 @@ const watchSingleLocation = (
       { accuracy, distanceInterval: 0 },
       (location) => {
         if (finished) {
+          return;
+        }
+        // #6996 の「最初の1件で閉じる」を、新しく有効な時刻の1件に限定する。
+        // キャッシュや重複で閉じると、後続の新しい測位を受け取れない。
+        // 継続測位が待機中に進む場合もあるため、重複の基準は毎回読む。
+        // 途絶判定と同じ10秒を超えた測位は復旧とは扱わない。待機上限は既存の30秒。
+        if (
+          !Number.isFinite(location.timestamp) ||
+          Date.now() - location.timestamp >
+            LOCATION_HEARTBEAT_STALE_THRESHOLD ||
+          !isNewTrackingLocation(location.timestamp)
+        ) {
           return;
         }
         stop();

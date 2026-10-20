@@ -28,6 +28,9 @@ export const LOCATION_TIME_INTERVAL = 10000;
 //   更新頻度を決めるため、0にすると約1Hzで配信され電池を著しく消費する。実車検証済みの
 //   旧既定値10mへ戻す。10mであれば停車中もGPSの揺らぎで測位が届き続ける一方、25mでは
 //   揺らぎが閾値を超えず停車中の更新が止まりやすい。
+// 背景かつ通常測位のiOSだけはexpo-locationのパッチでネイティブの変位ゲートを外す。
+// 前景復帰・省電力への切り替えではこの設定値へ戻し、背景のJS配信は10秒でまとめる。
+// パッチ: patches/expo-location+58.0.16.patch
 export const LOCATION_DISTANCE_INTERVAL = Platform.OS === 'ios' ? 10 : 0;
 
 // 継続測位が途絶えたときに測位を自前で取りに行く補完測位(ハートビート)を要するか。

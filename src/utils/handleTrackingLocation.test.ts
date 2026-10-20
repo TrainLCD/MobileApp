@@ -8,6 +8,7 @@ import {
 import {
   getMsSinceLastTrackedLocation,
   handleTrackingLocation,
+  isNewTrackingLocation,
   resetTrackingLocationDedup,
 } from './handleTrackingLocation';
 import {
@@ -57,6 +58,26 @@ const makeLocation = (
 ): Location.LocationObject => makeLocationAt(35.0, 139.0, accuracy, timestamp);
 
 describe('handleTrackingLocation', () => {
+  it('補完測位の重複判定は継続測位で進んだ最新時刻を参照する', () => {
+    handleTrackingLocation(makeLocation(30, 1000));
+    expect(isNewTrackingLocation(1000)).toBe(false);
+    expect(isNewTrackingLocation(999)).toBe(false);
+    expect(isNewTrackingLocation(1001)).toBe(true);
+    handleTrackingLocation(makeLocation(30, 2000));
+    expect(isNewTrackingLocation(1500)).toBe(false);
+    expect(isNewTrackingLocation(2001)).toBe(true);
+  });
+
+  it('時計の巻き戻し時は共通入口と同じく過去の重複基準を無効にする', () => {
+    jest.spyOn(Date, 'now').mockReturnValue(100_000);
+    handleTrackingLocation(makeLocation(30, 100_000));
+    jest.spyOn(Date, 'now').mockReturnValue(80_000);
+    expect(isNewTrackingLocation(80_000)).toBe(true);
+    handleTrackingLocation(makeLocation(30, 80_000));
+    expect(mockSetLocation).toHaveBeenLastCalledWith(makeLocation(30, 80_000));
+    expect(isNewTrackingLocation(80_000)).toBe(false);
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();

@@ -1,0 +1,116 @@
+diff --git a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
+index b7132b8..54180a2 100644
+--- a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
++++ b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
+@@ -7,6 +7,7 @@
+ #import <ExpoModulesCore/EXTaskInterface.h>
+ #import <ExpoLocation/EXLocation.h>
+ #import <ExpoLocation/EXLocationTaskConsumer.h>
++#import "EXTrainLCDLocationPolicy.h"
+ 
+ @interface EXLocationTaskConsumer ()
+ 
+@@ -14,6 +15,8 @@
+ @property (nonatomic, strong) NSMutableArray<CLLocation *> *deferredLocations;
+ @property (nonatomic, strong) CLLocation *lastReportedLocation;
+ @property (nonatomic, assign) CLLocationDistance deferredDistance;
++@property (nonatomic, assign) CLLocationDistance configuredDistanceFilter;
++@property (nonatomic, assign) BOOL trainLCDInBackground;
+ 
+ @end
+ 
+@@ -24,12 +27,15 @@
+   if (self = [super init]) {
+     _deferredLocations = [NSMutableArray new];
+     _deferredDistance = 0.0;
++    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(trainLCDDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
++    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(trainLCDWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+   }
+   return self;
+ }
+ 
+ - (void)dealloc
+ {
++  [[NSNotificationCenter defaultCenter] removeObserver:self];
+   [self reset];
+ }
+ 
+@@ -47,6 +53,7 @@
+ 
+     self->_task = task;
+     self->_locationManager = locationManager;
++    self->_trainLCDInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
+ 
+     locationManager.delegate = self;
+     locationManager.allowsBackgroundLocationUpdates = YES;
+@@ -68,16 +75,47 @@
+     EXLocationAccuracy accuracy = [options[@"accuracy"] unsignedIntegerValue] ?: EXLocationAccuracyBalanced;
+ 
+     locationManager.desiredAccuracy = [EXLocation CLLocationAccuracyFromOption:accuracy];
+-    locationManager.distanceFilter = [self numberToDouble:options[@"distanceInterval"] defaultValue:kCLDistanceFilterNone];
++    self->_configuredDistanceFilter = [self numberToDouble:options[@"distanceInterval"] defaultValue:kCLDistanceFilterNone];
+     locationManager.activityType = [EXLocation CLActivityTypeFromOption:[self numberToInteger:options[@"activityType"] defaultValue:CLActivityTypeOther]];
+     locationManager.pausesLocationUpdatesAutomatically = [self numberToBool:options[@"pausesUpdatesAutomatically"] defaultValue:false];
+     locationManager.showsBackgroundLocationIndicator = [self numberToBool:options[@"showsBackgroundLocationIndicator"] defaultValue:false];
+ 
++    [self trainLCDUpdateDistanceFilter];
+     [locationManager startUpdatingLocation];
+     [locationManager startMonitoringSignificantLocationChanges];
+   }];
+ }
+ 
++// Keep the background-capable manager alive across AppState transitions. A JS timer or
++// foreground watch cannot provide this recovery while the app is suspended.
++- (void)trainLCDDidEnterBackground:(NSNotification *)notification
++{
++  _trainLCDInBackground = YES;
++  [self trainLCDUpdateDistanceFilter];
++}
++
++- (void)trainLCDWillEnterForeground:(NSNotification *)notification
++{
++  _trainLCDInBackground = NO;
++  [self trainLCDUpdateDistanceFilter];
++}
++
++- (void)trainLCDUpdateDistanceFilter
++{
++  if (_locationManager == nil) {
++    return;
++  }
++  // Only background non-power-saving tracking bypasses the displacement gate.
++  // Existing deferred reporting still batches JS delivery by time. Native sampling
++  // may be more frequent; this does not promise unchanged battery consumption.
++  _locationManager.distanceFilter = EXTrainLCDDistanceFilter(
++    _trainLCDInBackground,
++    _locationManager.pausesLocationUpdatesAutomatically,
++    _configuredDistanceFilter,
++    kCLDistanceFilterNone
++  );
++}
++
+ # pragma mark - CLLocationManagerDelegate
+ 
+ - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
+diff --git a/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
+new file mode 100644
+index 0000000..816fd79
+--- /dev/null
++++ b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
+@@ -0,0 +1,16 @@
++// TrainLCD: keep the configured foreground and power-saving distance filters.
++#ifndef EX_TRAINLCD_LOCATION_POLICY_H
++#define EX_TRAINLCD_LOCATION_POLICY_H
++
++static inline double EXTrainLCDDistanceFilter(
++  int inBackground,
++  int pausesAutomatically,
++  double configuredDistance,
++  double noDistanceFilter
++) {
++  return inBackground && !pausesAutomatically
++    ? noDistanceFilter
++    : configuredDistance;
++}
++
++#endif
