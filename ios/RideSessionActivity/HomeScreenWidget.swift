@@ -214,6 +214,11 @@ struct HomeScreenWidgetEntryView: View {
   var body: some View {
     // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
     VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
+      if family == .systemMedium {
+        Text("TrainLCD")
+          .font(.caption2)
+          .fontWeight(.bold)
+      }
       WidgetLineHeader(
         lineColor: entry.displayLineColor,
         lineSymbol: entry.displayLineSymbol,
