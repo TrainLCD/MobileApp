@@ -131,7 +131,7 @@ const callbacks = (): SpeechEngineCallbacks & {
 describe('useVitsSpeechEngine', () => {
   it('補正済みの固有名詞をタグなしでVITSの合成処理へ渡す', async () => {
     const { result } = renderEngine();
-    const names = ['Jinja', 'Oji', 'Shinjuku', 'Jefu', 'Joetsu']
+    const names = ['Mejiro', 'Jinja', 'Oji', 'Shinjuku', 'Jefu', 'Joetsu']
       .map((name) => wrapPhoneme(null, name))
       .join(', ');
     act(() => {
@@ -146,7 +146,7 @@ describe('useVitsSpeechEngine', () => {
     await flushAsync();
     expect(mockSynthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        text: 'Enjoy your journey. Gee-n-jah, O-gee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
+        text: 'Enjoy your journey. Megeero, Geen-jah, Ogee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
       })
     );
   });
