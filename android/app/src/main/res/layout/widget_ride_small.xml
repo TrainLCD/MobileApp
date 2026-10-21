@@ -65,14 +65,6 @@
                 android:textColor="@color/widget_on_line_primary"
                 android:textSize="12sp"
                 android:textStyle="bold" />
-            <ImageView
-                android:id="@+id/widget_brand_icon"
-                android:layout_width="14dp"
-                android:layout_height="14dp"
-                android:layout_marginStart="8dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_notification_live_update"
-                android:tint="@color/widget_on_line_secondary" />
         </LinearLayout>
         <TextView
             android:id="@+id/widget_bound_for"

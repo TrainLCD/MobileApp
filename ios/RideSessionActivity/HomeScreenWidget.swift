@@ -222,20 +222,12 @@ struct HomeScreenWidgetEntryView: View {
         .font(.caption2)
         .fontWeight(.bold)
       }
-      HStack(alignment: .top, spacing: 8) {
-        WidgetLineHeader(
-          lineColor: entry.displayLineColor,
-          lineSymbol: entry.displayLineSymbol,
-          lineName: entry.lineName,
-          boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
-            ? entry.boundFor : "")
-        if family == .systemSmall {
-          Spacer(minLength: 0)
-          Image(systemName: entry.loaded ? "tram.fill" : "tram")
-            .font(.caption)
-            .opacity(0.7)
-        }
-      }
+      WidgetLineHeader(
+        lineColor: entry.displayLineColor,
+        lineSymbol: entry.displayLineSymbol,
+        lineName: entry.lineName,
+        boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
+          ? entry.boundFor : "")
       if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
                        vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22,
