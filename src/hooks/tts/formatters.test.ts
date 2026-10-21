@@ -215,7 +215,7 @@ describe('formatJrWestStopsListEn', () => {
       makeStop(3, 'Uji'),
     ];
     expect(formatJrWestStopsListEn(stops, () => false)).toBe(
-      'Tofuku-gee, Roku-gee-zo, and U-gee'
+      'Tofukugee, Rokugeezo, and Ugee'
     );
   });
 
@@ -234,7 +234,7 @@ describe('formatJrWestStopsListEn', () => {
   it('joins two stops with a plain "and" (no serial comma)', () => {
     const stops = [makeStop(1, 'Tofukuji'), makeStop(2, 'Rokujizo')];
     expect(formatJrWestStopsListEn(stops, () => false)).toBe(
-      'Tofuku-gee and Roku-gee-zo'
+      'Tofukugee and Rokugeezo'
     );
   });
 
