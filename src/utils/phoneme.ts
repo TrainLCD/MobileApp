@@ -1,4 +1,5 @@
 import { TtsAlphabet, type TtsSegment } from '~/@types/graphql';
+import { fixRomanizedNameReading } from './romanizedNameReading';
 
 export const escapeXml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -92,16 +93,18 @@ export const stripJapaneseCharacters = (text: string): string =>
  * 「あかさか」で fallbackText 未設定の駅）は英語文へ日本語が混入し、エンジンが
  * 言語を誤判定して日本語音声で合成されてしまう。その場合はセグメントを使わず
  * ローマ字名（fallback）全体へフォールバックする。
+ * 英語用の固有名詞内の ji / jo は、タグの属性を変えず読み上げ用の綴りへ補正する。
  */
 export const wrapPhoneme = (
   segments: TtsSegment[] | null | undefined,
   fallback?: string | null
 ): string => {
-  if (!segments?.length) return fallback ? escapeXml(fallback) : '';
+  if (!segments?.length)
+    return fallback ? escapeXml(fixRomanizedNameReading(fallback)) : '';
 
   const built = buildFromSegments(segments);
   if (fallback && JAPANESE_CHAR_REGEXP.test(stripTagsForInspection(built))) {
-    return escapeXml(fallback);
+    return escapeXml(fixRomanizedNameReading(fallback));
   }
   return built;
 };
@@ -124,9 +127,9 @@ const buildFromSegments = (segments: TtsSegment[]): string => {
             return acc;
           }, [])
           .join('');
-        return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(ph)}">${escapeXml(inner)}</phoneme>${escapeXml(group.trailingSeparator)}`;
+        return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(ph)}">${escapeXml(fixRomanizedNameReading(inner))}</phoneme>${escapeXml(group.trailingSeparator)}`;
       }
-      return escapeXml(group.text);
+      return escapeXml(fixRomanizedNameReading(group.text));
     })
     .join('');
 };
