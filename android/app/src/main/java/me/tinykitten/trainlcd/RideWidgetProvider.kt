@@ -231,6 +231,10 @@ class RideWidgetProvider : AppWidgetProvider() {
             vertical: Boolean
         ): RemoteViews =
             RemoteViews(context.packageName, if (vertical) R.layout.widget_ride_small else R.layout.widget_ride_rectangular).apply {
+                if (!vertical) {
+                    setTextColor(R.id.widget_brand_label, WidgetTheme.onLineColor(lineColor))
+                    setInt(R.id.widget_brand_icon, "setColorFilter", WidgetTheme.onLineColor(lineColor))
+                }
                 applyBackground(lineColor)
                 applyNumberingBadge(lineSymbol, lineColor)
                 applyTextColors(lineColor)

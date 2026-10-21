@@ -3,6 +3,7 @@ import { createStore, Provider } from 'jotai';
 import { createElement, type ReactNode } from 'react';
 import { TTS_SPEED_PREFERENCE } from '~/models/TTSSpeed';
 import { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
+import { wrapPhoneme } from '~/utils/phoneme';
 import type {
   SpeechEngine,
   SpeechEngineCallbacks,
@@ -128,6 +129,28 @@ const callbacks = (): SpeechEngineCallbacks & {
 });
 
 describe('useVitsSpeechEngine', () => {
+  it('補正済みの固有名詞をタグなしでVITSの合成処理へ渡す', async () => {
+    const { result } = renderEngine();
+    const names = ['Jinja', 'Oji', 'Shinjuku', 'Jefu', 'Joetsu']
+      .map((name) => wrapPhoneme(null, name))
+      .join(', ');
+    act(() => {
+      result.current.speak(
+        {
+          ...defaultRequest,
+          ssmlEn: `Enjoy your journey. ${names}.`,
+        },
+        callbacks()
+      );
+    });
+    await flushAsync();
+    expect(mockSynthesize).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: 'Enjoy your journey. Gee-n-jah, O-gee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
+      })
+    );
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     playAudioCalls.length = 0;
