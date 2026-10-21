@@ -4,6 +4,7 @@ import {
   stripJapaneseCharacters,
   wrapPhoneme,
 } from './phoneme';
+import { toSpeakableText } from './speakableText';
 
 const ipaSegment = (
   surface: string | null,
@@ -21,6 +22,63 @@ const ipaSegment = (
 });
 
 describe('wrapPhoneme', () => {
+  it.each([
+    ['', 'Joe-etsu'],
+    ['-', 'Joe-etsu'],
+    [' ', 'Joe etsu'],
+    [' & ', 'Joe &amp; etsu'],
+  ])('通常セグメントを結合し区切り%sを維持する', (separator, expected) => {
+    expect(
+      wrapPhoneme([
+        ipaSegment('Jo', '', null, separator),
+        ipaSegment('etsu', ''),
+      ])
+    ).toBe(expected);
+  });
+
+  it('IPAグループと通常グループの境界と末尾区切りを維持する', () => {
+    expect(
+      wrapPhoneme([
+        ipaSegment('Osaki', 'oːsaki', null, ', '),
+        ipaSegment('Jo', ''),
+        ipaSegment('etsu', '', null, ' & '),
+        ipaSegment('Tokyo', 'toːkjoː', null, '.'),
+      ])
+    ).toBe(
+      '<phoneme alphabet="ipa" ph="oːsaki">Osaki</phoneme>, Joe-etsu &amp; <phoneme alphabet="ipa" ph="toːkjoː">Tokyo</phoneme>.'
+    );
+  });
+
+  it.each(['native', 'remote'] as const)(
+    '%s向けの英語固有名詞を補正し、案内文と日本語は維持する',
+    (engine) => {
+      const name = wrapPhoneme(
+        [ipaSegment('神保町', 'dʑimboːtɕoː', 'Jinbocho')],
+        'Jinbocho'
+      );
+      expect(
+        toSpeakableText(
+          `Enjoy your journey. The next station is ${name}.`,
+          'EN',
+          engine
+        )
+      ).toBe('Enjoy your journey. The next station is Gee-nbocho.');
+      expect(toSpeakableText('次は、神保町です。', 'JA', engine)).toBe(
+        '次は、神保町です。'
+      );
+    }
+  );
+
+  it('セグメントなし・日本語からのフォールバック・通常セグメントも補正する', () => {
+    expect(wrapPhoneme([], 'Tojo')).toBe('To-joe');
+    expect(wrapPhoneme([ipaSegment('王子', 'oːdʑi')], 'Oji')).toBe('O-gee');
+    expect(
+      wrapPhoneme([
+        { ...ipaSegment('Joetsu & Oji', ''), alphabet: TtsAlphabet.Ipa },
+      ])
+    ).toBe('Joe-etsu &amp; O-gee');
+  });
+
   it('ローマ字の表記を持つセグメントはphonemeタグに変換する', () => {
     const result = wrapPhoneme(
       [ipaSegment('Osaki', 'oːsaki')],
@@ -66,7 +124,7 @@ describe('wrapPhoneme', () => {
       'Shinjuku'
     );
     expect(result).toBe(
-      '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ">Shinjuku</phoneme>'
+      '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ">Shin-jew-ku</phoneme>'
     );
   });
 });
