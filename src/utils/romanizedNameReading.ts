@@ -5,7 +5,7 @@
  * 案内文全体には適用しない（join / journey などの英単語を壊さないため）。
  */
 export const fixRomanizedNameReading = (name: string): string =>
-  name.replace(/[A-Za-z\u00C0-\u024F]+/g, (word) => {
+  name.normalize('NFC').replace(/[A-Za-z\u00C0-\u024F]+/g, (word) => {
     // 読み替え済みの綴りは再変換しない。Joetsu のような語頭の jo は対象。
     if (/^(?:jah|jew|jeh|joe)$/i.test(word)) return word;
     return word

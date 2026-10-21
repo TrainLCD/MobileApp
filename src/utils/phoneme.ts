@@ -49,7 +49,13 @@ const groupSegments = (segments: TtsSegment[]): SegmentGroup[] => {
       }
     } else {
       const text = seg.surface ?? seg.fallbackText ?? '';
-      groups.push({ kind: 'plain', text: text + separator });
+      const last = groups[groups.length - 1];
+      // 名前が Jo / etsu のように分割されていても、全体の綴りで補正する。
+      if (last?.kind === 'plain') {
+        last.text += text + separator;
+      } else {
+        groups.push({ kind: 'plain', text: text + separator });
+      }
     }
   }
 

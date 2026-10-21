@@ -19,6 +19,8 @@ describe('fixRomanizedNameReading', () => {
     ['Joetsu', 'Joe-etsu'],
     ['Tojo', 'To-joe'],
     ['Jōban', 'Joe-ban'],
+    ['Jo\u0304ban', 'Joe-ban'],
+    ['O\u0304ji', 'Ō-gee'],
     ['JOJO', 'Joe-Joe'],
     ['Jiji', 'Gee-gee'],
     ['Ōji', 'Ō-gee'],
