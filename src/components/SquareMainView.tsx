@@ -41,6 +41,7 @@ export type SquareStop = {
 };
 export type SquareMainViewProps = {
   showStops?: boolean;
+  scrollPhase?: 'CURRENT' | 'NEXT' | 'ARRIVING';
   onShowStopsChange?: (show: boolean) => void;
   etaUnit?: string;
   etaSoon?: string;
@@ -88,7 +89,11 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
   const dragged = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const rowYs = useRef(new Map<string, number>());
-  const lastScroll = useRef<{ key: string; y: number } | null>(null);
+  const lastScroll = useRef<{
+    key: string;
+    y: number;
+    phase: SquareMainViewProps['scrollPhase'];
+  } | null>(null);
   const reduceMotion = useRef(true);
   useEffect(() => {
     let active = true;
@@ -113,15 +118,25 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
     };
   }, []);
   const focusedKey = props.stops.find((stop) => stop.focused)?.key;
-  const scrollToFocused = useCallback((key: string | undefined) => {
-    const rowY = key == null ? undefined : rowYs.current.get(key);
-    if (key == null || rowY == null || !scrollRef.current) return;
-    // ポートレートと同じく、1駅前が見える余白を残す。
-    const y = Math.max(0, rowY - 54);
-    if (lastScroll.current?.key === key && lastScroll.current.y === y) return;
-    scrollRef.current.scrollTo({ y, animated: !reduceMotion.current });
-    lastScroll.current = { key, y };
-  }, []);
+  const scrollPhase = props.scrollPhase;
+  const scrollToFocused = useCallback(
+    (key: string | undefined) => {
+      const rowY = key == null ? undefined : rowYs.current.get(key);
+      if (key == null || rowY == null || !scrollRef.current) return;
+      // ポートレートと同じく、1駅前が見える余白を残す。
+      const y = Math.max(0, rowY - 54);
+      // 同じ駅でも接近・停車時には追従し、言語更新だけでは戻さない。
+      if (
+        lastScroll.current?.key === key &&
+        lastScroll.current.y === y &&
+        lastScroll.current.phase === scrollPhase
+      )
+        return;
+      scrollRef.current.scrollTo({ y, animated: !reduceMotion.current });
+      lastScroll.current = { key, y, phase: scrollPhase };
+    },
+    [scrollPhase]
+  );
   const attachScroll = useCallback((node: ScrollViewInstance | null) => {
     scrollRef.current = node;
     rowYs.current.clear();

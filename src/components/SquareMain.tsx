@@ -191,7 +191,7 @@ const SquareMain = ({
       minutesByStation.get(station.id) != null
   );
   // 乗換対象は次の停車駅だが、一覧では通過駅も順に追う。
-  // 通過駅が現在駅の間は、停車駅向けのヘッダー状態にかかわらずその駅を示す。
+  // 通過駅は順に追い、次が停車駅なら「まもなく」の時点でその駅へ移る。
   const passing = !!currentStation && getIsPass(currentStation);
   const nextIndex = currentIndex + 1;
   const immediateNext =
@@ -199,13 +199,20 @@ const SquareMain = ({
       ? undefined
       : (ordered[nextIndex] ?? (isLoopLine ? ordered[0] : undefined));
   const upcomingPass = immediateNext && getIsPass(immediateNext);
-  const focusStation = passing
-    ? currentStation
-    : data.headerState.startsWith('CURRENT')
-      ? data.currentStation
-      : upcomingPass
-        ? immediateNext
-        : target;
+  const arrivingAtNextStop =
+    data.headerState.startsWith('ARRIVING') &&
+    immediateNext != null &&
+    !upcomingPass &&
+    isSameStation(immediateNext, target);
+  const focusStation = arrivingAtNextStop
+    ? target
+    : passing
+      ? currentStation
+      : data.headerState.startsWith('CURRENT')
+        ? data.currentStation
+        : upcomingPass
+          ? immediateNext
+          : target;
   // B案の状態も駅名と同じ環境言語に固定し、C案の言語タイマーには追従しない。
   const stopStateKeys = isJapanese
     ? {
@@ -236,6 +243,7 @@ const SquareMain = ({
   return (
     <SquareMainView
       showStops={showStops}
+      scrollPhase={stoppingState}
       onShowStopsChange={setShowStops}
       dark={colors.isDark}
       disabled={disabled}
