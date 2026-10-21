@@ -363,3 +363,36 @@ it.each([false, true])(
     );
   }
 );
+
+it('scrolls on approach and arrival at the same station after manual scrolling', async () => {
+  jest
+    .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
+    .mockResolvedValue(false);
+  const scrollTo = ScrollView.prototype.scrollTo as jest.Mock;
+  const r = render(<SquareMainView {...props} showStops scrollPhase="NEXT" />);
+  await act(async () => {});
+  fireEvent(r.getByTestId('square-stop-2'), 'layout', {
+    nativeEvent: { layout: { x: 0, y: 108, width: 328, height: 90 } },
+  });
+  for (const scrollPhase of ['ARRIVING', 'CURRENT'] as const) {
+    fireEvent.scroll(r.getByTestId('square-stops'), {
+      nativeEvent: { contentOffset: { y: 300 } },
+    });
+    scrollTo.mockClear();
+    r.rerender(
+      <SquareMainView {...props} showStops scrollPhase={scrollPhase} />
+    );
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(scrollTo).toHaveBeenLastCalledWith({ y: 54, animated: true });
+    scrollTo.mockClear();
+    r.rerender(
+      <SquareMainView
+        {...props}
+        showStops
+        scrollPhase={scrollPhase}
+        stateText="English"
+      />
+    );
+    expect(scrollTo).not.toHaveBeenCalled();
+  }
+});

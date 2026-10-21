@@ -691,6 +691,17 @@ it.each([
     for (const index of [1, 2]) {
       for (const headerState of ['NEXT_EN', 'ARRIVING_KO', 'CURRENT']) {
         update(index, headerState);
+        // 最後の通過駅からは、停車を待たず接近判定で次の停車駅へ移る。
+        if (index === 2 && headerState.startsWith('ARRIVING')) {
+          expect(latest().stops.filter((s) => s.focused)).toEqual([
+            expect.objectContaining({
+              key: `${travel[3].id}-3`,
+              stateText: japanese ? 'soonLast' : 'soonEnLast',
+              pass: false,
+            }),
+          ]);
+          continue;
+        }
         expect(latest().stops.filter((s) => s.focused)).toEqual([
           expect.objectContaining({
             key: `${travel[index].id}-${index}`,
@@ -706,7 +717,21 @@ it.each([
         );
       }
     }
+    for (const headerState of [
+      'ARRIVING',
+      'ARRIVING_EN',
+      'ARRIVING_ZH',
+      'ARRIVING_KO',
+    ]) {
+      update(2, headerState);
+      expect(latest().scrollPhase).toBe('ARRIVING');
+      expect(latest().stops[3]).toMatchObject({
+        focused: true,
+        stateText: japanese ? 'soonLast' : 'soonEnLast',
+      });
+    }
     update(3, 'CURRENT');
+    expect(latest().scrollPhase).toBe('CURRENT');
     expect(latest().stops[3]).toMatchObject({
       focused: true,
       stateText: japanese ? 'nowStoppingAt' : 'nowStoppingAtEn',
