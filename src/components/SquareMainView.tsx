@@ -32,6 +32,7 @@ export type SquareStop = {
   color: string;
   focused: boolean;
   passed: boolean;
+  pass?: boolean;
   label: string;
   stateText?: string;
   numberColor?: string;
@@ -239,11 +240,12 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                   ]}
                 >
                   <View
+                    testID={`square-stop-bar-${stop.key}`}
                     style={[
                       styles.stopBar,
                       {
                         backgroundColor: stop.color,
-                        opacity: stop.passed ? 0.4 : 1,
+                        opacity: stop.passed || stop.pass ? 0.4 : 1,
                       },
                     ]}
                   />
@@ -265,7 +267,12 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                       minimumFontScale={0.35}
                       style={[
                         styles.stopName,
-                        { color: stop.passed ? colors.secondary : colors.text },
+                        {
+                          color:
+                            stop.passed || stop.pass
+                              ? colors.secondary
+                              : colors.text,
+                        },
                         stop.focused && styles.focusName,
                       ]}
                     >
@@ -279,7 +286,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                         styles.stopNumber,
                         {
                           color: stop.numberColor ?? colors.secondary,
-                          opacity: stop.passed ? 0.4 : 1,
+                          opacity: stop.passed || stop.pass ? 0.4 : 1,
                         },
                       ]}
                     >

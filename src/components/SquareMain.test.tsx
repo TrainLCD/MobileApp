@@ -696,6 +696,8 @@ it.each([
             key: `${travel[index].id}-${index}`,
             stateText: japanese ? '通過中' : 'Passing',
             passed: false,
+            pass: true,
+            numberColor: '#C2C2C2',
             showEta: false,
           }),
         ]);

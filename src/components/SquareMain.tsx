@@ -321,14 +321,15 @@ const SquareMain = ({
           color: station.line?.color || lineColor,
           focused,
           passed,
+          pass,
           label: pass ? copy.pass : '',
           stateText: focused ? stopStateText : undefined,
-          numberColor: focused
-            ? accentColorFor(station.line?.color || lineColor, colors.isDark)
-            : pass
-              ? colors.isDark
-                ? colors.strongBorder
-                : '#C2C2C2'
+          numberColor: pass
+            ? colors.isDark
+              ? colors.strongBorder
+              : '#C2C2C2'
+            : focused
+              ? accentColorFor(station.line?.color || lineColor, colors.isDark)
               : colors.secondaryText,
           showEta: hasEta && isEtaTarget(station, index),
           estimatedMinutes:
