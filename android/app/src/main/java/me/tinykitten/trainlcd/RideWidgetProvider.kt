@@ -234,6 +234,11 @@ class RideWidgetProvider : AppWidgetProvider() {
                 if (!vertical) {
                     setTextColor(R.id.widget_brand_label, WidgetTheme.onLineColor(lineColor))
                 }
+                setInt(
+                    R.id.widget_brand_icon,
+                    "setColorFilter",
+                    if (vertical) WidgetTheme.onLineColorSecondary(lineColor) else WidgetTheme.onLineColor(lineColor)
+                )
                 applyBackground(lineColor)
                 applyNumberingBadge(lineSymbol, lineColor)
                 applyTextColors(lineColor)

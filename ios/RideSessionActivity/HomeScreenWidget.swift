@@ -215,16 +215,27 @@ struct HomeScreenWidgetEntryView: View {
     // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
     VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
       if family == .systemMedium {
-        Text("TrainLCD")
-          .font(.caption2)
-          .fontWeight(.bold)
+        HStack(spacing: 4) {
+          Image(systemName: entry.loaded ? "tram.fill" : "tram")
+          Text("TrainLCD")
+        }
+        .font(.caption2)
+        .fontWeight(.bold)
       }
-      WidgetLineHeader(
-        lineColor: entry.displayLineColor,
-        lineSymbol: entry.displayLineSymbol,
-        lineName: entry.lineName,
-        boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
-          ? entry.boundFor : "")
+      HStack(alignment: .top, spacing: 8) {
+        WidgetLineHeader(
+          lineColor: entry.displayLineColor,
+          lineSymbol: entry.displayLineSymbol,
+          lineName: entry.lineName,
+          boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
+            ? entry.boundFor : "")
+        if family == .systemSmall {
+          Spacer(minLength: 0)
+          Image(systemName: entry.loaded ? "tram.fill" : "tram")
+            .font(.caption)
+            .opacity(0.7)
+        }
+      }
       if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
                        vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22,
