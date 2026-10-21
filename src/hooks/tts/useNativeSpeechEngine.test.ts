@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
+import { wrapPhoneme } from '~/utils/phoneme';
 import type { SpeechEngineRequest } from './speechEngine';
 import { useNativeSpeechEngine } from './useNativeSpeechEngine';
 
@@ -58,6 +59,36 @@ const flushAsync = async () => {
 const renderEngine = () => renderHook(() => useNativeSpeechEngine());
 
 describe('useNativeSpeechEngine', () => {
+  it.each([
+    ['Jinja', 'Gee-n-jah'],
+    ['Oji', 'O-gee'],
+    ['Shinjuku', 'Shin-jew-ku'],
+    ['Jefu', 'Jeh-fu'],
+    ['Joetsu', 'Joe-etsu'],
+    ['Jo\u0304ban', 'Joe-ban'],
+  ])('%sの補正結果をタグなしの本文でTTSへ渡す', async (name, reading) => {
+    const { result } = renderEngine();
+    const stationName = wrapPhoneme(null, name);
+    result.current.speak(
+      {
+        ...defaultRequest,
+        ssmlJa: '次は、神社前です。',
+        ssmlEn: `Enjoy your journey. The next station is ${stationName}.`,
+      },
+      { onSettled: jest.fn() }
+    );
+    await flushAsync();
+
+    expect(mockSpeak).toHaveBeenCalledWith(
+      `Enjoy your journey. The next station is ${reading}.`,
+      expect.objectContaining({ language: 'en-US' })
+    );
+    expect(mockSpeak).toHaveBeenCalledWith(
+      '次は、神社前です。',
+      expect.objectContaining({ language: 'ja-JP' })
+    );
+  });
+
   beforeEach(() => {
     // 音声一覧取得の上限待ち（VOICES_READY_TIMEOUT_MS）が実タイマーのまま
     // テスト終了後も残らないよう、この suite では偽タイマーを使う。

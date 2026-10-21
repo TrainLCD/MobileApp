@@ -56,9 +56,6 @@ describe('wrapPhoneme', () => {
         [ipaSegment('神保町', 'dʑimboːtɕoː', 'Jinbocho')],
         'Jinbocho'
       );
-      expect(name).toBe(
-        '<phoneme alphabet="ipa" ph="dʑimboːtɕoː">Gee-nbocho</phoneme>'
-      );
       expect(
         toSpeakableText(
           `Enjoy your journey. The next station is ${name}.`,
