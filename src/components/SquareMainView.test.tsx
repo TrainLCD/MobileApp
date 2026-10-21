@@ -298,3 +298,68 @@ it('honors reduced motion initially and after changes, and removes the subscript
   r.unmount();
   expect(remove).toHaveBeenCalledTimes(1);
 });
+
+it.each([false, true])(
+  'dims upcoming, focused and passed pass stations equally (dark: %s)',
+  (dark) => {
+    const stops = [
+      {
+        ...props.stops[1],
+        key: 'upcoming',
+        name: 'Upcoming',
+        pass: true,
+        focused: false,
+        passed: false,
+      },
+      {
+        ...props.stops[1],
+        key: 'passing',
+        name: 'Passing station',
+        pass: true,
+        focused: true,
+        passed: false,
+        stateText: '通過中',
+      },
+      {
+        ...props.stops[1],
+        key: 'passed',
+        name: 'Passed',
+        pass: true,
+        focused: false,
+        passed: true,
+      },
+      {
+        ...props.stops[1],
+        key: 'stop',
+        name: 'Stopping station',
+        pass: false,
+        focused: false,
+        passed: false,
+      },
+    ];
+    const r = render(
+      <SquareMainView {...props} dark={dark} showStops stops={stops} />
+    );
+    for (const stop of stops.slice(0, 3)) {
+      expect(r.getByText(stop.name)).toHaveStyle({
+        color: dark ? '#B6BAC0' : '#60656D',
+      });
+      expect(r.getByTestId(`square-stop-bar-${stop.key}`)).toHaveStyle({
+        opacity: 0.4,
+      });
+      expect(r.getByTestId(`square-number-${stop.key}`)).toHaveStyle({
+        opacity: 0.4,
+      });
+    }
+    expect(r.getByText('Stopping station')).toHaveStyle({
+      color: dark ? '#F6F7F8' : '#202124',
+    });
+    expect(r.getByTestId('square-stop-bar-stop')).toHaveStyle({ opacity: 1 });
+    expect(r.getByTestId('square-stop-passing')).toHaveStyle({
+      backgroundColor: dark ? '#2B2D31' : '#F2F3F4',
+    });
+    expect(r.getByTestId('square-stop-state-passing')).toHaveTextContent(
+      '通過中'
+    );
+  }
+);

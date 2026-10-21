@@ -221,19 +221,16 @@ const SquareMain = ({
   const stoppingState = data.headerState.split(
     '_'
   )[0] as keyof typeof stopStateKeys;
-  const stopStateText = passing
+  // 通過駅の案内は、現在駅になる前後もフォーカス対象に合わせて統一する。
+  const stopStateText = getIsPass(focusStation)
     ? isJapanese
       ? '通過中'
       : 'Passing'
-    : upcomingPass && !data.headerState.startsWith('CURRENT')
-      ? translate(isJapanese ? 'next' : 'nextEn', {
+    : stopStateKeys[stoppingState]
+      ? translate(stopStateKeys[stoppingState], {
           locale: isJapanese ? 'ja' : 'en',
         }).replaceAll('\n', ' ')
-      : stopStateKeys[stoppingState]
-        ? translate(stopStateKeys[stoppingState], {
-            locale: isJapanese ? 'ja' : 'en',
-          }).replaceAll('\n', ' ')
-        : '';
+      : '';
   const numbering = data.currentStationNumber;
 
   return (
@@ -324,14 +321,15 @@ const SquareMain = ({
           color: station.line?.color || lineColor,
           focused,
           passed,
+          pass,
           label: pass ? copy.pass : '',
           stateText: focused ? stopStateText : undefined,
-          numberColor: focused
-            ? accentColorFor(station.line?.color || lineColor, colors.isDark)
-            : pass
-              ? colors.isDark
-                ? colors.strongBorder
-                : '#C2C2C2'
+          numberColor: pass
+            ? colors.isDark
+              ? colors.strongBorder
+              : '#C2C2C2'
+            : focused
+              ? accentColorFor(station.line?.color || lineColor, colors.isDark)
               : colors.secondaryText,
           showEta: hasEta && isEtaTarget(station, index),
           estimatedMinutes:
