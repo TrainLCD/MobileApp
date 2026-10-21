@@ -62,7 +62,7 @@ describe('wrapPhoneme', () => {
           'EN',
           engine
         )
-      ).toBe('Enjoy your journey. The next station is Gee-nbocho.');
+      ).toBe('Enjoy your journey. The next station is Geenbocho.');
       expect(toSpeakableText('次は、神保町です。', 'JA', engine)).toBe(
         '次は、神保町です。'
       );
@@ -71,12 +71,12 @@ describe('wrapPhoneme', () => {
 
   it('セグメントなし・日本語からのフォールバック・通常セグメントも補正する', () => {
     expect(wrapPhoneme([], 'Tojo')).toBe('To-joe');
-    expect(wrapPhoneme([ipaSegment('王子', 'oːdʑi')], 'Oji')).toBe('O-gee');
+    expect(wrapPhoneme([ipaSegment('王子', 'oːdʑi')], 'Oji')).toBe('Ogee');
     expect(
       wrapPhoneme([
         { ...ipaSegment('Joetsu & Oji', ''), alphabet: TtsAlphabet.Ipa },
       ])
-    ).toBe('Joe-etsu &amp; O-gee');
+    ).toBe('Joe-etsu &amp; Ogee');
   });
 
   it('ローマ字の表記を持つセグメントはphonemeタグに変換する', () => {

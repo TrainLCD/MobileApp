@@ -1,7 +1,7 @@
 /**
  * 英語TTS用の固有名詞で ji / jo が「ヒ / ホ」と読まれるのを避ける。
  * ja / ji / ju / je / jo を「ジャ / ジ / ジュ / ジェ / ジョ」に寄せる
- * 読み上げ用の綴りへ置換し、前後の音節とは区切る。
+ * 読み上げ用の綴りへ置換する。ji は語を分断しないよう前後とつなげる。
  * 案内文全体には適用しない（join / journey などの英単語を壊さないため）。
  */
 export const fixRomanizedNameReading = (name: string): string =>
@@ -23,7 +23,9 @@ export const fixRomanizedNameReading = (name: string): string =>
           syllable[0] === 'J'
             ? reading.charAt(0).toUpperCase() + reading.slice(1)
             : reading;
-        return `-${cased}-`;
+        // Mejiro → Me-gee-ro では単語内に不自然な切れ目が生じるため、
+        // ji の読み替えには区切りを挿入しない。元からあるハイフンは維持する。
+        return syllable.toLowerCase() === 'ji' ? cased : `-${cased}-`;
       })
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
