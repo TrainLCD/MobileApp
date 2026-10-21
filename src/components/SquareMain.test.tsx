@@ -674,13 +674,20 @@ it.each([
         r.store.set(stationsAtom, [...route]);
       });
     };
-    update(0, 'NEXT');
-    expect(latest().stops.filter((s) => s.focused)).toEqual([
-      expect.objectContaining({
-        key: `${travel[1].id}-1`,
-        stateText: japanese ? 'next' : 'nextEn',
-      }),
-    ]);
+    update(0, 'CURRENT');
+    expect(latest().stops[0]).toMatchObject({
+      focused: true,
+      stateText: japanese ? 'nowStoppingAt' : 'nowStoppingAtEn',
+    });
+    for (const headerState of ['NEXT', 'NEXT_EN', 'ARRIVING_KO']) {
+      update(0, headerState);
+      expect(latest().stops.filter((s) => s.focused)).toEqual([
+        expect.objectContaining({
+          key: `${travel[1].id}-1`,
+          stateText: japanese ? '通過中' : 'Passing',
+        }),
+      ]);
+    }
     for (const index of [1, 2]) {
       for (const headerState of ['NEXT_EN', 'ARRIVING_KO', 'CURRENT']) {
         update(index, headerState);
