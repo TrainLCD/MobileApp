@@ -93,7 +93,7 @@ export const stripJapaneseCharacters = (text: string): string =>
  * 「あかさか」で fallbackText 未設定の駅）は英語文へ日本語が混入し、エンジンが
  * 言語を誤判定して日本語音声で合成されてしまう。その場合はセグメントを使わず
  * ローマ字名（fallback）全体へフォールバックする。
- * 英語用の固有名詞内の ji / jo は、タグの属性を変えず読み上げ用の綴りへ補正する。
+ * 英語用の固有名詞内の ja / ji / ju / je / jo は、タグの属性を変えず読み上げ用の綴りへ補正する。
  */
 export const wrapPhoneme = (
   segments: TtsSegment[] | null | undefined,

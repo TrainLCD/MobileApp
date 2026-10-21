@@ -100,7 +100,7 @@ describe('wrapPhoneme', () => {
       'Shinjuku'
     );
     expect(result).toBe(
-      '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ">Shinjuku</phoneme>'
+      '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ">Shin-jew-ku</phoneme>'
     );
   });
 });
