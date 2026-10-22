@@ -57,7 +57,7 @@ const fix = (
 });
 const reported = fix(35.7482968925073, 139.6411520672503, timestamp);
 
-describe('iOS coarse subway location regression (synthetic history)', () => {
+describe('iOS coarse location regression (synthetic history)', () => {
   const originalOS = Platform.OS;
   beforeEach(() => {
     Object.defineProperty(Platform, 'OS', { value: 'ios', configurable: true });
@@ -232,7 +232,7 @@ describe('iOS coarse subway location regression (synthetic history)', () => {
     expect(isPointWithinRadius(result.coords, kasugacho, 350)).toBe(false);
   });
 
-  it('does not contaminate the surface filter reference with coarse subway noise', () => {
+  it('adopts the recovered accurate fix after a line type transition', () => {
     handleTrackingLocation(
       fix(kasugacho.latitude, kasugacho.longitude, timestamp)
     );
@@ -280,4 +280,58 @@ describe('iOS coarse subway location regression (synthetic history)', () => {
       }
     }
   );
+
+  it.each([LineType.Normal, LineType.Subway, null])(
+    'smooths coarse iOS fixes and recovers accurate fixes regardless of line type (%s)',
+    (lineType) => {
+      store.set(stationState, (prev) => ({
+        ...prev,
+        station: {
+          ...kasugacho,
+          line: lineType ? { lineType } : null,
+        } as Station,
+      }));
+      const center = fix(
+        kasugacho.latitude,
+        kasugacho.longitude,
+        timestamp - 10000
+      );
+      center.coords.accuracy = 30;
+      handleTrackingLocation(center);
+      handleTrackingLocation(reported);
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(false);
+      expect(
+        getDistance(
+          (store.get(locationAtom) as Location.LocationObject).coords,
+          kasugacho
+        )
+      ).toBeLessThan(350);
+      const recovered = fix(
+        toshimaen.latitude,
+        toshimaen.longitude,
+        timestamp + 1000
+      );
+      recovered.coords.accuracy = 30;
+      handleTrackingLocation(recovered);
+      expect(store.get(locationAtom)).toBe(recovered);
+    }
+  );
+
+  it('keeps smoothing coarse measurements when the line type changes', () => {
+    handleTrackingLocation(
+      fix(kasugacho.latitude, kasugacho.longitude, timestamp - 10000)
+    );
+    store.set(stationState, (prev) => ({
+      ...prev,
+      station: { ...kasugacho, line: { lineType: LineType.Normal } } as Station,
+    }));
+    handleTrackingLocation(reported);
+    expect(store.get(locationAtom)).not.toBe(reported);
+    expect(
+      getDistance(
+        (store.get(locationAtom) as Location.LocationObject).coords,
+        kasugacho
+      )
+    ).toBeLessThan(350);
+  });
 });

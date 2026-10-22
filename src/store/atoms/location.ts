@@ -137,7 +137,7 @@ export const smoothingDecisionAtom = atom<SmoothingDecision>(
 );
 
 // EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
-// 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
+// iOS以外の地下鉄スキップ中は更新せず、復帰後の誤棄却を防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
 // 速度フィルタの基準として使う「最後に受理した“生の”座標」。
@@ -147,14 +147,13 @@ const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 // 走行が丸ごと弾かれて位置が凍結していた。速度判定は生座標同士で行う。
 const lastRawLocationAtom = atom<Location.LocationObject | null>(null);
 
-// 地下鉄の粗い点を地上用の基準へ混ぜない(#5665)。iOS地下鉄では
-// 生採用の点も専用基準へ記録し、粗い測位に切り替わった直後のEMAに使う。
-const lastIosSubwayFilteredLocationAtom = atom<Location.LocationObject | null>(
-  null
-);
-const lastIosSubwayRawLocationAtom = atom<Location.LocationObject | null>(null);
+// iOSは路線種別によらず同じ基準で粗い測位を処理する。生採用の点も記録し、
+// 次の粗い測位のEMAへ使う。精度回復時は下で基準を張り直して誤棄却を防ぐ。
+// 他OSの地下鉄スキップが維持する基準と棄却回数は共有しない。
+const lastIosFilteredLocationAtom = atom<Location.LocationObject | null>(null);
+const lastIosRawLocationAtom = atom<Location.LocationObject | null>(null);
 // 連続棄却の上限も基準ごとに数え、一方の棄却で他方の再同期を誘発しない。
-const consecutiveSpeedRejections = { standard: 0, iosSubway: 0 };
+const consecutiveSpeedRejections = { standard: 0, ios: 0 };
 
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
@@ -165,10 +164,10 @@ export const resetLocationState = () => {
   store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
   store.set(smoothingDecisionAtom, INITIAL_SMOOTHING_DECISION);
-  store.set(lastIosSubwayFilteredLocationAtom, null);
-  store.set(lastIosSubwayRawLocationAtom, null);
+  store.set(lastIosFilteredLocationAtom, null);
+  store.set(lastIosRawLocationAtom, null);
   consecutiveSpeedRejections.standard = 0;
-  consecutiveSpeedRejections.iosSubway = 0;
+  consecutiveSpeedRejections.ios = 0;
   resetEtaBoundHold();
   resetLocationPipelineStats();
 };
@@ -194,19 +193,16 @@ export const setRawLocation = (location: Location.LocationObject) => {
 const resyncLocationReference = (
   location: Location.LocationObject,
   updatedHistory: number[],
-  iosSubway = false
+  ios = false
 ) => {
   store.set(locationAtom, location);
   store.set(
-    iosSubway ? lastIosSubwayFilteredLocationAtom : lastFilteredLocationAtom,
+    ios ? lastIosFilteredLocationAtom : lastFilteredLocationAtom,
     location
   );
-  store.set(
-    iosSubway ? lastIosSubwayRawLocationAtom : lastRawLocationAtom,
-    location
-  );
+  store.set(ios ? lastIosRawLocationAtom : lastRawLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
-  consecutiveSpeedRejections[iosSubway ? 'iosSubway' : 'standard'] = 0;
+  consecutiveSpeedRejections[ios ? 'ios' : 'standard'] = 0;
   countAcceptedLocation();
 };
 
@@ -306,26 +302,26 @@ export const setLocation = (location: Location.LocationObject) => {
   // #5670の直接採用は、通常の許容上限(MAX_PERMIT_ACCURACY)内では維持する。
   // リモート設定で上限を緩和した帯まで直接採用すると、iOSの粗い測位の揺れが
   // そのまま到着・発車になる。この帯だけ既存の低精度EMAと速度フィルタへ通す。
+  // 地下区間は路線種別で判定できないため、iOSでは精度だけで条件を決める。
   // Androidの地下鉄処理は維持する。
   const currentLineType = store.get(stationState).station?.line?.lineType;
-  const isIosSubway =
-    Platform.OS === 'ios' && currentLineType === LineType.Subway;
-  const isCoarseIosSubway =
-    isIosSubway &&
+  const isIosTracking = Platform.OS === 'ios';
+  const isCoarseIosLocation =
+    isIosTracking &&
     newAccuracy != null &&
     Number.isFinite(newAccuracy) &&
     newAccuracy > MAX_PERMIT_ACCURACY;
   const skipSmoothing =
     currentLineType === LineType.Subway &&
     !isAccuracyStable(updatedHistory) &&
-    !isCoarseIosSubway;
-  const filteredReferenceAtom = isIosSubway
-    ? lastIosSubwayFilteredLocationAtom
+    !isCoarseIosLocation;
+  const filteredReferenceAtom = isIosTracking
+    ? lastIosFilteredLocationAtom
     : lastFilteredLocationAtom;
-  const rawReferenceAtom = isIosSubway
-    ? lastIosSubwayRawLocationAtom
+  const rawReferenceAtom = isIosTracking
+    ? lastIosRawLocationAtom
     : lastRawLocationAtom;
-  const rejectionKey = isIosSubway ? 'iosSubway' : 'standard';
+  const rejectionKey = isIosTracking ? 'ios' : 'standard';
   const filteredPrev = store.get(filteredReferenceAtom);
   const rawPrev = store.get(rawReferenceAtom);
 
@@ -352,13 +348,13 @@ export const setLocation = (location: Location.LocationObject) => {
     return;
   }
 
-  // スキップ時は生座標を反映する。地上用の基準は更新せず、地上復帰時に
-  // STALE_REFERENCE_MSなどの既存条件で張り直す。iOS地下鉄用の基準は別に保持する。
+  // スキップ時は生座標を反映する。iOSでは次の粗い測位用に基準も更新する。
+  // 他OSでは既存どおり基準を残し、STALE_REFERENCE_MSなどの条件で張り直す。
   if (skipSmoothing) {
-    if (isIosSubway) {
+    if (isIosTracking) {
       // 駅で精度が戻った点は即時反映し、次の粗い測位もこの位置を基準にする。
       // 過去の地上位置を残すと、次の低精度EMAが駅から後方へ引き戻す。
-      resyncLocationReference(location, updatedHistory, isIosSubway);
+      resyncLocationReference(location, updatedHistory, isIosTracking);
       return;
     }
     store.set(locationAtom, location);
@@ -369,21 +365,21 @@ export const setLocation = (location: Location.LocationObject) => {
 
   // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
   if (filteredPrev == null || rawPrev == null) {
-    resyncLocationReference(location, updatedHistory, isIosSubway);
+    resyncLocationReference(location, updatedHistory, isIosTracking);
     return;
   }
 
   // #5665で避けた「ノイズの多い地下測位を基準に、正常な復帰点を棄却する」
   // 回帰を防ぐ。精度が回復した測位は低精度EMAへ混ぜず、その点から再開する。
   if (
-    isIosSubway &&
+    isIosTracking &&
     newAccuracy != null &&
     newAccuracy >= 0 &&
     newAccuracy < BAD_ACCURACY_THRESHOLD &&
     rawPrev.coords.accuracy != null &&
-    rawPrev.coords.accuracy >= BAD_ACCURACY_THRESHOLD
+    rawPrev.coords.accuracy > MAX_PERMIT_ACCURACY
   ) {
-    resyncLocationReference(location, updatedHistory, isIosSubway);
+    resyncLocationReference(location, updatedHistory, isIosTracking);
     return;
   }
 
@@ -417,7 +413,7 @@ export const setLocation = (location: Location.LocationObject) => {
         consecutiveSpeedRejections[rejectionKey] >=
         MAX_CONSECUTIVE_SPEED_REJECTIONS
       ) {
-        resyncLocationReference(location, updatedHistory, isIosSubway);
+        resyncLocationReference(location, updatedHistory, isIosTracking);
         return;
       }
       store.set(accuracyHistoryAtom, updatedHistory);
@@ -433,7 +429,7 @@ export const setLocation = (location: Location.LocationObject) => {
   // EMAで混ぜると新しい測位のα割しか反映されず、残った遅れが次回の変位へ乗って
   // 再棄却…という復帰不能ループの原因になる。
   if (location.timestamp - rawPrev.timestamp >= STALE_REFERENCE_MS) {
-    resyncLocationReference(location, updatedHistory, isIosSubway);
+    resyncLocationReference(location, updatedHistory, isIosTracking);
     return;
   }
 
