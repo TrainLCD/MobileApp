@@ -155,7 +155,7 @@ struct WidgetLineHeader: View {
   var body: some View {
     HStack(spacing: 8) {
       LineNumberingBadge(lineColor: lineColor, lineSymbol: lineSymbol, diameter: 28)
-      VStack(alignment: .leading, spacing: 4) {
+      VStack(alignment: .leading, spacing: 2) {
         Text(lineName)
           .font(.system(size: 12, weight: .semibold))
           .lineLimit(2)
