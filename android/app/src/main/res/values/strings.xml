@@ -19,4 +19,5 @@
   <string name="widget_presets_route">%1$s → %2$s</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="widget_last_updated">最終更新 %1$s</string>
 </resources>

@@ -7,10 +7,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.text.format.DateFormat
 import android.util.SizeF
-import androidx.core.os.BundleCompat
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.os.BundleCompat
+import java.util.Date
 
 /**
  * ホーム画面ウィジェット。
@@ -232,6 +234,12 @@ class RideWidgetProvider : AppWidgetProvider() {
         ): RemoteViews =
             RemoteViews(context.packageName, if (vertical) R.layout.widget_ride_small else R.layout.widget_ride_rectangular).apply {
                 if (!vertical) {
+                    val hasUpdatedAt = state.loaded && state.updatedAt > 0L
+                    setViewVisibility(R.id.widget_last_updated, if (hasUpdatedAt) View.VISIBLE else View.GONE)
+                    setTextViewText(R.id.widget_last_updated, if (hasUpdatedAt) {
+                        context.getString(R.string.widget_last_updated, DateFormat.getTimeFormat(context).format(Date(state.updatedAt)))
+                    } else "")
+                    setTextColor(R.id.widget_last_updated, WidgetTheme.onLineColorSecondary(lineColor))
                     setTextColor(R.id.widget_brand_label, WidgetTheme.onLineColor(lineColor))
                     setInt(R.id.widget_brand_icon, "setColorFilter", WidgetTheme.onLineColor(lineColor))
                 }
