@@ -1,7 +1,9 @@
 import type * as Location from 'expo-location';
 import getDistance from 'geolib/es/getDistance';
 import { atom } from 'jotai';
+import { Platform } from 'react-native';
 import { LineType } from '~/@types/graphql';
+import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
@@ -135,7 +137,7 @@ export const smoothingDecisionAtom = atom<SmoothingDecision>(
 );
 
 // EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
-// 地下鉄モード中は更新しないため、モード復帰後にノイジーなprevで誤棄却されるのを防ぐ
+// iOS以外の地下鉄スキップ中は更新せず、復帰後の誤棄却を防ぐ
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
 // 速度フィルタの基準として使う「最後に受理した“生の”座標」。
@@ -145,8 +147,13 @@ const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 // 走行が丸ごと弾かれて位置が凍結していた。速度判定は生座標同士で行う。
 const lastRawLocationAtom = atom<Location.LocationObject | null>(null);
 
-// 速度フィルタが連続で棄却した回数。MAX_CONSECUTIVE_SPEED_REJECTIONSの判定に使う。
-let consecutiveSpeedRejections = 0;
+// iOSは路線種別によらず同じ基準で粗い測位を処理する。生採用の点も記録し、
+// 次の粗い測位のEMAへ使う。精度回復時は下で基準を張り直して誤棄却を防ぐ。
+// 他OSの地下鉄スキップが維持する基準と棄却回数は共有しない。
+const lastIosFilteredLocationAtom = atom<Location.LocationObject | null>(null);
+const lastIosRawLocationAtom = atom<Location.LocationObject | null>(null);
+// 連続棄却の上限も基準ごとに数え、一方の棄却で他方の再同期を誘発しない。
+const consecutiveSpeedRejections = { standard: 0, ios: 0 };
 
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
@@ -157,7 +164,10 @@ export const resetLocationState = () => {
   store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
   store.set(smoothingDecisionAtom, INITIAL_SMOOTHING_DECISION);
-  consecutiveSpeedRejections = 0;
+  store.set(lastIosFilteredLocationAtom, null);
+  store.set(lastIosRawLocationAtom, null);
+  consecutiveSpeedRejections.standard = 0;
+  consecutiveSpeedRejections.ios = 0;
   resetEtaBoundHold();
   resetLocationPipelineStats();
 };
@@ -182,13 +192,17 @@ export const setRawLocation = (location: Location.LocationObject) => {
 // 古い遅れが乗って誤棄却の引き金になる。
 const resyncLocationReference = (
   location: Location.LocationObject,
-  updatedHistory: number[]
+  updatedHistory: number[],
+  ios = false
 ) => {
   store.set(locationAtom, location);
-  store.set(lastFilteredLocationAtom, location);
-  store.set(lastRawLocationAtom, location);
+  store.set(
+    ios ? lastIosFilteredLocationAtom : lastFilteredLocationAtom,
+    location
+  );
+  store.set(ios ? lastIosRawLocationAtom : lastRawLocationAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
-  consecutiveSpeedRejections = 0;
+  consecutiveSpeedRejections[ios ? 'ios' : 'standard'] = 0;
   countAcceptedLocation();
 };
 
@@ -277,8 +291,6 @@ export const setLocation = (location: Location.LocationObject) => {
   // フィルタ判定より前で解除する。
   store.set(locationAccuracyOutlierAtom, false);
 
-  const filteredPrev = store.get(lastFilteredLocationAtom);
-  const rawPrev = store.get(lastRawLocationAtom);
   const currentHistory = store.get(accuracyHistoryAtom);
   const newAccuracy = location.coords.accuracy;
 
@@ -287,11 +299,32 @@ export const setLocation = (location: Location.LocationObject) => {
       ? [...currentHistory, newAccuracy].slice(-MAX_ACCURACY_HISTORY)
       : currentHistory;
 
-  // 地下鉄ではGPS信号が不安定なため原則スムージングをスキップするが、
-  // 精度が安定している場合（地上区間など）はスムージングを適用する
+  // #5670の直接採用は、通常の許容上限(MAX_PERMIT_ACCURACY)内では維持する。
+  // リモート設定で上限を緩和した帯まで直接採用すると、iOSの粗い測位の揺れが
+  // そのまま到着・発車になる。この帯だけ既存の低精度EMAと速度フィルタへ通す。
+  // 地下区間は路線種別で判定できないため、iOSでは精度だけで条件を決める。
+  // Androidの地下鉄処理は維持する。
   const currentLineType = store.get(stationState).station?.line?.lineType;
+  const isIosTracking = Platform.OS === 'ios';
+  const isCoarseIosLocation =
+    isIosTracking &&
+    newAccuracy != null &&
+    Number.isFinite(newAccuracy) &&
+    newAccuracy > MAX_PERMIT_ACCURACY;
   const skipSmoothing =
-    currentLineType === LineType.Subway && !isAccuracyStable(updatedHistory);
+    currentLineType === LineType.Subway &&
+    !isAccuracyStable(updatedHistory) &&
+    !isCoarseIosLocation;
+  const filteredReferenceAtom = isIosTracking
+    ? lastIosFilteredLocationAtom
+    : lastFilteredLocationAtom;
+  const rawReferenceAtom = isIosTracking
+    ? lastIosRawLocationAtom
+    : lastRawLocationAtom;
+  const rejectionKey = isIosTracking ? 'ios' : 'standard';
+  const filteredPrev = store.get(filteredReferenceAtom);
+  const rawPrev = store.get(rawReferenceAtom);
+
   // 判定の結果と入力を、同じ瞬間の組として残す。DevOverlayの診断表示から
   // 「いま地下鉄分岐に入っているか」と「その根拠」を読めるようにするためで、
   // 同じ条件を呼び出し側で組み直すと判定と表示が別々に育って食い違う。
@@ -315,11 +348,15 @@ export const setLocation = (location: Location.LocationObject) => {
     return;
   }
 
-  // スムージングスキップ時はフィルタ・スムージングを全てスキップする
-  // UIには生の座標を反映するが、EMA基準(lastFilteredLocationAtom)も速度フィルタ基準
-  // (lastRawLocationAtom)も更新しない。地上復帰時は基準が古いためSTALE_REFERENCE_MSの
-  // 判定に掛かり、そこで張り直される
+  // スキップ時は生座標を反映する。iOSでは次の粗い測位用に基準も更新する。
+  // 他OSでは既存どおり基準を残し、STALE_REFERENCE_MSなどの条件で張り直す。
   if (skipSmoothing) {
+    if (isIosTracking) {
+      // 駅で精度が戻った点は即時反映し、次の粗い測位もこの位置を基準にする。
+      // 過去の地上位置を残すと、次の低精度EMAが駅から後方へ引き戻す。
+      resyncLocationReference(location, updatedHistory, isIosTracking);
+      return;
+    }
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
     countAcceptedLocation();
@@ -328,7 +365,21 @@ export const setLocation = (location: Location.LocationObject) => {
 
   // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
   if (filteredPrev == null || rawPrev == null) {
-    resyncLocationReference(location, updatedHistory);
+    resyncLocationReference(location, updatedHistory, isIosTracking);
+    return;
+  }
+
+  // #5665で避けた「ノイズの多い地下測位を基準に、正常な復帰点を棄却する」
+  // 回帰を防ぐ。精度が回復した測位は低精度EMAへ混ぜず、その点から再開する。
+  if (
+    isIosTracking &&
+    newAccuracy != null &&
+    newAccuracy >= 0 &&
+    newAccuracy < BAD_ACCURACY_THRESHOLD &&
+    rawPrev.coords.accuracy != null &&
+    rawPrev.coords.accuracy > MAX_PERMIT_ACCURACY
+  ) {
+    resyncLocationReference(location, updatedHistory, isIosTracking);
     return;
   }
 
@@ -355,11 +406,14 @@ export const setLocation = (location: Location.LocationObject) => {
 
     // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
     if (speed > MAX_PLAUSIBLE_SPEED) {
-      consecutiveSpeedRejections += 1;
+      consecutiveSpeedRejections[rejectionKey] += 1;
       // 棄却が続くのは基準側が誤っている可能性が高い。位置が凍結したまま
       // 復帰できなくなるのを避けるため、上限に達したら基準を張り直す。
-      if (consecutiveSpeedRejections >= MAX_CONSECUTIVE_SPEED_REJECTIONS) {
-        resyncLocationReference(location, updatedHistory);
+      if (
+        consecutiveSpeedRejections[rejectionKey] >=
+        MAX_CONSECUTIVE_SPEED_REJECTIONS
+      ) {
+        resyncLocationReference(location, updatedHistory, isIosTracking);
         return;
       }
       store.set(accuracyHistoryAtom, updatedHistory);
@@ -368,14 +422,14 @@ export const setLocation = (location: Location.LocationObject) => {
     }
   }
 
-  consecutiveSpeedRejections = 0;
+  consecutiveSpeedRejections[rejectionKey] = 0;
 
   // 速度としては妥当だが基準が古すぎる場合、EMAの基準としては使えないため
   // スムージングせず生の座標へスナップして基準を張り直す。長く途切れたあとに
   // EMAで混ぜると新しい測位のα割しか反映されず、残った遅れが次回の変位へ乗って
   // 再棄却…という復帰不能ループの原因になる。
   if (location.timestamp - rawPrev.timestamp >= STALE_REFERENCE_MS) {
-    resyncLocationReference(location, updatedHistory);
+    resyncLocationReference(location, updatedHistory, isIosTracking);
     return;
   }
 
@@ -403,9 +457,9 @@ export const setLocation = (location: Location.LocationObject) => {
   };
 
   store.set(locationAtom, smoothedLocation);
-  store.set(lastFilteredLocationAtom, smoothedLocation);
+  store.set(filteredReferenceAtom, smoothedLocation);
   // 速度フィルタの基準はスムージング前の生座標を保持する
-  store.set(lastRawLocationAtom, location);
+  store.set(rawReferenceAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
   countAcceptedLocation();
 };
