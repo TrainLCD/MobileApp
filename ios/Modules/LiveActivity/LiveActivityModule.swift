@@ -45,6 +45,8 @@ class LiveActivityModule: NSObject {
     for (key, value) in state {
       defaults.set(value, forKey: key)
     }
+    // 表示情報の保存時刻。タイムラインの再生成では進めない。
+    defaults.set(Date().timeIntervalSince1970, forKey: "widgetUpdatedAt")
     defaults.set(true, forKey: "loaded")
     reloadWidgetSurfaces()
   }
@@ -63,6 +65,7 @@ class LiveActivityModule: NSObject {
     guard let defaults = UserDefaults(suiteName: appGroupID) else {
       return
     }
+    defaults.removeObject(forKey: "widgetUpdatedAt")
     defaults.set(false, forKey: "loaded")
     reloadWidgetSurfaces()
   }

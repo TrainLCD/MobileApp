@@ -239,6 +239,13 @@ struct HomeScreenWidgetEntryView: View {
           .lineLimit(2)
           .minimumScaleFactor(0.7)
       }
+      if family == .systemMedium, entry.loaded, let updatedAt = entry.updatedAt {
+        Text("\(String(localized: "lastUpdated")) \(updatedAt.formatted(date: .omitted, time: .shortened))")
+          .font(.system(size: 10))
+          .foregroundStyle(lineForegroundColor(for: entry.displayLineColor).opacity(0.8))
+          .lineLimit(1)
+          .minimumScaleFactor(0.8)
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     .foregroundStyle(lineForegroundColor(for: entry.displayLineColor))
@@ -292,7 +299,8 @@ struct HomeScreenWidget_Previews: PreviewProvider {
       lineSymbol: "JY",
       boundFor: "新宿・渋谷方面",
       stationName: "新宿",
-      nextStationName: "代々木"
+      nextStationName: "代々木",
+      updatedAt: .now
     )
   }
 
