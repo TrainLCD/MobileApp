@@ -163,5 +163,16 @@
                 android:layout_weight="1" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/widget_last_updated"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/widget_on_line_primary"
+            android:textSize="10sp"
+            android:visibility="gone" />
     </LinearLayout>
 </FrameLayout>

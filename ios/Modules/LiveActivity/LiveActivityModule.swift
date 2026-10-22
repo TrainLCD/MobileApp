@@ -38,13 +38,23 @@ class LiveActivityModule: NSObject {
     if state == lastWidgetState {
       return
     }
-    lastWidgetState = state
     guard let defaults = UserDefaults(suiteName: appGroupID) else {
+      return
+    }
+    // プロセス再起動でメモリ上のキャッシュが消えても、同一内容の保存時刻は維持する。
+    // 時刻のない旧データにも現在時刻を補わず、実際に内容が変わるまで非表示にする。
+    let unchanged = defaults.bool(forKey: "loaded") && state.allSatisfy { key, value in
+      (defaults.string(forKey: key) ?? "") == value
+    }
+    lastWidgetState = state
+    if unchanged {
       return
     }
     for (key, value) in state {
       defaults.set(value, forKey: key)
     }
+    // 表示情報の保存時刻。タイムラインの再生成では進めない。
+    defaults.set(Date().timeIntervalSince1970, forKey: "widgetUpdatedAt")
     defaults.set(true, forKey: "loaded")
     reloadWidgetSurfaces()
   }
@@ -63,6 +73,7 @@ class LiveActivityModule: NSObject {
     guard let defaults = UserDefaults(suiteName: appGroupID) else {
       return
     }
+    defaults.removeObject(forKey: "widgetUpdatedAt")
     defaults.set(false, forKey: "loaded")
     reloadWidgetSurfaces()
   }
