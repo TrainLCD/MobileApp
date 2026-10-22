@@ -209,12 +209,27 @@ struct PresetsWidgetRow: View {
   }
 }
 
+private struct PresetsWidgetBrandHeader: View {
+  var body: some View {
+    HStack(spacing: 4) {
+      Image(systemName: "tram.fill")
+      Text("TrainLCD")
+    }
+    .font(.caption2)
+    .fontWeight(.bold)
+    .fixedSize(horizontal: false, vertical: true)
+  }
+}
+
 struct PresetsWidgetFeatured: View {
   let preset: PresetsWidgetItem
   var vertical = true
 
   var body: some View {
     VStack(alignment: .leading, spacing: vertical ? 8 : 12) {
+      if !vertical {
+        PresetsWidgetBrandHeader()
+      }
       VStack(alignment: .leading, spacing: 4) {
         WidgetLineHeader(
           lineColor: preset.displayLineColor,
@@ -302,25 +317,30 @@ struct PresetsWidgetEntryView: View {
 
   // systemLarge。固定した行高から表示件数を求める。
   private var listView: some View {
-    GeometryReader { proxy in
-      VStack(alignment: .leading, spacing: 0) {
-        VStack(alignment: .leading, spacing: rowSpacing) {
-          ForEach(entry.presets.prefix(rowCount(for: proxy.size.height))) { preset in
-            if let url = presetURL(preset) {
-              Link(destination: url) {
+    VStack(alignment: .leading, spacing: rowSpacing) {
+      PresetsWidgetBrandHeader()
+        .foregroundStyle(colorScheme == .dark ? Color.white : Color(red: 41 / 255, green: 46 / 255, blue: 54 / 255))
+      // ヘッダーと余白を除いた実際の一覧領域で件数を計算します。
+      GeometryReader { proxy in
+        VStack(alignment: .leading, spacing: 0) {
+          VStack(alignment: .leading, spacing: rowSpacing) {
+            ForEach(entry.presets.prefix(rowCount(for: proxy.size.height))) { preset in
+              if let url = presetURL(preset) {
+                Link(destination: url) {
+                  PresetsWidgetRow(
+                    preset: preset)
+                }
+              } else {
                 PresetsWidgetRow(
                   preset: preset)
               }
-            } else {
-              PresetsWidgetRow(
-                preset: preset)
             }
           }
+          // 登録件数が収まる行数に満たないときだけ効く。通常は0
+          Spacer(minLength: 0)
         }
-        // 登録件数が収まる行数に満たないときだけ効く。通常は0
-        Spacer(minLength: 0)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
   }
 
@@ -339,7 +359,7 @@ struct PresetsWidgetEntryView: View {
   }
 
   private var listBackground: Color {
-    colorScheme == .dark ? Color(white: 0.11) : .white
+    colorScheme == .dark ? Color(white: 0.11) : Color(red: 252 / 255, green: 252 / 255, blue: 252 / 255)
   }
 
   @ViewBuilder
