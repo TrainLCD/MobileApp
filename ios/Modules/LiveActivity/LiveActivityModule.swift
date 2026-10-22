@@ -38,8 +38,16 @@ class LiveActivityModule: NSObject {
     if state == lastWidgetState {
       return
     }
-    lastWidgetState = state
     guard let defaults = UserDefaults(suiteName: appGroupID) else {
+      return
+    }
+    // プロセス再起動でメモリ上のキャッシュが消えても、同一内容の保存時刻は維持する。
+    // 時刻のない旧データにも現在時刻を補わず、実際に内容が変わるまで非表示にする。
+    let unchanged = defaults.bool(forKey: "loaded") && state.allSatisfy { key, value in
+      (defaults.string(forKey: key) ?? "") == value
+    }
+    lastWidgetState = state
+    if unchanged {
       return
     }
     for (key, value) in state {
