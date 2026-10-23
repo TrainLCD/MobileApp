@@ -1,13 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import {
-  Platform,
-  Animated as RNAnimated,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AnimatedTypography from '~/components/AnimatedTypography';
+import Typography from '~/components/Typography';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
@@ -202,42 +198,42 @@ const HeaderSaikyo: React.FC<HeaderSaikyoProps> = (props) => {
         <View style={styles.headerTexts}>
           <TrainTypeBox lineColor={lineColor} trainType={trainType} />
           <View style={styles.boundWrapper}>
-            <RNAnimated.Text
+            <AnimatedTypography
               style={[
                 animation.boundTopAnimatedStyles,
                 styles.boundTextContainer,
               ]}
             >
-              <Text style={[styles.connectedLines, textColorStyle]}>
+              <Typography style={[styles.connectedLines, textColorStyle]}>
                 {connectedLines?.length && isJapaneseState
                   ? `${connectionText}直通 `
                   : null}
-              </Text>
-              <Text style={[styles.boundText, textColorStyle]}>
+              </Typography>
+              <Typography style={[styles.boundText, textColorStyle]}>
                 {boundText}
-              </Text>
-            </RNAnimated.Text>
+              </Typography>
+            </AnimatedTypography>
 
-            <RNAnimated.Text
+            <AnimatedTypography
               style={[
                 animation.boundBottomAnimatedStyles,
                 styles.boundTextContainer,
               ]}
             >
-              <Text style={[styles.connectedLines, textColorStyle]}>
+              <Typography style={[styles.connectedLines, textColorStyle]}>
                 {connectedLines?.length && animation.prevIsJapaneseState
                   ? `${animation.prevConnectionText}直通 `
                   : null}
-              </Text>
-              <Text style={[styles.boundText, textColorStyle]}>
+              </Typography>
+              <Typography style={[styles.boundText, textColorStyle]}>
                 {animation.prevBoundText}
-              </Text>
-            </RNAnimated.Text>
+              </Typography>
+            </AnimatedTypography>
           </View>
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <RNAnimated.Text
+            <AnimatedTypography
               style={[
                 animation.stateTopAnimatedStyles,
                 styles.state,
@@ -247,8 +243,8 @@ const HeaderSaikyo: React.FC<HeaderSaikyoProps> = (props) => {
               numberOfLines={2}
             >
               {stateText}
-            </RNAnimated.Text>
-            <RNAnimated.Text
+            </AnimatedTypography>
+            <AnimatedTypography
               style={[
                 animation.stateBottomAnimatedStyles,
                 styles.state,
@@ -258,7 +254,7 @@ const HeaderSaikyo: React.FC<HeaderSaikyoProps> = (props) => {
               numberOfLines={2}
             >
               {animation.prevStateText}
-            </RNAnimated.Text>
+            </AnimatedTypography>
           </View>
 
           {currentStationNumber ? (
@@ -274,7 +270,7 @@ const HeaderSaikyo: React.FC<HeaderSaikyoProps> = (props) => {
           <View style={styles.stationNameWrapper}>
             <View style={styles.stationNameContainer}>
               <HeaderStationName
-                TextComponent={RNAnimated.Text}
+                TextComponent={AnimatedTypography}
                 text={stationText}
                 textStyle={[
                   animation.topNameAnimatedStyles,
@@ -291,7 +287,7 @@ const HeaderSaikyo: React.FC<HeaderSaikyoProps> = (props) => {
 
             <View style={styles.stationNameContainer}>
               <HeaderStationName
-                TextComponent={RNAnimated.Text}
+                TextComponent={AnimatedTypography}
                 text={animation.prevStationText}
                 textStyle={[
                   animation.bottomNameAnimatedStyles,

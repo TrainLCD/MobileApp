@@ -13,9 +13,9 @@ import {
   ScrollView,
   type ScrollViewInstance,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import Typography from '~/components/Typography';
 import { FONTS } from '~/constants';
 
 export type SquareTransfer = {
@@ -184,9 +184,9 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
           accessibilityRole="button"
         >
           <View style={styles.lineRow}>
-            <Text numberOfLines={1} style={[styles.lineName, textStyle]}>
+            <Typography numberOfLines={1} style={[styles.lineName, textStyle]}>
               {props.lineName}
-            </Text>
+            </Typography>
             {!!props.trainTypeName && (
               <View
                 style={[
@@ -194,18 +194,18 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                   { backgroundColor: props.trainTypeColor },
                 ]}
               >
-                <Text
+                <Typography
                   numberOfLines={1}
                   style={[styles.typeText, { color: props.trainTypeTextColor }]}
                 >
                   {props.trainTypeName}
-                </Text>
+                </Typography>
               </View>
             )}
           </View>
-          <Text numberOfLines={1} style={[styles.bound, secondaryStyle]}>
+          <Typography numberOfLines={1} style={[styles.bound, secondaryStyle]}>
             {props.boundText}
-          </Text>
+          </Typography>
         </Pressable>
         <Pressable
           testID="square-settings"
@@ -275,7 +275,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                   </View>
                   <View style={styles.stopNameColumn}>
                     {stop.focused && !!stop.stateText && (
-                      <Text
+                      <Typography
                         testID={`square-stop-state-${stop.key}`}
                         numberOfLines={1}
                         adjustsFontSizeToFit
@@ -283,9 +283,9 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                         style={[styles.stopState, secondaryStyle]}
                       >
                         {stop.stateText}
-                      </Text>
+                      </Typography>
                     )}
-                    <Text
+                    <Typography
                       numberOfLines={1}
                       adjustsFontSizeToFit
                       minimumFontScale={0.35}
@@ -301,7 +301,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                       ]}
                     >
                       {stop.name}
-                    </Text>
+                    </Typography>
                   </View>
                   {stop.junction ? (
                     <View style={styles.stopNumbers}>
@@ -310,7 +310,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                         stop.junction?.findIndex(
                           (entry) => entry.number === side.number
                         ) === index ? (
-                          <Text
+                          <Typography
                             key={side.key}
                             testID={`square-number-${stop.key}-${index}`}
                             style={[
@@ -322,13 +322,13 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                             ]}
                           >
                             {side.number}
-                          </Text>
+                          </Typography>
                         ) : null
                       )}
                     </View>
                   ) : (
                     !!stop.number && (
-                      <Text
+                      <Typography
                         testID={`square-number-${stop.key}`}
                         style={[
                           styles.stopNumber,
@@ -339,7 +339,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                         ]}
                       >
                         {stop.number}
-                      </Text>
+                      </Typography>
                     )
                   )}
                   {stop.showEta && (
@@ -347,7 +347,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                       testID={`square-eta-${stop.key}`}
                       style={styles.etaColumn}
                     >
-                      <Text
+                      <Typography
                         style={[
                           styles.etaValue,
                           stop.focused && styles.etaFocused,
@@ -362,27 +362,27 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                           : Math.round(stop.estimatedMinutes) < 1
                             ? props.etaSoon
                             : Math.round(stop.estimatedMinutes)}
-                      </Text>
+                      </Typography>
                       {stop.estimatedMinutes != null &&
                         Math.round(stop.estimatedMinutes) >= 1 && (
-                          <Text
+                          <Typography
                             style={[
                               styles.etaUnit,
                               { color: stop.numberColor ?? colors.secondary },
                             ]}
                           >
                             {props.etaUnit}
-                          </Text>
+                          </Typography>
                         )}
                     </View>
                   )}
                   {!!stop.label && (
-                    <Text
+                    <Typography
                       numberOfLines={2}
                       style={[styles.stopLabel, secondaryStyle]}
                     >
                       {stop.label}
-                    </Text>
+                    </Typography>
                   )}
                 </View>
               ))}
@@ -405,9 +405,9 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
               contentContainerStyle={styles.marks}
             >
               {!!props.transfers.length && (
-                <Text style={[styles.caption, secondaryStyle]}>
+                <Typography style={[styles.caption, secondaryStyle]}>
                   {props.transferLabel}
-                </Text>
+                </Typography>
               )}
               {props.transfers.map((line) => (
                 <View key={line.key} accessibilityLabel={line.name}>
@@ -415,9 +415,9 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                 </View>
               ))}
               {!props.transfers.length && (
-                <Text style={[styles.caption, secondaryStyle]}>
+                <Typography style={[styles.caption, secondaryStyle]}>
                   {props.noTransfersText}
-                </Text>
+                </Typography>
               )}
             </ScrollView>
           </Pressable>
@@ -434,15 +434,15 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
           >
             {props.numbering}
             <View style={styles.stationText}>
-              <Text
+              <Typography
                 testID="square-state"
                 numberOfLines={2}
                 adjustsFontSizeToFit
                 style={[styles.state, secondaryStyle]}
               >
                 {props.stateText.replaceAll('\n', ' ')}
-              </Text>
-              <Text
+              </Typography>
+              <Typography
                 testID="square-station-name"
                 numberOfLines={1}
                 adjustsFontSizeToFit
@@ -450,7 +450,7 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                 style={[styles.stationName, textStyle]}
               >
                 {props.stationText}
-              </Text>
+              </Typography>
             </View>
           </Pressable>
           <View
@@ -468,9 +468,12 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
               accessibilityRole="button"
               accessibilityLabel={props.toggleLabel}
             >
-              <Text numberOfLines={1} style={[styles.caption, secondaryStyle]}>
+              <Typography
+                numberOfLines={1}
+                style={[styles.caption, secondaryStyle]}
+              >
                 {props.transferHeading}
-              </Text>
+              </Typography>
             </Pressable>
             <ScrollView
               onScrollBeginDrag={() => {
@@ -491,17 +494,17 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                 >
                   {line.mark}
                   <View style={styles.flex}>
-                    <Text
+                    <Typography
                       numberOfLines={1}
                       adjustsFontSizeToFit
                       style={[styles.transferName, textStyle]}
                     >
                       {line.name}
-                    </Text>
+                    </Typography>
                     {!!line.stationName && (
-                      <Text style={[styles.caption, secondaryStyle]}>
+                      <Typography style={[styles.caption, secondaryStyle]}>
                         {line.stationName}
-                      </Text>
+                      </Typography>
                     )}
                   </View>
                 </Pressable>
@@ -513,9 +516,9 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                   onPress={toggle}
                   disabled={props.disabled}
                 >
-                  <Text style={[styles.caption, secondaryStyle]}>
+                  <Typography style={[styles.caption, secondaryStyle]}>
                     {props.noTransfersText}
-                  </Text>
+                  </Typography>
                 </Pressable>
               )}
             </ScrollView>

@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
+import AnimatedTypography from '~/components/AnimatedTypography';
 import { FONTS, parenthesisRegexp } from '~/constants';
 import { useCurrentLine, useLazyPrevious, usePrevious } from '~/hooks';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
@@ -298,7 +299,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
         />
 
         <View style={styles.textWrapper}>
-          <RNAnimated.Text
+          <AnimatedTypography
             adjustsFontSizeToFit
             numberOfLines={numberOfLines}
             style={[
@@ -315,10 +316,10 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {trainTypeName}
-          </RNAnimated.Text>
+          </AnimatedTypography>
         </View>
         <View style={styles.textWrapper}>
-          <RNAnimated.Text
+          <AnimatedTypography
             adjustsFontSizeToFit
             numberOfLines={prevNumberOfLines}
             style={[
@@ -335,7 +336,7 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
             ]}
           >
             {prevTrainTypeText}
-          </RNAnimated.Text>
+          </AnimatedTypography>
         </View>
       </View>
     </View>
