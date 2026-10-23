@@ -132,6 +132,7 @@ describe('useVitsSpeechEngine', () => {
   it('補正済みの固有名詞をタグなしでVITSの合成処理へ渡す', async () => {
     const { result } = renderEngine();
     const names = [
+      'Daigaku-byoin',
       'Keisatsusho',
       'Ginza-itchome',
       'Mejiro',
@@ -155,7 +156,7 @@ describe('useVitsSpeechEngine', () => {
     await flushAsync();
     expect(mockSynthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        text: 'Enjoy your journey. Kaysatsusho, Ginza-itch-oh-meh, Megeero, Geen-jah, Ogee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
+        text: 'Enjoy your journey. Daigaku-byoh-in, Kaysatsusho, Ginza-itch-oh-meh, Megeero, Geen-jah, Ogee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
       })
     );
   });

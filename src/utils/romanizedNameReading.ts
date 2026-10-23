@@ -3,6 +3,7 @@
  * ja / ji / ju / je / jo を「ジャ / ジ / ジュ / ジェ / ジョ」に寄せる
  * 読み上げ用の綴りへ置換する。ji は語を分断しないよう前後とつなげる。
  * kei は kay に読み替え、「カイ」と読まれるのを避ける。
+ * 病院の byoin / byouin / byōin は byoh-in に読み替える。
  * 一丁目の itchome / icchome は itch-oh-meh に読み替える。
  * 案内文全体には適用しない（join / journey などの英単語を壊さないため）。
  */
@@ -12,7 +13,11 @@ export const fixRomanizedNameReading = (name: string): string =>
     if (/^(?:jah|jew|jeh|joe)$/i.test(word)) return word;
     // 一丁目だけを対象にし、sanchome など別の丁目の読みは変えない。
     // 語末に限定し、itchome を含む長い別単語への部分一致を避ける。
+    // 病院前などの複合名も対象にし、byo と in の母音を分ける。
     return word
+      .replace(/by(?:ou?|ō)in/gi, (syllable) =>
+        syllable[0] === 'B' ? 'Byoh-in' : 'byoh-in'
+      )
       .replace(/kei/gi, (syllable) => (syllable[0] === 'K' ? 'Kay' : 'kay'))
       .replace(/i(?:t|c)ch[oō]me$/i, (suffix) =>
         suffix[0] === 'I' ? 'Itch-oh-meh' : 'itch-oh-meh'

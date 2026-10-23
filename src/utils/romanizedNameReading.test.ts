@@ -2,6 +2,17 @@ import { fixRomanizedNameReading } from './romanizedNameReading';
 
 describe('fixRomanizedNameReading', () => {
   it.each([
+    ['byoin', 'byoh-in'],
+    ['Byoin', 'Byoh-in'],
+    ['BYOIN', 'Byoh-in'],
+    ['byouin', 'byoh-in'],
+    ['Byōin', 'Byoh-in'],
+    ['Byo\u0304in', 'Byoh-in'],
+    ['Daigaku-byoin', 'Daigaku-byoh-in'],
+    ['Byoin-mae', 'Byoh-in-mae'],
+    ['Byoinmae', 'Byoh-inmae'],
+    ['Daigakubyoin', 'Daigakubyoh-in'],
+    ['Byodo', 'Byodo'],
     ['kei', 'kay'],
     ['Kei', 'Kay'],
     ['KEI', 'Kay'],

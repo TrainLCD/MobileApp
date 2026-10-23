@@ -78,6 +78,8 @@ const renderEngineWithSpeed = (
 
 describe('useRemoteSpeechEngine', () => {
   it.each([
+    ['Daigaku-byoin', 'Daigaku-byoh-in'],
+    ['Byoin-mae', 'Byoh-in-mae'],
     ['Keisatsusho', 'Kaysatsusho'],
     ['Ginza-itchome', 'Ginza-itch-oh-meh'],
     ['Aoyama-itchome', 'Aoyama-itch-oh-meh'],
