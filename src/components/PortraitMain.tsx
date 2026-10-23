@@ -77,6 +77,10 @@ import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
+import {
+  buildJunctionDisplays,
+  type JunctionDisplay,
+} from '~/utils/junctionDisplay';
 import { RFValue } from '~/utils/rfValue';
 import {
   getTrainTypeTextColor,
@@ -784,6 +788,7 @@ const EtaValue = ({
 // 路線の全駅を並べるので、親の再レンダー(ヘッダーの言語切り替えなど)の
 // たびに全行を描き直さないよう memo にする。props はすべて値か安定参照で渡す。
 const StopRow = memo(function StopRow({
+  junction,
   index,
   station,
   colors,
@@ -799,6 +804,7 @@ const StopRow = memo(function StopRow({
   showEta,
   estimatedMinutes,
 }: {
+  junction?: JunctionDisplay;
   index: number;
   station: Station;
   colors: AppColors;
@@ -831,6 +837,12 @@ const StopRow = memo(function StopRow({
         ? departedTrackColor(accentColor, colors.background)
         : accentColor,
     [departed, accentColor, colors.background]
+  );
+  const junctionAccents = junction?.map((side) =>
+    accentColorFor(side.line?.color ?? fallbackLineColor, colors.isDark)
+  );
+  const junctionTracks = junctionAccents?.map((color) =>
+    departed ? departedTrackColor(color, colors.background) : color
   );
   const getStationNumberIndex = useStationNumberIndexFunc();
   const transferLines = useTransferLinesFromStation(station, {
@@ -867,7 +879,7 @@ const StopRow = memo(function StopRow({
         {/* 全駅表示なので上側は始発駅(isFirst)、下側は終点(isLast)でのみ
             隠す。中間駅は前後の駅と線が繋がる。 */}
         <TrackSegment
-          color={trackColor}
+          color={junctionTracks?.[0] ?? trackColor}
           markerColor={accentColor}
           markerBackground={colors.background}
           markerMoving={markerMoving}
@@ -879,6 +891,33 @@ const StopRow = memo(function StopRow({
           <View
             style={[styles.passDot, { backgroundColor: colors.background }]}
           />
+        ) : junctionTracks ? (
+          <View
+            testID={`stop-dot-${station.id}`}
+            style={[
+              isFocused ? styles.focusDot : styles.stopDot,
+              { borderWidth: 0, overflow: 'hidden' },
+            ]}
+          >
+            {junctionTracks.map((color, side) => (
+              <View
+                key={junction?.[side].id}
+                testID={`stop-dot-${station.id}-${side}`}
+                style={{ flex: 1, backgroundColor: color }}
+              />
+            ))}
+            <View
+              style={{
+                position: 'absolute',
+                top: isFocused ? FOCUS_DOT_BORDER : STOP_DOT_BORDER,
+                bottom: isFocused ? FOCUS_DOT_BORDER : STOP_DOT_BORDER,
+                left: isFocused ? FOCUS_DOT_BORDER : STOP_DOT_BORDER,
+                right: isFocused ? FOCUS_DOT_BORDER : STOP_DOT_BORDER,
+                borderRadius: FOCUS_DOT_SIZE,
+                backgroundColor: colors.background,
+              }}
+            />
+          </View>
         ) : (
           <View
             style={[
@@ -889,7 +928,7 @@ const StopRow = memo(function StopRow({
           />
         )}
         <TrackSegment
-          color={trackColor}
+          color={junctionTracks?.[1] ?? trackColor}
           hidden={isLast}
           lineTestID={`track-bottom-${station.id}`}
         />
@@ -929,7 +968,26 @@ const StopRow = memo(function StopRow({
             </View>
           ) : null}
         </View>
-        {stationNumber ? (
+        {junction ? (
+          <View style={{ gap: 4, alignItems: 'center' }}>
+            {junction.map((side, sideIndex) => {
+              const number =
+                side.stationNumbers?.[getStationNumberIndex(side, side.line)]
+                  ?.stationNumber;
+              return number ? (
+                <Typography
+                  key={side.id}
+                  style={[
+                    styles.stopNumber,
+                    { color: junctionAccents?.[sideIndex] },
+                  ]}
+                >
+                  {number}
+                </Typography>
+              ) : null;
+            })}
+          </View>
+        ) : stationNumber ? (
           <Typography style={[styles.stopNumber, { color: numberColor }]}>
             {stationNumber}
           </Typography>
@@ -1378,6 +1436,17 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
     return shouldReverse ? [...dropped].reverse() : dropped;
   }, [allStations, selectedDirection, isLoopLine]);
 
+  const junctions = useMemo(
+    () =>
+      buildJunctionDisplays(
+        allStations,
+        isLoopLine
+          ? selectedDirection === 'INBOUND'
+          : selectedDirection === 'OUTBOUND'
+      ),
+    [allStations, selectedDirection, isLoopLine]
+  );
+
   // 現在の最寄り駅(列車位置)の index。
   const currentIndex = useMemo(
     () => stops.findIndex((s) => s.groupId === currentStation?.groupId),
@@ -1722,6 +1791,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
                   key={station.id}
                   index={index}
                   station={station}
+                  junction={junctions.get(station)}
                   colors={colors}
                   isFirst={index === 0}
                   isLast={index === stops.length - 1}

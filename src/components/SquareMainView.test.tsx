@@ -396,3 +396,33 @@ it('scrolls on approach and arrival at the same station after manual scrolling',
     expect(scrollTo).not.toHaveBeenCalled();
   }
 });
+
+it('splits junction colors and stacks both numbers while preserving pass opacity', () => {
+  const r = render(
+    <SquareMainView
+      {...props}
+      showStops
+      stops={[
+        {
+          ...props.stops[0],
+          pass: true,
+          junction: [
+            { key: 'before', color: '#AA88BB', number: 'Z-01' },
+            { key: 'after', color: '#00AA88', number: 'DT-01' },
+          ],
+        },
+      ]}
+    />
+  );
+  expect(r.getByTestId('square-stop-bar-1-0')).toHaveStyle({
+    flex: 1,
+    backgroundColor: '#AA88BB',
+  });
+  expect(r.getByTestId('square-stop-bar-1-1')).toHaveStyle({
+    flex: 1,
+    backgroundColor: '#00AA88',
+  });
+  expect(r.getByTestId('square-stop-bar-1')).toHaveStyle({ opacity: 0.4 });
+  expect(r.getByTestId('square-number-1-0')).toHaveTextContent('Z-01');
+  expect(r.getByTestId('square-number-1-1')).toHaveTextContent('DT-01');
+});

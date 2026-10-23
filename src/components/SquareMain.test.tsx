@@ -738,3 +738,29 @@ it.each([
     });
   }
 );
+
+it.each(['INBOUND', 'OUTBOUND'] as const)(
+  'keeps both junction memberships in travel order: %s',
+  (direction) => {
+    const { store } = setup();
+    const before = {
+      ...stations[0],
+      stationNumbers: [{ stationNumber: 'Z-01' }],
+    } as Station;
+    const after = {
+      ...before,
+      id: 99,
+      line: { ...before.line, id: 2, color: '#00AA88' },
+      stationNumbers: [{ stationNumber: 'DT-01' }],
+    } as Station;
+    act(() => {
+      store.set(stationsAtom, [before, after, stations[1]]);
+      store.set(selectedDirectionAtom, direction);
+    });
+    const junction = latest().stops.find((s) => s.junction)?.junction;
+    expect(junction?.map((s) => s.number)).toEqual(
+      direction === 'INBOUND' ? ['Z-01', 'DT-01'] : ['DT-01', 'Z-01']
+    );
+    expect(latest().stops).toHaveLength(2);
+  }
+);
