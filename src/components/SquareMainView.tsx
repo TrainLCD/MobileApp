@@ -306,7 +306,10 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                   {stop.junction ? (
                     <View style={styles.stopNumbers}>
                       {stop.junction.map((side, index) =>
-                        side.number ? (
+                        side.number &&
+                        stop.junction?.findIndex(
+                          (entry) => entry.number === side.number
+                        ) === index ? (
                           <Text
                             key={side.key}
                             testID={`square-number-${stop.key}-${index}`}

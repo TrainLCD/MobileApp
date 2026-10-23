@@ -417,6 +417,35 @@ describe('PortraitMain', () => {
   });
 
   it.each(['INBOUND', 'OUTBOUND'] as const)(
+    '同じ直通駅番号は一つだけ表示する: %s',
+    (direction) => {
+      const before = buildStation(101, '西谷', StopCondition.All, 'SO-08', {
+        ...yamanoteLine,
+        id: 1,
+        color: '#0044FF',
+      });
+      const after = {
+        ...buildStation(102, '西谷', StopCondition.All, 'SO-08', {
+          ...yamanoteLine,
+          id: 2,
+          color: '#0044FF',
+        }),
+        groupId: before.groupId,
+      };
+      const current = direction === 'INBOUND' ? before : after;
+      const { getByTestId } = renderWithStations([before, after], {
+        direction,
+        currentStation: current,
+      });
+      expect(
+        within(getByTestId(`stop-body-${current.id}`)).getAllByText('SO-08')
+      ).toHaveLength(1);
+      expect(getByTestId(`stop-dot-${current.id}-0`)).toBeTruthy();
+      expect(getByTestId(`stop-dot-${current.id}-1`)).toBeTruthy();
+    }
+  );
+
+  it.each(['INBOUND', 'OUTBOUND'] as const)(
     '直通境界の丸と線を中心で分割し番号も進行方向順に表示する: %s',
     (direction) => {
       const before = buildStation(101, '渋谷', StopCondition.All, 'Z-01', {

@@ -426,3 +426,29 @@ it('splits junction colors and stacks both numbers while preserving pass opacity
   expect(r.getByTestId('square-number-1-0')).toHaveTextContent('Z-01');
   expect(r.getByTestId('square-number-1-1')).toHaveTextContent('DT-01');
 });
+
+it.each(['SO-08', ''])(
+  'deduplicates identical junction numbers without removing either color: %s',
+  (number) => {
+    const r = render(
+      <SquareMainView
+        {...props}
+        showStops
+        stops={[
+          {
+            ...props.stops[0],
+            junction: [
+              { key: 'before', color: '#AA88BB', number },
+              { key: 'after', color: '#00AA88', number },
+            ],
+          },
+        ]}
+      />
+    );
+    expect(r.getByTestId('square-stop-bar-1-0')).toBeTruthy();
+    expect(r.getByTestId('square-stop-bar-1-1')).toBeTruthy();
+    expect(r.queryByTestId('square-number-1-1')).toBeNull();
+    if (number) expect(r.getAllByText(number)).toHaveLength(1);
+    else expect(r.queryByTestId('square-number-1-0')).toBeNull();
+  }
+);

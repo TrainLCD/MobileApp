@@ -853,6 +853,13 @@ const StopRow = memo(function StopRow({
   const stationNumber =
     station.stationNumbers?.[numberingIndex]?.stationNumber ?? null;
 
+  // 路線が異なっても駅番号が同じ境界では、進行方向で先の一つだけを表示する。
+  const junctionNumbers = junction?.map(
+    (side) =>
+      side.stationNumbers?.[getStationNumberIndex(side, side.line)]
+        ?.stationNumber
+  );
+
   const stationName = isJapanese
     ? (station.name ?? '')
     : (station.nameRoman ?? station.name ?? '');
@@ -971,10 +978,9 @@ const StopRow = memo(function StopRow({
         {junction ? (
           <View style={{ gap: 4, alignItems: 'center' }}>
             {junction.map((side, sideIndex) => {
-              const number =
-                side.stationNumbers?.[getStationNumberIndex(side, side.line)]
-                  ?.stationNumber;
-              return number ? (
+              const number = junctionNumbers?.[sideIndex];
+              return number &&
+                junctionNumbers?.indexOf(number) === sideIndex ? (
                 <Typography
                   key={side.id}
                   style={[
