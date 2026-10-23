@@ -18,7 +18,7 @@ export const fixRomanizedNameReading = (name: string): string =>
         syllable[0] === 'B' ? 'Byoh-in' : 'byoh-in'
       )
       .replace(/kei/gi, (syllable) => (syllable[0] === 'K' ? 'Kay' : 'kay'))
-      .replace(/i(?:t|c)ch(?:ou?|ō)me$/i, (suffix) =>
+      .replace(/i(?:t|c)ch[oō]me$/i, (suffix) =>
         suffix[0] === 'I' ? 'Itch-oh-meh' : 'itch-oh-meh'
       )
       .replace(/ch(?:ou?|ō)me$/i, (suffix) =>
