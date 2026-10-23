@@ -7,8 +7,10 @@ export const message =
   'Use AnimatedTypography from src/components/AnimatedTypography instead of Animated.Text.';
 
 export function checkAnimatedText(source, filename = 'component.tsx') {
+  // TypeScript normalizes host lookups to forward slashes, including on Windows.
+  const sourcePath = filename.replaceAll('\\', '/');
   const file = ts.createSourceFile(
-    filename,
+    sourcePath,
     source,
     ts.ScriptTarget.Latest,
     true,
@@ -16,15 +18,15 @@ export function checkAnimatedText(source, filename = 'component.tsx') {
   );
   // Bind local symbols without resolving dependencies, so shadowed names are not reported.
   const program = ts.createProgram(
-    [filename],
+    [sourcePath],
     { noLib: true, noResolve: true },
     {
-      getSourceFile: (name) => (name === filename ? file : undefined),
+      getSourceFile: (name) => (name === sourcePath ? file : undefined),
       getDefaultLibFileName: () => '',
       writeFile: () => {},
       getCurrentDirectory: () => '',
       getDirectories: () => [],
-      fileExists: (name) => name === filename,
+      fileExists: (name) => name === sourcePath,
       readFile: () => undefined,
       getCanonicalFileName: (name) => name,
       useCaseSensitiveFileNames: () => true,
@@ -72,15 +74,57 @@ export function checkAnimatedText(source, filename = 'component.tsx') {
       return node.argumentExpression.text;
     return undefined;
   };
-  const kindOf = (node) => {
-    if (ts.isIdentifier(node))
-      return bindings.get(checker.getSymbolAtLocation(node));
-    if (ts.isParenthesizedExpression(node)) return kindOf(node.expression);
+  const memberKind = (owner, key) => {
+    if (owner === 'native' && key === 'Animated') return 'animated';
+    if (owner === 'reanimated' && (key === 'default' || key === 'Animated'))
+      return 'animated';
+    return undefined;
+  };
+  const kindOf = (node, seen = new Set()) => {
+    if (ts.isIdentifier(node)) {
+      const symbol = checker.getSymbolAtLocation(node);
+      if (!symbol || seen.has(symbol)) return undefined;
+      if (bindings.has(symbol)) return bindings.get(symbol);
+      const next = new Set(seen).add(symbol);
+      const declaration = symbol.valueDeclaration;
+      if (
+        declaration &&
+        ts.isVariableDeclaration(declaration) &&
+        declaration.initializer
+      )
+        return kindOf(declaration.initializer, next);
+      if (
+        declaration &&
+        ts.isBindingElement(declaration) &&
+        !declaration.dotDotDotToken
+      ) {
+        const variable = declaration.parent.parent;
+        const key = declaration.propertyName ?? declaration.name;
+        if (
+          ts.isVariableDeclaration(variable) &&
+          variable.initializer &&
+          (ts.isIdentifier(key) || ts.isStringLiteral(key))
+        )
+          return memberKind(kindOf(variable.initializer, next), key.text);
+      }
+      return undefined;
+    }
+    if (ts.isParenthesizedExpression(node))
+      return kindOf(node.expression, seen);
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'require' &&
+      !checker.getSymbolAtLocation(node.expression) &&
+      node.arguments.length === 1 &&
+      ts.isStringLiteral(node.arguments[0])
+    ) {
+      if (node.arguments[0].text === 'react-native') return 'native';
+      if (node.arguments[0].text === 'react-native-reanimated')
+        return 'reanimated';
+    }
     const key = property(node);
-    if (key === 'Animated' && kindOf(node.expression) === 'native')
-      return 'animated';
-    if (key === 'default' && kindOf(node.expression) === 'reanimated')
-      return 'animated';
+    if (key) return memberKind(kindOf(node.expression, seen), key);
     return undefined;
   };
   const violations = [];

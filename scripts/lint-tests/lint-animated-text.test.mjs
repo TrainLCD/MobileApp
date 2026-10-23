@@ -8,6 +8,12 @@ import { fileURLToPath } from 'node:url';
 import { checkAnimatedText } from '../lint-animated-text.mjs';
 
 const invalid = [
+  "import { Animated } from 'react-native'; const Motion = Animated; const x = <Motion.Text />;",
+  "import { Animated } from 'react-native'; function f() { const A = Animated; const B = A; return <B.Text />; }",
+  "const { Animated } = require('react-native'); const x = <Animated.Text />;",
+  "const { Animated: Motion } = require('react-native'); const x = Motion['Text'];",
+  "const RN = require('react-native'); const Motion = RN.Animated; const x = <Motion.Text />;",
+  "const { default: Motion } = require('react-native-reanimated'); const x = <Motion.Text />;",
   "import { Animated } from 'react-native'; const x = <Animated.Text />;",
   "import { Animated as Motion } from 'react-native'; const x = <Motion.Text>Hi</Motion.Text>;",
   "import Animated from 'react-native-reanimated'; const x = Animated.Text;",
@@ -28,6 +34,10 @@ for (const source of invalid) {
 }
 
 const valid = [
+  'const A = B; const B = A; const x = A.Text;',
+  "function f(require) { const { Animated } = require('react-native'); return Animated.Text; }",
+  "const { Animated } = require('another-library'); const x = Animated.Text;",
+  "import { Animated } from 'react-native'; const Motion = Animated; function f(Motion) { return Motion.Text; }",
   "import { Animated } from 'react-native'; const x = <Animated.View />;",
   "import Animated from 'react-native-reanimated'; const x = <Animated.View />;",
   "import AnimatedTypography from './AnimatedTypography'; const x = <AnimatedTypography />;",

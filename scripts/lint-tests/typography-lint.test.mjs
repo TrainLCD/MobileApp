@@ -59,21 +59,28 @@ for (const [name, source, allowed, path = 'src/Example.tsx'] of cases) {
       writeFileSync(fixture, `${source}\n`);
       const result = spawnSync(
         process.execPath,
-        [biome, 'lint', path, '--only=style/noRestrictedImports'],
+        [biome, 'lint', path, '--reporter=json'],
         {
           cwd: directory,
           encoding: 'utf8',
         }
       );
       assert.ifError(result.error);
+      const report = JSON.parse(result.stdout);
+      const diagnostics = report.diagnostics.filter(
+        (diagnostic) => diagnostic.category === 'lint/style/noRestrictedImports'
+      );
+      // Other rules may report unused fixture imports. Inspect the actual configured
+      // restriction, including warnings, rather than inferring it from the exit code.
       assert.equal(
-        result.status,
+        diagnostics.length,
         allowed ? 0 : 1,
         result.stdout + result.stderr
       );
       if (!allowed) {
-        assert.match(result.stderr, /lint\/style\/noRestrictedImports/);
-        assert.match(result.stderr, /Use Typography/);
+        assert.equal(result.status, 1);
+        assert.equal(diagnostics[0].severity, 'error');
+        assert.match(JSON.stringify(diagnostics[0]), /Use Typography/);
       }
     } finally {
       rmSync(directory, { recursive: true, force: true });
