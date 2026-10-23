@@ -4,13 +4,13 @@ import {
   type LayoutChangeEvent,
   type StyleProp,
   StyleSheet,
-  Text,
   type TextLayoutEvent,
   type TextProps,
   type TextStyle,
   View,
   type ViewStyle,
 } from 'react-native';
+import Typography from '~/components/Typography';
 
 const MEASURE_TEXT_WIDTH = 10000;
 // 8px covers small native text-measurement underestimates seen with Japanese
@@ -58,7 +58,7 @@ const HeaderStationName: React.FC<Props> = ({
   containerStyle,
   textStyle,
   textProps,
-  TextComponent: TextComponentProp = Text,
+  TextComponent: TextComponentProp = Typography,
 }) => {
   const TextComponent = TextComponentProp as React.ComponentType<
     Animated.AnimatedProps<TextProps>

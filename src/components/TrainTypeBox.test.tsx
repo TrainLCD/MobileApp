@@ -8,6 +8,7 @@ import { APP_THEME } from '../models/Theme';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
+import AnimatedTypography from './AnimatedTypography';
 import TrainTypeBox, { resolveTrainTypeFontFamily } from './TrainTypeBox';
 
 jest.mock('jotai', () => ({
@@ -247,7 +248,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
 
   it('adjustsFontSizeToFitの縮小下限を指定してグリフの消失を防ぐ', () => {
     const { UNSAFE_root } = renderWithScale(1.2);
-    const texts = UNSAFE_root.findAllByType(Animated.Text);
+    const texts = UNSAFE_root.findAllByType(AnimatedTypography);
 
     expect(texts.length).toBeGreaterThan(0);
     for (const text of texts) {

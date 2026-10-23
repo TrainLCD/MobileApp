@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
+import AnimatedTypography from './AnimatedTypography';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 
 // Mock dependencies
@@ -169,7 +170,7 @@ describe('TrainTypeBoxJRKyushu', () => {
       const boxHeight = collectSizedViewStyles(view)[0].height;
       // クロスフェードの新旧2層とも2行レイアウトで描画される。
       const labels = view
-        .UNSAFE_getAllByType(Animated.Text)
+        .UNSAFE_getAllByType(AnimatedTypography)
         .filter((label) => label.props.numberOfLines === 2);
 
       expect(labels.length).toBeGreaterThan(0);

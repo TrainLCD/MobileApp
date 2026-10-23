@@ -1,9 +1,10 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { TrainTypeKind } from '~/@types/graphql';
 import { computeTwoLineTypography } from '~/utils/computeTwoLineTypography';
+import AnimatedTypography from './AnimatedTypography';
 import TrainTypeBoxSaikyo from './TrainTypeBoxSaikyo';
 
 // Mock dependencies
@@ -264,7 +265,7 @@ describe('TrainTypeBoxSaikyo', () => {
         <TrainTypeBoxSaikyo lineColor="#00ac9a" trainType={twoLineTrainType} />
       );
       // クロスフェードの新旧2層とも2行レイアウトで描画される。
-      const labels = UNSAFE_getAllByType(Animated.Text).filter(
+      const labels = UNSAFE_getAllByType(AnimatedTypography).filter(
         (label) => label.props.numberOfLines === 2
       );
 

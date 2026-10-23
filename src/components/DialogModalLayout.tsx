@@ -5,7 +5,6 @@ import {
   ScrollView,
   type StyleProp,
   StyleSheet,
-  Text,
   View,
   type ViewStyle,
 } from 'react-native';
@@ -180,7 +179,7 @@ export const DialogModalLayout: React.FC<DialogModalLayoutProps> = ({
             ]}
           >
             {checkboxChecked ? (
-              <Text style={styles.checkboxMark}>✓</Text>
+              <Typography style={styles.checkboxMark}>✓</Typography>
             ) : null}
           </View>
           <Typography style={styles.checkboxText}>{checkboxText}</Typography>

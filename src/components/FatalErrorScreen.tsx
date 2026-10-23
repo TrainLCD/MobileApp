@@ -3,8 +3,9 @@ import * as Linking from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
 import type React from 'react';
 import { useCallback, useEffect } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Typography from '~/components/Typography';
 import { showDialog } from '~/utils/dialogPresentation';
 import { isDevApp } from '~/utils/isDevApp';
 import { STATUS_URL } from '../constants';
@@ -87,24 +88,30 @@ const FatalErrorScreen: React.FC<Props> = ({
 
   return (
     <SafeAreaView style={styles.root}>
-      <Text style={[styles.text, styles.headingText]}>{title}</Text>
-      <Text style={styles.text}>{text}</Text>
-      {reason ? <Text style={styles.text}>{reason}</Text> : null}
+      <Typography style={[styles.text, styles.headingText]}>{title}</Typography>
+      <Typography style={styles.text}>{text}</Typography>
+      {reason ? <Typography style={styles.text}>{reason}</Typography> : null}
 
       <View style={styles.buttons}>
         {onRetryPress ? (
           <TouchableOpacity onPress={onRetryPress} style={styles.button}>
-            <Text style={styles.buttonText}>{translate('retry')}</Text>
+            <Typography style={styles.buttonText}>
+              {translate('retry')}
+            </Typography>
           </TouchableOpacity>
         ) : null}
         {showStatus ? (
           <TouchableOpacity onPress={openStatusPage} style={styles.button}>
-            <Text style={styles.buttonText}>{translate('openStatusText')}</Text>
+            <Typography style={styles.buttonText}>
+              {translate('openStatusText')}
+            </Typography>
           </TouchableOpacity>
         ) : null}
         {stacktrace ? (
           <TouchableOpacity onPress={showStacktrace} style={styles.button}>
-            <Text style={styles.buttonText}>{translate('stacktrace')}</Text>
+            <Typography style={styles.buttonText}>
+              {translate('stacktrace')}
+            </Typography>
           </TouchableOpacity>
         ) : null}
       </View>
