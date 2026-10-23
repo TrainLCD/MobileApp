@@ -89,6 +89,8 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 - For animated text, use `src/components/AnimatedTypography.tsx` or create the animated component from `Typography`; do not use `Animated.Text` directly.
 - React Native's `Text` is allowed inside `src/components/Typography.tsx` as its underlying primitive. Any other unavoidable exception must explain in an adjacent comment why `Typography` cannot meet the requirement; styling convenience alone is not an exception.
 - Type-only imports such as `TextProps`, `TextStyle`, and `TextInstance` remain allowed. When adding or modifying text UI, follow this rule; do not copy existing direct `Text` usage.
+- `npm run lint` enforces the import restriction with Biome's `noRestrictedImports`. Use named imports from `react-native`; namespace/default imports, `require`, and dynamic imports are restricted to prevent bypassing the `Text` restriction. The rule does not inspect `Animated.Text` member access; the animated-text requirement above still applies.
+- The lint exceptions are `Typography.tsx` (the underlying primitive) and `*.test.ts(x)` (test harnesses, native-node assertions, and mocks). Application UI remains subject to the rule even when tested. Other unavoidable exceptions require a narrowly scoped `biome-ignore lint/style/noRestrictedImports` with a reason; `src/index.tsx` uses one to configure native `Text` defaults globally.
 
 ### Markdown (docs/, README, .claude/skills/\*\*/SKILL.md)
 

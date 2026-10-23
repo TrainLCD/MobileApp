@@ -12,6 +12,7 @@ import * as Location from 'expo-location';
 import * as SplashScreen from 'expo-splash-screen';
 import { Provider, useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
+// biome-ignore lint/style/noRestrictedImports: Configure native Text defaults globally, including third-party components; Typography cannot configure those defaults.
 import { Platform, StatusBar, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
