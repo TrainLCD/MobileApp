@@ -1,6 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Animated as RNAnimated, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import AnimatedTypography from '~/components/AnimatedTypography';
+import Typography from '~/components/Typography';
 import { MARK_SHAPE, STATION_NAME_FONT_SIZE } from '../../constants';
 import { useHeaderAnimation, useLandscapeWindowDimensions } from '../../hooks';
 import isTablet from '../../utils/isTablet';
@@ -193,13 +195,13 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
           />
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
-              <RNAnimated.Text
+              <AnimatedTypography
                 style={[
                   animation.boundTopAnimatedStyles,
                   styles.boundTextContainer,
                 ]}
               >
-                <Text
+                <Typography
                   adjustsFontSizeToFit
                   numberOfLines={1}
                   style={{
@@ -211,8 +213,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   {connectedLines?.length && isJapaneseState
                     ? `${connectionText}直通 `
                     : null}
-                </Text>
-                <Text
+                </Typography>
+                <Typography
                   style={{
                     color: config.textColor,
                     fontWeight: 'bold',
@@ -220,15 +222,15 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   }}
                 >
                   {boundText}
-                </Text>
-              </RNAnimated.Text>
-              <RNAnimated.Text
+                </Typography>
+              </AnimatedTypography>
+              <AnimatedTypography
                 style={[
                   animation.boundBottomAnimatedStyles,
                   styles.boundTextContainer,
                 ]}
               >
-                <Text
+                <Typography
                   adjustsFontSizeToFit
                   numberOfLines={1}
                   style={{
@@ -240,8 +242,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   {connectedLines?.length && animation.prevIsJapaneseState
                     ? `${animation.prevConnectionText}直通 `
                     : null}
-                </Text>
-                <Text
+                </Typography>
+                <Typography
                   style={{
                     color: config.textColor,
                     fontWeight: 'bold',
@@ -249,8 +251,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                   }}
                 >
                   {animation.prevBoundText}
-                </Text>
-              </RNAnimated.Text>
+                </Typography>
+              </AnimatedTypography>
             </View>
           ) : null}
         </View>
@@ -258,7 +260,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
           style={[styles.bottom, { paddingBottom: config.bottomPaddingBottom }]}
         >
           <View style={[styles.stateWrapper, { width: dim.width * 0.14 }]}>
-            <RNAnimated.Text
+            <AnimatedTypography
               style={[
                 animation.stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
@@ -268,8 +270,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
               numberOfLines={2}
             >
               {stateText}
-            </RNAnimated.Text>
-            <RNAnimated.Text
+            </AnimatedTypography>
+            <AnimatedTypography
               style={[
                 animation.stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
@@ -279,7 +281,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
               numberOfLines={2}
             >
               {animation.prevStateText}
-            </RNAnimated.Text>
+            </AnimatedTypography>
           </View>
 
           {renderNumberingIcon()}
@@ -294,7 +296,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
               ]}
             >
               <HeaderStationName
-                TextComponent={RNAnimated.Text}
+                TextComponent={AnimatedTypography}
                 text={stationText}
                 textStyle={[
                   styles.stationName,
@@ -317,7 +319,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
               ]}
             >
               <HeaderStationName
-                TextComponent={RNAnimated.Text}
+                TextComponent={AnimatedTypography}
                 text={animation.prevStationText}
                 textStyle={[
                   styles.stationName,
@@ -337,7 +339,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
             <View
               style={[styles.firstTextWrapper, { width: dim.width * 0.14 }]}
             >
-              <RNAnimated.Text
+              <AnimatedTypography
                 style={[
                   animation.stateTopAnimatedStylesRight,
                   styles.firstText,
@@ -345,8 +347,8 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                 ]}
               >
                 {stateTextRight}
-              </RNAnimated.Text>
-              <RNAnimated.Text
+              </AnimatedTypography>
+              <AnimatedTypography
                 style={[
                   animation.stateBottomAnimatedStylesRight,
                   styles.firstText,
@@ -354,7 +356,7 @@ const HeaderEast: React.FC<Props> = ({ config, ...props }) => {
                 ]}
               >
                 {animation.prevStateTextRight}
-              </RNAnimated.Text>
+              </AnimatedTypography>
             </View>
           ) : null}
         </View>

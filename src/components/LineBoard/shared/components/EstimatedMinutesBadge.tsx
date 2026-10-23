@@ -1,5 +1,6 @@
 import type React from 'react';
-import { Platform, StyleSheet, Text, type TextStyle } from 'react-native';
+import { Platform, StyleSheet, type TextStyle } from 'react-native';
+import Typography from '~/components/Typography';
 import { FONTS } from '~/constants';
 import isTablet from '~/utils/isTablet';
 
@@ -22,4 +23,8 @@ export type EstimatedMinutesBadgeProps = {
 export const EstimatedMinutesBadge: React.FC<EstimatedMinutesBadgeProps> = ({
   estimatedMinutes,
   style,
-}) => <Text style={[styles.text, style]}>{Math.round(estimatedMinutes)}</Text>;
+}) => (
+  <Typography style={[styles.text, style]}>
+    {Math.round(estimatedMinutes)}
+  </Typography>
+);

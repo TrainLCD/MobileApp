@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import AnimatedTypography from '~/components/AnimatedTypography';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
@@ -153,7 +154,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
           <TrainTypeBoxJRKyushu trainType={trainType} />
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
-              <RNAnimated.Text
+              <AnimatedTypography
                 style={[
                   animation.boundTopAnimatedStyles,
                   styles.boundTextContainer,
@@ -169,8 +170,8 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                     : null}
                 </Typography>
                 <Typography style={styles.boundText}>{boundText}</Typography>
-              </RNAnimated.Text>
-              <RNAnimated.Text
+              </AnimatedTypography>
+              <AnimatedTypography
                 style={[
                   animation.boundBottomAnimatedStyles,
                   styles.boundTextContainer,
@@ -188,34 +189,34 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                 <Typography style={styles.boundText}>
                   {animation.prevBoundText}
                 </Typography>
-              </RNAnimated.Text>
+              </AnimatedTypography>
             </View>
           ) : null}
         </View>
         <View style={styles.bottom}>
           <View style={styles.stateWrapper}>
-            <RNAnimated.Text
+            <AnimatedTypography
               style={[
                 animation.stateTopAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
             >
               {stateText}
-            </RNAnimated.Text>
-            <RNAnimated.Text
+            </AnimatedTypography>
+            <AnimatedTypography
               style={[
                 animation.stateBottomAnimatedStyles,
                 selectedBound && firstStop ? styles.firstText : styles.state,
               ]}
             >
               {animation.prevStateText}
-            </RNAnimated.Text>
+            </AnimatedTypography>
           </View>
 
           <View style={styles.stationNameWrapper}>
             <View style={styles.stationNameContainer}>
               <HeaderStationName
-                TextComponent={RNAnimated.Text}
+                TextComponent={AnimatedTypography}
                 text={stationText}
                 textStyle={[
                   animation.topNameAnimatedStyles,
@@ -230,7 +231,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
             </View>
             <View style={styles.stationNameContainer}>
               <HeaderStationName
-                TextComponent={RNAnimated.Text}
+                TextComponent={AnimatedTypography}
                 text={animation.prevStationText}
                 textStyle={[
                   animation.bottomNameAnimatedStyles,
@@ -260,22 +261,22 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
 
           {selectedBound && firstStop ? (
             <View style={styles.firstTextWrapper}>
-              <RNAnimated.Text
+              <AnimatedTypography
                 style={[
                   animation.stateTopAnimatedStylesRight,
                   styles.firstText,
                 ]}
               >
                 {stateTextRight}
-              </RNAnimated.Text>
-              <RNAnimated.Text
+              </AnimatedTypography>
+              <AnimatedTypography
                 style={[
                   animation.stateBottomAnimatedStylesRight,
                   styles.firstText,
                 ]}
               >
                 {animation.prevStateTextRight}
-              </RNAnimated.Text>
+              </AnimatedTypography>
             </View>
           ) : (
             <View style={styles.rightPad} />
