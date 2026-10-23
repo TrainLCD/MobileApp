@@ -2,13 +2,21 @@
  * 英語TTS用の固有名詞で ji / jo が「ヒ / ホ」と読まれるのを避ける。
  * ja / ji / ju / je / jo を「ジャ / ジ / ジュ / ジェ / ジョ」に寄せる
  * 読み上げ用の綴りへ置換する。ji は語を分断しないよう前後とつなげる。
+ * kei は kay に読み替え、「カイ」と読まれるのを避ける。
+ * 一丁目の itchome / icchome は itch-oh-meh に読み替える。
  * 案内文全体には適用しない（join / journey などの英単語を壊さないため）。
  */
 export const fixRomanizedNameReading = (name: string): string =>
   name.normalize('NFC').replace(/[A-Za-z\u00C0-\u024F]+/g, (word) => {
     // 読み替え済みの綴りは再変換しない。Joetsu のような語頭の jo は対象。
     if (/^(?:jah|jew|jeh|joe)$/i.test(word)) return word;
+    // 一丁目だけを対象にし、sanchome など別の丁目の読みは変えない。
+    // 語末に限定し、itchome を含む長い別単語への部分一致を避ける。
     return word
+      .replace(/kei/gi, (syllable) => (syllable[0] === 'K' ? 'Kay' : 'kay'))
+      .replace(/i(?:t|c)ch[oō]me$/i, (suffix) =>
+        suffix[0] === 'I' ? 'Itch-oh-meh' : 'itch-oh-meh'
+      )
       .replace(/j[aiueoō]/gi, (syllable) => {
         const reading =
           {

@@ -897,7 +897,7 @@ describe('through service boundary announcement', () => {
     expect(jaText).toContain('京王線</sub>直通');
     expect(jaText).toContain('をご利用くださいまして、ありがとうございました');
     expect(enText).toContain(
-      'will merge and continue traveling on the Keio Line'
+      'will merge and continue traveling on the Kayo Line'
     );
     expect(enText).toContain('Thank you for using the');
   });
