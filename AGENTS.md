@@ -83,6 +83,13 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 - Hooks that subscribe to high-frequency atoms (`locationAtom` updates every second while riding) must not run in a screen body. Host each in its own renderless `Fx*` component (`MainScreenEffects` in `src/screens/Main.tsx`, `PermittedLayoutEffects` in `src/components/Permitted.tsx`), and gate platform- or setting-specific ones by mounting their host conditionally (`FxTTS`, `FxUpdateLiveActivities`). Subscribe to narrow derived atoms such as `pictureInPictureEnabledAtom` / `pictureInPictureActiveAtom` rather than the whole object.
 - StrictMode re-runs effects in development, so mount-time effects must be repeatable. Never call the unkeyed `showDialog` from `useEffect` or async work it starts; use `showDialogWhilePresenting` from `src/utils/dialogPresentation.ts`. Event handlers such as `onPress` may call `showDialog` directly. An effect that writes shared state in cleanup must correspond to a real lifecycle event (e.g., navigation `beforeRemove`).
 
+### Text rendering
+
+- Use `src/components/Typography.tsx` for application text. Do not import or render React Native's `Text` directly in screens or other UI components, including aliases such as `RNText` or namespace access such as `ReactNative.Text`. This keeps font selection, theme colors, and font-scaling behavior centralized.
+- For animated text, use `src/components/AnimatedTypography.tsx` or create the animated component from `Typography`; do not use `Animated.Text` directly.
+- React Native's `Text` is allowed inside `src/components/Typography.tsx` as its underlying primitive. Any other unavoidable exception must explain in an adjacent comment why `Typography` cannot meet the requirement; styling convenience alone is not an exception.
+- Type-only imports such as `TextProps`, `TextStyle`, and `TextInstance` remain allowed. When adding or modifying text UI, follow this rule; do not copy existing direct `Text` usage.
+
 ### Markdown (docs/, README, .claude/skills/\*\*/SKILL.md)
 
 `markdownlint-cli2` 準拠（CodeRabbit も同ルールで指摘する）。
