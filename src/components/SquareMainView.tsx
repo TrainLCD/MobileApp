@@ -30,6 +30,7 @@ export type SquareStop = {
   name: string;
   number: string;
   color: string;
+  junction?: { key: string; color: string; number: string }[];
   focused: boolean;
   passed: boolean;
   pass?: boolean;
@@ -259,11 +260,19 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                     style={[
                       styles.stopBar,
                       {
-                        backgroundColor: stop.color,
+                        backgroundColor: stop.junction ? undefined : stop.color,
                         opacity: stop.passed || stop.pass ? 0.4 : 1,
                       },
                     ]}
-                  />
+                  >
+                    {stop.junction?.map((side, index) => (
+                      <View
+                        key={side.key}
+                        testID={`square-stop-bar-${stop.key}-${index}`}
+                        style={{ flex: 1, backgroundColor: side.color }}
+                      />
+                    ))}
+                  </View>
                   <View style={styles.stopNameColumn}>
                     {stop.focused && !!stop.stateText && (
                       <Text
@@ -294,19 +303,41 @@ export const SquareMainView = memo((props: SquareMainViewProps) => {
                       {stop.name}
                     </Text>
                   </View>
-                  {!!stop.number && (
-                    <Text
-                      testID={`square-number-${stop.key}`}
-                      style={[
-                        styles.stopNumber,
-                        {
-                          color: stop.numberColor ?? colors.secondary,
-                          opacity: stop.passed || stop.pass ? 0.4 : 1,
-                        },
-                      ]}
-                    >
-                      {stop.number}
-                    </Text>
+                  {stop.junction ? (
+                    <View style={styles.stopNumbers}>
+                      {stop.junction.map((side, index) =>
+                        side.number ? (
+                          <Text
+                            key={side.key}
+                            testID={`square-number-${stop.key}-${index}`}
+                            style={[
+                              styles.stopNumber,
+                              {
+                                color: side.color,
+                                opacity: stop.passed || stop.pass ? 0.4 : 1,
+                              },
+                            ]}
+                          >
+                            {side.number}
+                          </Text>
+                        ) : null
+                      )}
+                    </View>
+                  ) : (
+                    !!stop.number && (
+                      <Text
+                        testID={`square-number-${stop.key}`}
+                        style={[
+                          styles.stopNumber,
+                          {
+                            color: stop.numberColor ?? colors.secondary,
+                            opacity: stop.passed || stop.pass ? 0.4 : 1,
+                          },
+                        ]}
+                      >
+                        {stop.number}
+                      </Text>
+                    )
                   )}
                   {stop.showEta && (
                     <View
@@ -579,7 +610,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   focusRow: { minHeight: 90 },
-  stopBar: { width: 4, alignSelf: 'stretch', borderRadius: 2 },
+  stopBar: {
+    width: 4,
+    alignSelf: 'stretch',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  stopNumbers: { gap: 4, alignItems: 'center' },
   stopNumber: { fontFamily: FONTS.RobotoBold, fontSize: 10 },
   etaColumn: {
     minWidth: 46,
