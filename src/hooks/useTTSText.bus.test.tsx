@@ -156,6 +156,24 @@ describe('useTTSText (bus mode)', () => {
     }
   );
 
+  test('聖母病院入口のGTFS表記を病院の読み替えを含む案内にする', () => {
+    setupMockUseNextStation({
+      ...TOEI_SHINJUKU_LINE_STATIONS[1],
+      name: '聖母病院入口',
+      nameKatakana: 'セイボビョウインイリグチ',
+      nameRoman: 'Seibo-Byōin-Iriguchi (Seibo Hp.)',
+      nameTtsSegments: [],
+    });
+    const { result } = renderHook(
+      () => useBusTTSTextWithJotai('TOKYO_METRO', 'NEXT', false),
+      { wrapper }
+    );
+    const [jaText, enText] = result.current.text;
+    expect(jaText).toContain('聖母病院入口');
+    expect(enText).toContain('Seibo-Bee-oh-in-Iriguchi');
+    expect(enText).not.toContain('Seibo Hp.');
+  });
+
   describe('TOKYO_METRO Theme', () => {
     test('should generate NEXT text with firstSpeech=true', () => {
       const { result } = renderHook(

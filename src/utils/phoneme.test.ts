@@ -22,6 +22,21 @@ const ipaSegment = (
 });
 
 describe('wrapPhoneme', () => {
+  it.each(['native', 'remote'] as const)(
+    '聖母病院入口の日本語セグメントを%s向けの英語本文へ変換する',
+    (engine) => {
+      // 都営バス GTFS の表記。API の日本語 fallbackText から
+      // nameRoman へ戻る経路でも病院の補正を適用する。
+      const name = wrapPhoneme(
+        [ipaSegment('Byōin', 'bʲoːiɴ', 'びょういん')],
+        'Seibo-Byōin-Iriguchi'
+      );
+      expect(toSpeakableText(`The next stop is ${name}.`, 'EN', engine)).toBe(
+        'The next stop is Seibo-Bee-oh-in-Iriguchi.'
+      );
+    }
+  );
+
   it.each([
     ['', 'Joe-etsu'],
     ['-', 'Joe-etsu'],

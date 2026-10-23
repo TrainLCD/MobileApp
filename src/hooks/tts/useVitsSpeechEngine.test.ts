@@ -133,6 +133,7 @@ describe('useVitsSpeechEngine', () => {
     const { result } = renderEngine();
     const names = [
       'Shinjuku-sanchome',
+      'Seibo-Byōin-Iriguchi',
       'Daigaku-byoin',
       'Keisatsusho',
       'Ginza-itchome',
@@ -157,7 +158,7 @@ describe('useVitsSpeechEngine', () => {
     await flushAsync();
     expect(mockSynthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        text: 'Enjoy your journey. Shin-jew-ku-san-choh-meh, Daigaku-byoh-in, Kaysatsusho, Ginza-itch-oh-meh, Megeero, Geen-jah, Ogee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
+        text: 'Enjoy your journey. Shin-jew-ku-san-choh-meh, Seibo-Bee-oh-in-Iriguchi, Daigaku-bee-oh-in, Kaysatsusho, Ginza-itch-oh-meh, Megeero, Geen-jah, Ogee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
       })
     );
   });
