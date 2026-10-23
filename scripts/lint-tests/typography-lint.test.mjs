@@ -12,7 +12,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-const root = fileURLToPath(new URL('../', import.meta.url));
+const root = fileURLToPath(new URL('../../', import.meta.url));
 const biome = join(root, 'node_modules/@biomejs/biome/bin/biome');
 const cases = [
   ['named Text', "import { Text } from 'react-native';", false],
