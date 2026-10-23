@@ -25,6 +25,7 @@ import { untouchableModeEnabledAtom } from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
+import { buildJunctionDisplays } from '~/utils/junctionDisplay';
 import { resolveRunningStateText } from '~/utils/resolveRunningStateText';
 import { accentColorFor } from '~/utils/stopListAccentColor';
 import {
@@ -154,6 +155,15 @@ const SquareMain = ({
       ? [...list].reverse()
       : list;
   }, [allStations, direction, isLoopLine]);
+
+  const junctions = useMemo(
+    () =>
+      buildJunctionDisplays(
+        allStations,
+        isLoopLine ? direction === 'INBOUND' : direction === 'OUTBOUND'
+      ),
+    [allStations, direction, isLoopLine]
+  );
 
   if (!data)
     return <View style={{ flex: 1, backgroundColor: colors.background }} />;
@@ -322,7 +332,15 @@ const SquareMain = ({
           (isSameStation(station, progressStation) || index < etaStartIndex);
         const pass = getIsPass(station);
         const number = station.stationNumbers?.[getNumberIndex(station)];
+        const junction = junctions.get(station);
         return {
+          junction: junction?.map((side) => ({
+            key: String(side.id),
+            color: side.line?.color || lineColor,
+            number:
+              side.stationNumbers?.[getNumberIndex(side, side.line)]
+                ?.stationNumber ?? '',
+          })),
           key: `${station.id}-${index}`,
           name: squareName(station, isJapanese ? 'JA' : 'EN'),
           number: number?.stationNumber ?? '',
