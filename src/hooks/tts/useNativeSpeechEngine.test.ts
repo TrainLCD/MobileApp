@@ -60,6 +60,12 @@ const renderEngine = () => renderHook(() => useNativeSpeechEngine());
 
 describe('useNativeSpeechEngine', () => {
   it.each([
+    ['Shinjuku-sanchome', 'Shin-jew-ku-san-choh-meh'],
+    ['Daigaku-byoin', 'Daigaku-byoh-in'],
+    ['Byoin-mae', 'Byoh-in-mae'],
+    ['Keisatsusho', 'Kaysatsusho'],
+    ['Ginza-itchome', 'Ginza-itch-oh-meh'],
+    ['Aoyama-itchome', 'Aoyama-itch-oh-meh'],
     ['Mejiro', 'Megeero'],
     ['Higashi-Mejiro', 'Higashi-Megeero'],
     ['Jinja', 'Geen-jah'],
