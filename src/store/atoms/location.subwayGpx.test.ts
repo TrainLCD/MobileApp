@@ -225,8 +225,15 @@ describe.each(GPX_FILES)('%s の電波環境', (file) => {
   });
 
   it('同じトラックなら路線種別によらず同じ処理になる', () => {
-    const normal = replay(track, LineType.Normal);
-    expect(normal).toEqual(replay(track, LineType.Subway));
+    const coordinates = (lineType: LineType) => {
+      resetLocationState();
+      setLineType(lineType);
+      return track.map((point) => {
+        setLocation(toLocation(point, point.accuracy ?? 8));
+        return store.get(locationAtom)?.coords;
+      });
+    };
+    expect(coordinates(LineType.Normal)).toEqual(coordinates(LineType.Subway));
   });
 });
 
