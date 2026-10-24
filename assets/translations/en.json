@@ -1,4 +1,6 @@
 {
+  "backgroundDistanceFilterBypassTitle": "Remove the background 10 m filter",
+  "backgroundDistanceFilterBypassDescription": "ON removes the movement distance filter for background location updates. OFF restores the 10 m filter. Defaults to ON. The 10 m filter stays enabled in the foreground and during power-saving location tracking.",
   "specifyStation": "Set current station",
   "errorTitle": "Error",
   "failedToFetchStation": "Failed to get station information.",

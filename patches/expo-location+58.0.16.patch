@@ -1,5 +1,5 @@
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-index b7132b8..2e39bfe 100644
+index b7132b8..579a444 100644
 --- a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
 @@ -7,6 +7,7 @@
@@ -46,7 +46,7 @@ index b7132b8..2e39bfe 100644
  
      locationManager.delegate = self;
      locationManager.allowsBackgroundLocationUpdates = YES;
-@@ -68,16 +78,122 @@
+@@ -68,16 +78,123 @@
      EXLocationAccuracy accuracy = [options[@"accuracy"] unsignedIntegerValue] ?: EXLocationAccuracyBalanced;
  
      locationManager.desiredAccuracy = [EXLocation CLLocationAccuracyFromOption:accuracy];
@@ -90,6 +90,7 @@ index b7132b8..2e39bfe 100644
 +  // may be more frequent; this does not promise unchanged battery consumption.
 +  _locationManager.distanceFilter = EXTrainLCDDistanceFilter(
 +    _trainLCDInBackground,
++    [self numberToBool:_task.options[@"trainLCDBypassBackgroundDistanceFilter"] defaultValue:true],
 +    _locationManager.pausesLocationUpdatesAutomatically,
 +    _configuredDistanceFilter,
 +    kCLDistanceFilterNone
@@ -170,7 +171,7 @@ index b7132b8..2e39bfe 100644
  # pragma mark - CLLocationManagerDelegate
  
  - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
-@@ -98,6 +214,7 @@
+@@ -98,6 +215,7 @@
  - (void)reset
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
@@ -178,7 +179,7 @@ index b7132b8..2e39bfe 100644
      [self->_locationManager stopUpdatingLocation];
      [self->_locationManager stopMonitoringSignificantLocationChanges];
      [self->_deferredLocations removeAllObjects];
-@@ -118,12 +235,15 @@
+@@ -118,12 +236,15 @@
    _lastReportedLocation = _deferredLocations.lastObject;
    _deferredDistance = 0.0;
    [_deferredLocations removeAllObjects];
@@ -196,10 +197,10 @@ index b7132b8..2e39bfe 100644
  
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
 new file mode 100644
-index 0000000..892f783
+index 0000000..ffbd7de
 --- /dev/null
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,31 @@
 +// TrainLCD: keep the configured foreground and power-saving distance filters.
 +#ifndef EX_TRAINLCD_LOCATION_POLICY_H
 +#define EX_TRAINLCD_LOCATION_POLICY_H
@@ -208,11 +209,12 @@ index 0000000..892f783
 +
 +static inline double EXTrainLCDDistanceFilter(
 +  int inBackground,
++  int bypassDistanceFilter,
 +  int pausesAutomatically,
 +  double configuredDistance,
 +  double noDistanceFilter
 +) {
-+  return inBackground && !pausesAutomatically
++  return bypassDistanceFilter && inBackground && !pausesAutomatically
 +    ? noDistanceFilter
 +    : configuredDistance;
 +}

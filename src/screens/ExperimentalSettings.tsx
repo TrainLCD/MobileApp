@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
+  Platform,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
@@ -19,6 +20,7 @@ import {
   setRemoteTTSOverride,
 } from '~/lib/remoteTTSOverride';
 import { useAppColors } from '~/providers/AppColorsProvider';
+import { iosBackgroundDistanceFilterBypassAtom } from '~/store/atoms/locationSettings';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
@@ -165,6 +167,18 @@ const ExperimentalSettingsScreen: React.FC = () => {
   // 値の情報源はモジュール側のキャッシュなので、画面はローカル state を持たず購読する。
   const remoteTTSOverride = useRemoteTTSOverride();
 
+  const [bypassDistanceFilter, setBypassDistanceFilter] = useAtom(
+    iosBackgroundDistanceFilterBypassAtom
+  );
+  const handleToggleDistanceFilter = useCallback(() => {
+    try {
+      setBypassDistanceFilter(!bypassDistanceFilter);
+    } catch (error) {
+      console.error('Failed to save background distance filter setting', error);
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  }, [bypassDistanceFilter, setBypassDistanceFilter]);
+
   const navigation = useNavigation();
 
   const handleSelectRemoteTTSOverride = useCallback(
@@ -254,6 +268,22 @@ const ExperimentalSettingsScreen: React.FC = () => {
           >
             {translate('untouchableModeDescription')}
           </Typography>
+          {Platform.OS === 'ios' && (
+            <>
+              <View style={styles.toggleSpacer}>
+                <ToggleItem
+                  title={translate('backgroundDistanceFilterBypassTitle')}
+                  state={bypassDistanceFilter}
+                  onToggle={handleToggleDistanceFilter}
+                />
+              </View>
+              <Typography
+                style={[styles.description, { color: colors.secondaryText }]}
+              >
+                {translate('backgroundDistanceFilterBypassDescription')}
+              </Typography>
+            </>
+          )}
           <Typography style={styles.sectionTitle}>
             {translate('remoteTTSOverrideTitle')}
           </Typography>
