@@ -1,0 +1,197 @@
+import type * as Location from 'expo-location';
+import { Platform } from 'react-native';
+import { LineType, type Station } from '~/@types/graphql';
+import {
+  handleTrackingLocation,
+  resetTrackingLocationDedup,
+} from '~/utils/handleTrackingLocation';
+import { getLocationPipelineCounts } from '~/utils/locationPipelineStats';
+import { store } from '..';
+import { etaAnchorAtom, etaStopsAtom } from './etaFallback';
+import { locationAtom, resetLocationState } from './location';
+import stationState from './station';
+
+jest.mock('~/lib/remoteConfig', () => ({
+  getMaxPermitAccuracy: () => 3000,
+  isEtaAssistEnabled: () => true,
+  getEtaFallbackArrivalConfirmMarginSec: () => 30,
+}));
+
+const t = 1_000_000;
+const fix = (
+  latitude: number,
+  seconds: number,
+  accuracy = 30
+): Location.LocationObject => ({
+  timestamp: t + seconds * 1000,
+  coords: {
+    latitude,
+    longitude: 139,
+    accuracy,
+    altitude: null,
+    altitudeAccuracy: null,
+    heading: null,
+    speed: null,
+  },
+});
+const feed = (latitude: number, seconds: number, accuracy = 30) =>
+  handleTrackingLocation(fix(latitude, seconds, accuracy));
+const seed = (latitude: number) => {
+  for (let i = -3; i <= 0; i++) feed(latitude, i);
+};
+const originalOS = Platform.OS;
+
+afterAll(() => Object.defineProperty(Platform, 'OS', { value: originalOS }));
+
+describe.each(['ios', 'android'] as const)('%s underground recovery', (os) => {
+  describe.each([LineType.Normal, LineType.Subway, null])(
+    'line %s',
+    (lineType) => {
+      beforeEach(() => {
+        Object.defineProperty(Platform, 'OS', {
+          configurable: true,
+          value: os,
+        });
+        resetLocationState();
+        resetTrackingLocationDedup();
+        store.set(etaAnchorAtom, null);
+        store.set(etaStopsAtom, []);
+        store.set(stationState, (prev) => ({
+          ...prev,
+          station:
+            lineType == null ? null : ({ line: { lineType } } as Station),
+          stations: [],
+        }));
+      });
+
+      it('recovers at the end of a consistent sequence and resumes the speed filter', () => {
+        seed(35);
+        feed(35, 1, 1500);
+        for (let i = 1; i <= 12; i++) feed(35.1 + i * 0.00001, i + 1);
+        expect(store.get(locationAtom)?.coords.latitude).toBeCloseTo(
+          35.10012,
+          5
+        );
+        expect(getLocationPipelineCounts().rejectedBySpeed).toBe(0);
+        const before = store.get(locationAtom);
+        feed(36.1, 14);
+        expect(store.get(locationAtom)).toBe(before);
+        expect(getLocationPipelineCounts().rejectedBySpeed).toBe(1);
+        feed(35.10013, 15);
+        expect(store.get(locationAtom)?.coords.latitude).toBeGreaterThan(
+          35.10012
+        );
+      });
+
+      it('rejects a 111km jump on the first normal-filter fix', () => {
+        seed(35);
+        feed(35, 1, 1500);
+        for (let i = 1; i <= 11; i++) feed(35.1 + i * 0.00001, i + 1);
+        const before = store.get(locationAtom);
+        feed(36.10012, 13);
+        expect(store.get(locationAtom)).toBe(before);
+        expect(getLocationPipelineCounts().rejectedBySpeed).toBe(1);
+        feed(35.10013, 14);
+        feed(35.10014, 15);
+        expect(store.get(locationAtom)?.coords.latitude).toBeCloseTo(
+          35.10014,
+          5
+        );
+      });
+
+      it.each([30, 60])(
+        'recovers with a %s-second delivery interval',
+        (interval) => {
+          seed(35);
+          feed(35, 1, 1500);
+          for (let i = 1; i <= 12; i++)
+            feed(35.1 + i * 0.00001, 1 + i * interval);
+          expect(store.get(locationAtom)).toEqual(
+            fix(35.1 + 12 * 0.00001, 1 + 12 * interval)
+          );
+          expect(getLocationPipelineCounts().rejectedBySpeed).toBe(0);
+        }
+      );
+
+      it('clears pending confirmation on reset', () => {
+        seed(35);
+        feed(35, 1, 1500);
+        for (let i = 1; i <= 11; i++) feed(35.1 + i * 0.00001, i + 1);
+        feed(36.1, 13);
+        resetLocationState();
+        resetTrackingLocationDedup();
+        feed(34, 14);
+        expect(store.get(locationAtom)?.coords.latitude).toBe(34);
+        feed(35.1, 15);
+        expect(store.get(locationAtom)?.coords.latitude).toBe(34);
+        expect(getLocationPipelineCounts().rejectedBySpeed).toBe(1);
+      });
+
+      it('does not resync merely after five inconsistent recovery candidates', () => {
+        seed(35);
+        feed(35, 1, 1500);
+        for (let i = 1; i <= 11; i++) feed(35.1 + i * 0.00001, i + 1);
+        const before = store.get(locationAtom);
+        for (let i = 0; i < 6; i++) {
+          feed(36 + i, 13 + i);
+          expect(store.get(locationAtom)).toBe(before);
+        }
+        feed(35.10013, 19);
+        feed(35.10014, 20);
+        expect(store.get(locationAtom)?.coords.latitude).toBe(35.10014);
+      });
+
+      it.each([500, 1500, 1600])(
+        'holds ETA rejections and confirms recovery from accuracy %s',
+        (accuracy) => {
+          seed(34.9);
+          if (accuracy === 500) feed(34.9, 0.5, 1500);
+          feed(34.9, 1, accuracy);
+          const stations = Array.from(
+            { length: 5 },
+            (_, i) =>
+              ({
+                id: i + 1,
+                latitude: 35 + i * 0.01,
+                longitude: 139,
+              }) as Station
+          );
+          store.set(stationState, (prev) => ({ ...prev, stations }));
+          store.set(
+            etaStopsAtom,
+            stations.map((_, i) => ({
+              stationId: i + 1,
+              cumulativeMinutes: i * 2,
+              departureCumulativeMinutes: i * 2 + 0.5,
+            }))
+          );
+          store.set(etaAnchorAtom, {
+            stationId: 1,
+            kind: 'DEPARTED',
+            observedAtMs: t,
+          });
+          const before = store.get(locationAtom);
+          for (let i = 2; i <= 13; i++) {
+            feed(35.04, i);
+            expect(store.get(locationAtom)).toBe(before);
+          }
+          expect(getLocationPipelineCounts().rejectedByEta).toBe(12);
+          // ETAを通る最初の一点だけでは古い基準を破棄しない。
+          feed(35.01001, 14);
+          expect(store.get(locationAtom)).toBe(before);
+          feed(35.04, 15);
+          expect(store.get(locationAtom)).toBe(before);
+          feed(35.01001, 16);
+          expect(store.get(locationAtom)).toBe(before);
+          feed(35.01002, 17);
+          expect(store.get(locationAtom)?.coords.latitude).toBe(35.01002);
+          const recovered = store.get(locationAtom);
+          // ETA範囲内でも、復帰後の1秒・約1kmの移動は速度で棄却する。
+          feed(35.00001, 18);
+          expect(store.get(locationAtom)).toBe(recovered);
+          expect(getLocationPipelineCounts().rejectedBySpeed).toBe(3);
+        }
+      );
+    }
+  );
+});
