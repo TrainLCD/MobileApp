@@ -103,9 +103,7 @@ describe('iOS coarse location regression (synthetic history)', () => {
       Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
       handleTrackingLocation(reported);
       expect(store.get(locationAtom)).toBe(reported);
-      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(
-        os === 'android'
-      );
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(false);
       expect(getDistance(reported.coords, kasugacho, 0.01)).toBeCloseTo(
         360.84,
         2
@@ -160,7 +158,7 @@ describe('iOS coarse location regression (synthetic history)', () => {
     ).toBe(true);
   });
 
-  it('Android continues to adopt coarse station-to-station measurements directly', () => {
+  it('Android rejects an implausible coarse jump on a subway too', () => {
     Object.defineProperty(Platform, 'OS', {
       value: 'android',
       configurable: true,
@@ -170,7 +168,8 @@ describe('iOS coarse location regression (synthetic history)', () => {
     );
     const next = fix(toshimaen.latitude, toshimaen.longitude, timestamp);
     handleTrackingLocation(next);
-    expect(store.get(locationAtom)).toBe(next);
+    expect(store.get(locationAtom)?.coords.latitude).toBe(kasugacho.latitude);
+    expect(getLocationPipelineCounts().rejectedBySpeed).toBe(1);
   });
 
   it('immediately adopts a recovered accurate station fix after coarse measurements', () => {
@@ -254,7 +253,7 @@ describe('iOS coarse location regression (synthetic history)', () => {
   });
 
   it.each([1500, 1501])(
-    'only smooths the band above the existing 1500m limit (%i)',
+    'smooths both sides of the 1500m boundary (%i)',
     (accuracy) => {
       const center = fix(
         kasugacho.latitude,
@@ -265,19 +264,13 @@ describe('iOS coarse location regression (synthetic history)', () => {
       handleTrackingLocation(center);
       const next = { ...reported, coords: { ...reported.coords, accuracy } };
       handleTrackingLocation(next);
-      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(
-        accuracy === 1500
-      );
-      if (accuracy === 1500) {
-        expect(store.get(locationAtom)).toBe(next);
-      } else {
-        expect(
-          getDistance(
-            (store.get(locationAtom) as Location.LocationObject).coords,
-            kasugacho
-          )
-        ).toBeLessThan(350);
-      }
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(false);
+      expect(
+        getDistance(
+          (store.get(locationAtom) as Location.LocationObject).coords,
+          kasugacho
+        )
+      ).toBeLessThan(350);
     }
   );
 

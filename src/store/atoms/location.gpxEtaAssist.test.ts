@@ -110,7 +110,7 @@ const setupRoute = (stops: TrackStop[]) => {
   store.set(stationState, {
     arrived: true,
     approaching: false,
-    // 地下鉄はスムージング自体をスキップするため、地上路線として流す
+    // 路線種別では測位処理を分岐しない。ここではNormalとして流す。
     station: { line: { lineType: LineType.Normal } } as Station,
     stations: buildStations(stops),
     stationsCache: [],
