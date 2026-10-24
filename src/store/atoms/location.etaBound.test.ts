@@ -1,5 +1,6 @@
 import type * as Location from 'expo-location';
 import { LineType, type Station } from '~/@types/graphql';
+import { getLocationPipelineCounts } from '~/utils/locationPipelineStats';
 import { store } from '..';
 import { etaAnchorAtom, etaStopsAtom } from './etaFallback';
 import { locationAtom, resetLocationState, setLocation } from './location';
@@ -105,9 +106,9 @@ describe('ETAの進行量上限による棄却', () => {
 
     setLocation(makeLocation(stations[1].latitude as number, t0 + 1_000));
 
-    // 10秒後、3駅目付近(=次の停車駅)の座標が届く
+    // 30秒後、3駅目付近(=次の停車駅)の座標が届く。速度フィルタも通過する。
     const next = stations[2].latitude as number;
-    setLocation(makeLocation(next, t0 + 11_000));
+    setLocation(makeLocation(next, t0 + 31_000));
 
     expect(store.get(locationAtom)?.coords.latitude).toBe(next);
   });
@@ -133,9 +134,15 @@ describe('ETAの進行量上限による棄却', () => {
     expect(store.get(locationAtom)?.coords.latitude).toBe(far);
 
     // 打ち切り後は、直後の範囲外測位も続けて反映される
-    const farther = stations[6].latitude as number;
+    const farther = far + 10 / METERS_PER_DEG_LAT;
     setLocation(makeLocation(farther, t0 + 11_000 + 91_000));
-    expect(store.get(locationAtom)?.coords.latitude).toBe(farther);
+    expect(store.get(locationAtom)?.coords.latitude).toBeGreaterThan(far);
+    expect(store.get(locationAtom)?.coords.latitude).toBeLessThan(farther);
+    expect(getLocationPipelineCounts()).toMatchObject({
+      accepted: 3,
+      rejectedByEta: 1,
+      rejectedBySpeed: 0,
+    });
   });
 
   it('打ち切り後に範囲内の測位が届いたら、再び範囲外を棄却する', () => {
@@ -155,13 +162,19 @@ describe('ETAの進行量上限による棄却', () => {
     // 範囲内へ戻る(ETAを再び信用できる状態)
     const inRange = stations[2].latitude as number;
     setLocation(makeLocation(inRange, t0 + 11_000 + 91_000));
-    expect(store.get(locationAtom)?.coords.latitude).toBe(inRange);
+    // 1秒で3駅戻る入力は速度フィルタで棄却するが、ETAの保留は解除する。
+    expect(store.get(locationAtom)?.coords.latitude).toBe(far);
+    expect(getLocationPipelineCounts()).toMatchObject({
+      rejectedByEta: 1,
+      rejectedBySpeed: 1,
+    });
 
     // 再び範囲外が届いたら棄却する
     setLocation(
       makeLocation(stations[6].latitude as number, t0 + 11_000 + 92_000)
     );
-    expect(store.get(locationAtom)?.coords.latitude).toBe(inRange);
+    expect(store.get(locationAtom)?.coords.latitude).toBe(far);
+    expect(getLocationPipelineCounts().rejectedByEta).toBe(2);
   });
 
   it('打ち切り後でもアンカーが張り直されたら再び棄却する', () => {
@@ -202,7 +215,7 @@ describe('ETAの進行量上限による棄却', () => {
 
     setLocation(makeLocation(stations[1].latitude as number, t0 + 1_000));
     const far = stations[5].latitude as number;
-    setLocation(makeLocation(far, t0 + 11_000));
+    setLocation(makeLocation(far, t0 + 61_000));
 
     expect(store.get(locationAtom)?.coords.latitude).toBe(far);
   });
@@ -213,7 +226,7 @@ describe('ETAの進行量上限による棄却', () => {
 
     setLocation(makeLocation(stations[1].latitude as number, t0 + 1_000));
     const far = stations[5].latitude as number;
-    setLocation(makeLocation(far, t0 + 11_000));
+    setLocation(makeLocation(far, t0 + 61_000));
 
     expect(store.get(locationAtom)?.coords.latitude).toBe(far);
   });
@@ -248,9 +261,15 @@ describe('ETAの進行量上限による棄却', () => {
       });
       setLocation(makeLocation(stations[0].latitude as number, t0));
 
-      // 発車後、トンネルで測位が途切れ、次の停車駅(idx4)で復活する
+      // 停車状態のアンカーが更新され、仮想時計は停車中のまま。
+      store.set(etaAnchorAtom, {
+        stationId: stations[0].id as number,
+        kind: 'AT_STATION',
+        observedAtMs: t0 + 50_000,
+      });
+      // 4.4kmを60秒で進み、次の停車駅で測位が復活する。
       const next = stations[4].latitude as number;
-      setLocation(makeLocation(next, t0 + 10_000));
+      setLocation(makeLocation(next, t0 + 60_000));
 
       expect(store.get(locationAtom)?.coords.latitude).toBe(next);
     });
