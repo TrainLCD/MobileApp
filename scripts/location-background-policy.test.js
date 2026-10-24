@@ -16,17 +16,24 @@ test('background tracking removes the distance gate and restores foreground/powe
 int main(void) {
   const double none = -1;
   // Foreground -> background -> foreground, without restarting the manager.
-  assert(EXTrainLCDDistanceFilter(0, 0, 10, none) == 10);
-  assert(EXTrainLCDDistanceFilter(1, 0, 10, none) == none);
-  assert(EXTrainLCDDistanceFilter(0, 0, 10, none) == 10);
+  assert(EXTrainLCDDistanceFilter(0, 1, 0, 10, none) == 10);
+  assert(EXTrainLCDDistanceFilter(1, 1, 0, 10, none) == none);
+  assert(EXTrainLCDDistanceFilter(0, 1, 0, 10, none) == 10);
   // Enabling/disabling power saving while already in the background.
-  assert(EXTrainLCDDistanceFilter(1, 1, 10, none) == 10);
-  assert(EXTrainLCDDistanceFilter(1, 0, 10, none) == none);
-  assert(EXTrainLCDDistanceFilter(0, 1, 10, none) == 10);
+  assert(EXTrainLCDDistanceFilter(1, 1, 1, 10, none) == 10);
+  assert(EXTrainLCDDistanceFilter(1, 1, 0, 10, none) == none);
+  assert(EXTrainLCDDistanceFilter(0, 1, 1, 10, none) == 10);
   // Restore the configured value, not a hard-coded default.
-  assert(EXTrainLCDDistanceFilter(0, 0, 25, none) == 25);
-  assert(EXTrainLCDDistanceFilter(1, 1, 25, none) == 25);
-  assert(EXTrainLCDDistanceFilter(0, 0, none, none) == none);
+  assert(EXTrainLCDDistanceFilter(0, 1, 0, 25, none) == 25);
+  assert(EXTrainLCDDistanceFilter(1, 1, 1, 25, none) == 25);
+  assert(EXTrainLCDDistanceFilter(0, 1, 0, none, none) == none);
+  // OFF keeps the configured filter through foreground/background and power saving.
+  for (int background = 0; background <= 1; background++) {
+    for (int powerSaving = 0; powerSaving <= 1; powerSaving++) {
+      assert(EXTrainLCDDistanceFilter(background, 0, powerSaving, 10, none) == 10);
+      assert(EXTrainLCDDistanceFilter(background, 0, powerSaving, 25, none) == 25);
+    }
+  }
   return 0;
 }
 `);
