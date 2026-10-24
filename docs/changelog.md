@@ -6,6 +6,20 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-10-24 — iOS通常測位の要求精度をHighestへ戻す
+
+### 内容
+
+- #6395で通常測位へ昇格したHigh精度のうち、iOSだけをHighestへ戻します。expo-location 58.0.16では、背景タスクの`EXLocation.m`と前景購読の`LocationAccuracy.swift`の両方で、Highを`kCLLocationAccuracyNearestTenMeters`、Highestを`kCLLocationAccuracyBest`へ変換します。
+- 前景購読・背景タスク・補完測位は共通プロファイルを使います。AndroidのHigh精度、省電力時のBalanced精度、配信間隔は維持します。
+- 平滑化と到着半径は変更しません。ETAで到着や発車を確定する処理も追加しません。
+
+### 検証と制約
+
+- `npm run lint`、測位関連8スイート・145テスト、`npm run typecheck`が成功しました。
+- iOS実機での走行確認は実施していません。この変更は要求精度の復元であり、一駅遅れの解消を確認したものではありません。
+- Appleの[desiredAccuracy仕様](https://developer.apple.com/documentation/corelocation/cllocationmanager/desiredaccuracy)では、高精度を要求しても精度の低い位置情報が届く場合があります。実測精度と電池消費は実車で比較する必要があります。
+
 ## 2026-10-21 — iOS の背景測位で保留データの配信期限を設ける
 
 ### 内容
