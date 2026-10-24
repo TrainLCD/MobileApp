@@ -33,7 +33,7 @@ export type LocationPipelineCounts = {
   accepted: number;
   /** 最大許容精度フィルタ、または復帰確認中の精度不足で棄却した件数 */
   rejectedByAccuracy: number;
-  /** handleTrackingLocation の重複排除(同一・逆転タイムスタンプ)で棄却した件数 */
+  /** 継続・ワンショット測位の時刻判定で棄却した件数（重複・逆転・非有限値） */
   rejectedAsDuplicate: number;
   /** setLocation でETAが許す進行量を超えたとして棄却した件数 */
   rejectedByEta: number;

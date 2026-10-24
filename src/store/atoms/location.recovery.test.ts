@@ -4,6 +4,7 @@ import { LineType, type Station } from '~/@types/graphql';
 import {
   handleTrackingLocation,
   resetTrackingLocationDedup,
+  setOneShotLocation,
 } from '~/utils/handleTrackingLocation';
 import { getLocationPipelineCounts } from '~/utils/locationPipelineStats';
 import { store } from '..';
@@ -228,6 +229,9 @@ describe.each(['ios', 'android'] as const)('%s underground recovery', (os) => {
           }
           expect(getLocationPipelineCounts().rejectedByEta).toBe(12);
           // ETAを通る最初の一点だけでは古い基準を破棄しない。
+          // 古いワンショット応答で候補を作ると、時刻差が広がり次のジャンプが通る。
+          setOneShotLocation(fix(34.9, -200));
+          expect(store.get(locationAtom)).toBe(before);
           feed(35.01001, 14);
           expect(store.get(locationAtom)).toBe(before);
           feed(35.04, 15);

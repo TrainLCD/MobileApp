@@ -2,9 +2,10 @@ import * as Location from 'expo-location';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
+import { setOneShotLocation } from '~/utils/handleTrackingLocation';
 import { LOCATION_TASK_NAME, STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
-import { locationAtom, setLocation } from '../store/atoms/location';
+import { locationAtom } from '../store/atoms/location';
 import navigationState from '../store/atoms/navigation';
 import stationState, { stationAtom } from '../store/atoms/station';
 import { stationResolveFailedAtom } from '../store/atoms/stationSearchPrompt';
@@ -53,7 +54,7 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
       if (!requestCoords) {
         const currentLocation = await fetchCurrentLocation(true);
         if (!currentLocation) return;
-        setLocation(currentLocation);
+        setOneShotLocation(currentLocation);
         requestCoords = {
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
@@ -177,7 +178,7 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
       // refetch は常に新鮮な位置情報を取得する
       const currentLocation = await fetchCurrentLocation();
       if (!currentLocation) return;
-      setLocation(currentLocation);
+      setOneShotLocation(currentLocation);
       await fetchNearbyAndUpdate({
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
