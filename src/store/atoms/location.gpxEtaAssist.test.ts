@@ -110,7 +110,6 @@ const setupRoute = (stops: TrackStop[]) => {
   store.set(stationState, {
     arrived: true,
     approaching: false,
-    // 路線種別では測位処理を分岐しない。ここではNormalとして流す。
     station: { line: { lineType: LineType.Normal } } as Station,
     stations: buildStations(stops),
     stationsCache: [],

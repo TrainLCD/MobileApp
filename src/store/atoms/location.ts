@@ -9,6 +9,7 @@ import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
 import {
   countAcceptedLocation,
+  countLocationRejectedByAccuracy,
   countLocationRejectedByEta,
   countLocationRejectedBySpeed,
   resetLocationPipelineStats,
@@ -81,6 +82,24 @@ const getSmoothingAlpha = (accuracy: number | null, dtSec: number): number => {
   return dtSec / (dtSec + getSmoothingLagSec(accuracy));
 };
 
+// 精度履歴の安定性を変動係数(CV)で判定する
+const MIN_STABILITY_SAMPLES = 4;
+const MAX_STABLE_CV = 0.5;
+
+const isAccuracyStable = (history: number[]): boolean => {
+  if (history.length < MIN_STABILITY_SAMPLES) {
+    return false;
+  }
+  const mean = history.reduce((sum, v) => sum + v, 0) / history.length;
+  if (mean <= 0 || mean >= BAD_ACCURACY_THRESHOLD) {
+    return false;
+  }
+  const variance =
+    history.reduce((sum, v) => sum + (v - mean) ** 2, 0) / history.length;
+  const stddev = Math.sqrt(variance);
+  return stddev / mean < MAX_STABLE_CV;
+};
+
 export const locationAtom = atom<Location.LocationObject | null>(null);
 // MAX_PERMIT_ACCURACYフィルタで棄却される測位も含めた、継続測位の生の値。
 // handleTrackingLocation経由でwatch/background双方が更新し、DevOverlayの診断表示で
@@ -88,6 +107,7 @@ export const locationAtom = atom<Location.LocationObject | null>(null);
 // DevOverlayはisDevApp時しか描画されないので、更新もそのとき（isDevApp）だけ行えば十分。
 export const rawLocationAtom = atom<Location.LocationObject | null>(null);
 export const accuracyHistoryAtom = atom<number[]>([]);
+const undergroundLocationAtom = atom(false);
 export const backgroundLocationTrackingAtom = atom(false);
 
 // 直近の継続測位がMAX_PERMIT_ACCURACYを超え、ワープ対策フィルタで棄却されたかを表す。
@@ -97,8 +117,8 @@ export const backgroundLocationTrackingAtom = atom(false);
 export const locationAccuracyOutlierAtom = atom(false);
 
 // 直近のsetLocationが下した平滑化の判定。診断表示専用で、パイプラインの判定には使わない。
-// skipSmoothingは旧ダンプとの互換性のため残す。路線別の省略分岐を廃止したので
-// 常にfalseとなる。初回・精度回復・古い基準の再同期を表すフラグではない。
+// 地下の挙動を調べるとき、locationAtomの値だけではどちらの経路を通ったか分からず、
+// 条件を外から組み直すと判定と食い違うため、結果そのものを残す。
 //
 // 結果(skipSmoothing)と入力(lineType)を1つのオブジェクトで持つ。別々のatomにすると、
 // lineTypeは測位と無関係に変わる(stationAtomの更新)ため、判定後に路線が変わった状態で
@@ -119,7 +139,7 @@ export const smoothingDecisionAtom = atom<SmoothingDecision>(
 );
 
 // EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
-// 受理した測位ごとに更新する。
+// iOS以外の地下向け処理中は粗い座標を混ぜず、復帰時に別途確認して張り直す
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
 // 速度フィルタの基準として使う「最後に受理した“生の”座標」。
@@ -131,17 +151,30 @@ const lastRawLocationAtom = atom<Location.LocationObject | null>(null);
 
 // iOSは路線種別によらず同じ基準で粗い測位を処理する。生採用の点も記録し、
 // 次の粗い測位のEMAへ使う。精度回復時は下で基準を張り直して誤棄却を防ぐ。
-// 精度回復時の再同期を持つiOSと、他OSの基準・棄却回数を分ける。
+// 他OSの地下向け処理のスキップが維持する基準と棄却回数は共有しない。
 const lastIosFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 const lastIosRawLocationAtom = atom<Location.LocationObject | null>(null);
 // 連続棄却の上限も基準ごとに数え、一方の棄却で他方の再同期を誘発しない。
 const consecutiveSpeedRejections = { standard: 0, ios: 0 };
+
+// 通常フィルタの基準とは別に、地下から復帰する際の良好な測位を確認する。
+// ETAを通過した精度200m未満の点だけを候補とし、2点間の速度を検証する。
+// 表示位置・EMA・通常の連続棄却回数には、確認前の候補を混ぜない。
+type RecoveryState = {
+  pending: boolean;
+  candidate: Location.LocationObject | null;
+};
+const recoveryState: Record<'standard' | 'ios', RecoveryState> = {
+  standard: { pending: false, candidate: null },
+  ios: { pending: false, candidate: null },
+};
 
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
   store.set(locationAtom, null);
   store.set(rawLocationAtom, null);
   store.set(accuracyHistoryAtom, []);
+  store.set(undergroundLocationAtom, false);
   store.set(lastFilteredLocationAtom, null);
   store.set(lastRawLocationAtom, null);
   store.set(locationAccuracyOutlierAtom, false);
@@ -150,6 +183,8 @@ export const resetLocationState = () => {
   store.set(lastIosRawLocationAtom, null);
   consecutiveSpeedRejections.standard = 0;
   consecutiveSpeedRejections.ios = 0;
+  recoveryState.standard = { pending: false, candidate: null };
+  recoveryState.ios = { pending: false, candidate: null };
   resetEtaBoundHold();
   resetLocationPipelineStats();
 };
@@ -169,7 +204,7 @@ export const setRawLocation = (location: Location.LocationObject) => {
 };
 
 // スムージングせず測位をそのまま反映し、EMA基準・速度フィルタ基準の双方を張り直す。
-// 基準が無い(初回起動)、基準が古すぎる、基準が誤っていると判断した
+// 基準が無い(初回起動・地下鉄からの復帰)、基準が古すぎる、基準が誤っていると判断した
 // 場合に使う。基準を両方とも生の測位へ揃えるのが要点で、片方だけ残すと次回の変位に
 // 古い遅れが乗って誤棄却の引き金になる。
 const resyncLocationReference = (
@@ -281,11 +316,29 @@ export const setLocation = (location: Location.LocationObject) => {
       ? [...currentHistory, newAccuracy].slice(-MAX_ACCURACY_HISTORY)
       : currentHistory;
 
-  // 路線種別では地下区間や測位の品質を判別できないため、全路線を共通の
-  // 速度フィルタ・EMAへ通す。路線種別は診断の文脈としてのみ記録する。
+  // #5670の直接採用は、通常の許容上限(MAX_PERMIT_ACCURACY)内では維持する。
+  // リモート設定で上限を緩和した帯まで直接採用すると、iOSの粗い測位の揺れが
+  // そのまま到着・発車になる。この帯だけ既存の低精度EMAと速度フィルタへ通す。
+  // 地下区間は路線種別で判定できないため、iOSでは精度だけで条件を決める。
+  // 路線種別で限定せず、全種別の精度履歴で判定する。
   const currentLineType = store.get(stationState).station?.line?.lineType;
   const isIosTracking = Platform.OS === 'ios';
-  const skipSmoothing = false;
+  const isCoarseIosLocation =
+    isIosTracking &&
+    newAccuracy != null &&
+    Number.isFinite(newAccuracy) &&
+    newAccuracy > MAX_PERMIT_ACCURACY;
+  // 路線種別ではなく、1500m以上の測位を地下向け処理の入口とする。
+  // 復帰中は履歴が安定するまで既存の直接採用を維持する。
+  const hasUndergroundAccuracy = updatedHistory.some(
+    (accuracy) => accuracy >= MAX_PERMIT_ACCURACY
+  );
+  const wasUndergroundLocation = store.get(undergroundLocationAtom);
+  const isUndergroundLocation =
+    (hasUndergroundAccuracy || wasUndergroundLocation) &&
+    !isAccuracyStable(updatedHistory);
+  store.set(undergroundLocationAtom, isUndergroundLocation);
+  const skipSmoothing = isUndergroundLocation && !isCoarseIosLocation;
   const filteredReferenceAtom = isIosTracking
     ? lastIosFilteredLocationAtom
     : lastFilteredLocationAtom;
@@ -293,11 +346,21 @@ export const setLocation = (location: Location.LocationObject) => {
     ? lastIosRawLocationAtom
     : lastRawLocationAtom;
   const rejectionKey = isIosTracking ? 'ios' : 'standard';
+  const recovery = recoveryState[rejectionKey];
+  if (isUndergroundLocation && !wasUndergroundLocation) {
+    recovery.pending = true;
+    recovery.candidate = null;
+  }
+  const isGoodAccuracy =
+    newAccuracy != null &&
+    Number.isFinite(newAccuracy) &&
+    newAccuracy >= 0 &&
+    newAccuracy < BAD_ACCURACY_THRESHOLD;
   const filteredPrev = store.get(filteredReferenceAtom);
   const rawPrev = store.get(rawReferenceAtom);
 
   // 判定の結果と入力を、同じ瞬間の組として残す。DevOverlayの診断表示から
-  // 測位処理時点の路線種別を診断から読めるようにするためで、
+  // 「いま平滑化を省略しているか」と「その根拠」を読めるようにするためで、
   // 同じ条件を呼び出し側で組み直すと判定と表示が別々に育って食い違う。
   // 値が変わらないときは書かない。毎回新しいオブジェクトを入れると、購読側が
   // 測位のたびに再レンダーする。
@@ -314,12 +377,67 @@ export const setLocation = (location: Location.LocationObject) => {
 
   // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
   if (isImplausibleByEta(location)) {
+    recovery.candidate = null;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedByEta();
     return;
   }
 
-  // 基準が無い場合（初回起動時）
+  // スキップ時は生座標を反映する。iOSでは次の粗い測位用に基準も更新する。
+  // 良好な点は復帰確認用にも保存する。他OSの通常フィルタの基準にはまだ混ぜない。
+  if (skipSmoothing) {
+    recovery.candidate = isGoodAccuracy ? location : null;
+    if (isIosTracking) {
+      // 駅で精度が戻った点は即時反映し、次の粗い測位もこの位置を基準にする。
+      // 過去の地上位置を残すと、次の低精度EMAが駅から後方へ引き戻す。
+      resyncLocationReference(location, updatedHistory, isIosTracking);
+      return;
+    }
+    store.set(locationAtom, location);
+    store.set(accuracyHistoryAtom, updatedHistory);
+    countAcceptedLocation();
+    return;
+  }
+
+  // 精度履歴だけが安定しても、ETAで棄却されていれば基準は古いまま。
+  // 復帰確認はETAの後に置き、直近の良好な候補との速度が妥当な場合だけ再同期する。
+  // 候補が無い場合や単発のジャンプは保留し、次の測位で確認する。
+  // 配信間隔が長くても速度で検証する。時間だけで候補を失効させると、
+  // 低頻度の配信が続く間は確認できず、永久に位置が凍結する。
+  if (recovery.pending && !isUndergroundLocation) {
+    // 確認を終えるまでは、精度不足の点を通常フィルタへ渡さない。
+    // 連続棄却の上限やEMAを経由した、確認前の基準更新を防ぐ。
+    // 候補は保持し、精度不足を挟んだ異常ジャンプでも置き換えない。
+    if (!isGoodAccuracy) {
+      store.set(accuracyHistoryAtom, updatedHistory);
+      countLocationRejectedByAccuracy();
+      return;
+    }
+    const candidate = recovery.candidate;
+    const elapsed = candidate ? location.timestamp - candidate.timestamp : 0;
+    if (
+      candidate &&
+      elapsed > 0 &&
+      getDistance(candidate.coords, location.coords) / (elapsed / 1000) <=
+        MAX_PLAUSIBLE_SPEED
+    ) {
+      recovery.pending = false;
+      recovery.candidate = null;
+      resyncLocationReference(location, updatedHistory, isIosTracking);
+      return;
+    }
+    // 既存候補から飛んだ点で候補を上書きすると、その近傍の異常測位が
+    // 続いただけで再同期してしまう。候補がないときだけ確認を始める。
+    // 時計の巻き戻りで旧候補との時間差が使えなくなった場合も確認を始め直す。
+    // 重複・順序逆転の配信は共通入口で棄却済み。ここでは位置を即時採用しない。
+    if (candidate == null || elapsed <= 0) recovery.candidate = location;
+    store.set(accuracyHistoryAtom, updatedHistory);
+    countLocationRejectedBySpeed();
+    return;
+  }
+  if (!isGoodAccuracy) recovery.candidate = null;
+
+  // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
   if (filteredPrev == null || rawPrev == null) {
     resyncLocationReference(location, updatedHistory, isIosTracking);
     return;
