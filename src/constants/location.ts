@@ -2,11 +2,12 @@ import * as Location from 'expo-location';
 import { Platform } from 'react-native';
 
 export const LOCATION_TASK_NAME = 'trainlcd-background-location-task';
-// 旧・省電力測位モードの精度と更新間隔を実車検証を経て既定値へ昇格した。
-// 駅判定の信頼性を維持するためHighを使用する。iOSではkCLLocationAccuracyBestから
-// NearestTenMetersへ一段下がる。AndroidではHighestと同じ高精度プロバイダを維持し、
-// 更新間隔の緩和によって電池消費と発熱を抑える。
-export const LOCATION_ACCURACY = Location.Accuracy.High;
+// #6395で省電力プロファイルを既定にした際、iOSの要求精度もNearestTenMetersへ
+// 下げていた。通常測位ではBestへ戻し、前景・背景・補完測位で共通して使う。
+// 要求精度を上げても地下での実測精度は保証されない。電池消費との比較は実車で行う。
+// Androidは既存のHighを維持する。
+export const LOCATION_ACCURACY =
+  Platform.OS === 'ios' ? Location.Accuracy.Highest : Location.Accuracy.High;
 // 省電力測位モード(実験的機能)では電池優先のBalancedまで精度を下げる。iOSでは
 // kCLLocationAccuracyHundredMeters、AndroidではGPSを常用しない省電力プロバイダに
 // なるため、駅判定の精度低下と引き換えに電池消費をさらに抑える。
