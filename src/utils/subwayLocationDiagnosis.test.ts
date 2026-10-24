@@ -6,6 +6,7 @@ import { LineType, type Station } from '~/@types/graphql';
 import { store } from '~/store';
 import { etaAnchorAtom, etaStopsAtom } from '~/store/atoms/etaFallback';
 import {
+  accuracyHistoryAtom,
   locationAtom,
   resetLocationState,
   smoothingDecisionAtom,
@@ -103,7 +104,9 @@ describe('iOS coarse location regression (synthetic history)', () => {
       Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
       handleTrackingLocation(reported);
       expect(store.get(locationAtom)).toBe(reported);
-      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(false);
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(
+        os === 'android'
+      );
       expect(getDistance(reported.coords, kasugacho, 0.01)).toBeCloseTo(
         360.84,
         2
@@ -117,6 +120,67 @@ describe('iOS coarse location regression (synthetic history)', () => {
         rejectedByEta: 0,
         rejectedBySpeed: 0,
       });
+    }
+  );
+
+  it.each(['ios', 'android'] as const)(
+    '%s uses the same 1500m entry and stable-history recovery for every line type',
+    (os) => {
+      Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
+      store.set(etaAnchorAtom, null);
+      store.set(etaStopsAtom, []);
+      const replay = (lineType: LineType | null) => {
+        resetLocationState();
+        resetTrackingLocationDedup();
+        store.set(stationState, (prev) => ({
+          ...prev,
+          station: lineType
+            ? ({ ...kasugacho, line: { lineType } } as Station)
+            : null,
+        }));
+        const accuracies = [
+          30,
+          30,
+          30,
+          30,
+          1499,
+          1500,
+          1501,
+          ...Array<number>(13).fill(500),
+          ...Array<number>(12).fill(30),
+        ];
+        return accuracies.map((accuracy, index) => {
+          const location = fix(
+            kasugacho.latitude + index * 0.00001,
+            kasugacho.longitude,
+            timestamp + index * 10000
+          );
+          location.coords.accuracy = accuracy;
+          handleTrackingLocation(location);
+          return {
+            location: store.get(locationAtom),
+            skip: store.get(smoothingDecisionAtom).skipSmoothing,
+            history: store.get(accuracyHistoryAtom),
+            counts: getLocationPipelineCounts(),
+          };
+        });
+      };
+      const subway = replay(LineType.Subway);
+      expect(replay(LineType.Normal)).toEqual(subway);
+      expect(replay(null)).toEqual(subway);
+      expect(subway.slice(0, 5).every((point) => !point.skip)).toBe(true);
+      expect(subway[5].skip).toBe(true); // 1500m is inclusive.
+      expect(subway[6].skip).toBe(os === 'android'); // Existing iOS coarse filter.
+      expect(subway[19].history).not.toContain(1500);
+      expect(subway[19].skip).toBe(true); // Poor precision has not recovered.
+      expect(subway.at(-1)?.skip).toBe(false);
+      expect(subway.at(-1)?.history).toEqual(Array(12).fill(30));
+      resetLocationState();
+      resetTrackingLocationDedup();
+      const fresh = fix(kasugacho.latitude, kasugacho.longitude, timestamp);
+      fresh.coords.accuracy = 500;
+      handleTrackingLocation(fresh);
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(false);
     }
   );
 
@@ -158,7 +222,7 @@ describe('iOS coarse location regression (synthetic history)', () => {
     ).toBe(true);
   });
 
-  it('Android rejects an implausible coarse jump on a subway too', () => {
+  it('Android continues to adopt coarse station-to-station measurements directly', () => {
     Object.defineProperty(Platform, 'OS', {
       value: 'android',
       configurable: true,
@@ -168,8 +232,7 @@ describe('iOS coarse location regression (synthetic history)', () => {
     );
     const next = fix(toshimaen.latitude, toshimaen.longitude, timestamp);
     handleTrackingLocation(next);
-    expect(store.get(locationAtom)?.coords.latitude).toBe(kasugacho.latitude);
-    expect(getLocationPipelineCounts().rejectedBySpeed).toBe(1);
+    expect(store.get(locationAtom)).toBe(next);
   });
 
   it('immediately adopts a recovered accurate station fix after coarse measurements', () => {
@@ -253,7 +316,7 @@ describe('iOS coarse location regression (synthetic history)', () => {
   });
 
   it.each([1500, 1501])(
-    'smooths both sides of the 1500m boundary (%i)',
+    'only smooths the band above the existing 1500m limit (%i)',
     (accuracy) => {
       const center = fix(
         kasugacho.latitude,
@@ -264,13 +327,19 @@ describe('iOS coarse location regression (synthetic history)', () => {
       handleTrackingLocation(center);
       const next = { ...reported, coords: { ...reported.coords, accuracy } };
       handleTrackingLocation(next);
-      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(false);
-      expect(
-        getDistance(
-          (store.get(locationAtom) as Location.LocationObject).coords,
-          kasugacho
-        )
-      ).toBeLessThan(350);
+      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(
+        accuracy === 1500
+      );
+      if (accuracy === 1500) {
+        expect(store.get(locationAtom)).toBe(next);
+      } else {
+        expect(
+          getDistance(
+            (store.get(locationAtom) as Location.LocationObject).coords,
+            kasugacho
+          )
+        ).toBeLessThan(350);
+      }
     }
   );
 
