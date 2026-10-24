@@ -146,6 +146,44 @@ describe.each(['ios', 'android'] as const)('%s underground recovery', (os) => {
         }
       );
 
+      it.each(['tracking', 'one-shot'])(
+        'rebuilds the candidate after clock rollback through %s',
+        (source) => {
+          const now = jest.spyOn(Date, 'now').mockReturnValue(t + 13_000);
+          try {
+            seed(35);
+            feed(35, 1, 1500);
+            for (let i = 1; i <= 11; i++) feed(35.1 + i * 0.00001, i + 1);
+            const before = store.get(locationAtom);
+            feed(36.1, 13);
+            expect(store.get(locationAtom)).toBe(before);
+
+            now.mockReturnValue(t - 20_000);
+            const accept =
+              source === 'tracking'
+                ? handleTrackingLocation
+                : setOneShotLocation;
+            accept(fix(35.10013, -20));
+            // 巻き戻り後の一点だけでは再同期しない。
+            expect(store.get(locationAtom)).toBe(before);
+            // 同時刻・順序逆転の応答で新しい候補を汚染しない。
+            setOneShotLocation(fix(36.1, -20));
+            handleTrackingLocation(fix(36.1, -21));
+            expect(store.get(locationAtom)).toBe(before);
+            expect(getLocationPipelineCounts().rejectedAsDuplicate).toBe(2);
+
+            now.mockReturnValue(t - 19_000);
+            accept(fix(35.10014, -19));
+            expect(store.get(locationAtom)).toEqual(fix(35.10014, -19));
+            now.mockReturnValue(t - 18_000);
+            accept(fix(36.1, -18));
+            expect(store.get(locationAtom)).toEqual(fix(35.10014, -19));
+          } finally {
+            now.mockRestore();
+          }
+        }
+      );
+
       it.each([30, 60])(
         'recovers with a %s-second delivery interval',
         (interval) => {

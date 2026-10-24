@@ -428,7 +428,9 @@ export const setLocation = (location: Location.LocationObject) => {
     }
     // 既存候補から飛んだ点で候補を上書きすると、その近傍の異常測位が
     // 続いただけで再同期してしまう。候補がないときだけ確認を始める。
-    if (candidate == null) recovery.candidate = location;
+    // 時計の巻き戻りで旧候補との時間差が使えなくなった場合も確認を始め直す。
+    // 重複・順序逆転の配信は共通入口で棄却済み。ここでは位置を即時採用しない。
+    if (candidate == null || elapsed <= 0) recovery.candidate = location;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedBySpeed();
     return;
