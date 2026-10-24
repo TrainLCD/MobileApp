@@ -1,4 +1,5 @@
 import type * as Location from 'expo-location';
+import { Platform } from 'react-native';
 import { LineType, type Station } from '~/@types/graphql';
 import {
   getLocationInputDisplacementHistory,
@@ -175,17 +176,17 @@ describe('setLocation', () => {
     });
   });
 
-  describe('地下鉄分岐を通ったかの記録', () => {
+  describe('測位処理の診断記録', () => {
     // 診断の持ち出し(DevOverlay)がこの値を読む。同じ条件を外で組み直すと、
     // 判定と表示が別々に育って食い違うため、setLocationが下した結果そのものを固定する。
-    it('地下鉄かつ精度が不安定なら真になる', () => {
+    it('地下鉄でも平滑化の省略フラグは偽になる', () => {
       setStationLineType(LineType.Subway);
       store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
 
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
 
       expect(store.get(smoothingDecisionAtom)).toEqual({
-        skipSmoothing: true,
+        skipSmoothing: false,
         lineType: LineType.Subway,
       });
     });
@@ -237,7 +238,7 @@ describe('setLocation', () => {
       setStationLineType(LineType.Normal);
 
       expect(store.get(smoothingDecisionAtom)).toEqual({
-        skipSmoothing: true,
+        skipSmoothing: false,
         lineType: LineType.Subway,
       });
     });
@@ -259,7 +260,7 @@ describe('setLocation', () => {
       setStationLineType(LineType.Subway);
       store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
-      expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(true);
+      expect(store.get(smoothingDecisionAtom).lineType).toBe(LineType.Subway);
 
       resetLocationState();
 
@@ -270,77 +271,69 @@ describe('setLocation', () => {
     });
   });
 
-  describe('地下鉄路線', () => {
-    it('精度が不安定な場合はスムージングをスキップする', () => {
-      setStationLineType(LineType.Subway);
-      // 高い変動の精度履歴をセット
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+  describe.each(['ios', 'android'] as const)(
+    '%s の路線種別に依存しない処理',
+    (os) => {
+      const originalOS = Platform.OS;
+      beforeEach(() => {
+        Object.defineProperty(Platform, 'OS', {
+          value: os,
+          configurable: true,
+        });
+      });
+      afterEach(() => {
+        Object.defineProperty(Platform, 'OS', {
+          value: originalOS,
+          configurable: true,
+        });
+      });
 
-      const loc = makeLocation(35.0, 139.0, 500, 1000);
-      setLocation(loc);
+      it.each([30, 200, 500, 1500, 1501, 2000])(
+        '精度%imの同じ測位列は全路線で同じ座標・棄却結果になる',
+        (accuracy) => {
+          const replay = (lineType: LineType | null) => {
+            resetLocationState();
+            setStationLineType(lineType);
+            store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+            return [
+              makeLocation(35, 139, accuracy, 1000),
+              makeLocation(35.001, 139, accuracy, 11000),
+              makeLocation(36, 139, accuracy, 12000),
+              makeLocation(35.002, 139, accuracy, 21000),
+              makeLocation(35.003, 139, 30, 61000),
+            ].map((location) => {
+              setLocation(location);
+              return {
+                location: store.get(locationAtom),
+                counts: getLocationPipelineCounts(),
+              };
+            });
+          };
+          const normal = replay(LineType.Normal);
+          expect(replay(LineType.Subway)).toEqual(normal);
+          expect(replay(null)).toEqual(normal);
+          expect(normal[1].location?.coords.latitude).toBeGreaterThan(35);
+          expect(normal[1].location?.coords.latitude).toBeLessThan(35.001);
+          expect(normal[2].counts.rejectedBySpeed).toBe(1);
+          expect(normal[4].location?.coords.latitude).toBe(35.003);
+        }
+      );
 
-      const result = store.get(locationAtom);
-      // スキップされたので生の座標がそのまま入る
-      expect(result?.coords.latitude).toBe(35.0);
-      expect(result?.coords.longitude).toBe(139.0);
-    });
-
-    it('精度が安定している場合はスムージングを適用する', () => {
-      setStationLineType(LineType.Subway);
-      // 安定した精度履歴をセット（低CV、平均200m未満）
-      store.set(accuracyHistoryAtom, [30, 35, 28, 32]);
-
-      const first = makeLocation(35.0, 139.0, 30, 1000);
-      setLocation(first);
-
-      const second = makeLocation(35.001, 139.001, 30, 4000);
-      setLocation(second);
-
-      const result = store.get(locationAtom);
-      // EMAが適用されるため、生の座標とは異なる値になるはず
-      expect(result?.coords.latitude).not.toBe(35.001);
-      expect(result?.coords.longitude).not.toBe(139.001);
-    });
-
-    it('サンプル数が不足している場合はスムージングをスキップする', () => {
-      setStationLineType(LineType.Subway);
-      // 2サンプルのみ（新しい値を追加しても3で MIN_STABILITY_SAMPLES=4 未満）
-      store.set(accuracyHistoryAtom, [30, 35]);
-
-      const loc = makeLocation(35.0, 139.0, 30, 1000);
-      setLocation(loc);
-
-      const result = store.get(locationAtom);
-      expect(result?.coords.latitude).toBe(35.0);
-      expect(result?.coords.longitude).toBe(139.0);
-    });
-
-    it('精度が安定していても平均が200m以上の場合はスムージングをスキップする', () => {
-      setStationLineType(LineType.Subway);
-      // 安定だが高い値（平均250m）
-      store.set(accuracyHistoryAtom, [240, 250, 260, 250]);
-
-      const loc = makeLocation(35.0, 139.0, 250, 1000);
-      setLocation(loc);
-
-      const result = store.get(locationAtom);
-      expect(result?.coords.latitude).toBe(35.0);
-      expect(result?.coords.longitude).toBe(139.0);
-    });
-
-    it('平均精度がちょうど200mの境界値の場合はスムージングをスキップする', () => {
-      setStationLineType(LineType.Subway);
-      // 平均がちょうど200m（mean >= BAD_ACCURACY_THRESHOLD で不安定扱い）
-      store.set(accuracyHistoryAtom, [200, 200, 200, 200]);
-
-      const loc = makeLocation(35.0, 139.0, 200, 1000);
-      setLocation(loc);
-
-      const result = store.get(locationAtom);
-      expect(result?.coords.latitude).toBe(35.0);
-      expect(result?.coords.longitude).toBe(139.0);
-    });
-  });
+      it('途中で路線種別が変わっても基準を引き継ぐ', () => {
+        const replay = (changeLine: boolean) => {
+          resetLocationState();
+          setStationLineType(LineType.Normal);
+          setLocation(makeLocation(35, 139, 500, 1000));
+          if (changeLine) setStationLineType(LineType.Subway);
+          setLocation(makeLocation(35.001, 139, 500, 11000));
+          if (changeLine) setStationLineType(LineType.Normal);
+          setLocation(makeLocation(35.002, 139, 500, 21000));
+          return store.get(locationAtom);
+        };
+        expect(replay(true)).toEqual(replay(false));
+      });
+    }
+  );
 });
 
 // 東北新幹線の一ノ関〜仙台に相当する南北方向の直線を走らせる。
