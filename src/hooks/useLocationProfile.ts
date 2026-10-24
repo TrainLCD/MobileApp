@@ -35,8 +35,7 @@ type LocationProfile = {
 export const useLocationProfile = (): LocationProfile => {
   const systemLowPowerMode = Battery.useLowPowerMode();
   // 省電力測位モード。精度をBalancedへ下げ、停車中の測位自動休止(iOSのみ)を
-  // 許可する。旧プロファイルのHigh精度・更新間隔の緩和は実車検証を経て既定値へ
-  // 昇格済み(constants/location.ts)。
+  // 許可する。通常測位の要求精度はOS別にconstants/location.tsで定義する。
   const powerSavingSettingEnabled = useAtomValue(
     powerSavingLocationEnabledAtom
   );

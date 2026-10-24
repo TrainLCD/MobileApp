@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import { StrictMode } from 'react';
 import { AppState } from 'react-native';
 import {
+  LOCATION_ACCURACY,
   LOCATION_HEARTBEAT_MAX_PENDING,
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
 } from '../constants/location';
@@ -457,7 +458,7 @@ describe('useLocationHeartbeat', () => {
     // 変位ゲートは0で張る。ここへ来る時点で継続測位のゲート(10m)に届いていないので、
     // 同じゲートを張り直したら待っても届かない
     expect(mockWatchPositionAsync).toHaveBeenLastCalledWith(
-      { accuracy: Location.Accuracy.High, distanceInterval: 0 },
+      { accuracy: LOCATION_ACCURACY, distanceInterval: 0 },
       expect.any(Function)
     );
   });

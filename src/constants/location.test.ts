@@ -15,6 +15,16 @@ const loadConstants = (os: 'ios' | 'android') => {
 };
 
 describe('測位オプション', () => {
+  it.each([
+    ['ios', Location.Accuracy.Highest],
+    ['android', Location.Accuracy.High],
+  ] as const)('%s の通常測位の要求精度を全経路で揃える', (os, accuracy) => {
+    const constants = loadConstants(os);
+    expect(constants.LOCATION_ACCURACY).toBe(accuracy);
+    expect(constants.LOCATION_WATCH_OPTIONS.accuracy).toBe(accuracy);
+    expect(constants.LOCATION_TASK_OPTIONS.accuracy).toBe(accuracy);
+  });
+
   describe('Android', () => {
     it('変位ゲートを掛けず更新頻度をtimeIntervalだけで抑える', () => {
       const constants = loadConstants('android');
