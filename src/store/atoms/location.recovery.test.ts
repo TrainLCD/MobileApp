@@ -99,6 +99,52 @@ describe.each(['ios', 'android'] as const)('%s underground recovery', (os) => {
         );
       });
 
+      it('keeps the trusted candidate when nearby abnormal fixes repeat', () => {
+        seed(35);
+        feed(35, 1, 1500);
+        for (let i = 1; i <= 11; i++) feed(35.1 + i * 0.00001, i + 1);
+        const before = store.get(locationAtom);
+        for (let i = 0; i < 6; i++) {
+          feed(36.1 + i * 0.00001, 13 + i);
+          expect(store.get(locationAtom)).toBe(before);
+        }
+        expect(getLocationPipelineCounts().rejectedBySpeed).toBe(6);
+        feed(35.10013, 19);
+        expect(store.get(locationAtom)).toEqual(fix(35.10013, 19));
+        feed(36.1, 20);
+        expect(store.get(locationAtom)).toEqual(fix(35.10013, 19));
+      });
+
+      it.each([200, 201, null, Number.NaN, -1])(
+        'holds accuracy %s during confirmation without replacing the trusted candidate',
+        (accuracy) => {
+          seed(35);
+          feed(35, 1, 1500);
+          for (let i = 1; i <= 11; i++) feed(35.1 + i * 0.00001, i + 1, 190);
+          const before = store.get(locationAtom);
+          // 200mで地下向け履歴から抜け、その点も確認前には反映しない。
+          feed(35.10012, 13, 200);
+          expect(store.get(locationAtom)).toBe(before);
+          for (let i = 0; i < 5; i++) {
+            const location = fix(36.1, 14 + i);
+            location.coords.accuracy = accuracy;
+            handleTrackingLocation(location);
+            expect(store.get(locationAtom)).toBe(before);
+          }
+          expect(getLocationPipelineCounts()).toMatchObject({
+            accepted: 16,
+            rejectedByAccuracy: 6,
+            rejectedBySpeed: 0,
+          });
+          // 精度不足を挟んでも、異常座標を新たな候補として採用しない。
+          feed(36.1, 19);
+          feed(36.10001, 20);
+          expect(store.get(locationAtom)).toBe(before);
+          feed(35.10013, 21);
+          expect(store.get(locationAtom)).toEqual(fix(35.10013, 21));
+        }
+      );
+
       it.each([30, 60])(
         'recovers with a %s-second delivery interval',
         (interval) => {
@@ -137,8 +183,13 @@ describe.each(['ios', 'android'] as const)('%s underground recovery', (os) => {
           expect(store.get(locationAtom)).toBe(before);
         }
         feed(35.10013, 19);
+        // 異常値で候補を置き換えないため、この良好な点で即座に復帰する。
+        expect(store.get(locationAtom)).toEqual(fix(35.10013, 19));
         feed(35.10014, 20);
-        expect(store.get(locationAtom)?.coords.latitude).toBe(35.10014);
+        // 復帰後は通常のEMAへ戻る。生座標による再同期を繰り返さない。
+        expect(store.get(locationAtom)?.coords.latitude).toBe(
+          0.8 * 35.10014 + 0.2 * 35.10013
+        );
       });
 
       it.each([500, 1500, 1600])(

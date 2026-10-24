@@ -31,7 +31,7 @@ export type LocationPipelineCounts = {
    * setLocation を経由せず locationAtom を直接書くため、これらは含まない。
    */
   accepted: number;
-  /** handleTrackingLocation の最大許容精度フィルタで棄却した件数 */
+  /** 最大許容精度フィルタ、または復帰確認中の精度不足で棄却した件数 */
   rejectedByAccuracy: number;
   /** handleTrackingLocation の重複排除(同一・逆転タイムスタンプ)で棄却した件数 */
   rejectedAsDuplicate: number;

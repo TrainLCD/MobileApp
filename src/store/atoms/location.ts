@@ -9,6 +9,7 @@ import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
 import {
   countAcceptedLocation,
+  countLocationRejectedByAccuracy,
   countLocationRejectedByEta,
   countLocationRejectedBySpeed,
   resetLocationPipelineStats,
@@ -403,7 +404,15 @@ export const setLocation = (location: Location.LocationObject) => {
   // 候補が無い場合や単発のジャンプは保留し、次の測位で確認する。
   // 配信間隔が長くても速度で検証する。時間だけで候補を失効させると、
   // 低頻度の配信が続く間は確認できず、永久に位置が凍結する。
-  if (recovery.pending && !isUndergroundLocation && isGoodAccuracy) {
+  if (recovery.pending && !isUndergroundLocation) {
+    // 確認を終えるまでは、精度不足の点を通常フィルタへ渡さない。
+    // 連続棄却の上限やEMAを経由した、確認前の基準更新を防ぐ。
+    // 候補は保持し、精度不足を挟んだ異常ジャンプでも置き換えない。
+    if (!isGoodAccuracy) {
+      store.set(accuracyHistoryAtom, updatedHistory);
+      countLocationRejectedByAccuracy();
+      return;
+    }
     const candidate = recovery.candidate;
     const elapsed = candidate ? location.timestamp - candidate.timestamp : 0;
     if (
@@ -417,7 +426,9 @@ export const setLocation = (location: Location.LocationObject) => {
       resyncLocationReference(location, updatedHistory, isIosTracking);
       return;
     }
-    recovery.candidate = location;
+    // 既存候補から飛んだ点で候補を上書きすると、その近傍の異常測位が
+    // 続いただけで再同期してしまう。候補がないときだけ確認を始める。
+    if (candidate == null) recovery.candidate = location;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedBySpeed();
     return;
