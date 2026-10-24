@@ -1,5 +1,5 @@
 /**
- * 地下鉄の電波環境を記録したGPX(--signal-profile subway)を、記録されたまま
+ * 地下区間の電波環境を記録したGPX(--signal-profile subway)を、記録されたまま
  * setLocation の実パイプラインへ流す。
  *
  * location.gpxEtaAssist.test.ts のスイープは「GPXは真の軌跡だけを供給し、精度と
@@ -14,10 +14,10 @@
  *
  * 見ているのは3つ。
  *  1. フィクスチャが主張どおりの電波環境であること。生成条件を変えて作り直したときに、
- *     地下鉄の検証に使えないトラックへ静かに置き換わるのを防ぐ。
+ *     地下区間の検証に使えないトラックへ静かに置き換わるのを防ぐ。
  *  2. 精度1500m未満のトラックでは、路線種別だけでフィルタを省略しないこと。
  *  3. 地上の安定した測位を平滑化すること。フィルタが適用されなくなる
- *     回帰(地上でも生の座標が出続ける)を捕まえられない。
+ *     回帰を検出する。
  */
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -49,11 +49,11 @@ jest.mock('~/lib/remoteConfig', () => ({
 // src/store/atoms/location.ts の同名の非公開定数と同値。export されていないので
 // ここで持つが、値がずれると下のアサーションの意味が変わるため目視で同期する。
 //
-// ETA_BOUND_MAX_HOLD_MS: ETAによる棄却の保険が解けるまでの時間。地下鉄の欠測が
+// ETA_BOUND_MAX_HOLD_MS: ETAによる棄却の保険が解けるまでの時間。地下区間での欠測が
 //   これを超えるかどうかが「発車を観測できないまま次の停車駅で測位が復活する」
 //   ケースの分かれ目になる。
 // MAX_ACCURACY_HISTORY: isAccuracyStable が見る精度履歴の長さ。地上へ出てから
-//   坑口帯の値がこの点数ぶんで履歴から押し出される。
+//   精度が悪化した測位の値がこの点数ぶんで履歴から押し出される。
 const ETA_BOUND_MAX_HOLD_MS = 90_000;
 const MAX_ACCURACY_HISTORY = 12;
 
@@ -78,7 +78,7 @@ const setLineType = (lineType: LineType) => {
 /**
  * トラックを流し、各点で locationAtom が「入力そのもの」になったかを返す。
  *
- * setLocation は地下鉄分岐に入ると平滑化も速度フィルタも掛けずに生の座標を
+ * setLocation は直接採用の分岐に入ると平滑化も速度フィルタも掛けずに生の座標を
  * locationAtom へ入れる。EMAが掛かれば値は必ずずれ、速度フィルタで棄却されれば
  * 前回値のまま止まるので、どちらでもない「入力と完全一致」が分岐の目印になる。
  */
@@ -97,7 +97,7 @@ const replay = (track: TrackPoint[], lineType: LineType): boolean[] => {
  *
  * - 直前の点から1秒以内: 測位が長く途切れると基準が古い(STALE_REFERENCE_MS)と
  *   判断されて基準の張り直しが走り、そこでも locationAtom には生の座標が入る。
- *   欠測明けの1点目は地下鉄分岐と区別が付かないので外す。
+ *   欠測明けの1点目は直接採用の分岐と区別が付かないので外す。
  * - 直前から動いている: 止まったままの点はEMAが同じ座標へ収束しているため、
  *   平滑化してもしなくても出力が一致してしまい判定に使えない。
  */
@@ -108,7 +108,7 @@ const isDecidable = (points: TrackPoint[], i: number): boolean => {
   return p.t - prev.t <= 1_000 && (p.lat !== prev.lat || p.lon !== prev.lon);
 };
 
-/** 判定可能かつ精度が BAD_ACCURACY_THRESHOLD 超の点。地下鉄分岐の入口の帯 */
+/** 座標による判定が可能で、測位精度が BAD_ACCURACY_THRESHOLD を超える点 */
 const denseDegradedIndices = (points: TrackPoint[]): number[] =>
   points.reduce<number[]>((acc, p, i) => {
     if (isDecidable(points, i) && (p.accuracy ?? 0) > BAD_ACCURACY_THRESHOLD) {
@@ -155,7 +155,7 @@ afterEach(() => {
 });
 
 describe('点ごとの精度を持つGPXの集合', () => {
-  it('1本以上あり、地下鉄のフィクスチャを含む', () => {
+  it('1本以上あり、地下区間のフィクスチャを含む', () => {
     // gpxEtaAssist 側は精度を持たないGPXだけを流すので、ここが空になると
     // 電波環境を持つトラックがどのテストからも漏れる。
     expect(GPX_FILES.length).toBeGreaterThan(0);
@@ -166,12 +166,11 @@ describe('点ごとの精度を持つGPXの集合', () => {
 describe.each(GPX_FILES)('%s の電波環境', (file) => {
   const track = parseGpx(join(GPX_DIR, file));
 
-  it('地上帯・ホーム帯・坑口帯が揃い、精度フィルタの上限を超えない', () => {
+  it('地上・ホーム相当の精度と精度が悪化した測位を含み、許容精度の上限を超えない', () => {
     const accuracies = track.map((p) => p.accuracy ?? Number.NaN);
     expect(accuracies.every(Number.isFinite)).toBe(true);
 
-    // 地上(GPS)・地下駅のホーム(Wi-Fi/基地局)・坑口付近(基地局のみ)。
-    // 坑口帯が BAD_ACCURACY_THRESHOLD を超えていることが、地下鉄分岐へ入る条件。
+    // 精度不良の閾値を超える測位も含むことを確認する。
     expect(
       accuracies.filter((a) => a <= SURFACE_MAX_ACCURACY).length
     ).toBeGreaterThan(0);
@@ -204,7 +203,7 @@ describe.each(GPX_FILES)('%s の電波環境', (file) => {
     );
   });
 
-  it('1500m未満の劣化区間ではSubwayでもフィルタを通す', () => {
+  it('測位精度が1500m未満の区間では路線種別Subwayでもフィルタを通す', () => {
     const degraded = denseDegradedIndices(track);
     expect(degraded.length).toBeGreaterThan(50);
 
@@ -213,10 +212,9 @@ describe.each(GPX_FILES)('%s の電波環境', (file) => {
     expect(degraded.filter((i) => subway[i]).length).toBe(0);
   });
 
-  it('lineTypeがSubwayでも、地上へ出れば平滑化へ戻る', () => {
-    // 分岐の「出口」。地上帯に入ると accuracyHistory から坑口帯の値が押し出され、
-    // isAccuracyStable が true に戻ってスムージングが復活する。履歴が入れ替わる
-    // までの MAX_ACCURACY_HISTORY 点は判定できないので各ランの先頭から除く。
+  it('路線種別Subwayでも、精度の良い測位が続く区間では平滑化する', () => {
+    // 精度の良い測位が続く区間でも平滑化されることを確認する。
+    // 履歴が入れ替わった後の点を検証するため、各区間の先頭を除く。
     const subway = replay(track, LineType.Subway);
     const tails = denseSurfaceRuns(track)
       .map((run) => run.slice(MAX_ACCURACY_HISTORY))
