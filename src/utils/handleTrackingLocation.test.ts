@@ -11,6 +11,7 @@ import {
   handleTrackingLocation,
   isNewTrackingLocation,
   resetTrackingLocationDedup,
+  setOneShotLocation,
 } from './handleTrackingLocation';
 import {
   getLocationInputDisplacementHistory,
@@ -177,6 +178,77 @@ describe('handleTrackingLocation', () => {
 
   // 配信からの経過時間は測位そのものの古さとは分けて記録する。
   // 受信後の経過時間は端末時計の変更に影響されないmonotonicNowで測る。
+  describe('ワンショット測位の時刻判定', () => {
+    it('古い応答・同時刻を継続測位の後に反映しない', () => {
+      handleTrackingLocation(makeLocation(30, 5000));
+      mockSetLocation.mockClear();
+      setOneShotLocation(makeLocation(30, 4000));
+      setOneShotLocation(makeLocation(30, 5000));
+      expect(mockSetLocation).not.toHaveBeenCalled();
+      setOneShotLocation(makeLocation(30, 6000));
+      expect(mockSetLocation).toHaveBeenCalledWith(makeLocation(30, 6000));
+      expect(isNewTrackingLocation(6000)).toBe(false);
+      mockSetLocation.mockClear();
+      handleTrackingLocation(makeLocation(30, 5500));
+      handleTrackingLocation(makeLocation(30, 6000));
+      expect(mockSetLocation).not.toHaveBeenCalled();
+      handleTrackingLocation(makeLocation(30, 6001));
+      expect(mockSetLocation).toHaveBeenCalledWith(makeLocation(30, 6001));
+    });
+
+    it('最大許容精度フィルタや継続測位の配信記録を適用しない', () => {
+      const location = makeLocation(MAX_PERMIT_ACCURACY + 1, 5000);
+      setOneShotLocation(location);
+      expect(mockSetLocation).toHaveBeenCalledWith(location);
+      expect(getMsSinceLastTrackedLocation()).toBeNull();
+      expect(getTrackedLocationAgeMs()).toBeNull();
+      expect(mockSetRawLocation).not.toHaveBeenCalled();
+      expect(mockSetLocationAccuracyOutlier).not.toHaveBeenCalled();
+    });
+
+    it('新旧どちらのワンショット応答でも補完測位の時計を進めない', () => {
+      jest.useFakeTimers();
+      try {
+        jest.setSystemTime(100_000);
+        handleTrackingLocation(makeLocation(30, 66_000));
+        jest.advanceTimersByTime(5000);
+        setOneShotLocation(makeLocation(30, 105_000));
+        setOneShotLocation(makeLocation(30, 60_000));
+        expect(getMsSinceLastTrackedLocation()).toBe(5000);
+        expect(getTrackedLocationAgeMs()).toBe(39_000);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('時計の巻き戻り後は新しい時刻基準で受理する', () => {
+      jest.spyOn(Date, 'now').mockReturnValue(100_000);
+      setOneShotLocation(makeLocation(30, 100_000));
+      jest.spyOn(Date, 'now').mockReturnValue(80_000);
+      setOneShotLocation(makeLocation(30, 80_000));
+      expect(mockSetLocation).toHaveBeenLastCalledWith(
+        makeLocation(30, 80_000)
+      );
+      expect(isNewTrackingLocation(80_000)).toBe(false);
+      expect(getMsSinceLastTrackedLocation()).toBeNull();
+    });
+
+    it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+      '非有限の時刻%sで基準を壊さない',
+      (timestamp) => {
+        setOneShotLocation(makeLocation(30, 5000));
+        mockSetLocation.mockClear();
+        setOneShotLocation(makeLocation(30, timestamp));
+        handleTrackingLocation(makeLocation(30, timestamp));
+        expect(isNewTrackingLocation(timestamp)).toBe(false);
+        expect(mockSetLocation).not.toHaveBeenCalled();
+        expect(isNewTrackingLocation(5000)).toBe(false);
+        setOneShotLocation(makeLocation(30, 6000));
+        expect(mockSetLocation).toHaveBeenCalledWith(makeLocation(30, 6000));
+      }
+    );
+  });
+
   describe('配信時刻の記録', () => {
     beforeEach(() => {
       jest.useFakeTimers();

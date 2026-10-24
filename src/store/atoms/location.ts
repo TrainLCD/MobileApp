@@ -9,6 +9,7 @@ import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
 import {
   countAcceptedLocation,
+  countLocationRejectedByAccuracy,
   countLocationRejectedByEta,
   countLocationRejectedBySpeed,
   resetLocationPipelineStats,
@@ -138,7 +139,7 @@ export const smoothingDecisionAtom = atom<SmoothingDecision>(
 );
 
 // EMAスムージングの基準として使う「最後にフィルタ処理を通過した位置」
-// iOS以外の地下向け処理のスキップ中は更新せず、復帰後の誤棄却を防ぐ
+// iOS以外の地下向け処理中は粗い座標を混ぜず、復帰時に別途確認して張り直す
 const lastFilteredLocationAtom = atom<Location.LocationObject | null>(null);
 
 // 速度フィルタの基準として使う「最後に受理した“生の”座標」。
@@ -156,6 +157,18 @@ const lastIosRawLocationAtom = atom<Location.LocationObject | null>(null);
 // 連続棄却の上限も基準ごとに数え、一方の棄却で他方の再同期を誘発しない。
 const consecutiveSpeedRejections = { standard: 0, ios: 0 };
 
+// 通常フィルタの基準とは別に、地下から復帰する際の良好な測位を確認する。
+// ETAを通過した精度200m未満の点だけを候補とし、2点間の速度を検証する。
+// 表示位置・EMA・通常の連続棄却回数には、確認前の候補を混ぜない。
+type RecoveryState = {
+  pending: boolean;
+  candidate: Location.LocationObject | null;
+};
+const recoveryState: Record<'standard' | 'ios', RecoveryState> = {
+  standard: { pending: false, candidate: null },
+  ios: { pending: false, candidate: null },
+};
+
 // テスト用: モジュール内部の状態をリセットする
 export const resetLocationState = () => {
   store.set(locationAtom, null);
@@ -170,6 +183,8 @@ export const resetLocationState = () => {
   store.set(lastIosRawLocationAtom, null);
   consecutiveSpeedRejections.standard = 0;
   consecutiveSpeedRejections.ios = 0;
+  recoveryState.standard = { pending: false, candidate: null };
+  recoveryState.ios = { pending: false, candidate: null };
   resetEtaBoundHold();
   resetLocationPipelineStats();
 };
@@ -318,8 +333,9 @@ export const setLocation = (location: Location.LocationObject) => {
   const hasUndergroundAccuracy = updatedHistory.some(
     (accuracy) => accuracy >= MAX_PERMIT_ACCURACY
   );
+  const wasUndergroundLocation = store.get(undergroundLocationAtom);
   const isUndergroundLocation =
-    (hasUndergroundAccuracy || store.get(undergroundLocationAtom)) &&
+    (hasUndergroundAccuracy || wasUndergroundLocation) &&
     !isAccuracyStable(updatedHistory);
   store.set(undergroundLocationAtom, isUndergroundLocation);
   const skipSmoothing = isUndergroundLocation && !isCoarseIosLocation;
@@ -330,6 +346,16 @@ export const setLocation = (location: Location.LocationObject) => {
     ? lastIosRawLocationAtom
     : lastRawLocationAtom;
   const rejectionKey = isIosTracking ? 'ios' : 'standard';
+  const recovery = recoveryState[rejectionKey];
+  if (isUndergroundLocation && !wasUndergroundLocation) {
+    recovery.pending = true;
+    recovery.candidate = null;
+  }
+  const isGoodAccuracy =
+    newAccuracy != null &&
+    Number.isFinite(newAccuracy) &&
+    newAccuracy >= 0 &&
+    newAccuracy < BAD_ACCURACY_THRESHOLD;
   const filteredPrev = store.get(filteredReferenceAtom);
   const rawPrev = store.get(rawReferenceAtom);
 
@@ -351,14 +377,16 @@ export const setLocation = (location: Location.LocationObject) => {
 
   // ETAが許す進行量を超えた測位は、どちらの経路へも通さない
   if (isImplausibleByEta(location)) {
+    recovery.candidate = null;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedByEta();
     return;
   }
 
   // スキップ時は生座標を反映する。iOSでは次の粗い測位用に基準も更新する。
-  // 他OSでは既存どおり基準を残し、STALE_REFERENCE_MSなどの条件で張り直す。
+  // 良好な点は復帰確認用にも保存する。他OSの通常フィルタの基準にはまだ混ぜない。
   if (skipSmoothing) {
+    recovery.candidate = isGoodAccuracy ? location : null;
     if (isIosTracking) {
       // 駅で精度が戻った点は即時反映し、次の粗い測位もこの位置を基準にする。
       // 過去の地上位置を残すと、次の低精度EMAが駅から後方へ引き戻す。
@@ -370,6 +398,44 @@ export const setLocation = (location: Location.LocationObject) => {
     countAcceptedLocation();
     return;
   }
+
+  // 精度履歴だけが安定しても、ETAで棄却されていれば基準は古いまま。
+  // 復帰確認はETAの後に置き、直近の良好な候補との速度が妥当な場合だけ再同期する。
+  // 候補が無い場合や単発のジャンプは保留し、次の測位で確認する。
+  // 配信間隔が長くても速度で検証する。時間だけで候補を失効させると、
+  // 低頻度の配信が続く間は確認できず、永久に位置が凍結する。
+  if (recovery.pending && !isUndergroundLocation) {
+    // 確認を終えるまでは、精度不足の点を通常フィルタへ渡さない。
+    // 連続棄却の上限やEMAを経由した、確認前の基準更新を防ぐ。
+    // 候補は保持し、精度不足を挟んだ異常ジャンプでも置き換えない。
+    if (!isGoodAccuracy) {
+      store.set(accuracyHistoryAtom, updatedHistory);
+      countLocationRejectedByAccuracy();
+      return;
+    }
+    const candidate = recovery.candidate;
+    const elapsed = candidate ? location.timestamp - candidate.timestamp : 0;
+    if (
+      candidate &&
+      elapsed > 0 &&
+      getDistance(candidate.coords, location.coords) / (elapsed / 1000) <=
+        MAX_PLAUSIBLE_SPEED
+    ) {
+      recovery.pending = false;
+      recovery.candidate = null;
+      resyncLocationReference(location, updatedHistory, isIosTracking);
+      return;
+    }
+    // 既存候補から飛んだ点で候補を上書きすると、その近傍の異常測位が
+    // 続いただけで再同期してしまう。候補がないときだけ確認を始める。
+    // 時計の巻き戻りで旧候補との時間差が使えなくなった場合も確認を始め直す。
+    // 重複・順序逆転の配信は共通入口で棄却済み。ここでは位置を即時採用しない。
+    if (candidate == null || elapsed <= 0) recovery.candidate = location;
+    store.set(accuracyHistoryAtom, updatedHistory);
+    countLocationRejectedBySpeed();
+    return;
+  }
+  if (!isGoodAccuracy) recovery.candidate = null;
 
   // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
   if (filteredPrev == null || rawPrev == null) {

@@ -7,10 +7,10 @@ import { PermissionsAndroid, Platform, StyleSheet, View } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppColors } from '~/providers/AppColorsProvider';
+import { setOneShotLocation } from '~/utils/handleTrackingLocation';
 import Button from '../components/Button';
 import Typography from '../components/Typography';
 import { useFetchCurrentLocationOnce } from '../hooks';
-import { setLocation } from '../store/atoms/location';
 import { isJapanese, translate } from '../translation';
 import { showDialog } from '../utils/dialogPresentation';
 import { RFValue } from '../utils/rfValue';
@@ -81,7 +81,7 @@ const PrivacyScreen: React.FC = () => {
 
     const location = (await fetchCurrentLocation()) ?? null;
     if (location) {
-      setLocation(location);
+      setOneShotLocation(location);
     }
   }, [fetchCurrentLocation, navigation]);
 

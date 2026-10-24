@@ -18,7 +18,7 @@ import { monotonicNow } from './monotonicNow';
 // (リセットしないと時計が追いつくまで全測位が「古い」と誤判定され凍結する)。
 const CLOCK_ROLLBACK_TOLERANCE_MS = 5_000;
 
-// 最後に本関数で処理した測位のタイムスタンプ。Android 16ではTaskManagerと
+// 継続・ワンショット測位で共有する処理済みタイムスタンプ。Android 16ではTaskManagerと
 // watchPositionAsyncの2系統が同じ測位を配信するため(useStartBackgroundLocationUpdates)、
 // これ以下のタイムスタンプの測位を重複・遅延再配信として破棄する基準に使う。
 let lastProcessedTimestampMs = 0;
@@ -59,14 +59,37 @@ export const getTrackedLocationAgeMs = (): number | null => {
 // 補完測位は重複を受け取っても購読を閉じず、新しい測位を待つ。
 // 時計が巻き戻った場合は共通入口と同じ条件で過去の基準を無効にする。
 export const isNewTrackingLocation = (timestamp: number): boolean =>
+  Number.isFinite(timestamp) &&
   timestamp >
-  (lastProcessedTimestampMs > Date.now() + CLOCK_ROLLBACK_TOLERANCE_MS
-    ? 0
-    : lastProcessedTimestampMs);
+    (lastProcessedTimestampMs > Date.now() + CLOCK_ROLLBACK_TOLERANCE_MS
+      ? 0
+      : lastProcessedTimestampMs);
+
+// 時刻の判定と更新を同期して行う。ワンショットでは継続測位の配信時刻や
+// 受信時の古さを更新せず、補完測位の開始を先送りしない。
+const acceptLocationTimestamp = (timestamp: number): boolean => {
+  if (!Number.isFinite(timestamp)) return false;
+  if (lastProcessedTimestampMs > Date.now() + CLOCK_ROLLBACK_TOLERANCE_MS) {
+    lastProcessedTimestampMs = 0;
+  }
+  if (timestamp <= lastProcessedTimestampMs) return false;
+  lastProcessedTimestampMs = timestamp;
+  return true;
+};
+
+// 駅検索・初回位置取得は最大許容精度による棄却を通さず、従来どおり
+// setLocationへ渡す。古い応答では位置の更新だけを省略し、呼出元の検索は続行する。
+export const setOneShotLocation = (location: Location.LocationObject): void => {
+  if (!acceptLocationTimestamp(location.timestamp)) {
+    countLocationRejectedAsDuplicate();
+    return;
+  }
+  setLocation(location);
+};
 
 // watchPositionAsync / startLocationUpdatesAsync 双方の継続測位の共通入口。
 // 経路ごとにMAX_PERMIT_ACCURACYの適用漏れが起きないよう、精度フィルタをここへ集約する。
-// （getCurrentPositionAsyncによるワンショット取得や手動選択はsetLocationを直接呼ぶため対象外）
+// （駅検索などのワンショットはsetOneShotLocationへ通し、時刻判定だけ共有する）
 export const handleTrackingLocation = (location: Location.LocationObject) => {
   // 重複・順序逆転した測位の破棄。Android 16(API 36)ではJobSchedulerクォータ対策で
   // TaskManagerとwatchPositionAsyncの直接コールバックを併用しており、同一の測位が
@@ -74,16 +97,12 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
   // 下流の最寄り駅探索・到着判定・再レンダーも全て二重に走って電池を無駄に消費する。
   // また、クォータでスロットルされたTaskManagerのバッチが遅れて届いた場合、直接
   // コールバック済みの新しい測位より古い座標へ位置が引き戻されるのもここで防ぐ。
-  if (lastProcessedTimestampMs > Date.now() + CLOCK_ROLLBACK_TOLERANCE_MS) {
-    lastProcessedTimestampMs = 0;
-  }
-  if (location.timestamp <= lastProcessedTimestampMs) {
+  if (!acceptLocationTimestamp(location.timestamp)) {
     // 破棄した事実だけ数える。重複排除はlastProcessedAtMsを更新する前に抜けるので、
     // 経過時間からは「OSが呼んでいない」状態と区別が付かない(locationPipelineStats)。
     countLocationRejectedAsDuplicate();
     return;
   }
-  lastProcessedTimestampMs = location.timestamp;
   lastProcessedAtMs = monotonicNow();
   lastLocationAgeAtDeliveryMs = Number.isFinite(location.timestamp)
     ? Math.max(0, Date.now() - location.timestamp)
