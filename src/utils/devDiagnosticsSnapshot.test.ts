@@ -51,6 +51,14 @@ const baseInput: DevDiagnosticsInput = {
     rejectedByEta: 2,
     rejectedBySpeed: 1,
   },
+  backgroundBatches: {
+    batches: 3,
+    locations: 5,
+    lastDeliveredAtMs: 1700000001000,
+    lastFixAtMs: 1700000000000,
+    lastAccuracy: 3168,
+    lastBatchSize: 2,
+  },
   heartbeat: {
     state: 'running',
     requested: 12,
@@ -82,6 +90,17 @@ const baseInput: DevDiagnosticsInput = {
 };
 
 describe('buildDevDiagnosticsSnapshot', () => {
+  it('バックグラウンドタスクの受信時刻と測位精度を保持する', () => {
+    expect(buildDevDiagnosticsSnapshot(baseInput).backgroundBatches).toEqual({
+      batches: 3,
+      locations: 5,
+      lastDeliveredAtMs: 1700000001000,
+      lastFixAtMs: 1700000000000,
+      lastAccuracy: 3168,
+      lastBatchSize: 2,
+    });
+  });
+
   it('実効設定を座標と一緒に持ち出す', () => {
     // 設定が分からないと同じ測位でも挙動を説明できないため、
     // 座標だけを持ち出せても診断には足りない
