@@ -1,13 +1,24 @@
 import * as Battery from 'expo-battery';
 import type * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
+import { Platform } from 'react-native';
 import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
+import { iosBackgroundDistanceFilterBypassAtom } from '~/store/atoms/locationSettings';
 import {
   LOCATION_TASK_OPTIONS,
   LOCATION_TASK_OPTIONS_POWER_SAVING,
   LOCATION_WATCH_OPTIONS,
   LOCATION_WATCH_OPTIONS_POWER_SAVING,
 } from '../constants';
+
+// expo-locationのiOSタスクはoptions辞書をそのままネイティブへ渡す。
+// 独自キーはpatches/expo-location+58.0.16.patchで解釈する。
+const IOS_TASK_OPTIONS_WITH_DISTANCE_FILTER: Location.LocationTaskOptions & {
+  trainLCDBypassBackgroundDistanceFilter: boolean;
+} = {
+  ...LOCATION_TASK_OPTIONS,
+  trainLCDBypassBackgroundDistanceFilter: false,
+};
 
 type LocationProfile = {
   /**
@@ -33,6 +44,9 @@ type LocationProfile = {
  * 呼び出し側がwatchOptions/taskOptionsをそのままeffect依存に置いても参照は安定する。
  */
 export const useLocationProfile = (): LocationProfile => {
+  const bypassDistanceFilter = useAtomValue(
+    iosBackgroundDistanceFilterBypassAtom
+  );
   const systemLowPowerMode = Battery.useLowPowerMode();
   // 省電力測位モード。精度をBalancedへ下げ、停車中の測位自動休止(iOSのみ)を
   // 許可する。通常測位の要求精度はOS別にconstants/location.tsで定義する。
@@ -50,6 +64,8 @@ export const useLocationProfile = (): LocationProfile => {
       : LOCATION_WATCH_OPTIONS,
     taskOptions: powerSavingEnabled
       ? LOCATION_TASK_OPTIONS_POWER_SAVING
-      : LOCATION_TASK_OPTIONS,
+      : Platform.OS === 'ios' && bypassDistanceFilter === false
+        ? IOS_TASK_OPTIONS_WITH_DISTANCE_FILTER
+        : LOCATION_TASK_OPTIONS,
   };
 };
