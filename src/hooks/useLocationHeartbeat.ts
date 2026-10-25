@@ -1,4 +1,5 @@
 import * as Location from 'expo-location';
+import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
 import { useAtomValue } from 'jotai';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
@@ -81,6 +82,16 @@ const watchSingleLocation = (
           Date.now() - location.timestamp >
             LOCATION_HEARTBEAT_STALE_THRESHOLD ||
           !isNewTrackingLocation(location.timestamp)
+        ) {
+          return;
+        }
+        // 地下では最初の新規測位がセル由来の粗い座標になりやすい。
+        // 後段の精度フィルタで棄却される値では購読を閉じず、
+        // 駅到着時に精度が回復した測位を待つ（既存の見切り時間は維持）。
+        const { accuracy: horizontalAccuracy } = location.coords;
+        if (
+          horizontalAccuracy != null &&
+          horizontalAccuracy > getMaxPermitAccuracy()
         ) {
           return;
         }
