@@ -179,7 +179,7 @@ index b7132b8..579a444 100644
      [self->_locationManager stopUpdatingLocation];
      [self->_locationManager stopMonitoringSignificantLocationChanges];
      [self->_deferredLocations removeAllObjects];
-@@ -118,12 +236,17 @@
+@@ -118,12 +236,15 @@
    _lastReportedLocation = _deferredLocations.lastObject;
    _deferredDistance = 0.0;
    [_deferredLocations removeAllObjects];
