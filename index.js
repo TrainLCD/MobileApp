@@ -5,6 +5,7 @@ import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME } from './src/constants';
 import { setupRemoteConfig } from './src/lib/remoteConfig';
+import { recordBackgroundLocationBatch } from './src/utils/backgroundLocationDiagnostics';
 import { handleTrackingLocation } from './src/utils/handleTrackingLocation';
 
 Sentry.init({
@@ -28,6 +29,9 @@ if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
       return;
     }
 
+    // Persist before filters, so a later foreground snapshot can distinguish
+    // native task delivery from inaccurate/rejected positions.
+    recordBackgroundLocationBatch(data?.locations ?? []);
     const latestLocation = data.locations[data.locations.length - 1];
     if (latestLocation) {
       handleTrackingLocation(latestLocation);
