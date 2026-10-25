@@ -11,13 +11,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  Linking,
-  Platform,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
@@ -50,7 +44,6 @@ import {
   useWarningInfo,
   useWrongDirectionDetectorEffect,
 } from '../hooks';
-import { useAndroidScreenDimensions } from '../hooks/useAndroidScreenDimensions';
 import { useManualCurrentStation } from '../hooks/useManualCurrentStation';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
@@ -70,7 +63,6 @@ import speechState from '../store/atoms/speech';
 import { selectedBoundAtom } from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
 import { isJapanese, translate } from '../translation';
-import { getRunningLayout } from '../utils/runningLayout';
 import NewReportModal from './NewReportModal';
 import { SelectBoundSettingListModal } from './SelectBoundSettingListModal';
 import { ThemeListModal } from './ThemeListModal';
@@ -134,13 +126,6 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
   const pictureInPictureEnabled = useAtomValue(pictureInPictureEnabledAtom);
   const pictureInPictureActive = useAtomValue(pictureInPictureActiveAtom);
   const isAppActive = useIsAppActive();
-  const { width, height } = useWindowDimensions();
-  const screenDimensions = useAndroidScreenDimensions();
-  // 走行画面と同じ正方形判定を使い、駅一覧操作中のメニュー誤表示を抑える。
-  const longPressDuration =
-    getRunningLayout(width, height, false, screenDimensions) === 'square'
-      ? 3000
-      : LONG_PRESS_DURATION;
   const setTuning = useSetAtom(tuningState);
   const [themePreference, setThemePreference] = useAtom(themePreferenceAtom);
   const [reportModalShow, setReportModalShow] = useAtom(reportModalVisibleAtom);
@@ -734,7 +719,7 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
       <PermittedLayoutEffects />
       <LongPressGestureHandler
         onHandlerStateChange={onLongPress}
-        minDurationMs={longPressDuration}
+        minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.container}>
           <RunningSettingsContext.Provider value={openSettingListModal}>
