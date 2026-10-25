@@ -41,6 +41,8 @@ on:
         type: string
 
 permissions:
+  # Claude Code Action が GitHub App 認証に使う OIDC トークンを取得するために必要です。
+  id-token: write
   contents: write
   pull-requests: write
 
