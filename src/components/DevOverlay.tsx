@@ -43,6 +43,7 @@ import {
   stationAtom,
 } from '~/store/atoms/station';
 import { getAccuracyBonus } from '~/utils/accuracyBonus';
+import { getBackgroundLocationStats } from '~/utils/backgroundLocationDiagnostics';
 import { copyTextToClipboard } from '~/utils/clipboard';
 import { formatDevDiagnosticsSnapshot } from '~/utils/devDiagnosticsSnapshot';
 import {
@@ -613,6 +614,7 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         accuracyOutlier,
         pipelineCounts: getLocationPipelineCounts(),
         heartbeat: getLocationHeartbeatStats(),
+        backgroundBatches: getBackgroundLocationStats(),
         skipSmoothing: smoothingDecision.skipSmoothing,
         lineType: smoothingDecision.lineType,
         effectiveSpeedMps: effectiveSpeed,
