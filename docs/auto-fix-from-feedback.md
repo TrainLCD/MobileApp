@@ -76,6 +76,12 @@ fix/feedback-<issue番号> → dev の Pull Request
 
 ## 必要な設定
 
+### OIDC トークンの取得権限
+
+Claude Code Action は GitHub が発行する OIDC トークンを GitHub App のトークンに交換します。
+そのため、このワークフローには `id-token: write` が必要です。
+OIDC 用の環境変数は GitHub が実行時に用意します。手動で secret を追加する必要はありません。
+
 ### MobileApp 側の secret
 
 | secret | 用途 |
