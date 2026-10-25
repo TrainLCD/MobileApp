@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { StrictMode } from 'react';
 import { AppState } from 'react-native';
+import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
 import {
   LOCATION_ACCURACY,
   LOCATION_HEARTBEAT_MAX_PENDING,
@@ -88,11 +89,14 @@ const mockMonotonicNow = monotonicNow as jest.Mock;
 
 const NOW = 1_700_000_000_000;
 
-const makeLocation = (timestamp: number): Location.LocationObject => ({
+const makeLocation = (
+  timestamp: number,
+  accuracy = 30
+): Location.LocationObject => ({
   coords: {
     latitude: 35.681236,
     longitude: 139.767125,
-    accuracy: 30,
+    accuracy,
     altitude: 0,
     altitudeAccuracy: 0,
     heading: 0,
@@ -220,6 +224,25 @@ describe('useLocationHeartbeat', () => {
       expect(getLocationHeartbeatStats().succeeded).toBe(1);
     }
   );
+
+  it('精度上限超過後も購読を維持し、改善した測位を同じ購読で受理する', async () => {
+    setWatchBehavior(null);
+    await startHeartbeat();
+    await advanceBy(1);
+    const watch = watches[0];
+
+    const coarse = makeLocation(Date.now(), getMaxPermitAccuracy() + 1);
+    await act(async () => watch.emit(coarse));
+    expect(watch.remove).not.toHaveBeenCalled();
+    expect(mockHandleTrackingLocation).not.toHaveBeenCalled();
+    expect(getLocationHeartbeatStats().succeeded).toBe(0);
+
+    const improved = makeLocation(Date.now(), getMaxPermitAccuracy() - 1);
+    await act(async () => watch.emit(improved));
+    expect(watch.remove).toHaveBeenCalledTimes(1);
+    expect(mockHandleTrackingLocation).toHaveBeenCalledWith(improved);
+    expect(getLocationHeartbeatStats().succeeded).toBe(1);
+  });
 
   it('古い測位だけが続いても30秒で購読を閉じて再試行する', async () => {
     setWatchBehavior(() => makeLocation(NOW - 65_000));
