@@ -1,8 +1,8 @@
 import * as Location from 'expo-location';
-import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
 import { useAtomValue } from 'jotai';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
+import { getMaxPermitAccuracy } from '~/lib/remoteConfig';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   getTrackedLocationAgeMs,
