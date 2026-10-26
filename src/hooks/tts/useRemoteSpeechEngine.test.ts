@@ -8,6 +8,7 @@ import {
 } from '~/constants';
 import { TTS_SPEED_PREFERENCE } from '~/models/TTSSpeed';
 import { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
+import { wrapPhoneme } from '~/utils/phoneme';
 import type { SpeechEngineRequest } from './speechEngine';
 import { useRemoteSpeechEngine } from './useRemoteSpeechEngine';
 
@@ -76,6 +77,43 @@ const renderEngineWithSpeed = (
 };
 
 describe('useRemoteSpeechEngine', () => {
+  it.each([
+    ['Seibo-Byōin-Iriguchi', 'Seibo-Bee-oh-in-Iriguchi'],
+    ['Shinjuku-sanchome', 'Shin-jew-ku-san-choh-meh'],
+    ['Daigaku-byoin', 'Daigaku-bee-oh-in'],
+    ['Byoin-mae', 'Bee-oh-in-mae'],
+    ['Keisatsusho', 'Kaysatsusho'],
+    ['Ginza-itchome', 'Ginza-itch-oh-meh'],
+    ['Aoyama-itchome', 'Aoyama-itch-oh-meh'],
+    ['Mejiro', 'Megeero'],
+    ['Higashi-Mejiro', 'Higashi-Megeero'],
+    ['Jinja', 'Geen-jah'],
+    ['Oji', 'Ogee'],
+    ['Shinjuku', 'Shin-jew-ku'],
+    ['Jefu', 'Jeh-fu'],
+    ['Joetsu', 'Joe-etsu'],
+    ['Jo\u0304ban', 'Joe-ban'],
+  ])('%sの補正結果をタグなしの本文でTTSへ渡す', async (name, reading) => {
+    const { result } = renderEngine();
+    const stationName = wrapPhoneme(null, name);
+    result.current.speak(
+      {
+        ...defaultRequest,
+        ssmlJa: '次は、神社前です。',
+        ssmlEn: `Enjoy your journey. The next station is ${stationName}.`,
+      },
+      { onSettled: jest.fn() }
+    );
+    await flushAsync();
+
+    expect(mockFetchSpeechAudio).toHaveBeenCalledWith(
+      expect.objectContaining({
+        textEn: `Enjoy your journey. The next station is ${reading}.`,
+        textJa: '次は、神社前です。',
+      })
+    );
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     playAudioCalls.length = 0;

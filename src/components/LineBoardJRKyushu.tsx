@@ -34,6 +34,10 @@ import {
   getLineColorBarSegments,
   getLineDotCenterX,
 } from './LineBoard/shared/utils/lineColorBarSegments';
+import {
+  LineBoardCurrentStationContext,
+  useLineBoardCurrentStation,
+} from './LineBoardCurrentStation';
 import NumberingIcon from './NumberingIcon';
 
 type Props = {
@@ -121,7 +125,7 @@ const useStationRenderState = (
 ) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
-  const currentStation = useDisplayCurrentStation();
+  const currentStation = useLineBoardCurrentStation();
   const isEn = useAtomValue(isEnAtom);
 
   const currentStationIndex = useMemo(
@@ -510,4 +514,14 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   );
 };
 
-export default React.memo(LineBoardJRKyushu);
+const MemoLineBoardJRKyushu = React.memo(LineBoardJRKyushu);
+const LineBoardJRKyushuWithCurrentStation = (props: Props) => {
+  const station = useDisplayCurrentStation();
+  return (
+    <LineBoardCurrentStationContext value={station}>
+      <MemoLineBoardJRKyushu {...props} />
+    </LineBoardCurrentStationContext>
+  );
+};
+
+export default React.memo(LineBoardJRKyushuWithCurrentStation);

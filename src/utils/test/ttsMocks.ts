@@ -3,6 +3,7 @@ export const mockFetch = jest.fn();
 // 退避・クリア時に削除された音声ファイルの uri を受け取る。
 // jest.mock のファクトリから参照するため、名前は `mock` 始まりにする必要がある。
 export const mockFileDelete = jest.fn();
+export const mockFileWriteSync = jest.fn();
 
 jest.mock('expo/fetch', () => ({
   fetch: (...args: unknown[]) => mockFetch(...args),
@@ -19,7 +20,9 @@ jest.mock('expo-file-system', () => ({
         name === undefined ? basePathOrUri : `${basePathOrUri}/${name}`;
     }
 
-    write() {}
+    writeSync(bytes: Uint8Array) {
+      mockFileWriteSync(this.uri, bytes);
+    }
 
     delete() {
       mockFileDelete(this.uri);

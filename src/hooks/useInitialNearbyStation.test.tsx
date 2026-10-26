@@ -1,13 +1,19 @@
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { STORAGE_KEYS } from '~/constants';
 import { storage } from '~/lib/storage';
+import { store } from '~/store';
+import { locationAtom, resetLocationState } from '~/store/atoms/location';
 import {
   getDialogPresentationSnapshot,
   resetDialogPresentationForTests,
 } from '~/utils/dialogPresentation';
+import {
+  resetTrackingLocationDedup,
+  setOneShotLocation,
+} from '~/utils/handleTrackingLocation';
 import { createStation } from '~/utils/test/factories';
 import navigationState from '../store/atoms/navigation';
 import stationState, { stationAtom } from '../store/atoms/station';
@@ -154,6 +160,78 @@ describe('useInitialNearbyStation', () => {
       },
     });
   });
+  it.each(['initial', 'refetch'])(
+    '古い%sの応答でも駅検索を続け、現在地は戻さない',
+    async (mode) => {
+      jest.useFakeTimers();
+      resetLocationState();
+      resetTrackingLocationDedup();
+      try {
+        const fresh: Location.LocationObject = {
+          timestamp: 5000,
+          coords: {
+            latitude: 35,
+            longitude: 139,
+            accuracy: 30,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+        };
+        const old = {
+          ...fresh,
+          timestamp: 4000,
+          coords: { ...fresh.coords, latitude: 34 },
+        };
+        setOneShotLocation(fresh);
+        (useFetchCurrentLocationOnce as jest.Mock).mockReturnValue({
+          fetchCurrentLocation: jest.fn().mockResolvedValue(old),
+        });
+        const fetchByCoords = jest
+          .fn()
+          .mockResolvedValue({ data: { stationsNearby: [createStation(1)] } });
+        (useFetchNearbyStation as jest.Mock).mockReturnValue({
+          stations: [],
+          fetchByCoords,
+          isLoading: false,
+          error: null,
+        });
+        if (mode === 'refetch') {
+          mockUseAtomValue.mockImplementation((atom) =>
+            atom === stationAtom ? createStation(1) : null
+          );
+        }
+        const hookRef: { current: HookResult } = { current: null };
+        render(
+          <HookBridge
+            onReady={(v) => {
+              hookRef.current = v;
+            }}
+          />
+        );
+        if (mode === 'initial') {
+          await jest.advanceTimersByTimeAsync(800);
+        } else {
+          await act(async () => {
+            await hookRef.current?.refetch();
+          });
+        }
+        expect(fetchByCoords).toHaveBeenCalledWith({
+          latitude: 34,
+          longitude: 139,
+          limit: 1,
+        });
+        expect(store.get(locationAtom)).toBe(fresh);
+        expect(mockSetStationResolveFailed).toHaveBeenCalledWith(false);
+      } finally {
+        resetLocationState();
+        resetTrackingLocationDedup();
+        jest.useRealTimers();
+      }
+    }
+  );
+
   describe('現在駅の解決失敗フラグ', () => {
     // 初回の位置取得は 800ms のフォールバックタイマーで始まる
     const INITIAL_LOCATION_FALLBACK_DELAY_MS = 800;

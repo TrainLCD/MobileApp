@@ -7,7 +7,7 @@ import {
   Pressable,
   StyleSheet,
   TextInput,
-  type TextInput as TextInputType,
+  type TextInputInstance as TextInputType,
   View,
 } from 'react-native';
 import { FONTS, LED_THEME_BG_COLOR } from '~/constants';

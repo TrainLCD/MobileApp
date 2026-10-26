@@ -20,12 +20,13 @@ import {
   GET_STATIONS_NEARBY,
 } from '~/lib/graphql/queries';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
-import { locationAtom, setLocation } from '~/store/atoms/location';
+import { locationAtom } from '~/store/atoms/location';
 import { stationAtom } from '~/store/atoms/station';
 import { stationResolveFailedAtom } from '~/store/atoms/stationSearchPrompt';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import { isJapanese, translate } from '~/translation';
 import { showDialogWhilePresenting } from '~/utils/dialogPresentation';
+import { setOneShotLocation } from '~/utils/handleTrackingLocation';
 import isTablet from '~/utils/isTablet';
 import { filterBusLinesForNonBusStation } from '~/utils/line';
 import Button from './Button';
@@ -204,7 +205,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
         });
-        setLocation(currentLocation);
+        setOneShotLocation(currentLocation);
       } catch (error) {
         console.error(error);
       }

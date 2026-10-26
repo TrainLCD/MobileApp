@@ -11,7 +11,10 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { LOCATION_HEARTBEAT_STALE_THRESHOLD } from '../constants/location';
-import { resetTrackingLocationDedup } from '../utils/handleTrackingLocation';
+import {
+  handleTrackingLocation,
+  resetTrackingLocationDedup,
+} from '../utils/handleTrackingLocation';
 import { useLocationHeartbeat } from './useLocationHeartbeat';
 
 jest.mock('expo-location');
@@ -69,6 +72,48 @@ describe('useLocationHeartbeat の取得間隔', () => {
   afterEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
+  });
+
+  it.each([
+    [34_000, 1],
+    [5_000, 5_000],
+  ])('受信時点で%dms古い測位なら%dms以内に補完を始める', async (age, wait) => {
+    const remove = jest.fn();
+    let emit: ((location: Location.LocationObject) => void) | undefined;
+    mockWatchPositionAsync.mockImplementation((_options, callback) => {
+      emit = callback;
+      return Promise.resolve({ remove });
+    });
+    const location: Location.LocationObject = {
+      coords: {
+        latitude: 35.681236,
+        longitude: 139.767125,
+        accuracy: 1537,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: -1,
+      },
+      timestamp: Date.now() - age,
+    };
+    handleTrackingLocation(location);
+    const { unmount } = renderHook(() => useLocationHeartbeat());
+    await act(async () => {});
+    await act(async () => jest.advanceTimersByTime(wait));
+    expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
+    expect(emit).toBeDefined();
+
+    // 継続配信が先に進んだ場合、同じ測位では購読を閉じない。
+    const fresh = { ...location, timestamp: Date.now() };
+    handleTrackingLocation(fresh);
+    await act(async () => emit?.(fresh));
+    expect(remove).not.toHaveBeenCalled();
+    await act(async () => {
+      jest.advanceTimersByTime(1);
+      emit?.({ ...fresh, timestamp: Date.now() });
+    });
+    expect(remove).toHaveBeenCalledTimes(1);
+    unmount();
   });
 
   it('継続測位が完全に途絶している間、途絶時間を超えて取得が空かない', async () => {

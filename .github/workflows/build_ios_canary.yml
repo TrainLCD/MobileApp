@@ -178,6 +178,7 @@ jobs:
           fi
 
       - name: Archive canary
+        id: archive
         env:
           APP_VARIANT: "dev"
           EXPERIMENTAL_TELEMETRY_TOKEN: "${{ secrets.EXPERIMENTAL_TELEMETRY_TOKEN }}"
@@ -196,8 +197,38 @@ jobs:
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
             archive
 
+      - name: Export Canary IPA
+        env:
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          export_options_path="$RUNNER_TEMP/ArtifactExportOptions.plist"
+          plutil -create xml1 "$export_options_path"
+          plutil -insert method -string release-testing "$export_options_path"
+          plutil -insert destination -string export "$export_options_path"
+          plutil -insert signingStyle -string automatic "$export_options_path"
+          plutil -insert teamID -string E6R2G33Z36 "$export_options_path"
+          plutil -insert manageAppVersionAndBuildNumber -bool false "$export_options_path"
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$RUNNER_TEMP/TrainLCD.xcarchive" \
+            -exportPath "$RUNNER_TEMP/ipa" \
+            -exportOptionsPlist "$export_options_path" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-canary-ipa
+          path: ${{ runner.temp }}/ipa/*.ipa
+          if-no-files-found: error
+
       - name: Upload to TestFlight
-        if: github.event_name == 'push' || inputs.publish_to_testflight
+        if: ${{ !cancelled() && steps.archive.outcome == 'success' && (github.event_name == 'push' || inputs.publish_to_testflight) }}
         env:
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}

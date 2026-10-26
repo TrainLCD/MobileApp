@@ -1,4 +1,5 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
+import { Platform } from 'react-native';
 import {
   LOCATION_TASK_OPTIONS,
   LOCATION_TASK_OPTIONS_POWER_SAVING,
@@ -18,10 +19,19 @@ jest.mock('~/store/atoms/battery', () => ({
   },
 }));
 
+jest.mock('~/store/atoms/locationSettings', () => ({
+  iosBackgroundDistanceFilterBypassAtom: {
+    toString: () => 'iosBackgroundDistanceFilterBypassAtom',
+  },
+}));
+let mockBypassDistanceFilter = true;
 let mockPowerSavingLocationEnabled = false;
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
   useAtomValue: jest.fn((atom: unknown) => {
+    if (String(atom) === 'iosBackgroundDistanceFilterBypassAtom') {
+      return mockBypassDistanceFilter;
+    }
     if (String(atom) === 'powerSavingLocationEnabledAtom') {
       return mockPowerSavingLocationEnabled;
     }
@@ -33,6 +43,7 @@ describe('useLocationProfile', () => {
   beforeEach(() => {
     mockPowerSavingLocationEnabled = false;
     mockSystemLowPowerMode = false;
+    mockBypassDistanceFilter = true;
   });
 
   afterEach(() => {
@@ -81,3 +92,41 @@ describe('useLocationProfile', () => {
     expect(result.current.taskOptions).toBe(firstTask);
   });
 });
+
+const originalOS = Platform.OS;
+afterEach(() => {
+  Platform.OS = originalOS;
+});
+it.each(['ios', 'android'] as const)(
+  '解除OFFの設定は%sの対象プロファイルだけを変更する',
+  (os) => {
+    Platform.OS = os;
+    mockPowerSavingLocationEnabled = false;
+    mockSystemLowPowerMode = false;
+    mockBypassDistanceFilter = true;
+    const { result, rerender } = renderHook(() => useLocationProfile());
+    act(() => {
+      mockBypassDistanceFilter = false;
+    });
+    rerender({});
+    expect(result.current.watchOptions).toBe(LOCATION_WATCH_OPTIONS);
+    if (os === 'ios') {
+      expect(result.current.taskOptions).toEqual({
+        ...LOCATION_TASK_OPTIONS,
+        trainLCDBypassBackgroundDistanceFilter: false,
+      });
+    } else {
+      expect(result.current.taskOptions).toBe(LOCATION_TASK_OPTIONS);
+    }
+    const off = result.current.taskOptions;
+    rerender({});
+    expect(result.current.taskOptions).toBe(off);
+    mockSystemLowPowerMode = true;
+    rerender({});
+    expect(result.current.taskOptions).toBe(LOCATION_TASK_OPTIONS_POWER_SAVING);
+    mockSystemLowPowerMode = false;
+    mockBypassDistanceFilter = true;
+    rerender({});
+    expect(result.current.taskOptions).toBe(LOCATION_TASK_OPTIONS);
+  }
+);

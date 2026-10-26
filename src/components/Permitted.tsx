@@ -15,6 +15,7 @@ import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { LongPressGestureHandler, State } from 'react-native-gesture-handler';
 import Share from 'react-native-share';
 import ViewShot, { type ViewShotRef } from 'react-native-view-shot';
+import { RunningSettingsContext } from '~/providers/RunningSettingsContext';
 import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import reportModalVisibleAtom from '~/store/atoms/reportModal';
 import tuningState from '~/store/atoms/tuning';
@@ -43,6 +44,7 @@ import {
   useWarningInfo,
   useWrongDirectionDetectorEffect,
 } from '../hooks';
+import { useManualCurrentStation } from '../hooks/useManualCurrentStation';
 import { useTrainTypeModal } from '../hooks/useTrainTypeModal';
 import { storage } from '../lib/storage';
 import { THEME_PREFERENCE, type ThemePreference } from '../models/Theme';
@@ -158,6 +160,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
     closeTrainTypeModal,
     handleTrainTypeModalSelect,
   } = useTrainTypeModal();
+
+  const { selectableStations, selectStation } = useManualCurrentStation();
 
   const viewShotRef = useRef<ViewShotRef>(null);
 
@@ -718,7 +722,9 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         minDurationMs={LONG_PRESS_DURATION}
       >
         <View style={styles.container}>
-          {children}
+          <RunningSettingsContext.Provider value={openSettingListModal}>
+            {children}
+          </RunningSettingsContext.Provider>
           {warningPanel}
         </View>
       </LongPressGestureHandler>
@@ -736,6 +742,8 @@ const PermittedLayout: React.FC<Props> = ({ children }: Props) => {
         themeLabel={themeLabel}
         themeColor={themeRowColor}
         onThemePress={handleThemePress}
+        stations={selectableStations}
+        onStationSelect={selectedBound ? selectStation : undefined}
       />
       <TrainTypeListModal
         visible={isTrainTypeModalVisible}

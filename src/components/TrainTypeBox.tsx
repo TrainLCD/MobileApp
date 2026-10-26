@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
+import AnimatedTypography from '~/components/AnimatedTypography';
 import { FONTS, parenthesisRegexp } from '../constants';
 import {
   useCurrentLine,
@@ -368,7 +369,7 @@ const TrainTypeBox: React.FC<Props> = ({
         ) : null}
 
         <View style={styles.textWrapper}>
-          <RNAnimated.Text
+          <AnimatedTypography
             style={[
               textTopAnimatedStyles,
               [
@@ -387,10 +388,10 @@ const TrainTypeBox: React.FC<Props> = ({
             numberOfLines={numberOfLines}
           >
             {trainTypeName}
-          </RNAnimated.Text>
+          </AnimatedTypography>
         </View>
 
-        <RNAnimated.Text
+        <AnimatedTypography
           style={[
             styles.text,
             prevTrainTypeDisplayState.textStyle,
@@ -407,7 +408,7 @@ const TrainTypeBox: React.FC<Props> = ({
           numberOfLines={prevNumberOfLines}
         >
           {prevTrainTypeName}
-        </RNAnimated.Text>
+        </AnimatedTypography>
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <View style={nextTrainTypeWrapperStyle}>

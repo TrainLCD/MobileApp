@@ -8,6 +8,9 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'src/**'
+      - 'scripts/**'
+      - 'patches/**'
+      - '.github/workflows/test.yml'
 
 env:
   cache-version: v1

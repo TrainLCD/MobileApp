@@ -3,7 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import { lighten } from 'polished';
 import type React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
+import Typography from '~/components/Typography';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import type { DialogOptions } from '~/utils/dialogPresentation';
 import { RFValue } from '~/utils/rfValue';
@@ -72,7 +73,7 @@ export const CommonDialogModal: React.FC<CommonDialogModalProps> = ({
         testID="common-dialog-line-symbol-fallback"
       />
     ) : (
-      <Text style={styles.emoji}>{emoji}</Text>
+      <Typography style={styles.emoji}>{emoji}</Typography>
     );
 
   return (

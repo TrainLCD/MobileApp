@@ -74,6 +74,20 @@
         android:name="android.appwidget.provider"
         android:resource="@xml/presets_widget_info"/>
     </receiver>
+    <receiver
+      android:name=".CoverLauncherWidgetProvider"
+      android:label="@string/cover_launcher_title"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/cover_launcher_widget_info"/>
+      <meta-data
+        android:name="com.samsung.android.appwidget.provider"
+        android:resource="@xml/samsung_cover_widget_info"/>
+    </receiver>
     <!-- プリセットウィジェットの行を供給するアダプタ。BIND_REMOTEVIEWSはシステムのみが保持する -->
     <service
       android:name=".PresetsWidgetService"

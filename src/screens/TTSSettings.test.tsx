@@ -213,7 +213,9 @@ describe('TTSSettingsScreen', () => {
     });
 
     it('利用不可の説明とサービスステータスリンクを表示しタップでブラウザを開く', () => {
-      const openURLSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+      const openURLSpy = jest
+        .spyOn(Linking, 'openURL')
+        .mockResolvedValue(undefined);
 
       const { getByText } = renderWithSpeechState({ enabled: true });
 

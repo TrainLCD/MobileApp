@@ -19,8 +19,8 @@ import FirebaseCore
 // 素の `RCTAppDelegate` は `RCTReactNativeFactory` しか生成せず、`EXAppContext` を作って
 // `registerNativeModules()` を呼ぶのは `ExpoReactNativeFactory` だけなので、
 // 旧実装では Expo モジュールが 1 つも登録されず JS 評価時に落ちて白画面のまま固まっていた。
-@UIApplicationMain
-internal class AppDelegate: ExpoAppDelegate {
+@main
+internal class AppDelegate: ExpoAppDelegate, ExpoReactNativeFactoryProvider {
   var window: UIWindow?
 
   var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
@@ -42,12 +42,6 @@ internal class AppDelegate: ExpoAppDelegate {
     // Firebase Analytics。ターゲットごとに Schemes/{Dev,Prod}/GoogleService-Info.plist を同梱している。
     // JS 側から default app を参照する前に初期化を済ませるため、React Native の起動より前に呼ぶ
     FirebaseApp.configure()
-
-    window = UIWindow(frame: UIScreen.main.bounds)
-    factory.startReactNative(
-      withModuleName: "main",
-      in: window,
-      launchOptions: launchOptions)
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
@@ -90,3 +84,7 @@ class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
 #endif
   }
 }
+
+// SDK 58: UIKit creates the window and starts React Native when the scene connects.
+@objc(SceneDelegate)
+internal class SceneDelegate: ExpoAppSceneDelegate {}

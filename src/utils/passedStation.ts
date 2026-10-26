@@ -1,4 +1,4 @@
-import getDistance from 'geolib/es/getPreciseDistance';
+import getDistance from 'geolib/es/getDistance';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_MAX_THRESHOLD } from '~/constants';
 import { getAccuracyBonus } from './accuracyBonus';
@@ -17,6 +17,23 @@ const toCoordinates = (s: Station | undefined): Coordinates | null =>
   s?.latitude != null && s.longitude != null
     ? { latitude: s.latitude, longitude: s.longitude }
     : null;
+
+const sectionCache = new WeakMap<
+  Station[],
+  { coordinates: (Coordinates | null)[]; distances: (number | null)[] }
+>();
+const getSections = (stations: Station[]) => {
+  const cached = sectionCache.get(stations);
+  if (cached) return cached;
+  const coordinates = stations.map(toCoordinates);
+  const distances = coordinates.map((start, i) => {
+    const end = coordinates[i + 1];
+    return start && end ? getDistance(start, end) : null;
+  });
+  const sections = { coordinates, distances };
+  sectionCache.set(stations, sections);
+  return sections;
+};
 
 /**
  * 現在駅より先にある通過駅のうち、現在地がすでに通り過ぎたものを返す。
@@ -57,7 +74,16 @@ export const findPassedStation = (
     return undefined;
   }
 
+  const sections = getSections(orderedStations);
   const current: Coordinates = { latitude, longitude };
+  const distancesFromCurrent = new Map<number, number>();
+  const distanceTo = (index: number, coordinates: Coordinates) => {
+    const cached = distancesFromCurrent.get(index);
+    if (cached != null) return cached;
+    const distance = getDistance(current, coordinates);
+    distancesFromCurrent.set(index, distance);
+    return distance;
+  };
   let bestIndex = -1;
   let bestExcess = Number.POSITIVE_INFINITY;
 
@@ -67,15 +93,15 @@ export const findPassedStation = (
     if (i > currentIndex && !getIsPass(start)) {
       break;
     }
-    const startCoordinates = toCoordinates(start);
-    const endCoordinates = toCoordinates(orderedStations[i + 1]);
+    const startCoordinates = sections.coordinates[i];
+    const endCoordinates = sections.coordinates[i + 1];
     if (!startCoordinates || !endCoordinates) {
       continue;
     }
     const excess =
-      getDistance(current, startCoordinates) +
-      getDistance(current, endCoordinates) -
-      getDistance(startCoordinates, endCoordinates);
+      distanceTo(i, startCoordinates) +
+      distanceTo(i + 1, endCoordinates) -
+      (sections.distances[i] as number);
     if (excess < bestExcess) {
       bestExcess = excess;
       bestIndex = i;
@@ -87,8 +113,8 @@ export const findPassedStation = (
   }
 
   const passed = orderedStations[bestIndex];
-  const passedCoordinates = toCoordinates(passed);
-  const nextCoordinates = toCoordinates(orderedStations[bestIndex + 1]);
+  const passedCoordinates = sections.coordinates[bestIndex];
+  const nextCoordinates = sections.coordinates[bestIndex + 1];
   if (!passed || !passedCoordinates || !nextCoordinates) {
     return undefined;
   }
@@ -99,9 +125,9 @@ export const findPassedStation = (
     accuracy != null && Number.isFinite(accuracy) && accuracy > 0
       ? accuracy
       : 0;
-  const distanceFromPassed = getDistance(current, passedCoordinates);
-  const distanceToNext = getDistance(current, nextCoordinates);
-  const sectionDistance = getDistance(passedCoordinates, nextCoordinates);
+  const distanceFromPassed = distanceTo(bestIndex, passedCoordinates);
+  const distanceToNext = distanceTo(bestIndex + 1, nextCoordinates);
+  const sectionDistance = sections.distances[bestIndex] as number;
   if (distanceFromPassed - uncertainty < PASSED_STATION_MIN_DISTANCE) {
     return undefined;
   }

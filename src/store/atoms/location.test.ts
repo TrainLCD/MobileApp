@@ -158,7 +158,7 @@ describe('setLocation', () => {
     });
   });
 
-  describe('非地下鉄路線', () => {
+  describe('路線種別Normalでの通常測位', () => {
     it('スムージングが適用される（座標が生の値と異なる）', () => {
       setStationLineType(LineType.Normal);
 
@@ -175,12 +175,12 @@ describe('setLocation', () => {
     });
   });
 
-  describe('地下鉄分岐を通ったかの記録', () => {
+  describe('地下向け処理を通ったかの記録', () => {
     // 診断の持ち出し(DevOverlay)がこの値を読む。同じ条件を外で組み直すと、
     // 判定と表示が別々に育って食い違うため、setLocationが下した結果そのものを固定する。
-    it('地下鉄かつ精度が不安定なら真になる', () => {
+    it('測位精度1500m以上の履歴があり精度が不安定なら真になる', () => {
       setStationLineType(LineType.Subway);
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      store.set(accuracyHistoryAtom, [1500, 300, 20, 400]);
 
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
 
@@ -190,19 +190,19 @@ describe('setLocation', () => {
       });
     });
 
-    it('地上路線なら偽になる', () => {
+    it('Normalでも測位精度1500m以上の履歴があれば真になる', () => {
       setStationLineType(LineType.Normal);
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      store.set(accuracyHistoryAtom, [1500, 300, 20, 400]);
 
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
 
       expect(store.get(smoothingDecisionAtom)).toEqual({
-        skipSmoothing: false,
+        skipSmoothing: true,
         lineType: LineType.Normal,
       });
     });
 
-    it('地下鉄でも精度履歴が安定していれば偽になる', () => {
+    it('路線種別Subwayでも精度履歴が安定していれば偽になる', () => {
       setStationLineType(LineType.Subway);
       store.set(accuracyHistoryAtom, [30, 35, 28, 32]);
 
@@ -216,12 +216,12 @@ describe('setLocation', () => {
 
     it('駅が無ければ路線種別はnullで記録する', () => {
       setStationLineType(null);
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      store.set(accuracyHistoryAtom, [1500, 300, 20, 400]);
 
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
 
       expect(store.get(smoothingDecisionAtom)).toEqual({
-        skipSmoothing: false,
+        skipSmoothing: true,
         lineType: null,
       });
     });
@@ -231,7 +231,7 @@ describe('setLocation', () => {
     // skipSmoothingとlineTypeが別の瞬間の値になって検算できなくなる。
     it('判定後に路線が変わっても判定時の組を保つ', () => {
       setStationLineType(LineType.Subway);
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      store.set(accuracyHistoryAtom, [1500, 300, 20, 400]);
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
 
       setStationLineType(LineType.Normal);
@@ -246,7 +246,7 @@ describe('setLocation', () => {
     // 購読しているDevOverlayが1秒ごとに再レンダーする。
     it('判定が変わらなければ参照を作り直さない', () => {
       setStationLineType(LineType.Subway);
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      store.set(accuracyHistoryAtom, [1500, 300, 20, 400]);
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
       const first = store.get(smoothingDecisionAtom);
 
@@ -257,7 +257,7 @@ describe('setLocation', () => {
 
     it('リセットで初期値へ戻る', () => {
       setStationLineType(LineType.Subway);
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      store.set(accuracyHistoryAtom, [1500, 300, 20, 400]);
       setLocation(makeLocation(35.0, 139.0, 500, 1000));
       expect(store.get(smoothingDecisionAtom).skipSmoothing).toBe(true);
 
@@ -270,11 +270,11 @@ describe('setLocation', () => {
     });
   });
 
-  describe('地下鉄路線', () => {
+  describe('測位精度に応じた地下区間向け処理', () => {
     it('精度が不安定な場合はスムージングをスキップする', () => {
       setStationLineType(LineType.Subway);
       // 高い変動の精度履歴をセット
-      store.set(accuracyHistoryAtom, [10, 300, 20, 400]);
+      store.set(accuracyHistoryAtom, [1500, 300, 20, 400]);
 
       const loc = makeLocation(35.0, 139.0, 500, 1000);
       setLocation(loc);
@@ -302,7 +302,7 @@ describe('setLocation', () => {
       expect(result?.coords.longitude).not.toBe(139.001);
     });
 
-    it('サンプル数が不足している場合はスムージングをスキップする', () => {
+    it('初回の測位は履歴不足でも採用する', () => {
       setStationLineType(LineType.Subway);
       // 2サンプルのみ（新しい値を追加しても3で MIN_STABILITY_SAMPLES=4 未満）
       store.set(accuracyHistoryAtom, [30, 35]);
@@ -315,7 +315,7 @@ describe('setLocation', () => {
       expect(result?.coords.longitude).toBe(139.0);
     });
 
-    it('精度が安定していても平均が200m以上の場合はスムージングをスキップする', () => {
+    it('精度250mの初回測位を採用する', () => {
       setStationLineType(LineType.Subway);
       // 安定だが高い値（平均250m）
       store.set(accuracyHistoryAtom, [240, 250, 260, 250]);
@@ -328,7 +328,7 @@ describe('setLocation', () => {
       expect(result?.coords.longitude).toBe(139.0);
     });
 
-    it('平均精度がちょうど200mの境界値の場合はスムージングをスキップする', () => {
+    it('精度200mの初回測位を採用する', () => {
       setStationLineType(LineType.Subway);
       // 平均がちょうど200m（mean >= BAD_ACCURACY_THRESHOLD で不安定扱い）
       store.set(accuracyHistoryAtom, [200, 200, 200, 200]);

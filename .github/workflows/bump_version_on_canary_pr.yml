@@ -29,29 +29,57 @@ jobs:
     if: |
       (
         github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        !contains(github.event.pull_request.labels.*.name, 'skip-version-bump')
+        github.event.pull_request.head.repo.full_name == github.repository
       ) || github.event_name == 'workflow_dispatch'
     steps:
+      # gh pr create applies labels after creating the PR, in a separate API call.
+      - name: Wait for skip-version-bump label
+        id: canary-label
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            labels="$(gh api "repos/${REPOSITORY}/issues/${PR_NUMBER}/labels" \
+              --paginate --jq '.[].name')"
+            if grep -Fx 'skip-version-bump' <<< "$labels" >/dev/null; then
+              echo 'skip=true' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$attempt" -lt 12 ]; then
+              sleep 5
+            fi
+          done
+          echo 'skip=false' >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v4
+        if: steps.canary-label.outputs.skip != 'true'
         with:
           ref: ${{ github.event.pull_request.head.ref || inputs.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
+        if: steps.canary-label.outputs.skip != 'true'
         with:
           node-version: 24
           cache: "npm"
 
       - name: Install dependencies
+        if: steps.canary-label.outputs.skip != 'true'
         run: npm ci
 
       - name: Bump version
+        if: steps.canary-label.outputs.skip != 'true'
         run: |
           set -e
           npm run version:bump -- --no-version-increment
 
       - name: Create Pull Request
+        if: steps.canary-label.outputs.skip != 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

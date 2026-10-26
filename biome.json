@@ -33,6 +33,17 @@
         "noExplicitAny": "error"
       },
       "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "react-native": {
+                "importNames": ["Text", "*", "default"],
+                "message": "Use Typography from src/components/Typography instead of React Native Text."
+              }
+            }
+          }
+        },
         "noNonNullAssertion": "warn",
         "noParameterAssign": "error",
         "useAsConstAssertion": "error",
@@ -46,5 +57,21 @@
         "noUselessElse": "error"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "src/components/Typography.tsx",
+        "**/*.test.ts",
+        "**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }

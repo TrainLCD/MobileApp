@@ -2,7 +2,7 @@ type FeedbackDeviceInfo = {
   brand: string | null;
   manufacturer: string | null;
   modelName: string | null;
-  modelId: string;
+  modelId: string | null;
   designName: string | null;
   productName: string | null;
   deviceYearClass: number | null;

@@ -87,9 +87,11 @@ import { getIsLocal } from '~/utils/trainTypeString';
 import LineBoard from '../components/LineBoard';
 import PortraitMain from '../components/PortraitMain';
 import PortraitModePrompt from '../components/PortraitModePrompt';
+import SquareMain from '../components/SquareMain';
 import Transfers from '../components/Transfers';
 import TransfersYamanote from '../components/TransfersYamanote';
 import TypeChangeNotify from '../components/TypeChangeNotify';
+import { useAndroidScreenDimensions } from '../hooks/useAndroidScreenDimensions';
 import navigationState, {
   bottomStateAtom,
   leftStationsAtom,
@@ -106,6 +108,7 @@ import {
   showDialogWhilePresenting,
 } from '../utils/dialogPresentation';
 import getIsPass from '../utils/isPass';
+import { getRunningLayout } from '../utils/runningLayout';
 
 type GetLineGroupStationsData = {
   lineGroupStations: Station[];
@@ -269,6 +272,7 @@ const MainScreen: React.FC = () => {
   const nextStation = useNextStation();
 
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const screenDimensions = useAndroidScreenDimensions();
 
   // OS 側で orientation lock せず、物理的に portrait のときはコンテンツ側を 90deg
   // 回転して横長レイアウトを維持する。端末の回転ロック ON でも横表示を保てる。
@@ -827,10 +831,29 @@ const MainScreen: React.FC = () => {
     );
   }
 
+  // 正方形は回転せずC案を表示し、タップでB案へ切り替える。
+  // #6204 の縦画面切替は正方形以外で従来どおり設定に従う。
+  const runningLayout = getRunningLayout(
+    windowWidth,
+    windowHeight,
+    portraitModeEnabled,
+    screenDimensions
+  );
+  if (runningLayout === 'square') {
+    return (
+      <>
+        <MainScreenEffects />
+        <SquareMain onTransferPress={handleTransferPress} />
+        {isDevApp && devOverlayEnabled && <DevOverlay unrotated />}
+        {selectBoundModal}
+      </>
+    );
+  }
+
   // ポートレートモード有効時、端末が縦向きの間は路線テーマに依存しない
   // 縦画面最適化レイアウトへ切り替える(横向きに戻すと通常表示)。
   // 配色は操作系画面と同じライト/ダークの設定に追従する。
-  if (portraitModeEnabled && windowHeight > windowWidth) {
+  if (runningLayout === 'portrait') {
     return (
       <>
         <MainScreenEffects />

@@ -12,6 +12,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import type { ViewInstance } from 'react-native';
 import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Station } from '~/@types/graphql';
@@ -166,9 +167,9 @@ const RouteSearchScreen = () => {
     setSpotlightArea,
   } = useRouteSearchWalkthrough(aiAgentEnabled);
 
-  const searchBarRef = useRef<View>(null);
-  const agentEntryBannerRef = useRef<View>(null);
-  const searchResultsRef = useRef<View>(null);
+  const searchBarRef = useRef<ViewInstance>(null);
+  const agentEntryBannerRef = useRef<ViewInstance>(null);
+  const searchResultsRef = useRef<ViewInstance>(null);
   const [searchBarLayout, setSearchBarLayout] = useState<{
     x: number;
     y: number;

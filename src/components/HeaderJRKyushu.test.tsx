@@ -5,6 +5,7 @@ import HeaderJRKyushu from './HeaderJRKyushu';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
+  ...jest.requireActual('jotai'),
   useAtomValue: jest.fn((atom) => {
     if (atom === require('~/store/atoms/station').default) {
       return { selectedBound: null, arrived: false };

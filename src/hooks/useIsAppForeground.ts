@@ -7,7 +7,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 // 'background'は「別のアプリにいる」「ホーム画面にいる」ときの状態で、こちらが背景。
 // 'unknown'(初期状態が読めない環境)は前景と見なさない。前景でだけ動いてよい処理が
 // 対象なので、判断が付かない間は動かさない側へ倒す。
-const isForegroundState = (state: AppStateStatus): boolean =>
+const isForegroundState = (state: string | null | undefined): boolean =>
   state === 'active' || state === 'inactive';
 
 /**

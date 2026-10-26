@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import {
+  LOCATION_ACCURACY,
   LOCATION_START_MAX_RETRIES,
   LOCATION_TASK_NAME,
   LOCATION_TASK_OPTIONS,
@@ -434,7 +435,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       expect(mockStartLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME,
         expect.objectContaining({
-          accuracy: Location.Accuracy.High,
+          accuracy: LOCATION_ACCURACY,
           pausesUpdatesAutomatically: false,
         })
       );

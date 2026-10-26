@@ -12,7 +12,10 @@ data class WidgetState(
     val lineName: String,
     val lineColor: String,
     val lineSymbol: String,
-    val boundStationName: String
+    val boundStationName: String,
+    val stationName: String = "",
+    val nextStationName: String = "",
+    val updatedAt: Long = 0L
 )
 
 /**
@@ -22,10 +25,13 @@ data class WidgetState(
  */
 object WidgetStateStore {
     private const val PREFS_NAME = "me.tinykitten.trainlcd.widget"
+    private const val KEY_UPDATED_AT = "updatedAt"
     private const val KEY_LOADED = "loaded"
     private const val KEY_LINE_NAME = "lineName"
     private const val KEY_LINE_COLOR = "lineColor"
     private const val KEY_LINE_SYMBOL = "lineSymbol"
+    private const val KEY_STATION_NAME = "stationName"
+    private const val KEY_NEXT_STATION_NAME = "nextStationName"
     private const val KEY_BOUND_STATION_NAME = "boundStationName"
 
     /** 未乗車時にiOS版が使っているプレースホルダー色に合わせる */
@@ -43,24 +49,32 @@ object WidgetStateStore {
         lineName: String,
         lineColor: String,
         lineSymbol: String,
-        boundStationName: String
+        boundStationName: String,
+        stationName: String = "",
+        nextStationName: String = ""
     ): Boolean {
         val prefs = prefs(context)
         val unchanged = prefs.getBoolean(KEY_LOADED, false) &&
             prefs.getString(KEY_LINE_NAME, "") == lineName &&
             prefs.getString(KEY_LINE_COLOR, "") == lineColor &&
             prefs.getString(KEY_LINE_SYMBOL, "") == lineSymbol &&
-            prefs.getString(KEY_BOUND_STATION_NAME, "") == boundStationName
+            prefs.getString(KEY_BOUND_STATION_NAME, "") == boundStationName &&
+            prefs.getString(KEY_STATION_NAME, "") == stationName &&
+            prefs.getString(KEY_NEXT_STATION_NAME, "") == nextStationName
         if (unchanged) {
             return false
         }
 
         prefs.edit()
+            // 再描画時刻ではなく、表示内容を保存した時刻を保持する。
+            .putLong(KEY_UPDATED_AT, System.currentTimeMillis())
             .putBoolean(KEY_LOADED, true)
             .putString(KEY_LINE_NAME, lineName)
             .putString(KEY_LINE_COLOR, lineColor)
             .putString(KEY_LINE_SYMBOL, lineSymbol)
             .putString(KEY_BOUND_STATION_NAME, boundStationName)
+            .putString(KEY_STATION_NAME, stationName)
+            .putString(KEY_NEXT_STATION_NAME, nextStationName)
             .apply()
         return true
     }
@@ -71,7 +85,7 @@ object WidgetStateStore {
         if (!prefs.getBoolean(KEY_LOADED, false)) {
             return false
         }
-        prefs.edit().putBoolean(KEY_LOADED, false).apply()
+        prefs.edit().putBoolean(KEY_LOADED, false).remove(KEY_UPDATED_AT).apply()
         return true
     }
 
@@ -82,7 +96,10 @@ object WidgetStateStore {
             lineName = prefs.getString(KEY_LINE_NAME, "").orEmpty(),
             lineColor = prefs.getString(KEY_LINE_COLOR, "").orEmpty(),
             lineSymbol = prefs.getString(KEY_LINE_SYMBOL, "").orEmpty(),
-            boundStationName = prefs.getString(KEY_BOUND_STATION_NAME, "").orEmpty()
+            boundStationName = prefs.getString(KEY_BOUND_STATION_NAME, "").orEmpty(),
+            stationName = prefs.getString(KEY_STATION_NAME, "").orEmpty(),
+            nextStationName = prefs.getString(KEY_NEXT_STATION_NAME, "").orEmpty(),
+            updatedAt = prefs.getLong(KEY_UPDATED_AT, 0L)
         )
     }
 

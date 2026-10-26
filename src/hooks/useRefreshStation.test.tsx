@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: テストコードまで型安全にするのはつらい */
 import { renderHook } from '@testing-library/react-native';
-import { Provider, useAtomValue, useSetAtom } from 'jotai';
+import { createStore, Provider, useAtomValue, useSetAtom } from 'jotai';
 import { OperationStatus, type Station, StopCondition } from '~/@types/graphql';
 import * as useApproachingStationModule from '~/hooks/useApproachingStation';
 import * as useCanGoForwardModule from '~/hooks/useCanGoForward';
@@ -13,6 +13,8 @@ import * as useWrongDirectionDetectorModule from '~/hooks/useWrongDirectionDetec
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { store } from '~/store';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
+import { stationsAtom } from '~/store/atoms/station';
 import * as etaPhaseNowModule from '~/utils/etaPhaseNow';
 import sendNotificationAsync from '~/utils/native/ios/sensitiveNotificationMoudle';
 
@@ -398,6 +400,56 @@ describe('useRefreshStation', () => {
   it('ETAが停車中の自駅を指していても到着圏を広げない', () => {
     const { nextState } = setupEtaDwelling('AT_STATION');
     expect(nextState.arrived).toBe(false);
+  });
+
+  it('手動補正時の古い測位は再適用せず、新しい測位から更新を再開する', () => {
+    const localStore = createStore();
+    const stations = [mockStation];
+    const location = {
+      timestamp: 1,
+      coords: { latitude: 35, longitude: 135 },
+    } as any;
+    localStore.set(stationsAtom, stations);
+    localStore.set(manualStationCorrectionAtom, { location, stations });
+    let currentLocation = location;
+    mockUseAtomValue.mockImplementation((atom) =>
+      atom === require('~/store/atoms/location').locationAtom
+        ? currentLocation
+        : { targetStationIds: [] }
+    );
+    const setStation = jest.fn();
+    const setNavigation = jest.fn();
+    mockUseSetAtom.mockImplementation((atom) =>
+      atom === require('~/store/atoms/station').default
+        ? setStation
+        : setNavigation
+    );
+    jest
+      .spyOn(useNearestStationModule, 'useNearestStation')
+      .mockReturnValue(mockStation);
+    jest
+      .spyOn(useNextStationModule, 'useNextStation')
+      .mockReturnValue(mockStation);
+    jest.spyOn(useCanGoForwardModule, 'useCanGoForward').mockReturnValue(true);
+    jest
+      .spyOn(useThresholdModule, 'useThreshold')
+      .mockReturnValue({ arrivedThreshold: 100, approachingThreshold: 300 });
+    jest
+      .spyOn(useWrongDirectionDetectorModule, 'useWrongDirectionDetector')
+      .mockReturnValue({
+        isWrongDirection: false,
+        isLoopLineWrongDirection: false,
+      });
+    const { rerender } = renderHook(useRefreshStation, {
+      wrapper: ({ children }) => (
+        <Provider store={localStore}>{children}</Provider>
+      ),
+    });
+    expect(setStation).not.toHaveBeenCalled();
+    expect(setNavigation).not.toHaveBeenCalled();
+    currentLocation = { ...location, timestamp: 2 };
+    rerender({});
+    expect(setStation).toHaveBeenCalled();
   });
 
   describe('通過駅の取りこぼしからの自己修復', () => {

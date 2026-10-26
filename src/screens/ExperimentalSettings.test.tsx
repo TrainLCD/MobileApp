@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
+import { Platform } from 'react-native';
 import { STORAGE_KEYS } from '~/constants';
 import {
   getRemoteTTSOverride,
@@ -7,6 +8,7 @@ import {
   resetRemoteTTSOverrideForTests,
 } from '~/lib/remoteTTSOverride';
 import { storage } from '~/lib/storage';
+import { iosBackgroundDistanceFilterBypassAtom } from '~/store/atoms/locationSettings';
 import tuningState from '~/store/atoms/tuning';
 import {
   getDialogPresentationSnapshot,
@@ -218,5 +220,48 @@ describe('ExperimentalSettingsScreen', () => {
         message: 'failedToSavePreference',
       },
     });
+  });
+});
+
+describe('背景測位の距離制限', () => {
+  const originalOS = Platform.OS;
+  afterEach(() => {
+    Platform.OS = originalOS;
+  });
+  it('iOSでON/OFFを保存して表示へ反映する', () => {
+    Platform.OS = 'ios';
+    const { getByLabelText, store } = renderWithStore();
+    const toggle = () => getByLabelText('backgroundDistanceFilterBypassTitle');
+    expect(toggle().props.accessibilityState.checked).toBe(true);
+    fireEvent.press(toggle());
+    expect(store.get(iosBackgroundDistanceFilterBypassAtom)).toBe(false);
+    expect(
+      storage.getString(STORAGE_KEYS.IOS_BACKGROUND_DISTANCE_FILTER_BYPASS)
+    ).toBe('false');
+    expect(toggle().props.accessibilityState.checked).toBe(false);
+    fireEvent.press(toggle());
+    expect(
+      storage.getString(STORAGE_KEYS.IOS_BACKGROUND_DISTANCE_FILTER_BYPASS)
+    ).toBe('true');
+  });
+  it('保存失敗時は設定を変えずエラーを表示する', () => {
+    Platform.OS = 'ios';
+    const { getByLabelText, store } = renderWithStore();
+    const spy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw new Error('storage failure');
+    });
+    const log = jest.spyOn(console, 'error').mockImplementation(() => {});
+    fireEvent.press(getByLabelText('backgroundDistanceFilterBypassTitle'));
+    expect(store.get(iosBackgroundDistanceFilterBypassAtom)).toBe(true);
+    expect(getDialogPresentationSnapshot()).toMatchObject({ visible: true });
+    spy.mockRestore();
+    log.mockRestore();
+    resetDialogPresentationForTests();
+  });
+  it('Androidには表示しない', () => {
+    Platform.OS = 'android';
+    expect(
+      renderWithStore().queryByLabelText('backgroundDistanceFilterBypassTitle')
+    ).toBeNull();
   });
 });

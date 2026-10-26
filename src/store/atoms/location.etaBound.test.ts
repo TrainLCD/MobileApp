@@ -31,7 +31,8 @@ const stations: Station[] = Array.from(
 const makeLocation = (
   lat: number,
   timestamp: number,
-  accuracy = 300
+  // 地下向け処理の入口。ETAによる棄却だけを検証するため直接採用の帯を使う。
+  accuracy = 1500
 ): Location.LocationObject => ({
   coords: {
     latitude: lat,

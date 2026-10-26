@@ -27,7 +27,7 @@ import {
 import { themePreferenceAtom } from '~/store/atoms/theme';
 import { translate } from '~/translation';
 import { RFValue } from '~/utils/rfValue';
-import PortraitMain from './PortraitMain';
+import PortraitMain, { accentColorFor } from './PortraitMain';
 
 jest.mock('~/translation', () => ({
   isJapanese: true,
@@ -415,6 +415,127 @@ describe('PortraitMain', () => {
       StyleSheet.flatten(getByTestId('stop-dot-1').props.style).borderColor
     ).toBe(yamanoteLine.color);
   });
+
+  it.each(['INBOUND', 'OUTBOUND'] as const)(
+    '同じ直通駅番号は一つだけ表示する: %s',
+    (direction) => {
+      const before = buildStation(101, '西谷', StopCondition.All, 'SO-08', {
+        ...yamanoteLine,
+        id: 1,
+        color: '#0044FF',
+      });
+      const after = {
+        ...buildStation(102, '西谷', StopCondition.All, 'SO-08', {
+          ...yamanoteLine,
+          id: 2,
+          color: '#0044FF',
+        }),
+        groupId: before.groupId,
+      };
+      const current = direction === 'INBOUND' ? before : after;
+      const { getByTestId } = renderWithStations([before, after], {
+        direction,
+        currentStation: current,
+      });
+      expect(
+        within(getByTestId(`stop-body-${current.id}`)).getAllByText('SO-08')
+      ).toHaveLength(1);
+      expect(getByTestId(`stop-dot-${current.id}-0`)).toBeTruthy();
+      expect(getByTestId(`stop-dot-${current.id}-1`)).toBeTruthy();
+    }
+  );
+
+  it.each(['INBOUND', 'OUTBOUND'] as const)(
+    '直通境界の丸と線を中心で分割し番号も進行方向順に表示する: %s',
+    (direction) => {
+      const before = buildStation(101, '渋谷', StopCondition.All, 'Z-01', {
+        ...yamanoteLine,
+        id: 1,
+        color: '#9B7CB6',
+      });
+      const after = {
+        ...buildStation(102, '渋谷', StopCondition.All, 'DT-01', {
+          ...yamanoteLine,
+          id: 2,
+          color: '#009944',
+        }),
+        groupId: before.groupId,
+      };
+      const current = direction === 'INBOUND' ? before : after;
+      const { getByTestId } = renderWithStations([before, after], {
+        direction,
+        currentStation: current,
+      });
+      const ordered =
+        direction === 'INBOUND' ? [before, after] : [after, before];
+      const top = accentColorFor(ordered[0].line?.color ?? '', false);
+      const bottom = accentColorFor(ordered[1].line?.color ?? '', false);
+      expect(getByTestId(`track-top-${current.id}`)).toHaveStyle({
+        backgroundColor: top,
+      });
+      expect(getByTestId(`track-bottom-${current.id}`)).toHaveStyle({
+        backgroundColor: bottom,
+      });
+      expect(getByTestId(`stop-dot-${current.id}-0`)).toHaveStyle({
+        backgroundColor: top,
+        flex: 1,
+      });
+      expect(getByTestId(`stop-dot-${current.id}-1`)).toHaveStyle({
+        backgroundColor: bottom,
+        flex: 1,
+      });
+      const body = within(getByTestId(`stop-body-${current.id}`));
+      expect(body.getByText('Z-01')).toBeTruthy();
+      expect(body.getByText('DT-01')).toBeTruthy();
+    }
+  );
+
+  it.each([COLOR_SCHEME_PREFERENCE.LIGHT, COLOR_SCHEME_PREFERENCE.DARK])(
+    '直通境界を通過後も上下それぞれの色をフェードする: %s',
+    (colorScheme) => {
+      const before = buildStation(101, '渋谷', StopCondition.All, 'Z-01', {
+        ...yamanoteLine,
+        id: 1,
+        color: '#9B7CB6',
+      });
+      const after = {
+        ...buildStation(102, '渋谷', StopCondition.All, 'DT-01', {
+          ...yamanoteLine,
+          id: 2,
+          color: '#009944',
+        }),
+        groupId: before.groupId,
+      };
+      const next = buildStation(
+        103,
+        '池尻大橋',
+        StopCondition.All,
+        'DT-02',
+        after.line as typeof yamanoteLine
+      );
+      const { getByTestId } = renderWithStations([before, after, next], {
+        colorScheme,
+        currentStation: next,
+      });
+      const top = StyleSheet.flatten(
+        getByTestId('track-top-101').props.style
+      ).backgroundColor;
+      const bottom = StyleSheet.flatten(
+        getByTestId('track-bottom-101').props.style
+      ).backgroundColor;
+      expect(top).not.toBe(bottom);
+      expect(top).not.toBe(
+        accentColorFor('#9B7CB6', colorScheme === COLOR_SCHEME_PREFERENCE.DARK)
+      );
+      expect(getByTestId('stop-dot-101-0')).toHaveStyle({
+        backgroundColor: top,
+      });
+      expect(getByTestId('stop-dot-101-1')).toHaveStyle({
+        backgroundColor: bottom,
+      });
+      expect(getByTestId('stop-body-101')).toHaveStyle({ opacity: 0.4 });
+    }
+  );
 
   it('直通先の駅は直通先のラインカラーで描画される', () => {
     const keihinTohokuLine = {

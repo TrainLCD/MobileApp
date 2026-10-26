@@ -1,14 +1,17 @@
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  FlatList,
   Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
+import type { Station } from '~/@types/graphql';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
@@ -20,10 +23,14 @@ import Button from '../components/Button';
 import { Heading } from '../components/Heading';
 import { LED_THEME_BG_COLOR } from '../constants';
 import { isLEDThemeAtom } from '../store/atoms/theme';
-import { translate } from '../translation';
+import { isJapanese, translate } from '../translation';
+import { CommonCard } from './CommonCard';
 import { CustomModal } from './CustomModal';
 import { ToggleButton } from './ToggleButton';
 import Typography from './Typography';
+
+// CommonCard の最小高さ72pxに、カード間の余白8pxを加える。
+const STATION_CARD_HEIGHT = 80;
 
 const styles = StyleSheet.create({
   contentView: {
@@ -91,6 +98,8 @@ const styles = StyleSheet.create({
     fontSize: isTablet ? RFValue(12) : RFValue(14),
     fontWeight: 'bold',
   },
+  stationListContent: { paddingHorizontal: 24, paddingVertical: 8, gap: 8 },
+  stationButtonText: { textAlign: 'left' },
   heading: { width: '100%' },
 });
 
@@ -125,6 +134,8 @@ type Props = {
   themeLabel?: string;
   themeColor?: string;
   onThemePress?: () => void;
+  stations?: Station[];
+  onStationSelect?: (station: Station) => void;
 };
 
 export const SelectBoundSettingListModal: React.FC<Props> = ({
@@ -142,7 +153,14 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
   themeLabel,
   themeColor,
   onThemePress,
+  stations = [],
+  onStationSelect,
 }) => {
+  const { height: windowHeight } = useWindowDimensions();
+  const [selectingStation, setSelectingStation] = useState(false);
+  useEffect(() => {
+    if (!visible) setSelectingStation(false);
+  }, [visible]);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAtomValue(appColorsAtom);
 
@@ -178,6 +196,12 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
           backgroundColor: isLEDTheme ? LED_THEME_BG_COLOR : colors.card,
           borderRadius: isLEDTheme ? 0 : 8,
         },
+        selectingStation && {
+          height: Math.min(
+            136 + stations.length * STATION_CARD_HEIGHT,
+            windowHeight * 0.8
+          ),
+        },
         isTablet && {
           width: '80%',
           maxHeight: '90%',
@@ -187,128 +211,182 @@ export const SelectBoundSettingListModal: React.FC<Props> = ({
         },
       ]}
     >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Heading style={styles.heading}>{translate('settings')}</Heading>
+      {selectingStation ? (
+        <View style={{ flex: 1, paddingTop: 24, paddingBottom: 72 }}>
+          <Heading style={{ paddingHorizontal: 24 }}>
+            {translate('specifyStation')}
+          </Heading>
+          <FlatList
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.stationListContent}
+            data={stations}
+            keyExtractor={(station) => String(station.id)}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) =>
+              item.line ? (
+                <CommonCard
+                  line={item.line}
+                  targetStation={item}
+                  title={
+                    (isJapanese ? item.name : item.nameRoman || item.name) ||
+                    undefined
+                  }
+                  subtitle={
+                    (isJapanese
+                      ? item.line.nameShort
+                      : item.line.nameRoman || item.line.nameShort) || undefined
+                  }
+                  onPress={() => {
+                    onStationSelect?.(item);
+                    onClose();
+                  }}
+                />
+              ) : null
+            }
+          />
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Heading style={styles.heading}>{translate('settings')}</Heading>
 
-        <View style={styles.buttonsContainer}>
-          <ToggleButton
-            outline
-            onToggle={toggleAutoModeEnabled}
-            state={autoModeEnabled}
-          >
-            {translate('autoModeSettings')}
-          </ToggleButton>
-          {onTrainTypePress && (
-            <TouchableOpacity
-              onPress={trainTypeDisabled ? undefined : onTrainTypePress}
-              disabled={trainTypeDisabled}
-              style={[
-                styles.trainTypeButton,
-                {
-                  backgroundColor: isLEDTheme
-                    ? LED_THEME_BG_COLOR
-                    : colors.card,
-                  borderColor: colors.accent,
-                  borderRadius: isLEDTheme ? 0 : 8,
-                  opacity: trainTypeDisabled ? 0.5 : 1,
-                },
-              ]}
+          <View style={styles.buttonsContainer}>
+            <ToggleButton
+              outline
+              onToggle={toggleAutoModeEnabled}
+              state={autoModeEnabled}
             >
-              {trainTypeDisabled ? (
-                <Typography
-                  style={[
-                    styles.trainTypeDisabledText,
-                    { color: colors.accent },
-                  ]}
-                >
-                  {translate(
-                    isBus ? 'busRoutesNotExist' : 'trainTypesNotExist'
-                  )}
-                </Typography>
-              ) : (
-                <>
+              {translate('autoModeSettings')}
+            </ToggleButton>
+            {onTrainTypePress && (
+              <TouchableOpacity
+                onPress={trainTypeDisabled ? undefined : onTrainTypePress}
+                disabled={trainTypeDisabled}
+                style={[
+                  styles.trainTypeButton,
+                  {
+                    backgroundColor: isLEDTheme
+                      ? LED_THEME_BG_COLOR
+                      : colors.card,
+                    borderColor: colors.accent,
+                    borderRadius: isLEDTheme ? 0 : 8,
+                    opacity: trainTypeDisabled ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {trainTypeDisabled ? (
                   <Typography
-                    style={[styles.trainTypeLabel, { color: colors.accent }]}
-                  >
-                    {translate(isBus ? 'busRoute' : 'trainType')}
-                  </Typography>
-                  <View
                     style={[
-                      styles.trainTypeNamePanel,
-                      {
-                        backgroundColor: normalizedTrainTypeColor,
-                        borderRadius: isLEDTheme ? 0 : 8,
-                        opacity: trainTypeLoading ? 0.5 : 1,
-                      },
+                      styles.trainTypeDisabledText,
+                      { color: colors.accent },
                     ]}
                   >
+                    {translate(
+                      isBus ? 'busRoutesNotExist' : 'trainTypesNotExist'
+                    )}
+                  </Typography>
+                ) : (
+                  <>
                     <Typography
-                      style={[
-                        styles.trainTypeNameText,
-                        { color: trainTypeTextColor },
-                      ]}
-                      numberOfLines={1}
+                      style={[styles.trainTypeLabel, { color: colors.accent }]}
                     >
-                      {renderWithSmallParens(
-                        trainTypeName ||
-                          translate(
-                            isBus ? 'notSpecified' : 'trainTypeDefault'
-                          ),
-                        trainTypeTextColor
-                      )}
+                      {translate(isBus ? 'busRoute' : 'trainType')}
                     </Typography>
-                  </View>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-          {onThemePress && (
-            <TouchableOpacity
-              onPress={onThemePress}
-              style={[
-                styles.trainTypeButton,
-                {
-                  backgroundColor: isLEDTheme
-                    ? LED_THEME_BG_COLOR
-                    : colors.card,
-                  borderColor: colors.accent,
-                  borderRadius: isLEDTheme ? 0 : 8,
-                },
-              ]}
-            >
-              <Typography
-                style={[styles.trainTypeLabel, { color: colors.accent }]}
+                    <View
+                      style={[
+                        styles.trainTypeNamePanel,
+                        {
+                          backgroundColor: normalizedTrainTypeColor,
+                          borderRadius: isLEDTheme ? 0 : 8,
+                          opacity: trainTypeLoading ? 0.5 : 1,
+                        },
+                      ]}
+                    >
+                      <Typography
+                        style={[
+                          styles.trainTypeNameText,
+                          { color: trainTypeTextColor },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {renderWithSmallParens(
+                          trainTypeName ||
+                            translate(
+                              isBus ? 'notSpecified' : 'trainTypeDefault'
+                            ),
+                          trainTypeTextColor
+                        )}
+                      </Typography>
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+            {onStationSelect && (
+              <Button
+                outline
+                disabled={stations.length === 0}
+                onPress={() => setSelectingStation(true)}
+                style={styles.trainTypeButton}
+                textStyle={[
+                  styles.trainTypeLabel,
+                  styles.stationButtonText,
+                  { color: colors.accent },
+                ]}
               >
-                {translate('theme')}
-              </Typography>
-              <View
+                {translate('specifyStation')}
+              </Button>
+            )}
+            {onThemePress && (
+              <TouchableOpacity
+                onPress={onThemePress}
                 style={[
-                  styles.trainTypeNamePanel,
+                  styles.trainTypeButton,
                   {
-                    backgroundColor: normalizedThemeColor,
+                    backgroundColor: isLEDTheme
+                      ? LED_THEME_BG_COLOR
+                      : colors.card,
+                    borderColor: colors.accent,
                     borderRadius: isLEDTheme ? 0 : 8,
                   },
                 ]}
               >
                 <Typography
-                  style={[styles.trainTypeNameText, { color: themeTextColor }]}
-                  numberOfLines={1}
+                  style={[styles.trainTypeLabel, { color: colors.accent }]}
                 >
-                  {renderWithSmallParens(
-                    themeLabel ?? translate('autoTheme'),
-                    themeTextColor
-                  )}
+                  {translate('theme')}
                 </Typography>
-              </View>
-            </TouchableOpacity>
-          )}
-        </View>
-      </ScrollView>
+                <View
+                  style={[
+                    styles.trainTypeNamePanel,
+                    {
+                      backgroundColor: normalizedThemeColor,
+                      borderRadius: isLEDTheme ? 0 : 8,
+                    },
+                  ]}
+                >
+                  <Typography
+                    style={[
+                      styles.trainTypeNameText,
+                      { color: themeTextColor },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {renderWithSmallParens(
+                      themeLabel ?? translate('autoTheme'),
+                      themeTextColor
+                    )}
+                  </Typography>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
+      )}
       <View
         style={[
           styles.closeButtonContainer,

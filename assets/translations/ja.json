@@ -1,4 +1,7 @@
 {
+  "backgroundDistanceFilterBypassTitle": "背景測位の10m制限を解除",
+  "backgroundDistanceFilterBypassDescription": "ONではバックグラウンド測位の移動距離制限を解除し、OFFでは10mに戻します。初期値はONです。省電力測位中とアプリ表示中は10m制限を維持します。",
+  "specifyStation": "駅を指定する",
   "errorTitle": "エラー",
   "failedToFetchStation": "駅情報の取得に失敗しました。",
   "nowStoppingAt": "ただいま",

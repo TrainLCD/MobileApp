@@ -1,0 +1,234 @@
+diff --git a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
+index b7132b8..579a444 100644
+--- a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
++++ b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
+@@ -7,6 +7,7 @@
+ #import <ExpoModulesCore/EXTaskInterface.h>
+ #import <ExpoLocation/EXLocation.h>
+ #import <ExpoLocation/EXLocationTaskConsumer.h>
++#import "EXTrainLCDLocationPolicy.h"
+ 
+ @interface EXLocationTaskConsumer ()
+ 
+@@ -14,6 +15,10 @@
+ @property (nonatomic, strong) NSMutableArray<CLLocation *> *deferredLocations;
+ @property (nonatomic, strong) CLLocation *lastReportedLocation;
+ @property (nonatomic, assign) CLLocationDistance deferredDistance;
++@property (nonatomic, assign) CLLocationDistance configuredDistanceFilter;
++@property (nonatomic, assign) BOOL trainLCDInBackground;
++@property (nonatomic, strong) NSTimer *trainLCDFlushTimer;
++@property (nonatomic, assign) UIBackgroundTaskIdentifier trainLCDFlushTaskId;
+ 
+ @end
+ 
+@@ -24,12 +29,16 @@
+   if (self = [super init]) {
+     _deferredLocations = [NSMutableArray new];
+     _deferredDistance = 0.0;
++    _trainLCDFlushTaskId = UIBackgroundTaskInvalid;
++    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(trainLCDDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
++    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(trainLCDWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+   }
+   return self;
+ }
+ 
+ - (void)dealloc
+ {
++  [[NSNotificationCenter defaultCenter] removeObserver:self];
+   [self reset];
+ }
+ 
+@@ -47,6 +56,7 @@
+ 
+     self->_task = task;
+     self->_locationManager = locationManager;
++    self->_trainLCDInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
+ 
+     locationManager.delegate = self;
+     locationManager.allowsBackgroundLocationUpdates = YES;
+@@ -68,16 +78,123 @@
+     EXLocationAccuracy accuracy = [options[@"accuracy"] unsignedIntegerValue] ?: EXLocationAccuracyBalanced;
+ 
+     locationManager.desiredAccuracy = [EXLocation CLLocationAccuracyFromOption:accuracy];
+-    locationManager.distanceFilter = [self numberToDouble:options[@"distanceInterval"] defaultValue:kCLDistanceFilterNone];
++    self->_configuredDistanceFilter = [self numberToDouble:options[@"distanceInterval"] defaultValue:kCLDistanceFilterNone];
+     locationManager.activityType = [EXLocation CLActivityTypeFromOption:[self numberToInteger:options[@"activityType"] defaultValue:CLActivityTypeOther]];
+     locationManager.pausesLocationUpdatesAutomatically = [self numberToBool:options[@"pausesUpdatesAutomatically"] defaultValue:false];
+     locationManager.showsBackgroundLocationIndicator = [self numberToBool:options[@"showsBackgroundLocationIndicator"] defaultValue:false];
+ 
++    [self trainLCDCancelDeferredFlush];
++    [self trainLCDUpdateDistanceFilter];
++    [self maybeReportDeferredLocations];
+     [locationManager startUpdatingLocation];
+     [locationManager startMonitoringSignificantLocationChanges];
+   }];
+ }
+ 
++// Keep the background-capable manager alive across AppState transitions. A JS timer or
++// foreground watch cannot provide this recovery while the app is suspended.
++- (void)trainLCDDidEnterBackground:(NSNotification *)notification
++{
++  _trainLCDInBackground = YES;
++  [self trainLCDUpdateDistanceFilter];
++  [self maybeReportDeferredLocations];
++}
++
++- (void)trainLCDWillEnterForeground:(NSNotification *)notification
++{
++  _trainLCDInBackground = NO;
++  [self trainLCDUpdateDistanceFilter];
++  [self trainLCDFlushDeferredLocations];
++}
++
++- (void)trainLCDUpdateDistanceFilter
++{
++  if (_locationManager == nil) {
++    return;
++  }
++  // Only background non-power-saving tracking bypasses the displacement gate.
++  // Existing deferred reporting still batches JS delivery by time. Native sampling
++  // may be more frequent; this does not promise unchanged battery consumption.
++  _locationManager.distanceFilter = EXTrainLCDDistanceFilter(
++    _trainLCDInBackground,
++    [self numberToBool:_task.options[@"trainLCDBypassBackgroundDistanceFilter"] defaultValue:true],
++    _locationManager.pausesLocationUpdatesAutomatically,
++    _configuredDistanceFilter,
++    kCLDistanceFilterNone
++  );
++}
++
++// A batch shorter than deferredUpdatesInterval must not wait for another fix.
++// Hold a finite UIKit background task only while an already received batch awaits
++// its one-shot timer. No empty polling or foreground JS watch is started here.
++- (void)trainLCDScheduleDeferredFlush
++{
++  if (!_trainLCDInBackground || _locationManager.pausesLocationUpdatesAutomatically ||
++      _task == nil || _deferredLocations.count == 0 || _trainLCDFlushTimer != nil) {
++    return;
++  }
++  NSDictionary *options = _task.options;
++  double distance = [self numberToDouble:options[@"deferredUpdatesDistance"] defaultValue:0];
++  if (_deferredDistance < distance) {
++    return;
++  }
++  CLLocation *oldest = _lastReportedLocation ?: _deferredLocations.firstObject;
++  CLLocation *newest = _deferredLocations.lastObject;
++  double delay = EXTrainLCDDeferredFlushDelay(
++    [self numberToDouble:options[@"deferredUpdatesInterval"] defaultValue:0],
++    [newest.timestamp timeIntervalSinceDate:oldest.timestamp]
++  );
++  if (delay <= 0) {
++    [self trainLCDFlushDeferredLocations];
++    return;
++  }
++
++  __weak EXLocationTaskConsumer *weakSelf = self;
++  NSTimer *timer = [NSTimer timerWithTimeInterval:delay repeats:NO block:^(NSTimer *firedTimer) {
++    [weakSelf trainLCDFlushDeferredLocations];
++  }];
++  _trainLCDFlushTimer = timer;
++  UIBackgroundTaskIdentifier taskId = [[UIApplication sharedApplication]
++    beginBackgroundTaskWithName:@"TrainLCDLocationBatch"
++    expirationHandler:^{
++      // UIKit does not guarantee the requested time. Flush before ending the task.
++      [weakSelf trainLCDFlushDeferredLocations];
++    }];
++  // Expiration can cancel the pending flush before beginBackgroundTask returns.
++  if (_trainLCDFlushTimer != timer) {
++    if (taskId != UIBackgroundTaskInvalid) {
++      [[UIApplication sharedApplication] endBackgroundTask:taskId];
++    }
++    return;
++  }
++  _trainLCDFlushTaskId = taskId;
++  if (taskId == UIBackgroundTaskInvalid) {
++    [self trainLCDFlushDeferredLocations];
++    return;
++  }
++  [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
++}
++
++- (void)trainLCDCancelDeferredFlush
++{
++  [_trainLCDFlushTimer invalidate];
++  _trainLCDFlushTimer = nil;
++  UIBackgroundTaskIdentifier taskId = _trainLCDFlushTaskId;
++  _trainLCDFlushTaskId = UIBackgroundTaskInvalid;
++  if (taskId != UIBackgroundTaskInvalid) {
++    [[UIApplication sharedApplication] endBackgroundTask:taskId];
++  }
++}
++
++- (void)trainLCDFlushDeferredLocations
++{
++  if (_task != nil && _deferredLocations.count > 0) {
++    [self executeTaskWithDeferredLocations];
++  } else {
++    [self trainLCDCancelDeferredFlush];
++  }
++}
++
+ # pragma mark - CLLocationManagerDelegate
+ 
+ - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
+@@ -98,6 +215,7 @@
+ - (void)reset
+ {
+   [EXUtilities performSynchronouslyOnMainThread:^{
++    [self trainLCDCancelDeferredFlush];
+     [self->_locationManager stopUpdatingLocation];
+     [self->_locationManager stopMonitoringSignificantLocationChanges];
+     [self->_deferredLocations removeAllObjects];
+@@ -118,12 +236,15 @@
+   _lastReportedLocation = _deferredLocations.lastObject;
+   _deferredDistance = 0.0;
+   [_deferredLocations removeAllObjects];
++  [self trainLCDCancelDeferredFlush];
+ }
+ 
+ - (void)maybeReportDeferredLocations
+ {
+   if ([self shouldReportDeferredLocations]) {
+     [self executeTaskWithDeferredLocations];
++  } else {
++    [self trainLCDScheduleDeferredFlush];
+   }
+ }
+ 
+diff --git a/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
+new file mode 100644
+index 0000000..ffbd7de
+--- /dev/null
++++ b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
+@@ -0,0 +1,31 @@
++// TrainLCD: keep the configured foreground and power-saving distance filters.
++#ifndef EX_TRAINLCD_LOCATION_POLICY_H
++#define EX_TRAINLCD_LOCATION_POLICY_H
++
++#include <math.h>
++
++static inline double EXTrainLCDDistanceFilter(
++  int inBackground,
++  int bypassDistanceFilter,
++  int pausesAutomatically,
++  double configuredDistance,
++  double noDistanceFilter
++) {
++  return bypassDistanceFilter && inBackground && !pausesAutomatically
++    ? noDistanceFilter
++    : configuredDistance;
++}
++
++// Remaining batch interval in seconds; NSTimer measures the wait independently
++// of subsequent CoreLocation callbacks. Clamp clock reversal to one interval.
++static inline double EXTrainLCDDeferredFlushDelay(double intervalMs, double sampleElapsedSeconds) {
++  if (!isfinite(intervalMs) || intervalMs <= 0) {
++    return 0;
++  }
++  double elapsed = isfinite(sampleElapsedSeconds) && sampleElapsedSeconds > 0
++    ? sampleElapsedSeconds : 0;
++  double remaining = intervalMs / 1000.0 - elapsed;
++  return remaining > 0 ? remaining : 0;
++}
++
++#endif

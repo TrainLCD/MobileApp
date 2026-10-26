@@ -1,3 +1,10 @@
+// SDK 58 の expo-asset は React Native の公開 AssetRegistry を使います。
+// jest-expo が従来のサブパスへ登録するアセットのモックと同じ実装に揃えます。
+Object.assign(
+  require("react-native").AssetRegistry,
+  require("react-native/asset-registry")
+);
+
 // react-native-mmkv 本体は import 時に react-native-nitro-modules（ネイティブ
 // バイナリ必須）を引き込んで落ちるため、ライブラリ同梱のインメモリ実装
 // createMockMMKV だけを取り出して createMMKV を差し替える。

@@ -20,7 +20,7 @@ import {
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
-import { headerStateAtom } from '~/store/atoms/navigation';
+import { headerIsEnglishAtom } from '~/store/atoms/navigation';
 import { arrivedAtom, stationsAtom } from '~/store/atoms/station';
 import getStationNameR from '~/utils/getStationNameR';
 import getIsPass from '../utils/isPass';
@@ -31,6 +31,10 @@ import {
   HORIZONTAL_STATION_NAME_FONT_SIZE,
   HORIZONTAL_STATION_NAME_MAX_CHARS,
 } from './LineBoard/shared/styles/commonStyles';
+import {
+  LineBoardCurrentStationContext,
+  useLineBoardCurrentStation,
+} from './LineBoardCurrentStation';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
 
@@ -306,7 +310,7 @@ const useStationCellState = (
 ) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
-  const currentStation = useDisplayCurrentStation();
+  const currentStation = useLineBoardCurrentStation();
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
     omitRepeatingLine: true,
@@ -472,8 +476,7 @@ const StationColumn: React.FC<StationColumnProps> = ({
   hasPassBefore,
 }: StationColumnProps) => {
   // 実物は補足の行が中国語の間も路線図を日本語のまま出す。英語にするのは英語の表示中だけ
-  const headerState = useAtomValue(headerStateAtom);
-  const isEn = headerState.endsWith('_EN');
+  const isEn = useAtomValue(headerIsEnglishAtom);
   const {
     arrived,
     isCurrent,
@@ -643,4 +646,14 @@ const LineBoardSanyo: React.FC<Props> = ({ stations, hasTerminus }: Props) => {
   );
 };
 
-export default React.memo(LineBoardSanyo);
+const MemoLineBoardSanyo = React.memo(LineBoardSanyo);
+const LineBoardSanyoWithCurrentStation = (props: Props) => {
+  const station = useDisplayCurrentStation();
+  return (
+    <LineBoardCurrentStationContext value={station}>
+      <MemoLineBoardSanyo {...props} />
+    </LineBoardCurrentStationContext>
+  );
+};
+
+export default React.memo(LineBoardSanyoWithCurrentStation);

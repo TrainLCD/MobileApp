@@ -8,6 +8,11 @@ jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
   useAtomValue: jest.fn(),
 }));
+jest.mock('./useCurrentStation', () => ({ useCurrentStation: jest.fn() }));
+jest.mock('./useDisplayNextStation', () => ({
+  useDisplayNextStation: jest.fn(),
+}));
+jest.mock('./useNextStation', () => ({ useNextStation: jest.fn() }));
 jest.mock('./useBounds', () => ({ useBounds: jest.fn() }));
 jest.mock('./useCurrentLine', () => ({ useCurrentLine: jest.fn() }));
 jest.mock('./useNumbering', () => ({ useNumbering: jest.fn() }));
@@ -30,6 +35,9 @@ import {
 } from '../utils/native/android/widgetModule';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
+import { useCurrentStation } from './useCurrentStation';
+import { useDisplayNextStation } from './useDisplayNextStation';
+import { useNextStation } from './useNextStation';
 import { useNumbering } from './useNumbering';
 import { useUpdateWidget } from './useUpdateWidget';
 
@@ -57,6 +65,18 @@ const TestComponent: React.FC = () => {
 
 describe('useUpdateWidget フック', () => {
   beforeEach(() => {
+    (useCurrentStation as jest.Mock).mockReturnValue({
+      ...makeStation('新宿'),
+      groupId: 1,
+    });
+    (useDisplayNextStation as jest.Mock).mockReturnValue({
+      ...makeStation('代々木'),
+      groupId: 2,
+    });
+    (useNextStation as jest.Mock).mockReturnValue({
+      ...makeStation('代々木'),
+      groupId: 2,
+    });
     (useCurrentLine as jest.Mock).mockReturnValue({
       nameShort: '山手線',
       nameRoman: 'Yamanote Line',
@@ -86,7 +106,54 @@ describe('useUpdateWidget フック', () => {
       lineColor: '#80C241',
       lineSymbol: 'JY',
       boundStationName: '新宿・渋谷方面',
+      stationName: '新宿',
+      nextStationName: '代々木',
     });
+  });
+
+  it('次駅が現在駅へ重なる遷移では記録基準の次駅を送る', () => {
+    setAtomValues({ selectedBound: makeStation('大崎') });
+    (useDisplayNextStation as jest.Mock).mockReturnValue({
+      ...makeStation('新宿'),
+      groupId: 1,
+    });
+    render(<TestComponent />);
+    expect(updateWidget).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stationName: '新宿',
+        nextStationName: '代々木',
+      })
+    );
+  });
+
+  it('終点で次駅がなければ架空の駅を補わない', () => {
+    setAtomValues({ selectedBound: makeStation('大崎') });
+    (useDisplayNextStation as jest.Mock).mockReturnValue(undefined);
+    (useNextStation as jest.Mock).mockReturnValue(undefined);
+    render(<TestComponent />);
+    expect(updateWidget).toHaveBeenCalledWith(
+      expect.objectContaining({ stationName: '新宿', nextStationName: '' })
+    );
+  });
+
+  it('駅名が変わったときに更新する', () => {
+    setAtomValues({ selectedBound: makeStation('大崎') });
+    const { rerender } = render(<TestComponent />);
+    (useCurrentStation as jest.Mock).mockReturnValue({
+      ...makeStation('代々木'),
+      groupId: 2,
+    });
+    (useDisplayNextStation as jest.Mock).mockReturnValue({
+      ...makeStation('原宿'),
+      groupId: 3,
+    });
+    rerender(<TestComponent />);
+    expect(updateWidget).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stationName: '代々木',
+        nextStationName: '原宿',
+      })
+    );
   });
 
   it('行先未選択のうちはウィジェットを更新しない', () => {

@@ -1,136 +1,178 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  iOSのホーム画面ウィジェット(systemMedium)に相当するレイアウト。
-  背景は路線色の下地(widget_background)にグラデーション(widget_background_shade)を重ねて作る。
-  路線色は面が担うようになったため、旧デザインにあった左端の路線色バーは置かない
--->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-
     <ImageView
         android:id="@+id/widget_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@null"
-        android:scaleType="fitXY"
         android:src="@drawable/widget_background"
+        android:scaleType="fitXY"
+        android:contentDescription="@null"
         android:tint="@color/widget_brand" />
-
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:contentDescription="@null"
+        android:src="@drawable/widget_background_shade"
         android:scaleType="fitXY"
-        android:src="@drawable/widget_background_shade" />
-
+        android:contentDescription="@null" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:padding="12dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="12dp">
-
+        android:orientation="vertical">
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <!-- iOS版のLineColorChip相当。カプセルの色と不透明度は実行時に与える -->
-            <FrameLayout
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <ImageView
+                android:id="@+id/widget_brand_icon"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_notification_live_update"
+                android:tint="@color/widget_on_line_primary" />
+            <TextView
+                android:id="@+id/widget_brand_label"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:text="@string/widget_brand"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <FrameLayout
+                android:layout_width="28dp"
+                android:layout_height="28dp">
                 <ImageView
-                    android:id="@+id/widget_brand_chip"
+                    android:id="@+id/widget_numbering_badge"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:contentDescription="@null"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/widget_chip_background"
-                    android:tint="#2EFFFFFF" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:src="@drawable/widget_numbering_badge"
+                    android:contentDescription="@null" />
+                <TextView
+                    android:id="@+id/widget_line_symbol"
+                android:text="@string/widget_line_symbol_placeholder"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="8dp"
-                    android:paddingTop="3dp"
-                    android:paddingEnd="8dp"
-                    android:paddingBottom="3dp">
-
-                    <ImageView
-                        android:id="@+id/widget_brand_icon"
-                        android:layout_width="12dp"
-                        android:layout_height="12dp"
-                        android:layout_marginEnd="4dp"
-                        android:contentDescription="@null"
-                        android:src="@drawable/ic_notification_live_update"
-                        android:tint="@color/widget_on_line_primary" />
-
-                    <TextView
-                        android:id="@+id/widget_brand_label"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/widget_brand"
-                        android:textColor="@color/widget_on_line_primary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_gravity="center" />
             </FrameLayout>
-
             <TextView
                 android:id="@+id/widget_line_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:ellipsize="end"
-                android:maxLines="2"
                 android:text="@string/widget_line_not_set"
-                android:textColor="@color/widget_on_line_primary"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/widget_bound_for"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:includeFontPadding="false"
+                android:maxLines="1"
                 android:ellipsize="end"
-                android:maxLines="2"
-                android:text="@string/widget_destination_not_set"
-                android:textColor="@color/widget_on_line_secondary"
-                android:textSize="13sp" />
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
         </LinearLayout>
+        <TextView
+            android:id="@+id/widget_bound_for"
+            android:text="@string/widget_destination_not_set"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/widget_on_line_primary"
+            android:textSize="14sp"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="12sp"
+            android:autoSizeMaxTextSize="14sp"
+            android:autoSizeStepGranularity="1sp"
+            android:layout_marginTop="4dp" />
 
-        <FrameLayout
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="10dp">
-
-            <ImageView
-                android:id="@+id/widget_numbering_badge"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@null"
-                android:src="@drawable/widget_numbering_badge" />
-
+        <LinearLayout
+            android:id="@+id/widget_stations"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
             <TextView
-                android:id="@+id/widget_line_symbol"
+                android:id="@+id/widget_current_station"
+                android:gravity="end"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="22sp"
+                android:autoSizeStepGranularity="1sp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_weight="1" />
+            <TextView
+                android:id="@+id/widget_station_arrow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:ellipsize="end"
+                android:includeFontPadding="false"
                 android:maxLines="1"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:text="@string/widget_line_symbol_placeholder"
-                android:textColor="@color/widget_brand"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-        </FrameLayout>
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="2dp"
+                android:layout_marginBottom="2dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="→" />
+            <TextView
+                android:id="@+id/widget_next_station"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="12sp"
+                android:autoSizeMaxTextSize="22sp"
+                android:autoSizeStepGranularity="1sp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textColor="@color/widget_on_line_primary"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_last_updated"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/widget_on_line_primary"
+            android:textSize="10sp"
+            android:visibility="gone" />
     </LinearLayout>
 </FrameLayout>

@@ -9,7 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
-  type TextInput as TextInputType,
+  type TextInputInstance as TextInputType,
   View,
 } from 'react-native';
 import { FAQ_URL, FONTS, LED_THEME_BG_COLOR } from '~/constants';

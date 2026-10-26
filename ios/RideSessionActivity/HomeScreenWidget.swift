@@ -20,10 +20,6 @@ import WidgetKit
 // このファイルにはプリセットウィジェット(PresetsWidget.swift)と共有する
 // 背景・配色・ナンバリングバッジも置いている。
 
-// ナンバリングバッジの直径。systemSmallは下に路線名と方面が2行入るぶん小さくする
-private let smallBadgeDiameter: CGFloat = 48
-private let mediumBadgeDiameter: CGFloat = 60
-
 /// 路線色の相対輝度(0...1)。
 ///
 /// `Color(hex:)` と同じ書式(3 / 6 / 8桁、`#` 付きも可)を受け付ける。
@@ -149,95 +145,110 @@ struct LineColorChip<Content: View>: View {
   }
 }
 
+// 乗車中とプリセットで余白・路線見出し・駅名の組み方を共有する。
+struct WidgetLineHeader: View {
+  let lineColor: String
+  let lineSymbol: String
+  let lineName: String
+  var boundFor: String = ""
+
+  var body: some View {
+    HStack(spacing: 8) {
+      LineNumberingBadge(lineColor: lineColor, lineSymbol: lineSymbol, diameter: 28)
+      VStack(alignment: .leading, spacing: 2) {
+        Text(lineName)
+          .font(.system(size: 12, weight: .semibold))
+          .lineLimit(2)
+          .minimumScaleFactor(0.8)
+        if !boundFor.isEmpty {
+          Text(boundFor)
+            .font(.system(size: 14))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+        }
+      }
+    }
+  }
+}
+
+struct WidgetStations: View {
+  let from: String
+  let to: String
+  let vertical: Bool
+  var fontSize: CGFloat = 22
+  var compactHorizontal = false
+
+  private func station(_ name: String) -> some View {
+    Text(name)
+      .font(.system(size: fontSize, weight: .bold))
+      .lineLimit(1)
+      .minimumScaleFactor(0.6)
+      .frame(maxWidth: vertical || !compactHorizontal ? .infinity : nil, alignment: .leading)
+  }
+
+  var body: some View {
+    if vertical {
+      VStack(alignment: .leading, spacing: 2) {
+        if !from.isEmpty { station(from) }
+        if !from.isEmpty && !to.isEmpty {
+          Image(systemName: "arrow.down").font(.system(size: 12, weight: .semibold))
+        }
+        if !to.isEmpty { station(to) }
+      }
+    } else {
+      HStack(spacing: 8) {
+        if !from.isEmpty { station(from) }
+        if !from.isEmpty && !to.isEmpty {
+          Image(systemName: "arrow.right").font(.system(size: 14, weight: .semibold))
+        }
+        if !to.isEmpty { station(to) }
+      }
+    }
+  }
+}
+
 struct HomeScreenWidgetEntryView: View {
   let entry: LockScreenEntry
-
   @Environment(\.widgetFamily) var family
 
   var body: some View {
-    Group {
-      switch family {
-      case .systemSmall:
-        smallView
-      case .systemMedium:
-        mediumView
-      default:
-        EmptyView()
+    // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
+    VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
+      if family == .systemMedium {
+        HStack(spacing: 4) {
+          Image(systemName: entry.loaded ? "tram.fill" : "tram")
+          Text("TrainLCD")
+        }
+        .font(.caption2)
+        .fontWeight(.bold)
       }
-    }
-    // バッジだけは内側で路線色を指定して上書きする
-    .foregroundStyle(lineForegroundColor(for: entry.displayLineColor))
-  }
-
-  // ロック画面コントロールと同じtramシンボルでアプリの表示を揃える
-  private var brandLabel: some View {
-    LineColorChip(lineColor: entry.displayLineColor) {
-      HStack(spacing: 4) {
-        Image(systemName: entry.loaded ? "tram.fill" : "tram")
-        Text("TrainLCD")
-      }
-      .font(.caption2)
-      .fontWeight(.bold)
-    }
-  }
-
-  private var lineNameText: some View {
-    Text(entry.lineName)
-      .lineLimit(2)
-      .minimumScaleFactor(0.7)
-  }
-
-  private var boundForLabel: some View {
-    Text(entry.boundFor)
-      .lineLimit(2)
-      .minimumScaleFactor(0.8)
-      .opacity(0.85)
-  }
-
-  // 正方形なのでバッジを上に置き、その下に路線名と方面を積む
-  var smallView: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      HStack(alignment: .top, spacing: 0) {
-        LineNumberingBadge(
-          lineColor: entry.displayLineColor,
-          lineSymbol: entry.displayLineSymbol,
-          diameter: smallBadgeDiameter
-        )
-        Spacer(minLength: 0)
-        // 正方形にブランド行を入れる余裕は無いので、乗車中かどうかだけをアイコンで示す
-        Image(systemName: entry.loaded ? "tram.fill" : "tram")
-          .font(.caption)
-          .opacity(0.7)
-      }
-      Spacer(minLength: 8)
-      lineNameText
-        .font(.headline)
-      boundForLabel
-        .font(.caption)
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-  }
-
-  // 横に余裕があるので、ブランド行 + 路線名 + 方面を左に積み、バッジを右へ逃がす。
-  // 路線色は面が担うようになったため、旧デザインにあった左端の路線色バーは置かない
-  var mediumView: some View {
-    HStack(spacing: 12) {
-      VStack(alignment: .leading, spacing: 4) {
-        brandLabel
-        lineNameText
-          .font(.title3)
-          .fontWeight(.bold)
-        boundForLabel
-          .font(.subheadline)
-      }
-      Spacer(minLength: 0)
-      LineNumberingBadge(
+      WidgetLineHeader(
         lineColor: entry.displayLineColor,
         lineSymbol: entry.displayLineSymbol,
-        diameter: mediumBadgeDiameter
-      )
+        lineName: entry.lineName,
+        boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
+          ? entry.boundFor : "")
+      if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
+        WidgetStations(from: entry.stationName, to: entry.nextStationName,
+                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22,
+                       compactHorizontal: true)
+      } else {
+        // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。
+        Text(entry.boundFor)
+          .font(.headline)
+          .lineLimit(2)
+          .minimumScaleFactor(0.7)
+      }
+      if family == .systemMedium, entry.loaded, let updatedAt = entry.updatedAt {
+        Text("\(String(localized: "lastUpdated")) \(updatedAt.formatted(date: .omitted, time: .shortened))")
+          .font(.system(size: 10))
+          .foregroundStyle(lineForegroundColor(for: entry.displayLineColor).opacity(0.8))
+          .lineLimit(1)
+          .minimumScaleFactor(0.8)
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    .foregroundStyle(lineForegroundColor(for: entry.displayLineColor))
   }
 }
 
@@ -286,7 +297,10 @@ struct HomeScreenWidget_Previews: PreviewProvider {
       lineColor: "80C241",
       lineName: "山手線",
       lineSymbol: "JY",
-      boundFor: "新宿・渋谷方面"
+      boundFor: "新宿・渋谷方面",
+      stationName: "新宿",
+      nextStationName: "代々木",
+      updatedAt: .now
     )
   }
 

@@ -15,19 +15,17 @@ import {
   summarizeRides,
 } from '~/utils/rideStats';
 
-type RideStatsState =
+type RideStatsState<Details extends boolean = true> =
   | { status: 'loading' }
   | { status: 'error' }
-  | {
+  | ({
       status: 'ready';
       period: RidePeriod;
       range: RidePeriodRange;
       stats: RideStats;
-      // 移動経路の地図に描く線
-      routes: RideRoutes;
-      // 都道府県ごとの集計(#7123)
-      prefectures: RidePrefectures;
-    };
+    } & (Details extends true
+      ? { routes: RideRoutes; prefectures: RidePrefectures }
+      : Record<never, never>));
 
 // setTimeout に渡せる最大の待ち時間(約24.8日)。年の終わりまではこれより長いので、
 // 超える場合はここで一度起きて、終わりまでの残りを測り直す
@@ -43,11 +41,23 @@ const MAX_TIMEOUT_MS = 2 ** 31 - 1;
  * 乗車中は Main 画面が前面にあり、この画面は表示されないので、表示中に記録が
  * 増えることは考えない。
  */
-export const useRideStats = (
+export function useRideStats(
   period: RidePeriod,
   enabled: boolean
-): RideStatsState => {
-  const [state, setState] = useState<RideStatsState>({ status: 'loading' });
+): RideStatsState;
+export function useRideStats(
+  period: RidePeriod,
+  enabled: boolean,
+  details: false
+): RideStatsState<false>;
+export function useRideStats(
+  period: RidePeriod,
+  enabled: boolean,
+  details = true
+): RideStatsState<false> {
+  const [state, setState] = useState<RideStatsState<false>>({
+    status: 'loading',
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -95,8 +105,12 @@ export const useRideStats = (
               period,
               range,
               stats: summarizeRides(sessions, period, range),
-              routes: buildRideRoutes(sessions, range),
-              prefectures: summarizeRidePrefectures(sessions, range),
+              ...(details
+                ? {
+                    routes: buildRideRoutes(sessions, range),
+                    prefectures: summarizeRidePrefectures(sessions, range),
+                  }
+                : {}),
             });
           })
           .catch((error) => {
@@ -121,8 +135,8 @@ export const useRideStats = (
           clearTimeout(boundaryTimer);
         }
       };
-    }, [enabled, period])
+    }, [details, enabled, period])
   );
 
   return state;
-};
+}

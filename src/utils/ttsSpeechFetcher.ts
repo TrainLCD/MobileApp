@@ -369,7 +369,7 @@ export const fetchSpeechAudio = async (
     ): string => {
       const normalized = normalizeAudioForFile(base64Audio, mimeType);
       const file = new File(Paths.cache, `${id}_${suffix}.${normalized.ext}`);
-      file.write(normalized.bytes);
+      file.writeSync(normalized.bytes);
       return file.uri;
     };
 

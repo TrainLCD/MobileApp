@@ -15,3 +15,10 @@
 
 # Expo modules (Headless tasks, notifications, etc.)
 -keep class expo.modules.** { *; }
+
+# WorkManager initializes its Room database through AndroidX Startup before React Native starts.
+# AGP 9 / R8 can remove these reflectively invoked no-arg constructors even when the
+# classes are kept by Room 2.5.0 / WorkManager 2.9.1. Preserve constructors explicitly.
+# https://github.com/expo/expo/pull/51349
+-keep class * extends androidx.room.RoomDatabase { <init>(); }
+-keep class * extends androidx.work.InputMerger { <init>(); }

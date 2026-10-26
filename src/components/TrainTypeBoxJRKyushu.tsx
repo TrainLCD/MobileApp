@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
+import AnimatedTypography from '~/components/AnimatedTypography';
 import { FONTS, parenthesisRegexp } from '../constants';
 import { useCurrentLine, useLazyPrevious, usePrevious } from '../hooks';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
@@ -235,7 +236,7 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
     <View>
       <View style={styles.box}>
         <View style={styles.textWrapper}>
-          <RNAnimated.Text
+          <AnimatedTypography
             style={[
               styles.text,
               animatedTextBaseStyle,
@@ -252,10 +253,10 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
             numberOfLines={numberOfLines}
           >
             {trainTypeName}
-          </RNAnimated.Text>
+          </AnimatedTypography>
         </View>
 
-        <RNAnimated.Text
+        <AnimatedTypography
           style={[
             styles.text,
             animatedTextBaseStyle,
@@ -272,7 +273,7 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
           numberOfLines={prevNumberOfLines}
         >
           {prevTrainTypeName}
-        </RNAnimated.Text>
+        </AnimatedTypography>
       </View>
     </View>
   );
