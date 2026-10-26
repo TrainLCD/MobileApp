@@ -3,6 +3,7 @@
  * ja / ji / ju / je / jo を「ジャ / ジ / ジュ / ジェ / ジョ」に寄せる
  * 読み上げ用の綴りへ置換する。ji は語を分断しないよう前後とつなげる。
  * kei は kay に読み替え、「カイ」と読まれるのを避ける。
+ * mei と語頭の ei は may / eh に分け、「マイ / アイ」と読まれるのを避ける。
  * 病院の byoin / byouin / byōin は bee-oh-in に読み替える。
  * 丁目の chome は choh-meh、一丁目は itch-oh-meh に読み替える。
  * 案内文全体には適用しない（join / journey などの英単語を壊さないため）。
@@ -19,6 +20,17 @@ export const fixRomanizedNameReading = (name: string): string =>
         syllable[0] === 'B' ? 'Bee-oh-in' : 'bee-oh-in'
       )
       .replace(/kei/gi, (syllable) => (syllable[0] === 'K' ? 'Kay' : 'kay'))
+      .replace(/mei|^ei/gi, (syllable) => {
+        // 駅名全体ではなく音節で補正する。前後の綴りと結合して未知語に
+        // 戻らないよう区切る。語中の ei 全般には広げず、既存の kei は維持する。
+        // vits-ljs の辞書では ay は /aɪ/、eh は /eɪ/ なので ei には eh を使う。
+        const reading = syllable.toLowerCase() === 'mei' ? 'may' : 'eh';
+        const cased =
+          syllable[0] === syllable[0].toUpperCase()
+            ? reading.charAt(0).toUpperCase() + reading.slice(1)
+            : reading;
+        return `-${cased}-`;
+      })
       .replace(/i(?:t|c)ch[oō]me$/i, (suffix) =>
         suffix[0] === 'I' ? 'Itch-oh-meh' : 'itch-oh-meh'
       )
