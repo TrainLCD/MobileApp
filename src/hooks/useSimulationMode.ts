@@ -690,9 +690,12 @@ export const useSimulationMode = (): void => {
       return;
     }
     const selected = manualCorrection.station;
-    const directIndex = maybeRevsersedStations.findIndex(
-      (s) => s.id === selected.id
-    );
+    // 同じ駅IDが経路内に再登場しても、選択した出現位置を維持する。
+    const selectedIndex = maybeRevsersedStations.indexOf(selected);
+    const directIndex =
+      selectedIndex >= 0
+        ? selectedIndex
+        : maybeRevsersedStations.findIndex((s) => s.id === selected.id);
     // 接続駅は進行方向によって片側の駅オブジェクトが除かれる。
     const targetIndex =
       directIndex >= 0

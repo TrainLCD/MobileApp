@@ -292,6 +292,37 @@ describe('useSimulationMode', () => {
     jest.clearAllMocks();
   });
 
+  it.each(['INBOUND', 'OUTBOUND'] as const)(
+    '同じIDが再登場しても選択した後の区間から再開する（%s）',
+    (direction) => {
+      const first = mockStation(1, 1, 35, 139);
+      const selected = { ...first };
+      const walkOrder = [
+        first,
+        mockStation(2, 2, 34.99, 139),
+        selected,
+        mockStation(3, 3, 35.01, 139),
+      ];
+      const stations =
+        direction === 'INBOUND' ? walkOrder : walkOrder.slice().reverse();
+      const state = { stations, station: first, selectedDirection: direction };
+      setupAtomMocks(state, { autoModeEnabled: true });
+      mockTrainRoute(walkOrder);
+      const { rerender } = renderHook(useSimulationMode);
+      act(() => jest.advanceTimersByTime(5000));
+      state.station = selected;
+      seedStore(manualStationCorrectionAtom, {
+        station: selected,
+        stations,
+        location: store.get(locationAtom),
+      });
+      rerender({});
+      act(() => jest.advanceTimersByTime(5000));
+      // 先の出現からは南へ、選択した後の出現からは北へ進む。
+      expect(store.get(locationAtom)?.coords.latitude).toBeGreaterThan(35);
+    }
+  );
+
   it.each([
     ['INBOUND', false],
     ['OUTBOUND', false],
