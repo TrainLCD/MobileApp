@@ -4,6 +4,7 @@
  * 読み上げ用の綴りへ置換する。ji は語を分断しないよう前後とつなげる。
  * kei は kay に読み替え、「カイ」と読まれるのを避ける。
  * mei と語頭の ei は may / eh に分け、「マイ / アイ」と読まれるのを避ける。
+ * ge は gay に分け、英語の軟音の g で「ジェ」と読まれるのを避ける。
  * 病院の byoin / byouin / byōin は bee-oh-in に読み替える。
  * 丁目の chome は choh-meh、一丁目は itch-oh-meh に読み替える。
  * 案内文全体には適用しない（join / journey などの英単語を壊さないため）。
@@ -37,6 +38,11 @@ export const fixRomanizedNameReading = (name: string): string =>
       .replace(/ch(?:ou?|ō)me$/i, (suffix) =>
         suffix[0] === 'C' ? '-Choh-meh' : '-choh-meh'
       )
+      .replace(/ge(?!e)/gi, (syllable) => {
+        // vits-ljs の辞書で gay は /ɡeɪ/。前後と区切って硬音の g を保つ。
+        // ji の補正先 gee (Megeero などの語中も含む) は再変換しない。
+        return syllable[0] === 'G' ? '-Gay-' : '-gay-';
+      })
       .replace(/j[aiueoō]/gi, (syllable) => {
         const reading =
           {
