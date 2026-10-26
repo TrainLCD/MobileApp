@@ -12,6 +12,7 @@ import {
 } from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
+import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import {
@@ -105,6 +106,8 @@ export const useSimulationMode = (): void => {
   const rawStations = useAtomValue(stationsAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
   const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
+  const manualCorrection = useAtomValue(manualStationCorrectionAtom);
+  const handledCorrectionRef = useRef(manualCorrection);
 
   const currentStationRef = useRef(currentStation);
   currentStationRef.current = currentStation;
@@ -674,6 +677,93 @@ export const useSimulationMode = (): void => {
       segmentProgressDistanceRef.current = 0;
     }
   }, [enabled, stations.length, maybeRevsersedStations, resolveStartIndex]);
+
+  // 通常の到着による現在駅更新ではリセットせず、手動選択だけを走行位置に反映する。
+  useEffect(() => {
+    if (handledCorrectionRef.current === manualCorrection) return;
+    if (
+      !enabled ||
+      !manualCorrection ||
+      manualCorrection.stations !== rawStations
+    ) {
+      handledCorrectionRef.current = manualCorrection;
+      return;
+    }
+    const selected = manualCorrection.station;
+    // 同じ駅IDが経路内に再登場しても、選択した出現位置を維持する。
+    const selectedIndex = maybeRevsersedStations.indexOf(selected);
+    const directIndex =
+      selectedIndex >= 0
+        ? selectedIndex
+        : maybeRevsersedStations.findIndex((s) => s.id === selected.id);
+    // 接続駅は進行方向によって片側の駅オブジェクトが除かれる。
+    const targetIndex =
+      directIndex >= 0
+        ? directIndex
+        : maybeRevsersedStations.findIndex(
+            (s) => s.groupId === selected.groupId
+          );
+    const target = maybeRevsersedStations[targetIndex];
+    if (
+      targetIndex < 0 ||
+      target.latitude == null ||
+      target.longitude == null
+    ) {
+      handledCorrectionRef.current = manualCorrection;
+      return;
+    }
+
+    // 通過駅には独立した速度列がないので、その駅を含む停車駅間の途中へ移す。
+    let segmentIndex = targetIndex;
+    while (
+      segmentIndex > 0 &&
+      getIsPass(maybeRevsersedStations[segmentIndex])
+    ) {
+      segmentIndex -= 1;
+    }
+    const geometry = segmentGeometryCacheRef.current[segmentIndex];
+    if (!trainRouteSegments?.length || !geometry) return; // 経路取得後に再試行する。
+    const waypointIndex =
+      maybeRevsersedStations
+        .slice(segmentIndex, targetIndex + 1)
+        .filter((s) => s.latitude != null && s.longitude != null).length - 1;
+    const distance = geometry.cumulativeDistances[waypointIndex] ?? 0;
+    const speeds = speedProfilesRef.current[segmentIndex] ?? [];
+    let childIndex = 0;
+    let elapsedDistance = 0;
+    while (
+      childIndex < speeds.length &&
+      elapsedDistance + speeds[childIndex] <= distance
+    ) {
+      elapsedDistance += speeds[childIndex];
+      childIndex += 1;
+    }
+    segmentIndexRef.current = segmentIndex;
+    childIndexRef.current = childIndex;
+    segmentProgressDistanceRef.current = distance;
+    dwellPendingRef.current = false;
+    terminalDwellCountRef.current = 0;
+    reversingRef.current = false;
+    handledCorrectionRef.current = manualCorrection;
+    setSimulatedLocation({
+      timestamp: Date.now(),
+      coords: {
+        latitude: target.latitude,
+        longitude: target.longitude,
+        accuracy: 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: 0,
+        heading: null,
+      },
+    });
+  }, [
+    enabled,
+    manualCorrection,
+    rawStations,
+    maybeRevsersedStations,
+    trainRouteSegments,
+  ]);
 
   useEffect(() => {
     if (!enabled || !selectedDirection) {

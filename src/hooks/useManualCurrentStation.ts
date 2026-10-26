@@ -34,6 +34,7 @@ export const useManualCurrentStation = () => {
       )
         return;
       store.set(manualStationCorrectionAtom, {
+        station,
         location: store.get(locationAtom),
         stations: store.get(stationsAtom),
       });
