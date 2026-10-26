@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import getDistance from 'geolib/es/getDistance';
 import { Provider, useAtomValue } from 'jotai';
@@ -22,6 +22,7 @@ import {
 } from '~/lib/graphql/queries';
 import { store } from '~/store';
 import { locationAtom } from '~/store/atoms/location';
+import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
 import { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import * as trainSpeedModule from '~/utils/trainSpeed';
 
@@ -178,7 +179,7 @@ const setupAtomMocks = (
       case 'autoModeEnabledAtom':
         return navigationStateValue.autoModeEnabled;
       default:
-        return undefined;
+        return storeValues.get(atom);
     }
   });
 };
@@ -289,6 +290,147 @@ describe('useSimulationMode', () => {
     jest.useRealTimers();
     jest.restoreAllMocks();
     jest.clearAllMocks();
+  });
+
+  it.each(['INBOUND', 'OUTBOUND'] as const)(
+    '同じIDが再登場しても選択した後の区間から再開する（%s）',
+    (direction) => {
+      const first = mockStation(1, 1, 35, 139);
+      const selected = { ...first };
+      const walkOrder = [
+        first,
+        mockStation(2, 2, 34.99, 139),
+        selected,
+        mockStation(3, 3, 35.01, 139),
+      ];
+      const stations =
+        direction === 'INBOUND' ? walkOrder : walkOrder.slice().reverse();
+      const state = { stations, station: first, selectedDirection: direction };
+      setupAtomMocks(state, { autoModeEnabled: true });
+      mockTrainRoute(walkOrder);
+      const { rerender } = renderHook(useSimulationMode);
+      act(() => jest.advanceTimersByTime(5000));
+      state.station = selected;
+      seedStore(manualStationCorrectionAtom, {
+        station: selected,
+        stations,
+        location: store.get(locationAtom),
+      });
+      rerender({});
+      act(() => jest.advanceTimersByTime(5000));
+      // 先の出現からは南へ、選択した後の出現からは北へ進む。
+      expect(store.get(locationAtom)?.coords.latitude).toBeGreaterThan(35);
+    }
+  );
+
+  it.each([
+    ['INBOUND', false],
+    ['OUTBOUND', false],
+    ['INBOUND', true],
+    ['OUTBOUND', true],
+  ] as const)(
+    '手動指定した駅から再開する（%s、通過駅=%s）',
+    (direction, pass) => {
+      const stations = [
+        mockStation(1, 1, 35, 139),
+        mockStation(2, 2, 35.01, 139),
+        mockStation(3, 3, 35.02, 139),
+        mockStation(4, 4, 35.03, 139),
+      ];
+      const target = stations[direction === 'INBOUND' ? 2 : 1];
+      if (pass) target.stopCondition = StopCondition.Not;
+      const walkOrder =
+        direction === 'INBOUND' ? stations : stations.slice().reverse();
+      const state = {
+        stations,
+        station: walkOrder[0],
+        selectedDirection: direction,
+      };
+      setupAtomMocks(state, { autoModeEnabled: true });
+      mockTrainRoute(walkOrder);
+      const { rerender } = renderHook(useSimulationMode);
+      act(() => jest.advanceTimersByTime(10000));
+
+      const select = (station: Station) => {
+        state.station = station;
+        seedStore(manualStationCorrectionAtom, {
+          station,
+          stations,
+          location: store.get(locationAtom),
+        });
+        rerender({});
+        expect(store.get(locationAtom)?.coords.latitude).toBe(station.latitude);
+      };
+      select(target);
+      act(() => jest.advanceTimersByTime(5000));
+      const after = store.get(locationAtom)?.coords.latitude;
+      if (direction === 'INBOUND')
+        expect(after).toBeGreaterThan(target.latitude ?? 0);
+      else expect(after).toBeLessThan(target.latitude ?? 0);
+
+      // 同じ駅を再選択した場合も、古い距離を残さず選択地点へ戻す。
+      select(target);
+      act(() => jest.advanceTimersByTime(1000));
+      // 後方の駅も指定でき、次のティックで元の区間へ戻らない。
+      select(walkOrder[0]);
+      act(() => jest.advanceTimersByTime(1000));
+      expect(
+        Math.abs(
+          (store.get(locationAtom)?.coords.latitude ?? 0) -
+            (walkOrder[0].latitude ?? 0)
+        )
+      ).toBeLessThan(0.001);
+
+      select(target);
+      act(() => jest.advanceTimersByTime(300000));
+      // 通過駅の途中からでも終点まで到達する（距離の端数を落とさない）。
+      expect(store.get(locationAtom)?.coords.latitude).toBe(
+        walkOrder.at(-1)?.latitude
+      );
+    }
+  );
+
+  it('通常の現在駅更新では走行位置を戻さず、終点での手動指定では停車待ちを解除する', () => {
+    const stations = [
+      mockStation(1, 1, 35, 139),
+      mockStation(2, 2, 35.01, 139),
+      mockStation(3, 3, 35.02, 139),
+    ];
+    const state = {
+      stations,
+      station: stations[0],
+      selectedDirection: 'INBOUND' as const,
+    };
+    setupAtomMocks(state, { autoModeEnabled: true });
+    mockTrainRoute(stations);
+    const { rerender } = renderHook(useSimulationMode);
+    act(() => jest.advanceTimersByTime(10000));
+    const movingLocation = store.get(locationAtom);
+    state.station = stations[1];
+    rerender({});
+    expect(store.get(locationAtom)).toBe(movingLocation);
+
+    seedStore(manualStationCorrectionAtom, {
+      station: stations[2],
+      stations,
+      location: movingLocation,
+    });
+    rerender({});
+    act(() => jest.advanceTimersByTime(30000));
+    expect(store.get(locationAtom)?.coords.latitude).toBe(stations[2].latitude);
+    seedStore(manualStationCorrectionAtom, {
+      station: stations[1],
+      stations,
+      location: store.get(locationAtom),
+    });
+    rerender({});
+    act(() => jest.advanceTimersByTime(3000));
+    expect(store.get(locationAtom)?.coords.latitude).toBeGreaterThan(
+      stations[1].latitude ?? 0
+    );
+    expect(store.get(locationAtom)?.coords.latitude).toBeLessThan(
+      stations[2].latitude ?? 0
+    );
   });
 
   it('自動モードが無効の場合は何もしない', () => {
