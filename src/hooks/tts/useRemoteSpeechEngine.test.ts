@@ -78,6 +78,7 @@ const renderEngineWithSpeed = (
 
 describe('useRemoteSpeechEngine', () => {
   it.each([
+    ['Oshiage', 'Oshia-gay'],
     ['Meidaimae', 'May-daimae'],
     ['Eifukucho', 'Eh-fukucho'],
     ['Seibo-Byōin-Iriguchi', 'Seibo-Bee-oh-in-Iriguchi'],

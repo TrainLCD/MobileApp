@@ -23,9 +23,10 @@ const ipaSegment = (
 
 describe('wrapPhoneme', () => {
   it.each(['native', 'remote'] as const)(
-    '%s向けにmeiと語頭のeiをセグメントの有無によらず補正する',
+    '%s向けに固有名詞をセグメントの有無によらず補正する',
     (engine) => {
       for (const [roman, japanese, reading] of [
+        ['Oshiage', '押上', 'Oshia-gay'],
         ['Meidaimae', '明大前', 'May-daimae'],
         ['Eifukucho', '永福町', 'Eh-fukucho'],
       ]) {

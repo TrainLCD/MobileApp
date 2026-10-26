@@ -132,6 +132,7 @@ describe('useVitsSpeechEngine', () => {
   it('補正済みの固有名詞をタグなしでVITSの合成処理へ渡す', async () => {
     const { result } = renderEngine();
     const names = [
+      'Oshiage',
       'Meidaimae',
       'Eifukucho',
       'Shinjuku-sanchome',
@@ -160,7 +161,7 @@ describe('useVitsSpeechEngine', () => {
     await flushAsync();
     expect(mockSynthesize).toHaveBeenCalledWith(
       expect.objectContaining({
-        text: 'Enjoy your journey. May-daimae, Eh-fukucho, Shin-jew-ku-san-choh-meh, Seibo-Bee-oh-in-Iriguchi, Daigaku-bee-oh-in, Kaysatsusho, Ginza-itch-oh-meh, Megeero, Geen-jah, Ogee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
+        text: 'Enjoy your journey. Oshia-gay, May-daimae, Eh-fukucho, Shin-jew-ku-san-choh-meh, Seibo-Bee-oh-in-Iriguchi, Daigaku-bee-oh-in, Kaysatsusho, Ginza-itch-oh-meh, Megeero, Geen-jah, Ogee, Shin-jew-ku, Jeh-fu, Joe-etsu.',
       })
     );
   });
