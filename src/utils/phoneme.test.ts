@@ -23,6 +23,32 @@ const ipaSegment = (
 
 describe('wrapPhoneme', () => {
   it.each(['native', 'remote'] as const)(
+    '%s向けにmeiと語頭のeiをセグメントの有無によらず補正する',
+    (engine) => {
+      for (const [roman, japanese, reading] of [
+        ['Meidaimae', '明大前', 'May-daimae'],
+        ['Eifukucho', '永福町', 'Eh-fukucho'],
+      ]) {
+        for (const segments of [
+          null,
+          [ipaSegment(roman, 'test')],
+          [ipaSegment(japanese, 'test', roman)],
+          [ipaSegment(japanese, 'test')],
+          [ipaSegment(roman, '')],
+        ]) {
+          const name = wrapPhoneme(segments, roman);
+          expect(
+            toSpeakableText(`We are arriving at ${name}.`, 'EN', engine)
+          ).toBe(`We are arriving at ${reading}.`);
+        }
+        expect(toSpeakableText(`次は、${japanese}です。`, 'JA', engine)).toBe(
+          `次は、${japanese}です。`
+        );
+      }
+    }
+  );
+
+  it.each(['native', 'remote'] as const)(
     '聖母病院入口の日本語セグメントを%s向けの英語本文へ変換する',
     (engine) => {
       // 都営バス GTFS の表記。API の日本語 fallbackText から
