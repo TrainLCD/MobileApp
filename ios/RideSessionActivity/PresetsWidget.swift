@@ -249,6 +249,15 @@ struct PresetsWidgetFeatured: View {
           from: preset.fromStationName, to: preset.toStationName,
           vertical: vertical, fontSize: vertical ? 20 : 22)
       }
+      if !vertical {
+        // 乗車中の最終更新時刻と同じ位置で、プリセットであることを示します。
+        LineColorChip(lineColor: preset.displayLineColor) {
+          Text("presetsWidgetTitle")
+            .font(.system(size: 10, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
   }
