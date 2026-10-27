@@ -234,16 +234,29 @@ struct PresetsWidgetFeatured: View {
         WidgetLineHeader(
           lineColor: preset.displayLineColor,
           lineSymbol: preset.displayLineSymbol,
-          lineName: preset.lineName)
-        Text(preset.name)
-          .font(.system(size: 18, weight: .bold))
-          .lineLimit(1)
-          .minimumScaleFactor(0.8)
+          lineName: preset.lineName,
+          // 横長では乗車中の方面と同じ位置・文字組みにし、見出しの高さを揃えます。
+          boundFor: vertical ? "" : preset.name)
+        if vertical {
+          Text(preset.name)
+            .font(.system(size: 18, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
       }
       if preset.hasStations {
         WidgetStations(
           from: preset.fromStationName, to: preset.toStationName,
           vertical: vertical, fontSize: vertical ? 20 : 22)
+      }
+      if !vertical {
+        // 乗車中の最終更新時刻と同じ位置で、プリセットであることを示します。
+        LineColorChip(lineColor: preset.displayLineColor) {
+          Text("presetsWidgetTitle")
+            .font(.system(size: 10, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
