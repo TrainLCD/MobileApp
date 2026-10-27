@@ -234,11 +234,15 @@ struct PresetsWidgetFeatured: View {
         WidgetLineHeader(
           lineColor: preset.displayLineColor,
           lineSymbol: preset.displayLineSymbol,
-          lineName: preset.lineName)
-        Text(preset.name)
-          .font(.system(size: 18, weight: .bold))
-          .lineLimit(1)
-          .minimumScaleFactor(0.8)
+          lineName: preset.lineName,
+          // 横長では乗車中の方面と同じ位置・文字組みにし、見出しの高さを揃えます。
+          boundFor: vertical ? "" : preset.name)
+        if vertical {
+          Text(preset.name)
+            .font(.system(size: 18, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
       }
       if preset.hasStations {
         WidgetStations(
