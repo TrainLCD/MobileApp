@@ -24,6 +24,10 @@ The `Bundle React Native code and images` phase runs `sentry-xcode.sh`
 from `@sentry/react-native`, which uploads the Hermes source map.
 ProdTrainLCD and CanaryTrainLCD then run `Upload Debug Symbols to Sentry`.
 Auth is `ios/sentry.properties`, decoded from `SENTRY_PROPERTIES_BASE64`.
+`xcodebuild archive` sets `ACTION=install` and must upload. Profile uses
+Release with `ACTION=build`, so those builds set
+`SENTRY_DISABLE_AUTO_UPLOAD=true`. The upload also fails the build when
+the main app dSYM is not ready before the wait times out.
 The archive step fails when `TrainLCD.app.dSYM` (production) or
 `CanaryTrainLCD.app.dSYM` (Canary) is missing. The Actions artifact is
 still the whole `dSYMs` directory.

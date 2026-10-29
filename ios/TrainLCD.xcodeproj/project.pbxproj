@@ -1556,7 +1556,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n# xcodebuild archive sets ACTION=install. Profile uses Release with ACTION=build.\nif [ \"${ACTION}\" != \"install\" ]; then\n  export SENTRY_DISABLE_AUTO_UPLOAD=true\nfi\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
 		};
 		1238756A0ACF0943150FA11D /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2057,7 +2057,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n# xcodebuild archive sets ACTION=install. Profile uses Release with ACTION=build.\nif [ \"${ACTION}\" != \"install\" ]; then\n  export SENTRY_DISABLE_AUTO_UPLOAD=true\nfi\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
 		};
 		94E2C86C2D64E3230090392E /* Bundle React Native code and images */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2075,7 +2075,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n# xcodebuild archive sets ACTION=install. Profile uses Release with ACTION=build.\nif [ \"${ACTION}\" != \"install\" ]; then\n  export SENTRY_DISABLE_AUTO_UPLOAD=true\nfi\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
 		};
 		94E2C86D2D64E3520090392E /* Start Packager */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2129,7 +2129,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n# xcodebuild archive sets ACTION=install. Profile uses Release with ACTION=build.\nif [ \"${ACTION}\" != \"install\" ]; then\n  export SENTRY_DISABLE_AUTO_UPLOAD=true\nfi\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
 		};
 		C4E8A17B2D5F4C09A6B3E8D1 /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
