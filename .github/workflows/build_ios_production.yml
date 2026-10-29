@@ -196,8 +196,15 @@ jobs:
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
             archive
 
+          dsym_path="$RUNNER_TEMP/TrainLCD.xcarchive/dSYMs/TrainLCD.app.dSYM"
+          if [ ! -d "$dsym_path" ]; then
+            echo "::error::TrainLCD.app.dSYM is missing from the archive"
+            find "$RUNNER_TEMP/TrainLCD.xcarchive/dSYMs" -maxdepth 2 -type d -name '*.dSYM' -print
+            exit 1
+          fi
+
       - name: Upload to TestFlight
-        if: github.event_name == 'push' || inputs.publish_to_testflight
+        if: ${{ success() && (github.event_name == 'push' || inputs.publish_to_testflight) }}
         env:
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}

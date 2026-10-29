@@ -101,7 +101,7 @@
     "react-native-view-shot": "6.1.1",
     "react-native-watch-connectivity": "^1.1.0",
     "react-native-web": "^0.21.4",
-    "zod": "^3.24.3"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
@@ -170,5 +170,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.19.0"
+  "version": "10.19.1"
 }

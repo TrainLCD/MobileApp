@@ -410,7 +410,11 @@ describe('useRefreshStation', () => {
       coords: { latitude: 35, longitude: 135 },
     } as any;
     localStore.set(stationsAtom, stations);
-    localStore.set(manualStationCorrectionAtom, { location, stations });
+    localStore.set(manualStationCorrectionAtom, {
+      station: stations[0],
+      location,
+      stations,
+    });
     let currentLocation = location;
     mockUseAtomValue.mockImplementation((atom) =>
       atom === require('~/store/atoms/location').locationAtom

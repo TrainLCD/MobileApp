@@ -3,6 +3,7 @@ import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import { StopCondition } from '~/@types/graphql';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
 import { stationForHeaderAtom, trainTypeAtom } from '~/store/atoms/navigation';
 import { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import {
@@ -57,6 +58,7 @@ it('現在駅とヘッダーを補正し、種別・方向・行き先・走行�
   });
   act(() => result.current.selectStation(b));
   expect(store.get(stationAtom)).toBe(b);
+  expect(store.get(manualStationCorrectionAtom)?.station).toBe(b);
   expect(store.get(etaAnchorAtom)).toBeNull();
   expect(store.get(stationForHeaderAtom)).toBe(b);
   expect(store.get(approachingAtom)).toBe(false);
