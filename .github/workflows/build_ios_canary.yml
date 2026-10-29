@@ -197,6 +197,13 @@ jobs:
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
             archive
 
+          dsym_path="$RUNNER_TEMP/TrainLCD.xcarchive/dSYMs/CanaryTrainLCD.app.dSYM"
+          if [ ! -d "$dsym_path" ]; then
+            echo "::error::CanaryTrainLCD.app.dSYM is missing from the archive"
+            find "$RUNNER_TEMP/TrainLCD.xcarchive/dSYMs" -maxdepth 2 -type d -name '*.dSYM' -print
+            exit 1
+          fi
+
       - name: Export Canary IPA
         env:
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
