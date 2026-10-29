@@ -2137,6 +2137,7 @@
 			files = (
 			);
 			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${EXECUTABLE_NAME}",
 			);
 			name = "Upload Debug Symbols to Sentry";
 			outputPaths = (
@@ -2151,6 +2152,7 @@
 			files = (
 			);
 			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${EXECUTABLE_NAME}",
 			);
 			name = "Upload Debug Symbols to Sentry";
 			outputPaths = (
