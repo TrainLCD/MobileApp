@@ -23,6 +23,10 @@ Release archives also upload symbols to Sentry from the Xcode build.
 The `Bundle React Native code and images` phase runs `sentry-xcode.sh`
 from `@sentry/react-native`, which uploads the Hermes source map.
 ProdTrainLCD and CanaryTrainLCD then run `Upload Debug Symbols to Sentry`.
+Keep this phase after all embedding and resource-copy phases. Its dSYM input
+depends on processing the app's Info.plist, which depends on the embedded App
+Clip. Placing the upload before `Embed App Clips` creates an archive dependency
+cycle.
 Auth is `ios/sentry.properties`, decoded from `SENTRY_PROPERTIES_BASE64`.
 `xcodebuild archive` sets `ACTION=install` and must upload. Profile uses
 Release with `ACTION=build`, so those builds set
