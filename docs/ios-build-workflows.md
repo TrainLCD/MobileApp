@@ -19,6 +19,15 @@ still runs when requested, provided archiving succeeded and the run was not
 cancelled.
 Production runs continue to preserve only dSYMs as artifacts.
 
+Release archives also upload symbols to Sentry from the Xcode build.
+The `Bundle React Native code and images` phase runs `sentry-xcode.sh`
+from `@sentry/react-native`, which uploads the Hermes source map.
+ProdTrainLCD and CanaryTrainLCD then run `Upload Debug Symbols to Sentry`.
+Auth is `ios/sentry.properties`, decoded from `SENTRY_PROPERTIES_BASE64`.
+The archive step fails when `TrainLCD.app.dSYM` (production) or
+`CanaryTrainLCD.app.dSYM` (Canary) is missing. The Actions artifact is
+still the whole `dSYMs` directory.
+
 Both workflows preserve the iOS build number committed to
 `ios/TrainLCD.xcodeproj/project.pbxproj`. The version bump workflow updates that
 value together with `app.config.ts`; build workflows must not replace it with a
@@ -72,7 +81,10 @@ the archive starts so a missing private key fails with a targeted error.
 2. Select the branch or commit to validate.
 3. Leave **Upload the archive to TestFlight** disabled.
 4. Run the workflow and confirm that dependency installation, environment
-   validation, signing, archive creation, and dSYM upload succeed.
+   validation, signing, and archive creation succeed. In the archive log,
+   confirm `output: sentry-cli` lines from the source map upload and the debug
+   file upload. Confirm the dSYM artifact contains `TrainLCD.app.dSYM` or
+   `CanaryTrainLCD.app.dSYM`.
    For Canary, also confirm that IPA export and the `app-canary-ipa` artifact
    upload succeed.
 5. Confirm that **Upload to TestFlight** is skipped and that

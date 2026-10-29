@@ -1095,6 +1095,7 @@
 				942CB5CE2A32AA96008339D2 /* Bundle React Native code and images */,
 				942CB5D02A32AA96008339D2 /* Embed Watch Content */,
 				942CB61C2A32AAE9008339D2 /* Embed Foundation Extensions */,
+				C4E8A17B2D5F4C09A6B3E8D1 /* Upload Debug Symbols to Sentry */,
 				94E2C86B2D64E1CB0090392E /* Embed App Clips */,
 				6FE2F30AE1EE40834538D8A5 /* [CP] Embed Pods Frameworks */,
 				3400245360B0AA5F803CD234 /* [CP] Copy Pods Resources */,
@@ -1555,7 +1556,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
 		};
 		1238756A0ACF0943150FA11D /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2056,7 +2057,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
 		};
 		94E2C86C2D64E3230090392E /* Bundle React Native code and images */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2074,7 +2075,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
 		};
 		94E2C86D2D64E3520090392E /* Start Packager */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2128,7 +2129,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "# Keep the intermediate Metro source map in CONFIGURATION_BUILD_DIR (#5226).\n# sentry-xcode.sh uploads the Hermes-composed map from SOURCEMAP_FILE.\nexport EXTRA_PACKAGER_ARGS=\"--sourcemap-output $CONFIGURATION_BUILD_DIR/main.jsbundle.map\"\nexport NODE_BINARY=node\n/bin/sh \"`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode.sh'\"`\" \"../node_modules/react-native/scripts/react-native-xcode.sh\"\n";
+		};
+		C4E8A17B2D5F4C09A6B3E8D1 /* Upload Debug Symbols to Sentry */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Upload Debug Symbols to Sentry";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/bash \"${SRCROOT}/scripts/upload-sentry-debug-files.sh\"";
 		};
 		9A5BC962D43A48928901B1FB /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2142,7 +2157,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh ../node_modules/@sentry/react-native/scripts/sentry-xcode-debug-files.sh";
+			shellScript = "/bin/bash \"${SRCROOT}/scripts/upload-sentry-debug-files.sh\"";
 		};
 		9F6AFA870507DC753F048E7A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2603,6 +2618,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2969;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = E6R2G33Z36;
 				INFOPLIST_FILE = TrainLCD/Schemes/Prod/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = TrainLCD;
