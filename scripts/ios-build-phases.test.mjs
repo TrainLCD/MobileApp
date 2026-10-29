@@ -7,6 +7,35 @@ const project = readFileSync(
   'utf8'
 );
 
+const dsymPath = '${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${EXECUTABLE_NAME}';
+
+function inputPaths(script) {
+  // Keep quoted strings intact so comment markers inside paths remain values.
+  const tokens = (script.match(/"(?:\\.|[^"\\])*"|\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|[A-Za-z_][A-Za-z_0-9]*|[^\s]/g) ?? [])
+    .filter((token) => !token.startsWith('//') && !token.startsWith('/*'));
+  const key = tokens.indexOf('inputPaths');
+  assert.ok(key >= 0, 'Missing inputPaths');
+  assert.equal(tokens[key + 1], '=');
+  assert.equal(tokens[key + 2], '(');
+  const end = tokens.indexOf(')', key + 3);
+  assert.ok(end >= 0, 'Unterminated inputPaths');
+  return tokens.slice(key + 3, end)
+    .filter((token) => token.startsWith('"'))
+    .map((token) => JSON.parse(token));
+}
+
+for (const [name, script, expected] of [
+  ['active input', `inputPaths = ("${dsymPath}",);`, true],
+  ['line comment', `inputPaths = (\n// "${dsymPath}",\n);`, false],
+  ['block comment', `inputPaths = (/* "${dsymPath}", */);`, false],
+  ['output only', `inputPaths = (); outputPaths = ("${dsymPath}",);`, false],
+  ['script text only', `inputPaths = (); shellScript = ${JSON.stringify(`inputPaths = ("${dsymPath}",);`)};`, false],
+]) {
+  test(`dSYM input dependency: ${name}`, () => {
+    assert.equal(inputPaths(script).includes(dsymPath), expected);
+  });
+}
+
 for (const target of ['CanaryTrainLCD', 'ProdTrainLCD']) {
   test(`${target}: embedding finishes before the dSYM-dependent Sentry phase`, () => {
     const targetBlock = project.match(
@@ -24,6 +53,6 @@ for (const target of ['CanaryTrainLCD', 'ProdTrainLCD']) {
       new RegExp(`${phases[upload][1]} /\\* Upload Debug Symbols to Sentry \\*/ = \\{([\\s\\S]*?)\\n\\t\\t\\};`)
     );
     assert.ok(script, 'Missing Sentry script definition');
-    assert.ok(script[1].includes('${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${EXECUTABLE_NAME}'), 'Keep the explicit dependency on the generated dSYM');
+    assert.ok(inputPaths(script[1]).includes(dsymPath), 'Keep the explicit dependency on the generated dSYM in inputPaths');
   });
 }
