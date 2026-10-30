@@ -1,4 +1,5 @@
 import { useAtomValue } from 'jotai';
+import { manualOutsideRouteStationAtom } from '~/store/atoms/manualStationCorrection';
 import type { Station } from '../@types/graphql';
 import type { LineDirection } from '../models/Bound';
 import {
@@ -104,13 +105,16 @@ export const useCurrentStation = (
   const stations = useAtomValue(stationsAtom);
   const stationFromState = useAtomValue(stationAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
+  const manualStation = useAtomValue(manualOutsideRouteStationAtom);
 
-  const station = findBasicCurrentStation(
-    stations,
-    selectedDirection ?? null,
-    stationFromState?.id,
-    stationFromState?.groupId
-  );
+  const station =
+    manualStation ??
+    findBasicCurrentStation(
+      stations,
+      selectedDirection ?? null,
+      stationFromState?.id,
+      stationFromState?.groupId
+    );
 
   if (skipPassStation || withTrainTypes) {
     return findWithTrainTypeStation(

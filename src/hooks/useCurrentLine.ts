@@ -1,5 +1,6 @@
 import { useAtomValue } from 'jotai';
 import type { Line, Station } from '~/@types/graphql';
+import { manualOutsideRouteStationAtom } from '~/store/atoms/manualStationCorrection';
 import type { LineDirection } from '../models/Bound';
 import { selectedLineAtom } from '../store/atoms/line';
 import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
@@ -44,6 +45,7 @@ export const useCurrentLine = (): Line | null => {
   const selectedDirection = useAtomValue(selectedDirectionAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentStation = useCurrentStation();
+  const manualStation = useAtomValue(manualOutsideRouteStationAtom);
 
   const actualCurrentStation = findActualCurrentStation(
     stations,
@@ -54,7 +56,10 @@ export const useCurrentLine = (): Line | null => {
   // NOTE: selectedLineがnullishの時はcurrentLineもnullishであってほしい
   // 手動指定では種別の経路に含まれない駅も選べる。
   return (
-    (selectedLine && (actualCurrentStation?.line ?? currentStation?.line)) ??
+    (selectedLine &&
+      (manualStation?.line ??
+        actualCurrentStation?.line ??
+        currentStation?.line)) ??
     null
   );
 };
