@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import type React from 'react';
 import { StopCondition } from '~/@types/graphql';
+import { GET_LINE_LIST_STATIONS } from '~/lib/graphql/queries';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
 import { stationForHeaderAtom, trainTypeAtom } from '~/store/atoms/navigation';
@@ -37,11 +38,12 @@ const setup = () => {
   jest.mocked(useCurrentLine).mockReturnValue(createLine(1));
   jest.mocked(useGraphQLQuery).mockReturnValue({
     data: {
-      lineStations: [
+      lineListStations: [
         a,
         { ...b, stopCondition: StopCondition.All },
         duplicateGroup,
         outsideRoute,
+        other,
       ],
     },
     loading: false,
@@ -55,12 +57,13 @@ const setup = () => {
 
 afterEach(() => jest.clearAllMocks());
 
-it('現在路線の全駅を返し、経路上の通過情報と同一groupIdの別駅を残す', () => {
+it('直通経路の各路線の全駅を返し、経路上の通過情報と同一groupIdの別駅を残す', () => {
   expect(setup().result.current.selectableStations).toEqual([
     a,
     b,
     duplicateGroup,
     outsideRoute,
+    other,
   ]);
 });
 
@@ -113,19 +116,25 @@ it('全駅の取得中や取得失敗時にも既存経路の駅を選べる', (
     error: new Error('offline'),
   });
   rerender({});
-  expect(result.current.selectableStations).toEqual([a, b, duplicateGroup]);
+  expect(result.current.selectableStations).toEqual([
+    a,
+    b,
+    other,
+    duplicateGroup,
+  ]);
 });
 
 it('別路線の取得結果や一覧にない駅では補正しない', () => {
   const { store, result, rerender } = setup();
+  const unrelated = createStation(99, { line: { id: 99 } });
   jest.mocked(useGraphQLQuery).mockReturnValue({
-    data: { lineStations: [a, other] },
+    data: { lineListStations: [a, unrelated] },
     loading: false,
     error: undefined,
   });
   rerender({});
   expect(result.current.selectableStations).toEqual([a]);
-  act(() => result.current.selectStation(other));
+  act(() => result.current.selectStation(unrelated));
   expect(store.get(stationAtom)).toBe(a);
 });
 
@@ -135,4 +144,12 @@ it('走行を終了した場合は一覧を空にし、補正しない', () => {
   expect(result.current.selectableStations).toEqual([]);
   act(() => result.current.selectStation(b));
   expect(store.get(stationAtom)).toBe(a);
+});
+
+it('種別で絞らないAPIへ直通経路の路線IDを重複なく渡す', () => {
+  setup();
+  expect(useGraphQLQuery).toHaveBeenLastCalledWith(GET_LINE_LIST_STATIONS, {
+    variables: { lineIds: [1, 2] },
+    skip: false,
+  });
 });
