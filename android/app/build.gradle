@@ -1,6 +1,7 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+apply plugin: "io.sentry.android.gradle"
 // Firebase Analytics 用。android/app/google-services.json（Git 管理外）を読む。
 // GitHub Actions は Canary / Production でシークレットを分けて復元する。EAS はファイル型環境変数
 // GOOGLE_SERVICES_JSON から置く（scripts/eas-restore-google-services.mjs）。
@@ -102,6 +103,29 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 apply from: new File(["node", "--print", "require('path').dirname(require.resolve('@sentry/react-native/package.json'))"].execute(null, rootDir).text.trim(), "sentry.gradle")
 
+sentry {
+    // JS ソースマップは上記の RN スクリプトが送信します。こちらは R8 と NDK 用です。
+    includeProguardMapping = true
+    autoUploadProguardMapping = shouldSentryAutoUpload()
+    uploadNativeSymbols = true
+    autoUploadNativeSymbols = shouldSentryAutoUpload()
+    includeNativeSources = false
+    ignoredBuildTypes = ["debug", "debugOptimized"]
+    ignoredFlavors = ["local"]
+
+    // React Native SDK が要求する sentry-android のバージョンを維持します。
+    autoInstallation {
+        enabled = false
+    }
+    // 今回は解析ファイルの送信だけを追加し、バイトコードの計装・最適化は行いません。
+    tracingInstrumentation {
+        enabled = false
+    }
+    runtimeOptimizations {
+        enabled = false
+    }
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -142,6 +166,10 @@ android {
         }
         release {
             signingConfig signingConfigs.release
+            // Google Play のネイティブクラッシュ解析用シンボルを AAB に同梱します。
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
@@ -170,12 +198,12 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.dev"
             versionNameSuffix "-dev"
-            versionCode 100000939
+            versionCode 100000941
             versionName "10.19.2"
         }
         prod {
             dimension "environment"
-            versionCode 100000939
+            versionCode 100000941
             versionName "10.19.2"
         }
         // ストア配信する dev (Canary) と applicationId を分けた、ローカル検証専用のフレーバー。
@@ -186,7 +214,7 @@ android {
             dimension "environment"
             applicationId "me.tinykitten.trainlcd.local"
             versionNameSuffix "-local"
-            versionCode 100000939
+            versionCode 100000941
             versionName "10.19.2"
         }
     }
