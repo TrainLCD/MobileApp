@@ -16,13 +16,16 @@ import {
 } from '~/store/atoms/station';
 import { createLine, createStation } from '~/utils/test/factories';
 import { useCurrentLine } from './useCurrentLine';
+import { useGraphQLQuery } from './useGraphQLQuery';
 import { useManualCurrentStation } from './useManualCurrentStation';
 
 jest.mock('./useCurrentLine', () => ({ useCurrentLine: jest.fn() }));
+jest.mock('./useGraphQLQuery', () => ({ useGraphQLQuery: jest.fn() }));
 const a = createStation(1);
 const b = createStation(2, { stopCondition: StopCondition.Not });
 const other = createStation(3, { line: { id: 2 } });
 const duplicateGroup = createStation(4, { groupId: a.groupId });
+const outsideRoute = createStation(5);
 const setup = () => {
   const store = createStore();
   store.set(stationsAtom, [a, b, other, duplicateGroup]);
@@ -32,6 +35,18 @@ const setup = () => {
   store.set(arrivedAtom, false);
   store.set(approachingAtom, true);
   jest.mocked(useCurrentLine).mockReturnValue(createLine(1));
+  jest.mocked(useGraphQLQuery).mockReturnValue({
+    data: {
+      lineStations: [
+        a,
+        { ...b, stopCondition: StopCondition.All },
+        duplicateGroup,
+        outsideRoute,
+      ],
+    },
+    loading: false,
+    error: undefined,
+  });
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>{children}</Provider>
   );
@@ -40,11 +55,12 @@ const setup = () => {
 
 afterEach(() => jest.clearAllMocks());
 
-it('現在路線の駅だけを返し、通過駅と同一groupIdの別駅を残す', () => {
+it('現在路線の全駅を返し、経路上の通過情報と同一groupIdの別駅を残す', () => {
   expect(setup().result.current.selectableStations).toEqual([
     a,
     b,
     duplicateGroup,
+    outsideRoute,
   ]);
 });
 
@@ -71,8 +87,45 @@ it('現在駅とヘッダーを補正し、種別・方向・行き先・走行�
 
 it('経路が変更されて一覧の駅がなくなった場合は補正しない', () => {
   const { store, result } = setup();
+  const selectStation = result.current.selectStation;
   act(() => store.set(stationsAtom, [other]));
-  act(() => result.current.selectStation(b));
+  act(() => selectStation(b));
+  expect(store.get(stationAtom)).toBe(a);
+});
+
+it('列車種別の経路にない駅も選べて運行経路を維持する', () => {
+  const { store, result } = setup();
+  const route = store.get(stationsAtom);
+  act(() => result.current.selectStation(outsideRoute));
+  expect(store.get(stationAtom)).toBe(outsideRoute);
+  expect(store.get(stationForHeaderAtom)).toBe(outsideRoute);
+  expect(store.get(stationsAtom)).toBe(route);
+  expect(store.get(manualStationCorrectionAtom)?.stations).toBe(route);
+  expect(store.get(selectedBoundAtom)).toBe(b);
+  expect(store.get(selectedDirectionAtom)).toBe('OUTBOUND');
+});
+
+it('全駅の取得中や取得失敗時にも既存経路の駅を選べる', () => {
+  const { result, rerender } = setup();
+  jest.mocked(useGraphQLQuery).mockReturnValue({
+    data: undefined,
+    loading: false,
+    error: new Error('offline'),
+  });
+  rerender({});
+  expect(result.current.selectableStations).toEqual([a, b, duplicateGroup]);
+});
+
+it('別路線の取得結果や一覧にない駅では補正しない', () => {
+  const { store, result, rerender } = setup();
+  jest.mocked(useGraphQLQuery).mockReturnValue({
+    data: { lineStations: [a, other] },
+    loading: false,
+    error: undefined,
+  });
+  rerender({});
+  expect(result.current.selectableStations).toEqual([a]);
+  act(() => result.current.selectStation(other));
   expect(store.get(stationAtom)).toBe(a);
 });
 
