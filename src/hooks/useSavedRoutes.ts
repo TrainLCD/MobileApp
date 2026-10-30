@@ -1,203 +1,47 @@
 import { randomUUID } from 'expo-crypto';
-import * as SQLite from 'expo-sqlite';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import {
-  type SavedRoute,
-  type SavedRouteInput,
-  type SavedRouteLeg,
-  SavedRouteLegSchema,
+  migrateSavedRoutes,
+  readSavedRoutes,
+  writeSavedRoutes,
+} from '~/lib/savedRoutesStorage';
+import type {
+  SavedRoute,
+  SavedRouteInput,
+  SavedRouteLeg,
 } from '~/models/SavedRoute';
-import navigationState, {
-  presetRoutesAtom,
-  presetsFetchedAtom,
-} from '~/store/atoms/navigation';
+import { presetRoutesAtom, presetsFetchedAtom } from '~/store/atoms/navigation';
 import { isSameSavedRouteLegs } from '~/utils/transferRoutePreset';
-
-// SQLiteの行データ型を定義
-interface SavedRouteRow {
-  id: string;
-  name: string;
-  lineId: number;
-  trainTypeId: number | null;
-  wantedDestinationId: number | null;
-  originStationId: number | null;
-  direction: string | null;
-  notifyStationIds: string | null; // JSON文字列として保存
-  legs: string | null; // 乗換のある経路の区間。JSON文字列として保存
-  hasTrainType: number; // SQLiteではBOOLEANが数値として保存される
-  createdAt: string; // SQLiteでは日時が文字列として保存される
-}
-
-const db = SQLite.openDatabaseSync('savedRoutes.db');
-
-const parseDirection = (
-  value: string | null
-): 'INBOUND' | 'OUTBOUND' | null => {
-  if (value === 'INBOUND' || value === 'OUTBOUND') return value;
-  return null;
-};
-
-const parseNotifyStationIds = (value: string | null): number[] => {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter(Number.isFinite) : [];
-  } catch {
-    return [];
-  }
-};
-
-const LegsSchema = SavedRouteLegSchema.array().min(2);
-
-// 乗換のない経路は undefined、壊れた値は null
-const parseLegs = (
-  value: string | null
-): SavedRouteLeg[] | null | undefined => {
-  if (!value) return undefined;
-  try {
-    const parsed = LegsSchema.safeParse(JSON.parse(value));
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
-};
-
-// SQLiteの行データを SavedRoute に変換（不正データは null を返す）
-const convertRowToSavedRoute = (row: SavedRouteRow): SavedRoute | null => {
-  const hasTrainType = Boolean(row.hasTrainType);
-  const direction = parseDirection(row.direction);
-  const notifyStationIds = parseNotifyStationIds(row.notifyStationIds);
-  const legs = parseLegs(row.legs ?? null);
-
-  if (hasTrainType) {
-    // 破損データは読み飛ばす。区間を読めない乗換経路を最初の区間だけの経路として開かない
-    if (row.trainTypeId === null || legs === null) {
-      return null;
-    }
-    return {
-      id: row.id,
-      name: row.name,
-      lineId: row.lineId,
-      trainTypeId: row.trainTypeId,
-      wantedDestinationId: row.wantedDestinationId ?? null,
-      originStationId: row.originStationId ?? null,
-      direction,
-      notifyStationIds,
-      ...(legs ? { legs } : {}),
-      hasTrainType: true,
-      createdAt: new Date(row.createdAt),
-    };
-  }
-  return {
-    id: row.id,
-    name: row.name,
-    lineId: row.lineId,
-    trainTypeId: null,
-    wantedDestinationId: row.wantedDestinationId ?? null,
-    originStationId: row.originStationId ?? null,
-    direction,
-    notifyStationIds,
-    hasTrainType: false,
-    createdAt: new Date(row.createdAt),
-  };
-};
-
-// モジュールスコープで初期化 Promise を保持し、並行実行を防ぐ
-let initPromise: Promise<void> | null = null;
-
-const initDb = async (): Promise<void> => {
-  await db.execAsync(
-    `CREATE TABLE IF NOT EXISTS saved_routes (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    lineId INTEGER NOT NULL,
-    trainTypeId INTEGER,
-    wantedDestinationId INTEGER,
-    originStationId INTEGER,
-    direction TEXT,
-    notifyStationIds TEXT,
-    legs TEXT,
-    hasTrainType INTEGER NOT NULL CHECK (hasTrainType IN (0,1)),
-    createdAt TEXT NOT NULL,
-    CHECK ((hasTrainType = 1 AND trainTypeId IS NOT NULL) OR (hasTrainType = 0 AND trainTypeId IS NULL))
-  );`
-  );
-  // よく使う検索条件に合わせて索引を付与
-  await db.execAsync(
-    'CREATE INDEX IF NOT EXISTS idx_saved_routes_createdAt ON saved_routes(createdAt DESC);'
-  );
-  await db.execAsync(
-    'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has ON saved_routes(lineId, hasTrainType, createdAt DESC);'
-  );
-  await db.execAsync(
-    'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has ON saved_routes(trainTypeId, hasTrainType, createdAt DESC);'
-  );
-  // 既存テーブルにカラムを追加（存在しない場合のみ）
-  const columns = (await db.getAllAsync(
-    "PRAGMA table_info('saved_routes')"
-  )) as { name: string }[];
-  const columnNames = new Set(columns.map((c) => c.name));
-  if (!columnNames.has('wantedDestinationId')) {
-    await db.execAsync(
-      'ALTER TABLE saved_routes ADD COLUMN wantedDestinationId INTEGER;'
-    );
-  }
-  if (!columnNames.has('originStationId')) {
-    await db.execAsync(
-      'ALTER TABLE saved_routes ADD COLUMN originStationId INTEGER;'
-    );
-  }
-  if (!columnNames.has('direction')) {
-    await db.execAsync('ALTER TABLE saved_routes ADD COLUMN direction TEXT;');
-  }
-  if (!columnNames.has('notifyStationIds')) {
-    await db.execAsync(
-      'ALTER TABLE saved_routes ADD COLUMN notifyStationIds TEXT;'
-    );
-  }
-  if (!columnNames.has('legs')) {
-    await db.execAsync('ALTER TABLE saved_routes ADD COLUMN legs TEXT;');
-  }
-};
-
-const ensureDbInitialized = (): Promise<void> => {
-  if (!initPromise) {
-    initPromise = initDb().catch((err) => {
-      initPromise = null;
-      throw err;
-    });
-  }
-  return initPromise;
-};
 
 export const useSavedRoutes = () => {
   const routes = useAtomValue(presetRoutesAtom);
   const isInitialized = useAtomValue(presetsFetchedAtom);
-  const setNavigationAtom = useSetAtom(navigationState);
-
-  useEffect(() => {
-    ensureDbInitialized()
-      .then(() => {
-        setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
-      })
-      .catch((err) => {
-        console.error('useSavedRoutes: DB初期化に失敗しました', err);
-        setNavigationAtom((prev) => ({ ...prev, presetsFetched: true }));
-      });
-  }, [setNavigationAtom]);
+  const store = useStore();
 
   const updateRoutes = useCallback(async (): Promise<void> => {
-    const rows = (await db.getAllAsync(
-      'SELECT * FROM saved_routes ORDER BY createdAt DESC'
-    )) as SavedRouteRow[];
+    if (store.get(presetsFetchedAtom)) return;
+    let saved = readSavedRoutes();
+    if (saved === null) {
+      await migrateSavedRoutes();
+      // 別の呼び出しが初期化・保存を済ませていれば古い読み取りで上書きしない。
+      if (store.get(presetsFetchedAtom)) return;
+      saved = readSavedRoutes();
+    }
+    if (saved === null)
+      throw new Error('Saved routes migration did not complete');
+    store.set(presetRoutesAtom, saved);
+    store.set(presetsFetchedAtom, true);
+  }, [store]);
 
-    const presetRoutes = rows
-      .map(convertRowToSavedRoute)
-      .filter((r): r is SavedRoute => r !== null);
-
-    setNavigationAtom((prev) => ({ ...prev, presetRoutes }));
-  }, [setNavigationAtom]);
+  useEffect(() => {
+    updateRoutes().catch((error) => {
+      console.error(
+        'useSavedRoutes: プリセットの読み込みに失敗しました',
+        error
+      );
+    });
+  }, [updateRoutes]);
 
   const find = useCallback(
     ({
@@ -256,57 +100,30 @@ export const useSavedRoutes = () => {
 
   const save = useCallback(
     async (route: SavedRouteInput): Promise<SavedRoute> => {
-      const normalizedTrainTypeId = route.hasTrainType
-        ? (route as SavedRoute).trainTypeId
-        : null;
+      await updateRoutes();
       const newRoute = {
         ...route,
-        trainTypeId: normalizedTrainTypeId,
+        trainTypeId: route.hasTrainType ? route.trainTypeId : null,
         id: randomUUID(),
         createdAt: new Date(),
       } as SavedRoute;
-
-      await db.runAsync(
-        `INSERT INTO saved_routes
-         (id, name, lineId, trainTypeId, wantedDestinationId, originStationId, direction, notifyStationIds, legs, hasTrainType, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          newRoute.id,
-          newRoute.name,
-          newRoute.lineId,
-          newRoute.trainTypeId ?? null,
-          newRoute.wantedDestinationId ?? null,
-          newRoute.originStationId ?? null,
-          newRoute.direction ?? null,
-          newRoute.notifyStationIds.length
-            ? JSON.stringify(newRoute.notifyStationIds)
-            : null,
-          newRoute.hasTrainType && newRoute.legs
-            ? JSON.stringify(newRoute.legs)
-            : null,
-          newRoute.hasTrainType ? 1 : 0,
-          newRoute.createdAt.toISOString(),
-        ]
-      );
-
-      setNavigationAtom((prev) => ({
-        ...prev,
-        presetRoutes: [newRoute, ...prev.presetRoutes],
-      }));
+      const next = [newRoute, ...store.get(presetRoutesAtom)];
+      // 永続化が成功してから画面・ウィジェットへ通知する。
+      writeSavedRoutes(next);
+      store.set(presetRoutesAtom, next);
       return newRoute;
     },
-    [setNavigationAtom]
+    [store, updateRoutes]
   );
 
   const remove = useCallback(
     async (id: string): Promise<void> => {
-      await db.runAsync('DELETE FROM saved_routes WHERE id = ?', [id]);
-      setNavigationAtom((prev) => ({
-        ...prev,
-        presetRoutes: prev.presetRoutes.filter((r) => r.id !== id),
-      }));
+      await updateRoutes();
+      const next = store.get(presetRoutesAtom).filter((r) => r.id !== id);
+      writeSavedRoutes(next);
+      store.set(presetRoutesAtom, next);
     },
-    [setNavigationAtom]
+    [store, updateRoutes]
   );
 
   return { isInitialized, routes, updateRoutes, find, save, remove };
