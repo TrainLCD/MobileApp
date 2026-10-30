@@ -1,6 +1,7 @@
 # 状態管理ガイドライン (Jotai)
 
-このアプリの状態管理は Jotai に統一されている。
+画面や走行中の状態管理には Jotai を使用します。
+駅検索モーダルの近くの駅一覧には TanStack DB を使用します。
 atom の定義は `src/store/atoms/` 配下にある。
 
 ## フィールド単位 atom と互換ファサード
@@ -133,3 +134,17 @@ useAtomValue.mockImplementation((a: unknown) => {
 `createStore()` を使う実 store でのテストは、ファサード
 (`store.set(stationState, ...)`) とフィールド atom のどちらで状態を
 準備しても同じ結果になる。
+
+## TanStack DB の導入範囲
+
+`useNearbyStations` は駅検索モーダルの近くの駅一覧を Query Collection に取り込み、
+`useLiveQuery` で購読します。初回導入はこの読み取り経路に限定しています。
+
+- 通信とエラー状態は TanStack Query が管理します。既存の GraphQL キーと応答形式を共有します。
+- DB 側では自動取得を無効にし、モーダルが表示されていて座標があるときだけ Query から取得します。
+- 応答内の順位をキーにして距離順を保持します。同じ駅 ID の行も取り込みます。表示側の重複排除は従来どおりです。
+- DB の購読終了後はコレクションを解放します。Query のキャッシュ寿命は変更しません。
+- コレクション ID を明示し、Web Crypto のない環境でも読み取り時に UUID の生成を要求しません。
+
+Jotai の走行状態、SQLite のプリセット保存、駅名検索、ほかの GraphQL クエリは従来の構成を使います。
+端末内の永続化やオフライン同期は、この導入には含みません。
