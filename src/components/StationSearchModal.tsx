@@ -5,20 +5,14 @@ import uniqBy from 'lodash/uniqBy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type {
-  GetStationsNearbyQueryVariables,
-  Station,
-} from '~/@types/graphql';
+import type { Station } from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
 import { useAIAgentFeatureEnabled } from '~/hooks/useAIAgentFeatureEnabled';
 import { useFetchCurrentLocationOnce } from '~/hooks/useFetchCurrentLocationOnce';
-import { useGraphQLQuery } from '~/hooks/useGraphQLQuery';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
-import {
-  GET_STATIONS_BY_NAME,
-  GET_STATIONS_NEARBY,
-} from '~/lib/graphql/queries';
+import { useNearbyStations } from '~/hooks/useNearbyStations';
+import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { locationAtom } from '~/store/atoms/location';
 import { stationAtom } from '~/store/atoms/station';
@@ -37,10 +31,6 @@ import { EmptyResult } from './EmptyResult';
 import { Heading } from './Heading';
 import { SearchBar } from './SearchBar';
 import Typography from './Typography';
-
-type GetStationsNearbyData = {
-  stationsNearby: Station[];
-};
 
 type GetStationsByNameData = {
   stationsByName: Station[];
@@ -165,14 +155,7 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
     data: stationsNearbyData,
     loading: fetchStationsNearbyLoading,
     error: fetchStationsNearbyError,
-  } = useGraphQLQuery<GetStationsNearbyData>(GET_STATIONS_NEARBY, {
-    skip: !visible || latitude == null || longitude == null,
-    variables: {
-      latitude: latitude as number,
-      longitude: longitude as number,
-      limit: 10,
-    } as GetStationsNearbyQueryVariables,
-  });
+  } = useNearbyStations({ latitude, longitude, visible });
 
   const [
     fetchStationsByName,

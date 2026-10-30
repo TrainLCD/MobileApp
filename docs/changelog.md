@@ -6,6 +6,15 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-10-30 — 近くの駅一覧に TanStack DB を試験導入
+
+- `@tanstack/react-db` 0.5.12 と `@tanstack/query-db-collection` 1.4.8 を追加しました。両者が使用する `@tanstack/db` は 0.15.2 です。
+- 駅検索モーダルの近くの駅一覧を Query Collection とライブクエリに接続しました。通信には既存の TanStack Query と GraphQL を使います。
+- 距離順、重複行、座標変更、再表示、通信失敗からの復旧、キャッシュ更新、Web Crypto がない環境を回帰テストで確認しました。
+- `npm run lint` と `npm run typecheck` は成功しました。`npm test -- --runInBand` は342スイート・4,117テストが成功しました。
+- `npx expo export --platform ios --platform android --max-workers 2` で両プラットフォームの Hermes バンドルを生成しました。実機での動作確認は行っていません。
+- `npx expo-doctor` は19項目中17項目が成功しました。既存の `react-native-edge-to-edge` と `audio-focus` のメタデータ、およびExpo関連22パッケージのパッチ版不一致が指摘されました。これらの依存バージョンは変更していません。
+
 ## 2026-10-30 — iOSアーカイブの循環依存を修正
 
 - CanaryとProdのSentryデバッグシンボル送信を、App ClipとPodsの組み込み処理より後へ移動しました。
