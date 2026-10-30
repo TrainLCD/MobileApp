@@ -1,4 +1,10 @@
 import { readLegacySavedRoutes } from './legacySavedRoutes';
+import {
+  migrateSavedRoutes,
+  readSavedRoutes,
+  SAVED_ROUTES_KEY,
+} from './savedRoutesStorage';
+import { storage } from './storage';
 
 const mockDb = {
   getAllAsync: jest.fn(),
@@ -33,13 +39,53 @@ const legs = [
 ];
 
 beforeEach(() => {
+  storage.remove(SAVED_ROUTES_KEY);
   mockOpen.mockResolvedValue(mockDb);
   mockDb.closeAsync.mockResolvedValue(undefined);
   mockDb.getAllAsync.mockReset().mockResolvedValueOnce([{ name: 'id' }]);
 });
 afterEach(() => {
+  storage.remove(SAVED_ROUTES_KEY);
   jest.clearAllMocks();
 });
+
+it.each([
+  ['不正なID', { id: 'invalid' }],
+  ['負の路線ID', { lineId: -1 }],
+  ['小数の路線ID', { lineId: 1.5 }],
+  ['不正な作成日', { createdAt: 'not-a-date' }],
+  ['負の通知駅ID', { notifyStationIds: '[-1,7]' }],
+  ['小数の通知駅ID', { notifyStationIds: '[1.5,7]' }],
+])(
+  '%sの行が混在しても正常なプリセットを順序を保ってMMKVへ移行する',
+  async (_label, invalid) => {
+    const last = {
+      ...row,
+      id: '550e8400-e29b-41d4-a716-446655440001',
+      hasTrainType: 0,
+    };
+    mockDb.getAllAsync.mockResolvedValueOnce([
+      row,
+      { ...row, ...invalid },
+      last,
+    ]);
+
+    await migrateSavedRoutes();
+
+    const routes = readSavedRoutes();
+    expect(routes?.map((route) => route.id)).toEqual([row.id, last.id]);
+    expect(routes?.[0]).toMatchObject({
+      name: row.name,
+      lineId: row.lineId,
+      createdAt: new Date(row.createdAt),
+    });
+    expect(routes?.[1]).toMatchObject({
+      hasTrainType: false,
+      trainTypeId: null,
+    });
+    expect(mockDb.closeAsync).toHaveBeenCalledTimes(1);
+  }
+);
 
 it('旧版の列が欠けていても既定値を補い、IDと作成日を維持する', async () => {
   mockDb.getAllAsync.mockResolvedValueOnce([row]);

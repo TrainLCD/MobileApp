@@ -2,6 +2,7 @@ import {
   type SavedRoute,
   type SavedRouteLeg,
   SavedRouteLegSchema,
+  SavedRouteSchema,
 } from '~/models/SavedRoute';
 
 // SQLiteの行データ型を定義
@@ -101,9 +102,15 @@ export const readLegacySavedRoutes = async (): Promise<SavedRoute[]> => {
     const rows = await db.getAllAsync<SavedRouteRow>(
       'SELECT * FROM saved_routes ORDER BY createdAt DESC'
     );
-    return rows
-      .map(convertRowToSavedRoute)
-      .filter((r): r is SavedRoute => r !== null);
+    return (
+      rows
+        .map(convertRowToSavedRoute)
+        // 不正な行が正常なプリセットの移行まで妨げないよう、行ごとに検証する。
+        .filter(
+          (r): r is SavedRoute =>
+            r !== null && SavedRouteSchema.safeParse(r).success
+        )
+    );
   } finally {
     await db.closeAsync();
   }
