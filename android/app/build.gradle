@@ -142,6 +142,10 @@ android {
         }
         release {
             signingConfig signingConfigs.release
+            // Google Play のネイティブクラッシュ解析用シンボルを AAB に同梱します。
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds

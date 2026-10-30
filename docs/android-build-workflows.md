@@ -151,6 +151,21 @@ each upload step passes its own module's `mapping.txt`. Keep the `mappingFile`
 path aligned with the module of that step — a mismatched mapping silently
 corrupts crash deobfuscation for the affected bundle.
 
+## Native debug symbols
+
+The handheld app sets `buildTypes.release.ndk.debugSymbolLevel` to `FULL`.
+This applies to both `devRelease` and `prodRelease`, including EAS builds.
+Gradle includes the available native debug symbols in the AAB for Google Play
+to use when symbolicating native crashes. These symbols are separate from
+R8's `mapping.txt` and JavaScript source maps.
+
+After a dry-run, inspect the handheld AAB with `unzip -l` and confirm that it
+contains entries under `BUNDLE-METADATA/com.android.tools.build.debugsymbols/`.
+Dependencies that already strip their debug information cannot supply it through
+this setting. Use Gradle's `--info` output to identify those libraries.
+
+See [Include native symbols in your release build](https://developer.android.com/build/include-native-symbols).
+
 ## Build memory
 
 A release build compiles Kotlin for every native module under `node_modules`
