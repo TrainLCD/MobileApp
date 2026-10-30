@@ -166,6 +166,54 @@ this setting. Use Gradle's `--info` output to identify those libraries.
 
 See [Include native symbols in your release build](https://developer.android.com/build/include-native-symbols).
 
+## Sentry native crash symbolication
+
+The handheld app applies Sentry Android Gradle Plugin 6.25.0 to upload the
+R8 mapping and unstripped native libraries from `merged_native_libs` for
+`devRelease` and `prodRelease`. The plugin also packages the ProGuard UUID used
+to match crash reports to the uploaded mapping. The existing React Native
+`sentry.gradle` integration continues to upload JavaScript source maps.
+
+The plugin reads the existing `android/sentry.properties` restored by the
+Canary and Production workflows. Local and EAS release builds must provide the
+same Sentry configuration through `sentry.properties` or the CLI environment
+variables (`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`). Do not commit
+credentials.
+
+Debug build types and the `local` flavor are excluded from the Android plugin.
+SDK auto-installation, tracing instrumentation, and runtime optimizations are
+disabled so that the React Native SDK keeps its existing Android SDK dependency
+and instrumentation. Native source-code upload is also disabled.
+
+`SENTRY_DISABLE_AUTO_UPLOAD=true` disables automatic uploads for both the
+existing JS integration and the Android plugin. With
+`SENTRY_DISABLE_NATIVE_DEBUG_UPLOAD=true`, only the Android plugin's native
+symbols and R8 mapping uploads are disabled; JS source maps still upload.
+The Android plugin retains its mapping UUID generation and runs its CLI upload
+tasks in no-upload mode when these flags disable uploads.
+
+### Verification
+
+1. Run the Canary and Production workflows on the topic branch with
+   `upload_to_play=false`. Leave both Sentry disable variables unset.
+2. Confirm that `uploadSentryProguardMappingsDevRelease` and
+   `uploadSentryNativeSymbolsForDevRelease` succeed, along with the existing
+   `createBundleDevReleaseJsAndAssets_SentryUpload_*` task. Check the equivalent
+   `ProdRelease` tasks in the Production build.
+3. Confirm that Sentry contains the build's ProGuard mapping and native debug
+   files. Libraries distributed without debug information cannot supply it
+   through this integration.
+4. On a test device with a release build, trigger a controlled Java/Kotlin crash
+   and a native crash, then restart the app to send pending crash reports.
+   Confirm that Sentry restores the Java/Kotlin frames with the matching
+   ProGuard UUID and native frames with matching debug IDs. Use a temporary
+   test-only build for these triggers; do not add crash controls to the store app.
+
+References:
+
+- [Sentry React Native Android setup](https://docs.sentry.io/platforms/react-native/manual-setup/manual-setup/#android)
+- [Sentry Android Gradle Plugin 6.25.0](https://github.com/getsentry/sentry-android-gradle-plugin/releases/tag/6.25.0)
+
 ## Build memory
 
 A release build compiles Kotlin for every native module under `node_modules`
