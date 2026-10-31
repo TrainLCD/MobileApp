@@ -10,7 +10,6 @@ import {
   GET_STATION_TRAIN_TYPES_LIGHT,
 } from '~/lib/graphql/queries';
 import { selectedLineAtom } from '~/store/atoms/line';
-import { locationAtom } from '~/store/atoms/location';
 import {
   selectedBoundAtom,
   selectedDirectionAtom,
@@ -19,7 +18,6 @@ import {
 } from '~/store/atoms/station';
 import { createLine, createStation } from '~/utils/test/factories';
 import { useCurrentLine } from './useCurrentLine';
-import { useCurrentStation } from './useCurrentStation';
 import { useManualCurrentStation } from './useManualCurrentStation';
 
 jest.mock('~/lib/gql', () => ({
@@ -160,95 +158,3 @@ it('渋谷で東横線の種別を選んでも副都心線・西武・東武・�
   unmount();
   client.clear();
 });
-
-it.each(['INBOUND', 'OUTBOUND'] as const)(
-  '%s: 経路に東横線側の渋谷だけがあっても副都心線側の手動指定を維持する',
-  async (direction) => {
-    const toyoko = createStation(201, { groupId: 100, line: { id: 2 } });
-    const fukutoshin = createStation(101, { groupId: 100, line: { id: 1 } });
-    const bound = createStation(202, { line: { id: 2 } });
-    const route = [toyoko, bound];
-    const store = createStore();
-    store.set(selectedLineAtom, createLine(2));
-    store.set(stationsAtom, route);
-    store.set(stationAtom, toyoko);
-    store.set(selectedDirectionAtom, direction);
-    store.set(selectedBoundAtom, bound);
-    (gqlRequest as jest.Mock).mockImplementation(async (document) => {
-      if (document === GET_STATION_TRAIN_TYPES_LIGHT) {
-        return {
-          stationTrainTypes: [{ lines: [createLine(1), createLine(2)] }],
-        };
-      }
-      return { lineListStations: [toyoko, fukutoshin, bound] };
-    });
-    const client = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false, gcTime: Number.POSITIVE_INFINITY },
-      },
-    });
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={client}>
-        <Provider store={store}>{children}</Provider>
-      </QueryClientProvider>
-    );
-    const { result, unmount } = renderHook(
-      () => ({
-        ...useManualCurrentStation(),
-        currentStation: useCurrentStation(),
-        currentLine: useCurrentLine(),
-      }),
-      { wrapper }
-    );
-    await waitFor(() =>
-      expect(result.current.selectableStations).toContain(fukutoshin)
-    );
-    // 自動判定で同じグループの駅が来た場合は、従来の経路上の駅への解決を維持する。
-    act(() => store.set(stationAtom, fukutoshin));
-    expect(result.current.currentStation).toBe(toyoko);
-    act(() => store.set(stationAtom, toyoko));
-    act(() => result.current.selectStation(fukutoshin));
-    expect(store.get(stationAtom)).toBe(fukutoshin);
-    expect(result.current.currentStation).toBe(fukutoshin);
-    expect(result.current.currentLine?.id).toBe(1);
-    expect(store.get(stationsAtom)).toBe(route);
-    await waitFor(() =>
-      expect(gqlRequest).toHaveBeenCalledWith(GET_STATION_TRAIN_TYPES_LIGHT, {
-        stationId: 101,
-      })
-    );
-
-    act(() =>
-      store.set(locationAtom, {
-        timestamp: 1,
-        coords: {
-          latitude: 35,
-          longitude: 139,
-          altitude: null,
-          accuracy: 1,
-          heading: null,
-          speed: null,
-          altitudeAccuracy: null,
-        },
-      })
-    );
-    expect(result.current.currentStation).toBe(toyoko);
-    expect(result.current.currentLine?.id).toBe(2);
-
-    act(() => result.current.selectStation(fukutoshin));
-    expect(result.current.currentStation).toBe(fukutoshin);
-    act(() => store.set(stationsAtom, [...route]));
-    expect(result.current.currentStation).toBe(toyoko);
-    expect(result.current.currentLine?.id).toBe(2);
-
-    await waitFor(() =>
-      expect(result.current.selectableStations).toContain(fukutoshin)
-    );
-    act(() => result.current.selectStation(fukutoshin));
-    act(() => store.set(stationAtom, bound));
-    expect(result.current.currentStation).toBe(bound);
-    expect(result.current.currentLine?.id).toBe(2);
-    unmount();
-    client.clear();
-  }
-);

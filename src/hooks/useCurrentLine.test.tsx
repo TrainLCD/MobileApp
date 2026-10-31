@@ -2,7 +2,6 @@ import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
-import { manualOutsideRouteStationAtom } from '~/store/atoms/manualStationCorrection';
 import { createLine, createStation } from '~/utils/test/factories';
 import { selectedLineAtom } from '../store/atoms/line';
 import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
@@ -53,7 +52,6 @@ describe('useCurrentLine', () => {
       if (atom === stationsAtom) return [station1, station2];
       if (atom === selectedDirectionAtom) return 'INBOUND';
       if (atom === selectedLineAtom) return lineA;
-      if (atom === manualOutsideRouteStationAtom) return null;
       throw new Error('unknown atom');
     });
 
@@ -77,7 +75,6 @@ describe('useCurrentLine', () => {
       if (atom === stationsAtom) return [station1];
       if (atom === selectedDirectionAtom) return 'INBOUND';
       if (atom === selectedLineAtom) return null;
-      if (atom === manualOutsideRouteStationAtom) return null;
       throw new Error('unknown atom');
     });
 
@@ -94,7 +91,6 @@ describe('useCurrentLine', () => {
       if (atom === stationsAtom) return [];
       if (atom === selectedDirectionAtom) return 'INBOUND';
       if (atom === selectedLineAtom) return lineA;
-      if (atom === manualOutsideRouteStationAtom) return null;
       throw new Error('unknown atom');
     });
 
@@ -121,7 +117,6 @@ describe('useCurrentLine', () => {
       if (atom === stationsAtom) return [station1, station2];
       if (atom === selectedDirectionAtom) return 'INBOUND';
       if (atom === selectedLineAtom) return lineB;
-      if (atom === manualOutsideRouteStationAtom) return null;
       throw new Error('unknown atom');
     });
 
@@ -151,7 +146,6 @@ describe('useCurrentLine', () => {
       if (atom === stationsAtom) return [station1, station2];
       if (atom === selectedDirectionAtom) return 'OUTBOUND';
       if (atom === selectedLineAtom) return lineA;
-      if (atom === manualOutsideRouteStationAtom) return null;
       throw new Error('unknown atom');
     });
 
