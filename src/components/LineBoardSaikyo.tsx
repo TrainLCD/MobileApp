@@ -28,6 +28,7 @@ import {
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   commonLineBoardStyles,
   STATION_NAME_CONTAINER_BOTTOM,
@@ -73,6 +74,7 @@ interface StationNameCellProps {
   arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
+  boardPaddingBottom?: number;
   isE131: boolean;
 }
 
@@ -224,6 +226,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
+  boardPaddingBottom,
   isE131,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
@@ -309,7 +312,9 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           {
             marginLeft: widthScale(14),
             bottom: isTablet
-              ? dim.height / 3.5 + (STATION_NAME_CONTAINER_BOTTOM ?? 0) - 52
+              ? (boardPaddingBottom ?? 0) +
+                (STATION_NAME_CONTAINER_BOTTOM ?? 0) -
+                52
               : 32,
           },
         ]}
@@ -338,6 +343,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
   // E131系の車内表示器にはETAが無いため、E131系風ではクエリごと実行しない
   const { route: estimatedRoute } = useEstimateArrivalTimes({
     skip: isE131,
@@ -359,6 +365,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
       return (
         <React.Fragment key={s.id}>
           <StationNameCell
+            boardPaddingBottom={boardPaddingBottom}
             station={s}
             stations={stations}
             index={i}
@@ -375,6 +382,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
       );
     },
     [
+      boardPaddingBottom,
       hasTerminus,
       line,
       lineColors,
@@ -396,10 +404,12 @@ const LineBoardSaikyo: React.FC<Props> = ({
 
   return (
     <View
+      testID="line-board-saikyo"
+      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
-          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+          paddingBottom: boardPaddingBottom,
         },
       ]}
     >
