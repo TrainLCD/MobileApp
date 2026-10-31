@@ -34,6 +34,7 @@ import {
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   STATION_NAME_CONTAINER_BOTTOM,
   commonLineBoardStyles as styles,
@@ -120,6 +121,7 @@ interface StationNameCellProps {
   chevronColors: readonly [ChevronColor, ChevronColor];
   isOdakyu?: boolean;
   estimatedMinutes?: number | null;
+  boardPaddingBottom?: number;
 }
 
 // Helper for bar gradients
@@ -332,6 +334,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   chevronColors,
   isOdakyu,
   estimatedMinutes,
+  boardPaddingBottom,
 }: StationNameCellProps) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
@@ -477,7 +480,9 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           additionalChevronStyle,
           {
             bottom: isTablet
-              ? dim.height / 3.5 + (STATION_NAME_CONTAINER_BOTTOM ?? 0) - 52
+              ? (boardPaddingBottom ?? 0) +
+                (STATION_NAME_CONTAINER_BOTTOM ?? 0) -
+                52
               : 32,
             marginLeft: widthScale(14),
           },
@@ -523,6 +528,8 @@ const LineBoardEast: React.FC<Props> = ({
     useEstimatedMinutesByStationId(estimatedRoute);
 
   const dim = useLandscapeWindowDimensions();
+
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -590,6 +597,7 @@ const LineBoardEast: React.FC<Props> = ({
             arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
             chevronColors={chevronColors}
+            boardPaddingBottom={boardPaddingBottom}
             isOdakyu={isOdakyu}
             estimatedMinutes={
               s.id != null ? estimatedMinutesByStationId.get(s.id) : null
@@ -600,6 +608,7 @@ const LineBoardEast: React.FC<Props> = ({
     },
     [
       chevronColors,
+      boardPaddingBottom,
       hasTerminus,
       line,
       lineColors,
@@ -612,10 +621,12 @@ const LineBoardEast: React.FC<Props> = ({
 
   return (
     <View
+      testID="line-board-east"
+      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
-          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+          paddingBottom: boardPaddingBottom,
         },
       ]}
     >

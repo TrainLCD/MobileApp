@@ -29,6 +29,7 @@ import {
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 import {
   getLineColorBarSegments,
@@ -78,6 +79,7 @@ interface StationNameCellProps {
   arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
+  boardPaddingBottom?: number;
 }
 
 // Helper: Determine if the bar should be split at current station
@@ -281,6 +283,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
+  boardPaddingBottom,
 }: StationNameCellProps) => {
   const dim = useLandscapeWindowDimensions();
   const {
@@ -406,7 +409,9 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           additionalChevronStyle,
           {
             bottom: isTablet
-              ? dim.height / 3.5 + (JR_KYUSHU_CONTAINER_BOTTOM ?? 0) - 52
+              ? (boardPaddingBottom ?? 0) +
+                (JR_KYUSHU_CONTAINER_BOTTOM ?? 0) -
+                52
               : 32,
             marginLeft: widthScale(14),
           },
@@ -433,6 +438,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
   const padCount = Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
   const { route: estimatedRoute } = useEstimateArrivalTimes();
@@ -466,6 +472,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       return (
         <React.Fragment key={s.id}>
           <StationNameCell
+            boardPaddingBottom={boardPaddingBottom}
             station={s}
             stations={stations}
             index={i}
@@ -481,6 +488,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       );
     },
     [
+      boardPaddingBottom,
       hasTerminus,
       line,
       lineColors,
@@ -502,10 +510,12 @@ const LineBoardJRKyushu: React.FC<Props> = ({
 
   return (
     <View
+      testID="line-board-jrkyushu"
+      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
-          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+          paddingBottom: boardPaddingBottom,
         },
       ]}
     >
