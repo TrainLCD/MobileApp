@@ -27,6 +27,7 @@ import {
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   commonLineBoardStyles,
   STATION_NAME_CONTAINER_BOTTOM,
@@ -172,6 +173,7 @@ interface StationNameCellProps {
   arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
+  boardPaddingBottom?: number;
 }
 
 const StationNameCell: React.FC<StationNameCellProps> = ({
@@ -183,6 +185,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
+  boardPaddingBottom,
 }: StationNameCellProps) => {
   const isEn = useAtomValue(isEnAtom);
   const dim = useLandscapeWindowDimensions();
@@ -346,7 +349,9 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           {
             marginLeft: widthScale(14),
             bottom: isTablet
-              ? dim.height / 3.5 + (STATION_NAME_CONTAINER_BOTTOM ?? 0) - 52
+              ? (boardPaddingBottom ?? 0) +
+                (STATION_NAME_CONTAINER_BOTTOM ?? 0) -
+                52
               : 32,
           },
         ]}
@@ -366,6 +371,7 @@ const LineBoardE231: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
   const { route: estimatedRoute } = useEstimateArrivalTimes();
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
@@ -384,6 +390,7 @@ const LineBoardE231: React.FC<Props> = ({
       return (
         <React.Fragment key={s.id}>
           <StationNameCell
+            boardPaddingBottom={boardPaddingBottom}
             station={s}
             stations={stations}
             index={i}
@@ -399,6 +406,7 @@ const LineBoardE231: React.FC<Props> = ({
       );
     },
     [
+      boardPaddingBottom,
       arrivingLineColor,
       hasTerminus,
       line,
@@ -419,11 +427,13 @@ const LineBoardE231: React.FC<Props> = ({
 
   return (
     <View
+      testID="line-board-e231"
+      onLayout={onBoardLayout}
       style={[
         commonLineBoardStyles.root,
         localStyles.root,
         {
-          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+          paddingBottom: boardPaddingBottom,
         },
       ]}
     >

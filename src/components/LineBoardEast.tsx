@@ -1,12 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo, useState } from 'react';
-import {
-  type LayoutChangeEvent,
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -39,6 +34,7 @@ import {
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   STATION_NAME_CONTAINER_BOTTOM,
   commonLineBoardStyles as styles,
@@ -533,17 +529,7 @@ const LineBoardEast: React.FC<Props> = ({
 
   const dim = useLandscapeWindowDimensions();
 
-  const fitBelowHeader = isOdakyu && isTablet && Platform.OS === 'android';
-  const [boardHeight, setBoardHeight] = useState<number>();
-  const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    setBoardHeight(event.nativeEvent.layout.height);
-  }, []);
-  // 小田急風は駅番号の分だけ駅名が高くなる。画面全体から下余白を取ると
-  // Androidタブレットで5文字の駅名もヘッダーに入り込むため、ヘッダーを
-  // 除いた実測の高さを使う。セルと矢印には同じ余白を渡して位置を揃える。
-  const boardPaddingBottom = isTablet
-    ? (fitBelowHeader ? (boardHeight ?? 0) : dim.height) / 3.5
-    : undefined;
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -636,7 +622,7 @@ const LineBoardEast: React.FC<Props> = ({
   return (
     <View
       testID="line-board-east"
-      onLayout={fitBelowHeader ? handleLayout : undefined}
+      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
