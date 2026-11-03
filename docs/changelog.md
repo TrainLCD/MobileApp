@@ -6,6 +6,17 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+
+## 2026-11-03 — iOS 16対応を維持して振り返りの地図をexpo-mapsへ移行
+
+- iOS 17以降とAndroidでは `expo-maps` 58.0.11を使います。iOS 16では従来の `react-native-maps` の実装を使います。最低対応版のiOS 16.4は変更していません。
+- #7145の経路線・駅の点・駅名表示と、#7253のズーム時の円の更新単位を引き継ぎます。iOS 16の実装は別コンポーネントに保存しました。
+- expo-mapsでは地図の外側に見出しと凡例の高さを確保します。Androidの駅名は画像化してマーカーに渡します。iOSの全画面地図はApple Maps標準の操作を使います。Androidのカードは操作を禁止し、旧実装のliteModeは使いません。
+- iOS 16.4・16.7・16.7.12の分岐、期間変更、Androidのカメラ、余白、空データをテストしています。
+- WSL（Ubuntu、Node.js 24.22.1）で `npm run lint`、`npm run typecheck`、`npm test -- --runInBand` が成功しました。345スイート・4,161テストが通りました。
+- `npx expo export --platform ios --platform android --max-workers 2` で両OSのHermesバンドルを生成しました。実機での描画とネイティブビルドは未実施です。
+- `npx expo-doctor` は19項目中17項目が成功しました。既存の `react-native-edge-to-edge` と `audio-focus` のメタデータ、および既存依存のパッチ版不一致が指摘されました。地図以外の依存バージョンは変更していません。
+
 ## 2026-10-30 — 近くの駅一覧に TanStack DB を試験導入
 
 - `@tanstack/react-db` 0.5.12 と `@tanstack/query-db-collection` 1.4.8 を追加しました。両者が使用する `@tanstack/db` は 0.15.2 です。
