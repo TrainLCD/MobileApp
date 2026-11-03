@@ -62,6 +62,10 @@ const baseInput: DevDiagnosticsInput = {
     recentTeardownReasons: ['foreground: true→false / AppState=background'],
     lastErrorMessage: '位置情報を取得できません',
   },
+  backgroundHeartbeat: {
+    availability: 'unavailable',
+    reason: 'native-method-missing',
+  },
   maxPermitAccuracy: 1500,
   etaAssistEnabled: false,
   etaPhase: { kind: 'RUNNING', targetStationId: 9930135 },

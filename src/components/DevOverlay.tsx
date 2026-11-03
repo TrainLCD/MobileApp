@@ -43,6 +43,7 @@ import {
   stationAtom,
 } from '~/store/atoms/station';
 import { getAccuracyBonus } from '~/utils/accuracyBonus';
+import { getBackgroundLocationDiagnostics } from '~/utils/backgroundLocationDiagnostics';
 import { copyTextToClipboard } from '~/utils/clipboard';
 import { formatDevDiagnosticsSnapshot } from '~/utils/devDiagnosticsSnapshot';
 import {
@@ -593,6 +594,7 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
 
     // 実際に載ったときだけ COPIED を出す。失敗しているのに成功表示を出すと、
     // 貼り付けてみるまで気付けない。
+    const backgroundHeartbeat = await getBackgroundLocationDiagnostics();
     const copied = await copyTextToClipboard(
       formatDevDiagnosticsSnapshot({
         // レンダー中ではなくイベントハンドラ内なので Date.now() を直接読んでよい
@@ -613,6 +615,7 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
         accuracyOutlier,
         pipelineCounts: getLocationPipelineCounts(),
         heartbeat: getLocationHeartbeatStats(),
+        backgroundHeartbeat,
         skipSmoothing: smoothingDecision.skipSmoothing,
         lineType: smoothingDecision.lineType,
         effectiveSpeedMps: effectiveSpeed,

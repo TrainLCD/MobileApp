@@ -22,6 +22,7 @@ import {
   stationAtom,
 } from '~/store/atoms/station';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
+import { getBackgroundLocationDiagnostics } from '~/utils/backgroundLocationDiagnostics';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import DevOverlay, {
   getDevOverlayClampedPosition,
@@ -36,6 +37,10 @@ jest.mock('jotai', () => {
     useAtomValue: jest.fn(),
   };
 });
+
+jest.mock('~/utils/backgroundLocationDiagnostics', () => ({
+  getBackgroundLocationDiagnostics: jest.fn(),
+}));
 
 // Mock expo-application
 jest.mock('expo-application', () => ({
@@ -383,6 +388,10 @@ describe('DevOverlay', () => {
     beforeEach(() => {
       mockCopyTextToClipboard.mockResolvedValue(true);
       resetLocationHeartbeatStats();
+      jest.mocked(getBackgroundLocationDiagnostics).mockResolvedValue({
+        availability: 'unavailable',
+        reason: 'native-method-missing',
+      });
     });
 
     afterEach(() => {
@@ -406,10 +415,45 @@ describe('DevOverlay', () => {
         telemetryEnabled: true,
         autoModeEnabled: false,
       });
+      expect(copied.backgroundHeartbeat).toEqual({
+        availability: 'unavailable',
+        reason: 'native-method-missing',
+      });
       expect(copied.location.raw).toMatchObject({ accuracy: 15 });
       expect(copied.build.appVersion).toBe(
         `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
       );
+    });
+
+    it('前景へ戻った後も背景ネイティブの履歴を別枠でコピーする', async () => {
+      const backgroundHeartbeat = {
+        availability: 'available' as const,
+        native: {
+          schemaVersion: 1 as const,
+          scope: 'process' as const,
+          capturedAtMs: 40_000,
+          counts: { requested: 3, succeeded: 1, 'timed-out': 1, expired: 1 },
+          lastEvents: {
+            expired: { event: 'expired', atMs: 30_000, uptimeMs: 20_000 },
+          },
+          recentEvents: [
+            { event: 'entered-foreground', atMs: 39_000, uptimeMs: 29_000 },
+          ],
+        },
+      };
+      jest
+        .mocked(getBackgroundLocationDiagnostics)
+        .mockResolvedValue(backgroundHeartbeat);
+      setLocationHeartbeatState('running');
+      const { getByTestId } = render(<DevOverlay />);
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.backgroundHeartbeat).toEqual(backgroundHeartbeat);
+      expect(copied.heartbeat.state).toBe('running');
+      expect(copied.heartbeat.requested).toBe(0);
+      expect(getBackgroundLocationDiagnostics).toHaveBeenCalledTimes(1);
     });
 
     // 補完測位が測位を一件も得られない区間では pipelineCounts がどれも動かないので、
