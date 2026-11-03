@@ -1,6 +1,8 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { AppleMaps } from 'expo-maps';
 import { createStore, Provider } from 'jotai';
-import { Polyline } from 'react-native-maps';
+import { View } from 'react-native';
+import { RideRouteMapView } from '~/components/RideRouteMapView';
 import { STORAGE_KEYS } from '~/constants';
 import { useRideReviewWalkthrough } from '~/hooks/useRideReviewWalkthrough';
 import {
@@ -228,11 +230,19 @@ describe('RideReviewScreen', () => {
     await findByTestId('ride-review-route-map-expand');
 
     // 線は縁取りと路線色の2本を重ねる。通った駅を含めて4駅をつなぐ
-    const polylines = UNSAFE_getAllByType(Polyline);
+    const mapContainer = UNSAFE_getAllByType(RideRouteMapView)[0]
+      .findAllByType(View)
+      .find((node) => node.props.onLayout);
+    if (!mapContainer) throw new Error('地図のレイアウトがありません');
+    fireEvent(mapContainer, 'layout', {
+      nativeEvent: { layout: { width: 400, height: 220 } },
+    });
+    const polylines = UNSAFE_getAllByType(AppleMaps.View)[0].props
+      .polylines as { color: string; coordinates: unknown[] }[];
     expect(polylines).toHaveLength(2);
-    const lines = polylines.filter((l) => l.props.strokeColor === '#F15A22');
+    const lines = polylines.filter((l) => l.color === '#F15A22');
     expect(lines).toHaveLength(1);
-    expect(lines[0].props.coordinates).toHaveLength(4);
+    expect(lines[0].coordinates).toHaveLength(4);
     expect(
       getByLabelText('rideReviewRouteMapLabel:{"lines":"中央線快速"}')
     ).toBeTruthy();

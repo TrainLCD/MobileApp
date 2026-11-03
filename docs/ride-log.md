@@ -136,7 +136,7 @@ StationAPI の `Station.prefectureId`（1〜47）をそのまま入れます。
 - 同じ区間を通った乗車が多いほど、線を太くします。期間でいちばん多い回数に対する割合で、3段階に分けます。
 - 駅の座標が無い乗車は描きません。その回数をカードに添えます。期間の乗車がすべてそうなら、地図の代わりに理由を出します。
 
-地図の表示には `react-native-maps` を使います。地図の地は、Android では Google マップ、iOS では Apple マップです。
+地図の表示には iOS 17 以降と Android で `expo-maps`、iOS 16.4〜16.7 では `react-native-maps` を使います。最低対応版の iOS 16.4 は変更しません。地図の地は、Android では Google マップ、iOS では Apple マップです。
 Android の Google マップのキーは、ビルド時の環境変数 `GOOGLE_MAPS_API_KEY` から
 `AndroidManifest.xml` に入れます（`android/app/build.gradle` の `manifestPlaceholders`）。
 キーはリポジトリに置きません。手元では `.env.local` に書きます。
