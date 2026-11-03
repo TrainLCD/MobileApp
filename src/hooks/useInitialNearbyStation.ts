@@ -11,7 +11,10 @@ import navigationState from '../store/atoms/navigation';
 import stationState, { stationAtom } from '../store/atoms/station';
 import { stationResolveFailedAtom } from '../store/atoms/stationSearchPrompt';
 import { translate } from '../translation';
-import { showDialogWhilePresenting } from '../utils/dialogPresentation';
+import {
+  showDialog,
+  showDialogWhilePresenting,
+} from '../utils/dialogPresentation';
 import { useFetchCurrentLocationOnce } from './useFetchCurrentLocationOnce';
 import { useFetchNearbyStation } from './useFetchNearbyStation';
 
@@ -157,6 +160,10 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
               } catch (error) {
                 // 保存できなければ完了扱いにせず、次回マウント時に再び案内する。
                 Sentry.captureException(error);
+                showDialog(
+                  translate('errorTitle'),
+                  translate('failedToSavePreference')
+                );
               }
             },
           },
