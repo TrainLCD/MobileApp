@@ -6,6 +6,11 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 
 新しいエントリを上に追加する。
 
+## 2026-11-03 — iOS補完測位のビルドエラー修正
+
+- カナリアのArchiveで、補完測位のエラー判定に使用する`kCLErrorLocationUnknown`の宣言を参照できず、コンパイルが失敗しました。`CoreLocation/CLError.h`を明示的にimportします。
+- Cの判定関数テストではObjective-Cのimport不足を検出できませんでした。修正後の確認にはiOSのArchiveも必要です。
+
 ## 2026-11-03 — iOS背景測位の途絶時に限定した補完測位
 
 - 通常測位の10m制限は維持します。背景で新しい測位が10秒以上届かない場合だけ、別の背景対応CLLocationManagerで補完します。要求精度と活動種別は通常測位から引き継ぎます。
