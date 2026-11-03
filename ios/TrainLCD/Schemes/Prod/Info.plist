@@ -65,9 +65,9 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。</string>
+	<string>最寄り駅を取得するため、アプリがバックグラウンドにある間も位置情報を継続的に使用します。</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。</string>
+	<string>最寄り駅を取得するため、アプリがバックグラウンドにある間も位置情報を継続的に使用します。</string>
 	<key>NSMotionUsageDescription</key>
 	<string>位置情報とあわせて乗車中や徒歩などの移動状況を判定するためにモーションセンサーの情報を使用します。</string>
 	<key>NSSupportsLiveActivities</key>

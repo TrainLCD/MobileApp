@@ -9,8 +9,8 @@ CLAUDE.md「Security & Configuration Guardrails」に従い、依存更新後に
 ## 2026-11-03 — iOSの位置情報利用目的をInfo.plistに追加
 
 - 位置情報の説明文は日英の `InfoPlist.strings` にだけ存在し、本体とApp Clipの `Info.plist` にはありませんでした。
-- Canary・Prodの本体とApp Clipに `NSLocationWhenInUseUsageDescription` を追加しました。本体には常時利用の説明キーも追加しました。既存の日本語訳を使用しています。
-- Expoの位置情報プラグインにも同じ説明文を設定しました。ネイティブの4つのマニフェストで説明文の欠落を検出するテストを追加しました。
+- Canary・Prodの本体とApp Clipに `NSLocationWhenInUseUsageDescription` を追加しました。本体には常時利用の説明キーも追加しました。使用中の説明には既存の日本語訳を使用しています。常時利用の説明にはバックグラウンドで最寄り駅を取得する目的を明記し、日英の翻訳とExpoの設定にも反映しました。
+- Expoの位置情報プラグインにも同じ説明文を設定しました。ネイティブの4つのマニフェストで説明文の欠落を検出するテストを追加しました。XMLコメント内の記述は検証対象から除外します。
 
 
 ## 2026-11-03 — iOS 16対応を維持して振り返りの地図をexpo-mapsへ移行

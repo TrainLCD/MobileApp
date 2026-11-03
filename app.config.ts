@@ -24,9 +24,9 @@ export default {
         locationWhenInUsePermission:
           '最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。',
         locationAlwaysAndWhenInUsePermission:
-          '最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。',
+          '最寄り駅を取得するため、アプリがバックグラウンドにある間も位置情報を継続的に使用します。',
         locationAlwaysPermission:
-          '最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。',
+          '最寄り駅を取得するため、アプリがバックグラウンドにある間も位置情報を継続的に使用します。',
         isAndroidBackgroundLocationEnabled: true,
         isAndroidForegroundServiceEnabled: true,
       },

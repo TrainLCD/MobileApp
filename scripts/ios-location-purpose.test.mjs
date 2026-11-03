@@ -10,14 +10,22 @@ for (const path of [
   'ProdAppClip/Info.plist',
 ]) {
   test(`${path}: location purpose exists in the base manifest`, () => {
-    const plist = readFileSync(new URL(`../ios/${path}`, import.meta.url), 'utf8');
+    const plist = readFileSync(
+      new URL(`../ios/${path}`, import.meta.url),
+      'utf8'
+    ).replace(/<!--[\s\S]*?-->/g, '');
     const keys = ['NSLocationWhenInUseUsageDescription'];
     if (path.startsWith('TrainLCD/')) {
       keys.push('NSLocationAlwaysAndWhenInUseUsageDescription');
     }
     for (const key of keys) {
-      const value = plist.match(new RegExp(`<key>${key}</key>\\s*<string>([^<]+)</string>`));
-      assert.ok(value?.[1].trim(), `${key} must not rely only on InfoPlist.strings`);
+      const value = plist.match(
+        new RegExp(`<key>${key}</key>\\s*<string>([^<]+)</string>`)
+      );
+      assert.ok(
+        value?.[1].trim(),
+        `${key} must not rely only on InfoPlist.strings`
+      );
     }
   });
 }
