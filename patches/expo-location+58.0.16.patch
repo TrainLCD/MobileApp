@@ -1,8 +1,14 @@
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-index b7132b8..4379485 100644
+index b7132b8..b1d2478 100644
 --- a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-@@ -7,6 +7,7 @@
+@@ -2,11 +2,13 @@
+ 
+ #import <CoreLocation/CLLocationManager.h>
+ #import <CoreLocation/CLErrorDomain.h>
++#import <CoreLocation/CLError.h>
+ 
+ #import <ExpoModulesCore/EXUtilities.h>
  #import <ExpoModulesCore/EXTaskInterface.h>
  #import <ExpoLocation/EXLocation.h>
  #import <ExpoLocation/EXLocationTaskConsumer.h>
@@ -10,7 +16,7 @@ index b7132b8..4379485 100644
  
  @interface EXLocationTaskConsumer ()
  
-@@ -14,6 +15,18 @@
+@@ -14,6 +16,18 @@
  @property (nonatomic, strong) NSMutableArray<CLLocation *> *deferredLocations;
  @property (nonatomic, strong) CLLocation *lastReportedLocation;
  @property (nonatomic, assign) CLLocationDistance deferredDistance;
@@ -29,7 +35,7 @@ index b7132b8..4379485 100644
  
  @end
  
-@@ -24,12 +37,18 @@
+@@ -24,12 +38,18 @@
    if (self = [super init]) {
      _deferredLocations = [NSMutableArray new];
      _deferredDistance = 0.0;
@@ -48,7 +54,7 @@ index b7132b8..4379485 100644
    [self reset];
  }
  
-@@ -47,6 +66,7 @@
+@@ -47,6 +67,7 @@
  
      self->_task = task;
      self->_locationManager = locationManager;
@@ -56,7 +62,7 @@ index b7132b8..4379485 100644
  
      locationManager.delegate = self;
      locationManager.allowsBackgroundLocationUpdates = YES;
-@@ -64,33 +84,301 @@
+@@ -64,33 +85,301 @@
  - (void)setOptions:(NSDictionary *)options
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
@@ -363,7 +369,7 @@ index b7132b8..4379485 100644
  }
  
  # pragma mark - internal
-@@ -98,6 +386,8 @@
+@@ -98,6 +387,8 @@
  - (void)reset
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
@@ -372,7 +378,7 @@ index b7132b8..4379485 100644
      [self->_locationManager stopUpdatingLocation];
      [self->_locationManager stopMonitoringSignificantLocationChanges];
      [self->_deferredLocations removeAllObjects];
-@@ -118,12 +408,15 @@
+@@ -118,12 +409,15 @@
    _lastReportedLocation = _deferredLocations.lastObject;
    _deferredDistance = 0.0;
    [_deferredLocations removeAllObjects];
