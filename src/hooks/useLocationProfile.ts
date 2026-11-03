@@ -4,6 +4,8 @@ import { useAtomValue } from 'jotai';
 import { Platform } from 'react-native';
 import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
 import {
+  LOCATION_HEARTBEAT_MAX_PENDING,
+  LOCATION_HEARTBEAT_STALE_THRESHOLD,
   LOCATION_TASK_OPTIONS,
   LOCATION_TASK_OPTIONS_POWER_SAVING,
   LOCATION_WATCH_OPTIONS,
@@ -15,9 +17,14 @@ import {
 // 独自キーはpatches/expo-location+58.0.16.patchで解釈する。
 const IOS_TASK_OPTIONS_WITH_DISTANCE_FILTER: Location.LocationTaskOptions & {
   trainLCDBypassBackgroundDistanceFilter: boolean;
+  trainLCDBackgroundHeartbeatInterval: number;
+  trainLCDBackgroundHeartbeatTimeout: number;
 } = {
   ...LOCATION_TASK_OPTIONS,
   trainLCDBypassBackgroundDistanceFilter: false,
+  // 通常測位の10m制限を維持し、途絶時だけネイティブで補完します。
+  trainLCDBackgroundHeartbeatInterval: LOCATION_HEARTBEAT_STALE_THRESHOLD,
+  trainLCDBackgroundHeartbeatTimeout: LOCATION_HEARTBEAT_MAX_PENDING,
 };
 
 type LocationProfile = {

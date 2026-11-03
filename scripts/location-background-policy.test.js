@@ -89,3 +89,66 @@ int main(void) {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('background recovery waits for fresh fixes and backs off after a bounded attempt', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'trainlcd-location-heartbeat-'));
+  try {
+    const source = path.join(dir, 'heartbeat.c');
+    const binary = path.join(dir, 'heartbeat');
+    writeFileSync(source, `
+#include <assert.h>
+#include "EXTrainLCDLocationPolicy.h"
+int main(void) {
+  const double interval = 10;
+  const double timeout = 30;
+  assert(EXTrainLCDHeartbeatEnabled(1, 0, 0, 10, interval, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(0, 0, 0, 10, interval, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 1, 0, 10, interval, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 0, 1, 10, interval, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 0, 0, -1, interval, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 0, 0, 0, interval, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 0, 0, 10, 0, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 0, 0, 10, NAN, timeout));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 0, 0, 10, interval, INFINITY));
+  assert(!EXTrainLCDHeartbeatEnabled(1, 0, 0, 10, interval, -1));
+
+  // Background entry at uptime 5 after a fix at uptime 0: only 5s remain.
+  assert(EXTrainLCDHeartbeatDelay(5, 0, 0, interval) == 5);
+  assert(EXTrainLCDHeartbeatDelay(10, 0, 0, interval) == 0);
+  // A new main-manager fix cancels the need for recovery.
+  assert(EXTrainLCDHeartbeatDelay(10, 9, 0, interval) == 9);
+  // A 9s-old sample delivered now has only 1s left, not another full interval.
+  assert(EXTrainLCDHeartbeatDelay(20, 11, 0, interval) == 1);
+  // No sample during the attempt: after 30s, wait another 10s before retrying.
+  double attemptStarted = 10;
+  double attemptEnded = attemptStarted + timeout;
+  double retryAfter = attemptEnded + interval;
+  assert(EXTrainLCDHeartbeatDelay(attemptEnded, 0, retryAfter, interval) == 10);
+  assert(EXTrainLCDHeartbeatDelay(49, 0, retryAfter, interval) == 1);
+  assert(EXTrainLCDHeartbeatDelay(50, 0, retryAfter, interval) == 0);
+  // Suspension can delay timers; resume does not add another full wait.
+  assert(EXTrainLCDHeartbeatDelay(500, 0, retryAfter, interval) == 0);
+
+  // Cached, duplicate, out-of-order and future/invalid samples cannot end recovery.
+  assert(!EXTrainLCDHeartbeatSampleIsFresh(100, 99, 110, interval));
+  assert(!EXTrainLCDHeartbeatSampleIsFresh(109, 109, 110, interval));
+  assert(!EXTrainLCDHeartbeatSampleIsFresh(108, 109, 110, interval));
+  assert(!EXTrainLCDHeartbeatSampleIsFresh(111, 109, 110, interval));
+  assert(!EXTrainLCDHeartbeatSampleIsFresh(NAN, 109, 110, interval));
+  assert(!EXTrainLCDHeartbeatSampleIsFresh(INFINITY, 109, 110, interval));
+  assert(EXTrainLCDHeartbeatSampleIsFresh(110, 109, 110, interval));
+  // Wall-clock rollback must not block all subsequent real fixes.
+  assert(EXTrainLCDHeartbeatSampleIsFresh(50, 110, 50, interval));
+  return 0;
+}
+`);
+    execFileSync('cc', [
+      '-std=c99', '-Wall', '-Wextra', '-Werror',
+      '-I', path.resolve(__dirname, '../node_modules/expo-location/ios/TaskConsumers'),
+      source, '-lm', '-o', binary,
+    ], { stdio: 'pipe' });
+    execFileSync(binary, [], { stdio: 'pipe' });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

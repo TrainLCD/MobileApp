@@ -1,5 +1,5 @@
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-index b7132b8..579a444 100644
+index b7132b8..4379485 100644
 --- a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
 @@ -7,6 +7,7 @@
@@ -10,7 +10,7 @@ index b7132b8..579a444 100644
  
  @interface EXLocationTaskConsumer ()
  
-@@ -14,6 +15,10 @@
+@@ -14,6 +15,18 @@
  @property (nonatomic, strong) NSMutableArray<CLLocation *> *deferredLocations;
  @property (nonatomic, strong) CLLocation *lastReportedLocation;
  @property (nonatomic, assign) CLLocationDistance deferredDistance;
@@ -18,14 +18,24 @@ index b7132b8..579a444 100644
 +@property (nonatomic, assign) BOOL trainLCDInBackground;
 +@property (nonatomic, strong) NSTimer *trainLCDFlushTimer;
 +@property (nonatomic, assign) UIBackgroundTaskIdentifier trainLCDFlushTaskId;
++@property (nonatomic, strong) CLLocationManager *trainLCDRecoveryManager;
++@property (nonatomic, strong) NSTimer *trainLCDHeartbeatTimer;
++@property (nonatomic, assign) UIBackgroundTaskIdentifier trainLCDRecoveryTaskId;
++@property (nonatomic, assign) NSTimeInterval trainLCDHeartbeatInterval;
++@property (nonatomic, assign) NSTimeInterval trainLCDHeartbeatTimeout;
++@property (nonatomic, assign) NSTimeInterval trainLCDLastFreshUptime;
++@property (nonatomic, assign) NSTimeInterval trainLCDLastSampleTimestamp;
++@property (nonatomic, assign) NSTimeInterval trainLCDRetryAfter;
  
  @end
  
-@@ -24,12 +29,16 @@
+@@ -24,12 +37,18 @@
    if (self = [super init]) {
      _deferredLocations = [NSMutableArray new];
      _deferredDistance = 0.0;
 +    _trainLCDFlushTaskId = UIBackgroundTaskInvalid;
++    _trainLCDRecoveryTaskId = UIBackgroundTaskInvalid;
++    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(trainLCDPowerStateChanged:) name:NSProcessInfoPowerStateDidChangeNotification object:nil];
 +    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(trainLCDDidEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
 +    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(trainLCDWillEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
    }
@@ -38,7 +48,7 @@ index b7132b8..579a444 100644
    [self reset];
  }
  
-@@ -47,6 +56,7 @@
+@@ -47,6 +66,7 @@
  
      self->_task = task;
      self->_locationManager = locationManager;
@@ -46,7 +56,17 @@ index b7132b8..579a444 100644
  
      locationManager.delegate = self;
      locationManager.allowsBackgroundLocationUpdates = YES;
-@@ -68,16 +78,123 @@
+@@ -64,33 +84,301 @@
+ - (void)setOptions:(NSDictionary *)options
+ {
+   [EXUtilities performSynchronouslyOnMainThread:^{
++    [self trainLCDCancelHeartbeat];
++    self->_trainLCDHeartbeatInterval = [self numberToDouble:options[@"trainLCDBackgroundHeartbeatInterval"] defaultValue:0] / 1000.0;
++    self->_trainLCDHeartbeatTimeout = [self numberToDouble:options[@"trainLCDBackgroundHeartbeatTimeout"] defaultValue:0] / 1000.0;
++    self->_trainLCDLastFreshUptime = NSProcessInfo.processInfo.systemUptime;
++    self->_trainLCDLastSampleTimestamp = 0;
++    self->_trainLCDRetryAfter = 0;
+     CLLocationManager *locationManager = self->_locationManager;
      EXLocationAccuracy accuracy = [options[@"accuracy"] unsignedIntegerValue] ?: EXLocationAccuracyBalanced;
  
      locationManager.desiredAccuracy = [EXLocation CLLocationAccuracyFromOption:accuracy];
@@ -61,14 +81,16 @@ index b7132b8..579a444 100644
 +    [self maybeReportDeferredLocations];
      [locationManager startUpdatingLocation];
      [locationManager startMonitoringSignificantLocationChanges];
-   }];
- }
- 
++    [self trainLCDScheduleHeartbeat];
++  }];
++}
++
 +// Keep the background-capable manager alive across AppState transitions. A JS timer or
 +// foreground watch cannot provide this recovery while the app is suspended.
 +- (void)trainLCDDidEnterBackground:(NSNotification *)notification
 +{
 +  _trainLCDInBackground = YES;
++  [self trainLCDScheduleHeartbeat];
 +  [self trainLCDUpdateDistanceFilter];
 +  [self maybeReportDeferredLocations];
 +}
@@ -76,6 +98,7 @@ index b7132b8..579a444 100644
 +- (void)trainLCDWillEnterForeground:(NSNotification *)notification
 +{
 +  _trainLCDInBackground = NO;
++  [self trainLCDCancelHeartbeat];
 +  [self trainLCDUpdateDistanceFilter];
 +  [self trainLCDFlushDeferredLocations];
 +}
@@ -168,18 +191,188 @@ index b7132b8..579a444 100644
 +  }
 +}
 +
++// This timer runs only while iOS grants execution to the location-enabled app.
++// It cannot wake a suspended app. Only an in-flight recovery holds a finite UIKit
++// task; idle waiting never extends background execution.
++- (BOOL)trainLCDCanRecover
++{
++  CLAuthorizationStatus authorization = _locationManager.authorizationStatus;
++  return _task != nil && _locationManager != nil &&
++    authorization == kCLAuthorizationStatusAuthorizedAlways && EXTrainLCDHeartbeatEnabled(
++    _trainLCDInBackground, _locationManager.pausesLocationUpdatesAutomatically,
++    NSProcessInfo.processInfo.lowPowerModeEnabled, _locationManager.distanceFilter,
++    _trainLCDHeartbeatInterval, _trainLCDHeartbeatTimeout);
++}
++
++- (void)trainLCDPowerStateChanged:(NSNotification *)notification
++{
++  [EXUtilities performSynchronouslyOnMainThread:^{
++    [self trainLCDCancelHeartbeat];
++    [self trainLCDScheduleHeartbeat];
+   }];
+ }
+ 
++- (void)trainLCDCancelHeartbeat
++{
++  [_trainLCDHeartbeatTimer invalidate];
++  _trainLCDHeartbeatTimer = nil;
++  _trainLCDRecoveryManager.delegate = nil;
++  [_trainLCDRecoveryManager stopUpdatingLocation];
++  _trainLCDRecoveryManager = nil;
++  UIBackgroundTaskIdentifier taskId = _trainLCDRecoveryTaskId;
++  _trainLCDRecoveryTaskId = UIBackgroundTaskInvalid;
++  if (taskId != UIBackgroundTaskInvalid) {
++    [[UIApplication sharedApplication] endBackgroundTask:taskId];
++  }
++}
++
++- (void)trainLCDFinishRecovery
++{
++  [self trainLCDCancelHeartbeat];
++  // Failed requests do not immediately restart an unfiltered subscription.
++  _trainLCDRetryAfter = NSProcessInfo.processInfo.systemUptime + _trainLCDHeartbeatInterval;
++  [self trainLCDScheduleHeartbeat];
++}
++
++- (void)trainLCDScheduleHeartbeat
++{
++  if (![self trainLCDCanRecover] || _trainLCDRecoveryManager != nil) {
++    return;
++  }
++  [_trainLCDHeartbeatTimer invalidate];
++  double delay = EXTrainLCDHeartbeatDelay(NSProcessInfo.processInfo.systemUptime,
++    _trainLCDLastFreshUptime, _trainLCDRetryAfter, _trainLCDHeartbeatInterval);
++  __weak EXLocationTaskConsumer *weakSelf = self;
++  _trainLCDHeartbeatTimer = [NSTimer timerWithTimeInterval:MAX(0.01, delay) repeats:NO block:^(NSTimer *timer) {
++    EXLocationTaskConsumer *strongSelf = weakSelf;
++    if (strongSelf != nil && strongSelf->_trainLCDHeartbeatTimer == timer) {
++      [strongSelf trainLCDStartRecovery];
++    }
++  }];
++  [[NSRunLoop mainRunLoop] addTimer:_trainLCDHeartbeatTimer forMode:NSRunLoopCommonModes];
++}
++
++- (void)trainLCDStartRecovery
++{
++  [_trainLCDHeartbeatTimer invalidate];
++  _trainLCDHeartbeatTimer = nil;
++  if (![self trainLCDCanRecover] || _trainLCDRecoveryManager != nil) {
++    return;
++  }
++  // A separate background-capable manager leaves the main 10m filter unchanged.
++  CLLocationManager *manager = [CLLocationManager new];
++  _trainLCDRecoveryManager = manager;
++  manager.delegate = self;
++  manager.allowsBackgroundLocationUpdates = YES;
++  manager.desiredAccuracy = _locationManager.desiredAccuracy;
++  manager.activityType = _locationManager.activityType;
++  manager.showsBackgroundLocationIndicator = _locationManager.showsBackgroundLocationIndicator;
++  manager.pausesLocationUpdatesAutomatically = NO;
++  manager.distanceFilter = kCLDistanceFilterNone;
++
++  __weak EXLocationTaskConsumer *weakSelf = self;
++  UIBackgroundTaskIdentifier taskId = [[UIApplication sharedApplication]
++    beginBackgroundTaskWithName:@"TrainLCDLocationRecovery" expirationHandler:^{
++      EXLocationTaskConsumer *strongSelf = weakSelf;
++      if (strongSelf != nil && strongSelf->_trainLCDRecoveryManager == manager) {
++        [strongSelf trainLCDFinishRecovery];
++      }
++    }];
++  // Expiration may run before beginBackgroundTask returns.
++  if (_trainLCDRecoveryManager != manager) {
++    if (taskId != UIBackgroundTaskInvalid) {
++      [[UIApplication sharedApplication] endBackgroundTask:taskId];
++    }
++    return;
++  }
++  _trainLCDRecoveryTaskId = taskId;
++  if (taskId == UIBackgroundTaskInvalid) {
++    [self trainLCDFinishRecovery];
++    return;
++  }
++  _trainLCDHeartbeatTimer = [NSTimer timerWithTimeInterval:_trainLCDHeartbeatTimeout repeats:NO block:^(NSTimer *timer) {
++    EXLocationTaskConsumer *strongSelf = weakSelf;
++    if (strongSelf != nil && strongSelf->_trainLCDRecoveryManager == manager) {
++      [strongSelf trainLCDFinishRecovery];
++    }
++  }];
++  [[NSRunLoop mainRunLoop] addTimer:_trainLCDHeartbeatTimer forMode:NSRunLoopCommonModes];
++  [manager startUpdatingLocation];
++}
++
  # pragma mark - CLLocationManagerDelegate
  
  - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
-@@ -98,6 +215,7 @@
+ {
+-  if (_task != nil && locations.count > 0) {
+-    [self deferLocations:locations];
+-    [self maybeReportDeferredLocations];
++  // Ignore callbacks queued by a recovery manager that has already been closed.
++  if (_task == nil || (manager != _locationManager && manager != _trainLCDRecoveryManager)) {
++    return;
++  }
++  BOOL recoverySample = manager == _trainLCDRecoveryManager;
++  BOOL recovering = _trainLCDRecoveryManager != nil;
++  CLLocation *fresh = nil;
++  double wallNow = NSDate.date.timeIntervalSince1970;
++  for (CLLocation *location in locations) {
++    double timestamp = location.timestamp.timeIntervalSince1970;
++    if (location.horizontalAccuracy >= 0 &&
++        EXTrainLCDHeartbeatSampleIsFresh(timestamp, _trainLCDLastSampleTimestamp,
++          wallNow, _trainLCDHeartbeatInterval)) {
++      _trainLCDLastSampleTimestamp = timestamp;
++      fresh = location;
++    }
++  }
++  if (fresh != nil) {
++    _trainLCDLastFreshUptime = NSProcessInfo.processInfo.systemUptime -
++      (wallNow - fresh.timestamp.timeIntervalSince1970);
++    if (recovering) {
++      [self trainLCDFinishRecovery];
++    } else {
++      [self trainLCDScheduleHeartbeat];
++    }
++  }
++  // A cached/duplicate fix must not complete recovery or reset its deadline.
++  if (recoverySample && fresh == nil) {
++    return;
++  }
++  if (locations.count > 0) {
++    [self deferLocations:recoverySample ? @[fresh] : locations];
++    if (recovering && fresh != nil) {
++      [self trainLCDFlushDeferredLocations];
++    } else {
++      [self maybeReportDeferredLocations];
++    }
+   }
+ }
+ 
+ - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error
+ {
+-  [_task executeWithData:nil withError:error];
++  if (manager == _trainLCDRecoveryManager) {
++    // No fix yet is transient underground. The finite timeout still applies.
++    if (![error.domain isEqualToString:kCLErrorDomain] || error.code != kCLErrorLocationUnknown) {
++      [self trainLCDFinishRecovery];
++    }
++    return;
++  }
++  if (manager == _locationManager) {
++    [_task executeWithData:nil withError:error];
++  }
+ }
+ 
+ # pragma mark - internal
+@@ -98,6 +386,8 @@
  - (void)reset
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
++    [self trainLCDCancelHeartbeat];
 +    [self trainLCDCancelDeferredFlush];
      [self->_locationManager stopUpdatingLocation];
      [self->_locationManager stopMonitoringSignificantLocationChanges];
      [self->_deferredLocations removeAllObjects];
-@@ -118,12 +236,15 @@
+@@ -118,12 +408,15 @@
    _lastReportedLocation = _deferredLocations.lastObject;
    _deferredDistance = 0.0;
    [_deferredLocations removeAllObjects];
@@ -197,10 +390,10 @@ index b7132b8..579a444 100644
  
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
 new file mode 100644
-index 0000000..ffbd7de
+index 0000000..fe9552a
 --- /dev/null
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,49 @@
 +// TrainLCD: keep the configured foreground and power-saving distance filters.
 +#ifndef EX_TRAINLCD_LOCATION_POLICY_H
 +#define EX_TRAINLCD_LOCATION_POLICY_H
@@ -229,6 +422,24 @@ index 0000000..ffbd7de
 +    ? sampleElapsedSeconds : 0;
 +  double remaining = intervalMs / 1000.0 - elapsed;
 +  return remaining > 0 ? remaining : 0;
++}
++
++// Monotonic deadlines are independent of wall-clock changes and batched delivery.
++static inline double EXTrainLCDHeartbeatDelay(double now, double lastFresh, double retryAfter, double interval) {
++  double deadline = fmax(lastFresh + interval, retryAfter);
++  return fmax(0, deadline - now);
++}
++
++static inline int EXTrainLCDHeartbeatSampleIsFresh(double timestamp, double previous, double wallNow, double interval) {
++  return isfinite(timestamp) && isfinite(wallNow) && timestamp <= wallNow &&
++    wallNow - timestamp < interval &&
++    (timestamp > previous || previous > wallNow);
++}
++
++static inline int EXTrainLCDHeartbeatEnabled(int background, int pauses, int lowPower,
++  double distanceFilter, double interval, double timeout) {
++  return background && !pauses && !lowPower && distanceFilter > 0 &&
++    isfinite(interval) && interval > 0 && isfinite(timeout) && timeout > 0;
 +}
 +
 +#endif

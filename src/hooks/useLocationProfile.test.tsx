@@ -1,6 +1,8 @@
 import { renderHook } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import {
+  LOCATION_HEARTBEAT_MAX_PENDING,
+  LOCATION_HEARTBEAT_STALE_THRESHOLD,
   LOCATION_TASK_OPTIONS,
   LOCATION_TASK_OPTIONS_POWER_SAVING,
   LOCATION_WATCH_OPTIONS,
@@ -50,6 +52,9 @@ describe('useLocationProfile', () => {
         ? {
             ...LOCATION_TASK_OPTIONS,
             trainLCDBypassBackgroundDistanceFilter: false,
+            trainLCDBackgroundHeartbeatInterval:
+              LOCATION_HEARTBEAT_STALE_THRESHOLD,
+            trainLCDBackgroundHeartbeatTimeout: LOCATION_HEARTBEAT_MAX_PENDING,
           }
         : LOCATION_TASK_OPTIONS
     );
@@ -107,6 +112,9 @@ it.each(['ios', 'android'] as const)(
         ? {
             ...LOCATION_TASK_OPTIONS,
             trainLCDBypassBackgroundDistanceFilter: false,
+            trainLCDBackgroundHeartbeatInterval:
+              LOCATION_HEARTBEAT_STALE_THRESHOLD,
+            trainLCDBackgroundHeartbeatTimeout: LOCATION_HEARTBEAT_MAX_PENDING,
           }
         : LOCATION_TASK_OPTIONS
     );
