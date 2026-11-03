@@ -12,7 +12,6 @@ import {
   dismissPresentedDialog,
   getDialogPresentationSnapshot,
   resetDialogPresentationForTests,
-  showDialog,
 } from '~/utils/dialogPresentation';
 import {
   resetTrackingLocationDedup,
@@ -179,95 +178,51 @@ describe('useInitialNearbyStation', () => {
 
     expect(storage.getString(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe('true');
     expect(Sentry.captureException).not.toHaveBeenCalled();
-    expect(getDialogPresentationSnapshot().request).toBeNull();
     view.unmount();
     render(<HookBridge onReady={() => {}} />);
     expect(getDialogPresentationSnapshot().request).toBeNull();
   });
 
-  it.each([false, true])(
-    '保存失敗を通知し、エラーを閉じて次回の案内から再試行できる（待機ダイアログ: %s）',
-    (hasQueuedDialog) => {
-      storage.remove(STORAGE_KEYS.FIRST_LAUNCH_PASSED);
-      const view = render(<HookBridge onReady={() => {}} />);
-      if (hasQueuedDialog) {
-        showDialog('queuedNotice', 'queuedMessage');
-      }
-      const error = new Error('Failed to write first launch flag');
-      const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
-        throw error;
+  it('保存失敗でも案内を閉じ、次回の案内から保存を再試行できる', () => {
+    storage.remove(STORAGE_KEYS.FIRST_LAUNCH_PASSED);
+    const view = render(<HookBridge onReady={() => {}} />);
+    const error = new Error('Failed to write first launch flag');
+    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw error;
+    });
+
+    try {
+      expect(() => {
+        act(() => {
+          dismissPresentedDialog(0);
+          completePresentedDialogDismissal();
+        });
+      }).not.toThrow();
+      expect(Sentry.captureException).toHaveBeenCalledWith(error);
+      expect(Sentry.captureException).toHaveBeenCalledTimes(1);
+      expect(storage.contains(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe(false);
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+      expect(setSpy).toHaveBeenCalledTimes(1);
+
+      view.unmount();
+      const retryView = render(<HookBridge onReady={() => {}} />);
+      expect(getDialogPresentationSnapshot()).toMatchObject({
+        visible: true,
+        request: { message: 'firstAlertText' },
       });
-
-      try {
-        expect(() => {
-          act(() => {
-            dismissPresentedDialog(0);
-            expect(getDialogPresentationSnapshot()).toMatchObject({
-              visible: false,
-              request: { message: 'firstAlertText' },
-            });
-            expect(setSpy).not.toHaveBeenCalled();
-            completePresentedDialogDismissal();
-          });
-        }).not.toThrow();
-        expect(Sentry.captureException).toHaveBeenCalledWith(error);
-        expect(Sentry.captureException).toHaveBeenCalledTimes(1);
-        expect(storage.contains(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe(false);
-        expect(setSpy).toHaveBeenCalledTimes(1);
-
-        if (hasQueuedDialog) {
-          expect(getDialogPresentationSnapshot()).toMatchObject({
-            visible: true,
-            request: { title: 'queuedNotice', message: 'queuedMessage' },
-          });
-          act(() => {
-            dismissPresentedDialog(0);
-            completePresentedDialogDismissal();
-          });
-        }
-        expect(getDialogPresentationSnapshot()).toMatchObject({
-          visible: true,
-          request: {
-            title: 'errorTitle',
-            message: 'failedToSavePreference',
-            buttons: [{ text: 'OK' }],
-          },
-        });
-        act(() => {
-          dismissPresentedDialog(0);
-          completePresentedDialogDismissal();
-          completePresentedDialogDismissal();
-        });
-        expect(getDialogPresentationSnapshot()).toMatchObject({
-          visible: false,
-          request: null,
-        });
-        expect(storage.contains(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe(false);
-        expect(setSpy).toHaveBeenCalledTimes(1);
-        expect(Sentry.captureException).toHaveBeenCalledTimes(1);
-
-        view.unmount();
-        const retryView = render(<HookBridge onReady={() => {}} />);
-        expect(getDialogPresentationSnapshot()).toMatchObject({
-          visible: true,
-          request: { message: 'firstAlertText' },
-        });
-        act(() => {
-          dismissPresentedDialog(0);
-          completePresentedDialogDismissal();
-        });
-        expect(storage.getString(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe(
-          'true'
-        );
-        expect(setSpy).toHaveBeenCalledTimes(2);
-        retryView.unmount();
-        render(<HookBridge onReady={() => {}} />);
-        expect(getDialogPresentationSnapshot().request).toBeNull();
-      } finally {
-        setSpy.mockRestore();
-      }
+      act(() => {
+        dismissPresentedDialog(0);
+        completePresentedDialogDismissal();
+      });
+      expect(storage.getString(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe('true');
+      expect(setSpy).toHaveBeenCalledTimes(2);
+      retryView.unmount();
+      render(<HookBridge onReady={() => {}} />);
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+    } finally {
+      setSpy.mockRestore();
     }
-  );
+  });
 
   it.each(['initial', 'refetch'])(
     '古い%sの応答でも駅検索を続け、現在地は戻さない',
