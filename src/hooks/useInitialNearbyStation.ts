@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import * as Location from 'expo-location';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -151,7 +152,12 @@ export const useInitialNearbyStation = (): UseInitialNearbyStationResult => {
           {
             text: 'OK',
             onPress: (): void => {
-              storage.set(STORAGE_KEYS.FIRST_LAUNCH_PASSED, 'true');
+              try {
+                storage.set(STORAGE_KEYS.FIRST_LAUNCH_PASSED, 'true');
+              } catch (error) {
+                // 保存できなければ完了扱いにせず、次回マウント時に再び案内する。
+                Sentry.captureException(error);
+              }
             },
           },
         ]
