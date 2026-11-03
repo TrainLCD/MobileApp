@@ -21,6 +21,12 @@ export default {
     [
       'expo-location',
       {
+        locationWhenInUsePermission:
+          '最寄り駅を取得するためにアプリ使用中は継続的に位置情報を使用します。',
+        locationAlwaysAndWhenInUsePermission:
+          '最寄り駅を取得するため、アプリがバックグラウンドにある間も位置情報を継続的に使用します。',
+        locationAlwaysPermission:
+          '最寄り駅を取得するため、アプリがバックグラウンドにある間も位置情報を継続的に使用します。',
         isAndroidBackgroundLocationEnabled: true,
         isAndroidForegroundServiceEnabled: true,
       },
@@ -64,7 +70,7 @@ export default {
     userInterfaceStyle: 'automatic',
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',
-    buildNumber: '3004',
+    buildNumber: '3005',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV
       ? 'me.tinykitten.trainlcd.dev'
@@ -78,7 +84,7 @@ export default {
         ? 'me.tinykitten.trainlcd.dev'
         : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100000949,
+    versionCode: 100000951,
   },
   owner: 'trainlcd',
   experiments: {
