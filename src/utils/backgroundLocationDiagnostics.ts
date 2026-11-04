@@ -30,7 +30,11 @@ export type BackgroundLocationDiagnostics =
   | { availability: 'available'; native: NativeBackgroundLocationDiagnostics }
   | {
       availability: 'unavailable';
-      reason: 'unsupported-platform' | 'native-method-missing' | 'read-failed';
+      reason:
+        | 'unsupported-platform'
+        | 'native-method-missing'
+        | 'read-failed'
+        | 'read-timeout';
     };
 
 type DiagnosticLocationModule = {
@@ -43,6 +47,7 @@ export const getBackgroundLocationDiagnostics =
     if (Platform.OS !== 'ios') {
       return { availability: 'unavailable', reason: 'unsupported-platform' };
     }
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const nativeModule =
         requireOptionalNativeModule<DiagnosticLocationModule>('ExpoLocation');
@@ -51,9 +56,22 @@ export const getBackgroundLocationDiagnostics =
       if (!nativeModule?.getTrainLCDBackgroundDiagnosticsAsync) {
         return { availability: 'unavailable', reason: 'native-method-missing' };
       }
-      const native = await nativeModule.getTrainLCDBackgroundDiagnosticsAsync();
-      return { availability: 'available', native };
+      // Bound this optional read so a stalled native bridge cannot block the
+      // entire diagnostic dump. Late settlement must not overwrite the copy.
+      return await Promise.race<BackgroundLocationDiagnostics>([
+        nativeModule.getTrainLCDBackgroundDiagnosticsAsync().then((native) => ({
+          availability: 'available' as const,
+          native,
+        })),
+        new Promise<BackgroundLocationDiagnostics>((resolve) => {
+          timeout = setTimeout(() => {
+            resolve({ availability: 'unavailable', reason: 'read-timeout' });
+          }, 3000);
+        }),
+      ]);
     } catch {
       return { availability: 'unavailable', reason: 'read-failed' };
+    } finally {
+      if (timeout !== undefined) clearTimeout(timeout);
     }
   };

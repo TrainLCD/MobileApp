@@ -12,6 +12,7 @@ const originalOS = Platform.OS;
 afterEach(() => {
   Platform.OS = originalOS;
   jest.resetAllMocks();
+  jest.useRealTimers();
 });
 
 it('copies native history even after returning to foreground', async () => {
@@ -88,4 +89,46 @@ it('preserves copy availability when native module lookup throws', async () => {
     availability: 'unavailable',
     reason: 'read-failed',
   });
+});
+
+it('finishes a stalled native read and handles a late rejection', async () => {
+  jest.useFakeTimers();
+  Platform.OS = 'ios';
+  let rejectRead!: (reason: Error) => void;
+  requireModule.mockReturnValue({
+    getTrainLCDBackgroundDiagnosticsAsync: () =>
+      new Promise((_, reject) => {
+        rejectRead = reject;
+      }),
+  });
+  const result = getBackgroundLocationDiagnostics();
+  await jest.advanceTimersByTimeAsync(3000);
+  expect(await result).toEqual({
+    availability: 'unavailable',
+    reason: 'read-timeout',
+  });
+  rejectRead(new Error('late failure'));
+  await Promise.resolve();
+  expect(jest.getTimerCount()).toBe(0);
+});
+
+it('clears the timeout after a successful native read', async () => {
+  jest.useFakeTimers();
+  Platform.OS = 'ios';
+  const native = {
+    schemaVersion: 2,
+    scope: 'process',
+    capturedAtMs: 1,
+    counts: {},
+    lastEvents: {},
+    recentEvents: [],
+  };
+  requireModule.mockReturnValue({
+    getTrainLCDBackgroundDiagnosticsAsync: () => Promise.resolve(native),
+  });
+  expect(await getBackgroundLocationDiagnostics()).toEqual({
+    availability: 'available',
+    native,
+  });
+  expect(jest.getTimerCount()).toBe(0);
 });
