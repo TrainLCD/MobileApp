@@ -2,6 +2,7 @@ import type * as Location from 'expo-location';
 import type { Station } from '~/@types/graphql';
 import type { BackgroundLocationDiagnostics } from './backgroundLocationDiagnostics';
 import type { EtaAnchor, EtaPhase } from './etaFallback';
+import type { getLocationDeliveryDiagnostics } from './locationDeliveryDiagnostics';
 import type { LocationHeartbeatStats } from './locationHeartbeatStats';
 import type { LocationPipelineCounts } from './locationPipelineStats';
 
@@ -12,9 +13,8 @@ import type { LocationPipelineCounts } from './locationPipelineStats';
  * 画面には出していない実効設定(リモート設定の値・プラットフォーム)も含める。設定が
  * 分からないと同じ測位でも挙動を説明できないため、座標だけ持ち出しても再現できない。
  *
- * ここで持ち出せるのは「その瞬間のスナップショット」であって、棄却された測位の履歴や
- * 測位の出所(継続測位/補完測位)ではない。それらは setLocation / handleTrackingLocation の
- * 判定箇所に記録を足さないと取れないので、本関数の対象外。
+ * 現在値に加え、locationDeliveryには継続測位の受信・処理結果を残す。
+ * backgroundHeartbeatのネイティブ履歴とは取得時刻と保持範囲が異なる。
  */
 
 export type DevDiagnosticsInput = {
@@ -81,6 +81,7 @@ export type DevDiagnosticsInput = {
   heartbeat: LocationHeartbeatStats;
   /** iOSネイティブの背景補完。前景JSのheartbeatとは別集計です。 */
   backgroundHeartbeat: BackgroundLocationDiagnostics;
+  locationDelivery: ReturnType<typeof getLocationDeliveryDiagnostics>;
   /** 表示に使っている速度(m/s)と、それが実測かどうか */
   effectiveSpeedMps: number;
   hasMeasuredSpeed: boolean;
@@ -195,6 +196,7 @@ export const buildDevDiagnosticsSnapshot = (input: DevDiagnosticsInput) => ({
   // (あちらは継続測位の配信も含む)、合計は一致しない。
   heartbeat: input.heartbeat,
   backgroundHeartbeat: input.backgroundHeartbeat,
+  locationDelivery: input.locationDelivery,
   eta: {
     phase: input.etaPhase,
     anchor: input.etaAnchor,

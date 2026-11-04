@@ -1,5 +1,6 @@
 import { requireOptionalNativeModule } from 'expo';
 import { Platform } from 'react-native';
+import type { NativeLocationSample } from './locationDeliveryDiagnostics';
 
 export type BackgroundLocationDiagnosticEvent = {
   event: string;
@@ -9,13 +10,20 @@ export type BackgroundLocationDiagnosticEvent = {
 };
 
 export type NativeBackgroundLocationDiagnostics = {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   scope: 'process';
   capturedAtMs: number;
   /** Event counts since process start; absent keys mean no such event. */
   counts: Record<string, number>;
   lastEvents: Record<string, BackgroundLocationDiagnosticEvent>;
   recentEvents: BackgroundLocationDiagnosticEvent[];
+  /** Present in native schema 2; absent on the earlier diagnostic binary. */
+  historyLimit?: number;
+  currentConsumers?: Record<string, string | number | boolean | null>[];
+  receivedSampleCount?: number;
+  dispatchedSampleCount?: number;
+  receivedSamples?: NativeLocationSample[];
+  dispatchedSamples?: NativeLocationSample[];
 };
 
 export type BackgroundLocationDiagnostics =

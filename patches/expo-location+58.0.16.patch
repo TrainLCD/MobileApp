@@ -28,10 +28,10 @@ index 4d7ff94..0041dab 100644
  
  NS_ASSUME_NONNULL_END
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-index b7132b8..4dfd996 100644
+index b7132b8..82d0b3f 100644
 --- a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-@@ -2,11 +2,13 @@
+@@ -2,34 +2,172 @@
  
  #import <CoreLocation/CLLocationManager.h>
  #import <CoreLocation/CLErrorDomain.h>
@@ -45,8 +45,9 @@ index b7132b8..4dfd996 100644
  
  @interface EXLocationTaskConsumer ()
  
-@@ -14,22 +16,99 @@
+ @property (nonatomic, strong) CLLocationManager *locationManager;
  @property (nonatomic, strong) NSMutableArray<CLLocation *> *deferredLocations;
++@property (nonatomic, strong) NSMutableArray<NSDictionary *> *trainLCDDeferredMetadata;
  @property (nonatomic, strong) CLLocation *lastReportedLocation;
  @property (nonatomic, assign) CLLocationDistance deferredDistance;
 +@property (nonatomic, assign) CLLocationDistance configuredDistanceFilter;
@@ -61,6 +62,8 @@ index b7132b8..4dfd996 100644
 +@property (nonatomic, assign) NSTimeInterval trainLCDLastFreshUptime;
 +@property (nonatomic, assign) NSTimeInterval trainLCDLastSampleTimestamp;
 +@property (nonatomic, assign) NSTimeInterval trainLCDRetryAfter;
++
++- (NSDictionary *)trainLCDCurrentState;
  
  @end
  
@@ -69,18 +72,73 @@ index b7132b8..4dfd996 100644
 +static NSMutableDictionary<NSString *, NSNumber *> *trainLCDDiagnosticCounts;
 +static NSMutableDictionary<NSString *, NSDictionary *> *trainLCDLastDiagnosticEvents;
 +static NSMutableArray<NSDictionary *> *trainLCDDiagnosticEvents;
++static NSMutableArray<NSDictionary *> *trainLCDReceivedSamples;
++static NSMutableArray<NSDictionary *> *trainLCDDispatchedSamples;
++static NSString *trainLCDDiagnosticSessionId;
++static NSHashTable<EXLocationTaskConsumer *> *trainLCDConsumers;
++static unsigned long long trainLCDSampleSequence;
++static unsigned long long trainLCDDispatchedSampleCount;
++
++static void EXTrainLCDAppendSample(NSMutableArray<NSDictionary *> *__strong *history, NSDictionary *sample)
++{
++  if (*history == nil) *history = [NSMutableArray new];
++  [*history addObject:[sample copy]];
++  if ((*history).count > 40) [*history removeObjectAtIndex:0];
++}
 +
  @implementation EXLocationTaskConsumer
  
 ++ (NSDictionary<NSString *, id> *)trainLCDBackgroundDiagnostics
 +{
++  NSMutableArray *consumers = [NSMutableArray new];
++  for (EXLocationTaskConsumer *consumer in trainLCDConsumers) {
++    [consumers addObject:[consumer trainLCDCurrentState]];
++  }
 +  return @{
-+    @"schemaVersion": @1,
++    @"historyLimit": @40,
++    @"currentConsumers": consumers,
++    @"schemaVersion": @2,
 +    @"scope": @"process",
 +    @"capturedAtMs": @(NSDate.date.timeIntervalSince1970 * 1000),
 +    @"counts": [trainLCDDiagnosticCounts copy] ?: @{},
 +    @"lastEvents": [trainLCDLastDiagnosticEvents copy] ?: @{},
 +    @"recentEvents": [trainLCDDiagnosticEvents copy] ?: @[],
++    @"receivedSampleCount": @(trainLCDSampleSequence),
++    @"dispatchedSampleCount": @(trainLCDDispatchedSampleCount),
++    @"receivedSamples": [trainLCDReceivedSamples copy] ?: @[],
++    @"dispatchedSamples": [trainLCDDispatchedSamples copy] ?: @[],
++  };
++}
++
++- (NSDictionary *)trainLCDCurrentState
++{
++  NSDictionary *options = _task.options ?: @{};
++  CLLocationManager *manager = _locationManager;
++  CLLocation *oldest = _deferredLocations.firstObject;
++  NSTimeInterval now = NSDate.date.timeIntervalSince1970;
++  return @{
++    @"taskName": _task.name ?: (id)NSNull.null,
++    @"taskRegistered": @(_task != nil),
++    @"managerPresent": @(manager != nil),
++    @"inBackground": @(_trainLCDInBackground),
++    @"authorizationStatus": manager ? @(manager.authorizationStatus) : (id)NSNull.null,
++    @"accuracyAuthorization": manager ? @(manager.accuracyAuthorization) : (id)NSNull.null,
++    @"desiredAccuracy": manager ? @(manager.desiredAccuracy) : (id)NSNull.null,
++    @"activityType": manager ? @(manager.activityType) : (id)NSNull.null,
++    @"allowsBackgroundLocationUpdates": manager ? @(manager.allowsBackgroundLocationUpdates) : (id)NSNull.null,
++    @"pausesAutomatically": manager ? @(manager.pausesLocationUpdatesAutomatically) : (id)NSNull.null,
++    @"distanceFilter": manager ? @(manager.distanceFilter) : (id)NSNull.null,
++    @"lowPowerMode": @(NSProcessInfo.processInfo.lowPowerModeEnabled),
++    @"heartbeatTimerScheduled": @(_trainLCDHeartbeatTimer != nil),
++    @"flushTimerScheduled": @(_trainLCDFlushTimer != nil),
++    @"recoveryActive": @(_trainLCDRecoveryManager != nil),
++    @"pendingSampleCount": @(_deferredLocations.count),
++    @"pendingMetadataCount": @(_trainLCDDeferredMetadata.count),
++    @"oldestPendingSampleAgeMs": oldest ? @(MAX(0, now - oldest.timestamp.timeIntervalSince1970) * 1000) : (id)NSNull.null,
++    @"oldestPendingReceivedAtMs": _trainLCDDeferredMetadata.firstObject[@"receivedAtMs"] ?: (id)NSNull.null,
++    @"deferredDistance": @(_deferredDistance),
++    @"deferredUpdatesDistance": @([self numberToDouble:options[@"deferredUpdatesDistance"] defaultValue:0]),
++    @"deferredUpdatesIntervalMs": @([self numberToDouble:options[@"deferredUpdatesInterval"] defaultValue:0]),
 +  };
 +}
 +
@@ -129,6 +187,7 @@ index b7132b8..4dfd996 100644
  {
    if (self = [super init]) {
      _deferredLocations = [NSMutableArray new];
++    _trainLCDDeferredMetadata = [NSMutableArray new];
      _deferredDistance = 0.0;
 +    _trainLCDFlushTaskId = UIBackgroundTaskInvalid;
 +    _trainLCDRecoveryTaskId = UIBackgroundTaskInvalid;
@@ -145,15 +204,19 @@ index b7132b8..4dfd996 100644
    [self reset];
  }
  
-@@ -47,6 +126,7 @@
+@@ -45,8 +183,11 @@
+   [EXUtilities performSynchronouslyOnMainThread:^{
+     CLLocationManager *locationManager = [CLLocationManager new];
  
++    if (trainLCDConsumers == nil) trainLCDConsumers = [NSHashTable weakObjectsHashTable];
++    [trainLCDConsumers addObject:self];
      self->_task = task;
      self->_locationManager = locationManager;
 +    self->_trainLCDInBackground = [UIApplication sharedApplication].applicationState == UIApplicationStateBackground;
  
      locationManager.delegate = self;
      locationManager.allowsBackgroundLocationUpdates = YES;
-@@ -64,33 +144,335 @@
+@@ -64,33 +205,360 @@
  - (void)setOptions:(NSDictionary *)options
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
@@ -180,9 +243,9 @@ index b7132b8..4dfd996 100644
      [locationManager startUpdatingLocation];
      [locationManager startMonitoringSignificantLocationChanges];
 +    [self trainLCDScheduleHeartbeat];
-   }];
- }
- 
++  }];
++}
++
 +// Keep the background-capable manager alive across AppState transitions. A JS timer or
 +// foreground watch cannot provide this recovery while the app is suspended.
 +- (void)trainLCDDidEnterBackground:(NSNotification *)notification
@@ -249,7 +312,7 @@ index b7132b8..4dfd996 100644
 +  __weak EXLocationTaskConsumer *weakSelf = self;
 +  NSTimer *timer = [NSTimer timerWithTimeInterval:delay repeats:NO block:^(NSTimer *firedTimer) {
 +    [weakSelf trainLCDFlushDeferredLocations];
-+  }];
+   }];
 +  _trainLCDFlushTimer = timer;
 +  UIBackgroundTaskIdentifier taskId = [[UIApplication sharedApplication]
 +    beginBackgroundTaskWithName:@"TrainLCDLocationBatch"
@@ -412,8 +475,8 @@ index b7132b8..4dfd996 100644
 +  [[NSRunLoop mainRunLoop] addTimer:_trainLCDHeartbeatTimer forMode:NSRunLoopCommonModes];
 +  [self trainLCDRecordDiagnostic:@"started" details:@{}];
 +  [manager startUpdatingLocation];
-+}
-+
+ }
+ 
  # pragma mark - CLLocationManagerDelegate
  
  - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
@@ -436,7 +499,28 @@ index b7132b8..4dfd996 100644
 +        @"accuracy": latest && isfinite(latest.horizontalAccuracy) ? @(latest.horizontalAccuracy) : (id)NSNull.null,
 +      }];
 +  }
++  if (trainLCDDiagnosticSessionId == nil) trainLCDDiagnosticSessionId = NSUUID.UUID.UUIDString;
++  NSMutableArray<NSDictionary *> *metadata = [NSMutableArray new];
++  double receivedAtMs = NSDate.date.timeIntervalSince1970 * 1000;
++  double receivedUptimeMs = NSProcessInfo.processInfo.systemUptime * 1000;
++  for (CLLocation *location in locations) {
++    NSDictionary *sample = @{
++      @"sessionId": trainLCDDiagnosticSessionId,
++      @"sampleId": [NSString stringWithFormat:@"%llu", ++trainLCDSampleSequence],
++      @"taskName": _task.name,
++      @"source": recoverySample ? @"recovery" : @"regular",
++      @"sampleTimestampMs": @(location.timestamp.timeIntervalSince1970 * 1000),
++      @"accuracy": isfinite(location.horizontalAccuracy) ? @(location.horizontalAccuracy) : (id)NSNull.null,
++      @"receivedAtMs": @(receivedAtMs),
++      @"receivedUptimeMs": @(receivedUptimeMs),
++      @"receivedInBackground": @(_trainLCDInBackground),
++    };
++    [metadata addObject:sample];
++    EXTrainLCDAppendSample(&trainLCDReceivedSamples, sample);
++  }
 +  CLLocation *fresh = nil;
++  NSDictionary *freshMetadata = nil;
++  NSUInteger metadataIndex = 0;
 +  double wallNow = NSDate.date.timeIntervalSince1970;
 +  for (CLLocation *location in locations) {
 +    double timestamp = location.timestamp.timeIntervalSince1970;
@@ -445,7 +529,9 @@ index b7132b8..4dfd996 100644
 +          wallNow, _trainLCDHeartbeatInterval)) {
 +      _trainLCDLastSampleTimestamp = timestamp;
 +      fresh = location;
++      freshMetadata = metadata[metadataIndex];
 +    }
++    metadataIndex += 1;
 +  }
 +  if (fresh != nil) {
 +    _trainLCDLastFreshUptime = NSProcessInfo.processInfo.systemUptime -
@@ -468,6 +554,7 @@ index b7132b8..4dfd996 100644
 +  }
 +  if (locations.count > 0) {
 +    [self deferLocations:recoverySample ? @[fresh] : locations];
++    [_trainLCDDeferredMetadata addObjectsFromArray:recoverySample ? @[freshMetadata] : metadata];
 +    if (recovering && fresh != nil) {
 +      [self trainLCDFlushDeferredLocations];
 +    } else {
@@ -489,12 +576,13 @@ index b7132b8..4dfd996 100644
 +    return;
 +  }
 +  if (manager == _locationManager) {
++    [self trainLCDRecordDiagnostic:@"regular-error" details:@{@"domain": error.domain, @"code": @(error.code)}];
 +    [_task executeWithData:nil withError:error];
 +  }
  }
  
  # pragma mark - internal
-@@ -98,6 +480,10 @@
+@@ -98,9 +566,14 @@
  - (void)reset
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
@@ -505,10 +593,44 @@ index b7132b8..4dfd996 100644
      [self->_locationManager stopUpdatingLocation];
      [self->_locationManager stopMonitoringSignificantLocationChanges];
      [self->_deferredLocations removeAllObjects];
-@@ -118,12 +504,15 @@
++    [self->_trainLCDDeferredMetadata removeAllObjects];
+     self->_lastReportedLocation = nil;
+     self->_deferredDistance = 0.0;
+     self->_locationManager = nil;
+@@ -111,19 +584,44 @@
+ - (void)executeTaskWithDeferredLocations
+ {
+   // Execute task with deferred locations.
+-  NSDictionary *data = @{ @"locations": [EXLocationTaskConsumer _exportLocations:_deferredLocations] };
++  NSArray<NSDictionary *> *exported = [EXLocationTaskConsumer _exportLocations:_deferredLocations];
++  NSMutableArray<NSDictionary *> *diagnosed = [NSMutableArray new];
++  double dispatchedAtMs = NSDate.date.timeIntervalSince1970 * 1000;
++  double dispatchedUptimeMs = NSProcessInfo.processInfo.systemUptime * 1000;
++  for (NSUInteger index = 0; index < exported.count; index++) {
++    NSMutableDictionary *location = [exported[index] mutableCopy];
++    // Diagnostic metadata must never prevent delivery if the queues differ.
++    if (index < _trainLCDDeferredMetadata.count) {
++      NSMutableDictionary *sample = [_trainLCDDeferredMetadata[index] mutableCopy];
++      sample[@"dispatchedAtMs"] = @(dispatchedAtMs);
++      sample[@"dispatchedUptimeMs"] = @(dispatchedUptimeMs);
++      sample[@"dispatchedInBackground"] = @(_trainLCDInBackground);
++      sample[@"batchSize"] = @(exported.count);
++      sample[@"batchIndex"] = @(index);
++      NSDictionary *immutableSample = [sample copy];
++      location[@"trainLCDDiagnostic"] = immutableSample;
++      trainLCDDispatchedSampleCount += 1;
++      EXTrainLCDAppendSample(&trainLCDDispatchedSamples, immutableSample);
++    }
++    [diagnosed addObject:location];
++  }
++  NSDictionary *data = @{ @"locations": diagnosed };
+   [_task executeWithData:data withError:nil];
+ 
+   // Reset deferring state.
    _lastReportedLocation = _deferredLocations.lastObject;
    _deferredDistance = 0.0;
    [_deferredLocations removeAllObjects];
++  [_trainLCDDeferredMetadata removeAllObjects];
 +  [self trainLCDCancelDeferredFlush];
  }
  

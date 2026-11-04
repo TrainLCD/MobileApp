@@ -419,6 +419,13 @@ describe('DevOverlay', () => {
         availability: 'unavailable',
         reason: 'native-method-missing',
       });
+      expect(copied.locationDelivery).toMatchObject({
+        scope: 'js-runtime',
+        historyLimit: 40,
+        taskErrorCount: 0,
+        taskErrors: [],
+      });
+      expect(Array.isArray(copied.locationDelivery.recent)).toBe(true);
       expect(copied.location.raw).toMatchObject({ accuracy: 15 });
       expect(copied.build.appVersion).toBe(
         `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
