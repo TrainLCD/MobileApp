@@ -5,7 +5,8 @@ import { SENTRY_DSN } from 'react-native-dotenv';
 import App from './src';
 import { LOCATION_TASK_NAME } from './src/constants';
 import { setupRemoteConfig } from './src/lib/remoteConfig';
-import { handleTrackingLocation } from './src/utils/handleTrackingLocation';
+import { handleLocationTaskBatch } from './src/utils/handleLocationTaskBatch';
+import { recordLocationTaskError } from './src/utils/locationDeliveryDiagnostics';
 
 Sentry.init({
   dsn: SENTRY_DSN,
@@ -24,14 +25,12 @@ setupRemoteConfig().catch((error) => {
 if (!TaskManager.isTaskDefined(LOCATION_TASK_NAME)) {
   TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
     if (error) {
+      recordLocationTaskError(error);
       console.error(error);
       return;
     }
 
-    const latestLocation = data.locations[data.locations.length - 1];
-    if (latestLocation) {
-      handleTrackingLocation(latestLocation);
-    }
+    handleLocationTaskBatch(data.locations);
   });
 }
 

@@ -7,6 +7,7 @@ import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
+import type { LocationProcessingOutcome } from '~/utils/locationDeliveryDiagnostics';
 import {
   countAcceptedLocation,
   countLocationRejectedByAccuracy,
@@ -300,7 +301,9 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
 
 // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
 // 手動選択(StationSearchModal/useInitialNearbyStation/Privacy等)もここを通る。
-export const setLocation = (location: Location.LocationObject) => {
+export const setLocation = (
+  location: Location.LocationObject
+): LocationProcessingOutcome => {
   // 新しい測位を受け取った時点で「直近の測位が精度外れ値だった」状態は解消されるため、
   // ここで外れ値フラグを解除する。解除をhandleTrackingLocationだけに置くと、継続測位で
   // 一度立ったフラグがdirect setLocation経由の良好な測位では解除されず、arrivedがfalseに
@@ -380,7 +383,7 @@ export const setLocation = (location: Location.LocationObject) => {
     recovery.candidate = null;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedByEta();
-    return;
+    return 'rejectedByEta';
   }
 
   // スキップ時は生座標を反映する。iOSでは次の粗い測位用に基準も更新する。
@@ -391,12 +394,12 @@ export const setLocation = (location: Location.LocationObject) => {
       // 駅で精度が戻った点は即時反映し、次の粗い測位もこの位置を基準にする。
       // 過去の地上位置を残すと、次の低精度EMAが駅から後方へ引き戻す。
       resyncLocationReference(location, updatedHistory, isIosTracking);
-      return;
+      return 'accepted';
     }
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
     countAcceptedLocation();
-    return;
+    return 'accepted';
   }
 
   // 精度履歴だけが安定しても、ETAで棄却されていれば基準は古いまま。
@@ -411,7 +414,7 @@ export const setLocation = (location: Location.LocationObject) => {
     if (!isGoodAccuracy) {
       store.set(accuracyHistoryAtom, updatedHistory);
       countLocationRejectedByAccuracy();
-      return;
+      return 'rejectedByAccuracy';
     }
     const candidate = recovery.candidate;
     const elapsed = candidate ? location.timestamp - candidate.timestamp : 0;
@@ -424,7 +427,7 @@ export const setLocation = (location: Location.LocationObject) => {
       recovery.pending = false;
       recovery.candidate = null;
       resyncLocationReference(location, updatedHistory, isIosTracking);
-      return;
+      return 'accepted';
     }
     // 既存候補から飛んだ点で候補を上書きすると、その近傍の異常測位が
     // 続いただけで再同期してしまう。候補がないときだけ確認を始める。
@@ -433,14 +436,14 @@ export const setLocation = (location: Location.LocationObject) => {
     if (candidate == null || elapsed <= 0) recovery.candidate = location;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedBySpeed();
-    return;
+    return 'rejectedBySpeed';
   }
   if (!isGoodAccuracy) recovery.candidate = null;
 
   // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
   if (filteredPrev == null || rawPrev == null) {
     resyncLocationReference(location, updatedHistory, isIosTracking);
-    return;
+    return 'accepted';
   }
 
   // #5665で避けた「ノイズの多い地下測位を基準に、正常な復帰点を棄却する」
@@ -454,7 +457,7 @@ export const setLocation = (location: Location.LocationObject) => {
     rawPrev.coords.accuracy > MAX_PERMIT_ACCURACY
   ) {
     resyncLocationReference(location, updatedHistory, isIosTracking);
-    return;
+    return 'accepted';
   }
 
   // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用する。
@@ -488,11 +491,11 @@ export const setLocation = (location: Location.LocationObject) => {
         MAX_CONSECUTIVE_SPEED_REJECTIONS
       ) {
         resyncLocationReference(location, updatedHistory, isIosTracking);
-        return;
+        return 'accepted';
       }
       store.set(accuracyHistoryAtom, updatedHistory);
       countLocationRejectedBySpeed();
-      return;
+      return 'rejectedBySpeed';
     }
   }
 
@@ -504,7 +507,7 @@ export const setLocation = (location: Location.LocationObject) => {
   // 再棄却…という復帰不能ループの原因になる。
   if (location.timestamp - rawPrev.timestamp >= STALE_REFERENCE_MS) {
     resyncLocationReference(location, updatedHistory, isIosTracking);
-    return;
+    return 'accepted';
   }
 
   // EMA(指数移動平均)で座標をスムージングする
@@ -536,4 +539,5 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(rawReferenceAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
   countAcceptedLocation();
+  return 'accepted';
 };
