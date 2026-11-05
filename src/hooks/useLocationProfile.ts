@@ -1,9 +1,15 @@
 import * as Battery from 'expo-battery';
 import type * as Location from 'expo-location';
 import { useAtomValue } from 'jotai';
+import { useMemo, useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
+import {
+  getMaxPermitAccuracy,
+  subscribeRemoteConfig,
+} from '~/lib/remoteConfig';
 import { powerSavingLocationEnabledAtom } from '~/store/atoms/battery';
 import {
+  LOCATION_BACKGROUND_HEARTBEAT_START_DELAY,
   LOCATION_HEARTBEAT_MAX_PENDING,
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
   LOCATION_TASK_OPTIONS,
@@ -19,12 +25,15 @@ const IOS_TASK_OPTIONS_WITH_DISTANCE_FILTER: Location.LocationTaskOptions & {
   trainLCDBypassBackgroundDistanceFilter: boolean;
   trainLCDBackgroundHeartbeatInterval: number;
   trainLCDBackgroundHeartbeatTimeout: number;
+  trainLCDBackgroundHeartbeatStartDelay: number;
 } = {
   ...LOCATION_TASK_OPTIONS,
   trainLCDBypassBackgroundDistanceFilter: false,
   // 通常測位の10m制限を維持し、途絶時だけネイティブで補完します。
   trainLCDBackgroundHeartbeatInterval: LOCATION_HEARTBEAT_STALE_THRESHOLD,
   trainLCDBackgroundHeartbeatTimeout: LOCATION_HEARTBEAT_MAX_PENDING,
+  trainLCDBackgroundHeartbeatStartDelay:
+    LOCATION_BACKGROUND_HEARTBEAT_START_DELAY,
 };
 
 type LocationProfile = {
@@ -47,11 +56,24 @@ type LocationProfile = {
  * 旧規則のまま残り、省電力モード中に補完測位だけHigh精度で走る、といった食い違いが
  * 静かに生まれる。プロファイルの決定はこの1か所に集約する。
  *
- * 返すオブジェクト自体は毎回新しく作られるが、中身はモジュール定数なので、
- * 呼び出し側がwatchOptions/taskOptionsをそのままeffect依存に置いても参照は安定する。
+ * watchOptionsはモジュール定数を使う。iOSの通常taskOptionsは許容精度を
+ * 依存にメモ化し、許容精度が変わったときだけ呼び出し側の測位タスクを更新する。
  */
 export const useLocationProfile = (): LocationProfile => {
   const systemLowPowerMode = Battery.useLowPowerMode();
+  const maxAccuracy = useSyncExternalStore(
+    subscribeRemoteConfig,
+    getMaxPermitAccuracy,
+    getMaxPermitAccuracy
+  );
+  // 許容精度の取得後もネイティブへ反映し、無関係な再レンダーでは参照を保つ。
+  const iosTaskOptions = useMemo(
+    () => ({
+      ...IOS_TASK_OPTIONS_WITH_DISTANCE_FILTER,
+      trainLCDBackgroundHeartbeatMaxAccuracy: maxAccuracy,
+    }),
+    [maxAccuracy]
+  );
   // 省電力測位モード。精度をBalancedへ下げ、停車中の測位自動休止(iOSのみ)を
   // 許可する。通常測位の要求精度はOS別にconstants/location.tsで定義する。
   const powerSavingSettingEnabled = useAtomValue(
@@ -69,7 +91,7 @@ export const useLocationProfile = (): LocationProfile => {
     taskOptions: powerSavingEnabled
       ? LOCATION_TASK_OPTIONS_POWER_SAVING
       : Platform.OS === 'ios'
-        ? IOS_TASK_OPTIONS_WITH_DISTANCE_FILTER
+        ? iosTaskOptions
         : LOCATION_TASK_OPTIONS,
   };
 };

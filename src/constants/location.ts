@@ -50,6 +50,10 @@ export const NEEDS_LOCATION_HEARTBEAT =
 // 途絶タイマーが巻き戻るぶん必ず1回空振りし、実際の取得間隔がこの値の2倍まで開く。
 export const LOCATION_HEARTBEAT_STALE_THRESHOLD = LOCATION_TIME_INTERVAL;
 
+// 背景の補完開始だけを5秒へ早める。前景の10秒、取得上限30秒、
+// 再試行待ち10秒、測位の鮮度上限10秒は従来の値を維持する。
+export const LOCATION_BACKGROUND_HEARTBEAT_START_DELAY = 5_000;
+
 // 補完測位の取得を待つ上限(ms)。補完測位は継続測位と同じstartUpdatingLocationで1件を
 // 待つ(useLocationHeartbeat)ので、測位が得られない地下では購読が延々と待ち続ける。
 // 1件でも返らないままだと「取得中は次を出さない」ガードが解けず補完測位が二度と
