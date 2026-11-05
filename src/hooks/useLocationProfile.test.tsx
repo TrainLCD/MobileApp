@@ -1,6 +1,11 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import {
+  getMaxPermitAccuracy,
+  subscribeRemoteConfig,
+} from '~/lib/remoteConfig';
+import {
+  LOCATION_BACKGROUND_HEARTBEAT_START_DELAY,
   LOCATION_HEARTBEAT_MAX_PENDING,
   LOCATION_HEARTBEAT_STALE_THRESHOLD,
   LOCATION_TASK_OPTIONS,
@@ -9,6 +14,11 @@ import {
   LOCATION_WATCH_OPTIONS_POWER_SAVING,
 } from '../constants';
 import { useLocationProfile } from './useLocationProfile';
+
+jest.mock('~/lib/remoteConfig', () => ({
+  getMaxPermitAccuracy: jest.fn(() => 1500),
+  subscribeRemoteConfig: jest.fn(() => () => {}),
+}));
 
 let mockSystemLowPowerMode = false;
 jest.mock('expo-battery', () => ({
@@ -55,6 +65,9 @@ describe('useLocationProfile', () => {
             trainLCDBackgroundHeartbeatInterval:
               LOCATION_HEARTBEAT_STALE_THRESHOLD,
             trainLCDBackgroundHeartbeatTimeout: LOCATION_HEARTBEAT_MAX_PENDING,
+            trainLCDBackgroundHeartbeatStartDelay:
+              LOCATION_BACKGROUND_HEARTBEAT_START_DELAY,
+            trainLCDBackgroundHeartbeatMaxAccuracy: getMaxPermitAccuracy(),
           }
         : LOCATION_TASK_OPTIONS
     );
@@ -79,6 +92,27 @@ describe('useLocationProfile', () => {
       LOCATION_WATCH_OPTIONS_POWER_SAVING
     );
     expect(result.current.taskOptions).toBe(LOCATION_TASK_OPTIONS_POWER_SAVING);
+  });
+
+  it('リモート設定の許容精度が更新されたら背景タスクへ反映する', () => {
+    Platform.OS = 'ios';
+    let notify: (() => void) | undefined;
+    jest.mocked(subscribeRemoteConfig).mockImplementationOnce((listener) => {
+      notify = listener;
+      return () => {};
+    });
+    const { result } = renderHook(() => useLocationProfile());
+    const initial = result.current.taskOptions;
+    jest.mocked(getMaxPermitAccuracy).mockReturnValue(3000);
+    act(() => notify?.());
+    expect(result.current.taskOptions).not.toBe(initial);
+    expect(result.current.taskOptions).toMatchObject({
+      trainLCDBackgroundHeartbeatMaxAccuracy: 3000,
+      trainLCDBackgroundHeartbeatStartDelay: 5000,
+      trainLCDBackgroundHeartbeatInterval: 10000,
+      trainLCDBackgroundHeartbeatTimeout: 30000,
+    });
+    jest.mocked(getMaxPermitAccuracy).mockReturnValue(1500);
   });
 
   // 呼び出し側(useStartBackgroundLocationUpdates)はこの返り値をeffect依存に置く。
@@ -115,6 +149,9 @@ it.each(['ios', 'android'] as const)(
             trainLCDBackgroundHeartbeatInterval:
               LOCATION_HEARTBEAT_STALE_THRESHOLD,
             trainLCDBackgroundHeartbeatTimeout: LOCATION_HEARTBEAT_MAX_PENDING,
+            trainLCDBackgroundHeartbeatStartDelay:
+              LOCATION_BACKGROUND_HEARTBEAT_START_DELAY,
+            trainLCDBackgroundHeartbeatMaxAccuracy: getMaxPermitAccuracy(),
           }
         : LOCATION_TASK_OPTIONS
     );

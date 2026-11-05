@@ -28,10 +28,10 @@ index 4d7ff94..0041dab 100644
  
  NS_ASSUME_NONNULL_END
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-index b7132b8..82d0b3f 100644
+index b7132b8..89ccf72 100644
 --- a/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXLocationTaskConsumer.m
-@@ -2,34 +2,172 @@
+@@ -2,34 +2,176 @@
  
  #import <CoreLocation/CLLocationManager.h>
  #import <CoreLocation/CLErrorDomain.h>
@@ -58,6 +58,8 @@ index b7132b8..82d0b3f 100644
 +@property (nonatomic, strong) NSTimer *trainLCDHeartbeatTimer;
 +@property (nonatomic, assign) UIBackgroundTaskIdentifier trainLCDRecoveryTaskId;
 +@property (nonatomic, assign) NSTimeInterval trainLCDHeartbeatInterval;
++@property (nonatomic, assign) NSTimeInterval trainLCDHeartbeatStartDelay;
++@property (nonatomic, assign) CLLocationAccuracy trainLCDHeartbeatMaxAccuracy;
 +@property (nonatomic, assign) NSTimeInterval trainLCDHeartbeatTimeout;
 +@property (nonatomic, assign) NSTimeInterval trainLCDLastFreshUptime;
 +@property (nonatomic, assign) NSTimeInterval trainLCDLastSampleTimestamp;
@@ -164,6 +166,8 @@ index b7132b8..82d0b3f 100644
 +    @"pausesAutomatically": @(_locationManager.pausesLocationUpdatesAutomatically),
 +    @"distanceFilter": @(_locationManager.distanceFilter),
 +    @"intervalMs": @(_trainLCDHeartbeatInterval * 1000),
++    @"startDelayMs": @(_trainLCDHeartbeatStartDelay * 1000),
++    @"maxAccuracy": @(_trainLCDHeartbeatMaxAccuracy),
 +    @"timeoutMs": @(_trainLCDHeartbeatTimeout * 1000),
 +  } mutableCopy];
 +  [entry addEntriesFromDictionary:details];
@@ -204,7 +208,7 @@ index b7132b8..82d0b3f 100644
    [self reset];
  }
  
-@@ -45,8 +183,11 @@
+@@ -45,8 +187,11 @@
    [EXUtilities performSynchronouslyOnMainThread:^{
      CLLocationManager *locationManager = [CLLocationManager new];
  
@@ -216,13 +220,15 @@ index b7132b8..82d0b3f 100644
  
      locationManager.delegate = self;
      locationManager.allowsBackgroundLocationUpdates = YES;
-@@ -64,33 +205,360 @@
+@@ -64,33 +209,367 @@
  - (void)setOptions:(NSDictionary *)options
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
 +    [self trainLCDRecordCancellation:@"options-changed"];
 +    [self trainLCDCancelHeartbeat];
 +    self->_trainLCDHeartbeatInterval = [self numberToDouble:options[@"trainLCDBackgroundHeartbeatInterval"] defaultValue:0] / 1000.0;
++    self->_trainLCDHeartbeatStartDelay = [self numberToDouble:options[@"trainLCDBackgroundHeartbeatStartDelay"] defaultValue:self->_trainLCDHeartbeatInterval * 1000] / 1000.0;
++    self->_trainLCDHeartbeatMaxAccuracy = [self numberToDouble:options[@"trainLCDBackgroundHeartbeatMaxAccuracy"] defaultValue:0];
 +    self->_trainLCDHeartbeatTimeout = [self numberToDouble:options[@"trainLCDBackgroundHeartbeatTimeout"] defaultValue:0] / 1000.0;
 +    self->_trainLCDLastFreshUptime = NSProcessInfo.processInfo.systemUptime;
 +    self->_trainLCDLastSampleTimestamp = 0;
@@ -362,7 +368,9 @@ index b7132b8..82d0b3f 100644
 +{
 +  CLAuthorizationStatus authorization = _locationManager.authorizationStatus;
 +  return _task != nil && _locationManager != nil &&
-+    authorization == kCLAuthorizationStatusAuthorizedAlways && EXTrainLCDHeartbeatEnabled(
++    authorization == kCLAuthorizationStatusAuthorizedAlways &&
++    isfinite(_trainLCDHeartbeatStartDelay) && _trainLCDHeartbeatStartDelay > 0 &&
++    isfinite(_trainLCDHeartbeatMaxAccuracy) && _trainLCDHeartbeatMaxAccuracy > 0 && EXTrainLCDHeartbeatEnabled(
 +    _trainLCDInBackground, _locationManager.pausesLocationUpdatesAutomatically,
 +    NSProcessInfo.processInfo.lowPowerModeEnabled, _locationManager.distanceFilter,
 +    _trainLCDHeartbeatInterval, _trainLCDHeartbeatTimeout);
@@ -410,7 +418,7 @@ index b7132b8..82d0b3f 100644
 +  }
 +  [_trainLCDHeartbeatTimer invalidate];
 +  double delay = EXTrainLCDHeartbeatDelay(NSProcessInfo.processInfo.systemUptime,
-+    _trainLCDLastFreshUptime, _trainLCDRetryAfter, _trainLCDHeartbeatInterval);
++    _trainLCDLastFreshUptime, _trainLCDRetryAfter, _trainLCDHeartbeatStartDelay);
 +  __weak EXLocationTaskConsumer *weakSelf = self;
 +  _trainLCDHeartbeatTimer = [NSTimer timerWithTimeInterval:MAX(0.01, delay) repeats:NO block:^(NSTimer *timer) {
 +    EXLocationTaskConsumer *strongSelf = weakSelf;
@@ -524,7 +532,8 @@ index b7132b8..82d0b3f 100644
 +  double wallNow = NSDate.date.timeIntervalSince1970;
 +  for (CLLocation *location in locations) {
 +    double timestamp = location.timestamp.timeIntervalSince1970;
-+    if (location.horizontalAccuracy >= 0 &&
++    // Rejected accuracy must neither postpone recovery nor complete it.
++    if (EXTrainLCDHeartbeatAccuracyIsUsable(location.horizontalAccuracy, _trainLCDHeartbeatMaxAccuracy) &&
 +        EXTrainLCDHeartbeatSampleIsFresh(timestamp, _trainLCDLastSampleTimestamp,
 +          wallNow, _trainLCDHeartbeatInterval)) {
 +      _trainLCDLastSampleTimestamp = timestamp;
@@ -542,7 +551,9 @@ index b7132b8..82d0b3f 100644
 +        @"sampleTimestampMs": @(fresh.timestamp.timeIntervalSince1970 * 1000),
 +        @"accuracy": isfinite(fresh.horizontalAccuracy) ? @(fresh.horizontalAccuracy) : (id)NSNull.null,
 +      }];
-+      [self trainLCDFinishRecovery];
++      [self trainLCDCancelHeartbeat];
++      _trainLCDRetryAfter = 0;
++      [self trainLCDScheduleHeartbeat];
 +    } else {
 +      [self trainLCDScheduleHeartbeat];
 +    }
@@ -582,7 +593,7 @@ index b7132b8..82d0b3f 100644
  }
  
  # pragma mark - internal
-@@ -98,9 +566,14 @@
+@@ -98,9 +577,14 @@
  - (void)reset
  {
    [EXUtilities performSynchronouslyOnMainThread:^{
@@ -597,7 +608,7 @@ index b7132b8..82d0b3f 100644
      self->_lastReportedLocation = nil;
      self->_deferredDistance = 0.0;
      self->_locationManager = nil;
-@@ -111,19 +584,44 @@
+@@ -111,19 +595,44 @@
  - (void)executeTaskWithDeferredLocations
  {
    // Execute task with deferred locations.
@@ -645,10 +656,10 @@ index b7132b8..82d0b3f 100644
  
 diff --git a/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
 new file mode 100644
-index 0000000..fe9552a
+index 0000000..98fbfab
 --- /dev/null
 +++ b/node_modules/expo-location/ios/TaskConsumers/EXTrainLCDLocationPolicy.h
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,53 @@
 +// TrainLCD: keep the configured foreground and power-saving distance filters.
 +#ifndef EX_TRAINLCD_LOCATION_POLICY_H
 +#define EX_TRAINLCD_LOCATION_POLICY_H
@@ -683,6 +694,10 @@ index 0000000..fe9552a
 +static inline double EXTrainLCDHeartbeatDelay(double now, double lastFresh, double retryAfter, double interval) {
 +  double deadline = fmax(lastFresh + interval, retryAfter);
 +  return fmax(0, deadline - now);
++}
++
++static inline int EXTrainLCDHeartbeatAccuracyIsUsable(double accuracy, double maximum) {
++  return isfinite(accuracy) && accuracy >= 0 && isfinite(maximum) && maximum > 0 && accuracy <= maximum;
 +}
 +
 +static inline int EXTrainLCDHeartbeatSampleIsFresh(double timestamp, double previous, double wallNow, double interval) {

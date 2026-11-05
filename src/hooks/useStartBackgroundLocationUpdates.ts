@@ -20,10 +20,24 @@ const wait = (ms: number) =>
     setTimeout(resolve, ms);
   });
 
+// 同じ名前のネイティブタスクを操作するため、effectの世代をまたいで直列化する。
+// 旧startの完了 → 旧cleanupのstop完了 → 新startの順を保証する。
+let backgroundLocationTaskQueue = Promise.resolve();
+const enqueueBackgroundLocationTask = (operation: () => Promise<void>) => {
+  backgroundLocationTaskQueue = backgroundLocationTaskQueue
+    .then(operation)
+    .catch((error) => {
+      console.warn(
+        'バックグラウンド位置情報タスクの処理に失敗しました:',
+        error
+      );
+    });
+};
+
 export const useStartBackgroundLocationUpdates = () => {
   const bgPermGranted = useLocationPermissionsGranted();
   const autoModeEnabled = useAtomValue(autoModeEnabledAtom);
-  // 選択されるオブジェクトはモジュール定数なので、effect依存でも参照が安定する。
+  // 許容精度や省電力設定が変わったときだけ、測位オプションの参照が変わる。
   const { watchOptions, taskOptions } = useLocationProfile();
 
   useEffect(() => {
@@ -34,7 +48,8 @@ export const useStartBackgroundLocationUpdates = () => {
     let cancelled = false;
     let watchPositionSub: Location.LocationSubscription | null = null;
 
-    (async () => {
+    enqueueBackgroundLocationTask(async () => {
+      if (cancelled) return;
       // 前回セッションのフォアグラウンドサービスが残存している場合（killServiceOnDestroy: false）、
       // 明示的に停止してからstartすることで、FusedLocationProviderClientのサブスクリプションが
       // システムレベルで蓄積するのを防ぐ。
@@ -79,18 +94,8 @@ export const useStartBackgroundLocationUpdates = () => {
               killServiceOnDestroy: true,
             },
           });
-          // クリーンアップがstartの完了前に実行された場合、
-          // stopが先に走り開始済みの更新が残るため、ここで再度停止する
-          if (cancelled) {
-            try {
-              await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-            } catch (stopError) {
-              console.warn(
-                'バックグラウンド位置情報の更新停止に失敗しました:',
-                stopError
-              );
-            }
-          } else {
+          // 停止はキュー内のcleanupが担当し、新しい世代を後から止めない。
+          if (!cancelled) {
             store.set(backgroundLocationTrackingAtom, true);
 
             // Android 16(API 36)ではexpo-task-managerのJobScheduler経由のJS配信が
@@ -120,6 +125,7 @@ export const useStartBackgroundLocationUpdates = () => {
           }
           return;
         } catch (error) {
+          if (cancelled) return;
           if (attempt < LOCATION_START_MAX_RETRIES) {
             const delay = LOCATION_START_RETRY_BASE_DELAY_MS * 2 ** attempt;
             console.warn(
@@ -135,17 +141,21 @@ export const useStartBackgroundLocationUpdates = () => {
           }
         }
       }
-    })();
+    });
 
     return () => {
       cancelled = true;
       watchPositionSub?.remove();
       store.set(backgroundLocationTrackingAtom, false);
-      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch((error) => {
-        console.warn(
-          'バックグラウンド位置情報の更新停止に失敗しました:',
-          error
-        );
+      enqueueBackgroundLocationTask(async () => {
+        try {
+          await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        } catch (error) {
+          console.warn(
+            'バックグラウンド位置情報の更新停止に失敗しました:',
+            error
+          );
+        }
       });
     };
   }, [autoModeEnabled, bgPermGranted, taskOptions, watchOptions]);

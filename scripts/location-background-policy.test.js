@@ -101,6 +101,31 @@ test('background recovery waits for fresh fixes and backs off after a bounded at
 int main(void) {
   const double interval = 10;
   const double timeout = 30;
+  const double startDelay = 5;
+  // Start sooner without shortening freshness, retry backoff or acquisition time.
+  assert(EXTrainLCDHeartbeatDelay(4, 0, 0, startDelay) == 1);
+  assert(EXTrainLCDHeartbeatDelay(5, 0, 0, startDelay) == 0);
+  // A successful fix uses the short start delay, not the failure cooldown.
+  assert(EXTrainLCDHeartbeatDelay(11, 11, 0, startDelay) == 5);
+  double fastAttemptEnd = startDelay + timeout;
+  assert(fastAttemptEnd == 35);
+  assert(EXTrainLCDHeartbeatDelay(fastAttemptEnd, 0, fastAttemptEnd + interval, startDelay) == 10);
+  // The same accuracy policy gates ordinary and recovery fixes. Repeated rejected
+  // samples leave lastFresh at zero, so the original 5s deadline still expires.
+  double lastFresh = 0;
+  for (int now = 1; now <= 5; now++) {
+    if (EXTrainLCDHeartbeatAccuracyIsUsable(3001, 3000)) lastFresh = now;
+  }
+  assert(EXTrainLCDHeartbeatDelay(5, lastFresh, 0, startDelay) == 0);
+  assert(EXTrainLCDHeartbeatAccuracyIsUsable(3000, 3000));
+  assert(EXTrainLCDHeartbeatAccuracyIsUsable(0, 3000));
+  assert(!EXTrainLCDHeartbeatAccuracyIsUsable(-1, 3000));
+  assert(!EXTrainLCDHeartbeatAccuracyIsUsable(NAN, 3000));
+  assert(!EXTrainLCDHeartbeatAccuracyIsUsable(INFINITY, 3000));
+  assert(!EXTrainLCDHeartbeatAccuracyIsUsable(10, 0));
+  assert(!EXTrainLCDHeartbeatAccuracyIsUsable(10, NAN));
+  // Shorter scheduling must not reject the existing 9s-old but usable sample.
+  assert(EXTrainLCDHeartbeatSampleIsFresh(101, 100, 110, interval));
   assert(EXTrainLCDHeartbeatEnabled(1, 0, 0, 10, interval, timeout));
   assert(!EXTrainLCDHeartbeatEnabled(0, 0, 0, 10, interval, timeout));
   assert(!EXTrainLCDHeartbeatEnabled(1, 1, 0, 10, interval, timeout));
