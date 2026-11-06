@@ -187,4 +187,28 @@ describe('useEtaFallback / getEtaPhaseNow', () => {
     expect(store.get(stationAtom)?.id).toBe(1);
     expect(store.get(locationAtom)).toBe(BASE_LOCATION);
   });
+
+  it('粗い測位でホーム停車中でもETAの発車・次駅到着だけでは状態を進めない', () => {
+    const platformLocation = {
+      ...BASE_LOCATION,
+      coords: { ...BASE_LOCATION.coords, accuracy: 2356, speed: -1 },
+    };
+    store.set(arrivedAtom, true);
+    store.set(locationAtom, platformLocation);
+    store.set(etaAnchorAtom, {
+      stationId: 1,
+      kind: 'AT_STATION',
+      observedAtMs: T0,
+    });
+    const { rerender } = renderHook(() => useEtaFallback(), { wrapper });
+    for (const elapsedMinutes of [1, 2.2, 10]) {
+      const phase = getEtaPhaseNow(T0 + elapsedMinutes * 60_000);
+      expect(phase).not.toEqual({ kind: 'DWELLING', stationId: 1 });
+      rerender({});
+      expect(store.get(arrivedAtom)).toBe(true);
+      expect(store.get(approachingAtom)).toBe(false);
+      expect(store.get(stationAtom)?.id).toBe(1);
+      expect(store.get(locationAtom)).toBe(platformLocation);
+    }
+  });
 });
