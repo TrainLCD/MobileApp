@@ -78,6 +78,10 @@ private class PresetsRemoteViewsFactory(
             setTextViewText(R.id.widget_preset_to_station, preset.toStationName)
             setTextViewText(R.id.widget_preset_from_number, preset.fromStationNumber)
             setTextViewText(R.id.widget_preset_to_number, preset.toStationNumber)
+            val showsNumberSlot = preset.fromStationNumber.isNotBlank() || preset.toStationNumber.isNotBlank()
+            val numberVisibility = if (showsNumberSlot) View.VISIBLE else View.GONE
+            setViewVisibility(R.id.widget_preset_from_number, numberVisibility)
+            setViewVisibility(R.id.widget_preset_to_number, numberVisibility)
             listOf(R.id.widget_preset_from_station, R.id.widget_preset_to_station,
                 R.id.widget_preset_from_number, R.id.widget_preset_to_number,
                 R.id.widget_preset_arrow).forEach {
