@@ -62,6 +62,11 @@ const legacyAlphaToLagSec = (alpha: number): number =>
 // 正規化する。
 const LOW_ACCURACY_ALPHA = 0.3;
 
+// getDistanceの既定分解能(1m)で0〜1mの更新だけを同位置の再観測として扱う。
+// 報告精度(最大数km)を半径に使うと駅間移動や粗い座標の揺れまで再観測になる。
+// これは測位精度や実際の停車を保証する値ではなく、平滑化の遅れを詰める条件。
+const COARSE_REPEAT_DISTANCE_M = 1;
+
 // GPS精度に応じた許容追従遅れ(秒)を返す（精度が良いほど新しい値を信頼して遅れを詰める）
 const getSmoothingLagSec = (accuracy: number | null): number => {
   if (accuracy != null && accuracy > 0 && accuracy < 50) {
@@ -468,6 +473,7 @@ export const setLocation = (
   // 経過時間が延びても成立するため。ここを飛ばすと、間隔が空いた直後の1点に限って
   // ワープ対策が無効になる。
   const dt = (location.timestamp - rawPrev.timestamp) / 1000; // 秒
+  let isRepeatedRawPosition = false;
   if (dt > 0) {
     const dist = getDistance(
       {
@@ -479,6 +485,7 @@ export const setLocation = (
         longitude: location.coords.longitude,
       }
     );
+    isRepeatedRawPosition = dist <= COARSE_REPEAT_DISTANCE_M;
     const speed = dist / dt;
 
     // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
@@ -513,10 +520,20 @@ export const setLocation = (
   // EMA(指数移動平均)で座標をスムージングする
   // 精度が良いほど、また配信間隔が空くほどαが大きくなり、新しい測位値をより信頼する。
   // 間隔で正規化することで、追従遅れが配信間隔に依存しなくなる。
-  const alpha = getSmoothingAlpha(
-    newAccuracy,
-    (location.timestamp - rawPrev.timestamp) / 1000
-  );
+  // #7276の単発ジャンプ抑制と#6917の低精度ノイズ対策は維持する。
+  // iOSの粗い生座標が再観測された場合だけ、配信間隔によるEMAの遅れを詰める。
+  // 基準は棄却した入力ではなく採用済み生座標。駅との距離やETAの発停車は使わない。
+  // 1秒未満の連続配信では従来の係数を維持する。1秒なら補正後も0.3と一致する。
+  const canNormalizeCoarseRepeat =
+    isCoarseIosLocation &&
+    rawPrev.coords.accuracy != null &&
+    Number.isFinite(rawPrev.coords.accuracy) &&
+    rawPrev.coords.accuracy > MAX_PERMIT_ACCURACY &&
+    dt >= LEGACY_ALPHA_INTERVAL_SEC &&
+    isRepeatedRawPosition;
+  const alpha = canNormalizeCoarseRepeat
+    ? dt / (dt + legacyAlphaToLagSec(LOW_ACCURACY_ALPHA))
+    : getSmoothingAlpha(newAccuracy, dt);
   const smoothedLat =
     alpha * location.coords.latitude +
     (1 - alpha) * filteredPrev.coords.latitude;
