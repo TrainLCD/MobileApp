@@ -179,7 +179,13 @@ struct WidgetStations: View {
   var fromNumber: String = ""
   var toNumber: String = ""
 
-  /// 番号の有無によらず同じ幅・高さを使い、駅名の下に番号を中央揃えで表示します。
+  // 表示する駅の片方でも番号を持つ場合だけ、両側に番号用の領域を確保します。
+  private var showsNumberSlot: Bool {
+    (!from.isEmpty && !fromNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      || (!to.isEmpty && !toNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+  }
+
+  /// 番号欄が必要な場合に、駅名の下に番号を中央揃えで表示します。
   private func station(_ name: String, number: String) -> some View {
     let formattedNumber = number.trimmingCharacters(in: .whitespacesAndNewlines)
       .replacingOccurrences(of: "^([A-Za-z]+)([0-9]+)$", with: "$1-$2", options: .regularExpression)
@@ -187,18 +193,20 @@ struct WidgetStations: View {
       .font(.system(size: fontSize, weight: .bold))
       .lineLimit(1)
       .minimumScaleFactor(0.6)
-      // 短い駅名でも番号を読める幅を残し、欠番でも同じ幅を使います。
-      .frame(minWidth: 48)
+      // 片方でも番号がある場合は、欠番側にも同じ最小幅を使います。
+      .frame(minWidth: showsNumberSlot ? 48 : 0)
       // 番号を重ねる領域を先に確保し、番号の文字幅も駅名の配置に影響させません。
-      .padding(.bottom, 14)
+      .padding(.bottom, showsNumberSlot ? 14 : 0)
       .overlay(alignment: .bottom) {
-        Text(formattedNumber.isEmpty ? " " : formattedNumber)
-          .font(.system(size: 11, weight: .bold))
-          .lineLimit(1)
-          .minimumScaleFactor(0.6)
-          .frame(maxWidth: .infinity)
-          .frame(height: 14)
-          .accessibilityHidden(formattedNumber.isEmpty)
+        if showsNumberSlot {
+          Text(formattedNumber.isEmpty ? " " : formattedNumber)
+            .font(.system(size: 11, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .frame(maxWidth: .infinity)
+            .frame(height: 14)
+            .accessibilityHidden(formattedNumber.isEmpty)
+        }
       }
     // 中央揃えは駅名の幅の中だけで行い、横並びの8pt間隔は維持します。
     .frame(maxWidth: vertical ? .infinity : nil, alignment: .leading)
@@ -336,7 +344,7 @@ struct HomeScreenWidget_Previews: PreviewProvider {
   }
 }
 
-// 番号の有無だけを切り替えても駅名と矢印の位置が変わらないことを確認します。
+// 片方が欠番でも位置が揃い、両方が欠番なら番号用の領域がなくなることを確認します。
 struct WidgetStationNumbers_Previews: PreviewProvider {
   static var previews: some View {
     Group {
@@ -346,7 +354,11 @@ struct WidgetStationNumbers_Previews: PreviewProvider {
                          fromNumber: "E-35", toNumber: "E-36")
           WidgetStations(from: "練馬", to: "豊島園", vertical: vertical,
                          fromNumber: "E-35", toNumber: "")
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical,
+                         fromNumber: "", toNumber: "E-36")
           WidgetStations(from: "練馬", to: "豊島園", vertical: vertical)
+          WidgetStations(from: "練馬", to: "", vertical: vertical,
+                         fromNumber: "", toNumber: "E-36")
         }
         .padding()
         .previewLayout(.sizeThatFits)
