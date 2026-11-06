@@ -51,6 +51,26 @@ describe('Licenses', () => {
     return (list.props.data as Array<{ id: string }>).map((item) => item.id);
   };
 
+  it.each(['ios', 'android'] as const)(
+    '%s にSRTの出典とCC BY 4.0を表示する',
+    (os) => {
+      setPlatformOS(os);
+      const screen = render(<Licenses />);
+      const list = screen.UNSAFE_getByType(FlatList);
+      expect(list.props.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'nagoya_srt',
+            title: 'nagoyaSrt',
+            license: 'ccby',
+            licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
+            devOnly: false,
+          }),
+        ])
+      );
+    }
+  );
+
   // VOICEVOX は iOS 本体アプリだけが使う素材なので、クレジットもそこでだけ出す
   describe('VOICEVOX:夜語トバリ のクレジット (iosOnly)', () => {
     it('[iOS 本体アプリ] 表示する', () => {
