@@ -3,6 +3,7 @@ package me.tinykitten.trainlcd
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 
@@ -38,6 +39,7 @@ private class PresetsRemoteViewsFactory(
 
     override fun getCount(): Int = presets.size
 
+    /** 保存済みの行と、各駅名・駅番号を対応づけた読み上げ文を返します。 */
     override fun getViewAt(position: Int): RemoteViews {
         val preset = presets.getOrNull(position)
             ?: return RemoteViews(context.packageName, R.layout.widget_presets_row)
@@ -69,7 +71,24 @@ private class PresetsRemoteViewsFactory(
             setTextViewText(R.id.widget_preset_line, preset.lineName)
             setTextViewText(R.id.widget_preset_name, preset.name)
             setTextViewText(R.id.widget_preset_route, route)
-            setContentDescription(R.id.widget_preset_row, "${preset.name} / $route")
+            val hasStations = preset.fromStationName.isNotEmpty() && preset.toStationName.isNotEmpty()
+            setViewVisibility(R.id.widget_preset_route, if (hasStations) View.GONE else View.VISIBLE)
+            setViewVisibility(R.id.widget_preset_stations, if (hasStations) View.VISIBLE else View.GONE)
+            setTextViewText(R.id.widget_preset_from_station, preset.fromStationName)
+            setTextViewText(R.id.widget_preset_to_station, preset.toStationName)
+            setTextViewText(R.id.widget_preset_from_number, preset.fromStationNumber)
+            setTextViewText(R.id.widget_preset_to_number, preset.toStationNumber)
+            listOf(R.id.widget_preset_from_station, R.id.widget_preset_to_station,
+                R.id.widget_preset_from_number, R.id.widget_preset_to_number,
+                R.id.widget_preset_arrow).forEach {
+                setTextColor(it, WidgetTheme.onLineColor(lineColor))
+            }
+            val spokenRoute = if (hasStations) context.getString(
+                R.string.widget_presets_route,
+                widgetStationDescription(preset.fromStationName, preset.fromStationNumber),
+                widgetStationDescription(preset.toStationName, preset.toStationNumber)
+            ) else route
+            setContentDescription(R.id.widget_preset_row, "${preset.name} / $spokenRoute")
             // タップ先はProvider側のsetPendingIntentTemplateと組み合わさる。
             // ここではテンプレートに差し込むディープリンクのURIだけを渡す
             setOnClickFillInIntent(

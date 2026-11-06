@@ -1,6 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { getLocalizedLineName } from '~/utils/line';
+import { getWidgetStationNumber } from '~/utils/widgetStationNumber';
 import {
   approachingAtom,
   arrivedAtom,
@@ -53,6 +54,8 @@ export const useUpdateWidget = (): void => {
     (isJapanese ? stoppedStation?.name : stoppedStation?.nameRoman) ?? '';
   const nextStationName =
     (isJapanese ? nextStation?.name : nextStation?.nameRoman) ?? '';
+  const stationNumber = getWidgetStationNumber(stoppedStation);
+  const nextStationNumber = getWidgetStationNumber(nextStation);
   const [currentNumbering] = useNumbering();
   const { directionalStops } = useBounds(stations);
 
@@ -73,11 +76,15 @@ export const useUpdateWidget = (): void => {
       boundStationName,
       stationName,
       nextStationName,
+      stationNumber,
+      nextStationNumber,
     }),
     [
       boundStationName,
       currentLine,
       currentNumbering?.lineSymbol,
+      stationNumber,
+      nextStationNumber,
       stationName,
       nextStationName,
     ]
