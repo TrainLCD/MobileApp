@@ -175,7 +175,7 @@ struct WidgetStations: View {
   let from: String
   let to: String
   let vertical: Bool
-  var fontSize: CGFloat = 22
+  var fontSize: CGFloat = 24
   var fromNumber: String = ""
   var toNumber: String = ""
 
@@ -256,7 +256,7 @@ struct HomeScreenWidgetEntryView: View {
           ? entry.boundFor : "")
       if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22,
+                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 22 : 24,
                        fromNumber: entry.stationNumber, toNumber: entry.nextStationNumber)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。

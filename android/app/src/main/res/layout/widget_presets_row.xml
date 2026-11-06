@@ -113,10 +113,10 @@
                         android:ellipsize="end"
                         android:autoSizeTextType="uniform"
                         android:autoSizeMinTextSize="12sp"
-                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeMaxTextSize="20sp"
                         android:autoSizeStepGranularity="1sp"
                         android:textColor="@color/widget_on_line_primary"
-                        android:textSize="18sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
                     <TextView
                         android:id="@+id/widget_preset_from_number"
@@ -154,10 +154,10 @@
                         android:ellipsize="end"
                         android:autoSizeTextType="uniform"
                         android:autoSizeMinTextSize="12sp"
-                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeMaxTextSize="20sp"
                         android:autoSizeStepGranularity="1sp"
                         android:textColor="@color/widget_on_line_primary"
-                        android:textSize="18sp"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
                     <TextView
                         android:id="@+id/widget_preset_to_number"

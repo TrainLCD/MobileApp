@@ -100,7 +100,7 @@
                     android:minWidth="@dimen/widget_station_min_width"
                     android:autoSizeTextType="uniform"
                     android:autoSizeMinTextSize="12sp"
-                    android:autoSizeMaxTextSize="22sp"
+                    android:autoSizeMaxTextSize="24sp"
                     android:autoSizeStepGranularity="1sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -109,7 +109,7 @@
                     android:maxLines="1"
                     android:ellipsize="end"
                     android:textColor="@color/widget_on_line_primary"
-                    android:textSize="22sp"
+                    android:textSize="24sp"
                     android:textStyle="bold" />
                 <!-- 片方でも駅番号がある場合だけ、両側に高さを確保します。 -->
                 <TextView
@@ -155,7 +155,7 @@
                     android:minWidth="@dimen/widget_station_min_width"
                     android:autoSizeTextType="uniform"
                     android:autoSizeMinTextSize="12sp"
-                    android:autoSizeMaxTextSize="22sp"
+                    android:autoSizeMaxTextSize="24sp"
                     android:autoSizeStepGranularity="1sp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -164,7 +164,7 @@
                     android:maxLines="1"
                     android:ellipsize="end"
                     android:textColor="@color/widget_on_line_primary"
-                    android:textSize="22sp"
+                    android:textSize="24sp"
                     android:textStyle="bold" />
                 <!-- 片方でも駅番号がある場合だけ、両側に高さを確保します。 -->
                 <TextView
