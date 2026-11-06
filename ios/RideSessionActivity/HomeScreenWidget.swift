@@ -154,6 +154,9 @@ struct WidgetLineHeader: View {
   let lineSymbol: String
   let lineName: String
   var boundFor: String = ""
+  var boundFontSize: CGFloat = 14
+  var boundFontWeight: Font.Weight = .regular
+  var lineNameLineLimit: Int = 2
 
   var body: some View {
     HStack(spacing: 8) {
@@ -161,11 +164,11 @@ struct WidgetLineHeader: View {
       VStack(alignment: .leading, spacing: 2) {
         Text(lineName)
           .font(.system(size: 12, weight: .semibold))
-          .lineLimit(2)
+          .lineLimit(lineNameLineLimit)
           .minimumScaleFactor(0.8)
         if !boundFor.isEmpty {
           Text(boundFor)
-            .font(.system(size: 14))
+            .font(.system(size: boundFontSize, weight: boundFontWeight))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
         }
@@ -196,6 +199,9 @@ struct WidgetStations: View {
       .font(.system(size: fontSize, weight: .bold))
       .lineLimit(1)
       .minimumScaleFactor(0.6)
+      // 高さ不足で駅名まで縮めず、横幅が足りない場合だけ縮小します。
+      .fixedSize(horizontal: false, vertical: true)
+      .frame(height: fontSize)
       // 片方でも番号がある場合は、欠番側にも同じ最小幅を使います。
       .frame(minWidth: showsNumberSlot ? 48 : 0)
       // 番号の行高14ptを保ち、駅名の下の余白に2pt重ねて間隔を詰めます。
@@ -218,10 +224,12 @@ struct WidgetStations: View {
 
   var body: some View {
     if vertical {
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: 0) {
         if !from.isEmpty { station(from, number: fromNumber) }
         if !from.isEmpty && !to.isEmpty {
-          Image(systemName: "arrow.down").font(.system(size: 12, weight: .semibold))
+          Image(systemName: "arrow.down")
+            .font(.system(size: 10, weight: .semibold))
+            .frame(height: 12)
         }
         if !to.isEmpty { station(to, number: toNumber) }
       }
@@ -243,7 +251,7 @@ struct HomeScreenWidgetEntryView: View {
 
   var body: some View {
     // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
-    VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
+    VStack(alignment: .leading, spacing: family == .systemSmall ? 2 : 6) {
       if family == .systemMedium {
         HStack(spacing: 4) {
           Image(systemName: entry.loaded ? "tram.fill" : "tram")
@@ -257,10 +265,11 @@ struct HomeScreenWidgetEntryView: View {
         lineSymbol: entry.displayLineSymbol,
         lineName: entry.lineName,
         boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
-          ? entry.boundFor : "")
+          ? entry.boundFor : "",
+        lineNameLineLimit: family == .systemSmall ? 1 : 2)
       if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 22 : 24,
+                       vertical: family == .systemSmall, fontSize: 24,
                        fromNumber: entry.stationNumber, toNumber: entry.nextStationNumber)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。

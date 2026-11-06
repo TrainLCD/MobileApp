@@ -236,7 +236,7 @@ struct PresetsWidgetFeatured: View {
   var vertical = true
 
   var body: some View {
-    VStack(alignment: .leading, spacing: vertical ? 8 : 12) {
+    VStack(alignment: .leading, spacing: vertical ? 2 : 6) {
       if !vertical {
         PresetsWidgetBrandHeader()
       }
@@ -246,18 +246,16 @@ struct PresetsWidgetFeatured: View {
           lineSymbol: preset.displayLineSymbol,
           lineName: preset.lineName,
           // 横長では乗車中の方面と同じ位置・文字組みにし、見出しの高さを揃えます。
-          boundFor: vertical ? "" : preset.name)
-        if vertical {
-          Text(preset.name)
-            .font(.system(size: 18, weight: .bold))
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-        }
+          // 小サイズはプリセット名も見出し内に収め、駅名の高さを確保します。
+          boundFor: preset.name,
+          boundFontSize: vertical ? 18 : 14,
+          boundFontWeight: vertical ? .bold : .regular,
+          lineNameLineLimit: vertical ? 1 : 2)
       }
       if preset.hasStations {
         WidgetStations(
           from: preset.fromStationName, to: preset.toStationName,
-          vertical: vertical, fontSize: vertical ? 22 : 24,
+          vertical: vertical, fontSize: 24,
           fromNumber: preset.fromStationNumber ?? "",
           toNumber: preset.toStationNumber ?? "")
       }
