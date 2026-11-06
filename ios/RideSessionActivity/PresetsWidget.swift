@@ -28,9 +28,9 @@ import WidgetKit
 // 乗車中ウィジェット(HomeScreenWidget)と同じsystemSmall / systemMediumに加え、
 // 一覧をまとめて見たい向けにsystemLargeも選べるようにしている。
 
-// 見出し24pt・駅名18pt・駅番号欄14ptを同じ72ptの行に収めます。
+// 見出し24pt・駅名24pt・駅番号用の領域12ptに、上下10pt以上の余白を確保します。
 // 件数計算にも同じ高さを使い、最終行が見切れないようにする。
-private let rowHeight: CGFloat = 72
+private let rowHeight: CGFloat = 92
 private let rowSpacing: CGFloat = 8
 private let rowCornerRadius: CGFloat = 12
 
@@ -196,14 +196,19 @@ struct PresetsWidgetRow: View {
       }
       if preset.hasStations {
         WidgetStations(from: preset.fromStationName, to: preset.toStationName,
-                       vertical: false, fontSize: 20,
+                       vertical: false, fontSize: 24,
                        fromNumber: preset.fromStationNumber ?? "",
                        toNumber: preset.toStationNumber ?? "")
       } else {
-        Text(preset.lineName).font(.subheadline).lineLimit(1)
+        Text(preset.lineName)
+          .font(.subheadline)
+          .lineLimit(1)
+          // 固定行高と上下余白に収まる範囲で文字サイズを拡大します。
+          .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
       }
     }
     .padding(.horizontal, 12)
+    .padding(.vertical, 10)
     .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
     .foregroundStyle(lineForegroundColor(for: preset.displayLineColor))
     .background {
@@ -231,7 +236,7 @@ struct PresetsWidgetFeatured: View {
   var vertical = true
 
   var body: some View {
-    VStack(alignment: .leading, spacing: vertical ? 8 : 12) {
+    VStack(alignment: .leading, spacing: vertical ? 2 : 6) {
       if !vertical {
         PresetsWidgetBrandHeader()
       }
@@ -241,18 +246,16 @@ struct PresetsWidgetFeatured: View {
           lineSymbol: preset.displayLineSymbol,
           lineName: preset.lineName,
           // 横長では乗車中の方面と同じ位置・文字組みにし、見出しの高さを揃えます。
-          boundFor: vertical ? "" : preset.name)
-        if vertical {
-          Text(preset.name)
-            .font(.system(size: 18, weight: .bold))
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-        }
+          // 小サイズはプリセット名も見出し内に収め、駅名の高さを確保します。
+          boundFor: preset.name,
+          boundFontSize: vertical ? 18 : 14,
+          boundFontWeight: vertical ? .bold : .regular,
+          lineNameLineLimit: vertical ? 1 : 2)
       }
       if preset.hasStations {
         WidgetStations(
           from: preset.fromStationName, to: preset.toStationName,
-          vertical: vertical, fontSize: vertical ? 22 : 24,
+          vertical: vertical, fontSize: 24,
           fromNumber: preset.fromStationNumber ?? "",
           toNumber: preset.toStationNumber ?? "")
       }
@@ -426,5 +429,16 @@ struct PresetsWidget_Previews: PreviewProvider {
       PresetsWidgetEntryView(entry: .empty)
         .previewContext(WidgetPreviewContext(family: .systemSmall))
     }
+  }
+}
+
+struct PresetsWidgetMissingStations_Previews: PreviewProvider {
+  static var previews: some View {
+    PresetsWidgetRow(preset: PresetsWidgetItem(
+      id: "missing-stations", name: "通勤", fromStationName: "", toStationName: "",
+      lineName: "名古屋市営地下鉄東山線", lineColor: "F9C900", lineSymbol: "H"))
+      .environment(\.dynamicTypeSize, .accessibility5)
+      .frame(width: 300)
+      .previewLayout(.sizeThatFits)
   }
 }
