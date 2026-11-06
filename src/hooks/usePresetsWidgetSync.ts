@@ -24,6 +24,7 @@ type Params = {
   isRoutesDBInitialized: boolean;
 };
 
+/** 取得済みの端点を使い、駅名と駅番号を対応づけてネイティブ用の項目に変換します。 */
 const toWidgetItem = (item: LoopItem): PresetsWidgetItem => {
   const { from, to } = getPresetRouteEndpoints(item);
   const line = from?.line;

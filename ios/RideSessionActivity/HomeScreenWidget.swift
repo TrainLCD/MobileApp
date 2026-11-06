@@ -179,6 +179,7 @@ struct WidgetStations: View {
   var fromNumber: String = ""
   var toNumber: String = ""
 
+  /// 番号の有無によらず同じ幅・高さを使い、駅名の下に番号を中央揃えで表示します。
   private func station(_ name: String, number: String) -> some View {
     let formattedNumber = number.trimmingCharacters(in: .whitespacesAndNewlines)
       .replacingOccurrences(of: "^([A-Za-z]+)([0-9]+)$", with: "$1-$2", options: .regularExpression)
@@ -186,6 +187,8 @@ struct WidgetStations: View {
       .font(.system(size: fontSize, weight: .bold))
       .lineLimit(1)
       .minimumScaleFactor(0.6)
+      // 短い駅名でも番号を読める幅を残し、欠番でも同じ幅を使います。
+      .frame(minWidth: 48)
       // 番号を重ねる領域を先に確保し、番号の文字幅も駅名の配置に影響させません。
       .padding(.bottom, 14)
       .overlay(alignment: .bottom) {

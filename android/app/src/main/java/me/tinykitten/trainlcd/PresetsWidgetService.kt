@@ -39,6 +39,7 @@ private class PresetsRemoteViewsFactory(
 
     override fun getCount(): Int = presets.size
 
+    /** 保存済みの行と、各駅名・駅番号を対応づけた読み上げ文を返します。 */
     override fun getViewAt(position: Int): RemoteViews {
         val preset = presets.getOrNull(position)
             ?: return RemoteViews(context.packageName, R.layout.widget_presets_row)
@@ -82,7 +83,12 @@ private class PresetsRemoteViewsFactory(
                 R.id.widget_preset_arrow).forEach {
                 setTextColor(it, WidgetTheme.onLineColor(lineColor))
             }
-            setContentDescription(R.id.widget_preset_row, "${preset.name} / $route")
+            val spokenRoute = if (hasStations) context.getString(
+                R.string.widget_presets_route,
+                widgetStationDescription(preset.fromStationName, preset.fromStationNumber),
+                widgetStationDescription(preset.toStationName, preset.toStationNumber)
+            ) else route
+            setContentDescription(R.id.widget_preset_row, "${preset.name} / $spokenRoute")
             // タップ先はProvider側のsetPendingIntentTemplateと組み合わさる。
             // ここではテンプレートに差し込むディープリンクのURIだけを渡す
             setOnClickFillInIntent(

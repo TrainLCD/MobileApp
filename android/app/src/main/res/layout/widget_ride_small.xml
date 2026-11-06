@@ -97,6 +97,7 @@
                 android:layout_gravity="start">
                 <TextView
                     android:id="@+id/widget_current_station"
+                    android:minWidth="@dimen/widget_station_min_width"
                     android:autoSizeTextType="uniform"
                     android:autoSizeMinTextSize="12sp"
                     android:autoSizeMaxTextSize="22sp"
@@ -113,6 +114,10 @@
                 <!-- 空欄でも高さを確保し、駅番号の有無で駅名を動かしません。 -->
                 <TextView
                     android:id="@+id/widget_current_station_number"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="7sp"
+                    android:autoSizeMaxTextSize="11sp"
+                    android:autoSizeStepGranularity="1sp"
                     android:layout_width="0dp"
                     android:layout_below="@id/widget_current_station"
                     android:layout_alignStart="@id/widget_current_station"
@@ -147,6 +152,7 @@
                 android:layout_gravity="start">
                 <TextView
                     android:id="@+id/widget_next_station"
+                    android:minWidth="@dimen/widget_station_min_width"
                     android:autoSizeTextType="uniform"
                     android:autoSizeMinTextSize="12sp"
                     android:autoSizeMaxTextSize="22sp"
@@ -163,6 +169,10 @@
                 <!-- 空欄でも高さを確保し、駅番号の有無で駅名を動かしません。 -->
                 <TextView
                     android:id="@+id/widget_next_station_number"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="7sp"
+                    android:autoSizeMaxTextSize="11sp"
+                    android:autoSizeStepGranularity="1sp"
                     android:layout_width="0dp"
                     android:layout_below="@id/widget_next_station"
                     android:layout_alignStart="@id/widget_next_station"
