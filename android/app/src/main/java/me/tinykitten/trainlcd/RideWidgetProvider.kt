@@ -92,6 +92,7 @@ class RideWidgetProvider : AppWidgetProvider() {
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
+        /** サイズに応じた表示と、表示中の駅名・駅番号に対応する読み上げ文を組み立てます。 */
         private fun buildRemoteViews(
             context: Context,
             state: WidgetState,
@@ -133,7 +134,14 @@ class RideWidgetProvider : AppWidgetProvider() {
                 else -> fittingStationViews(context, state, lineName, boundFor, lineSymbol, lineColor, minWidthDp, minHeightDp, false)
             }
 
-            views.setContentDescription(R.id.widget_root, listOf(lineName, if (state.loaded) state.stationName else "", if (state.loaded) state.nextStationName else "", boundFor).filter { it.isNotEmpty() }.joinToString(" / "))
+            val stations = if (state.loaded) listOf(
+                widgetStationDescription(state.stationName, state.stationNumber),
+                widgetStationDescription(state.nextStationName, state.nextStationNumber)
+            ) else emptyList()
+            views.setContentDescription(
+                R.id.widget_root,
+                (listOf(lineName) + stations + boundFor).filter { it.isNotEmpty() }.joinToString(" / ")
+            )
             createContentIntent(context)?.let {
                 views.setOnClickPendingIntent(R.id.widget_root, it)
             }
@@ -223,6 +231,7 @@ class RideWidgetProvider : AppWidgetProvider() {
             return inlineViews(context, lineName, lineColor)
         }
 
+        /** 保存済みの駅名・駅番号を配置し、次駅そのものがない場合は欄ごと隠します。 */
         private fun stationViews(
             context: Context,
             state: WidgetState,
@@ -253,10 +262,13 @@ class RideWidgetProvider : AppWidgetProvider() {
                 setViewVisibility(R.id.widget_bound_for, if (boundFor.isNotEmpty()) View.VISIBLE else View.GONE)
                 setTextViewText(R.id.widget_current_station, state.stationName)
                 setTextViewText(R.id.widget_next_station, state.nextStationName)
-                setViewVisibility(R.id.widget_current_station, if (state.stationName.isNotEmpty()) View.VISIBLE else View.GONE)
-                setViewVisibility(R.id.widget_next_station, if (state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
+                setTextViewText(R.id.widget_current_station_number, state.stationNumber)
+                setTextViewText(R.id.widget_next_station_number, state.nextStationNumber)
+                setViewVisibility(R.id.widget_current_station_group, if (state.stationName.isNotEmpty()) View.VISIBLE else View.GONE)
+                setViewVisibility(R.id.widget_next_station_group, if (state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
                 setViewVisibility(R.id.widget_station_arrow, if (state.stationName.isNotEmpty() && state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
-                listOf(R.id.widget_current_station, R.id.widget_next_station, R.id.widget_station_arrow).forEach {
+                listOf(R.id.widget_current_station, R.id.widget_next_station, R.id.widget_station_arrow,
+                    R.id.widget_current_station_number, R.id.widget_next_station_number).forEach {
                     setTextColor(it, WidgetTheme.onLineColor(lineColor))
                 }
             }

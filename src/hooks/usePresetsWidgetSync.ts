@@ -9,6 +9,7 @@ import {
 } from '~/utils/native/presetsWidget';
 import { getPresetRouteEndpoints } from '~/utils/presetRouteEndpoints';
 import { getStationName } from '~/utils/station';
+import { getWidgetStationNumber } from '~/utils/widgetStationNumber';
 
 /**
  * ウィジェットへ渡すプリセットの最大件数。
@@ -23,6 +24,7 @@ type Params = {
   isRoutesDBInitialized: boolean;
 };
 
+/** 取得済みの端点を使い、駅名と駅番号を対応づけてネイティブ用の項目に変換します。 */
 const toWidgetItem = (item: LoopItem): PresetsWidgetItem => {
   const { from, to } = getPresetRouteEndpoints(item);
   const line = from?.line;
@@ -32,6 +34,8 @@ const toWidgetItem = (item: LoopItem): PresetsWidgetItem => {
     name: item.name,
     fromStationName: getStationName(from),
     toStationName: getStationName(to),
+    fromStationNumber: getWidgetStationNumber(from),
+    toStationNumber: getWidgetStationNumber(to),
     lineName: getLocalizedLineName(line, isJapanese),
     // 空文字はネイティブ側でブランドカラー・路線名の先頭1文字へフォールバックされる
     lineColor: line?.color ?? '',

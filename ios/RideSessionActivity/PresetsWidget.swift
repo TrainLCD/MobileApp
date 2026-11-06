@@ -28,7 +28,7 @@ import WidgetKit
 // 乗車中ウィジェット(HomeScreenWidget)と同じsystemSmall / systemMediumに加え、
 // 一覧をまとめて見たい向けにsystemLargeも選べるようにしている。
 
-// 名前18pt・路線名12pt・駅名18ptと上下8ptの余白を確保する。
+// 見出し24pt・駅名18pt・駅番号欄14ptを同じ72ptの行に収めます。
 // 件数計算にも同じ高さを使い、最終行が見切れないようにする。
 private let rowHeight: CGFloat = 72
 private let rowSpacing: CGFloat = 8
@@ -42,6 +42,9 @@ struct PresetsWidgetItem: Codable, Identifiable {
   let lineName: String
   let lineColor: String
   let lineSymbol: String
+  // 旧バージョンで保存したJSONには番号のキーがありません。
+  var fromStationNumber: String? = nil
+  var toStationNumber: String? = nil
 
   // JS側(PresetsWidgetItem)は路線色・路線記号が引けない場合に空文字を送ってくる
   var displayLineColor: String {
@@ -193,7 +196,9 @@ struct PresetsWidgetRow: View {
       }
       if preset.hasStations {
         WidgetStations(from: preset.fromStationName, to: preset.toStationName,
-                       vertical: false, fontSize: 18)
+                       vertical: false, fontSize: 18,
+                       fromNumber: preset.fromStationNumber ?? "",
+                       toNumber: preset.toStationNumber ?? "")
       } else {
         Text(preset.lineName).font(.subheadline).lineLimit(1)
       }
@@ -247,7 +252,9 @@ struct PresetsWidgetFeatured: View {
       if preset.hasStations {
         WidgetStations(
           from: preset.fromStationName, to: preset.toStationName,
-          vertical: vertical, fontSize: vertical ? 20 : 22)
+          vertical: vertical, fontSize: vertical ? 20 : 22,
+          fromNumber: preset.fromStationNumber ?? "",
+          toNumber: preset.toStationNumber ?? "")
       }
       if !vertical {
         // 乗車中の最終更新時刻と同じ位置で、プリセットであることを示します。

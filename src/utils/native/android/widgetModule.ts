@@ -13,6 +13,8 @@ export type WidgetState = {
   boundStationName: string;
   stationName?: string;
   nextStationName?: string;
+  stationNumber?: string;
+  nextStationNumber?: string;
 };
 
 export const updateWidget = (state: WidgetState) => {
