@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import React from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { FONTS } from '../constants';
 import { APP_THEME } from '../models/Theme';
@@ -206,7 +206,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     jest.restoreAllMocks();
   });
 
-  const renderWithScale = (fontSizeScale: number) => {
+  const renderWithScale = (fontSizeScale: number, heightScale = 1) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return 'CURRENT_JA';
       if (atom === themeAtom) return APP_THEME.TOKYO_METRO;
@@ -221,6 +221,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
       <TrainTypeBox
         trainType={twoLineTrainType}
         fontSizeScale={fontSizeScale}
+        heightScale={heightScale}
       />
     );
   };
@@ -242,6 +243,26 @@ describe('TrainTypeBox 2行種別の可読性', () => {
           lineHeight: number;
         };
         expect(style.lineHeight * 2).toBeLessThanOrEqual(BOX_HEIGHT);
+      }
+    }
+  );
+
+  it.each([1, 1.3])(
+    '高さ倍率=%pで箱と文字領域の内寸を揃える',
+    (heightScale) => {
+      const { UNSAFE_root, getAllByText } = renderWithScale(1.2, heightScale);
+      const height = BOX_HEIGHT * heightScale;
+      const boxes = UNSAFE_root.findAllByType(View)
+        .map((node) => StyleSheet.flatten(node.props.style))
+        .filter((style) => style?.width === 96.25 && style?.height != null);
+      expect(boxes.length).toBeGreaterThanOrEqual(2);
+      for (const box of boxes) {
+        expect(box.height).toBe(height);
+      }
+      for (const label of getAllByText('通勤特急\n')) {
+        expect(
+          StyleSheet.flatten(label.props.style).lineHeight * 2
+        ).toBeLessThanOrEqual(height);
       }
     }
   );

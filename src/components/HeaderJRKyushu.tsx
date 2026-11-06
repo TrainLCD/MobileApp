@@ -174,6 +174,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
               trainType={trainType}
               darkenColor
               fontSizeScale={1.2}
+              heightScale={1.3}
             />
           ) : (
             <TrainTypeBoxJRKyushu trainType={trainType} />

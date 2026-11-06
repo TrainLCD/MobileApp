@@ -172,7 +172,11 @@ describe('HeaderJRKyushu', () => {
       );
       expect(getByTestId('TrainTypeBox')).toBeTruthy();
       expect(jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0]).toEqual(
-        expect.objectContaining({ darkenColor: true, fontSizeScale: 1.2 })
+        expect.objectContaining({
+          darkenColor: true,
+          fontSizeScale: 1.2,
+          heightScale: 1.3,
+        })
       );
       expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
     });

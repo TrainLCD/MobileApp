@@ -42,6 +42,7 @@ type Props = {
   nextTrainTypeColor?: string;
   darkenColor?: boolean;
   fontSizeScale?: number;
+  heightScale?: number;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -114,8 +115,11 @@ const TrainTypeBox: React.FC<Props> = ({
   nextTrainTypeColor = '#444',
   darkenColor = false,
   fontSizeScale: fontSizeScaleRaw = 1,
+  heightScale = 1,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
+  const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
+  const boxHeightStyle = useMemo(() => ({ height: boxHeight }), [boxHeight]);
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const { width: windowWidth } = useLandscapeWindowDimensions();
@@ -310,8 +314,8 @@ const TrainTypeBox: React.FC<Props> = ({
   );
 
   const nextTrainTypeWrapperStyle = useMemo(
-    () => [styles.nextTrainTypeWrapper, { width: windowWidth }],
-    [windowWidth]
+    () => [styles.nextTrainTypeWrapper, { width: windowWidth, top: boxHeight }],
+    [boxHeight, windowWidth]
   );
 
   const numberOfLines = useMemo(
@@ -336,39 +340,39 @@ const TrainTypeBox: React.FC<Props> = ({
     fontSizeScale,
     numberOfLines,
     prevNumberOfLines,
-    maxHeight: BOX_HEIGHT,
+    maxHeight: boxHeight,
   });
 
   return (
     <View>
-      <View style={styles.box}>
+      <View style={[styles.box, boxHeightStyle]}>
         <LinearGradient
           colors={['#aaa', '#000', '#000', '#aaa']}
           locations={
             darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
           }
-          style={styles.gradient}
+          style={[styles.gradient, boxHeightStyle]}
         />
         <LinearGradient
           colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
-          style={styles.gradient}
+          style={[styles.gradient, boxHeightStyle]}
         />
         {darkenColor ? (
           <>
             <LinearGradient
               colors={['#00000000', '#00000033', '#00000000']}
               locations={[0.35, 0.55, 0.85]}
-              style={styles.gradient}
+              style={[styles.gradient, boxHeightStyle]}
             />
             <LinearGradient
               colors={['#ffffff44', '#ffffff11', '#00000000']}
               locations={[0, 0.35, 0.35]}
-              style={styles.gradient}
+              style={[styles.gradient, boxHeightStyle]}
             />
           </>
         ) : null}
 
-        <View style={styles.textWrapper}>
+        <View style={[styles.textWrapper, boxHeightStyle]}>
           <AnimatedTypography
             style={[
               textTopAnimatedStyles,
