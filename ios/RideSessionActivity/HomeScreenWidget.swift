@@ -273,7 +273,7 @@ struct HomeScreenWidgetEntryView: View {
         lineNameLineLimit: family == .systemSmall && hasStationInfo ? 1 : 2)
       if hasStationInfo {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 22 : 24,
+                       vertical: family == .systemSmall, fontSize: 24,
                        fromNumber: entry.stationNumber, toNumber: entry.nextStationNumber)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。
