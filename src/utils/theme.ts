@@ -66,6 +66,11 @@ export const getSettingsThemes = (): SettingsTheme[] =>
       devOnly: false,
     },
     {
+      label: translate('jr315Like'),
+      value: APP_THEME.JR_315,
+      devOnly: false,
+    },
+    {
       label: translate('jrKyushuLike'),
       value: APP_THEME.JR_KYUSHU,
       devOnly: false,

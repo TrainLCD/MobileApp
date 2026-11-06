@@ -166,6 +166,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         return (
           <LineBoardJO stations={slicedLeftStations} lineColors={lineColors} />
         );
+      case APP_THEME.JR_315:
       case APP_THEME.JR_KYUSHU:
         return (
           <LineBoardJRKyushu

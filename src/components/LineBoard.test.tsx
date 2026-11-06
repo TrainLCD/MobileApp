@@ -151,6 +151,12 @@ describe('LineBoard', () => {
     expect(LineBoardJO).toHaveBeenCalled();
   });
 
+  it('315系テーマでJR九州風の路線図を共有する', () => {
+    setupMocks(APP_THEME.JR_315);
+    render(<LineBoard />);
+    expect(LineBoardJRKyushu).toHaveBeenCalled();
+  });
+
   it('JR_KYUSHU テーマで LineBoardJRKyushu をレンダリングする', () => {
     setupMocks(APP_THEME.JR_KYUSHU);
     render(<LineBoard />);

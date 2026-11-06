@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react-native';
-import type React from 'react';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
+import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import HeaderJRKyushu from './HeaderJRKyushu';
+import TrainTypeBox from './TrainTypeBox';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
@@ -37,9 +38,14 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
-jest.mock('expo-linear-gradient', () => ({
-  LinearGradient: ({ children }: { children: React.ReactNode }) => children,
-}));
+jest.mock('expo-linear-gradient', () => {
+  const { View } = require('react-native');
+  return {
+    LinearGradient: (props: Record<string, unknown>) => (
+      <View {...props} testID="linear-gradient" />
+    ),
+  };
+});
 
 jest.mock('~/store/atoms/navigation', () => ({
   __esModule: true,
@@ -140,6 +146,13 @@ jest.mock('./NumberingIcon', () => {
   };
 });
 
+jest.mock('./TrainTypeBox', () => {
+  const { View } = require('react-native');
+  return jest.fn(function MockTrainTypeBox() {
+    return <View testID="TrainTypeBox" />;
+  });
+});
+
 jest.mock('./TrainTypeBoxJRKyushu', () => {
   const { View } = require('react-native');
   return function MockTrainTypeBoxJRKyushu() {
@@ -150,6 +163,66 @@ jest.mock('./TrainTypeBoxJRKyushu', () => {
 describe('HeaderJRKyushu', () => {
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('315系の配色', () => {
+    it('315系では小田急風の種別表示を使う', () => {
+      const { getByTestId, queryByTestId } = render(
+        <HeaderJRKyushu {...createMockHeaderProps()} is315 />
+      );
+      expect(getByTestId('TrainTypeBox')).toBeTruthy();
+      expect(jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({ darkenColor: true, fontSizeScale: 1.2 })
+      );
+      expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
+    });
+
+    it('上端と区切り線を現在の路線色で描く', () => {
+      const { getAllByTestId, UNSAFE_getAllByType } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({
+            currentLine: { ...TOEI_SHINJUKU_LINE_LOCAL, color: '#0068B7' },
+          })}
+          is315
+        />
+      );
+      const { View, StyleSheet } = require('react-native');
+      expect(getAllByTestId('linear-gradient')[0].props.colors).toEqual([
+        '#fcfcfc',
+        '#0068B7bb',
+        '#0068B7bb',
+        '#0068B7bb',
+        '#fcfcfc',
+      ]);
+      const views = UNSAFE_getAllByType(View);
+      expect(
+        StyleSheet.flatten(views[views.length - 1].props.style).backgroundColor
+      ).toBe('#0068B7');
+    });
+
+    it('路線がない場合もオレンジで描く', () => {
+      const { getAllByTestId } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({ currentLine: null })}
+          is315
+        />
+      );
+      expect(getAllByTestId('linear-gradient')[0].props.colors[1]).toBe(
+        '#FF6D00bb'
+      );
+    });
+
+    it('JR九州風には上端を追加せず赤い区切り線を保つ', () => {
+      const { getAllByTestId, UNSAFE_getAllByType } = render(
+        <HeaderJRKyushu {...createMockHeaderProps()} />
+      );
+      const { View, StyleSheet } = require('react-native');
+      expect(getAllByTestId('linear-gradient')).toHaveLength(1);
+      const views = UNSAFE_getAllByType(View);
+      expect(
+        StyleSheet.flatten(views[views.length - 1].props.style).backgroundColor
+      ).toBe('#E50012');
+    });
   });
 
   describe('Component rendering', () => {

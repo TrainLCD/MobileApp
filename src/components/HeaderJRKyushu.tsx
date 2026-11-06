@@ -7,8 +7,10 @@ import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderBar from './HeaderBar';
 import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
+import TrainTypeBox from './TrainTypeBox';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 import Typography from './Typography';
 
@@ -22,6 +24,9 @@ const styles = StyleSheet.create({
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
+  },
+  gradientRoot315: {
+    paddingTop: 0,
   },
   bottom: {
     height: isTablet ? 128 : 84,
@@ -107,13 +112,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  headerTexts315: {
+    // 上の余白を詰めた分だけ下へ移し、駅名と区切り線の位置を保つ。
+    marginBottom: 14,
+  },
   numberingIconContainer: {
     alignSelf: 'center',
   },
 });
 
-const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
+type Props = CommonHeaderProps & { is315?: boolean };
+
+const HeaderJRKyushu: React.FC<Props> = (props) => {
   const {
+    is315 = false,
+    currentLine,
     selectedBound,
     headerState,
     headerTransitionDelay,
@@ -143,15 +156,28 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
     isJapaneseState,
   });
 
+  const lineColor = currentLine?.color ?? '#FF6D00';
+
   return (
     <View style={styles.root}>
+      {is315 ? (
+        <HeaderBar height={15} lineColor={lineColor} edgeColor="#fcfcfc" />
+      ) : null}
       <LinearGradient
         colors={['#fcfcfc', '#ccc']}
         locations={[0, 1]}
-        style={styles.gradientRoot}
+        style={[styles.gradientRoot, is315 && styles.gradientRoot315]}
       >
-        <View style={styles.headerTexts}>
-          <TrainTypeBoxJRKyushu trainType={trainType} />
+        <View style={[styles.headerTexts, is315 && styles.headerTexts315]}>
+          {is315 ? (
+            <TrainTypeBox
+              trainType={trainType}
+              darkenColor
+              fontSizeScale={1.2}
+            />
+          ) : (
+            <TrainTypeBoxJRKyushu trainType={trainType} />
+          )}
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
               <AnimatedTypography
@@ -283,7 +309,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
           )}
         </View>
       </LinearGradient>
-      <View style={styles.divider} />
+      <View style={[styles.divider, is315 && { backgroundColor: lineColor }]} />
     </View>
   );
 };
