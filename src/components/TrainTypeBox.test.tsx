@@ -211,7 +211,8 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     fontSizeScale: number,
     heightScale = 1,
     widthScale = 1,
-    borderRadius?: number
+    borderRadius?: number,
+    gradientProps: { darkenColor?: boolean; softGradient?: boolean } = {}
   ) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return 'CURRENT_JA';
@@ -230,6 +231,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
         heightScale={heightScale}
         widthScale={widthScale}
         borderRadius={borderRadius}
+        {...gradientProps}
       />
     );
   };
@@ -295,6 +297,41 @@ describe('TrainTypeBox 2行種別の可読性', () => {
         expect(StyleSheet.flatten(layer.props.style).borderRadius).toBe(
           borderRadius ?? 4
         );
+      }
+    }
+  );
+
+  it.each([false, true])(
+    'softGradient=%pの段階位置を確認する',
+    (softGradient) => {
+      const { UNSAFE_root } = renderWithScale(1.2, 1.3, 1.4, 8, {
+        darkenColor: true,
+        softGradient,
+      });
+      const layers = UNSAFE_root.findAllByType(LinearGradient);
+      expect(layers).toHaveLength(4);
+      if (softGradient) {
+        for (const layer of layers) {
+          const locations = layer.props.locations as number[] | undefined;
+          locations?.forEach((position, index) => {
+            if (index > 0)
+              expect(position).toBeGreaterThan(locations[index - 1]);
+          });
+        }
+        expect(layers[3].props.colors).toEqual([
+          '#ffffff18',
+          '#ffffff08',
+          '#00000000',
+        ]);
+      } else {
+        expect(layers[0].props.colors).toEqual([
+          '#aaa',
+          '#000',
+          '#000',
+          '#aaa',
+        ]);
+        expect(layers[0].props.locations).toEqual([0.35, 0.35, 0.35, 0.9]);
+        expect(layers[3].props.locations).toEqual([0, 0.35, 0.35]);
       }
     }
   );

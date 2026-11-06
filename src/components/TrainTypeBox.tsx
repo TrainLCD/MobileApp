@@ -45,6 +45,7 @@ type Props = {
   heightScale?: number;
   widthScale?: number;
   borderRadius?: number;
+  softGradient?: boolean;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -120,6 +121,7 @@ const TrainTypeBox: React.FC<Props> = ({
   heightScale = 1,
   widthScale = 1,
   borderRadius = 4,
+  softGradient = false,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
@@ -359,9 +361,17 @@ const TrainTypeBox: React.FC<Props> = ({
     <View>
       <View style={[styles.box, boxSizeStyle]}>
         <LinearGradient
-          colors={['#aaa', '#000', '#000', '#aaa']}
+          colors={
+            softGradient
+              ? ['#666', '#222', '#333', '#555']
+              : ['#aaa', '#000', '#000', '#aaa']
+          }
           locations={
-            darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
+            softGradient
+              ? [0, 0.35, 0.7, 1]
+              : darkenColor
+                ? [0.35, 0.35, 0.35, 0.9]
+                : [0.5, 0.5, 0.5, 0.9]
           }
           style={gradientStyle}
         />
@@ -372,13 +382,21 @@ const TrainTypeBox: React.FC<Props> = ({
         {darkenColor ? (
           <>
             <LinearGradient
-              colors={['#00000000', '#00000033', '#00000000']}
-              locations={[0.35, 0.55, 0.85]}
+              colors={
+                softGradient
+                  ? ['#00000000', '#00000018', '#00000000']
+                  : ['#00000000', '#00000033', '#00000000']
+              }
+              locations={softGradient ? [0, 0.55, 1] : [0.35, 0.55, 0.85]}
               style={gradientStyle}
             />
             <LinearGradient
-              colors={['#ffffff44', '#ffffff11', '#00000000']}
-              locations={[0, 0.35, 0.35]}
+              colors={
+                softGradient
+                  ? ['#ffffff18', '#ffffff08', '#00000000']
+                  : ['#ffffff44', '#ffffff11', '#00000000']
+              }
+              locations={softGradient ? [0, 0.45, 1] : [0, 0.35, 0.35]}
               style={gradientStyle}
             />
           </>
