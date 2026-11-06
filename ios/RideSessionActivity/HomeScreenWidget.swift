@@ -204,9 +204,9 @@ struct WidgetStations: View {
       .frame(height: fontSize)
       // 片方でも番号がある場合は、欠番側にも同じ最小幅を使います。
       .frame(minWidth: showsNumberSlot ? 48 : 0)
-      // 番号の行高と同じ14ptを確保し、駅名の下に重ねず表示します。
+      // 番号の行高14ptに2ptの間隔を加え、駅名から離して表示します。
       // 番号の文字幅は駅名の配置に影響させません。
-      .padding(.bottom, showsNumberSlot ? 14 : 0)
+      .padding(.bottom, showsNumberSlot ? 16 : 0)
       .overlay(alignment: .bottom) {
         if showsNumberSlot {
           Text(formattedNumber.isEmpty ? " " : formattedNumber)
