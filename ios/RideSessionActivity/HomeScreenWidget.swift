@@ -204,9 +204,9 @@ struct WidgetStations: View {
       .frame(height: fontSize)
       // 片方でも番号がある場合は、欠番側にも同じ最小幅を使います。
       .frame(minWidth: showsNumberSlot ? 48 : 0)
-      // 番号の行高14ptを保ち、駅名の下の余白に2pt重ねて間隔を詰めます。
+      // 番号の行高と同じ14ptを確保し、駅名の下に重ねず表示します。
       // 番号の文字幅は駅名の配置に影響させません。
-      .padding(.bottom, showsNumberSlot ? 12 : 0)
+      .padding(.bottom, showsNumberSlot ? 14 : 0)
       .overlay(alignment: .bottom) {
         if showsNumberSlot {
           Text(formattedNumber.isEmpty ? " " : formattedNumber)
@@ -255,7 +255,7 @@ struct HomeScreenWidgetEntryView: View {
 
   var body: some View {
     // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
-    VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
+    VStack(alignment: .leading, spacing: family == .systemSmall ? 2 : 6) {
       if family == .systemMedium {
         HStack(spacing: 4) {
           Image(systemName: entry.loaded ? "tram.fill" : "tram")
