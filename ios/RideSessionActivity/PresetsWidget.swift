@@ -200,7 +200,11 @@ struct PresetsWidgetRow: View {
                        fromNumber: preset.fromStationNumber ?? "",
                        toNumber: preset.toStationNumber ?? "")
       } else {
-        Text(preset.lineName).font(.subheadline).lineLimit(1)
+        Text(preset.lineName)
+          .font(.subheadline)
+          .lineLimit(1)
+          // 固定行高と上下余白に収まる範囲で文字サイズを拡大します。
+          .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
       }
     }
     .padding(.horizontal, 12)
@@ -427,5 +431,16 @@ struct PresetsWidget_Previews: PreviewProvider {
       PresetsWidgetEntryView(entry: .empty)
         .previewContext(WidgetPreviewContext(family: .systemSmall))
     }
+  }
+}
+
+struct PresetsWidgetMissingStations_Previews: PreviewProvider {
+  static var previews: some View {
+    PresetsWidgetRow(preset: PresetsWidgetItem(
+      id: "missing-stations", name: "通勤", fromStationName: "", toStationName: "",
+      lineName: "名古屋市営地下鉄東山線", lineColor: "F9C900", lineSymbol: "H"))
+      .environment(\.dynamicTypeSize, .accessibility5)
+      .frame(width: 300)
+      .previewLayout(.sizeThatFits)
   }
 }
