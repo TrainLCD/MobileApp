@@ -111,17 +111,20 @@ struct LineNumberingBadge: View {
   let diameter: CGFloat
 
   var body: some View {
-    ZStack {
-      Circle()
-        .fill(lineForegroundColor(for: lineColor))
-      Text(lineSymbol)
-        .font(.system(size: diameter * 0.4, weight: .heavy, design: .rounded))
-        .foregroundStyle(Color(hex: lineColor))
-        .minimumScaleFactor(0.5)
-        .lineLimit(1)
-        .padding(diameter * 0.18)
-    }
-    .frame(width: diameter, height: diameter)
+    Circle()
+      .fill(lineForegroundColor(for: lineColor))
+      .frame(width: diameter, height: diameter)
+      .overlay(alignment: .center) {
+        Text(lineSymbol)
+          .font(.system(size: diameter * 0.4, weight: .heavy, design: .rounded))
+          .foregroundStyle(Color(hex: lineColor))
+          .minimumScaleFactor(0.5)
+          .lineLimit(1)
+          // 縮小された文字も中央揃えにし、円の寸法は文字幅に左右されないようにします。
+          .multilineTextAlignment(.center)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+          .padding(diameter * 0.18)
+      }
     // 面に浮いて見えるだけの最小限の影。強くすると路線色が濁る
     .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
   }
@@ -312,6 +315,28 @@ struct HomeScreenWidget: Widget {
         .systemMedium,
       ]
     )
+  }
+}
+
+// 一覧の24ptと見出しの28ptで、1文字・複数文字・代替文字の中心を比較します。
+struct LineNumberingBadge_Previews: PreviewProvider {
+  static var previews: some View {
+    VStack(spacing: 16) {
+      ForEach([CGFloat(24), CGFloat(28)], id: \.self) { diameter in
+        HStack(spacing: 16) {
+          ForEach(["H", "JC", "W", "ABC", "東", "?"], id: \.self) { symbol in
+            LineNumberingBadge(lineColor: "F15A22", lineSymbol: symbol, diameter: diameter)
+              .overlay {
+                // 円と文字を同じ中心線で確認するためのガイドです。
+                Rectangle().fill(Color.blue.opacity(0.4)).frame(width: 0.5)
+              }
+          }
+        }
+      }
+    }
+    .padding()
+    .background(Color.gray)
+    .previewLayout(.sizeThatFits)
   }
 }
 

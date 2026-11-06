@@ -28,9 +28,9 @@ import WidgetKit
 // 乗車中ウィジェット(HomeScreenWidget)と同じsystemSmall / systemMediumに加え、
 // 一覧をまとめて見たい向けにsystemLargeも選べるようにしている。
 
-// 見出し24pt・駅名18pt・駅番号欄14ptを同じ72ptの行に収めます。
+// 見出し24pt・駅名20pt・駅番号欄14ptに、上下10pt以上の余白を確保します。
 // 件数計算にも同じ高さを使い、最終行が見切れないようにする。
-private let rowHeight: CGFloat = 72
+private let rowHeight: CGFloat = 88
 private let rowSpacing: CGFloat = 8
 private let rowCornerRadius: CGFloat = 12
 
@@ -204,6 +204,7 @@ struct PresetsWidgetRow: View {
       }
     }
     .padding(.horizontal, 12)
+    .padding(.vertical, 10)
     .frame(maxWidth: .infinity, minHeight: rowHeight, maxHeight: rowHeight, alignment: .leading)
     .foregroundStyle(lineForegroundColor(for: preset.displayLineColor))
     .background {
