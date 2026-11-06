@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
@@ -209,7 +210,8 @@ describe('TrainTypeBox 2行種別の可読性', () => {
   const renderWithScale = (
     fontSizeScale: number,
     heightScale = 1,
-    widthScale = 1
+    widthScale = 1,
+    borderRadius?: number
   ) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return 'CURRENT_JA';
@@ -227,6 +229,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
         fontSizeScale={fontSizeScale}
         heightScale={heightScale}
         widthScale={widthScale}
+        borderRadius={borderRadius}
       />
     );
   };
@@ -278,6 +281,20 @@ describe('TrainTypeBox 2行種別の可読性', () => {
         expect(
           StyleSheet.flatten(label.props.style).lineHeight * 2
         ).toBeLessThanOrEqual(height);
+      }
+    }
+  );
+
+  it.each([undefined, 8])(
+    '角丸=%pを全グラデーション層へ反映する',
+    (borderRadius) => {
+      const { UNSAFE_root } = renderWithScale(1.2, 1, 1, borderRadius);
+      const layers = UNSAFE_root.findAllByType(LinearGradient);
+      expect(layers).toHaveLength(2);
+      for (const layer of layers) {
+        expect(StyleSheet.flatten(layer.props.style).borderRadius).toBe(
+          borderRadius ?? 4
+        );
       }
     }
   );

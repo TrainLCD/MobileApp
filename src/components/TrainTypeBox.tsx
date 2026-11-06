@@ -44,6 +44,7 @@ type Props = {
   fontSizeScale?: number;
   heightScale?: number;
   widthScale?: number;
+  borderRadius?: number;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -118,6 +119,7 @@ const TrainTypeBox: React.FC<Props> = ({
   fontSizeScale: fontSizeScaleRaw = 1,
   heightScale = 1,
   widthScale = 1,
+  borderRadius = 4,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
@@ -125,6 +127,10 @@ const TrainTypeBox: React.FC<Props> = ({
   const boxSizeStyle = useMemo(
     () => ({ width: boxWidth, height: boxHeight }),
     [boxHeight, boxWidth]
+  );
+  const gradientStyle = useMemo(
+    () => [styles.gradient, boxSizeStyle, { borderRadius }],
+    [borderRadius, boxSizeStyle]
   );
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
@@ -357,23 +363,23 @@ const TrainTypeBox: React.FC<Props> = ({
           locations={
             darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
           }
-          style={[styles.gradient, boxSizeStyle]}
+          style={gradientStyle}
         />
         <LinearGradient
           colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
-          style={[styles.gradient, boxSizeStyle]}
+          style={gradientStyle}
         />
         {darkenColor ? (
           <>
             <LinearGradient
               colors={['#00000000', '#00000033', '#00000000']}
               locations={[0.35, 0.55, 0.85]}
-              style={[styles.gradient, boxSizeStyle]}
+              style={gradientStyle}
             />
             <LinearGradient
               colors={['#ffffff44', '#ffffff11', '#00000000']}
               locations={[0, 0.35, 0.35]}
-              style={[styles.gradient, boxSizeStyle]}
+              style={gradientStyle}
             />
           </>
         ) : null}

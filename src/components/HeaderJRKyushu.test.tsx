@@ -177,6 +177,7 @@ describe('HeaderJRKyushu', () => {
           fontSizeScale: 1.2,
           heightScale: 1.3,
           widthScale: 1.4,
+          borderRadius: 8,
         })
       );
       expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
