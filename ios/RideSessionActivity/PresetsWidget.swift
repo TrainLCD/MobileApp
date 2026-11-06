@@ -196,7 +196,7 @@ struct PresetsWidgetRow: View {
       }
       if preset.hasStations {
         WidgetStations(from: preset.fromStationName, to: preset.toStationName,
-                       vertical: false, fontSize: 18,
+                       vertical: false, fontSize: 20,
                        fromNumber: preset.fromStationNumber ?? "",
                        toNumber: preset.toStationNumber ?? "")
       } else {
@@ -252,7 +252,7 @@ struct PresetsWidgetFeatured: View {
       if preset.hasStations {
         WidgetStations(
           from: preset.fromStationName, to: preset.toStationName,
-          vertical: vertical, fontSize: vertical ? 20 : 22,
+          vertical: vertical, fontSize: vertical ? 22 : 24,
           fromNumber: preset.fromStationNumber ?? "",
           toNumber: preset.toStationNumber ?? "")
       }
