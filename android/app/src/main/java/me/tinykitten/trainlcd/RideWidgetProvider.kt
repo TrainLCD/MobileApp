@@ -264,6 +264,16 @@ class RideWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_next_station, state.nextStationName)
                 setTextViewText(R.id.widget_current_station_number, state.stationNumber)
                 setTextViewText(R.id.widget_next_station_number, state.nextStationNumber)
+                val showsNumberSlot = (state.stationName.isNotEmpty() && state.stationNumber.isNotBlank()) ||
+                    (state.nextStationName.isNotEmpty() && state.nextStationNumber.isNotBlank())
+                val numberVisibility = if (showsNumberSlot) View.VISIBLE else View.GONE
+                setViewVisibility(R.id.widget_current_station_number, numberVisibility)
+                setViewVisibility(R.id.widget_next_station_number, numberVisibility)
+                if (vertical) {
+                    val minWidth = if (showsNumberSlot) context.resources.getDimensionPixelSize(R.dimen.widget_station_min_width) else 0
+                    setInt(R.id.widget_current_station, "setMinWidth", minWidth)
+                    setInt(R.id.widget_next_station, "setMinWidth", minWidth)
+                }
                 setViewVisibility(R.id.widget_current_station_group, if (state.stationName.isNotEmpty()) View.VISIBLE else View.GONE)
                 setViewVisibility(R.id.widget_next_station_group, if (state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
                 setViewVisibility(R.id.widget_station_arrow, if (state.stationName.isNotEmpty() && state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
