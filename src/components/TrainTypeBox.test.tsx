@@ -206,7 +206,11 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     jest.restoreAllMocks();
   });
 
-  const renderWithScale = (fontSizeScale: number, heightScale = 1) => {
+  const renderWithScale = (
+    fontSizeScale: number,
+    heightScale = 1,
+    widthScale = 1
+  ) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return 'CURRENT_JA';
       if (atom === themeAtom) return APP_THEME.TOKYO_METRO;
@@ -222,6 +226,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
         trainType={twoLineTrainType}
         fontSizeScale={fontSizeScale}
         heightScale={heightScale}
+        widthScale={widthScale}
       />
     );
   };
@@ -247,14 +252,24 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     }
   );
 
-  it.each([1, 1.3])(
-    '高さ倍率=%pで箱と文字領域の内寸を揃える',
-    (heightScale) => {
-      const { UNSAFE_root, getAllByText } = renderWithScale(1.2, heightScale);
+  it.each([
+    [1, 1],
+    [1.3, 1.4],
+  ])(
+    '高さ倍率=%p・幅倍率=%pで箱と文字領域の内寸を揃える',
+    (heightScale, widthScale) => {
+      const { UNSAFE_root, getAllByText } = renderWithScale(
+        1.2,
+        heightScale,
+        widthScale
+      );
       const height = BOX_HEIGHT * heightScale;
       const boxes = UNSAFE_root.findAllByType(View)
         .map((node) => StyleSheet.flatten(node.props.style))
-        .filter((style) => style?.width === 96.25 && style?.height != null);
+        .filter(
+          (style) =>
+            style?.width === 96.25 * widthScale && style?.height != null
+        );
       expect(boxes.length).toBeGreaterThanOrEqual(2);
       for (const box of boxes) {
         expect(box.height).toBe(height);

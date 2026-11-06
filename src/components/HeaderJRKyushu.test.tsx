@@ -176,6 +176,7 @@ describe('HeaderJRKyushu', () => {
           darkenColor: true,
           fontSizeScale: 1.2,
           heightScale: 1.3,
+          widthScale: 1.4,
         })
       );
       expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();

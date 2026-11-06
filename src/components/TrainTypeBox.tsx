@@ -43,6 +43,7 @@ type Props = {
   darkenColor?: boolean;
   fontSizeScale?: number;
   heightScale?: number;
+  widthScale?: number;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -116,10 +117,15 @@ const TrainTypeBox: React.FC<Props> = ({
   darkenColor = false,
   fontSizeScale: fontSizeScaleRaw = 1,
   heightScale = 1,
+  widthScale = 1,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
-  const boxHeightStyle = useMemo(() => ({ height: boxHeight }), [boxHeight]);
+  const boxWidth = BOX_WIDTH * Math.max(widthScale, 0.1);
+  const boxSizeStyle = useMemo(
+    () => ({ width: boxWidth, height: boxHeight }),
+    [boxHeight, boxWidth]
+  );
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const { width: windowWidth } = useLandscapeWindowDimensions();
@@ -345,34 +351,34 @@ const TrainTypeBox: React.FC<Props> = ({
 
   return (
     <View>
-      <View style={[styles.box, boxHeightStyle]}>
+      <View style={[styles.box, boxSizeStyle]}>
         <LinearGradient
           colors={['#aaa', '#000', '#000', '#aaa']}
           locations={
             darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
           }
-          style={[styles.gradient, boxHeightStyle]}
+          style={[styles.gradient, boxSizeStyle]}
         />
         <LinearGradient
           colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
-          style={[styles.gradient, boxHeightStyle]}
+          style={[styles.gradient, boxSizeStyle]}
         />
         {darkenColor ? (
           <>
             <LinearGradient
               colors={['#00000000', '#00000033', '#00000000']}
               locations={[0.35, 0.55, 0.85]}
-              style={[styles.gradient, boxHeightStyle]}
+              style={[styles.gradient, boxSizeStyle]}
             />
             <LinearGradient
               colors={['#ffffff44', '#ffffff11', '#00000000']}
               locations={[0, 0.35, 0.35]}
-              style={[styles.gradient, boxHeightStyle]}
+              style={[styles.gradient, boxSizeStyle]}
             />
           </>
         ) : null}
 
-        <View style={[styles.textWrapper, boxHeightStyle]}>
+        <View style={[styles.textWrapper, boxSizeStyle]}>
           <AnimatedTypography
             style={[
               textTopAnimatedStyles,
