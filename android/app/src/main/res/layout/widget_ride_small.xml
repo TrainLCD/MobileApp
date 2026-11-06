@@ -90,20 +90,42 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_vertical">
-            <TextView
-                android:id="@+id/widget_current_station"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="12sp"
-                android:autoSizeMaxTextSize="22sp"
-                android:autoSizeStepGranularity="1sp"
-                android:layout_width="match_parent"
+            <RelativeLayout
+                android:id="@+id/widget_current_station_group"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textColor="@color/widget_on_line_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:layout_gravity="start">
+                <TextView
+                    android:id="@+id/widget_current_station"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="12sp"
+                    android:autoSizeMaxTextSize="22sp"
+                    android:autoSizeStepGranularity="1sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+                <!-- 空欄でも高さを確保し、駅番号の有無で駅名を動かしません。 -->
+                <TextView
+                    android:id="@+id/widget_current_station_number"
+                    android:layout_width="0dp"
+                    android:layout_below="@id/widget_current_station"
+                    android:layout_alignStart="@id/widget_current_station"
+                    android:layout_alignEnd="@id/widget_current_station"
+                    android:layout_height="14sp"
+                    android:includeFontPadding="false"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
             <TextView
                 android:id="@+id/widget_station_arrow"
                 android:layout_width="wrap_content"
@@ -118,20 +140,42 @@
                 android:layout_marginBottom="2dp"
                 android:paddingEnd="8dp"
                 android:text="↓" />
-            <TextView
-                android:id="@+id/widget_next_station"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="12sp"
-                android:autoSizeMaxTextSize="22sp"
-                android:autoSizeStepGranularity="1sp"
-                android:layout_width="match_parent"
+            <RelativeLayout
+                android:id="@+id/widget_next_station_group"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:textColor="@color/widget_on_line_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                android:layout_gravity="start">
+                <TextView
+                    android:id="@+id/widget_next_station"
+                    android:autoSizeTextType="uniform"
+                    android:autoSizeMinTextSize="12sp"
+                    android:autoSizeMaxTextSize="22sp"
+                    android:autoSizeStepGranularity="1sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+                <!-- 空欄でも高さを確保し、駅番号の有無で駅名を動かしません。 -->
+                <TextView
+                    android:id="@+id/widget_next_station_number"
+                    android:layout_width="0dp"
+                    android:layout_below="@id/widget_next_station"
+                    android:layout_alignStart="@id/widget_next_station"
+                    android:layout_alignEnd="@id/widget_next_station"
+                    android:layout_height="14sp"
+                    android:includeFontPadding="false"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:textColor="@color/widget_on_line_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
         </LinearLayout>
 
     </LinearLayout>

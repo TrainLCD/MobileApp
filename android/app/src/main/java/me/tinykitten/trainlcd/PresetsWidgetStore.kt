@@ -17,7 +17,9 @@ data class PresetWidgetItem(
     val toStationName: String,
     val lineName: String,
     val lineColor: String,
-    val lineSymbol: String
+    val lineSymbol: String,
+    val fromStationNumber: String = "",
+    val toStationNumber: String = ""
 )
 
 /**
@@ -35,6 +37,8 @@ object PresetsWidgetStore {
     private const val FIELD_NAME = "name"
     private const val FIELD_FROM = "fromStationName"
     private const val FIELD_TO = "toStationName"
+    private const val FIELD_FROM_NUMBER = "fromStationNumber"
+    private const val FIELD_TO_NUMBER = "toStationNumber"
     private const val FIELD_LINE_NAME = "lineName"
     private const val FIELD_LINE_COLOR = "lineColor"
     private const val FIELD_LINE_SYMBOL = "lineSymbol"
@@ -58,6 +62,8 @@ object PresetsWidgetStore {
                         .put(FIELD_LINE_NAME, preset.lineName)
                         .put(FIELD_LINE_COLOR, preset.lineColor)
                         .put(FIELD_LINE_SYMBOL, preset.lineSymbol)
+                        .put(FIELD_FROM_NUMBER, preset.fromStationNumber)
+                        .put(FIELD_TO_NUMBER, preset.toStationNumber)
                 )
             }
         }.toString()
@@ -90,7 +96,9 @@ object PresetsWidgetStore {
                     toStationName = obj.optString(FIELD_TO),
                     lineName = obj.optString(FIELD_LINE_NAME),
                     lineColor = obj.optString(FIELD_LINE_COLOR),
-                    lineSymbol = obj.optString(FIELD_LINE_SYMBOL)
+                    lineSymbol = obj.optString(FIELD_LINE_SYMBOL),
+                    fromStationNumber = obj.optString(FIELD_FROM_NUMBER),
+                    toStationNumber = obj.optString(FIELD_TO_NUMBER)
                 )
             }
         } catch (_: JSONException) {

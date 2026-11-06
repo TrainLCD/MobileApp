@@ -253,10 +253,13 @@ class RideWidgetProvider : AppWidgetProvider() {
                 setViewVisibility(R.id.widget_bound_for, if (boundFor.isNotEmpty()) View.VISIBLE else View.GONE)
                 setTextViewText(R.id.widget_current_station, state.stationName)
                 setTextViewText(R.id.widget_next_station, state.nextStationName)
-                setViewVisibility(R.id.widget_current_station, if (state.stationName.isNotEmpty()) View.VISIBLE else View.GONE)
-                setViewVisibility(R.id.widget_next_station, if (state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
+                setTextViewText(R.id.widget_current_station_number, state.stationNumber)
+                setTextViewText(R.id.widget_next_station_number, state.nextStationNumber)
+                setViewVisibility(R.id.widget_current_station_group, if (state.stationName.isNotEmpty()) View.VISIBLE else View.GONE)
+                setViewVisibility(R.id.widget_next_station_group, if (state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
                 setViewVisibility(R.id.widget_station_arrow, if (state.stationName.isNotEmpty() && state.nextStationName.isNotEmpty()) View.VISIBLE else View.GONE)
-                listOf(R.id.widget_current_station, R.id.widget_next_station, R.id.widget_station_arrow).forEach {
+                listOf(R.id.widget_current_station, R.id.widget_next_station, R.id.widget_station_arrow,
+                    R.id.widget_current_station_number, R.id.widget_next_station_number).forEach {
                     setTextColor(it, WidgetTheme.onLineColor(lineColor))
                 }
             }

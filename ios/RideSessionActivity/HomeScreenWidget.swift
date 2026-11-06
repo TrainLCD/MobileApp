@@ -176,32 +176,47 @@ struct WidgetStations: View {
   let to: String
   let vertical: Bool
   var fontSize: CGFloat = 22
+  var fromNumber: String = ""
+  var toNumber: String = ""
 
-  private func station(_ name: String) -> some View {
-    Text(name)
+  private func station(_ name: String, number: String) -> some View {
+    let formattedNumber = number.trimmingCharacters(in: .whitespacesAndNewlines)
+      .replacingOccurrences(of: "^([A-Za-z]+)([0-9]+)$", with: "$1-$2", options: .regularExpression)
+    return Text(name)
       .font(.system(size: fontSize, weight: .bold))
       .lineLimit(1)
       .minimumScaleFactor(0.6)
-      // 横並びは乗車中・プリセットとも駅名の幅に合わせ、矢印との間隔を保ちます。
-      .frame(maxWidth: vertical ? .infinity : nil, alignment: .leading)
+      // 番号を重ねる領域を先に確保し、番号の文字幅も駅名の配置に影響させません。
+      .padding(.bottom, 14)
+      .overlay(alignment: .bottom) {
+        Text(formattedNumber.isEmpty ? " " : formattedNumber)
+          .font(.system(size: 11, weight: .bold))
+          .lineLimit(1)
+          .minimumScaleFactor(0.6)
+          .frame(maxWidth: .infinity)
+          .frame(height: 14)
+          .accessibilityHidden(formattedNumber.isEmpty)
+      }
+    // 中央揃えは駅名の幅の中だけで行い、横並びの8pt間隔は維持します。
+    .frame(maxWidth: vertical ? .infinity : nil, alignment: .leading)
   }
 
   var body: some View {
     if vertical {
       VStack(alignment: .leading, spacing: 2) {
-        if !from.isEmpty { station(from) }
+        if !from.isEmpty { station(from, number: fromNumber) }
         if !from.isEmpty && !to.isEmpty {
           Image(systemName: "arrow.down").font(.system(size: 12, weight: .semibold))
         }
-        if !to.isEmpty { station(to) }
+        if !to.isEmpty { station(to, number: toNumber) }
       }
     } else {
       HStack(spacing: 8) {
-        if !from.isEmpty { station(from) }
+        if !from.isEmpty { station(from, number: fromNumber) }
         if !from.isEmpty && !to.isEmpty {
           Image(systemName: "arrow.right").font(.system(size: 14, weight: .semibold))
         }
-        if !to.isEmpty { station(to) }
+        if !to.isEmpty { station(to, number: toNumber) }
       }
     }
   }
@@ -230,7 +245,8 @@ struct HomeScreenWidgetEntryView: View {
           ? entry.boundFor : "")
       if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22)
+                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22,
+                       fromNumber: entry.stationNumber, toNumber: entry.nextStationNumber)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。
         Text(entry.boundFor)
@@ -299,6 +315,8 @@ struct HomeScreenWidget_Previews: PreviewProvider {
       boundFor: "新宿・渋谷方面",
       stationName: "新宿",
       nextStationName: "代々木",
+      stationNumber: "JY-17",
+      nextStationNumber: "JY-18",
       updatedAt: .now
     )
   }
@@ -311,6 +329,25 @@ struct HomeScreenWidget_Previews: PreviewProvider {
       HomeScreenWidgetEntryView(entry: entry)
         .lineColorContainerBackground(entry.displayLineColor)
         .previewContext(WidgetPreviewContext(family: .systemMedium))
+    }
+  }
+}
+
+// 番号の有無だけを切り替えても駅名と矢印の位置が変わらないことを確認します。
+struct WidgetStationNumbers_Previews: PreviewProvider {
+  static var previews: some View {
+    Group {
+      ForEach([true, false], id: \.self) { vertical in
+        VStack(alignment: .leading, spacing: 16) {
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical,
+                         fromNumber: "E-35", toNumber: "E-36")
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical,
+                         fromNumber: "E-35", toNumber: "")
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical)
+        }
+        .padding()
+        .previewLayout(.sizeThatFits)
+      }
     }
   }
 }
