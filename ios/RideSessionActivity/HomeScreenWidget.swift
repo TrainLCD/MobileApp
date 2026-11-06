@@ -249,6 +249,10 @@ struct HomeScreenWidgetEntryView: View {
   let entry: LockScreenEntry
   @Environment(\.widgetFamily) var family
 
+  private var hasStationInfo: Bool {
+    entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
+  }
+
   var body: some View {
     // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
     VStack(alignment: .leading, spacing: family == .systemSmall ? 2 : 6) {
@@ -264,10 +268,10 @@ struct HomeScreenWidgetEntryView: View {
         lineColor: entry.displayLineColor,
         lineSymbol: entry.displayLineSymbol,
         lineName: entry.lineName,
-        boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
-          ? entry.boundFor : "",
-        lineNameLineLimit: family == .systemSmall ? 1 : 2)
-      if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
+        boundFor: hasStationInfo ? entry.boundFor : "",
+        // 駅情報がない場合は縦方向に余裕があるため、路線名を2行で表示します。
+        lineNameLineLimit: family == .systemSmall && hasStationInfo ? 1 : 2)
+      if hasStationInfo {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
                        vertical: family == .systemSmall, fontSize: 24,
                        fromNumber: entry.stationNumber, toNumber: entry.nextStationNumber)
@@ -376,6 +380,18 @@ struct HomeScreenWidget_Previews: PreviewProvider {
         .lineColorContainerBackground(entry.displayLineColor)
         .previewContext(WidgetPreviewContext(family: .systemMedium))
     }
+  }
+}
+
+// 駅情報・路線記号がない場合も、長い路線名を複数行で識別できることを確認します。
+struct HomeScreenWidgetMissingStations_Previews: PreviewProvider {
+  static var previews: some View {
+    HomeScreenWidgetEntryView(entry: LockScreenEntry(
+      date: .now, loaded: true, lineColor: "F9C900",
+      lineName: "名古屋市営地下鉄東山線", lineSymbol: "", boundFor: "藤が丘方面",
+      stationName: "", nextStationName: ""))
+      .lineColorContainerBackground("F9C900")
+      .previewContext(WidgetPreviewContext(family: .systemSmall))
   }
 }
 
