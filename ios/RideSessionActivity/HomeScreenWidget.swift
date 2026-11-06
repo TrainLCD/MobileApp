@@ -255,7 +255,7 @@ struct HomeScreenWidgetEntryView: View {
 
   var body: some View {
     // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
-    VStack(alignment: .leading, spacing: family == .systemSmall ? 2 : 6) {
+    VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
       if family == .systemMedium {
         HStack(spacing: 4) {
           Image(systemName: entry.loaded ? "tram.fill" : "tram")
@@ -273,7 +273,7 @@ struct HomeScreenWidgetEntryView: View {
         lineNameLineLimit: family == .systemSmall && hasStationInfo ? 1 : 2)
       if hasStationInfo {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: 24,
+                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 22 : 24,
                        fromNumber: entry.stationNumber, toNumber: entry.nextStationNumber)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。
