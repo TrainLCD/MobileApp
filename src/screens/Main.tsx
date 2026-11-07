@@ -918,6 +918,7 @@ const MainScreen: React.FC = () => {
             theme === APP_THEME.E231 && { backgroundColor: '#E6E6E6' },
             // E131系風の路線図エリアは灰色でなく、わずかに青みのある白地
             theme === APP_THEME.E131 && { backgroundColor: '#F0F4F6' },
+            theme === APP_THEME.JR_315 && { backgroundColor: '#fff' },
           ]}
           onPress={updateBottomState}
         >

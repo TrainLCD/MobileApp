@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import { FONTS } from '../constants';
 import { APP_THEME } from '../models/Theme';
@@ -10,6 +11,7 @@ import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import AnimatedTypography from './AnimatedTypography';
 import TrainTypeBox, { resolveTrainTypeFontFamily } from './TrainTypeBox';
+import TrainTypeBox315Gradient from './TrainTypeBox315Gradient';
 
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
@@ -206,7 +208,19 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     jest.restoreAllMocks();
   });
 
-  const renderWithScale = (fontSizeScale: number) => {
+  const renderWithScale = (
+    fontSizeScale: number,
+    heightScale = 1,
+    widthScale = 1,
+    borderRadius?: number,
+    gradientProps: {
+      darkenColor?: boolean;
+      jr315Gradient?: boolean;
+      borderColor?: string;
+      fitTextToHeight?: boolean;
+      colorOverride?: string;
+    } = {}
+  ) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return 'CURRENT_JA';
       if (atom === themeAtom) return APP_THEME.TOKYO_METRO;
@@ -221,6 +235,10 @@ describe('TrainTypeBox 2行種別の可読性', () => {
       <TrainTypeBox
         trainType={twoLineTrainType}
         fontSizeScale={fontSizeScale}
+        heightScale={heightScale}
+        widthScale={widthScale}
+        borderRadius={borderRadius}
+        {...gradientProps}
       />
     );
   };
@@ -245,6 +263,157 @@ describe('TrainTypeBox 2行種別の可読性', () => {
       }
     }
   );
+
+  it.each([
+    [1, 1],
+    [1.3, 1.4],
+  ])(
+    '高さ倍率=%p・幅倍率=%pで箱と文字領域の内寸を揃える',
+    (heightScale, widthScale) => {
+      const { UNSAFE_root, getAllByText } = renderWithScale(
+        1.2,
+        heightScale,
+        widthScale
+      );
+      const height = BOX_HEIGHT * heightScale;
+      const boxes = UNSAFE_root.findAllByType(View)
+        .map((node) => StyleSheet.flatten(node.props.style))
+        .filter(
+          (style) =>
+            style?.width === 96.25 * widthScale && style?.height != null
+        );
+      expect(boxes.length).toBeGreaterThanOrEqual(2);
+      for (const box of boxes) {
+        expect(box.height).toBe(height);
+      }
+      for (const label of getAllByText('通勤特急\n')) {
+        expect(
+          StyleSheet.flatten(label.props.style).lineHeight * 2
+        ).toBeLessThanOrEqual(height);
+      }
+    }
+  );
+
+  it.each([undefined, 8])(
+    '角丸=%pを全グラデーション層へ反映する',
+    (borderRadius) => {
+      const { UNSAFE_root } = renderWithScale(1.2, 1, 1, borderRadius);
+      const layers = UNSAFE_root.findAllByType(LinearGradient);
+      expect(layers).toHaveLength(2);
+      for (const layer of layers) {
+        expect(StyleSheet.flatten(layer.props.style).borderRadius).toBe(
+          borderRadius ?? 4
+        );
+      }
+    }
+  );
+
+  it.each([false, true])(
+    'jr315Gradient=%pの段階位置を確認する',
+    (jr315Gradient) => {
+      const { UNSAFE_root } = renderWithScale(1.2, 1.3, 1.4, 8, {
+        darkenColor: true,
+        jr315Gradient,
+      });
+      const layers = UNSAFE_root.findAllByType(LinearGradient);
+      expect(layers).toHaveLength(jr315Gradient ? 1 : 4);
+      if (jr315Gradient) {
+        expect(layers[0].props.locations).toEqual([0, 0.35, 0.62, 1]);
+      } else {
+        expect(layers[0].props.colors).toEqual([
+          '#aaa',
+          '#000',
+          '#000',
+          '#aaa',
+        ]);
+        expect(layers[0].props.locations).toEqual([0.35, 0.35, 0.35, 0.9]);
+        expect(layers[3].props.locations).toEqual([0, 0.35, 0.35]);
+      }
+    }
+  );
+
+  it.each([undefined, '#1e8ad2'])(
+    '色上書き=%pを315系のグラデーションに反映する',
+    (colorOverride) => {
+      const { UNSAFE_root } = renderWithScale(1, 1.3, 1.4, 8, {
+        jr315Gradient: true,
+        colorOverride,
+      });
+      expect(
+        UNSAFE_root.findByType(TrainTypeBox315Gradient).props.trainTypeColor
+      ).toBe(colorOverride ?? '#f00');
+    }
+  );
+
+  it('黒い普通でも上部・中央下・下端の明暗を残す', () => {
+    const { UNSAFE_root } = render(
+      <TrainTypeBox315Gradient trainTypeColor="#000000" style={{}} />
+    );
+    const gradient = UNSAFE_root.findByType(LinearGradient);
+    expect(gradient.props.colors).toEqual([
+      '#4f4f4f',
+      '#282828',
+      '#181818',
+      '#2b2b2b',
+    ]);
+    expect(gradient.props.locations).toEqual([0, 0.35, 0.62, 1]);
+  });
+
+  it.each([undefined, '#F47921'])(
+    '枠色=%pをグラデーションとは別に描く',
+    (borderColor) => {
+      const { UNSAFE_root } = renderWithScale(1.2, 1.3, 1.4, 8, {
+        jr315Gradient: true,
+        borderColor,
+      });
+      const outlines = UNSAFE_root.findAllByType(View).filter(
+        (node) => StyleSheet.flatten(node.props.style)?.borderWidth === 1
+      );
+      expect(outlines).toHaveLength(borderColor ? 1 : 0);
+      if (borderColor) {
+        expect(StyleSheet.flatten(outlines[0].props.style)).toMatchObject({
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          borderWidth: 1,
+          borderRadius: 8,
+          borderColor,
+        });
+        expect(outlines[0].props.pointerEvents).toBe('none');
+      }
+    }
+  );
+
+  it('315系では上下に余白を残し、2行表示と切り替え前の文字も箱に収める', () => {
+    const innerHeight = (BOX_HEIGHT * 1.3 - 2) * 0.675;
+    const { getAllByText, getByText, rerender } = renderWithScale(
+      1,
+      1.3,
+      1.4,
+      8,
+      {
+        fitTextToHeight: true,
+      }
+    );
+    for (const label of getAllByText('通勤特急\n')) {
+      expect(StyleSheet.flatten(label.props.style).lineHeight * 2).toBeCloseTo(
+        innerHeight
+      );
+    }
+    rerender(
+      <TrainTypeBox
+        trainType={{ ...twoLineTrainType, name: '快速' }}
+        heightScale={1.3}
+        widthScale={1.4}
+        fitTextToHeight
+      />
+    );
+    const style = StyleSheet.flatten(getByText('快速').props.style);
+    expect(style.fontSize).toBeCloseTo(innerHeight);
+    expect(style.lineHeight).toBeCloseTo(innerHeight);
+  });
 
   it('adjustsFontSizeToFitの縮小下限を指定してグリフの消失を防ぐ', () => {
     const { UNSAFE_root } = renderWithScale(1.2);

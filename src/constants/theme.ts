@@ -20,6 +20,7 @@ export const IN_USE_COLOR_MAP: Record<AppTheme, string> = {
   JO: '#0067C0',
   JL: '#808080',
   JR_KYUSHU: '#E50012',
+  JR_315: '#FF6D00',
   ODAKYU: '#0D82C7',
   E231: '#FFD400',
   E131: '#00B9F1',

@@ -34,6 +34,7 @@ import { computeTwoLineTypography } from '../utils/computeTwoLineTypography';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import truncateTrainType from '../utils/truncateTrainType';
+import TrainTypeBox315Gradient from './TrainTypeBox315Gradient';
 import Typography from './Typography';
 
 type Props = {
@@ -42,6 +43,13 @@ type Props = {
   nextTrainTypeColor?: string;
   darkenColor?: boolean;
   fontSizeScale?: number;
+  heightScale?: number;
+  widthScale?: number;
+  borderRadius?: number;
+  jr315Gradient?: boolean;
+  borderColor?: string;
+  fitTextToHeight?: boolean;
+  colorOverride?: string;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -70,6 +78,14 @@ const styles = StyleSheet.create({
     height: BOX_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  outline: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderWidth: 1,
   },
   gradient: {
     width: BOX_WIDTH,
@@ -114,8 +130,25 @@ const TrainTypeBox: React.FC<Props> = ({
   nextTrainTypeColor = '#444',
   darkenColor = false,
   fontSizeScale: fontSizeScaleRaw = 1,
+  heightScale = 1,
+  widthScale = 1,
+  borderRadius = 4,
+  jr315Gradient = false,
+  borderColor,
+  fitTextToHeight = false,
+  colorOverride,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
+  const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
+  const boxWidth = BOX_WIDTH * Math.max(widthScale, 0.1);
+  const boxSizeStyle = useMemo(
+    () => ({ width: boxWidth, height: boxHeight }),
+    [boxHeight, boxWidth]
+  );
+  const gradientStyle = useMemo(
+    () => [styles.gradient, boxSizeStyle, { borderRadius }],
+    [borderRadius, boxSizeStyle]
+  );
   const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const { width: windowWidth } = useLandscapeWindowDimensions();
@@ -128,9 +161,9 @@ const TrainTypeBox: React.FC<Props> = ({
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
   const trainTypeColor = useMemo(() => {
-    const base = trainType?.color ?? '#1f63c6';
+    const base = colorOverride ?? trainType?.color ?? '#1f63c6';
     return base;
-  }, [trainType]);
+  }, [colorOverride, trainType]);
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
   }, [headerState]);
@@ -310,8 +343,8 @@ const TrainTypeBox: React.FC<Props> = ({
   );
 
   const nextTrainTypeWrapperStyle = useMemo(
-    () => [styles.nextTrainTypeWrapper, { width: windowWidth }],
-    [windowWidth]
+    () => [styles.nextTrainTypeWrapper, { width: windowWidth, top: boxHeight }],
+    [boxHeight, windowWidth]
   );
 
   const numberOfLines = useMemo(
@@ -325,6 +358,7 @@ const TrainTypeBox: React.FC<Props> = ({
     [prevTrainTypeName]
   );
 
+  const textHeight = Math.max(1, (boxHeight - 2) * 0.675);
   const {
     fontSize: computedFontSize,
     lineHeight: computedLineHeight,
@@ -333,42 +367,53 @@ const TrainTypeBox: React.FC<Props> = ({
   } = computeTwoLineTypography({
     baseFontSize: 18,
     isTablet,
-    fontSizeScale,
+    fontSizeScale: fitTextToHeight
+      ? textHeight / (18 * (isTablet ? 1.5 : 1))
+      : fontSizeScale,
     numberOfLines,
     prevNumberOfLines,
-    maxHeight: BOX_HEIGHT,
+    maxHeight: fitTextToHeight ? textHeight : boxHeight,
   });
 
   return (
     <View>
-      <View style={styles.box}>
-        <LinearGradient
-          colors={['#aaa', '#000', '#000', '#aaa']}
-          locations={
-            darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
-          }
-          style={styles.gradient}
-        />
-        <LinearGradient
-          colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
-          style={styles.gradient}
-        />
-        {darkenColor ? (
+      <View style={[styles.box, boxSizeStyle]}>
+        {jr315Gradient ? (
+          <TrainTypeBox315Gradient
+            trainTypeColor={trainTypeColor}
+            style={gradientStyle}
+          />
+        ) : (
           <>
             <LinearGradient
-              colors={['#00000000', '#00000033', '#00000000']}
-              locations={[0.35, 0.55, 0.85]}
-              style={styles.gradient}
+              colors={['#aaa', '#000', '#000', '#aaa']}
+              locations={
+                darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
+              }
+              style={gradientStyle}
             />
             <LinearGradient
-              colors={['#ffffff44', '#ffffff11', '#00000000']}
-              locations={[0, 0.35, 0.35]}
-              style={styles.gradient}
+              colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
+              style={gradientStyle}
             />
+            {darkenColor ? (
+              <>
+                <LinearGradient
+                  colors={['#00000000', '#00000033', '#00000000']}
+                  locations={[0.35, 0.55, 0.85]}
+                  style={gradientStyle}
+                />
+                <LinearGradient
+                  colors={['#ffffff44', '#ffffff11', '#00000000']}
+                  locations={[0, 0.35, 0.35]}
+                  style={gradientStyle}
+                />
+              </>
+            ) : null}
           </>
-        ) : null}
+        )}
 
-        <View style={styles.textWrapper}>
+        <View style={[styles.textWrapper, boxSizeStyle]}>
           <AnimatedTypography
             style={[
               textTopAnimatedStyles,
@@ -379,7 +424,10 @@ const TrainTypeBox: React.FC<Props> = ({
                   letterSpacing,
                   marginLeft,
                   fontSize: computedFontSize,
-                  lineHeight: computedLineHeight,
+                  lineHeight:
+                    fitTextToHeight && numberOfLines === 1
+                      ? textHeight
+                      : computedLineHeight,
                 },
               ],
             ]}
@@ -400,7 +448,10 @@ const TrainTypeBox: React.FC<Props> = ({
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
               fontSize: prevComputedFontSize,
-              lineHeight: prevComputedLineHeight,
+              lineHeight:
+                fitTextToHeight && prevNumberOfLines === 1
+                  ? textHeight
+                  : prevComputedLineHeight,
             },
           ]}
           adjustsFontSizeToFit
@@ -409,6 +460,12 @@ const TrainTypeBox: React.FC<Props> = ({
         >
           {prevTrainTypeName}
         </AnimatedTypography>
+        {borderColor ? (
+          <View
+            pointerEvents="none"
+            style={[styles.outline, { borderColor, borderRadius }]}
+          />
+        ) : null}
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <View style={nextTrainTypeWrapperStyle}>

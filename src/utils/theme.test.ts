@@ -47,6 +47,7 @@ describe('getSettingsThemes', () => {
     const themes = loadThemes(false);
     expect(themes.some((t) => t.value === APP_THEME.TOKYO_METRO)).toBe(true);
     expect(themes.some((t) => t.value === APP_THEME.LED)).toBe(true);
+    expect(themes.some((t) => t.value === APP_THEME.JR_315)).toBe(true);
   });
 
   it('App Clip では LED テーマを一覧に含めない', () => {

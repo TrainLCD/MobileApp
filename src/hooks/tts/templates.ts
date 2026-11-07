@@ -94,6 +94,25 @@ const JR_EAST: ThemeTemplate = {
   ),
 };
 
+// 文言の参考: https://jrcc5000.memo.wiki/d/315%b7%cf%c5%c5%bc%d6%bc%d6%c6%e2%ca%fc%c1%f7
+// 編成両数・トイレ位置・出口方向は取得できないため案内しない。
+const JR_315: ThemeTemplate = {
+  NEXT: t(
+    '{#if firstSpeech}',
+    '今日も{currentLineCompanyJa}をご利用くださいまして、ありがとうございます。',
+    '{#if hasTrainType}{trainTypeJa315}、{/if}{boundForJa}行きです。',
+    '{/if}',
+    '次は{#if isNextStopTerminus}終点{/if}{nextStationJa}です。'
+  ),
+  ARRIVING: t(
+    'まもなく、{#if isNextStopTerminus}終点{/if}{nextStationJa}です。',
+    '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}',
+    '{#if jr315ShouldAnnounceAfterNextStop}{nextStationJa}を出ますと次は{#if isAfterNextStopTerminus}終点{/if}{afterNextStationJa}に停まります。{/if}',
+    '{#if isNextStopTerminus}お忘れ物のないよう、お確かめください。今日も{currentLineCompanyJa}をご利用くださいまして、ありがとうございました。{/if}',
+    'ドアから手を離してお待ちください。'
+  ),
+};
+
 // 文言の出典: JR西日本 近郊型車両 (223系/225系) 自動放送 (みやこ路快速書き起こし)。
 // - 乗換案内は到着前放送のみ (発車後の次駅案内には含まれない)。
 // - 終点到着前は「ご乗車ありがとうございました。まもなく終点・◯◯、◯◯です。…
@@ -223,6 +242,23 @@ const JR_EAST_EN: ThemeTemplate = {
   ),
 };
 
+const JR_315_EN: ThemeTemplate = {
+  NEXT: t(
+    '{#if firstSpeech}',
+    'Thank you for traveling with {currentLineCompanyEn}. ',
+    'This is the {#if hasTrainType}{trainTypeEn} {/if}{vehicleEn} bound for {boundForEn}. ',
+    '{/if}',
+    'The next stop is {nextStationEn}{#if hasNextStationNumberText}, {nextStationNumberTextNoPeriod}{/if}{#if isNextStopTerminus}, the final stop{/if}.'
+  ),
+  ARRIVING: t(
+    'We will soon make a brief stop at {nextStationEn}{#if hasNextStationNumberText}, {nextStationNumberTextNoPeriod}{/if}{#if isNextStopTerminus}, the final stop{/if}.',
+    '{#if hasTransferLines} Passengers transferring to {transferLinesEnList}, please change trains here.{/if}',
+    '{#if jr315ShouldAnnounceAfterNextStop} After leaving {nextStationEn}, we will stop at {afterNextStationEn}{#if hasAfterNextStationNumberText}, {afterNextStationNumberText}{/if}{#if isAfterNextStopTerminus}, the final stop{/if}.{/if}',
+    '{#if isNextStopTerminus} Please take care not to leave any items. Thank you for traveling with {currentLineCompanyEn}.{/if}',
+    ' Please refrain from touching the doors and wait for them to open.'
+  ),
+};
+
 const JR_WEST_EN: ThemeTemplate = {
   NEXT: t(
     '{#if firstSpeech}',
@@ -298,6 +334,7 @@ export const JA_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JR_WEST]: JR_WEST,
   [APP_THEME.SAIKYO]: JR_EAST,
   [APP_THEME.TOEI]: TOEI,
+  [APP_THEME.JR_315]: JR_315,
   [APP_THEME.JR_KYUSHU]: JR_KYUSHU,
   [APP_THEME.LED]: EMPTY_THEME,
   [APP_THEME.JO]: EMPTY_THEME,
@@ -316,6 +353,7 @@ export const EN_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JR_WEST]: JR_WEST_EN,
   [APP_THEME.SAIKYO]: JR_EAST_EN,
   [APP_THEME.TOEI]: TOEI_EN,
+  [APP_THEME.JR_315]: JR_315_EN,
   [APP_THEME.JR_KYUSHU]: JR_KYUSHU_EN,
   [APP_THEME.LED]: EMPTY_THEME,
   [APP_THEME.JO]: EMPTY_THEME,

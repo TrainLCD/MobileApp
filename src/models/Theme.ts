@@ -9,6 +9,7 @@ export const APP_THEME = {
   JO: 'JO',
   JL: 'JL',
   JR_KYUSHU: 'JR_KYUSHU',
+  JR_315: 'JR_315',
   ODAKYU: 'ODAKYU',
   E231: 'E231',
   E131: 'E131',
