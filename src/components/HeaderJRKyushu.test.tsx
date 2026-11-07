@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react-native';
+import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import HeaderJRKyushu from './HeaderJRKyushu';
@@ -180,9 +181,51 @@ describe('HeaderJRKyushu', () => {
           widthScale: 1.4,
           borderRadius: 8,
           borderColor: '#1f63c6',
+          colorOverride: '#1f63c6',
         })
       );
       expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
+    });
+
+    it.each([
+      TrainTypeKind.Rapid,
+      TrainTypeKind.HighSpeedRapid,
+      TrainTypeKind.CommuterRapid,
+      TrainTypeKind.Default,
+      TrainTypeKind.LimitedExpress,
+    ])('%sは快速系だけ青くし、枠も表示色に揃える', (kind) => {
+      const trainType: TrainType = {
+        __typename: 'TrainType',
+        id: 1,
+        typeId: 102,
+        groupId: 109,
+        name: '快速',
+        nameKatakana: 'カイソク',
+        nameRoman: 'Rapid',
+        nameIpa: null,
+        nameRomanIpa: null,
+        nameTtsSegments: null,
+        nameChinese: null,
+        nameKorean: null,
+        color: '#dc143c',
+        direction: null,
+        kind,
+        line: null,
+        lines: null,
+      };
+      render(
+        <HeaderJRKyushu {...createMockHeaderProps({ trainType })} is315 />
+      );
+      const expected =
+        kind === TrainTypeKind.Rapid || kind === TrainTypeKind.HighSpeedRapid
+          ? '#1e8ad2'
+          : '#dc143c';
+      const props = jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0];
+      expect(props).toMatchObject({
+        colorOverride: expected,
+        borderColor: expected,
+      });
+      expect(props?.trainType).toBe(trainType);
     });
 
     it('上端は東海道本線の色で固定し、区切り線には現在の路線色を使う', () => {

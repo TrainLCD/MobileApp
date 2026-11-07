@@ -49,6 +49,7 @@ type Props = {
   jr315Gradient?: boolean;
   borderColor?: string;
   fitTextToHeight?: boolean;
+  colorOverride?: string;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -135,6 +136,7 @@ const TrainTypeBox: React.FC<Props> = ({
   jr315Gradient = false,
   borderColor,
   fitTextToHeight = false,
+  colorOverride,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
@@ -159,9 +161,9 @@ const TrainTypeBox: React.FC<Props> = ({
   const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
   const trainTypeColor = useMemo(() => {
-    const base = trainType?.color ?? '#1f63c6';
+    const base = colorOverride ?? trainType?.color ?? '#1f63c6';
     return base;
-  }, [trainType]);
+  }, [colorOverride, trainType]);
   const headerLangState = useMemo((): HeaderLangState => {
     return headerState.split('_')[1] as HeaderLangState;
   }, [headerState]);

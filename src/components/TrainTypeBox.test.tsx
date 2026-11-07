@@ -218,6 +218,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
       jr315Gradient?: boolean;
       borderColor?: string;
       fitTextToHeight?: boolean;
+      colorOverride?: string;
     } = {}
   ) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
@@ -328,6 +329,19 @@ describe('TrainTypeBox 2行種別の可読性', () => {
         expect(layers[0].props.locations).toEqual([0.35, 0.35, 0.35, 0.9]);
         expect(layers[3].props.locations).toEqual([0, 0.35, 0.35]);
       }
+    }
+  );
+
+  it.each([undefined, '#1e8ad2'])(
+    '色上書き=%pを315系のグラデーションに反映する',
+    (colorOverride) => {
+      const { UNSAFE_root } = renderWithScale(1, 1.3, 1.4, 8, {
+        jr315Gradient: true,
+        colorOverride,
+      });
+      expect(
+        UNSAFE_root.findByType(TrainTypeBox315Gradient).props.trainTypeColor
+      ).toBe(colorOverride ?? '#f00');
     }
   );
 
