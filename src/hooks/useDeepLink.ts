@@ -19,6 +19,7 @@ import {
   ROUTE_RESOLVER_TIMEOUT_MS,
   resolveSidsFromShortId,
 } from '~/lib/routeResolver';
+import { confirmExternalRouteSwitch } from '~/utils/confirmExternalRouteSwitch';
 import type { LineDirection } from '../models/Bound';
 import { APP_THEME, type ThemePreference } from '../models/Theme';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -420,6 +421,7 @@ export const useDeepLink = () => {
         if (typeof preset !== 'string' || !PRESET_ID_PATTERN.test(preset)) {
           return;
         }
+        if (!(await confirmExternalRouteSwitch())) return;
         setNavigationState((prev) => ({
           ...prev,
           pendingQuickActionRouteId: preset,
@@ -449,6 +451,7 @@ export const useDeepLink = () => {
         if (typeof id !== 'string' || !ROUTE_RESOLVER_ID_PATTERN.test(id)) {
           return;
         }
+        if (!(await confirmExternalRouteSwitch())) return;
         const controller = new AbortController();
         const timeoutId = setTimeout(
           () => controller.abort(),
@@ -539,6 +542,7 @@ export const useDeepLink = () => {
           skipIndices = new Set(parsedSkips);
         }
 
+        if (!(await confirmExternalRouteSwitch())) return;
         await openRouteByStationIds({
           stationIds,
           skipIndices,
@@ -581,6 +585,7 @@ export const useDeepLink = () => {
         lineGroupId = Number(rawLineGroupId);
       }
 
+      if (!(await confirmExternalRouteSwitch())) return;
       await openLink({
         stationGroupId,
         direction,

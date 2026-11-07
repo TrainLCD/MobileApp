@@ -4,6 +4,12 @@ import { useSetAtom } from 'jotai';
 import type React from 'react';
 import { StopCondition, type TrainType } from '~/@types/graphql';
 import { resolveSidsFromShortId } from '~/lib/routeResolver';
+import {
+  completePresentedDialogDismissal,
+  dismissPresentedDialog,
+  getDialogPresentationSnapshot,
+  resetDialogPresentationForTests,
+} from '~/utils/dialogPresentation';
 import { createStation } from '~/utils/test/factories';
 import type { LineDirection } from '../models/Bound';
 import { navigationRef } from '../stacks/rootNavigation';
@@ -29,6 +35,7 @@ jest.mock('../stacks/rootNavigation', () => ({
   navigationRef: {
     isReady: jest.fn().mockReturnValue(false),
     dispatch: jest.fn(),
+    getRootState: jest.fn().mockReturnValue({ routes: [] }),
   },
 }));
 jest.mock('~/lib/routeResolver', () => ({
@@ -177,6 +184,8 @@ describe('useDeepLink', () => {
     // tests and cause order-dependent flakes (e.g. an isReady queue from
     // a previous test resuming on the next render). Reset and re-seed the
     // module-level mocks here so every test starts from the same baseline.
+    resetDialogPresentationForTests();
+    (navigationRef.getRootState as jest.Mock).mockReturnValue({ routes: [] });
     mockGetInitialURL.mockReset().mockResolvedValue(null);
     mockParse.mockReset();
     mockAddEventListener.mockReset().mockReturnValue({ remove: jest.fn() });
@@ -2204,6 +2213,90 @@ describe('useDeepLink', () => {
       const navResult = navSetter(createNavigationState());
       // head station's server-derived trainType is preserved as-is
       expect(navResult.trainType?.typeId).toBe(9999);
+    });
+  });
+
+  describe('走行中の外部リンク', () => {
+    const params = [
+      { preset: '11111111-1111-4111-8111-111111111111' },
+      { id: 'shared-route' },
+      { sids: '1,2', theme: 'AUTO', auto: '1' },
+      { lid: '999', sgid: '1', dir: '0', theme: 'AUTO', auto: '1' },
+    ];
+
+    it.each(params)(
+      'キャンセルしたリンクは経路や設定を変更しない: %j',
+      async (queryParams) => {
+        const setters = setupAtoms();
+        const queries = setupQueries();
+        (navigationRef.isReady as jest.Mock).mockReturnValue(true);
+        (navigationRef.getRootState as jest.Mock).mockReturnValue({
+          routes: [
+            { name: 'MainStack', state: { routes: [{ name: 'Main' }] } },
+          ],
+        });
+        const hookRef: { current: HookResult } = { current: null };
+        render(
+          <HookBridge
+            onReady={(value) => {
+              hookRef.current = value;
+            }}
+          />
+        );
+        await waitFor(() =>
+          expect(hookRef.current?.initialUrlProcessed).toBe(true)
+        );
+        mockParse.mockReturnValue({ queryParams });
+        const listener = mockAddEventListener.mock.calls.at(-1)[1];
+        await act(async () => {
+          listener({ url: 'trainlcd://route' });
+        });
+        expect(getDialogPresentationSnapshot().visible).toBe(true);
+        expect(navigationRef.dispatch).not.toHaveBeenCalled();
+        await act(async () => {
+          dismissPresentedDialog(0);
+          completePresentedDialogDismissal();
+        });
+        for (const setter of Object.values(setters))
+          expect(setter).not.toHaveBeenCalled();
+        for (const query of Object.values(queries))
+          expect(query).not.toHaveBeenCalled();
+        expect(resolveSidsFromShortId).not.toHaveBeenCalled();
+        expect(navigationRef.dispatch).not.toHaveBeenCalled();
+      }
+    );
+
+    it('確認を承認してからプリセットを適用する', async () => {
+      const { mockSetNavigationState } = setupAtoms();
+      setupQueries();
+      (navigationRef.isReady as jest.Mock).mockReturnValue(true);
+      (navigationRef.getRootState as jest.Mock).mockReturnValue({
+        routes: [{ name: 'MainStack', state: { routes: [{ name: 'Main' }] } }],
+      });
+      const hookRef: { current: HookResult } = { current: null };
+      render(
+        <HookBridge
+          onReady={(value) => {
+            hookRef.current = value;
+          }}
+        />
+      );
+      await waitFor(() =>
+        expect(hookRef.current?.initialUrlProcessed).toBe(true)
+      );
+      mockParse.mockReturnValue({ queryParams: params[0] });
+      await act(async () => {
+        mockAddEventListener.mock.calls.at(-1)[1]({ url: 'trainlcd://route' });
+      });
+      expect(mockSetNavigationState).not.toHaveBeenCalled();
+      await act(async () => {
+        dismissPresentedDialog(1);
+        completePresentedDialogDismissal();
+      });
+      expect(mockSetNavigationState).toHaveBeenCalledTimes(1);
+      expect(navigationRef.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'RESET' })
+      );
     });
   });
 
