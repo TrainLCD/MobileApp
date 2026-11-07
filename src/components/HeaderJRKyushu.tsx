@@ -6,7 +6,11 @@ import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
-import { getIsCommuterRapid, getIsRapid } from '../utils/trainTypeString';
+import {
+  getIsCommuterRapid,
+  getIsLocal,
+  getIsRapid,
+} from '../utils/trainTypeString';
 import type { CommonHeaderProps } from './Header.types';
 import HeaderBar from './HeaderBar';
 import HeaderStationName from './HeaderStationName';
@@ -160,8 +164,9 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
   });
 
   const lineColor = currentLine?.color ?? '#FF6D00';
-  const jr315TrainTypeColor =
-    getIsRapid(trainType) && !getIsCommuterRapid(trainType)
+  const jr315TrainTypeColor = getIsLocal(trainType)
+    ? '#000000'
+    : getIsRapid(trainType) && !getIsCommuterRapid(trainType)
       ? '#1e8ad2'
       : (trainType?.color ?? '#1f63c6');
 
@@ -188,7 +193,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
               fitTextToHeight
               heightScale={1.3}
               widthScale={1.4}
-              borderRadius={isTablet ? 8 : 6}
+              borderRadius={4}
               colorOverride={jr315TrainTypeColor}
               borderColor={jr315TrainTypeColor}
             />
