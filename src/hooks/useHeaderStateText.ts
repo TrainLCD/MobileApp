@@ -51,7 +51,9 @@ export const useHeaderStateText = ({
       case 'ARRIVING_KANA':
         return translate(isLast ? 'soonKanaLast' : 'soon');
       case 'ARRIVING_EN':
-        return translate(isLast ? 'soonEnLast' : 'soonEn');
+        return currentTheme === APP_THEME.JR_315
+          ? `Arriving at${isLast ? '\nLast Stop' : ''}`
+          : translate(isLast ? 'soonEnLast' : 'soonEn');
       case 'ARRIVING_ZH':
         return translate(isLast ? 'soonZhLast' : 'soonZh');
       case 'ARRIVING_KO':
@@ -63,9 +65,13 @@ export const useHeaderStateText = ({
       case 'CURRENT_EN':
         return currentTheme === APP_THEME.JR_315 ? 'This is' : '';
       case 'CURRENT_ZH':
-        return currentTheme === APP_THEME.JR_315 ? '本站' : '';
+        return currentTheme === APP_THEME.JR_315
+          ? translate('nowStoppingAtZh')
+          : '';
       case 'CURRENT_KO':
-        return currentTheme === APP_THEME.JR_315 ? '이번 역은' : '';
+        return currentTheme === APP_THEME.JR_315
+          ? translate('nowStoppingAtKo')
+          : '';
       case 'NEXT':
         return translate(isLast ? 'nextLast' : 'next');
       case 'NEXT_KANA':

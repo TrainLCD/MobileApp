@@ -16,6 +16,11 @@ jest.mock('jotai', () => ({
   useAtomValue: jest.fn(),
 }));
 
+jest.mock('../translation', () => ({
+  translate: (key: string) =>
+    jest.requireActual('../../assets/translations/ja.json')[key],
+}));
+
 jest.mock('./useLoopLine', () => ({
   __esModule: true,
   useLoopLine: jest.fn(),
@@ -67,8 +72,8 @@ describe('useHeaderStateText', () => {
 
   it.each([
     ['EN', 'This is'],
-    ['ZH', '本站'],
-    ['KO', '이번 역은'],
+    ['ZH', '这一站'],
+    ['KO', '현재'],
   ] as const)('315系の現在駅を%sでは「%s」で案内する', (lang, expected) => {
     setLoopLine(false);
     let theme: AppTheme = APP_THEME.JR_315;
@@ -95,6 +100,31 @@ describe('useHeaderStateText', () => {
     rerender({});
     expect(result.current.stateText).toBe(expected);
   });
+
+  it.each([false, true])(
+    '315系だけ英語の接近案内をArriving atにする（終点=%s）',
+    (isLast) => {
+      setLoopLine(false);
+      let theme: AppTheme = APP_THEME.JR_315;
+      mockUseAtomValue.mockImplementation((atom: unknown) => {
+        if (atom === headerStateAtom) return 'ARRIVING_EN';
+        if (atom === selectedBoundAtom) return osaki;
+        if (atom === themeAtom) return theme;
+        return undefined;
+      });
+      const { result, rerender } = renderHook(() =>
+        useHeaderStateText({ isLast, headerLangState: 'EN', firstStop: false })
+      );
+      expect(result.current.stateText).toBe(
+        isLast ? 'Arriving at\nLast Stop' : 'Arriving at'
+      );
+      theme = APP_THEME.JR_KYUSHU;
+      rerender({});
+      expect(result.current.stateText).toBe(
+        isLast ? 'Soon\nLast Stop' : 'Soon'
+      );
+    }
+  );
 
   it('環状線の乗車直後は行先に続く語を「方面」にする', () => {
     setLoopLine(true);
