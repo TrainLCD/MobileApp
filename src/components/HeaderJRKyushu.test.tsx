@@ -3,6 +3,7 @@ import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { useHeaderAnimation } from '../hooks';
+import AnimatedTypography from './AnimatedTypography';
 import HeaderJRKyushu from './HeaderJRKyushu';
 import TrainTypeBox from './TrainTypeBox';
 
@@ -189,6 +190,13 @@ describe('HeaderJRKyushu', () => {
       expect(getByText(expected).props.adjustsFontSizeToFit).toBe(
         is315 && headerLangState === 'EN' ? true : undefined
       );
+      if (is315 && headerLangState === 'EN') {
+        let ancestor = getByText(expected).parent;
+        while (ancestor) {
+          expect(ancestor.type).not.toBe(AnimatedTypography);
+          ancestor = ancestor.parent;
+        }
+      }
       expect(useHeaderAnimation).toHaveBeenLastCalledWith(
         expect.objectContaining({ boundText: expected })
       );
@@ -220,6 +228,13 @@ describe('HeaderJRKyushu', () => {
           is315={is315}
         />
       );
+      if (shouldFit) {
+        let ancestor = getByText(previousText).parent;
+        while (ancestor) {
+          expect(ancestor.type).not.toBe(AnimatedTypography);
+          ancestor = ancestor.parent;
+        }
+      }
       expect(getByText(previousText).props.numberOfLines).toBe(
         shouldFit ? 1 : undefined
       );

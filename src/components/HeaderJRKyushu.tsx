@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import AnimatedTypography from '~/components/AnimatedTypography';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
@@ -58,6 +58,11 @@ const styles = StyleSheet.create({
   fittedBoundTextContainer: {
     left: 0,
     right: 0,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  fittedBoundText: {
+    flex: 1,
   },
   boundText: {
     color: '#555',
@@ -177,6 +182,13 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
   // Bound forは315系の英語表示だけに付くため、現在の言語に依存せず旧表示を判定できる。
   const fitPreviousBoundText =
     is315 && animation.prevBoundText.startsWith('Bound for ');
+  // 縮小指定は入れ子のTextでは効かないため、英語行先だけViewを外枠にする。
+  const BoundTextContainer = fitBoundText
+    ? RNAnimated.View
+    : AnimatedTypography;
+  const PreviousBoundTextContainer = fitPreviousBoundText
+    ? RNAnimated.View
+    : AnimatedTypography;
   const boundTextFitProps = fitBoundText
     ? { numberOfLines: 1, adjustsFontSizeToFit: true }
     : {};
@@ -223,7 +235,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
           )}
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
-              <AnimatedTypography
+              <BoundTextContainer
                 style={[
                   animation.boundTopAnimatedStyles,
                   styles.boundTextContainer,
@@ -239,11 +251,17 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
                     ? `${connectionText}直通 `
                     : null}
                 </Typography>
-                <Typography {...boundTextFitProps} style={styles.boundText}>
+                <Typography
+                  {...boundTextFitProps}
+                  style={[
+                    styles.boundText,
+                    fitBoundText && styles.fittedBoundText,
+                  ]}
+                >
                   {boundText}
                 </Typography>
-              </AnimatedTypography>
-              <AnimatedTypography
+              </BoundTextContainer>
+              <PreviousBoundTextContainer
                 style={[
                   animation.boundBottomAnimatedStyles,
                   styles.boundTextContainer,
@@ -261,11 +279,14 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
                 </Typography>
                 <Typography
                   {...previousBoundTextFitProps}
-                  style={styles.boundText}
+                  style={[
+                    styles.boundText,
+                    fitPreviousBoundText && styles.fittedBoundText,
+                  ]}
                 >
                   {animation.prevBoundText}
                 </Typography>
-              </AnimatedTypography>
+              </PreviousBoundTextContainer>
             </View>
           ) : null}
         </View>
