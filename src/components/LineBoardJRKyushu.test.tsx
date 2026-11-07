@@ -1,5 +1,7 @@
 import { render } from '@testing-library/react-native';
-import type { Line, Station } from '~/@types/graphql';
+import { type Line, type Station, StopCondition } from '~/@types/graphql';
+import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
+import { useSlicedStations } from '~/hooks/useSlicedStations';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
 
 // モック設定
@@ -24,6 +26,14 @@ jest.mock('~/hooks/useScale', () => ({
   useScale: jest.fn(() => ({ widthScale: jest.fn((val) => val) })),
 }));
 
+jest.mock('~/hooks/useDisplayNextStation', () => ({
+  useDisplayNextStation: jest.fn(),
+}));
+
+jest.mock('~/hooks/useSlicedStations', () => ({
+  useSlicedStations: jest.fn(),
+}));
+
 jest.mock('~/store/selectors/isEn', () => ({
   isEnAtom: {},
 }));
@@ -31,11 +41,6 @@ jest.mock('~/store/selectors/isEn', () => ({
 jest.mock('~/utils/isTablet', () => ({
   __esModule: true,
   default: false,
-}));
-
-jest.mock('~/utils/isPass', () => ({
-  __esModule: true,
-  default: jest.fn(() => false),
 }));
 
 jest.mock('./BarTerminalSaikyo', () => ({
@@ -127,7 +132,70 @@ describe('LineBoardJRKyushu', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
+
+  it.each([
+    { tablet: true, enabled: true, pass: true, terminal: false, visible: true },
+    {
+      tablet: false,
+      enabled: true,
+      pass: true,
+      terminal: false,
+      visible: false,
+    },
+    {
+      tablet: true,
+      enabled: false,
+      pass: true,
+      terminal: false,
+      visible: false,
+    },
+    {
+      tablet: true,
+      enabled: true,
+      pass: false,
+      terminal: false,
+      visible: false,
+    },
+    { tablet: true, enabled: true, pass: true, terminal: true, visible: false },
+  ])(
+    '次停車駅の案内を表示する条件 tablet=$tablet enabled=$enabled pass=$pass terminal=$terminal',
+    ({ tablet, enabled, pass, terminal, visible }) => {
+      jest.replaceProperty(require('~/utils/isTablet'), 'default', tablet);
+      const stations = [
+        mockStations[0],
+        {
+          ...mockStations[0],
+          id: 3,
+          groupId: 3,
+          name: '通過候補駅',
+          stopCondition: pass ? StopCondition.Not : StopCondition.All,
+        },
+        mockStations[1],
+      ];
+      jest
+        .mocked(useDisplayNextStation)
+        .mockReturnValue(terminal ? mockStations[1] : mockStations[0]);
+      jest.mocked(useSlicedStations).mockReturnValue(stations);
+
+      const { queryByText } = render(
+        <LineBoardJRKyushu
+          stations={stations}
+          lineColors={['#f60', '#f60', '#f60']}
+          hasTerminus={terminal}
+          showNextStopBanner={enabled}
+        />
+      );
+
+      const banner = queryByText(/のつぎは.+にとまります/);
+      if (visible) {
+        expect(banner).toHaveTextContent('博多のつぎは小倉にとまります');
+      } else {
+        expect(banner).toBeNull();
+      }
+    }
+  );
 
   it.each([false, true])(
     '埼京線風グラデ=%pを帯と終端・空き枠へ揃える',
