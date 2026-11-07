@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 import * as QuickActions from 'expo-quick-actions';
-import { useSetAtom } from 'jotai';
+import { useSetAtom, useStore } from 'jotai';
 import { confirmExternalRouteSwitch } from '~/utils/confirmExternalRouteSwitch';
 import { navigateToSelectLine } from '~/utils/navigateToSelectLine';
 import { useQuickActions } from './useQuickActions';
@@ -13,6 +13,7 @@ jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
   useAtomValue: jest.fn().mockReturnValue([]),
   useSetAtom: jest.fn(),
+  useStore: jest.fn().mockReturnValue({ get: jest.fn().mockReturnValue([]) }),
 }));
 jest.mock('~/utils/confirmExternalRouteSwitch', () => ({
   confirmExternalRouteSwitch: jest.fn(),
@@ -32,6 +33,9 @@ it.each([true, false])(
         resolveConfirmation = resolve;
       })
     );
+    (useStore().get as jest.Mock).mockReturnValue([
+      { id: 'preset-id', name: '休日のお出かけ', lineId: 11302 },
+    ]);
     const setNavigation = jest.fn();
     (useSetAtom as jest.Mock).mockReturnValue(setNavigation);
     renderHook(() => useQuickActions());
@@ -39,6 +43,11 @@ it.each([true, false])(
     let handling: Promise<void>;
     await act(async () => {
       handling = listener({ params: { routeId: 'preset-id' } });
+    });
+    expect(confirmExternalRouteSwitch).toHaveBeenCalledWith({
+      id: 'preset-id',
+      name: '休日のお出かけ',
+      lineId: 11302,
     });
     expect(setNavigation).not.toHaveBeenCalled();
     expect(navigateToSelectLine).not.toHaveBeenCalled();
