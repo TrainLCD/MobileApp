@@ -116,7 +116,7 @@ describe('useHeaderStateText', () => {
         useHeaderStateText({ isLast, headerLangState: 'EN', firstStop: false })
       );
       expect(result.current.stateText).toBe(
-        isLast ? 'Arriving at\nLast Stop' : 'Arriving at'
+        isLast ? 'Arriving at\nFinal Stop' : 'Arriving at'
       );
       theme = APP_THEME.JR_KYUSHU;
       rerender({});

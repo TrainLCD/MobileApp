@@ -52,7 +52,7 @@ export const useHeaderStateText = ({
         return translate(isLast ? 'soonKanaLast' : 'soon');
       case 'ARRIVING_EN':
         return currentTheme === APP_THEME.JR_315
-          ? `Arriving at${isLast ? '\nLast Stop' : ''}`
+          ? `Arriving at${isLast ? '\nFinal Stop' : ''}`
           : translate(isLast ? 'soonEnLast' : 'soonEn');
       case 'ARRIVING_ZH':
         return translate(isLast ? 'soonZhLast' : 'soonZh');
