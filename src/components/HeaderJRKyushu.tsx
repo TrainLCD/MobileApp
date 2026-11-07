@@ -140,7 +140,8 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
     stationText,
     stateText,
     stateTextRight,
-    boundText,
+    boundText: rawBoundText,
+    headerLangState,
     currentStationNumber,
     threeLetterCode,
     numberingColor,
@@ -150,6 +151,11 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
     connectionText,
     isJapaneseState,
   } = props;
+
+  const boundText =
+    is315 && headerLangState === 'EN'
+      ? rawBoundText.replace(/^for /, 'Bound for ')
+      : rawBoundText;
 
   const animation = useHeaderAnimation({
     selectedBound,

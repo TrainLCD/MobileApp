@@ -2,6 +2,7 @@ import { render } from '@testing-library/react-native';
 import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
+import { useHeaderAnimation } from '../hooks';
 import HeaderJRKyushu from './HeaderJRKyushu';
 import TrainTypeBox from './TrainTypeBox';
 
@@ -165,6 +166,28 @@ describe('HeaderJRKyushu', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  it.each([
+    [true, 'EN', 'for Tajimi', 'Bound for Tajimi'],
+    [true, 'EN', 'for Tajimi via Kanayama', 'Bound for Tajimi via Kanayama'],
+    [true, 'EN', 'Bound for Tajimi', 'Bound for Tajimi'],
+    [false, 'EN', 'for Tajimi', 'for Tajimi'],
+    [true, 'JA', '多治見 行き', '多治見 行き'],
+  ] as const)(
+    '315系=%s・言語=%sの行先表示を整形する',
+    (is315, headerLangState, boundText, expected) => {
+      const props = createMockHeaderProps({
+        boundText,
+        headerLangState,
+        selectedBound: createMockHeaderProps().currentStation,
+      });
+      const { getByText } = render(<HeaderJRKyushu {...props} is315={is315} />);
+      expect(getByText(expected)).toBeTruthy();
+      expect(useHeaderAnimation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ boundText: expected })
+      );
+    }
+  );
 
   describe('315系の配色', () => {
     it('315系では小田急風の種別表示を使う', () => {
