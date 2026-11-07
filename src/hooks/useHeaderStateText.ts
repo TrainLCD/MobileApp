@@ -51,7 +51,9 @@ export const useHeaderStateText = ({
       case 'ARRIVING_KANA':
         return translate(isLast ? 'soonKanaLast' : 'soon');
       case 'ARRIVING_EN':
-        return translate(isLast ? 'soonEnLast' : 'soonEn');
+        return currentTheme === APP_THEME.JR_315
+          ? `Arriving at${isLast ? '\nFinal Stop' : ''}`
+          : translate(isLast ? 'soonEnLast' : 'soonEn');
       case 'ARRIVING_ZH':
         return translate(isLast ? 'soonZhLast' : 'soonZh');
       case 'ARRIVING_KO':
@@ -61,15 +63,23 @@ export const useHeaderStateText = ({
       case 'CURRENT_KANA':
         return translate('nowStoppingAt');
       case 'CURRENT_EN':
+        return currentTheme === APP_THEME.JR_315 ? 'This is' : '';
       case 'CURRENT_ZH':
+        return currentTheme === APP_THEME.JR_315
+          ? translate('nowStoppingAtZh')
+          : '';
       case 'CURRENT_KO':
-        return '';
+        return currentTheme === APP_THEME.JR_315
+          ? translate('nowStoppingAtKo')
+          : '';
       case 'NEXT':
         return translate(isLast ? 'nextLast' : 'next');
       case 'NEXT_KANA':
         return translate(isLast ? 'nextKanaLast' : 'nextKana');
       case 'NEXT_EN':
-        return translate(isLast ? 'nextEnLast' : 'nextEn');
+        return currentTheme === APP_THEME.JR_315 && isLast
+          ? 'Next\nFinal Stop'
+          : translate(isLast ? 'nextEnLast' : 'nextEn');
       case 'NEXT_ZH':
         return translate(isLast ? 'nextZhLast' : 'nextZh');
       case 'NEXT_KO':
@@ -77,7 +87,14 @@ export const useHeaderStateText = ({
       default:
         return '';
     }
-  }, [headerState, isLast, selectedBound, firstStop, headerLangState]);
+  }, [
+    headerState,
+    isLast,
+    selectedBound,
+    firstStop,
+    headerLangState,
+    currentTheme,
+  ]);
 
   const stateTextRight = useMemo<string>(() => {
     if (firstStop && selectedBound) {

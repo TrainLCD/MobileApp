@@ -358,6 +358,11 @@ const TrainTypeBox: React.FC<Props> = ({
     [prevTrainTypeName]
   );
 
+  // 中国語のOS代替フォントはRobotoと字形の上下寸法が異なる。
+  // 315系の固定行高で欠けないよう、現在・切り替え前とも自然な行高を使う。
+  const useNativeLineHeight = fitTextToHeight && headerLangState === 'ZH';
+  const prevUseNativeLineHeight =
+    fitTextToHeight && prevTrainTypeDisplayState.headerLangState === 'ZH';
   const textHeight = Math.max(1, (boxHeight - 2) * 0.675);
   const {
     fontSize: computedFontSize,
@@ -424,8 +429,9 @@ const TrainTypeBox: React.FC<Props> = ({
                   letterSpacing,
                   marginLeft,
                   fontSize: computedFontSize,
-                  lineHeight:
-                    fitTextToHeight && numberOfLines === 1
+                  lineHeight: useNativeLineHeight
+                    ? undefined
+                    : fitTextToHeight && numberOfLines === 1
                       ? textHeight
                       : computedLineHeight,
                 },
@@ -448,8 +454,9 @@ const TrainTypeBox: React.FC<Props> = ({
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
               fontSize: prevComputedFontSize,
-              lineHeight:
-                fitTextToHeight && prevNumberOfLines === 1
+              lineHeight: prevUseNativeLineHeight
+                ? undefined
+                : fitTextToHeight && prevNumberOfLines === 1
                   ? textHeight
                   : prevComputedLineHeight,
             },

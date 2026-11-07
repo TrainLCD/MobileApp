@@ -46,10 +46,11 @@ jest.mock('./useLoopLine', () => ({
   useLoopLine: jest.fn(),
 }));
 
-const TestComponent: React.FC<{ excludePrefixAndSuffix?: boolean }> = ({
-  excludePrefixAndSuffix,
-}) => {
-  const boundText = useBoundText(excludePrefixAndSuffix);
+const TestComponent: React.FC<{
+  excludePrefixAndSuffix?: boolean;
+  jr315?: boolean;
+}> = ({ excludePrefixAndSuffix, jr315 }) => {
+  const boundText = useBoundText(excludePrefixAndSuffix, jr315);
   return <Text testID="boundText">{JSON.stringify(boundText)}</Text>;
 };
 
@@ -144,6 +145,32 @@ describe('useBoundText', () => {
     expect(result.KO).toBe('TrainLCD');
     expect(result.KANA).toBe('TrainLCD');
   });
+
+  it.each([false, true])(
+    '315系=%sの漢字・かなの行先名と接尾辞を返す',
+    (jr315) => {
+      const tajimi = createStation(100, {
+        name: '多治見',
+        nameKatakana: 'タジミ',
+        nameRoman: 'Tajimi',
+      });
+      setAtomValues({
+        selectedBound: tajimi,
+        selectedDirection: 'INBOUND',
+        stations: [tajimi],
+      });
+      mockUseBounds.mockReturnValue({
+        boundCandidates: [],
+        directionalStops: [tajimi],
+        bounds: [[tajimi], []],
+      });
+      const { getByTestId } = render(<TestComponent jr315={jr315} />);
+      const result = JSON.parse(getByTestId('boundText').props.children);
+      expect(result.JA).toBe(jr315 ? '多治見 行' : '多治見 ゆき');
+      expect(result.KANA).toBe(jr315 ? 'たじみ ゆき' : '多治見 ゆき');
+      expect(result.EN).toBe('for Tajimi');
+    }
+  );
 
   it('通常路線で行先テキストを返す（接尾辞あり）', () => {
     setAtomValues({
