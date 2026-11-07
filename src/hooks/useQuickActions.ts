@@ -1,5 +1,5 @@
 import * as QuickActions from 'expo-quick-actions';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import navigationState, { presetRoutesAtom } from '~/store/atoms/navigation';
@@ -16,6 +16,7 @@ let handledInitial = false;
  * - クイックアクション選択時に pendingQuickActionRouteId を設定し、SelectLine に遷移
  */
 export const useQuickActions = () => {
+  const store = useStore();
   const presetRoutes = useAtomValue(presetRoutesAtom);
   const setNavigationState = useSetAtom(navigationState);
 
@@ -42,7 +43,10 @@ export const useQuickActions = () => {
     const handleAction = async (action: QuickActions.Action | null) => {
       const routeId = action?.params?.routeId;
       if (typeof routeId !== 'string') return;
-      if (!(await confirmExternalRouteSwitch())) return;
+      const presetRoute = store
+        .get(presetRoutesAtom)
+        .find((route) => route.id === routeId);
+      if (!(await confirmExternalRouteSwitch(presetRoute))) return;
 
       setNavigationState((prev) => ({
         ...prev,
@@ -69,5 +73,5 @@ export const useQuickActions = () => {
     // ウォームスタート時
     const subscription = QuickActions.addListener(handleAction);
     return () => subscription.remove();
-  }, [setNavigationState]);
+  }, [setNavigationState, store]);
 };

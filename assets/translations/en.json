@@ -44,6 +44,7 @@
   "trainTypeDefault": "Local",
   "viewStopStations": "See all stops",
   "viewBusStops": "See bus stops",
+  "confirmPresetRouteSwitchTitle": "Switch to “%{presetName}”?",
   "confirmExternalRouteSwitchTitle": "Switch to the selected route?",
   "confirmExternalRouteSwitchMessage": "Navigation for your current route will end.",
   "switchRoute": "Switch",

@@ -44,6 +44,7 @@
   "trainTypeDefault": "普通/各駅停車",
   "viewStopStations": "停車駅を見る",
   "viewBusStops": "バス停を見る",
+  "confirmPresetRouteSwitchTitle": "「%{presetName}」に切り替えますか？",
   "confirmExternalRouteSwitchTitle": "選択した経路に切り替えますか？",
   "confirmExternalRouteSwitchMessage": "現在の経路の案内は終了します。",
   "switchRoute": "切り替える",
