@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import React, {
   useCallback,
@@ -31,7 +32,6 @@ import {
   getIsRapid,
 } from '~/utils/trainTypeString';
 import truncateTrainType from '~/utils/truncateTrainType';
-import TrainTypeBoxSaikyoGradient from './TrainTypeBoxSaikyoGradient';
 
 type Props = {
   trainType: TrainType | null;
@@ -279,8 +279,22 @@ const TrainTypeBoxSaikyo: React.FC<Props> = ({
   return (
     <View style={styles.root}>
       <View style={styles.container}>
-        <TrainTypeBoxSaikyoGradient
-          trainTypeColor={trainTypeColor}
+        <LinearGradient
+          colors={['#000', '#000', '#fff']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={['#aaaaaaff', '#aaaaaabb']}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={['#000', '#000', '#fff']}
+          locations={[0.1, 0.5, 0.9]}
+          style={styles.gradient}
+        />
+        <LinearGradient
+          colors={[`${trainTypeColor}bb`, `${trainTypeColor}ff`]}
           style={styles.gradient}
         />
 

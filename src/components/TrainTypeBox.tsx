@@ -34,7 +34,7 @@ import { computeTwoLineTypography } from '../utils/computeTwoLineTypography';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import truncateTrainType from '../utils/truncateTrainType';
-import TrainTypeBoxSaikyoGradient from './TrainTypeBoxSaikyoGradient';
+import TrainTypeBox315Gradient from './TrainTypeBox315Gradient';
 import Typography from './Typography';
 
 type Props = {
@@ -46,7 +46,9 @@ type Props = {
   heightScale?: number;
   widthScale?: number;
   borderRadius?: number;
-  saikyoGradient?: boolean;
+  jr315Gradient?: boolean;
+  borderColor?: string;
+  fitTextToHeight?: boolean;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -75,6 +77,14 @@ const styles = StyleSheet.create({
     height: BOX_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  outline: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderWidth: 1,
   },
   gradient: {
     width: BOX_WIDTH,
@@ -122,7 +132,9 @@ const TrainTypeBox: React.FC<Props> = ({
   heightScale = 1,
   widthScale = 1,
   borderRadius = 4,
-  saikyoGradient = false,
+  jr315Gradient = false,
+  borderColor,
+  fitTextToHeight = false,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
@@ -344,6 +356,7 @@ const TrainTypeBox: React.FC<Props> = ({
     [prevTrainTypeName]
   );
 
+  const textHeight = Math.max(1, (boxHeight - 2) * 0.675);
   const {
     fontSize: computedFontSize,
     lineHeight: computedLineHeight,
@@ -352,17 +365,19 @@ const TrainTypeBox: React.FC<Props> = ({
   } = computeTwoLineTypography({
     baseFontSize: 18,
     isTablet,
-    fontSizeScale,
+    fontSizeScale: fitTextToHeight
+      ? textHeight / (18 * (isTablet ? 1.5 : 1))
+      : fontSizeScale,
     numberOfLines,
     prevNumberOfLines,
-    maxHeight: boxHeight,
+    maxHeight: fitTextToHeight ? textHeight : boxHeight,
   });
 
   return (
     <View>
       <View style={[styles.box, boxSizeStyle]}>
-        {saikyoGradient ? (
-          <TrainTypeBoxSaikyoGradient
+        {jr315Gradient ? (
+          <TrainTypeBox315Gradient
             trainTypeColor={trainTypeColor}
             style={gradientStyle}
           />
@@ -407,7 +422,10 @@ const TrainTypeBox: React.FC<Props> = ({
                   letterSpacing,
                   marginLeft,
                   fontSize: computedFontSize,
-                  lineHeight: computedLineHeight,
+                  lineHeight:
+                    fitTextToHeight && numberOfLines === 1
+                      ? textHeight
+                      : computedLineHeight,
                 },
               ],
             ]}
@@ -428,7 +446,10 @@ const TrainTypeBox: React.FC<Props> = ({
               letterSpacing: prevLetterSpacing,
               marginLeft: prevMarginLeft,
               fontSize: prevComputedFontSize,
-              lineHeight: prevComputedLineHeight,
+              lineHeight:
+                fitTextToHeight && prevNumberOfLines === 1
+                  ? textHeight
+                  : prevComputedLineHeight,
             },
           ]}
           adjustsFontSizeToFit
@@ -437,6 +458,12 @@ const TrainTypeBox: React.FC<Props> = ({
         >
           {prevTrainTypeName}
         </AnimatedTypography>
+        {borderColor ? (
+          <View
+            pointerEvents="none"
+            style={[styles.outline, { borderColor, borderRadius }]}
+          />
+        ) : null}
       </View>
       {showNextTrainType && nextTrainType?.nameRoman ? (
         <View style={nextTrainTypeWrapperStyle}>

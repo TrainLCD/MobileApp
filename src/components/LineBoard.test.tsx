@@ -154,13 +154,17 @@ describe('LineBoard', () => {
   it('315系テーマでJR九州風の路線図を共有する', () => {
     setupMocks(APP_THEME.JR_315);
     render(<LineBoard />);
-    expect(LineBoardJRKyushu).toHaveBeenCalled();
+    expect(LineBoardJRKyushu.mock.calls.at(-1)[0]).toMatchObject({
+      saikyoGradient: true,
+    });
   });
 
   it('JR_KYUSHU テーマで LineBoardJRKyushu をレンダリングする', () => {
     setupMocks(APP_THEME.JR_KYUSHU);
     render(<LineBoard />);
-    expect(LineBoardJRKyushu).toHaveBeenCalled();
+    expect(LineBoardJRKyushu.mock.calls.at(-1)[0]).toMatchObject({
+      saikyoGradient: false,
+    });
   });
 
   it('hasTerminus プロップが正しく渡される', () => {

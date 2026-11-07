@@ -38,6 +38,10 @@ jest.mock('~/utils/isPass', () => ({
   default: jest.fn(() => false),
 }));
 
+jest.mock('./BarTerminalSaikyo', () => ({
+  BarTerminalSaikyo: jest.fn(() => null),
+}));
+
 jest.mock('./BarTerminalEast', () => ({
   BarTerminalEast: jest.fn(() => null),
 }));
@@ -124,6 +128,41 @@ describe('LineBoardJRKyushu', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  it.each([false, true])(
+    '埼京線風グラデ=%pを帯と終端・空き枠へ揃える',
+    (saikyoGradient) => {
+      const { UNSAFE_getAllByType } = render(
+        <LineBoardJRKyushu
+          stations={mockStations}
+          lineColors={['#f60', '#f60']}
+          hasTerminus={false}
+          saikyoGradient={saikyoGradient}
+        />
+      );
+      const { LinearGradient } = require('expo-linear-gradient');
+      const layers = UNSAFE_getAllByType(LinearGradient).filter(
+        (layer) => layer.props.colors[0] === '#fff'
+      );
+      expect(layers.length).toBeGreaterThan(0);
+      for (const layer of layers) {
+        expect(layer.props.colors).toEqual(
+          saikyoGradient
+            ? ['#fff', '#000', '#000']
+            : ['#fff', '#000', '#000', '#fff']
+        );
+        expect(layer.props.locations).toEqual(
+          saikyoGradient ? [0.1, 0.5, 0.9] : [0.5, 0.5, 0.5, 0.9]
+        );
+      }
+      const { EmptyStationNameCell } = require('./LineBoard/shared/components');
+      expect(EmptyStationNameCell.mock.calls[0][0]).toMatchObject({
+        saikyoGradient,
+      });
+      const { BarTerminalSaikyo } = require('./BarTerminalSaikyo');
+      expect(BarTerminalSaikyo).toHaveBeenCalledTimes(saikyoGradient ? 1 : 0);
+    }
+  );
 
   it('正しくレンダリングされる', () => {
     const result = render(

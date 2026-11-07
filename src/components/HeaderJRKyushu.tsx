@@ -14,6 +14,8 @@ import TrainTypeBox from './TrainTypeBox';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 import Typography from './Typography';
 
+const JR_315_HEADER_COLOR = '#F47921';
+
 const styles = StyleSheet.create({
   root: {
     paddingBottom: 4,
@@ -161,10 +163,14 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
   return (
     <View style={styles.root}>
       {is315 ? (
-        <HeaderBar height={15} lineColor={lineColor} edgeColor="#fcfcfc" />
+        <HeaderBar
+          height={15}
+          lineColor={JR_315_HEADER_COLOR}
+          edgeColor="#fff"
+        />
       ) : null}
       <LinearGradient
-        colors={['#fcfcfc', '#ccc']}
+        colors={is315 ? ['#fff', '#fff'] : ['#fcfcfc', '#ccc']}
         locations={[0, 1]}
         style={[styles.gradientRoot, is315 && styles.gradientRoot315]}
       >
@@ -173,11 +179,12 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
             <TrainTypeBox
               trainType={trainType}
               darkenColor
-              saikyoGradient
-              fontSizeScale={1.2}
+              jr315Gradient
+              fitTextToHeight
               heightScale={1.3}
               widthScale={1.4}
               borderRadius={isTablet ? 12 : 8}
+              borderColor={trainType?.color ?? '#1f63c6'}
             />
           ) : (
             <TrainTypeBoxJRKyushu trainType={trainType} />

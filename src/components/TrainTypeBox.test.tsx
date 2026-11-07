@@ -11,6 +11,7 @@ import { themeAtom } from '../store/atoms/theme';
 import tuningState from '../store/atoms/tuning';
 import AnimatedTypography from './AnimatedTypography';
 import TrainTypeBox, { resolveTrainTypeFontFamily } from './TrainTypeBox';
+import TrainTypeBox315Gradient from './TrainTypeBox315Gradient';
 
 jest.mock('jotai', () => ({
   ...jest.requireActual('jotai'),
@@ -212,7 +213,12 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     heightScale = 1,
     widthScale = 1,
     borderRadius?: number,
-    gradientProps: { darkenColor?: boolean; saikyoGradient?: boolean } = {}
+    gradientProps: {
+      darkenColor?: boolean;
+      jr315Gradient?: boolean;
+      borderColor?: string;
+      fitTextToHeight?: boolean;
+    } = {}
   ) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return 'CURRENT_JA';
@@ -302,19 +308,16 @@ describe('TrainTypeBox 2行種別の可読性', () => {
   );
 
   it.each([false, true])(
-    'saikyoGradient=%pの段階位置を確認する',
-    (saikyoGradient) => {
+    'jr315Gradient=%pの段階位置を確認する',
+    (jr315Gradient) => {
       const { UNSAFE_root } = renderWithScale(1.2, 1.3, 1.4, 8, {
         darkenColor: true,
-        saikyoGradient,
+        jr315Gradient,
       });
       const layers = UNSAFE_root.findAllByType(LinearGradient);
-      expect(layers).toHaveLength(4);
-      if (saikyoGradient) {
-        expect(layers[0].props.colors).toEqual(['#000', '#000', '#fff']);
-        expect(layers[0].props.locations).toEqual([0.1, 0.5, 0.9]);
-        expect(layers[2].props.locations).toEqual([0.1, 0.5, 0.9]);
-        expect(layers[3].props.colors).toEqual(['#f00bb', '#f00ff']);
+      expect(layers).toHaveLength(jr315Gradient ? 1 : 4);
+      if (jr315Gradient) {
+        expect(layers[0].props.locations).toEqual([0, 0.35, 0.62, 1]);
       } else {
         expect(layers[0].props.colors).toEqual([
           '#aaa',
@@ -327,6 +330,76 @@ describe('TrainTypeBox 2行種別の可読性', () => {
       }
     }
   );
+
+  it('黒い普通でも上部・中央下・下端の明暗を残す', () => {
+    const { UNSAFE_root } = render(
+      <TrainTypeBox315Gradient trainTypeColor="#000000" style={{}} />
+    );
+    const gradient = UNSAFE_root.findByType(LinearGradient);
+    expect(gradient.props.colors).toEqual([
+      '#4f4f4f',
+      '#282828',
+      '#181818',
+      '#2b2b2b',
+    ]);
+    expect(gradient.props.locations).toEqual([0, 0.35, 0.62, 1]);
+  });
+
+  it.each([undefined, '#F47921'])(
+    '枠色=%pをグラデーションとは別に描く',
+    (borderColor) => {
+      const { UNSAFE_root } = renderWithScale(1.2, 1.3, 1.4, 8, {
+        jr315Gradient: true,
+        borderColor,
+      });
+      const outlines = UNSAFE_root.findAllByType(View).filter(
+        (node) => StyleSheet.flatten(node.props.style)?.borderWidth === 1
+      );
+      expect(outlines).toHaveLength(borderColor ? 1 : 0);
+      if (borderColor) {
+        expect(StyleSheet.flatten(outlines[0].props.style)).toMatchObject({
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          borderWidth: 1,
+          borderRadius: 8,
+          borderColor,
+        });
+        expect(outlines[0].props.pointerEvents).toBe('none');
+      }
+    }
+  );
+
+  it('315系では上下に余白を残し、2行表示と切り替え前の文字も箱に収める', () => {
+    const innerHeight = (BOX_HEIGHT * 1.3 - 2) * 0.675;
+    const { getAllByText, getByText, rerender } = renderWithScale(
+      1,
+      1.3,
+      1.4,
+      8,
+      {
+        fitTextToHeight: true,
+      }
+    );
+    for (const label of getAllByText('通勤特急\n')) {
+      expect(StyleSheet.flatten(label.props.style).lineHeight * 2).toBeCloseTo(
+        innerHeight
+      );
+    }
+    rerender(
+      <TrainTypeBox
+        trainType={{ ...twoLineTrainType, name: '快速' }}
+        heightScale={1.3}
+        widthScale={1.4}
+        fitTextToHeight
+      />
+    );
+    const style = StyleSheet.flatten(getByText('快速').props.style);
+    expect(style.fontSize).toBeCloseTo(innerHeight);
+    expect(style.lineHeight).toBeCloseTo(innerHeight);
+  });
 
   it('adjustsFontSizeToFitの縮小下限を指定してグリフの消失を防ぐ', () => {
     const { UNSAFE_root } = renderWithScale(1.2);

@@ -174,17 +174,18 @@ describe('HeaderJRKyushu', () => {
       expect(jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0]).toEqual(
         expect.objectContaining({
           darkenColor: true,
-          saikyoGradient: true,
-          fontSizeScale: 1.2,
+          jr315Gradient: true,
+          fitTextToHeight: true,
           heightScale: 1.3,
           widthScale: 1.4,
           borderRadius: 8,
+          borderColor: '#1f63c6',
         })
       );
       expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
     });
 
-    it('上端と区切り線を現在の路線色で描く', () => {
+    it('上端は東海道本線の色で固定し、区切り線には現在の路線色を使う', () => {
       const { getAllByTestId, UNSAFE_getAllByType } = render(
         <HeaderJRKyushu
           {...createMockHeaderProps({
@@ -195,11 +196,15 @@ describe('HeaderJRKyushu', () => {
       );
       const { View, StyleSheet } = require('react-native');
       expect(getAllByTestId('linear-gradient')[0].props.colors).toEqual([
-        '#fcfcfc',
-        '#0068B7bb',
-        '#0068B7bb',
-        '#0068B7bb',
-        '#fcfcfc',
+        '#fff',
+        '#F47921bb',
+        '#F47921bb',
+        '#F47921bb',
+        '#fff',
+      ]);
+      expect(getAllByTestId('linear-gradient')[1].props.colors).toEqual([
+        '#fff',
+        '#fff',
       ]);
       const views = UNSAFE_getAllByType(View);
       expect(
@@ -207,7 +212,7 @@ describe('HeaderJRKyushu', () => {
       ).toBe('#0068B7');
     });
 
-    it('路線がない場合もオレンジで描く', () => {
+    it('路線がなくても上端は東海道本線の色を使う', () => {
       const { getAllByTestId } = render(
         <HeaderJRKyushu
           {...createMockHeaderProps({ currentLine: null })}
@@ -215,7 +220,7 @@ describe('HeaderJRKyushu', () => {
         />
       );
       expect(getAllByTestId('linear-gradient')[0].props.colors[1]).toBe(
-        '#FF6D00bb'
+        '#F47921bb'
       );
     });
 
@@ -225,6 +230,10 @@ describe('HeaderJRKyushu', () => {
       );
       const { View, StyleSheet } = require('react-native');
       expect(getAllByTestId('linear-gradient')).toHaveLength(1);
+      expect(getAllByTestId('linear-gradient')[0].props.colors).toEqual([
+        '#fcfcfc',
+        '#ccc',
+      ]);
       const views = UNSAFE_getAllByType(View);
       expect(
         StyleSheet.flatten(views[views.length - 1].props.style).backgroundColor

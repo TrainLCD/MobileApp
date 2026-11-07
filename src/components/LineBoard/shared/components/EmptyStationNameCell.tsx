@@ -3,6 +3,7 @@ import type React from 'react';
 import { View } from 'react-native';
 import isTablet from '~/utils/isTablet';
 import { BarTerminalEast } from '../../../BarTerminalEast';
+import { BarTerminalSaikyo } from '../../../BarTerminalSaikyo';
 import { useBarStyles } from '../hooks/useBarStyles';
 import { commonLineBoardStyles as styles } from '../styles/commonStyles';
 
@@ -10,20 +11,27 @@ export type EmptyStationNameCellProps = {
   lastLineColor: string;
   isLast: boolean;
   hasTerminus: boolean;
+  saikyoGradient?: boolean;
 };
 
 export const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
   lastLineColor,
   isLast,
   hasTerminus,
+  saikyoGradient = false,
 }: EmptyStationNameCellProps) => {
   const { left: barLeft, width: barWidth } = useBarStyles({});
+  const BarTerminal = saikyoGradient ? BarTerminalSaikyo : BarTerminalEast;
 
   return (
     <View style={styles.stationNameContainer}>
       <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
+        colors={
+          saikyoGradient
+            ? ['#fff', '#000', '#000']
+            : ['#fff', '#000', '#000', '#fff']
+        }
+        locations={saikyoGradient ? [0.1, 0.5, 0.9] : [0.5, 0.5, 0.5, 0.9]}
         style={[
           styles.bar,
           {
@@ -49,7 +57,7 @@ export const EmptyStationNameCell: React.FC<EmptyStationNameCellProps> = ({
         ]}
       />
       {isLast ? (
-        <BarTerminalEast
+        <BarTerminal
           width={isTablet ? 41 : 27}
           height={isTablet ? 48 : 32}
           style={[
