@@ -188,7 +188,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
               fitTextToHeight
               heightScale={1.3}
               widthScale={1.4}
-              borderRadius={isTablet ? 12 : 8}
+              borderRadius={isTablet ? 8 : 6}
               colorOverride={jr315TrainTypeColor}
               borderColor={jr315TrainTypeColor}
             />

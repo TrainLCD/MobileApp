@@ -179,7 +179,7 @@ describe('HeaderJRKyushu', () => {
           fitTextToHeight: true,
           heightScale: 1.3,
           widthScale: 1.4,
-          borderRadius: 8,
+          borderRadius: 6,
           borderColor: '#1f63c6',
           colorOverride: '#1f63c6',
         })
