@@ -13,13 +13,15 @@ import {
   selectedDirectionAtom,
   stationsAtom,
 } from '../store/atoms/station';
+import katakanaToHiragana from '../utils/kanaToHiragana';
 import { useBounds } from './useBounds';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useLoopLine } from './useLoopLine';
 
 export const useBoundText = (
-  excludePrefixAndSuffix?: boolean
+  excludePrefixAndSuffix?: boolean,
+  jr315 = false
 ): Record<HeaderLangState, string> => {
   const selectedBound = useAtomValue(selectedBoundAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
@@ -31,9 +33,14 @@ export const useBoundText = (
   const currentStation = useCurrentStation();
 
   const boundText = useMemo(() => {
+    const kanaName = (station: Station | undefined): string =>
+      katakanaToHiragana(station?.nameKatakana) || station?.name || '';
+    const kanaDestination = directionalStops.map(kanaName).join('・');
+
     if (!selectedBound) {
       return {
         JA: 'TrainLCD',
+        KANA: 'TrainLCD',
         EN: 'TrainLCD',
         ZH: 'TrainLCD',
         KO: 'TrainLCD',
@@ -52,6 +59,7 @@ export const useBoundText = (
       ) {
         return {
           JA: `${directionalStops[0]?.name}経由 ${selectedBound.name}ゆき`,
+          KANA: `${kanaName(directionalStops[0])}けいゆ ${kanaName(selectedBound)} ゆき`,
           EN: `for ${selectedBound.nameRoman} via ${directionalStops[0]?.nameRoman}`,
           ZH: `经由${directionalStops[0]?.nameChinese} 开往${selectedBound.nameChinese}`,
           KO: `${directionalStops[0]?.nameKorean} 경유 ${selectedBound.nameKorean} 행`,
@@ -64,6 +72,7 @@ export const useBoundText = (
       ) {
         return {
           JA: `${directionalStops[0]?.name}経由 ${selectedBound.name}ゆき`,
+          KANA: `${kanaName(directionalStops[0])}けいゆ ${kanaName(selectedBound)} ゆき`,
           EN: `for ${selectedBound.nameRoman} via ${directionalStops[0]?.nameRoman}`,
           ZH: `经由${directionalStops[0]?.nameChinese} 开往${selectedBound.nameChinese}`,
           KO: `${directionalStops[0]?.nameKorean} 경유 ${selectedBound.nameKorean} 행`,
@@ -76,6 +85,7 @@ export const useBoundText = (
       ) {
         return {
           JA: `${directionalStops[0]?.name}経由 ${selectedBound.name}ゆき`,
+          KANA: `${kanaName(directionalStops[0])}けいゆ ${kanaName(selectedBound)} ゆき`,
           EN: `for ${selectedBound.nameRoman} via ${directionalStops[0]?.nameRoman}`,
           ZH: `经由${directionalStops[0]?.nameChinese} 开往${selectedBound.nameChinese}`,
           KO: `${directionalStops[0]?.nameKorean} 경유 ${selectedBound.nameKorean} 행`,
@@ -86,6 +96,7 @@ export const useBoundText = (
     if (excludePrefixAndSuffix) {
       return {
         JA: directionalStops.map((s: Station) => s.name).join('・'),
+        KANA: kanaDestination,
         EN: directionalStops.map((s: Station) => s.nameRoman).join(' & '),
         ZH: directionalStops.map((s: Station) => s.nameChinese).join('・'),
         KO: directionalStops.map((s: Station) => s.nameKorean).join('・'),
@@ -96,6 +107,7 @@ export const useBoundText = (
       JA: `${directionalStops.map((s: Station) => s.name).join('・')} ${
         isLoopLine ? '方面' : 'ゆき'
       }`,
+      KANA: `${kanaDestination} ${isLoopLine ? 'ほうめん' : 'ゆき'}`,
       EN: `for ${directionalStops.map((s: Station) => s.nameRoman).join(' & ')}`,
       ZH: `开往 ${directionalStops.map((s: Station) => s.nameChinese).join('・')}`,
       KO: `${directionalStops.map((s: Station) => s.nameKorean).join('・')} 행`,
@@ -110,5 +122,13 @@ export const useBoundText = (
     currentLine?.id,
   ]);
 
-  return { ...boundText, KANA: boundText.JA };
+  // 315系風だけ漢字の「行」と、読みデータによるひらがなの「ゆき」を使う。
+  return {
+    ...boundText,
+    JA:
+      jr315 && !excludePrefixAndSuffix
+        ? boundText.JA.replace(/ ?ゆき$/, ' 行')
+        : boundText.JA,
+    KANA: jr315 ? boundText.KANA : boundText.JA,
+  };
 };
