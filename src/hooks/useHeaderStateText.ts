@@ -61,9 +61,11 @@ export const useHeaderStateText = ({
       case 'CURRENT_KANA':
         return translate('nowStoppingAt');
       case 'CURRENT_EN':
+        return currentTheme === APP_THEME.JR_315 ? 'This is' : '';
       case 'CURRENT_ZH':
+        return currentTheme === APP_THEME.JR_315 ? '本站' : '';
       case 'CURRENT_KO':
-        return '';
+        return currentTheme === APP_THEME.JR_315 ? '이번 역은' : '';
       case 'NEXT':
         return translate(isLast ? 'nextLast' : 'next');
       case 'NEXT_KANA':
@@ -77,7 +79,14 @@ export const useHeaderStateText = ({
       default:
         return '';
     }
-  }, [headerState, isLast, selectedBound, firstStop, headerLangState]);
+  }, [
+    headerState,
+    isLast,
+    selectedBound,
+    firstStop,
+    headerLangState,
+    currentTheme,
+  ]);
 
   const stateTextRight = useMemo<string>(() => {
     if (firstStop && selectedBound) {

@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import type { Station } from '~/@types/graphql';
 import type { HeaderLangState } from '~/models/HeaderTransitionState';
-import { APP_THEME } from '~/models/Theme';
+import { APP_THEME, type AppTheme } from '~/models/Theme';
 import { themeAtom } from '~/store/atoms/theme';
 import { createStation } from '~/utils/test/factories';
 import { headerStateAtom } from '../store/atoms/navigation';
@@ -63,6 +63,37 @@ describe('useHeaderStateText', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it.each([
+    ['EN', 'This is'],
+    ['ZH', '本站'],
+    ['KO', '이번 역은'],
+  ] as const)('315系の現在駅を%sでは「%s」で案内する', (lang, expected) => {
+    setLoopLine(false);
+    let theme: AppTheme = APP_THEME.JR_315;
+    mockUseAtomValue.mockImplementation((atom: unknown) => {
+      if (atom === headerStateAtom) return `CURRENT_${lang}`;
+      if (atom === selectedBoundAtom) return osaki;
+      if (atom === themeAtom) return theme;
+      return undefined;
+    });
+    const { result, rerender } = renderHook(() =>
+      useHeaderStateText({
+        isLast: false,
+        headerLangState: lang,
+        firstStop: false,
+      })
+    );
+    expect(result.current.stateText).toBe(expected);
+    for (const otherTheme of [APP_THEME.JR_KYUSHU, APP_THEME.TOKYO_METRO]) {
+      theme = otherTheme;
+      rerender({});
+      expect(result.current.stateText).toBe('');
+    }
+    theme = APP_THEME.JR_315;
+    rerender({});
+    expect(result.current.stateText).toBe(expected);
   });
 
   it('環状線の乗車直後は行先に続く語を「方面」にする', () => {
