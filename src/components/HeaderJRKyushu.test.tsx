@@ -309,7 +309,7 @@ describe('HeaderJRKyushu', () => {
       expect(props?.trainType).toBe(trainType);
     });
 
-    it('上端は東海道本線の色で固定し、区切り線には現在の路線色を使う', () => {
+    it('上端は指定の固定色にし、区切り線には現在の路線色を使う', () => {
       const { getAllByTestId, UNSAFE_getAllByType } = render(
         <HeaderJRKyushu
           {...createMockHeaderProps({
@@ -321,9 +321,9 @@ describe('HeaderJRKyushu', () => {
       const { View, StyleSheet } = require('react-native');
       expect(getAllByTestId('linear-gradient')[0].props.colors).toEqual([
         '#fff',
-        '#F47921bb',
-        '#F47921bb',
-        '#F47921bb',
+        '#FA7D28bb',
+        '#FA7D28bb',
+        '#FA7D28bb',
         '#fff',
       ]);
       expect(getAllByTestId('linear-gradient')[1].props.colors).toEqual([
@@ -336,7 +336,7 @@ describe('HeaderJRKyushu', () => {
       ).toBe('#0068B7');
     });
 
-    it('路線がなくても上端は東海道本線の色を使う', () => {
+    it('路線がなくても上端は指定の固定色を使う', () => {
       const { getAllByTestId } = render(
         <HeaderJRKyushu
           {...createMockHeaderProps({ currentLine: null })}
@@ -344,7 +344,7 @@ describe('HeaderJRKyushu', () => {
         />
       );
       expect(getAllByTestId('linear-gradient')[0].props.colors[1]).toBe(
-        '#F47921bb'
+        '#FA7D28bb'
       );
     });
 
