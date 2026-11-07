@@ -452,6 +452,50 @@ describe('TrainTypeBox language transition', () => {
     jest.restoreAllMocks();
   });
 
+  it.each(['慢车', '区间\n快车'])(
+    '315系の中国語「%s」は自然な行高を使い、フェード中も維持する',
+    (nameChinese) => {
+      let headerState = 'CURRENT_ZH';
+      (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+        if (atom === headerStateAtom) return headerState;
+        if (atom === themeAtom) return APP_THEME.JR_315;
+        if (atom === tuningState) return { headerTransitionDelay: 1000 };
+        return undefined;
+      });
+      jest
+        .spyOn(Animated, 'timing')
+        .mockImplementation(() => ({ start: jest.fn() }) as never);
+      const type = { ...trainType, nameChinese };
+      const { getByText, getAllByText, rerender } = render(
+        <TrainTypeBox
+          trainType={type}
+          fitTextToHeight
+          heightScale={1.3}
+          widthScale={1.4}
+        />
+      );
+      const current = StyleSheet.flatten(
+        getAllByText(nameChinese)[0].props.style
+      );
+      expect(current.lineHeight).toBeUndefined();
+      expect(current.fontSize).toBeGreaterThan(0);
+      headerState = 'CURRENT_JA';
+      rerender(
+        <TrainTypeBox
+          trainType={{ ...type }}
+          fitTextToHeight
+          heightScale={1.3}
+          widthScale={1.4}
+        />
+      );
+      const previous = StyleSheet.flatten(getByText(nameChinese).props.style);
+      const japanese = StyleSheet.flatten(getByText('快速').props.style);
+      expect(previous.lineHeight).toBeUndefined();
+      expect(previous.fontSize).toBe(current.fontSize);
+      expect(japanese.lineHeight).toBe(japanese.fontSize);
+    }
+  );
+
   it('KOからJAへのフェード中は旧ハングルにOSフォント設定を維持する', () => {
     let headerState = 'CURRENT_KO';
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
