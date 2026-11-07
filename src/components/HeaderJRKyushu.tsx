@@ -55,6 +55,10 @@ const styles = StyleSheet.create({
   boundTextContainer: {
     position: 'absolute',
   },
+  fittedBoundTextContainer: {
+    left: 0,
+    right: 0,
+  },
   boundText: {
     color: '#555',
     fontWeight: 'bold',
@@ -169,6 +173,17 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
     isJapaneseState,
   });
 
+  const fitBoundText = is315 && headerLangState === 'EN';
+  // Bound forは315系の英語表示だけに付くため、現在の言語に依存せず旧表示を判定できる。
+  const fitPreviousBoundText =
+    is315 && animation.prevBoundText.startsWith('Bound for ');
+  const boundTextFitProps = fitBoundText
+    ? { numberOfLines: 1, adjustsFontSizeToFit: true }
+    : {};
+  const previousBoundTextFitProps = fitPreviousBoundText
+    ? { numberOfLines: 1, adjustsFontSizeToFit: true }
+    : {};
+
   const lineColor = currentLine?.color ?? '#FF6D00';
   const jr315TrainTypeColor = getIsLocal(trainType)
     ? '#000000'
@@ -212,6 +227,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
                 style={[
                   animation.boundTopAnimatedStyles,
                   styles.boundTextContainer,
+                  fitBoundText && styles.fittedBoundTextContainer,
                 ]}
               >
                 <Typography
@@ -223,12 +239,15 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
                     ? `${connectionText}直通 `
                     : null}
                 </Typography>
-                <Typography style={styles.boundText}>{boundText}</Typography>
+                <Typography {...boundTextFitProps} style={styles.boundText}>
+                  {boundText}
+                </Typography>
               </AnimatedTypography>
               <AnimatedTypography
                 style={[
                   animation.boundBottomAnimatedStyles,
                   styles.boundTextContainer,
+                  fitPreviousBoundText && styles.fittedBoundTextContainer,
                 ]}
               >
                 <Typography
@@ -240,7 +259,10 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
                     ? `${animation.prevConnectionText}直通 `
                     : null}
                 </Typography>
-                <Typography style={styles.boundText}>
+                <Typography
+                  {...previousBoundTextFitProps}
+                  style={styles.boundText}
+                >
                   {animation.prevBoundText}
                 </Typography>
               </AnimatedTypography>

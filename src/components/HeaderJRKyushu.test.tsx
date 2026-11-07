@@ -183,8 +183,48 @@ describe('HeaderJRKyushu', () => {
       });
       const { getByText } = render(<HeaderJRKyushu {...props} is315={is315} />);
       expect(getByText(expected)).toBeTruthy();
+      expect(getByText(expected).props.numberOfLines).toBe(
+        is315 && headerLangState === 'EN' ? 1 : undefined
+      );
+      expect(getByText(expected).props.adjustsFontSizeToFit).toBe(
+        is315 && headerLangState === 'EN' ? true : undefined
+      );
       expect(useHeaderAnimation).toHaveBeenLastCalledWith(
         expect.objectContaining({ boundText: expected })
+      );
+    }
+  );
+
+  it.each([
+    [true, 'Bound for Hikarigaoka via Tochomae', true],
+    [true, '多治見 行', false],
+    [false, 'Bound for Hikarigaoka via Tochomae', false],
+  ] as const)(
+    '315系=%sの旧行先「%s」も英語だけ1行に収める',
+    (is315, previousText, shouldFit) => {
+      const mockAnimation = jest.mocked(useHeaderAnimation);
+      const implementation = mockAnimation.getMockImplementation();
+      if (!implementation) throw new Error('Header animation mock is missing');
+      const animation = implementation(createMockHeaderProps());
+      mockAnimation.mockReturnValueOnce({
+        ...animation,
+        prevBoundText: previousText,
+      });
+      const { getByText } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({
+            boundText: 'たじみ ゆき',
+            headerLangState: 'KANA',
+            selectedBound: createMockHeaderProps().currentStation,
+          })}
+          is315={is315}
+        />
+      );
+      expect(getByText(previousText).props.numberOfLines).toBe(
+        shouldFit ? 1 : undefined
+      );
+      expect(getByText(previousText).props.adjustsFontSizeToFit).toBe(
+        shouldFit ? true : undefined
       );
     }
   );
