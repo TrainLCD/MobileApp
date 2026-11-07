@@ -43,10 +43,10 @@ export const useQuickActions = () => {
     const handleAction = async (action: QuickActions.Action | null) => {
       const routeId = action?.params?.routeId;
       if (typeof routeId !== 'string') return;
-      const presetName = store
+      const presetRoute = store
         .get(presetRoutesAtom)
-        .find((route) => route.id === routeId)?.name;
-      if (!(await confirmExternalRouteSwitch(presetName))) return;
+        .find((route) => route.id === routeId);
+      if (!(await confirmExternalRouteSwitch(presetRoute))) return;
 
       setNavigationState((prev) => ({
         ...prev,

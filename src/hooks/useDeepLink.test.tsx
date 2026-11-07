@@ -20,6 +20,9 @@ import type { StationState } from '../store/atoms/station';
 import { useDeepLink } from './useDeepLink';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
+jest.mock('~/lineSymbolImage', () => ({
+  getLineSymbolImage: jest.fn().mockReturnValue({ signPath: 101 }),
+}));
 jest.mock('~/translation', () => ({
   translate: jest.fn((key: string) => key),
 }));
@@ -2274,7 +2277,7 @@ describe('useDeepLink', () => {
 
     it('対象プリセット名を表示し、確認を承認してから適用する', async () => {
       (useStore().get as jest.Mock).mockReturnValue([
-        { id: params[0].preset, name: '通勤・新宿方面' },
+        { id: params[0].preset, name: '通勤・新宿方面', lineId: 11302 },
       ]);
       const { mockSetNavigationState } = setupAtoms();
       setupQueries();
@@ -2300,6 +2303,9 @@ describe('useDeepLink', () => {
       expect(translate).toHaveBeenCalledWith('confirmPresetRouteSwitchTitle', {
         presetName: '通勤・新宿方面',
       });
+      expect(
+        getDialogPresentationSnapshot().request?.options.lineSymbol
+      ).toEqual({ image: 101 });
       expect(mockSetNavigationState).not.toHaveBeenCalled();
       await act(async () => {
         dismissPresentedDialog(1);

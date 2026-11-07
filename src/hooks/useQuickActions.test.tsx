@@ -34,7 +34,7 @@ it.each([true, false])(
       })
     );
     (useStore().get as jest.Mock).mockReturnValue([
-      { id: 'preset-id', name: '休日のお出かけ' },
+      { id: 'preset-id', name: '休日のお出かけ', lineId: 11302 },
     ]);
     const setNavigation = jest.fn();
     (useSetAtom as jest.Mock).mockReturnValue(setNavigation);
@@ -44,7 +44,11 @@ it.each([true, false])(
     await act(async () => {
       handling = listener({ params: { routeId: 'preset-id' } });
     });
-    expect(confirmExternalRouteSwitch).toHaveBeenCalledWith('休日のお出かけ');
+    expect(confirmExternalRouteSwitch).toHaveBeenCalledWith({
+      id: 'preset-id',
+      name: '休日のお出かけ',
+      lineId: 11302,
+    });
     expect(setNavigation).not.toHaveBeenCalled();
     expect(navigateToSelectLine).not.toHaveBeenCalled();
     await act(async () => {

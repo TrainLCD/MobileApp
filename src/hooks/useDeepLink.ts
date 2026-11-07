@@ -422,10 +422,10 @@ export const useDeepLink = () => {
         if (typeof preset !== 'string' || !PRESET_ID_PATTERN.test(preset)) {
           return;
         }
-        const presetName = store
+        const presetRoute = store
           .get(presetRoutesAtom)
-          .find((route) => route.id === preset)?.name;
-        if (!(await confirmExternalRouteSwitch(presetName))) return;
+          .find((route) => route.id === preset);
+        if (!(await confirmExternalRouteSwitch(presetRoute))) return;
         setNavigationState((prev) => ({
           ...prev,
           pendingQuickActionRouteId: preset,

@@ -1,3 +1,5 @@
+import { getLineSymbolImage } from '~/lineSymbolImage';
+import type { SavedRoute } from '~/models/SavedRoute';
 import { navigationRef } from '~/stacks/rootNavigation';
 import { translate } from '~/translation';
 import { showDialogWhilePresenting } from './dialogPresentation';
@@ -8,7 +10,7 @@ import { showDialogWhilePresenting } from './dialogPresentation';
  * コールドスタートではナビゲーションが未準備のため、そのまま適用します。
  */
 export const confirmExternalRouteSwitch = (
-  presetName?: string
+  preset?: Pick<SavedRoute, 'name' | 'lineId'>
 ): Promise<boolean> => {
   const mainStack = navigationRef.isReady()
     ? navigationRef
@@ -19,11 +21,17 @@ export const confirmExternalRouteSwitch = (
     return Promise.resolve(true);
   }
 
+  const image = preset
+    ? getLineSymbolImage({ id: preset.lineId }, false)?.signPath
+    : undefined;
+
   return new Promise((resolve) => {
     const shown = showDialogWhilePresenting(
       'confirmExternalRouteSwitch',
-      presetName
-        ? translate('confirmPresetRouteSwitchTitle', { presetName })
+      preset?.name
+        ? translate('confirmPresetRouteSwitchTitle', {
+            presetName: preset.name,
+          })
         : translate('confirmExternalRouteSwitchTitle'),
       translate('confirmExternalRouteSwitchMessage'),
       [
@@ -34,7 +42,10 @@ export const confirmExternalRouteSwitch = (
         },
         { text: translate('switchRoute'), onPress: () => resolve(true) },
       ],
-      { onDismiss: () => resolve(false) }
+      {
+        lineSymbol: image !== undefined ? { image } : undefined,
+        onDismiss: () => resolve(false),
+      }
     );
     // 同時に届いたリンクやStrictModeの再実行で確認を重ねません。
     if (!shown) resolve(false);
