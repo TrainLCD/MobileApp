@@ -34,6 +34,7 @@ import { computeTwoLineTypography } from '../utils/computeTwoLineTypography';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import truncateTrainType from '../utils/truncateTrainType';
+import TrainTypeBoxSaikyoGradient from './TrainTypeBoxSaikyoGradient';
 import Typography from './Typography';
 
 type Props = {
@@ -45,7 +46,7 @@ type Props = {
   heightScale?: number;
   widthScale?: number;
   borderRadius?: number;
-  softGradient?: boolean;
+  saikyoGradient?: boolean;
 };
 
 export const resolveTrainTypeFontFamily = (
@@ -121,7 +122,7 @@ const TrainTypeBox: React.FC<Props> = ({
   heightScale = 1,
   widthScale = 1,
   borderRadius = 4,
-  softGradient = false,
+  saikyoGradient = false,
 }: Props) => {
   const fontSizeScale = Math.max(fontSizeScaleRaw, 0.1);
   const boxHeight = BOX_HEIGHT * Math.max(heightScale, 0.1);
@@ -360,47 +361,40 @@ const TrainTypeBox: React.FC<Props> = ({
   return (
     <View>
       <View style={[styles.box, boxSizeStyle]}>
-        <LinearGradient
-          colors={
-            softGradient
-              ? ['#666', '#222', '#333', '#555']
-              : ['#aaa', '#000', '#000', '#aaa']
-          }
-          locations={
-            softGradient
-              ? [0, 0.35, 0.7, 1]
-              : darkenColor
-                ? [0.35, 0.35, 0.35, 0.9]
-                : [0.5, 0.5, 0.5, 0.9]
-          }
-          style={gradientStyle}
-        />
-        <LinearGradient
-          colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
-          style={gradientStyle}
-        />
-        {darkenColor ? (
+        {saikyoGradient ? (
+          <TrainTypeBoxSaikyoGradient
+            trainTypeColor={trainTypeColor}
+            style={gradientStyle}
+          />
+        ) : (
           <>
             <LinearGradient
-              colors={
-                softGradient
-                  ? ['#00000000', '#00000018', '#00000000']
-                  : ['#00000000', '#00000033', '#00000000']
+              colors={['#aaa', '#000', '#000', '#aaa']}
+              locations={
+                darkenColor ? [0.35, 0.35, 0.35, 0.9] : [0.5, 0.5, 0.5, 0.9]
               }
-              locations={softGradient ? [0, 0.55, 1] : [0.35, 0.55, 0.85]}
               style={gradientStyle}
             />
             <LinearGradient
-              colors={
-                softGradient
-                  ? ['#ffffff18', '#ffffff08', '#00000000']
-                  : ['#ffffff44', '#ffffff11', '#00000000']
-              }
-              locations={softGradient ? [0, 0.45, 1] : [0, 0.35, 0.35]}
+              colors={[`${trainTypeColor}ee`, `${trainTypeColor}aa`]}
               style={gradientStyle}
             />
+            {darkenColor ? (
+              <>
+                <LinearGradient
+                  colors={['#00000000', '#00000033', '#00000000']}
+                  locations={[0.35, 0.55, 0.85]}
+                  style={gradientStyle}
+                />
+                <LinearGradient
+                  colors={['#ffffff44', '#ffffff11', '#00000000']}
+                  locations={[0, 0.35, 0.35]}
+                  style={gradientStyle}
+                />
+              </>
+            ) : null}
           </>
-        ) : null}
+        )}
 
         <View style={[styles.textWrapper, boxSizeStyle]}>
           <AnimatedTypography

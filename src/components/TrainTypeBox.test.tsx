@@ -212,7 +212,7 @@ describe('TrainTypeBox 2行種別の可読性', () => {
     heightScale = 1,
     widthScale = 1,
     borderRadius?: number,
-    gradientProps: { darkenColor?: boolean; softGradient?: boolean } = {}
+    gradientProps: { darkenColor?: boolean; saikyoGradient?: boolean } = {}
   ) => {
     (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
       if (atom === headerStateAtom) return 'CURRENT_JA';
@@ -302,27 +302,19 @@ describe('TrainTypeBox 2行種別の可読性', () => {
   );
 
   it.each([false, true])(
-    'softGradient=%pの段階位置を確認する',
-    (softGradient) => {
+    'saikyoGradient=%pの段階位置を確認する',
+    (saikyoGradient) => {
       const { UNSAFE_root } = renderWithScale(1.2, 1.3, 1.4, 8, {
         darkenColor: true,
-        softGradient,
+        saikyoGradient,
       });
       const layers = UNSAFE_root.findAllByType(LinearGradient);
       expect(layers).toHaveLength(4);
-      if (softGradient) {
-        for (const layer of layers) {
-          const locations = layer.props.locations as number[] | undefined;
-          locations?.forEach((position, index) => {
-            if (index > 0)
-              expect(position).toBeGreaterThan(locations[index - 1]);
-          });
-        }
-        expect(layers[3].props.colors).toEqual([
-          '#ffffff18',
-          '#ffffff08',
-          '#00000000',
-        ]);
+      if (saikyoGradient) {
+        expect(layers[0].props.colors).toEqual(['#000', '#000', '#fff']);
+        expect(layers[0].props.locations).toEqual([0.1, 0.5, 0.9]);
+        expect(layers[2].props.locations).toEqual([0.1, 0.5, 0.9]);
+        expect(layers[3].props.colors).toEqual(['#f00bb', '#f00ff']);
       } else {
         expect(layers[0].props.colors).toEqual([
           '#aaa',

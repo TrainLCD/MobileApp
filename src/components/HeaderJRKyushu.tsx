@@ -173,7 +173,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
             <TrainTypeBox
               trainType={trainType}
               darkenColor
-              softGradient
+              saikyoGradient
               fontSizeScale={1.2}
               heightScale={1.3}
               widthScale={1.4}

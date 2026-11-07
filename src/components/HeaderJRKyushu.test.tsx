@@ -174,7 +174,7 @@ describe('HeaderJRKyushu', () => {
       expect(jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0]).toEqual(
         expect.objectContaining({
           darkenColor: true,
-          softGradient: true,
+          saikyoGradient: true,
           fontSizeScale: 1.2,
           heightScale: 1.3,
           widthScale: 1.4,
