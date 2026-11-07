@@ -77,7 +77,9 @@ export const useHeaderStateText = ({
       case 'NEXT_KANA':
         return translate(isLast ? 'nextKanaLast' : 'nextKana');
       case 'NEXT_EN':
-        return translate(isLast ? 'nextEnLast' : 'nextEn');
+        return currentTheme === APP_THEME.JR_315 && isLast
+          ? 'Next\nFinal Stop'
+          : translate(isLast ? 'nextEnLast' : 'nextEn');
       case 'NEXT_ZH':
         return translate(isLast ? 'nextZhLast' : 'nextZh');
       case 'NEXT_KO':
