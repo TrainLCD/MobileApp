@@ -11,9 +11,11 @@ import {
 import { themeAtom } from '../store/atoms/theme';
 import getIsPass from '../utils/isPass';
 import { wrapPhoneme as ph } from '../utils/phoneme';
+import { getIsRapid } from '../utils/trainTypeString';
 import {
   dedupeLinesByTtsName,
   formatFirstConnectedLineEnPhrase,
+  formatJr315StationNumberEn,
   formatJrWestStopsListEn,
   formatJrWestStopsListJa,
   formatLinesListEn,
@@ -271,6 +273,17 @@ export const useTTSText = (
     [afterNextStationIndex, nextStationIndex, slicedStations]
   );
 
+  const afterNextStationNumberText = useMemo(() => {
+    if (isBus || theme !== APP_THEME.JR_315 || !afterNextStation) return '';
+    const index = getStationNumberIndex(
+      afterNextStation,
+      afterNextStation.line
+    );
+    return formatJr315StationNumberEn(
+      afterNextStation.stationNumbers?.[index]?.stationNumber
+    );
+  }, [afterNextStation, getStationNumberIndex, isBus, theme]);
+
   const isAfterNextStopTerminus = useIsTerminus(afterNextStation);
 
   // 次駅のさらに先の駅。次駅が他社線直通の境界駅かどうかの判定に使う。
@@ -400,6 +413,12 @@ export const useTTSText = (
       hasAfterNextStation: !!afterNextStation,
       hasTrainType,
       shouldAnnounceAfterNextStop,
+      jr315ShouldAnnounceAfterNextStop:
+        shouldAnnounceAfterNextStop &&
+        getIsRapid(currentTrainType) &&
+        !isNextStopTerminus,
+      hasAfterNextStationNumberText: afterNextStationNumberText.length > 0,
+      afterNextStationNumberText,
       hasViaStation: !!viaStation,
       nextStationIsBound,
       isNextStopThroughBoundary,
@@ -444,6 +463,7 @@ export const useTTSText = (
         yamanoteTrainTypeJa ?? (currentTrainTypeJa || '各駅停車'),
       // JR_KYUSHU 用 (普通 デフォルト)
       trainTypeJaKyushu: yamanoteTrainTypeJa ?? (currentTrainTypeJa || '普通'),
+      trainTypeJa315: currentTrainTypeJa || '普通',
       // JR東日本 (YAMANOTE/SAIKYO) の列車案内
       // 「この電車は、◯◯線、(種別、)◯◯ゆきです。」に入る路線+種別の塊。
       // 山手線は公式が「山手線内回り/外回り」と読むため専用文言で置き換える。
@@ -515,6 +535,7 @@ export const useTTSText = (
     };
   }, [
     afterNextStation,
+    afterNextStationNumberText,
     allStops,
     betweenNextStation,
     boundForEn,

@@ -2,9 +2,11 @@ import { renderHook } from '@testing-library/react-native';
 import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
-import type { Station } from '~/@types/graphql';
+import { type Station, type TrainType, TrainTypeKind } from '~/@types/graphql';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
+import * as afterNextStationHook from '~/hooks/useAfterNextStation';
+import * as currentTrainTypeHook from '~/hooks/useCurrentTrainType';
 import { useNextStation } from '~/hooks/useNextStation';
 import { useTTSText } from '~/hooks/useTTSText';
 import type { LineDirection } from '~/models/Bound';
@@ -256,6 +258,85 @@ describe('Without trainType & With numbering', () => {
         'The next station is Shin-jew-ku-san-choh-meh S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
       ]);
     });
+  });
+
+  describe('JR_315 Theme', () => {
+    test.each([TrainTypeKind.Rapid, TrainTypeKind.Default])(
+      '種別=%sは快速だけ次の停車駅とその駅番号を案内する',
+      (kind) => {
+        const typeSpy = jest
+          .spyOn(currentTrainTypeHook, 'useCurrentTrainType')
+          .mockReturnValue({
+            kind,
+            name: '快速',
+            nameKatakana: 'カイソク',
+            nameRoman: 'Rapid',
+          } as TrainType);
+        const afterSpy = jest
+          .spyOn(afterNextStationHook, 'useAfterNextStation')
+          .mockReturnValue({
+            ...TOEI_SHINJUKU_LINE_STATIONS[2],
+            name: 'テスト駅',
+            nameRoman: 'Test Station',
+            nameTtsSegments: null,
+            stationNumbers: [
+              {
+                __typename: 'StationNumber',
+                stationNumber: 'S-03',
+                lineSymbol: 'S',
+                lineSymbolColor: '#B0BF1E',
+                lineSymbolShape: 'ROUND',
+              },
+            ],
+          });
+        try {
+          const { result } = renderHook(
+            () => useTTSTextWithJotaiAndNumbering('JR_315', 'ARRIVING'),
+            { wrapper }
+          );
+          const [ja, en] = result.current.text;
+          if (kind === TrainTypeKind.Rapid) {
+            expect(ja).toContain('を出ますと次は');
+            expect(en).toContain('After leaving');
+            expect(en).toContain(
+              'Test Station, S <say-as interpret-as="cardinal">3</say-as>'
+            );
+          } else {
+            expect(ja).not.toContain('を出ますと次は');
+            expect(en).not.toContain('After leaving');
+          }
+        } finally {
+          typeSpy.mockRestore();
+          afterSpy.mockRestore();
+        }
+      }
+    );
+    test.each(['NEXT', 'ARRIVING'] as const)(
+      '%sは経路データを差し込み、到着前だけ日英末尾に注意喚起を加える',
+      (state) => {
+        const { result } = renderHook(
+          () => useTTSTextWithJotaiAndNumbering('JR_315', state),
+          { wrapper }
+        );
+        const [ja, en] = result.current.text;
+        expect(ja).toContain('新宿三丁目');
+        expect(en).toContain(
+          'Shin-jew-ku-san-choh-meh, S <say-as interpret-as="cardinal">2</say-as>'
+        );
+        expect(ja).not.toContain('JR東海');
+        expect(en).not.toContain('JR Central');
+        if (state === 'ARRIVING') {
+          expect(ja).toContain('東京メトロ丸ノ内線');
+          expect(ja).toMatch(/ドアから手を離してお待ちください。$/);
+          expect(en).toMatch(
+            /Please refrain from touching the doors and wait for them to open\.$/
+          );
+        } else {
+          expect(ja).not.toContain('ドアから');
+          expect(en).not.toContain('touching the doors');
+        }
+      }
+    );
   });
 
   describe('TOEI Theme', () => {

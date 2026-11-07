@@ -3,6 +3,7 @@ import { TtsAlphabet } from '~/@types/graphql';
 import {
   dedupeLinesByTtsName,
   formatFirstConnectedLineEnPhrase,
+  formatJr315StationNumberEn,
   formatJrWestStopsListEn,
   replaceJapaneseText,
   stripParensForTTS,
@@ -372,5 +373,22 @@ describe('stripStationParensForTTS', () => {
     const stripped = stripStationParensForTTS(baseStation);
     expect(stripped).not.toBe(baseStation);
     expect(baseStation.name).toBe(original.name);
+  });
+});
+
+describe('315系の次々駅番号', () => {
+  it.each([
+    ['CF-02', 'C F <say-as interpret-as="cardinal">2</say-as>'],
+    ['OH-05', 'O H <say-as interpret-as="cardinal">5</say-as>'],
+    ['22', 'Station Number <say-as interpret-as="cardinal">22</say-as>'],
+    [
+      'JB-27-1',
+      'J B <say-as interpret-as="cardinal">27</say-as>-<say-as interpret-as="cardinal">1</say-as>',
+    ],
+    [undefined, ''],
+    ['', ''],
+    ['CF-?', ''],
+  ])('%sを読み上げ用に変換する', (input, expected) => {
+    expect(formatJr315StationNumberEn(input)).toBe(expected);
   });
 });

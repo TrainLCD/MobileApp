@@ -10,6 +10,7 @@ import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
 import Clock from './Clock';
 import type { HeaderSaikyoProps } from './Header.types';
+import HeaderBar from './HeaderBar';
 import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
 import TrainTypeBox from './TrainTypeBoxSaikyo';
@@ -110,45 +111,6 @@ const BACKGROUND_COLORS_E131 = [
   E131_BACKGROUND_COLOR,
   E131_BACKGROUND_COLOR,
 ] as const;
-
-type HeaderBarProps = {
-  lineColor: string;
-  height: number;
-  // 両端をぼかす色。ヘッダーの地色に合わせる
-  edgeColor: string;
-};
-
-const headerBarStyles = StyleSheet.create({
-  root: {
-    width: '100%',
-    backgroundColor: 'black',
-  },
-  gradient: {
-    flex: 1,
-  },
-});
-
-const HeaderBar: React.FC<HeaderBarProps> = ({
-  lineColor,
-  height,
-  edgeColor,
-}: HeaderBarProps) => (
-  <View style={[headerBarStyles.root, { height }]}>
-    <LinearGradient
-      style={headerBarStyles.gradient}
-      colors={[
-        edgeColor,
-        `${lineColor}bb`,
-        `${lineColor}bb`,
-        `${lineColor}bb`,
-        edgeColor,
-      ]}
-      locations={[0, 0.2, 0.5, 0.8, 1]}
-      start={[0, 0]}
-      end={[1, 1]}
-    />
-  </View>
-);
 
 const HeaderSaikyo: React.FC<HeaderSaikyoProps> = (props) => {
   const {
