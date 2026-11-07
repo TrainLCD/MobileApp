@@ -192,3 +192,20 @@ export const formatFirstConnectedLineEnPhrase = (lines: Line[]): string => {
   if (!name) return '';
   return `on the ${name}`;
 };
+
+/** 315系の次々駅案内用。駅番号をSSMLにし、番号が無ければ案内を省く。 */
+export const formatJr315StationNumberEn = (
+  stationNumber?: string | null
+): string => {
+  if (!stationNumber) return '';
+  const parts = stationNumber.split('-');
+  const hasSymbol = parts.length > 1;
+  const numbers = hasSymbol ? parts.slice(1) : parts;
+  if (!numbers.every((part) => /^\d+$/.test(part))) return '';
+  const numberText = numbers
+    .map((part) => `<say-as interpret-as="cardinal">${Number(part)}</say-as>`)
+    .join('-');
+  return hasSymbol
+    ? `${escapeXml(parts[0]?.split('').join(' ') ?? '')} ${numberText}`
+    : `Station Number ${numberText}`;
+};
