@@ -9,7 +9,7 @@ import getIsPass from '~/utils/isPass';
 const styles = StyleSheet.create({
   banner: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 16,
     left: '12.5%',
     right: '12.5%',
   },
