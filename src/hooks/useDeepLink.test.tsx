@@ -1,9 +1,10 @@
 import { act, render, waitFor } from '@testing-library/react-native';
 import * as Linking from 'expo-linking';
-import { useSetAtom } from 'jotai';
+import { useSetAtom, useStore } from 'jotai';
 import type React from 'react';
 import { StopCondition, type TrainType } from '~/@types/graphql';
 import { resolveSidsFromShortId } from '~/lib/routeResolver';
+import { translate } from '~/translation';
 import {
   completePresentedDialogDismissal,
   dismissPresentedDialog,
@@ -19,11 +20,15 @@ import type { StationState } from '../store/atoms/station';
 import { useDeepLink } from './useDeepLink';
 import { useLazyGraphQLQuery } from './useLazyGraphQLQuery';
 
+jest.mock('~/translation', () => ({
+  translate: jest.fn((key: string) => key),
+}));
 jest.mock('./useLazyGraphQLQuery', () => ({
   useLazyGraphQLQuery: jest.fn(),
 }));
 jest.mock('jotai', () => ({
   useSetAtom: jest.fn(),
+  useStore: jest.fn().mockReturnValue({ get: jest.fn().mockReturnValue([]) }),
   atom: jest.fn(),
 }));
 jest.mock('expo-linking', () => ({
@@ -184,6 +189,7 @@ describe('useDeepLink', () => {
     // tests and cause order-dependent flakes (e.g. an isReady queue from
     // a previous test resuming on the next render). Reset and re-seed the
     // module-level mocks here so every test starts from the same baseline.
+    (useStore().get as jest.Mock).mockReturnValue([]);
     resetDialogPresentationForTests();
     (navigationRef.getRootState as jest.Mock).mockReturnValue({ routes: [] });
     mockGetInitialURL.mockReset().mockResolvedValue(null);
@@ -2266,7 +2272,10 @@ describe('useDeepLink', () => {
       }
     );
 
-    it('確認を承認してからプリセットを適用する', async () => {
+    it('対象プリセット名を表示し、確認を承認してから適用する', async () => {
+      (useStore().get as jest.Mock).mockReturnValue([
+        { id: params[0].preset, name: '通勤・新宿方面' },
+      ]);
       const { mockSetNavigationState } = setupAtoms();
       setupQueries();
       (navigationRef.isReady as jest.Mock).mockReturnValue(true);
@@ -2287,6 +2296,9 @@ describe('useDeepLink', () => {
       mockParse.mockReturnValue({ queryParams: params[0] });
       await act(async () => {
         mockAddEventListener.mock.calls.at(-1)[1]({ url: 'trainlcd://route' });
+      });
+      expect(translate).toHaveBeenCalledWith('confirmPresetRouteSwitchTitle', {
+        presetName: '通勤・新宿方面',
       });
       expect(mockSetNavigationState).not.toHaveBeenCalled();
       await act(async () => {

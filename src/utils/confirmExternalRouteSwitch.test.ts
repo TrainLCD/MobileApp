@@ -1,4 +1,5 @@
 import { navigationRef } from '~/stacks/rootNavigation';
+import { translate } from '~/translation';
 import { confirmExternalRouteSwitch } from './confirmExternalRouteSwitch';
 import {
   completePresentedDialogDismissal,
@@ -10,7 +11,9 @@ import {
 jest.mock('~/stacks/rootNavigation', () => ({
   navigationRef: { isReady: jest.fn(), getRootState: jest.fn() },
 }));
-jest.mock('~/translation', () => ({ translate: (key: string) => key }));
+jest.mock('~/translation', () => ({
+  translate: jest.fn((key: string) => key),
+}));
 
 beforeEach(() => {
   (navigationRef.isReady as jest.Mock).mockReturnValue(true);
@@ -72,4 +75,24 @@ it('確認中の追加要求は破棄し、承認済みの要求だけを続け�
   completePresentedDialogDismissal();
   expect(await first).toBe(true);
   expect(getDialogPresentationSnapshot().request).toBeNull();
+});
+
+it('プリセット名がある場合は専用の文言に渡す', async () => {
+  const result = confirmExternalRouteSwitch('自宅 → 職場');
+  expect(translate).toHaveBeenCalledWith('confirmPresetRouteSwitchTitle', {
+    presetName: '自宅 → 職場',
+  });
+  dismissPresentedDialog(0);
+  completePresentedDialogDismissal();
+  expect(await result).toBe(false);
+});
+
+it('名前を取得できない場合は通常の経路切り替え確認を表示する', async () => {
+  const result = confirmExternalRouteSwitch();
+  expect(getDialogPresentationSnapshot().request?.title).toBe(
+    'confirmExternalRouteSwitchTitle'
+  );
+  dismissPresentedDialog(0);
+  completePresentedDialogDismissal();
+  expect(await result).toBe(false);
 });

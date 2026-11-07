@@ -7,7 +7,9 @@ import { showDialogWhilePresenting } from './dialogPresentation';
  * 設定画面などを重ねている場合も、背後の走行中の経路を保護します。
  * コールドスタートではナビゲーションが未準備のため、そのまま適用します。
  */
-export const confirmExternalRouteSwitch = (): Promise<boolean> => {
+export const confirmExternalRouteSwitch = (
+  presetName?: string
+): Promise<boolean> => {
   const mainStack = navigationRef.isReady()
     ? navigationRef
         .getRootState()
@@ -20,7 +22,9 @@ export const confirmExternalRouteSwitch = (): Promise<boolean> => {
   return new Promise((resolve) => {
     const shown = showDialogWhilePresenting(
       'confirmExternalRouteSwitch',
-      translate('confirmExternalRouteSwitchTitle'),
+      presetName
+        ? translate('confirmPresetRouteSwitchTitle', { presetName })
+        : translate('confirmExternalRouteSwitchTitle'),
       translate('confirmExternalRouteSwitchMessage'),
       [
         {
