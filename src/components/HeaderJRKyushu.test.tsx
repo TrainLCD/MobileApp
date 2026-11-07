@@ -2,6 +2,8 @@ import { render } from '@testing-library/react-native';
 import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
+import { useHeaderAnimation } from '../hooks';
+import AnimatedTypography from './AnimatedTypography';
 import HeaderJRKyushu from './HeaderJRKyushu';
 import TrainTypeBox from './TrainTypeBox';
 
@@ -165,6 +167,82 @@ describe('HeaderJRKyushu', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  it.each([
+    [true, 'EN', 'for Tajimi', 'Bound for Tajimi'],
+    [true, 'EN', 'for Tajimi via Kanayama', 'Bound for Tajimi via Kanayama'],
+    [true, 'EN', 'Bound for Tajimi', 'Bound for Tajimi'],
+    [false, 'EN', 'for Tajimi', 'for Tajimi'],
+    [true, 'JA', '多治見 行き', '多治見 行き'],
+  ] as const)(
+    '315系=%s・言語=%sの行先表示を整形する',
+    (is315, headerLangState, boundText, expected) => {
+      const props = createMockHeaderProps({
+        boundText,
+        headerLangState,
+        selectedBound: createMockHeaderProps().currentStation,
+      });
+      const { getByText } = render(<HeaderJRKyushu {...props} is315={is315} />);
+      expect(getByText(expected)).toBeTruthy();
+      expect(getByText(expected).props.numberOfLines).toBe(
+        is315 && headerLangState === 'EN' ? 1 : undefined
+      );
+      expect(getByText(expected).props.adjustsFontSizeToFit).toBe(
+        is315 && headerLangState === 'EN' ? true : undefined
+      );
+      if (is315 && headerLangState === 'EN') {
+        let ancestor = getByText(expected).parent;
+        while (ancestor) {
+          expect(ancestor.type).not.toBe(AnimatedTypography);
+          ancestor = ancestor.parent;
+        }
+      }
+      expect(useHeaderAnimation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ boundText: expected })
+      );
+    }
+  );
+
+  it.each([
+    [true, 'Bound for Hikarigaoka via Tochomae', true],
+    [true, '多治見 行', false],
+    [false, 'Bound for Hikarigaoka via Tochomae', false],
+  ] as const)(
+    '315系=%sの旧行先「%s」も英語だけ1行に収める',
+    (is315, previousText, shouldFit) => {
+      const mockAnimation = jest.mocked(useHeaderAnimation);
+      const implementation = mockAnimation.getMockImplementation();
+      if (!implementation) throw new Error('Header animation mock is missing');
+      const animation = implementation(createMockHeaderProps());
+      mockAnimation.mockReturnValueOnce({
+        ...animation,
+        prevBoundText: previousText,
+      });
+      const { getByText } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({
+            boundText: 'たじみ ゆき',
+            headerLangState: 'KANA',
+            selectedBound: createMockHeaderProps().currentStation,
+          })}
+          is315={is315}
+        />
+      );
+      if (shouldFit) {
+        let ancestor = getByText(previousText).parent;
+        while (ancestor) {
+          expect(ancestor.type).not.toBe(AnimatedTypography);
+          ancestor = ancestor.parent;
+        }
+      }
+      expect(getByText(previousText).props.numberOfLines).toBe(
+        shouldFit ? 1 : undefined
+      );
+      expect(getByText(previousText).props.adjustsFontSizeToFit).toBe(
+        shouldFit ? true : undefined
+      );
+    }
+  );
 
   describe('315系の配色', () => {
     it('315系では小田急風の種別表示を使う', () => {

@@ -46,7 +46,8 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
   const boundStationNameList = useBoundText(
     theme === APP_THEME.YAMANOTE ||
       theme === APP_THEME.JO ||
-      theme === APP_THEME.JL
+      theme === APP_THEME.JL,
+    theme === APP_THEME.JR_315
   );
   const isLast = useIsNextLastStop();
   const firstStop = useFirstStop();

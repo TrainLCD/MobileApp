@@ -176,6 +176,18 @@ describe('useHeaderCommonData', () => {
     });
   };
 
+  it.each([APP_THEME.JR_315, APP_THEME.JR_KYUSHU])(
+    'テーマ=%sだけ315系の行先表記を指定する',
+    (theme) => {
+      setupMocks(theme);
+      render(<TestComponent />);
+      expect(mockUseBoundText).toHaveBeenCalledWith(
+        false,
+        theme === APP_THEME.JR_315
+      );
+    }
+  );
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -190,7 +202,7 @@ describe('useHeaderCommonData', () => {
 
       render(<TestComponent />);
 
-      expect(mockUseBoundText).toHaveBeenCalledWith(expectedArg);
+      expect(mockUseBoundText).toHaveBeenCalledWith(expectedArg, false);
     });
 
     it.each([
@@ -206,7 +218,7 @@ describe('useHeaderCommonData', () => {
 
       render(<TestComponent />);
 
-      expect(mockUseBoundText).toHaveBeenCalledWith(false);
+      expect(mockUseBoundText).toHaveBeenCalledWith(false, false);
     });
   });
 
