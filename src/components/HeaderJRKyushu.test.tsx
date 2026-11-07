@@ -180,8 +180,8 @@ describe('HeaderJRKyushu', () => {
           heightScale: 1.3,
           widthScale: 1.4,
           borderRadius: 6,
-          borderColor: '#1f63c6',
-          colorOverride: '#1f63c6',
+          borderColor: '#000000',
+          colorOverride: '#000000',
         })
       );
       expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
@@ -193,7 +193,7 @@ describe('HeaderJRKyushu', () => {
       TrainTypeKind.CommuterRapid,
       TrainTypeKind.Default,
       TrainTypeKind.LimitedExpress,
-    ])('%sは快速系だけ青くし、枠も表示色に揃える', (kind) => {
+    ])('%sは普通を黒・快速系を青にし、枠も表示色に揃える', (kind) => {
       const trainType: TrainType = {
         __typename: 'TrainType',
         id: 1,
@@ -217,9 +217,12 @@ describe('HeaderJRKyushu', () => {
         <HeaderJRKyushu {...createMockHeaderProps({ trainType })} is315 />
       );
       const expected =
-        kind === TrainTypeKind.Rapid || kind === TrainTypeKind.HighSpeedRapid
-          ? '#1e8ad2'
-          : '#dc143c';
+        kind === TrainTypeKind.Default
+          ? '#000000'
+          : kind === TrainTypeKind.Rapid ||
+              kind === TrainTypeKind.HighSpeedRapid
+            ? '#1e8ad2'
+            : '#dc143c';
       const props = jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0];
       expect(props).toMatchObject({
         colorOverride: expected,
