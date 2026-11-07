@@ -171,6 +171,7 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
         return (
           <LineBoardJRKyushu
             saikyoGradient={theme === APP_THEME.JR_315}
+            showNextStopBanner={theme === APP_THEME.JR_315}
             stations={slicedLeftStations}
             lineColors={lineColors}
             arrivingLineColor={arrivingLineColor}
