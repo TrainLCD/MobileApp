@@ -248,3 +248,9 @@ Android の行は `AbsListView.LayoutParams` がマージンを持たないた�
   (色は iOS の `LockScreenEntry.fallbackLineColor` / Android の
   `WidgetStateStore.PLACEHOLDER_LINE_COLOR` と `@color/widget_brand`)。
 - 前景色の判定式と閾値: iOS の `lineForegroundColor` と Android の `WidgetTheme.onLineColor`。
+
+## 走行中の経路切り替え確認
+
+走行画面を開いている間にプリセットウィジェットや共有リンクから経路を開くと、切り替え確認を表示します。設定画面を重ねている場合も確認します。ホーム画面のクイックアクションも同じ動作です。
+
+「切り替える」を選ぶまで経路の取得や画面遷移を開始しません。キャンセル、背景タップ、Androidの戻る操作では現在の経路と設定を維持します。確認中に届いた追加のリンクは適用しません。アプリの初回起動や路線選択画面では確認せずに開きます。

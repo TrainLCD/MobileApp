@@ -3,6 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import navigationState, { presetRoutesAtom } from '~/store/atoms/navigation';
+import { confirmExternalRouteSwitch } from '~/utils/confirmExternalRouteSwitch';
 import { navigateToSelectLine } from '~/utils/navigateToSelectLine';
 
 const MAX_QUICK_ACTIONS = 4;
@@ -38,9 +39,10 @@ export const useQuickActions = () => {
 
   // クイックアクション選択を監視
   useEffect(() => {
-    const handleAction = (action: QuickActions.Action | null) => {
+    const handleAction = async (action: QuickActions.Action | null) => {
       const routeId = action?.params?.routeId;
       if (typeof routeId !== 'string') return;
+      if (!(await confirmExternalRouteSwitch())) return;
 
       setNavigationState((prev) => ({
         ...prev,
