@@ -19,7 +19,7 @@ import TrainTypeBox from './TrainTypeBox';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 import Typography from './Typography';
 
-const JR_315_HEADER_COLOR = '#F47921';
+const JR_315_HEADER_COLOR = '#FA7D28';
 
 const styles = StyleSheet.create({
   root: {
