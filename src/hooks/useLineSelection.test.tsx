@@ -2,7 +2,7 @@ import { act, render } from '@testing-library/react-native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station, TrainType } from '~/@types/graphql';
-import { TransportType } from '~/@types/graphql';
+import { TrainTypeKind, TransportType } from '~/@types/graphql';
 import type { SavedRoute } from '~/models/SavedRoute';
 import { createLine, createStation } from '~/utils/test/factories';
 import type { LineState } from '../store/atoms/line';
@@ -561,6 +561,40 @@ describe('useLineSelection', () => {
     const navSetter = mockSetNavigationState.mock.calls[0][0];
     const navResult = navSetter(createNavigationState());
     expect(navResult.pendingTrainType).toBe(trainType);
+  });
+
+  it('バスの運行パターンを変えると同じ停留所の乗り場に切り替える', async () => {
+    const { mockSetStationState } = setupMolecules();
+    const { mockFetchByGroupId } = setupQueries();
+    const boardingStop = createStation(10, { groupId: 100 });
+    const otherPole = createStation(11, { groupId: 100 });
+    const stations = [createStation(30), otherPole];
+    mockFetchByGroupId.mockResolvedValue({
+      data: { lineGroupStations: stations },
+    });
+
+    const hookRef: { current: HookResult } = { current: null };
+    render(
+      <HookBridge
+        onReady={(value) => {
+          hookRef.current = value;
+        }}
+      />
+    );
+
+    await act(async () => {
+      await hookRef.current?.handleTrainTypeSelect({
+        groupId: 500,
+        kind: TrainTypeKind.BusRoute,
+      } as TrainType);
+    });
+
+    const update = mockSetStationState.mock.calls[0][0];
+    const nextState = update(
+      createStationState({ pendingStation: boardingStop })
+    );
+    expect(nextState.pendingStations).toEqual(stations);
+    expect(nextState.pendingStation).toBe(otherPole);
   });
 
   it('既定種別の駅一覧が遅れて解決しても、後から選ばれた種別の駅一覧を上書きしない', async () => {
