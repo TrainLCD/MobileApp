@@ -16,6 +16,7 @@ import { getIsRapid } from '../utils/trainTypeString';
 import {
   appendSpokenBusPlatform,
   dedupeLinesByTtsName,
+  formatBusRailTransferAnnouncements,
   formatFirstConnectedLineEnPhrase,
   formatJr315StationNumberEn,
   formatJrWestStopsListEn,
@@ -78,19 +79,15 @@ export const useTTSText = (
   const currentLineOrigin = useCurrentLine();
 
   const connectedLinesOrigin = useConnectedLines();
-  const transferLinesOrigin = useTransferLines();
-  // バスは直通・乗換・列車種別・駅ナンバリングを案内しない。
-  // フックのルートで配列を空にしておけば、以降の dedupe / format / 番号計算は
-  // すべて空入力に対する no-op となり、テンプレ側の hasTransferLines などの
-  // 真偽フラグも自動で false になる。
+  const transferLines = useTransferLines();
   const connectedLines = isBus ? [] : connectedLinesOrigin;
-  const transferLines = isBus ? [] : transferLinesOrigin;
   // 博多駅の鹿児島本線のように、データ上は方面別に同じ路線名が
   // 別レコードで登録されているケースがある。表示用には両方残したいが、
   // TTS では同じ路線名を続けて読み上げないように重複を除外する。
+  // バスの乗換案内は、鉄道用の路線名テンプレートと分けて到着前に駅名を読む。
   const ttsTransferLines = useMemo(
-    () => dedupeLinesByTtsName(transferLines),
-    [transferLines]
+    () => (isBus ? [] : dedupeLinesByTtsName(transferLines)),
+    [isBus, transferLines]
   );
   const currentTrainTypeFromHook = useCurrentTrainType();
   const currentTrainTypeOrigin = isBus ? null : currentTrainTypeFromHook;
@@ -581,18 +578,26 @@ export const useTTSText = (
   ]);
 
   const resolved = resolveTemplateTheme(theme);
+  const [busTransferJa, busTransferEn] = useMemo(
+    () =>
+      isBus && stoppingState === 'ARRIVING'
+        ? formatBusRailTransferAnnouncements(transferLines)
+        : ['', ''],
+    [isBus, stoppingState, transferLines]
+  );
 
   const jaText = useMemo(() => {
     if (!context) return '';
     if (stoppingState !== 'NEXT' && stoppingState !== 'ARRIVING') return '';
-    return JA_TEMPLATES[resolved][stoppingState](context);
-  }, [context, resolved, stoppingState]);
+    return JA_TEMPLATES[resolved][stoppingState](context) + busTransferJa;
+  }, [busTransferJa, context, resolved, stoppingState]);
 
   const enText = useMemo(() => {
     if (!context) return '';
     if (stoppingState !== 'NEXT' && stoppingState !== 'ARRIVING') return '';
-    return EN_TEMPLATES[resolved][stoppingState](context);
-  }, [context, resolved, stoppingState]);
+    const text = EN_TEMPLATES[resolved][stoppingState](context);
+    return busTransferEn ? `${text.trimEnd()} ${busTransferEn}` : text;
+  }, [busTransferEn, context, resolved, stoppingState]);
 
   if (!enabled) {
     return { text: [] };

@@ -130,6 +130,44 @@ export const dedupeLinesByTtsName = (lines: Line[]): Line[] => {
 export const formatStationsListJa = (stations: Station[]): string =>
   stations.map(replaceStationNameJa).join('、');
 
+export const formatBusRailTransferAnnouncements = (
+  lines: Line[]
+): [string, string] => {
+  const namesJa = new Map<string, string>();
+  const namesEn = new Set<string>();
+  for (const { station } of lines) {
+    if (!station) continue;
+
+    const nameJa = stripParensForTTS(station.name);
+    if (nameJa) {
+      const suffix = nameJa.endsWith('駅') ? '' : '駅';
+      const key = nameJa + suffix;
+      if (!namesJa.has(key)) {
+        const reading = stripParensForTTS(station.nameKatakana);
+        namesJa.set(key, replaceJapaneseText(nameJa, reading) + suffix);
+      }
+    }
+
+    const nameEn = stripParensForTTS(station.nameRoman)?.replace(
+      /\s+(?:station|sta\.?)$/i,
+      ''
+    );
+    if (nameEn) namesEn.add(nameEn);
+  }
+
+  const stationsJa = [...namesJa.values()].join('、');
+  const stationsEn = [...namesEn].map(
+    (name) => `${wrapPhoneme(undefined, name)} Station`
+  );
+  const lastStationEn = stationsEn.pop();
+  return [
+    stationsJa ? `鉄道へのお乗り換えは、${stationsJa}をご利用ください。` : '',
+    lastStationEn
+      ? `For rail connections, use ${stationsEn.length ? `${stationsEn.join(', ')} or ` : ''}${lastStationEn}.`
+      : '',
+  ];
+};
+
 /**
  * 路線名を `the A,<break time="200ms"/> the B,<break time="200ms"/> and the C` 形式で組み立てる。
  *

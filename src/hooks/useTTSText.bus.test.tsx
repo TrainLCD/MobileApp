@@ -3,6 +3,7 @@ import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
 import type { Station } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
 import { useNextStation } from '~/hooks/useNextStation';
@@ -15,6 +16,7 @@ import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
 import { themePreferenceAtom } from '~/store/atoms/theme';
 import { ssmlToPlainText } from '~/utils/ssmlToPlainText';
+import { createLine, createStation } from '~/utils/test/factories';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNextStation', () => ({
@@ -214,6 +216,84 @@ describe('useTTSText (bus mode)', () => {
     expect(enText).toContain('Nagoya Station');
     expect(jaText).not.toContain('番のりば');
     expect(enText).not.toContain('bay');
+  });
+
+  test.each(['ARRIVING', 'NEXT'] as const)(
+    'バスの %s 放送では到着前にだけ乗換先の鉄道駅を日英で案内する',
+    (state) => {
+      const railStation = {
+        ...createStation(1001, {
+          name: '名古屋（副名称）',
+          nameKatakana: 'ナゴヤ（フクメイショウ）',
+          nameRoman: 'Nagoya (Alternate Name)',
+        }),
+        __typename: 'StationNested' as const,
+      };
+      const nearbyStop = {
+        ...nagoyaStops[1],
+        lines: [
+          createLine(101, {
+            nameShort: '東海道線',
+            transportType: TransportType.Rail,
+            station: railStation,
+          }),
+          createLine(102, {
+            nameShort: '中央線',
+            transportType: TransportType.Rail,
+            station: { ...railStation, id: 1002 },
+          }),
+          createLine(103, {
+            nameShort: '名古屋本線',
+            transportType: TransportType.Rail,
+            station: {
+              ...railStation,
+              id: 1003,
+              groupId: 1003,
+              name: '名鉄名古屋',
+              nameKatakana: null,
+              nameRoman: 'Meitetsu Nagoya Station',
+            },
+          }),
+          createLine(104, {
+            nameShort: '別のバス系統',
+            transportType: TransportType.Bus,
+            station: { ...railStation, name: '別のバス停' },
+          }),
+        ].map((line) => ({ ...line, __typename: 'LineNested' as const })),
+      };
+      const stations = [nagoyaStops[0], nearbyStop, ...nagoyaStops.slice(2)];
+      setupMockUseNextStation(nearbyStop);
+      const { result } = renderHook(
+        () => useBusTTSTextWithJotai('TOKYO_METRO', state, false, stations),
+        { wrapper }
+      );
+      const [jaText, enText] = result.current.text;
+      if (state === 'ARRIVING') {
+        expect(jaText).toContain(
+          '鉄道へのお乗り換えは、<sub alias="ナゴヤ">名古屋</sub>駅、名鉄名古屋駅をご利用ください。'
+        );
+        expect(enText).toContain(
+          'For rail connections, use Nagoya Station or May-tetsu Nagoya Station.'
+        );
+        expect(jaText).not.toContain('別のバス停');
+      } else {
+        expect(jaText).not.toContain('鉄道へのお乗り換え');
+        expect(enText).not.toContain('For rail connections');
+      }
+    }
+  );
+
+  test('鉄道駅がない停留所では到着前に乗換を案内しない', () => {
+    const nextStop = { ...nagoyaStops[1], lines: [] };
+    setupMockUseNextStation(nextStop);
+    const { result } = renderHook(
+      () =>
+        useBusTTSTextWithJotai('TOKYO_METRO', 'ARRIVING', false, nagoyaStops),
+      { wrapper }
+    );
+    const [jaText, enText] = result.current.text;
+    expect(jaText).not.toContain('鉄道へのお乗り換え');
+    expect(enText).not.toContain('For rail connections');
   });
 
   test('聖母病院入口のGTFS表記を病院の読み替えを含む案内にする', () => {
