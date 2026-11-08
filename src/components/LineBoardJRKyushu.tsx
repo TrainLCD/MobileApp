@@ -25,6 +25,7 @@ import {
   LineDot,
   StationName,
 } from './LineBoard/shared/components';
+import { NextStopBanner } from './LineBoard/shared/components/NextStopBanner';
 import {
   useBarStyles,
   useChevronPosition,
@@ -48,6 +49,7 @@ type Props = {
   stations: Station[];
   hasTerminus: boolean;
   saikyoGradient?: boolean;
+  showNextStopBanner?: boolean;
 };
 
 // JRKyushuはヘッダーが他のテーマより高いため、独自のbottomオフセットを使用
@@ -451,6 +453,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   lineColors,
   arrivingLineColor,
   saikyoGradient = false,
+  showNextStopBanner = false,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
@@ -540,6 +543,9 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
+      {showNextStopBanner && isTablet ? (
+        <NextStopBanner stations={stations} />
+      ) : null}
     </View>
   );
 };
