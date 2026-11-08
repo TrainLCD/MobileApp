@@ -245,13 +245,15 @@ export const useLineSelection = (): UseLineSelectionResult => {
       const stations = res.data?.lineGroupStations ?? [];
       setStationState((prev) => {
         const { pendingStation } = prev;
+        const { id, groupId } = pendingStation ?? {};
         // 同じバス停でも、選んだ運行パターンによって乗り場の ID が変わる。
-        const boardingStop =
-          trainType.kind === TrainTypeKind.BusRoute &&
-          pendingStation?.groupId != null
-            ? (stations.find((stop) => stop.id === pendingStation.id) ??
-              stations.find((stop) => stop.groupId === pendingStation.groupId))
-            : undefined;
+        let boardingStop: Station | undefined;
+        if (trainType.kind === TrainTypeKind.BusRoute && groupId != null) {
+          const sameStop =
+            id == null ? undefined : stations.find((stop) => stop.id === id);
+          boardingStop =
+            sameStop ?? stations.find((stop) => stop.groupId === groupId);
+        }
         return {
           ...prev,
           pendingStations: stations,
