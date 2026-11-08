@@ -192,6 +192,7 @@ export const STATION_FRAGMENT = gql`
       ...TtsSegmentFields
     }
     threeLetterCode
+    platformCode
     latitude
     longitude
     prefectureId

@@ -335,6 +335,7 @@ export type Station = {
   nameRomanIpa: Maybe<Scalars['String']['output']>;
   nameTtsSegments: Maybe<Array<TtsSegment>>;
   openedAt: Maybe<Scalars['String']['output']>;
+  platformCode: Maybe<Scalars['String']['output']>;
   postalCode: Maybe<Scalars['String']['output']>;
   prefectureId: Maybe<Scalars['Int']['output']>;
   stationNumbers: Maybe<Array<StationNumber>>;
@@ -367,6 +368,7 @@ export type StationNested = {
   nameRomanIpa: Maybe<Scalars['String']['output']>;
   nameTtsSegments: Maybe<Array<TtsSegment>>;
   openedAt: Maybe<Scalars['String']['output']>;
+  platformCode: Maybe<Scalars['String']['output']>;
   postalCode: Maybe<Scalars['String']['output']>;
   prefectureId: Maybe<Scalars['Int']['output']>;
   stationNumbers: Maybe<Array<StationNumber>>;
@@ -1007,6 +1009,7 @@ export type StationFieldsFragment = {
   nameChinese: string | null | undefined;
   nameKorean: string | null | undefined;
   threeLetterCode: string | null | undefined;
+  platformCode: string | null | undefined;
   latitude: number | null | undefined;
   longitude: number | null | undefined;
   prefectureId: number | null | undefined;
@@ -1452,6 +1455,7 @@ export type GetStationsNearbyQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -2153,6 +2157,7 @@ export type GetLineListStationsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -2598,6 +2603,7 @@ export type GetLineStationsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -3043,6 +3049,7 @@ export type GetStationsByNameQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -3487,6 +3494,7 @@ export type GetLineGroupStationsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -3931,6 +3939,7 @@ export type GetStationsByIdsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -4722,6 +4731,7 @@ export type GetConnectedRoutesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
@@ -5203,6 +5213,7 @@ export type GetConnectedRoutesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
@@ -5845,6 +5856,7 @@ export type GetConnectedRoutesSortedQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
@@ -6326,6 +6338,7 @@ export type GetConnectedRoutesSortedQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
