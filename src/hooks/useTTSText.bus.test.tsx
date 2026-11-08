@@ -3,6 +3,7 @@ import { Provider, useSetAtom } from 'jotai';
 import type React from 'react';
 import { useEffect } from 'react';
 import type { Station } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { TOEI_SHINJUKU_LINE_STATIONS } from '~/__fixtures__/station';
 import { useNextStation } from '~/hooks/useNextStation';
@@ -15,6 +16,7 @@ import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
 import { themePreferenceAtom } from '~/store/atoms/theme';
 import { ssmlToPlainText } from '~/utils/ssmlToPlainText';
+import { createLine } from '~/utils/test/factories';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNextStation', () => ({
@@ -214,6 +216,79 @@ describe('useTTSText (bus mode)', () => {
     expect(enText).toContain('Nagoya Station');
     expect(jaText).not.toContain('番のりば');
     expect(enText).not.toContain('bay');
+  });
+
+  const tokaidoLine = createLine(101, {
+    nameShort: '東海道線',
+    nameKatakana: 'トウカイドウセン',
+    nameRoman: 'Tokaido Line',
+    transportType: TransportType.Rail,
+  });
+  const transferStop = {
+    ...nagoyaStops[1],
+    lines: [
+      tokaidoLine,
+      { ...tokaidoLine, id: 102 },
+      createLine(103, {
+        nameShort: '中央線',
+        nameKatakana: 'チュウオウセン',
+        nameRoman: 'Chuo Line',
+        transportType: TransportType.Rail,
+      }),
+      createLine(104, {
+        nameShort: '名駅16',
+        nameRoman: 'Bus 16',
+        transportType: TransportType.Bus,
+      }),
+    ].map((line) => ({ ...line, __typename: 'LineNested' as const })),
+  };
+  const transferStops = [nagoyaStops[0], transferStop, ...nagoyaStops.slice(2)];
+
+  test.each([
+    ['TOKYO_METRO', 'NEXT', 'Please change here for', ''],
+    ['JR_WEST', 'ARRIVING', 'Transfer here for', ''],
+    [
+      'TY',
+      'ARRIVING',
+      'Passengers changing to',
+      ', please transfer at this stop',
+    ],
+    [
+      'JR_315',
+      'ARRIVING',
+      'Passengers transferring to',
+      ', please transfer here',
+    ],
+  ] as const)(
+    '%s の %s 放送で乗換先の鉄道路線名を日英で案内する',
+    (theme, state, enLead, enTail) => {
+      setupMockUseNextStation(transferStop);
+      const { result } = renderHook(
+        () => useBusTTSTextWithJotai(theme, state, false, transferStops),
+        { wrapper }
+      );
+      const [jaText, enText] = result.current.text;
+      expect(jaText).toContain(
+        '<sub alias="トウカイドウセン">東海道線</sub>、<sub alias="チュウオウセン">中央線</sub>'
+      );
+      expect(enText).toContain(
+        `${enLead} the Tokaido Line,<break time="200ms"/> and the Chuo Line${enTail}.`
+      );
+      expect(jaText).not.toContain('名駅16');
+      expect(enText).not.toContain('Bus 16');
+    }
+  );
+
+  test('鉄道路線の候補がない停留所では乗換を案内しない', () => {
+    const nextStop = { ...nagoyaStops[1], lines: [] };
+    setupMockUseNextStation(nextStop);
+    const { result } = renderHook(
+      () => useBusTTSTextWithJotai('TOKYO_METRO', 'NEXT', false, nagoyaStops),
+      { wrapper }
+    );
+    const [jaText, enText] = result.current.text;
+    expect(jaText).not.toContain('お乗り換え');
+    expect(enText).not.toContain('Please change here for');
   });
 
   test('聖母病院入口のGTFS表記を病院の読み替えを含む案内にする', () => {

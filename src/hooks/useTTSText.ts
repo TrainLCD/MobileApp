@@ -78,13 +78,9 @@ export const useTTSText = (
   const currentLineOrigin = useCurrentLine();
 
   const connectedLinesOrigin = useConnectedLines();
-  const transferLinesOrigin = useTransferLines();
-  // バスは直通・乗換・列車種別・駅ナンバリングを案内しない。
-  // フックのルートで配列を空にしておけば、以降の dedupe / format / 番号計算は
-  // すべて空入力に対する no-op となり、テンプレ側の hasTransferLines などの
-  // 真偽フラグも自動で false になる。
+  const transferLines = useTransferLines();
+  // バスは直通・列車種別・駅ナンバリングを案内しない。
   const connectedLines = isBus ? [] : connectedLinesOrigin;
-  const transferLines = isBus ? [] : transferLinesOrigin;
   // 博多駅の鹿児島本線のように、データ上は方面別に同じ路線名が
   // 別レコードで登録されているケースがある。表示用には両方残したいが、
   // TTS では同じ路線名を続けて読み上げないように重複を除外する。
@@ -423,6 +419,7 @@ export const useTTSText = (
     return {
       // フラグ
       firstSpeech,
+      isBus,
       isNextStopTerminus,
       isAfterNextStopTerminus,
       hasTransferLines: ttsTransferLines.length > 0,
