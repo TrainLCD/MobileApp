@@ -23,6 +23,7 @@ import { resolvedAppColorsAtom } from '~/store/atoms/colorScheme';
 import { selectedDirectionAtom, stationsAtom } from '~/store/atoms/station';
 import { untouchableModeEnabledAtom } from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
+import { appendBusPlatform, getBusPlatformCode } from '~/utils/busPlatform';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
 import { buildJunctionDisplays } from '~/utils/junctionDisplay';
@@ -342,7 +343,11 @@ const SquareMain = ({
                 ?.stationNumber ?? '',
           })),
           key: `${station.id}-${index}`,
-          name: squareName(station, isJapanese ? 'JA' : 'EN'),
+          name: appendBusPlatform(
+            squareName(station, transferLang),
+            getBusPlatformCode(ordered, index),
+            isJapanese ? 'ja' : 'en'
+          ),
           number: number?.stationNumber ?? '',
           color: station.line?.color || lineColor,
           focused,

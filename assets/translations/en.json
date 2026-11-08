@@ -356,7 +356,7 @@
   "portraitModeTitle": "Portrait Mode",
   "portraitModeDescription": "When enabled, the running screen switches to a layout optimized for portrait orientation while you hold your device upright.",
   "portraitPassLabel": "Pass",
-  "portraitBusPlatform": "(Bay %{number})",
+  "busPlatform": "(Bay %{number})",
   "portraitNextStop": "Next %{station}",
   "portraitNextStopFrom": "After %{current}: %{station}",
   "portraitPassThrough": "Passing %{station}",

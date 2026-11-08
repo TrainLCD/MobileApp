@@ -108,6 +108,37 @@ describe('LineBoardLowPower', () => {
     expect(queryByText('自由が丘')).toBeNull();
   });
 
+  it.each([
+    { isEn: false, name: '名古屋駅（21番のりば）', fits: true },
+    { isEn: true, name: 'Nagoya Station', fits: false },
+  ])(
+    '表示中の駅名にのりばを添えた場合だけ文字を縮める ($name)',
+    ({ isEn, name, fits }) => {
+      setAtomValues({ isEn });
+      const stations = [
+        {
+          ...makeStation(1, '名古屋駅（21番のりば）', 'Nagoya Station'),
+          platformCode: '21',
+          hasPlatformLabel: { ja: true, en: false },
+        },
+        { ...makeStation(2, '柳橋西', 'Yanagibashi West'), platformCode: '1' },
+      ];
+      const { getByText } = render(<LineBoardLowPower stations={stations} />);
+
+      const nameText = getByText(name);
+      if (fits) {
+        expect(nameText).toHaveProp('adjustsFontSizeToFit', true);
+        expect(nameText).toHaveStyle({ maxWidth: '100%' });
+      } else {
+        expect(nameText).toHaveProp('adjustsFontSizeToFit', false);
+        expect(nameText).not.toHaveStyle({ maxWidth: '100%' });
+      }
+      const unlabeled = getByText(isEn ? 'Yanagibashi West' : '柳橋西');
+      expect(unlabeled).not.toHaveProp('adjustsFontSizeToFit', true);
+      expect(unlabeled).not.toHaveStyle({ maxWidth: '100%' });
+    }
+  );
+
   it('到着分は取得できた駅だけに出し、先頭列は単位の見出しにする', () => {
     useEstimatedMinutesByStationId.mockReturnValue(
       new Map([

@@ -74,6 +74,7 @@ import {
   stationsAtom,
 } from '~/store/atoms/station';
 import { isJapanese, translate } from '~/translation';
+import { getBusPlatformCode } from '~/utils/busPlatform';
 import dropEitherJunctionStation from '~/utils/dropJunctionStation';
 import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
@@ -963,7 +964,7 @@ const StopRow = memo(function StopRow({
               numberOfLines={1}
               style={[styles.stopNumber, { color: numberColor }]}
             >
-              {translate('portraitBusPlatform', { number: platformCode })}
+              {translate('busPlatform', { number: platformCode })}
             </Typography>
           ) : null}
           {isPass ? (
@@ -1802,23 +1803,12 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
               // 列車位置のピンより前の行(過ぎた線路)を淡色にする。停車中・
               // 走行中とも、ピンの行とそれ以降は通常色のまま。
               const departed = index < markerRowIndex;
-              // 同じ停留所名が続くときだけ、のりば番号で区別する。
-              const { name, platformCode } = station;
-              const showPlatform =
-                !!name &&
-                platformCode != null &&
-                /^\d+$/.test(platformCode) &&
-                [stops[index - 1], stops[index + 1]].some(
-                  (neighbor) =>
-                    neighbor?.name === name &&
-                    neighbor.platformCode !== platformCode
-                );
               return (
                 <StopRow
                   key={station.id}
                   index={index}
                   station={station}
-                  platformCode={showPlatform ? platformCode : undefined}
+                  platformCode={getBusPlatformCode(stops, index)}
                   junction={junctions.get(station)}
                   colors={colors}
                   isFirst={index === 0}

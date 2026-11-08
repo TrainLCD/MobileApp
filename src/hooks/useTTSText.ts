@@ -9,10 +9,12 @@ import {
   stationsAtom,
 } from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
+import { getBusPlatformCodeForStop } from '../utils/busPlatform';
 import getIsPass from '../utils/isPass';
 import { wrapPhoneme as ph } from '../utils/phoneme';
 import { getIsRapid } from '../utils/trainTypeString';
 import {
+  appendSpokenBusPlatform,
   dedupeLinesByTtsName,
   formatFirstConnectedLineEnPhrase,
   formatJr315StationNumberEn,
@@ -358,6 +360,22 @@ export const useTTSText = (
     const isBoundStop = (s: Station): boolean =>
       s.groupId === selectedBound?.groupId && !isLoopLine;
 
+    // 同名停留所の判定には経路全体の元データを使う。読み仮名・IPA のタグの外に番号を添える。
+    const platformFor = (stop: Station) =>
+      isBus ? getBusPlatformCodeForStop(stations, stop) : undefined;
+    const spokenStopJa = (stop: Station) =>
+      appendSpokenBusPlatform(
+        replaceJapaneseText(stop.name, stop.nameKatakana),
+        platformFor(stop),
+        'ja'
+      );
+    const spokenStopEn = (stop: Station) =>
+      appendSpokenBusPlatform(
+        ph(stop.nameTtsSegments, stop.nameRoman),
+        platformFor(stop),
+        'en'
+      );
+
     // バスは元アナウンス上「列車種別」概念を持たないので、
     // テンプレ側の `{#if hasTrainType}` で 各駅停車/Local Service 等の挿入を抑止する。
     // 鉄道時は常に true (列車種別未設定でも `各駅停車` / `Local` にフォールバックする既存挙動を維持)。
@@ -442,10 +460,7 @@ export const useTTSText = (
       placeEn: isBus ? 'stop' : 'station',
 
       // 日本語
-      nextStationJa: replaceJapaneseText(
-        nextStation?.name,
-        nextStation?.nameKatakana
-      ),
+      nextStationJa: spokenStopJa(nextStation),
       currentLineJa,
       currentLineShortJa: currentLine.nameShort ?? '',
       currentLineCompanyJa: replaceJapaneseText(
@@ -475,20 +490,18 @@ export const useTTSText = (
       connectedLinesListJa: formatLinesListJa(connectedLines),
       betweenStationsListJa: formatStationsListJa(betweenNextStation),
       afterNextStationJa: afterNextStation
-        ? replaceJapaneseText(
-            afterNextStation.name,
-            afterNextStation.nameKatakana
-          )
+        ? spokenStopJa(afterNextStation)
         : '',
       viaStationJa: viaStation
         ? replaceJapaneseText(viaStation.name, viaStation.nameKatakana)
         : '',
-      jrWestStopsListJa: formatJrWestStopsListJa(allStops, isBoundStop),
+      jrWestStopsListJa: formatJrWestStopsListJa(
+        allStops,
+        isBoundStop,
+        spokenStopJa
+      ),
       lastAnnouncedStopJa: lastAnnouncedStop
-        ? replaceJapaneseText(
-            lastAnnouncedStop.name,
-            lastAnnouncedStop.nameKatakana
-          )
+        ? spokenStopJa(lastAnnouncedStop)
         : '',
       // 直通境界駅で案内する直通先路線
       nextLineJa: isNextStopThroughBoundary
@@ -496,7 +509,7 @@ export const useTTSText = (
         : '',
 
       // 英語
-      nextStationEn: ph(nextStation?.nameTtsSegments, nextStation?.nameRoman),
+      nextStationEn: spokenStopEn(nextStation),
       currentLineEn,
       currentLineCompanyEn: currentLine.company?.nameEnglishShort ?? '',
       // "Thank you for using the X" に差し込む語。鉄道は路線名 (e.g. "Tokyo Metro Tozai Line")、
@@ -517,14 +530,18 @@ export const useTTSText = (
       transferLinesEnList: formatLinesListEn(ttsTransferLines),
       connectedLineEnPhrase: formatFirstConnectedLineEnPhrase(connectedLines),
       afterNextStationEn: afterNextStation
-        ? ph(afterNextStation.nameTtsSegments, afterNextStation.nameRoman)
+        ? spokenStopEn(afterNextStation)
         : '',
       viaStationEn: viaStation
         ? ph(viaStation.nameTtsSegments, viaStation.nameRoman)
         : '',
-      jrWestStopsListEn: formatJrWestStopsListEn(allStops, isBoundStop),
+      jrWestStopsListEn: formatJrWestStopsListEn(
+        allStops,
+        isBoundStop,
+        spokenStopEn
+      ),
       lastAnnouncedStopEn: lastAnnouncedStop
-        ? ph(lastAnnouncedStop.nameTtsSegments, lastAnnouncedStop.nameRoman)
+        ? spokenStopEn(lastAnnouncedStop)
         : '',
       // 直通境界駅で案内する直通先路線
       nextLineEn: isNextStopThroughBoundary
@@ -555,6 +572,7 @@ export const useTTSText = (
     selectedBound,
     shouldAnnounceJrWestStopList,
     stationAfterNextStop,
+    stations,
     theme,
     ttsTransferLines,
     viaStation,

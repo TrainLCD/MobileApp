@@ -1,6 +1,8 @@
 import { render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
+import { TransportType } from '~/@types/graphql';
 import { APP_THEME } from '~/models/Theme';
+import { setI18nConfig } from '~/translation';
 import LineBoard from './LineBoard';
 
 // モック設定
@@ -79,11 +81,15 @@ describe('LineBoard', () => {
     { id: 1, groupId: 1, name: '東京', line: { id: 1, color: '#ff0000' } },
   ];
 
-  const setupMocks = (theme: string, leftStations = defaultLeftStations) => {
+  const setupMocks = (
+    theme: string,
+    leftStations = defaultLeftStations,
+    allStations: typeof defaultLeftStations = []
+  ) => {
     mockUseAtomValue
       .mockReturnValueOnce(theme) // themeAtom
       .mockReturnValueOnce(leftStations) // leftStationsAtom
-      .mockReturnValueOnce([]) // stationsAtom
+      .mockReturnValueOnce(allStations) // stationsAtom
       .mockReturnValueOnce(null); // selectedDirectionAtom
     useDisplayCurrentStation.mockReturnValue({
       id: 1,
@@ -174,6 +180,47 @@ describe('LineBoard', () => {
       expect.objectContaining({ hasTerminus: true }),
       undefined
     );
+  });
+
+  it('同名停留所が表示範囲外にあってものりばを表示する', () => {
+    setI18nConfig();
+    const busLine = {
+      ...defaultLeftStations[0].line,
+      transportType: TransportType.Bus,
+    };
+    const allStops = [
+      {
+        id: 1,
+        groupId: 1,
+        name: '名古屋駅',
+        nameRoman: 'Nagoya Station',
+        platformCode: '9',
+        line: busLine,
+      },
+      {
+        id: 2,
+        groupId: 2,
+        name: '名古屋駅',
+        nameRoman: 'Nagoya Station',
+        platformCode: '21',
+        line: busLine,
+      },
+      { id: 3, groupId: 3, name: '柳橋西', platformCode: '1', line: busLine },
+    ];
+    setupMocks(APP_THEME.TY, allStops.slice(1), allStops);
+    useDisplayCurrentStation.mockReturnValue(allStops[1]);
+
+    render(<LineBoard />);
+
+    expect(LineBoardEast.mock.calls[0][0].stations).toMatchObject([
+      {
+        name: '名古屋駅（21番のりば）',
+        nameRoman: 'Nagoya Station (Bay 21)',
+        hasPlatformLabel: { ja: true, en: true },
+      },
+      { name: '柳橋西', hasPlatformLabel: { ja: false, en: false } },
+    ]);
+    expect(allStops[1].name).toBe('名古屋駅');
   });
 
   it('leftStations が8つにスライスされる', () => {
