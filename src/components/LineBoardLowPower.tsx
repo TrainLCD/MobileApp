@@ -155,7 +155,9 @@ const StationColumn: React.FC<ColumnProps> = ({
       </Typography>
       <Typography
         numberOfLines={2}
+        adjustsFontSizeToFit={!!station.platformCode}
         style={{
+          maxWidth: station.platformCode ? '100%' : undefined,
           height: metrics.nameRowHeight,
           paddingTop: 6 * scale,
           paddingHorizontal: 2 * scale,

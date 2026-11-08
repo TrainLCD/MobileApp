@@ -8,6 +8,10 @@ import { leftStationsAtom } from '../store/atoms/navigation';
 import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import { themeAtom } from '../store/atoms/theme';
 import { getArrivingLineColor } from '../utils/arrivingLineColor';
+import {
+  appendBusPlatform,
+  getBusPlatformCodeForStop,
+} from '../utils/busPlatform';
 import isTablet from '../utils/isTablet';
 import { isBusLine } from '../utils/line';
 import LineBoardE231 from './LineBoardE231';
@@ -49,12 +53,24 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
       // sliceは新しい配列を返すが要素は同一参照なので、子コンポーネントは memo 効きやすい。
       return leftStations.length <= 8 ? leftStations : leftStations.slice(0, 8);
     }
-    return leftStations.slice(0, 8).map((sta) => ({
-      ...sta,
-      name: sta.name?.replace(parenthesisRegexp, ''),
-      nameRoman: sta.nameRoman?.replace(parenthesisRegexp, ''),
-    }));
-  }, [leftStations, isBus]);
+    return leftStations.slice(0, 8).map((stop) => {
+      // 画面外に同名の停留所があっても、表示中の停留所にのりばを添える。
+      const code = getBusPlatformCodeForStop(stations, stop);
+      return {
+        ...stop,
+        name: appendBusPlatform(
+          stop.name?.replace(parenthesisRegexp, ''),
+          code,
+          'ja'
+        ),
+        nameRoman: appendBusPlatform(
+          stop.nameRoman?.replace(parenthesisRegexp, ''),
+          code,
+          'en'
+        ),
+      };
+    });
+  }, [leftStations, isBus, stations]);
 
   const currentStationIndex = useMemo(
     () =>
