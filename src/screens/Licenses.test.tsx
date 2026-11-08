@@ -52,7 +52,7 @@ describe('Licenses', () => {
   };
 
   it.each(['ios', 'android'] as const)(
-    '%s にSRTの出典とCC BY 4.0を表示する',
+    '%s に名古屋市SRTと名古屋市バスの出典とCC BY 4.0を表示する',
     (os) => {
       setPlatformOS(os);
       const screen = render(<Licenses />);
@@ -62,6 +62,14 @@ describe('Licenses', () => {
           expect.objectContaining({
             id: 'nagoya_srt',
             title: 'nagoyaSrt',
+            license: 'ccby',
+            licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
+            devOnly: false,
+          }),
+          expect.objectContaining({
+            id: 'nagoya_city_bus',
+            title: 'nagoyaCityBus',
+            href: 'https://data.bodik.jp/dataset/231002_7109030000_bus-gtfs-jp',
             license: 'ccby',
             licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
             devOnly: false,

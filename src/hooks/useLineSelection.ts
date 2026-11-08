@@ -2,7 +2,12 @@ import findNearest from 'geolib/es/findNearest';
 import orderByDistance from 'geolib/es/orderByDistance';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useState } from 'react';
-import type { Line, Station, TrainType } from '~/@types/graphql';
+import {
+  type Line,
+  type Station,
+  type TrainType,
+  TrainTypeKind,
+} from '~/@types/graphql';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -237,10 +242,24 @@ export const useLineSelection = (): UseLineSelectionResult => {
       });
       if (!isLatestSelection(generation)) return;
 
-      setStationState((prev) => ({
-        ...prev,
-        pendingStations: res.data?.lineGroupStations ?? [],
-      }));
+      const stations = res.data?.lineGroupStations ?? [];
+      setStationState((prev) => {
+        const { pendingStation } = prev;
+        const { id, groupId } = pendingStation ?? {};
+        // 同じバス停でも、選んだ運行パターンによって乗り場の ID が変わる。
+        let boardingStop: Station | undefined;
+        if (trainType.kind === TrainTypeKind.BusRoute && groupId != null) {
+          const sameStop =
+            id == null ? undefined : stations.find((stop) => stop.id === id);
+          boardingStop =
+            sameStop ?? stations.find((stop) => stop.groupId === groupId);
+        }
+        return {
+          ...prev,
+          pendingStations: stations,
+          pendingStation: boardingStop ?? pendingStation,
+        };
+      });
       setNavigationState((prev) => ({
         ...prev,
         pendingTrainType: trainType,
