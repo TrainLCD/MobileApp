@@ -114,7 +114,7 @@ describe('useTransferLinesFromStation', () => {
     expect(getByTestId('transferLines').props.children).toBe('[]');
   });
 
-  it('バス路線を除外する', () => {
+  it('鉄道駅では近くのバス路線を除外する', () => {
     const currentLine = createLineNested({ id: 1, nameShort: '中央線' });
     const railLine = createLineNested({
       id: 2,
@@ -139,6 +139,32 @@ describe('useTransferLinesFromStation', () => {
 
     expect(lines.map((l: Line) => l.id)).toEqual([2]);
     expect(lines.find((l: Line) => l.id === 3)).toBeUndefined();
+  });
+
+  it('バス停では乗車中の系統を除いて別のバス系統を案内する', () => {
+    const currentLine = createLineNested({
+      id: 1,
+      nameShort: '池86',
+      transportType: TransportType.Bus,
+    });
+    const otherLine = createLineNested({
+      id: 2,
+      nameShort: '都02',
+      station: createStationNested(200),
+      transportType: TransportType.Bus,
+    });
+    const station = createStation(100, {
+      line: currentLine,
+      lines: [currentLine, otherLine],
+    });
+    stationAtomValue.stations = [station];
+
+    const { getByTestId } = render(<TestComponent station={station} />);
+    const lines = JSON.parse(
+      getByTestId('transferLines').props.children as string
+    );
+
+    expect(lines).toEqual([otherLine]);
   });
 
   it('現在路線は除外する', () => {
