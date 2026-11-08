@@ -35,6 +35,7 @@ type LicenseId =
   | 'keio_bus'
   | 'tokyu_bus'
   | 'nagoya_srt'
+  | 'nagoya_city_bus'
   | 'hakodate_city'
   | 'firebase'
   | 'roboto'
@@ -283,6 +284,15 @@ const Licenses: React.FC = () => {
             title: translate('nagoyaSrt'),
             icon: '🚌',
             href: 'https://ckan.odpt.org/dataset/nagoya_housing_city_planning_bureau_nagoya_srt_all_lines',
+            license: translate('ccby'),
+            licenseUrl: CC_BY_URL,
+            devOnly: false,
+          },
+          {
+            id: 'nagoya_city_bus',
+            title: translate('nagoyaCityBus'),
+            icon: '🚌',
+            href: 'https://data.bodik.jp/dataset/231002_7109030000_bus-gtfs-jp',
             license: translate('ccby'),
             licenseUrl: CC_BY_URL,
             devOnly: false,
