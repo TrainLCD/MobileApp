@@ -357,6 +357,7 @@
   "portraitModeTitle": "ポートレートモード",
   "portraitModeDescription": "有効にすると、走行画面で端末を縦向きにした際に、縦画面に最適化されたデザインで表示します。",
   "portraitPassLabel": "通過",
+  "portraitBusPlatform": "（%{number}番のりば）",
   "portraitNextStop": "つぎは%{station}",
   "portraitNextStopFrom": "%{current}のつぎは%{station}",
   "portraitPassThrough": "%{station}を通過中",
