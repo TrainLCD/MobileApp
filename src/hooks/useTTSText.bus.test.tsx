@@ -14,6 +14,7 @@ import { store } from '~/store';
 import lineState from '~/store/atoms/line';
 import stationState from '~/store/atoms/station';
 import { themePreferenceAtom } from '~/store/atoms/theme';
+import { ssmlToPlainText } from '~/utils/ssmlToPlainText';
 
 jest.mock('~/translation', () => ({ isJapanese: true }));
 jest.mock('~/hooks/useNextStation', () => ({
@@ -25,18 +26,17 @@ jest.mock('~/hooks/useNextStation', () => ({
 const useBusTTSTextWithJotai = (
   theme: AppTheme,
   headerState: HeaderStoppingState,
-  firstSpeech = true
+  firstSpeech = true,
+  stations = TOEI_SHINJUKU_LINE_STATIONS
 ) => {
   const setLineState = useSetAtom(lineState);
   const setStationState = useSetAtom(stationState);
 
   useEffect(() => {
-    const station = TOEI_SHINJUKU_LINE_STATIONS[0];
-    const stations = TOEI_SHINJUKU_LINE_STATIONS;
+    const station = stations[0];
     const selectedDirection = 'INBOUND' as LineDirection;
     const selectedLine = TOEI_SHINJUKU_LINE_LOCAL;
-    const selectedBound =
-      TOEI_SHINJUKU_LINE_STATIONS[TOEI_SHINJUKU_LINE_STATIONS.length - 1];
+    const selectedBound = stations.at(-1) ?? null;
 
     const arrived = headerState === 'CURRENT';
     const approaching = headerState === 'ARRIVING';
@@ -52,7 +52,7 @@ const useBusTTSTextWithJotai = (
       approaching,
     }));
     setLineState((prev) => ({ ...prev, selectedLine }));
-  }, [headerState, setLineState, setStationState, theme]);
+  }, [headerState, setLineState, setStationState, stations, theme]);
 
   const texts = useTTSText(firstSpeech, true, true);
   return texts;
@@ -155,6 +155,66 @@ describe('useTTSText (bus mode)', () => {
       expect(enText?.indexOf('undefined')).toBe(-1);
     }
   );
+
+  const nagoyaStops = TOEI_SHINJUKU_LINE_STATIONS.slice(0, 4).map(
+    (stop, index) =>
+      index === 0
+        ? stop
+        : {
+            ...stop,
+            name: '名古屋駅 (副名称)',
+            nameKatakana: 'ナゴヤエキ (フクメイショウ)',
+            nameRoman: 'Nagoya Station (Alternate Name)',
+            nameTtsSegments: [],
+            platformCode: ['9', '21', '降車'][index - 1],
+          }
+  );
+
+  test.each([
+    ['TOKYO_METRO', 'NEXT', '次は', 'The next stop is'],
+    [
+      'JR_WEST',
+      'ARRIVING',
+      'まもなく',
+      'We will soon be making a brief stop at',
+    ],
+  ] as const)(
+    '%s の %s 案内で連続する同名停留所ののりばを読み上げる',
+    (theme, state, jaLead, enLead) => {
+      setupMockUseNextStation(nagoyaStops[1]);
+      const { result } = renderHook(
+        () => useBusTTSTextWithJotai(theme, state, false, nagoyaStops),
+        { wrapper }
+      );
+      const [jaText = '', enText = ''] = result.current.text;
+      expect(ssmlToPlainText(jaText)).toContain(
+        `${jaLead}ナゴヤエキ、9番のりば`
+      );
+      expect(ssmlToPlainText(jaText)).toContain('ナゴヤエキ、21番のりば');
+      expect(ssmlToPlainText(enText)).toContain(
+        `${enLead} Nagoya Station, bay 9`
+      );
+      if (theme === 'JR_WEST') {
+        expect(ssmlToPlainText(enText)).toContain('Nagoya Station, bay 21');
+      }
+      expect(jaText).not.toContain('フクメイショウ');
+      expect(enText).not.toContain('Alternate Name');
+    }
+  );
+
+  test('降車用の停留所ではのりばを読み上げない', () => {
+    setupMockUseNextStation(nagoyaStops[3]);
+    const { result } = renderHook(
+      () =>
+        useBusTTSTextWithJotai('TOKYO_METRO', 'ARRIVING', false, nagoyaStops),
+      { wrapper }
+    );
+    const [jaText, enText] = result.current.text;
+    expect(jaText).toContain('名古屋駅');
+    expect(enText).toContain('Nagoya Station');
+    expect(jaText).not.toContain('番のりば');
+    expect(enText).not.toContain('bay');
+  });
 
   test('聖母病院入口のGTFS表記を病院の読み替えを含む案内にする', () => {
     setupMockUseNextStation({
