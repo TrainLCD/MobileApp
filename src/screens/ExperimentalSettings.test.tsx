@@ -8,11 +8,13 @@ import {
   resetRemoteTTSOverrideForTests,
 } from '~/lib/remoteTTSOverride';
 import { storage } from '~/lib/storage';
+import { servicePatternDetectionEnabledAtom } from '~/store/atoms/servicePatternMismatch';
 import tuningState from '~/store/atoms/tuning';
 import {
   getDialogPresentationSnapshot,
   resetDialogPresentationForTests,
 } from '~/utils/dialogPresentation';
+import * as appVariant from '~/utils/isDevApp';
 import ExperimentalSettingsScreen from './ExperimentalSettings';
 
 jest.mock('@react-navigation/native', () => ({
@@ -58,6 +60,31 @@ describe('ExperimentalSettingsScreen', () => {
     jest.restoreAllMocks();
     resetDialogPresentationForTests();
     resetRemoteTTSOverrideForTests();
+  });
+
+  it('種別違いの検知設定を通常版に表示しない', () => {
+    expect(
+      renderWithStore().queryByLabelText('servicePatternDetectionTitle')
+    ).toBeNull();
+  });
+
+  it('カナリア版で種別違いの検知を明示的に有効化し、オフに戻せる', () => {
+    jest.replaceProperty(appVariant, 'isCanaryApp', true);
+    const { getByLabelText, store } = renderWithStore();
+    const toggle = () => getByLabelText('servicePatternDetectionTitle');
+
+    expect(toggle().props.accessibilityState.checked).toBe(false);
+    fireEvent.press(toggle());
+    expect(store.get(servicePatternDetectionEnabledAtom)).toBe(true);
+    expect(
+      storage.getString(STORAGE_KEYS.SERVICE_PATTERN_DETECTION_ENABLED)
+    ).toBe('true');
+
+    fireEvent.press(toggle());
+    expect(store.get(servicePatternDetectionEnabledAtom)).toBe(false);
+    expect(
+      storage.getString(STORAGE_KEYS.SERVICE_PATTERN_DETECTION_ENABLED)
+    ).toBe('false');
   });
 
   it('ポートレートモードのトグルは外観設定へ移設され表示されない', () => {

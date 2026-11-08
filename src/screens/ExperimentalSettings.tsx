@@ -19,10 +19,12 @@ import {
   setRemoteTTSOverride,
 } from '~/lib/remoteTTSOverride';
 import { useAppColors } from '~/providers/AppColorsProvider';
+import { servicePatternDetectionEnabledAtom } from '~/store/atoms/servicePatternMismatch';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
+import { isCanaryApp } from '~/utils/isDevApp';
 import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 
@@ -162,6 +164,8 @@ const ExperimentalSettingsScreen: React.FC = () => {
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
   const colors = useAppColors();
   const [tuning, setTuning] = useAtom(tuningState);
+  const [servicePatternDetectionEnabled, setServicePatternDetectionEnabled] =
+    useAtom(servicePatternDetectionEnabledAtom);
   // 値の情報源はモジュール側のキャッシュなので、画面はローカル state を持たず購読する。
   const remoteTTSOverride = useRemoteTTSOverride();
 
@@ -209,6 +213,20 @@ const ExperimentalSettingsScreen: React.FC = () => {
     }
   }, [tuning.telemetryEnabled, setTuning]);
 
+  const handleToggleServicePatternDetection = () => {
+    const enabled = !servicePatternDetectionEnabled;
+    try {
+      storage.set(
+        STORAGE_KEYS.SERVICE_PATTERN_DETECTION_ENABLED,
+        String(enabled)
+      );
+      setServicePatternDetectionEnabled(enabled);
+    } catch (error) {
+      console.error('Failed to save service pattern detection setting', error);
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  };
+
   const handleScroll = useRef(
     RNAnimated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
       useNativeDriver: true,
@@ -254,6 +272,22 @@ const ExperimentalSettingsScreen: React.FC = () => {
           >
             {translate('untouchableModeDescription')}
           </Typography>
+          {isCanaryApp && (
+            <>
+              <View style={styles.toggleSpacer}>
+                <ToggleItem
+                  title={translate('servicePatternDetectionTitle')}
+                  state={servicePatternDetectionEnabled}
+                  onToggle={handleToggleServicePatternDetection}
+                />
+              </View>
+              <Typography
+                style={[styles.description, { color: colors.secondaryText }]}
+              >
+                {translate('servicePatternDetectionDescription')}
+              </Typography>
+            </>
+          )}
           <Typography style={styles.sectionTitle}>
             {translate('remoteTTSOverrideTitle')}
           </Typography>

@@ -37,6 +37,7 @@ export const STORAGE_KEYS = {
   // 振り返りタブの案内を見終えたか。路線選択画面のウォークスルーを完了済みのユーザーに、
   // 後から足した振り返りタブのステップだけを1回出すために使う(#7118)
   RIDE_REVIEW_TAB_INTRO_COMPLETED: '@TrainLCD:rideReviewTabIntroCompleted',
+  SERVICE_PATTERN_DETECTION_ENABLED: '@TrainLCD:servicePatternDetectionEnabled',
   WRONG_DIRECTION_NOTIFY_ENABLED: '@TrainLCD:wrongDirectionNotifyEnabled',
   PICTURE_IN_PICTURE_ENABLED: '@TrainLCD:pictureInPictureEnabled',
   PORTRAIT_MODE_ENABLED: '@TrainLCD:portraitModeEnabled',
