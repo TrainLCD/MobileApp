@@ -8,7 +8,7 @@ import {
 } from 'react-native-watch-connectivity';
 import type { Station } from '~/@types/graphql';
 import { isJapanese } from '~/translation';
-import { getLocalizedLineName } from '~/utils/line';
+import { getLocalizedLineName, isBusLine } from '~/utils/line';
 import { parenthesisRegexp } from '../constants';
 import {
   arrivedAtom,
@@ -73,13 +73,18 @@ export const useAppleWatch = (): void => {
       return {};
     }
 
+    const isBusRide = isBusLine(currentLine);
+
     return {
       state: stoppingState,
       station: {
         id: switchedStation.id,
         name: isJapanese ? switchedStation.name : switchedStation.nameRoman,
+        // バス乗車中の乗換案内には鉄道路線だけを載せる。
         lines: (switchedStation.lines ?? [])
-          .filter((l) => l.id !== currentLine.id)
+          .filter(
+            (l) => l.id !== currentLine.id && !(isBusRide && isBusLine(l))
+          )
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
