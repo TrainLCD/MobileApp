@@ -212,17 +212,17 @@ const TY_EN: ThemeTemplate = {
     '{:else}This {vehicleEn} is bound for {boundForEn}. {/if}',
     '{/if}',
     'The next {placeEn} is {nextStationEn}{#if hasNextStationNumberText} {nextStationNumberTextNoPeriod}{/if}{#if isNextStopTerminus}, this is the last stop of this line{/if}.',
-    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this station.{/if}',
+    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this {placeEn}.{/if}',
     '{#if isNextStopThroughBoundary} This {vehicleEn} will merge and continue traveling on the {nextLineEn} to {boundForEn}. Thank you for using the {currentLineThanksEn}.{/if}'
   ),
   ARRIVING: t(
     '{#if isNextStopTerminus}',
     'We will soon be arriving at {nextStationEn}{#if hasNextStationNumberText} {nextStationNumberTextNoPeriod}{/if}.',
-    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this station.{/if}',
+    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this {placeEn}.{/if}',
     ' Thank you for using the {currentLineThanksEn}.',
     '{:else}',
     'We will soon make a brief stop at {nextStationEn}{#if hasNextStationNumberText} {nextStationNumberTextNoPeriod}{/if}.',
-    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this station.{/if}',
+    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this {placeEn}.{/if}',
     '{#if isNextStopThroughBoundary} This {vehicleEn} will merge and continue traveling on the {nextLineEn} to {boundForEn}. Thank you for using the {currentLineThanksEn}.{/if}',
     '{/if}'
   ),
@@ -252,7 +252,7 @@ const JR_315_EN: ThemeTemplate = {
   ),
   ARRIVING: t(
     'We will soon make a brief stop at {nextStationEn}{#if hasNextStationNumberText}, {nextStationNumberTextNoPeriod}{/if}{#if isNextStopTerminus}, the final stop{/if}.',
-    '{#if hasTransferLines} Passengers transferring to {transferLinesEnList}, please change trains here.{/if}',
+    '{#if hasTransferLines} Passengers transferring to {transferLinesEnList}, please {#if isBus}transfer{:else}change trains{/if} here.{/if}',
     '{#if jr315ShouldAnnounceAfterNextStop} After leaving {nextStationEn}, we will stop at {afterNextStationEn}{#if hasAfterNextStationNumberText}, {afterNextStationNumberText}{/if}{#if isAfterNextStopTerminus}, the final stop{/if}.{/if}',
     '{#if isNextStopTerminus} Please take care not to leave any items. Thank you for traveling with {currentLineCompanyEn}.{/if}',
     ' Please refrain from touching the doors and wait for them to open.'

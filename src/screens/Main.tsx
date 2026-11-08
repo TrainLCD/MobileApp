@@ -66,6 +66,7 @@ import {
   useUpdateLiveActivities,
   useUpdateWidget,
 } from '~/hooks';
+import { useServicePatternMismatch } from '~/hooks/useServicePatternMismatch';
 import {
   GET_LINE_GROUP_STATIONS,
   GET_LINE_STATIONS,
@@ -77,10 +78,11 @@ import { APP_THEME } from '~/models/Theme';
 import { portraitModeEnabledAtom } from '~/store/atoms/display';
 import lineState from '~/store/atoms/line';
 import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
+import { servicePatternDetectionEnabledAtom } from '~/store/atoms/servicePatternMismatch';
 import { isLEDThemeAtom, themeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
 import { isJapanese, translate } from '~/translation';
-import { isDevApp } from '~/utils/isDevApp';
+import { isCanaryApp, isDevApp } from '~/utils/isDevApp';
 import { getIsHoliday } from '~/utils/isHoliday';
 import { requestIgnoreBatteryOptimizationsAndroid } from '~/utils/native/android/ignoreBatteryOptimizationsModule';
 import { getIsLocal } from '~/utils/trainTypeString';
@@ -221,7 +223,15 @@ const FxPreventBackInUntouchableMode: React.FC = () => {
   return null;
 };
 
+const FxServicePatternMismatch: React.FC = () => {
+  useServicePatternMismatch();
+  return null;
+};
+
 const MainScreenEffects: React.FC = () => {
+  const servicePatternDetectionEnabled = useAtomValue(
+    servicePatternDetectionEnabledAtom
+  );
   const rideLogEnabled = useAtomValue(rideLogEnabledAtom);
   return (
     <>
@@ -232,6 +242,9 @@ const MainScreenEffects: React.FC = () => {
       <FxTransitionHeaderState />
       <FxRefreshLeftStations />
       <FxRefreshStation />
+      {isCanaryApp && servicePatternDetectionEnabled && (
+        <FxServicePatternMismatch />
+      )}
       <FxEtaAnchor />
       <FxEtaFallback />
       <FxKeepAwake />
