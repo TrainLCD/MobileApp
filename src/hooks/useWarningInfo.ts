@@ -9,6 +9,7 @@ import {
   autoModeEnabledAtom,
   leftStationsAtom,
 } from '~/store/atoms/navigation';
+import { servicePatternWarningAtom } from '~/store/atoms/servicePatternMismatch';
 import tuningState from '~/store/atoms/tuning';
 import { selectedBoundAtom } from '../store/atoms/station';
 import { isJapanese, translate } from '../translation';
@@ -33,6 +34,7 @@ const WARNING_KIND = {
   AUTO_MODE: 'AUTO_MODE',
   OFFLINE: 'OFFLINE',
   WRONG_DIRECTION: 'WRONG_DIRECTION',
+  SERVICE_PATTERN_MISMATCH: 'SERVICE_PATTERN_MISMATCH',
   WRONG_DIRECTION_LOOP_LINE: 'WRONG_DIRECTION_LOOP_LINE',
   BAD_ACCURACY: 'BAD_ACCURACY',
   PARTIALLY_PASS: 'PARTIALLY_PASS',
@@ -71,6 +73,7 @@ export const useWarningInfo = () => {
   const leftStations = useAtomValue(leftStationsAtom);
   const { untouchableModeEnabled } = useAtomValue(tuningState);
 
+  const servicePatternMismatch = useAtomValue(servicePatternWarningAtom);
   const badAccuracy = useBadAccuracy();
   const { isWrongDirection, isLoopLineWrongDirection } =
     useWrongDirectionDetector();
@@ -110,6 +113,26 @@ export const useWarningInfo = () => {
         kind: WARNING_KIND.ALWAYS_PERMISSION_NOT_GRANTED,
         level: WARNING_PANEL_LEVEL.WARNING,
         getText: () => translate('alwaysPermissionNotGrantedPanelText'),
+      });
+    }
+
+    if (servicePatternMismatch) {
+      const { kind, station } = servicePatternMismatch;
+      const key = {
+        'rail-pass': 'servicePatternRailPass',
+        'rail-stop': 'servicePatternRailStop',
+        'bus-stop': 'servicePatternBusStop',
+      }[kind];
+      list.push({
+        kind: WARNING_KIND.SERVICE_PATTERN_MISMATCH,
+        level: WARNING_PANEL_LEVEL.WARNING,
+        getText: () =>
+          translate(key, {
+            station:
+              (isJapanese ? station.name : station.nameRoman) ||
+              station.name ||
+              '',
+          }),
       });
     }
 
@@ -203,6 +226,7 @@ export const useWarningInfo = () => {
     longPressNoticeDismissed,
     screenshotTaken,
     selectedBound,
+    servicePatternMismatch,
     untouchableModeEnabled,
     passStations,
   ]);
