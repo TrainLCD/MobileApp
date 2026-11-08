@@ -210,6 +210,45 @@ describe('PortraitMain', () => {
     );
   });
 
+  it('同名のバス停が連続すると異なるのりば番号を表示する', () => {
+    const { getByTestId } = renderWithStations([
+      { ...buildStation(1, '名古屋駅', StopCondition.All), platformCode: '9' },
+      { ...buildStation(2, '名古屋駅', StopCondition.All), platformCode: '21' },
+      { ...buildStation(3, '柳橋西', StopCondition.All), platformCode: '1' },
+      {
+        ...buildStation(4, '名古屋駅', StopCondition.All),
+        platformCode: '降車',
+      },
+      {
+        ...buildStation(5, '名古屋駅', StopCondition.All),
+        platformCode: '降車',
+      },
+    ]);
+
+    expect(
+      within(getByTestId('stop-body-1')).getByText('名古屋駅')
+    ).toBeTruthy();
+    expect(
+      within(getByTestId('stop-body-1')).getByText('portraitBusPlatform')
+    ).toBeTruthy();
+    expect(
+      within(getByTestId('stop-body-2')).getByText('portraitBusPlatform')
+    ).toBeTruthy();
+    for (const id of [3, 4, 5]) {
+      expect(
+        within(getByTestId(`stop-body-${id}`)).queryByText(
+          'portraitBusPlatform'
+        )
+      ).toBeNull();
+    }
+    expect(translate).toHaveBeenCalledWith('portraitBusPlatform', {
+      number: '9',
+    });
+    expect(translate).toHaveBeenCalledWith('portraitBusPlatform', {
+      number: '21',
+    });
+  });
+
   it('英語環境では行き先を英語表記で表示する', () => {
     // isJapanese はモジュールスコープの定数なので、モック済みモジュールの
     // プロパティを差し替えて英語環境を再現する

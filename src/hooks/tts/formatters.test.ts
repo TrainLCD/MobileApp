@@ -333,6 +333,7 @@ describe('stripStationParensForTTS', () => {
     status: null,
     stopCondition: null,
     threeLetterCode: null,
+    platformCode: null,
     trackDistanceFromPrevious: null,
     trainType: null,
     transportType: null,
