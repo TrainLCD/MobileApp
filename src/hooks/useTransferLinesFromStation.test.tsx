@@ -141,21 +141,27 @@ describe('useTransferLinesFromStation', () => {
     expect(lines.find((l: Line) => l.id === 3)).toBeUndefined();
   });
 
-  it('バス停では乗車中の系統を除いて別のバス系統を案内する', () => {
+  it('バス停ではバス系統を除き、近くの鉄道路線を案内する', () => {
     const currentLine = createLineNested({
       id: 1,
       nameShort: '池86',
       transportType: TransportType.Bus,
     });
-    const otherLine = createLineNested({
+    const otherBusLine = createLineNested({
       id: 2,
       nameShort: '都02',
       station: createStationNested(200),
       transportType: TransportType.Bus,
     });
+    const railLine = createLineNested({
+      id: 3,
+      nameShort: '丸ノ内線',
+      station: createStationNested(300),
+      transportType: TransportType.Rail,
+    });
     const station = createStation(100, {
       line: currentLine,
-      lines: [currentLine, otherLine],
+      lines: [currentLine, otherBusLine, railLine],
     });
     stationAtomValue.stations = [station];
 
@@ -164,7 +170,7 @@ describe('useTransferLinesFromStation', () => {
       getByTestId('transferLines').props.children as string
     );
 
-    expect(lines).toEqual([otherLine]);
+    expect(lines).toEqual([railLine]);
   });
 
   it('現在路線は除外する', () => {

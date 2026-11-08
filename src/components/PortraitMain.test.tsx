@@ -229,22 +229,20 @@ describe('PortraitMain', () => {
       within(getByTestId('stop-body-1')).getByText('名古屋駅')
     ).toBeTruthy();
     expect(
-      within(getByTestId('stop-body-1')).getByText('portraitBusPlatform')
+      within(getByTestId('stop-body-1')).getByText('busPlatform')
     ).toBeTruthy();
     expect(
-      within(getByTestId('stop-body-2')).getByText('portraitBusPlatform')
+      within(getByTestId('stop-body-2')).getByText('busPlatform')
     ).toBeTruthy();
     for (const id of [3, 4, 5]) {
       expect(
-        within(getByTestId(`stop-body-${id}`)).queryByText(
-          'portraitBusPlatform'
-        )
+        within(getByTestId(`stop-body-${id}`)).queryByText('busPlatform')
       ).toBeNull();
     }
-    expect(translate).toHaveBeenCalledWith('portraitBusPlatform', {
+    expect(translate).toHaveBeenCalledWith('busPlatform', {
       number: '9',
     });
-    expect(translate).toHaveBeenCalledWith('portraitBusPlatform', {
+    expect(translate).toHaveBeenCalledWith('busPlatform', {
       number: '21',
     });
   });

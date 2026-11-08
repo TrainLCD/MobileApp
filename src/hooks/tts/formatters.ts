@@ -76,12 +76,28 @@ export const replaceJapaneseText = (
   return `<sub alias="${alias}">${escapeXml(name)}</sub>`;
 };
 
+export const appendSpokenBusPlatform = (
+  name: string,
+  code: string | undefined,
+  locale: 'ja' | 'en'
+): string => {
+  if (!name || !code) return name;
+  const number = `<say-as interpret-as="cardinal">${code}</say-as>`;
+  return locale === 'ja'
+    ? `${name}、${number}番のりば`
+    : `${name}, bay ${number}`;
+};
+
 const replaceLineNameJa = (line: Pick<Line, 'nameShort' | 'nameKatakana'>) =>
   replaceJapaneseText(line.nameShort, line.nameKatakana);
 
 const replaceStationNameJa = (
   station: Pick<Station, 'name' | 'nameKatakana'>
 ) => replaceJapaneseText(station.name, station.nameKatakana);
+
+const replaceStationNameEn = (
+  station: Pick<Station, 'nameTtsSegments' | 'nameRoman'>
+) => wrapPhoneme(station.nameTtsSegments, station.nameRoman);
 
 /** 路線名を sub alias 付きで `、` 連結する。 */
 export const formatLinesListJa = (lines: Line[]): string =>
@@ -143,15 +159,12 @@ export const formatLinesListEn = (lines: Line[]): string => {
  */
 export const formatJrWestStopsListJa = (
   stops: Station[],
-  isBoundStop: (s: Station) => boolean
+  isBoundStop: (s: Station) => boolean,
+  formatStop: (stop: Station) => string = replaceStationNameJa
 ): string =>
   stops
     .slice(0, 5)
-    .map((s) =>
-      isBoundStop(s)
-        ? `終点、${replaceStationNameJa(s)}`
-        : replaceStationNameJa(s)
-    )
+    .map((s) => (isBoundStop(s) ? `終点、${formatStop(s)}` : formatStop(s)))
     .join('、');
 
 /**
@@ -161,7 +174,8 @@ export const formatJrWestStopsListJa = (
  */
 export const formatJrWestStopsListEn = (
   stops: Station[],
-  isBoundStop: (s: Station) => boolean
+  isBoundStop: (s: Station) => boolean,
+  formatStop: (stop: Station) => string = replaceStationNameEn
 ): string => {
   const joinWithAnd = (names: string[]): string => {
     if (names.length <= 1) return names[0] ?? '';
@@ -170,7 +184,7 @@ export const formatJrWestStopsListEn = (
     return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
   };
   const batch = stops.slice(0, 5);
-  const names = batch.map((s) => wrapPhoneme(s.nameTtsSegments, s.nameRoman));
+  const names = batch.map(formatStop);
   const last = batch[batch.length - 1];
   if (last && isBoundStop(last) && names.length > 1) {
     return `${joinWithAnd(names.slice(0, -1))} before arriving at ${names[names.length - 1]}`;

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
+import { setI18nConfig } from '~/translation';
 import LineBoardLED from './LineBoardLED';
 
 // モック設定
@@ -58,13 +59,15 @@ describe('LineBoardLED', () => {
   const setAtomValues = ({
     selectedDirection = null,
     headerState = 'NEXT',
+    stations = [],
   }: {
     selectedDirection?: string | null;
     headerState?: string;
+    stations?: Station[];
   } = {}) => {
     useAtomValue.mockImplementation((a: unknown) => {
       if (a === selectedDirectionAtom) return selectedDirection;
-      if (a === stationsAtom) return [];
+      if (a === stationsAtom) return stations;
       if (a === headerStateAtom) return headerState;
       if (a === isLEDThemeAtom) return true;
       return undefined;
@@ -112,6 +115,36 @@ describe('LineBoardLED', () => {
     const result = render(<LineBoardLED />);
     expect(result.toJSON()).toBeTruthy();
   });
+
+  it.each(['NEXT', 'ARRIVING'])(
+    '%s状態で同名バス停ののりばを日英で表示する',
+    (headerState) => {
+      setI18nConfig();
+      const first = {
+        ...mockNextStation,
+        name: '名古屋駅',
+        nameRoman: 'Nagoya Station',
+        platformCode: '9',
+      };
+      const second = {
+        ...mockAfterNextStation,
+        name: '名古屋駅',
+        nameRoman: 'Nagoya Station',
+        platformCode: '21',
+        stationNumbers: [],
+      };
+      setAtomValues({ headerState, stations: [first, second] });
+      useDisplayNextStation.mockReturnValue(first);
+      useAfterNextStation.mockReturnValue(second);
+
+      const { getAllByText } = render(<LineBoardLED />);
+
+      expect(getAllByText('名古屋駅（9番のりば）').length).toBeGreaterThan(0);
+      expect(getAllByText('名古屋駅（21番のりば）').length).toBeGreaterThan(0);
+      expect(getAllByText('Nagoya Station (Bay 9)').length).toBeGreaterThan(0);
+      expect(getAllByText('Nagoya Station (Bay 21)').length).toBeGreaterThan(0);
+    }
+  );
 
   it('ARRIVING状態でまもなく駅名が表示される', () => {
     setAtomValues({ headerState: 'ARRIVING' });
