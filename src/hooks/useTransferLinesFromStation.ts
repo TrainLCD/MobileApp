@@ -51,8 +51,6 @@ export const useTransferLinesFromStation = (
 ): Line[] => {
   const omitRepeatingLine = option?.omitRepeatingLine ?? false;
   const omitJR = option?.omitJR ?? false;
-  // バス停では同じ停留所の別系統を案内する。鉄道駅では近傍のバス路線を除く。
-  const includeBusLines = isBusLine(station?.line);
 
   const stations = useAtomValue(stationsAtom);
 
@@ -132,7 +130,8 @@ export const useTransferLinesFromStation = (
 
     const filtered: Line[] = [];
     for (const line of station.lines) {
-      if (!line || (!includeBusLines && isBusLine(line))) continue;
+      // バス乗車中も、乗換案内には鉄道路線だけを載せる。
+      if (!line || isBusLine(line)) continue;
       if (line.id === stationLineId) continue;
       if (stripParen(line.nameShort) === stationLineNameNorm) continue;
 
@@ -170,7 +169,6 @@ export const useTransferLinesFromStation = (
 
     return filtered;
   }, [
-    includeBusLines,
     omitRepeatingLine,
     station?.groupId,
     station?.id,
