@@ -213,8 +213,12 @@ describe('LineBoard', () => {
     render(<LineBoard />);
 
     expect(LineBoardEast.mock.calls[0][0].stations).toMatchObject([
-      { name: '名古屋駅（21番のりば）', nameRoman: 'Nagoya Station (Bay 21)' },
-      { name: '柳橋西' },
+      {
+        name: '名古屋駅（21番のりば）',
+        nameRoman: 'Nagoya Station (Bay 21)',
+        hasPlatformLabel: { ja: true, en: true },
+      },
+      { name: '柳橋西', hasPlatformLabel: { ja: false, en: false } },
     ]);
     expect(allStops[1].name).toBe('名古屋駅');
   });

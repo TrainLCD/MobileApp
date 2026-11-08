@@ -56,18 +56,18 @@ const LineBoard: React.FC<Props> = ({ hasTerminus = false }: Props) => {
     return leftStations.slice(0, 8).map((stop) => {
       // 画面外に同名の停留所があっても、表示中の停留所にのりばを添える。
       const code = getBusPlatformCodeForStop(stations, stop);
+      const name = stop.name?.replace(parenthesisRegexp, '');
+      const nameRoman = stop.nameRoman?.replace(parenthesisRegexp, '');
+      const displayName = appendBusPlatform(name, code, 'ja');
+      const displayNameRoman = appendBusPlatform(nameRoman, code, 'en');
       return {
         ...stop,
-        name: appendBusPlatform(
-          stop.name?.replace(parenthesisRegexp, ''),
-          code,
-          'ja'
-        ),
-        nameRoman: appendBusPlatform(
-          stop.nameRoman?.replace(parenthesisRegexp, ''),
-          code,
-          'en'
-        ),
+        name: displayName,
+        nameRoman: displayNameRoman,
+        hasPlatformLabel: {
+          ja: displayName !== name,
+          en: displayNameRoman !== nameRoman,
+        },
       };
     });
   }, [leftStations, isBus, stations]);
