@@ -224,8 +224,9 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
               darkenColor
               jr315Gradient
               fitTextToHeight
-              heightScale={1.3}
-              widthScale={1.4}
+              // タブレットでは埼京線の種別箱と同じ基準寸法を使う。
+              heightScale={isTablet ? 1 : 1.3}
+              widthScale={isTablet ? 1 : 1.4}
               borderRadius={4}
               colorOverride={jr315TrainTypeColor}
               borderColor={jr315TrainTypeColor}
