@@ -3,6 +3,7 @@ import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
 import { useHeaderAnimation } from '../hooks';
+import * as tabletModule from '../utils/isTablet';
 import AnimatedTypography from './AnimatedTypography';
 import HeaderJRKyushu from './HeaderJRKyushu';
 import TrainTypeBox from './TrainTypeBox';
@@ -131,7 +132,9 @@ jest.mock('~/hooks', () => ({
 
 jest.mock('~/utils/isTablet', () => ({
   __esModule: true,
-  default: false,
+  get default() {
+    return false;
+  },
 }));
 
 jest.mock('~/utils/numbering', () => ({
@@ -166,6 +169,7 @@ jest.mock('./TrainTypeBoxJRKyushu', () => {
 describe('HeaderJRKyushu', () => {
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it.each([
@@ -244,26 +248,33 @@ describe('HeaderJRKyushu', () => {
     }
   );
 
-  describe('315系の配色', () => {
-    it('315系では小田急風の種別表示を使う', () => {
-      const { getByTestId, queryByTestId } = render(
-        <HeaderJRKyushu {...createMockHeaderProps()} is315 />
-      );
-      expect(getByTestId('TrainTypeBox')).toBeTruthy();
-      expect(jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0]).toEqual(
-        expect.objectContaining({
-          darkenColor: true,
-          jr315Gradient: true,
-          fitTextToHeight: true,
-          heightScale: 1.3,
-          widthScale: 1.4,
-          borderRadius: 4,
-          borderColor: '#000000',
-          colorOverride: '#000000',
-        })
-      );
-      expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
-    });
+  describe('315系の種別表示と配色', () => {
+    it.each([
+      [false, 1.3, 1.4],
+      [true, 1, 1],
+    ])(
+      'タブレット=%pで種別表示の寸法倍率を切り替える',
+      (isTablet, heightScale, widthScale) => {
+        jest.spyOn(tabletModule, 'default', 'get').mockReturnValue(isTablet);
+        const { getByTestId, queryByTestId } = render(
+          <HeaderJRKyushu {...createMockHeaderProps()} is315 />
+        );
+        expect(getByTestId('TrainTypeBox')).toBeTruthy();
+        expect(jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0]).toEqual(
+          expect.objectContaining({
+            darkenColor: true,
+            jr315Gradient: true,
+            fitTextToHeight: true,
+            heightScale,
+            widthScale,
+            borderRadius: 4,
+            borderColor: '#000000',
+            colorOverride: '#000000',
+          })
+        );
+        expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
+      }
+    );
 
     it.each([
       TrainTypeKind.Rapid,
