@@ -30,19 +30,28 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it.each([true, false])(
-  'バス走行中は鉄道路線名だけをウォッチに送る (停留所に到着済み: %s)',
-  (arrived) => {
+it.each(
+  [TransportType.Bus, TransportType.Rail].flatMap((transportType) =>
+    [true, false].flatMap((arrived) =>
+      [true, false].map((reachable) => ({ transportType, arrived, reachable }))
+    )
+  )
+)(
+  '乗換候補からバス路線を除く (乗車路線: $transportType, 到着済み: $arrived, 接続中: $reachable)',
+  ({ transportType, arrived, reachable }) => {
     jest.replaceProperty(Platform, 'OS', 'ios');
-    jest.mocked(useReachability).mockReturnValue(arrived);
+    jest.mocked(useReachability).mockReturnValue(reachable);
 
-    const busLine = createLine(1, { transportType: TransportType.Bus });
-    const currentBusLine: LineNested = { ...busLine, __typename: 'LineNested' };
-    const busStop = createStation(10, { line: currentBusLine });
+    const selectedLine = createLine(1, { transportType });
+    const currentLine: LineNested = {
+      ...selectedLine,
+      __typename: 'LineNested',
+    };
+    const currentStation = createStation(10, { line: currentLine });
     const transferStop = createStation(11, {
-      line: currentBusLine,
+      line: currentLine,
       lines: [
-        currentBusLine,
+        currentLine,
         {
           ...createLine(2, {
             nameShort: '都02',
@@ -71,16 +80,16 @@ it.each([true, false])(
 
     const store = createStore();
     store.set(arrivedAtom, arrived);
-    store.set(selectedLineAtom, busLine);
-    store.set(stationAtom, arrived ? transferStop : busStop);
-    store.set(stationsAtom, [busStop, transferStop]);
+    store.set(selectedLineAtom, selectedLine);
+    store.set(stationAtom, arrived ? transferStop : currentStation);
+    store.set(stationsAtom, [currentStation, transferStop]);
     renderHook(() => useAppleWatch(), {
       wrapper: ({ children }: PropsWithChildren) => (
         <Provider store={store}>{children}</Provider>
       ),
     });
 
-    const send = arrived ? sendMessage : updateApplicationContext;
+    const send = reachable ? sendMessage : updateApplicationContext;
     expect(jest.mocked(send).mock.lastCall?.[0]).toMatchObject({
       station: {
         id: transferStop.id,
