@@ -73,18 +73,14 @@ export const useAppleWatch = (): void => {
       return {};
     }
 
-    const isBusRide = isBusLine(currentLine);
-
     return {
       state: stoppingState,
       station: {
         id: switchedStation.id,
         name: isJapanese ? switchedStation.name : switchedStation.nameRoman,
-        // バス乗車中の乗換案内には鉄道路線だけを載せる。
+        // 乗車中の交通手段にかかわらず、乗換候補からバス路線を除く。
         lines: (switchedStation.lines ?? [])
-          .filter(
-            (l) => l.id !== currentLine.id && !(isBusRide && isBusLine(l))
-          )
+          .filter((l) => l.id !== currentLine.id && !isBusLine(l))
           .map((l) => ({
             id: l.id,
             lineColorC: l.color,
