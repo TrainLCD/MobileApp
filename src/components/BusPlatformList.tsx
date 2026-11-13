@@ -49,14 +49,9 @@ const PlatformCard = memo(
         onExpandedChange={setExpanded}
         leadingContent={
           group.platformCode ? (
-            <View
-              style={[
-                styles.badge,
-                { backgroundColor: colors.badgeBackground },
-              ]}
-            >
+            <View style={styles.badge}>
               <Typography
-                style={[styles.badgeText, { color: colors.text }]}
+                style={styles.badgeText}
                 numberOfLines={1}
                 adjustsFontSizeToFit
               >
@@ -114,6 +109,8 @@ export const BusPlatformList = memo(({ groups, ...props }: Props) => (
 const styles = StyleSheet.create({
   list: { gap: 12 },
   badge: {
+    // のりば番号は配色設定によらず白地に黒文字で表示します。
+    backgroundColor: '#fff',
     marginRight: 12,
     width: 40,
     height: 40,
@@ -122,7 +119,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontSize: 20, fontWeight: 'bold' },
+  badgeText: { fontSize: 20, fontWeight: 'bold', color: '#000' },
   routes: { paddingHorizontal: 12, paddingBottom: 8 },
   route: {
     flexDirection: 'row',
