@@ -44,7 +44,7 @@ const RouteCard = memo(
       codeCounts.set(code, (codeCounts.get(code) ?? 0) + 1);
     }
     const routeDescription = (line: Line) => {
-      const { code } = getBusRouteLabel(line);
+      const { code, name } = getBusRouteLabel(line);
       // GTFS の路線長名（翻訳があれば英語）は nameRoman に格納されています。
       // 同じ系統番号が並ぶ場合だけ、取得済みの詳細名を補足します。
       const detail = line.nameRoman?.trim();
@@ -52,9 +52,11 @@ const RouteCard = memo(
         (codeCounts.get(code) ?? 0) > 1 &&
         detail &&
         ![code, group.name, line.nameShort?.trim()].includes(detail);
-      return [showDetail ? detail : '', platformLabel(line)]
+      const description = [showDetail ? detail : '', platformLabel(line)]
         .filter(Boolean)
         .join(' / ');
+      // のりば・詳細がなくても、系統バッジの横に路線名を表示します。
+      return description || (isJapanese ? name : detail || name);
     };
     const subtitle = [
       [...new Set(codes)].filter((code) => code !== title).join('・'),
@@ -70,7 +72,7 @@ const RouteCard = memo(
         line={firstLine}
         title={title}
         subtitle={subtitle}
-        neutral
+        neutral={multiple}
         testID={multiple ? undefined : generateLineTestId(firstLine)}
         disabled={!multiple && disabled}
         onPress={() => onLineSelected(firstLine)}

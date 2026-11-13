@@ -1,5 +1,5 @@
-import { fireEvent, render } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
+import { fireEvent, render, within } from '@testing-library/react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { DARK_APP_COLORS, LIGHT_APP_COLORS } from '~/constants/colorScheme';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { groupBusLinesByRoute } from '~/utils/groupBusLinesByRoute';
@@ -200,4 +200,73 @@ it('系統番号が異なるときは詳細名を追加しない', () => {
   );
   fireEvent.press(ui.getByText('新前橋駅西口線'));
   expect(ui.queryByText(/中央公園経由|市役所経由/)).toBeNull();
+});
+
+it.each([null, undefined, '', '  ', '降車'])(
+  'のりばを表示できなくても展開行の本文に路線名を表示する（%s）',
+  (platformCode) => {
+    const lines = [first, second].map((line) => ({
+      ...line,
+      nameRoman: null,
+      station: {
+        ...createStation(line.id ?? 1, { platformCode }),
+        __typename: 'StationNested' as const,
+      },
+    }));
+    const selected = jest.fn();
+    const ui = render(
+      <BusRouteList
+        groups={groupBusLinesByRoute(lines)}
+        onLineSelected={selected}
+      />
+    );
+    fireEvent.press(ui.getByText('新前橋駅西口線'));
+    for (const line of lines) {
+      const row = ui.getByTestId(`line_${line.id}`);
+      expect(within(row).getByText('新前橋駅西口線')).toBeTruthy();
+      fireEvent.press(row);
+      expect(selected).toHaveBeenLastCalledWith(line);
+    }
+  }
+);
+
+it('同じ系統番号で詳細名ものりばもない場合に本文が空にならない', () => {
+  const lines = [first, second].map((line) => ({
+    ...line,
+    nameShort: first.nameShort,
+    nameRoman: null,
+    station: null,
+  }));
+  const ui = render(
+    <BusRouteList
+      groups={groupBusLinesByRoute(lines)}
+      onLineSelected={jest.fn()}
+    />
+  );
+  fireEvent.press(ui.getByText('新前橋駅西口線'));
+  expect(
+    within(ui.getByTestId('line_1')).getByText('新前橋駅西口線')
+  ).toBeTruthy();
+  expect(
+    within(ui.getByTestId('line_2')).getByText('新前橋駅西口線')
+  ).toBeTruthy();
+});
+
+it.each([
+  ['ライト', LIGHT_APP_COLORS],
+  ['ダーク', DARK_APP_COLORS],
+])('%sでも単独系統のカードは路線カラーを使う', (_name, colors) => {
+  jest.mocked(useAppColors).mockReturnValue(colors);
+  const line = { ...first, color: '#a35400' };
+  const ui = render(
+    <BusRouteList
+      groups={groupBusLinesByRoute([line])}
+      onLineSelected={jest.fn()}
+    />
+  );
+  const card = ui.UNSAFE_getByType(TouchableOpacity);
+  expect(StyleSheet.flatten(card.props.style).backgroundColor).toBe('#a35400');
+  expect(
+    StyleSheet.flatten(ui.getByText('新前橋駅西口線').props.style).color
+  ).toBe('#fff');
 });
