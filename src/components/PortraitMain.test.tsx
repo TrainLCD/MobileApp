@@ -435,6 +435,56 @@ describe('PortraitMain', () => {
     }
   );
 
+  it.each([null, undefined])(
+    '現在駅のIDが%sなら欠損ID同士を一致させずグループIDで探す',
+    (id) => {
+      const stops = [
+        { ...buildStation(1, '前橋駅', StopCondition.All), id },
+        buildStation(2, 'けやきウォーク前橋', StopCondition.All),
+        { ...buildStation(3, '永寿寺前', StopCondition.All), id },
+        buildStation(4, '表町', StopCondition.All),
+      ];
+      const { getByText, getByTestId } = renderWithStations(stops, {
+        arrived: false,
+        currentStation: stops[2],
+      });
+      expect(StyleSheet.flatten(getByText('表町').props.style).fontSize).toBe(
+        RFValue(15)
+      );
+      expect(
+        StyleSheet.flatten(getByText('けやきウォーク前橋').props.style).fontSize
+      ).toBe(RFValue(14));
+      expect(
+        within(getByTestId('stop-row-4')).getByTestId('train-chevron')
+      ).toBeTruthy();
+    }
+  );
+
+  it.each([null, undefined])(
+    '補正済み次駅のIDが%sなら欠損ID同士を一致させずグループIDで探す',
+    (id) => {
+      const stops = [
+        { ...buildStation(1, '前橋駅', StopCondition.All), id },
+        buildStation(2, '永寿寺前', StopCondition.All),
+        { ...buildStation(3, '表町', StopCondition.All), id },
+      ];
+      mockedUseHeaderCommonData.mockReturnValue({
+        ...commonData,
+        displayNextStation: stops[2],
+      });
+      const { getByText } = renderWithStations(stops, {
+        arrived: false,
+        currentStation: stops[1],
+      });
+      expect(StyleSheet.flatten(getByText('表町').props.style).fontSize).toBe(
+        RFValue(15)
+      );
+      expect(StyleSheet.flatten(getByText('前橋駅').props.style).fontSize).toBe(
+        RFValue(14)
+      );
+    }
+  );
+
   it('停車中は先頭駅が強調され半透明にならない', () => {
     const { getByTestId, getByText } = renderWithStations(
       [

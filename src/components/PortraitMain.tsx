@@ -1467,7 +1467,10 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
 
   // 現在の最寄り駅(列車位置)の index。
   const currentIndex = useMemo(() => {
-    const idIndex = stops.findIndex((s) => s.id === currentStation?.id);
+    const idIndex =
+      currentStation?.id != null
+        ? stops.findIndex((s) => s.id === currentStation.id)
+        : -1;
     if (idIndex >= 0) return idIndex;
     // 接続駅の重複除去でIDが残らない場合だけグループで照合する。
     return currentStation?.groupId != null
@@ -1485,7 +1488,8 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const displayNextIndex = useMemo(() => {
     const next = commonData?.displayNextStation;
     if (!next) return -1;
-    const idIndex = stops.findIndex((s) => s.id === next.id);
+    const idIndex =
+      next.id != null ? stops.findIndex((s) => s.id === next.id) : -1;
     return idIndex >= 0
       ? idIndex
       : next.groupId != null
