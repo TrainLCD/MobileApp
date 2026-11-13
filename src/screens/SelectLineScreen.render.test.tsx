@@ -218,6 +218,7 @@ jest.mock('../utils/generateTestID', () => ({
 }));
 
 jest.mock('~/utils/line', () => ({
+  ...jest.requireActual('~/utils/line'),
   isBusLine: jest.fn(
     (line: { transportType?: string } | null) =>
       line?.transportType === 'BUS' || line?.transportType === 'Bus'
@@ -419,6 +420,35 @@ describe('SelectLineScreen', () => {
       expect(getByTestId('line_100')).toBeTruthy();
       expect(getByTestId('line_200')).toBeTruthy();
     });
+  });
+
+  it('のりばが全系統で欠落したら現行カード一覧へ戻る', () => {
+    const bus = createLine(200, {
+      nameShort: '47A',
+      transportType: TransportType.Bus,
+      station: {
+        ...createStation(1, { platformCode: '4' }),
+        __typename: 'StationNested',
+      },
+    });
+    setupDefaults({
+      station: createStation(1, { lines: [bus] as Station['lines'] }),
+      stationsCache: [[]],
+    });
+    const ui = render(<SelectLineScreen />);
+    // のりば情報があれば個別の CommonCard ではなくグループ見出しを表示する。
+    expect(ui.queryByTestId('line_200')).toBeNull();
+    const noPlatform = {
+      ...bus,
+      station: { ...bus.station, platformCode: null },
+    };
+    setupDefaults({
+      station: createStation(1, { lines: [noPlatform] as Station['lines'] }),
+      stationsCache: [[]],
+    });
+    ui.unmount();
+    const fallback = render(<SelectLineScreen />);
+    expect(fallback.getByTestId('line_200')).toBeTruthy();
   });
 
   describe('NowHeader', () => {

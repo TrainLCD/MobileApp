@@ -709,6 +709,7 @@ export type LineInStationFieldsFragment = {
         __typename: 'StationNested';
         id: number | null | undefined;
         groupId: number | null | undefined;
+        platformCode: string | null | undefined;
         name: string | null | undefined;
         nameRoman: string | null | undefined;
         nameChinese: string | null | undefined;
@@ -1073,6 +1074,7 @@ export type StationFieldsFragment = {
               __typename: 'StationNested';
               id: number | null | undefined;
               groupId: number | null | undefined;
+              platformCode: string | null | undefined;
               name: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
@@ -1142,6 +1144,7 @@ export type StationFieldsFragment = {
               __typename: 'StationNested';
               id: number | null | undefined;
               groupId: number | null | undefined;
+              platformCode: string | null | undefined;
               name: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
@@ -1519,6 +1522,7 @@ export type GetStationsNearbyQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -1588,6 +1592,7 @@ export type GetStationsNearbyQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2221,6 +2226,7 @@ export type GetLineListStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2290,6 +2296,7 @@ export type GetLineListStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2667,6 +2674,7 @@ export type GetLineStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2736,6 +2744,7 @@ export type GetLineStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3113,6 +3122,7 @@ export type GetStationsByNameQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3182,6 +3192,7 @@ export type GetStationsByNameQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3558,6 +3569,7 @@ export type GetLineGroupStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3627,6 +3639,7 @@ export type GetLineGroupStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -4003,6 +4016,7 @@ export type GetStationsByIdsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -4072,6 +4086,7 @@ export type GetStationsByIdsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -4795,6 +4810,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -4864,6 +4880,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5277,6 +5294,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5346,6 +5364,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5920,6 +5939,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5989,6 +6009,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -6402,6 +6423,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -6471,6 +6493,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;

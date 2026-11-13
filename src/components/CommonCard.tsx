@@ -30,6 +30,8 @@ import Typography from './Typography';
 
 type Props = {
   line: Line;
+  /** のりばなど、路線マーク以外を見出しの先頭に表示する場合に指定します。 */
+  leadingContent?: React.ReactNode;
   targetStation?: Station;
   stations?: Station[];
   title?: string;
@@ -204,6 +206,7 @@ const ACCORDION_EASING = Easing.inOut(Easing.ease);
 export const CommonCard: React.FC<Props> = ({
   line,
   targetStation,
+  leadingContent,
   stations = EMPTY_STATIONS,
   title,
   hideParens,
@@ -465,6 +468,11 @@ export const CommonCard: React.FC<Props> = ({
         onPress={disabled ? undefined : handlePress}
         activeOpacity={1}
         disabled={disabled}
+        accessibilityRole="button"
+        accessibilityState={{
+          disabled: !!disabled,
+          ...(hasAccordion ? { expanded: !!expanded } : {}),
+        }}
         testID={testID}
         style={[
           styles.root,
@@ -474,7 +482,9 @@ export const CommonCard: React.FC<Props> = ({
           additionalRootStyle,
         ]}
       >
-        {mark ? (
+        {leadingContent != null ? (
+          leadingContent
+        ) : mark ? (
           <View style={[styles.mark, markScaleStyle]}>
             <TransferLineMark
               line={line}
@@ -590,6 +600,9 @@ export const CommonCard: React.FC<Props> = ({
       </TouchableOpacity>
       {hasAccordion && (
         <Animated.View
+          pointerEvents={expanded ? 'auto' : 'none'}
+          accessibilityElementsHidden={!expanded}
+          importantForAccessibility={expanded ? 'auto' : 'no-hide-descendants'}
           style={[
             styles.expandableWrapper,
             {
