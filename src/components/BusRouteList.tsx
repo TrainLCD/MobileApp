@@ -44,19 +44,18 @@ const RouteCard = memo(
       codeCounts.set(code, (codeCounts.get(code) ?? 0) + 1);
     }
     const routeDescription = (line: Line) => {
-      const { code, name } = getBusRouteLabel(line);
+      const { code } = getBusRouteLabel(line);
       // GTFS の路線長名（翻訳があれば英語）は nameRoman に格納されています。
       // 同じ系統番号が並ぶ場合だけ、取得済みの詳細名を補足します。
       const detail = line.nameRoman?.trim();
       const showDetail =
+        isJapanese &&
         (codeCounts.get(code) ?? 0) > 1 &&
         detail &&
         ![code, group.name, line.nameShort?.trim()].includes(detail);
-      const description = [showDetail ? detail : '', platformLabel(line)]
+      return [showDetail ? detail : '', platformLabel(line)]
         .filter(Boolean)
         .join(' / ');
-      // のりば・詳細がなくても、系統バッジの横に路線名を表示します。
-      return description || (isJapanese ? name : detail || name);
     };
     const subtitle = [
       [...new Set(codes)].filter((code) => code !== title).join('・'),
@@ -110,9 +109,23 @@ const RouteCard = memo(
                       {getBusRouteLabel(line).code}
                     </Typography>
                   </View>
-                  <Typography style={styles.routeName}>
-                    {routeDescription(line)}
-                  </Typography>
+                  <View style={styles.routeLabels}>
+                    <Typography style={styles.routeName}>
+                      {isJapanese
+                        ? getBusRouteLabel(line).name
+                        : line.nameRoman?.trim() || getBusRouteLabel(line).name}
+                    </Typography>
+                    {!!routeDescription(line) && (
+                      <Typography
+                        style={[
+                          styles.routeDescription,
+                          { color: colors.mutedText },
+                        ]}
+                      >
+                        {routeDescription(line)}
+                      </Typography>
+                    )}
+                  </View>
                   <CardChevron stroke={colors.text} />
                 </TouchableOpacity>
               ))}
@@ -145,5 +158,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
   },
-  routeName: { flex: 1, fontSize: 14 },
+  routeLabels: { flex: 1, gap: 2 },
+  routeName: { fontSize: 14 },
+  routeDescription: { fontSize: 12 },
 });

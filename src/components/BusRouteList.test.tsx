@@ -19,6 +19,7 @@ jest.mock('~/providers/AppColorsProvider', () => ({
 afterEach(() => {
   jest.mocked(useAppColors).mockReturnValue(LIGHT_APP_COLORS);
   jest.clearAllMocks();
+  jest.restoreAllMocks();
 });
 
 jest.mock('../hooks', () => ({
@@ -66,7 +67,7 @@ it('初期表示は折りたたみ、開閉して各系統を選択できる', (
   fireEvent.press(ui.getByText('47B'));
   expect(selected).toHaveBeenCalledWith(second);
   expect(selected).toHaveBeenCalledTimes(1);
-  fireEvent.press(ui.getByText('新前橋駅西口線'));
+  fireEvent.press(ui.getAllByText('新前橋駅西口線')[0]);
   expect(ui.queryByText('47A')).toBeNull();
   fireEvent.press(ui.getByText('不明系統'));
   expect(selected).toHaveBeenLastCalledWith(other);
@@ -269,4 +270,52 @@ it.each([
   expect(
     StyleSheet.flatten(ui.getByText('新前橋駅西口線').props.style).color
   ).toBe('#fff');
+});
+
+it.each([null, '4'])(
+  'のりばの有無で路線名を置き換えず補足行だけを切り替える（%s）',
+  (platformCode) => {
+    const lines = [first, second].map((line) => ({
+      ...line,
+      station: {
+        ...createStation(line.id ?? 1, { platformCode }),
+        __typename: 'StationNested' as const,
+      },
+    }));
+    const ui = render(
+      <BusRouteList
+        groups={groupBusLinesByRoute(lines)}
+        onLineSelected={jest.fn()}
+      />
+    );
+    fireEvent.press(ui.getByText('新前橋駅西口線'));
+    for (const line of lines) {
+      const row = within(ui.getByTestId(`line_${line.id}`));
+      expect(row.getByText('新前橋駅西口線')).toBeTruthy();
+      if (platformCode) {
+        expect(row.getByText('4番のりば')).toBeTruthy();
+      } else {
+        expect(row.queryByText(/番のりば/)).toBeNull();
+      }
+    }
+  }
+);
+
+it('英語表示では路線名を主行に表示し、詳細名を補足に重複表示しない', () => {
+  jest.replaceProperty(require('~/translation'), 'isJapanese', false);
+  const lines = [first, second].map((line) => ({
+    ...line,
+    nameShort: first.nameShort,
+    nameRoman: 'Via Central Park',
+  }));
+  const ui = render(
+    <BusRouteList
+      groups={groupBusLinesByRoute(lines)}
+      onLineSelected={jest.fn()}
+    />
+  );
+  fireEvent.press(ui.getByText('Via Central Park'));
+  const row = within(ui.getByTestId('line_1'));
+  expect(row.getAllByText('Via Central Park')).toHaveLength(1);
+  expect(row.getByText('4番のりば')).toBeTruthy();
 });
