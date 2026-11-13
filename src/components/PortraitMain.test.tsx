@@ -210,6 +210,27 @@ describe('PortraitMain', () => {
     );
   });
 
+  it('長い路線名は文字サイズと1行表示を維持し、表示幅を縮めない', () => {
+    const lineName = '埼玉高速鉄道埼玉スタジアム線';
+    mockedUseCurrentLine.mockReturnValue({
+      ...yamanoteLine,
+      nameShort: lineName,
+    });
+    const { getByText } = renderWithStations([
+      buildStation(1, '品川', StopCondition.All, 'JY-25'),
+    ]);
+
+    const lineText = getByText(lineName);
+    expect(lineText.props.numberOfLines).toBe(1);
+    expect(lineText.props.adjustsFontSizeToFit).not.toBe(true);
+    expect(StyleSheet.flatten(lineText.props.style)).toMatchObject({
+      flexShrink: 0,
+      fontSize: RFValue(12),
+    });
+    expect(getByText('各駅停車')).toBeTruthy();
+    expect(getByText('品川・大崎方面')).toBeTruthy();
+  });
+
   it('同名のバス停が連続すると異なるのりば番号を表示する', () => {
     const { getByTestId } = renderWithStations([
       { ...buildStation(1, '名古屋駅', StopCondition.All), platformCode: '9' },
