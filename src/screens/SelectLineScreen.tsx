@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import type { Line, LineNested } from '~/@types/graphql';
-import { BusPlatformList } from '~/components/BusPlatformList';
+import { BusRouteList } from '~/components/BusRouteList';
 import { CommonCard } from '~/components/CommonCard';
 import { CurrentStationUnavailableCard } from '~/components/CurrentStationUnavailableCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
@@ -34,7 +34,7 @@ import { usePresetsWidgetSync } from '~/hooks/usePresetsWidgetSync';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import { groupBusLinesByPlatform } from '~/utils/groupBusLinesByPlatform';
+import { groupBusLinesByRoute } from '~/utils/groupBusLinesByRoute';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import FooterTabBar, { useFooterHeight } from '../components/FooterTabBar';
@@ -218,8 +218,8 @@ const SelectLineScreen = () => {
     );
   }, [station?.lines]);
 
-  const busPlatformGroups = useMemo(
-    () => groupBusLinesByPlatform(busesLines),
+  const busRouteGroups = useMemo(
+    () => groupBusLinesByRoute(busesLines),
     [busesLines]
   );
 
@@ -419,32 +419,12 @@ const SelectLineScreen = () => {
                   <Heading style={styles.busHeading} singleLine>
                     {translate('busStopsNearby')}
                   </Heading>
-                  {busPlatformGroups ? (
-                    <BusPlatformList
-                      key={station?.id}
-                      groups={busPlatformGroups}
-                      onLineSelected={handleLineSelected}
-                      disabled={fetchStationsByLineIdLoading}
-                    />
-                  ) : (
-                    Array.from({
-                      length: Math.ceil(busesLines.length / numColumns),
-                    }).map((_, rowIndex) => {
-                      const rowLines = busesLines.slice(
-                        rowIndex * numColumns,
-                        (rowIndex + 1) * numColumns
-                      );
-                      const rowKey = rowLines.map((l) => l.id).join('-');
-                      return (
-                        <React.Fragment key={rowKey}>
-                          {renderLineRow(
-                            rowLines,
-                            rowIndex + stationLines.length
-                          )}
-                        </React.Fragment>
-                      );
-                    })
-                  )}
+                  <BusRouteList
+                    key={station?.id}
+                    groups={busRouteGroups}
+                    onLineSelected={handleLineSelected}
+                    disabled={fetchStationsByLineIdLoading}
+                  />
                 </>
               )}
             </>

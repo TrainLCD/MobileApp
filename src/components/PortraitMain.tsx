@@ -1466,10 +1466,17 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   );
 
   // 現在の最寄り駅(列車位置)の index。
-  const currentIndex = useMemo(
-    () => stops.findIndex((s) => s.groupId === currentStation?.groupId),
-    [stops, currentStation]
-  );
+  const currentIndex = useMemo(() => {
+    const idIndex =
+      currentStation?.id != null
+        ? stops.findIndex((s) => s.id === currentStation.id)
+        : -1;
+    if (idIndex >= 0) return idIndex;
+    // 接続駅の重複除去でIDが残らない場合だけグループで照合する。
+    return currentStation?.groupId != null
+      ? stops.findIndex((s) => s.groupId === currentStation.groupId)
+      : -1;
+  }, [stops, currentStation]);
 
   // 終点に到達したあと到着判定が外れると、arrived が false のまま現在駅は最終駅に
   // 留まる(!arrived の間 useRefreshStation は現在駅を進めない)。素直に次駅へ進めると
@@ -1478,19 +1485,33 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const atLastStation = currentIndex >= 0 && currentIndex === stops.length - 1;
   const stoppedHere = arrived || atLastStation;
 
+  const displayNextIndex = useMemo(() => {
+    const next = commonData?.displayNextStation;
+    if (!next) return -1;
+    const idIndex =
+      next.id != null ? stops.findIndex((s) => s.id === next.id) : -1;
+    return idIndex >= 0
+      ? idIndex
+      : next.groupId != null
+        ? stops.findIndex((s) => s.groupId === next.groupId)
+        : -1;
+  }, [stops, commonData?.displayNextStation]);
+
   // 強調する停車駅。停車中は現在駅(停車駅)、発車後・通過中は次の停車駅。
   const currentStopIndex = useMemo(
     () =>
-      stops.findIndex((s, i) => {
-        if (i < currentIndex) {
-          return false;
-        }
-        if (i === currentIndex && !stoppedHere) {
-          return false;
-        }
-        return !getIsPass(s);
-      }),
-    [stops, currentIndex, stoppedHere]
+      !stoppedHere && displayNextIndex >= 0
+        ? displayNextIndex
+        : stops.findIndex((s, i) => {
+            if (i < currentIndex) {
+              return false;
+            }
+            if (i === currentIndex && !stoppedHere) {
+              return false;
+            }
+            return !getIsPass(s);
+          }),
+    [stops, currentIndex, stoppedHere, displayNextIndex]
   );
 
   // カード脇の注記に使う「次の停車駅」の位置。
@@ -1536,7 +1557,18 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
 
   // 列車位置のピン(進行方向=下向き)。停車中は現在駅のドット直上、
   // 発車後は現在駅と次駅の境目=発車済みの色が切り替わる位置(次駅行の上端)に出す。
-  const markerRowIndex = stoppedHere ? currentIndex : currentIndex + 1;
+  // GPS補正が途中の停車駅を飛び越えた場合は、ピンも補正先の直前へ進める。
+  // 通過駅しか挟まない場合は従来の現在位置を保つ。
+  const skippedStop =
+    !stoppedHere &&
+    stops.some(
+      (s, i) => i > currentIndex && i < currentStopIndex && !getIsPass(s)
+    );
+  const markerRowIndex = stoppedHere
+    ? currentIndex
+    : skippedStop
+      ? currentStopIndex
+      : currentIndex + 1;
   const markerPosition: MarkerPosition = stoppedHere
     ? 'above-dot'
     : 'segment-top';

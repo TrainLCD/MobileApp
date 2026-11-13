@@ -422,7 +422,7 @@ describe('SelectLineScreen', () => {
     });
   });
 
-  it('のりばが全系統で欠落したら現行カード一覧へ戻る', () => {
+  it('単独系統はのりば情報の有無によらず直接選択カードを表示する', () => {
     const bus = createLine(200, {
       nameShort: '47A',
       transportType: TransportType.Bus,
@@ -436,8 +436,8 @@ describe('SelectLineScreen', () => {
       stationsCache: [[]],
     });
     const ui = render(<SelectLineScreen />);
-    // のりば情報があれば個別の CommonCard ではなくグループ見出しを表示する。
-    expect(ui.queryByTestId('line_200')).toBeNull();
+    // A案では単独系統を直接選択できます。
+    expect(ui.getByTestId('line_200')).toBeTruthy();
     const noPlatform = {
       ...bus,
       station: { ...bus.station, platformCode: null },

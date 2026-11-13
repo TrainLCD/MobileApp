@@ -222,6 +222,19 @@ describe('useHeaderCommonData', () => {
     });
   });
 
+  it('ヘッダー文字列に渡した補正済み次駅を一覧にも公開する', () => {
+    setupMocks(APP_THEME.TOKYO_METRO);
+    const corrected = { id: 999, name: '表町' };
+    (useDisplayNextStation as jest.Mock).mockReturnValue(corrected);
+    const { getByTestId } = render(<TestComponent />);
+    expect(
+      JSON.parse(getByTestId('result').props.children).displayNextStation
+    ).toEqual(corrected);
+    expect(useHeaderStationText).toHaveBeenCalledWith(
+      expect.objectContaining({ nextStation: corrected })
+    );
+  });
+
   describe('基本動作', () => {
     it('currentStationがない場合、nullを返す', () => {
       setupMocks(APP_THEME.TOKYO_METRO);

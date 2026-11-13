@@ -113,6 +113,7 @@ export const useHeaderCommonData = (): CommonHeaderProps | null => {
     currentStation,
     currentLine,
     nextStation,
+    displayNextStation,
     selectedBound,
     arrived,
     headerState,
