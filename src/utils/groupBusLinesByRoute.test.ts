@@ -39,3 +39,38 @@ it('路線名が違えば分け、数字を含む通常の路線名は切り取�
   );
   expect(groupBusLinesByRoute([])).toEqual([]);
 });
+
+it('複数系統を先に並べ、グループ・単独系統・グループ内の順序を保つ', () => {
+  const soloFirst = createLine(3, {
+    company: createCompany(1),
+    nameShort: '55C 前橋公園線',
+  });
+  const soloSecond = createLine(4, {
+    company: createCompany(1),
+    nameShort: '40B 東大室線',
+  });
+  const otherFirst = createLine(5, {
+    company: createCompany(1),
+    nameShort: '22B 前橋渋川線',
+  });
+  const otherSecond = createLine(6, {
+    company: createCompany(1),
+    nameShort: '22K 前橋渋川線',
+  });
+  const input = Object.freeze([
+    soloFirst,
+    first,
+    soloSecond,
+    otherFirst,
+    otherSecond,
+    second,
+  ]);
+  const groups = groupBusLinesByRoute(input);
+  expect(groups.map(({ lines }) => lines.map(({ id }) => id))).toEqual([
+    [1, 2],
+    [5, 6],
+    [3],
+    [4],
+  ]);
+  expect(input.map(({ id }) => id)).toEqual([3, 1, 4, 5, 6, 2]);
+});
