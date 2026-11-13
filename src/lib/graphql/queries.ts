@@ -127,6 +127,7 @@ export const LINE_IN_STATION_FRAGMENT = gql`
     station {
       id
       groupId
+      platformCode
       name
       nameRoman
       nameChinese

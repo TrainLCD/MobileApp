@@ -478,5 +478,8 @@
   "stopped": "停車中",
   "stoppedEn": "Stopped",
   "transferShort": "のりかえ",
-  "transferShortEn": "Transfer"
+  "transferShortEn": "Transfer",
+  "busPlatformHeading": "%{number}番のりば",
+  "busPlatformOther": "その他",
+  "busRouteCount": "%{count}系統"
 }
