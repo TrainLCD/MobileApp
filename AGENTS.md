@@ -130,6 +130,15 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 - If CI fails, pause reviews until you add root-cause notes and reproduction steps, or open an issue for infrastructure problems.
 - **Keep PR metadata in sync with the branch state.** After pushing to an open PR, refresh the body (`変更の種類`, `変更内容`, test results) while preserving human-written prose unless the change invalidates it. If the title no longer covers the scope, propose a new one and apply it with `gh pr edit --title` after approval.
 
+### Required issue linkage
+
+- Every PR must reference at least one issue for the same work in its `関連Issue` section. This applies to documentation, dependency updates, and release/canary PRs as well as code and data changes.
+- Before creating a PR, search existing issues by the problem, requested behavior, and affected component. Read candidate issues and reuse an issue for the same work, including one in another repository; do not create a duplicate merely to obtain an issue number.
+- If no issue covers the work, create one before opening the PR. Describe the problem or purpose, scope, and acceptance criteria, and assign it to `@TinyKitten`.
+- Use `Closes #123` when the PR completes the issue, or `Refs #123` for partial work or a reference that must stay open. For cross-repository issues, use `Closes TrainLCD/Repository#123` or `Refs TrainLCD/Repository#123`. Check the issue's remaining scope before choosing a closing keyword.
+- Do not leave the section empty, retain only its template comment, or write "none" because the request came from chat. Verify the referenced issue exists and matches the PR before publishing or updating the PR.
+- This requirement takes precedence over any optional `related_issue` input or empty-issue fallback in PR creation instructions. Release/canary PRs may reuse the issues covered by their changes; do not close unfinished issues just to satisfy this rule.
+
 ## Security & Incidents
 
 - Secrets and endpoints go in `.env.local` (template: `.env.example`); code reads API URLs from environment variables (`src/lib/gql.ts`). Never commit credentials, tokens, or endpoint URLs, including in docs. Protect Expo credentials with 2FA.
