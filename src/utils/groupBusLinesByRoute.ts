@@ -31,5 +31,9 @@ export const groupBusLinesByRoute = (
     if (group) group.lines.push(line);
     else groups.set(key, { key, name, lines: [line] });
   }
-  return [...groups.values()];
+  // 展開できるグループを先に表示し、各区分内ではAPIの掲載順を保ちます。
+  const ordered = [...groups.values()];
+  return ordered
+    .filter((group) => group.lines.length > 1)
+    .concat(ordered.filter((group) => group.lines.length === 1));
 };

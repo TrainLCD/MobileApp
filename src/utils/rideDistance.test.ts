@@ -78,6 +78,52 @@ describe('getRideDistanceMeters', () => {
         { id: 4, trackDistanceFromPrevious: 1700 },
       ]);
 
+    it.each([false, true])(
+      '乗換駅間は0 mとし、逆向き=%sでも全区間trackにする',
+      (reverse) => {
+        const transfer = { ...c, groupId: b.groupId };
+        rememberTrackDistances([
+          { id: a.id, trackDistanceFromPrevious: null },
+          { id: b.id, trackDistanceFromPrevious: 1500 },
+        ]);
+        rememberTrackDistances([
+          { id: transfer.id, trackDistanceFromPrevious: null },
+          { id: d.id, trackDistanceFromPrevious: 1700 },
+        ]);
+        expect(
+          measureRideDistance(
+            [a, b, transfer, d],
+            reverse ? d : a,
+            reverse ? a : d,
+            false
+          )
+        ).toEqual({
+          meters: 3200,
+          source: 'track',
+        });
+      }
+    );
+
+    it('座標の無い乗換駅間も0 mの線路距離として数える', () => {
+      const transfer = createStation(9, { groupId: b.groupId });
+      expect(measureRideDistance([b, transfer], b, transfer, false)).toEqual({
+        meters: 0,
+        source: 'track',
+      });
+    });
+
+    it.each([null, undefined])(
+      'groupIdが%sの駅同士は同じグループとみなさない',
+      (groupId) => {
+        const from = { ...a, groupId };
+        const to = { ...b, groupId };
+        expect(measureRideDistance([from, to], from, to, false)).toEqual({
+          meters: d2(a, b),
+          source: 'haversine',
+        });
+      }
+    );
+
     it('隣り合う駅の線路の長さがあればそれを合計する', () => {
       rememberAll();
       expect(measureRideDistance(stations, a, d, false)).toEqual({
@@ -108,7 +154,7 @@ describe('getRideDistanceMeters', () => {
 
     it('座標の無い駅のあとで線路の長さが途切れたら、座標のある駅どうしの直線距離でまとめて代える', () => {
       // a→b は線路の長さあり、b は座標なし、b→c は線路の長さなし
-      const noCoordsB = { id: 2, latitude: null, longitude: null };
+      const noCoordsB = { id: 2, groupId: 2, latitude: null, longitude: null };
       rememberTrackDistances([
         { id: 1, trackDistanceFromPrevious: null },
         { id: 2, trackDistanceFromPrevious: 1500 },
@@ -122,7 +168,7 @@ describe('getRideDistanceMeters', () => {
 
     it('座標の無い駅の手前で線路の長さが途切れても、同じく直線距離でまとめて代える', () => {
       // a→b は線路の長さなし、b は座標なし、b→c は線路の長さあり
-      const noCoordsB = { id: 2, latitude: null, longitude: null };
+      const noCoordsB = { id: 2, groupId: 2, latitude: null, longitude: null };
       rememberTrackDistances([
         { id: 2, trackDistanceFromPrevious: null },
         { id: 3, trackDistanceFromPrevious: 1600 },

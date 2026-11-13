@@ -49,6 +49,7 @@ const RouteCard = memo(
       // 同じ系統番号が並ぶ場合だけ、取得済みの詳細名を補足します。
       const detail = line.nameRoman?.trim();
       const showDetail =
+        isJapanese &&
         (codeCounts.get(code) ?? 0) > 1 &&
         detail &&
         ![code, group.name, line.nameShort?.trim()].includes(detail);
@@ -70,7 +71,7 @@ const RouteCard = memo(
         line={firstLine}
         title={title}
         subtitle={subtitle}
-        neutral
+        neutral={multiple}
         testID={multiple ? undefined : generateLineTestId(firstLine)}
         disabled={!multiple && disabled}
         onPress={() => onLineSelected(firstLine)}
@@ -108,9 +109,23 @@ const RouteCard = memo(
                       {getBusRouteLabel(line).code}
                     </Typography>
                   </View>
-                  <Typography style={styles.routeName}>
-                    {routeDescription(line)}
-                  </Typography>
+                  <View style={styles.routeLabels}>
+                    <Typography style={styles.routeName}>
+                      {isJapanese
+                        ? getBusRouteLabel(line).name
+                        : line.nameRoman?.trim() || getBusRouteLabel(line).name}
+                    </Typography>
+                    {!!routeDescription(line) && (
+                      <Typography
+                        style={[
+                          styles.routeDescription,
+                          { color: colors.mutedText },
+                        ]}
+                      >
+                        {routeDescription(line)}
+                      </Typography>
+                    )}
+                  </View>
                   <CardChevron stroke={colors.text} />
                 </TouchableOpacity>
               ))}
@@ -143,5 +158,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
   },
-  routeName: { flex: 1, fontSize: 14 },
+  routeLabels: { flex: 1, gap: 2 },
+  routeName: { fontSize: 14 },
+  routeDescription: { fontSize: 12 },
 });
