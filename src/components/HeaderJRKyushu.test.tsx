@@ -499,6 +499,63 @@ describe('HeaderJRKyushu', () => {
     });
   });
 
+  it.each([
+    [true, 'KANA', false],
+    [true, 'JA', true],
+    [true, 'EN', false],
+    [false, 'KANA', true],
+  ] as const)(
+    '315系=%s・言語=%sの直通案内表示',
+    (is315, headerLangState, visible) => {
+      const props = createMockHeaderProps({
+        selectedBound: createMockHeaderProps().currentStation,
+        connectedLines: [TOEI_SHINJUKU_LINE_LOCAL],
+        connectionText: '中央本線',
+        boundText: 'たじみ ゆき',
+        headerLangState,
+        isJapaneseState: headerLangState !== 'EN',
+      });
+      const { queryByText, getByText } = render(
+        <HeaderJRKyushu {...props} is315={is315} />
+      );
+      expect(Boolean(queryByText('中央本線直通 '))).toBe(visible);
+      expect(getByText('たじみ ゆき')).toBeTruthy();
+      expect(
+        jest.mocked(useHeaderAnimation).mock.calls.at(-1)?.[0].connectionText
+      ).toBe(is315 && headerLangState === 'KANA' ? '' : '中央本線');
+    }
+  );
+
+  it('かなから漢字に切り替える際に旧表示へ直通の文字だけを残さない', () => {
+    const props = createMockHeaderProps({
+      selectedBound: createMockHeaderProps().currentStation,
+      connectedLines: [TOEI_SHINJUKU_LINE_LOCAL],
+      connectionText: '中央本線',
+      boundText: 'たじみ ゆき',
+      headerLangState: 'KANA',
+    });
+    const { rerender, queryByText, getAllByText } = render(
+      <HeaderJRKyushu {...props} is315 />
+    );
+    const previous = jest.mocked(useHeaderAnimation).mock.results.at(-1)?.value;
+    jest.mocked(useHeaderAnimation).mockReturnValueOnce({
+      ...previous,
+      prevBoundText: 'たじみ ゆき',
+      prevConnectionText: '',
+      prevIsJapaneseState: true,
+    });
+    rerender(
+      <HeaderJRKyushu
+        {...props}
+        is315
+        headerLangState="JA"
+        boundText="多治見 行"
+      />
+    );
+    expect(getAllByText('中央本線直通 ')).toHaveLength(1);
+    expect(queryByText(/^直通\s*$/)).toBeNull();
+  });
+
   describe('Connected lines handling', () => {
     it('should handle connected lines', () => {
       const { useConnectedLines } = require('~/hooks');

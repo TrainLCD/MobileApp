@@ -157,7 +157,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
     trainType,
     firstStop,
     connectedLines,
-    connectionText,
+    connectionText: rawConnectionText,
     isJapaneseState,
   } = props;
 
@@ -165,6 +165,10 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
     is315 && headerLangState === 'EN'
       ? rawBoundText.replace(/^for /, 'Bound for ')
       : rawBoundText;
+
+  // 315系のかな表示では直通案内を省き、切替前の表示も同じ値で保持する。
+  const connectionText =
+    is315 && headerLangState === 'KANA' ? '' : rawConnectionText;
 
   const animation = useHeaderAnimation({
     selectedBound,
@@ -248,7 +252,7 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
                   numberOfLines={1}
                   style={styles.connectedLines}
                 >
-                  {connectedLines?.length && isJapaneseState
+                  {connectedLines?.length && isJapaneseState && connectionText
                     ? `${connectionText}直通 `
                     : null}
                 </Typography>
@@ -274,7 +278,9 @@ const HeaderJRKyushu: React.FC<Props> = (props) => {
                   numberOfLines={1}
                   style={styles.connectedLines}
                 >
-                  {connectedLines?.length && animation.prevIsJapaneseState
+                  {connectedLines?.length &&
+                  animation.prevIsJapaneseState &&
+                  animation.prevConnectionText
                     ? `${animation.prevConnectionText}直通 `
                     : null}
                 </Typography>
