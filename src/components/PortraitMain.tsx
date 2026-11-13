@@ -1682,7 +1682,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
             style={[styles.lineColorBar, { backgroundColor: accentColor }]}
           />
           <Typography
-            numberOfLines={1}
+            // 長い路線名は折り返し、種別・行き先と並んでも末尾を省略しない。
             style={[styles.lineName, { color: colors.text }]}
           >
             {lineName}
