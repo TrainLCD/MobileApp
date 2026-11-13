@@ -43,4 +43,36 @@ describe('groupBusLinesByPlatform', () => {
       )
     ).toEqual(['A', '北口']);
   });
+
+  it('groupId がない同名・同番号の別停留所は ID で分ける', () => {
+    const lines = [1, 2, 1].map((stationId, index) =>
+      createLine(index + 1, {
+        station: {
+          ...createStation(stationId, {
+            groupId: null,
+            name: '中央駅',
+            platformCode: '1',
+          }),
+          __typename: 'StationNested',
+        },
+      })
+    );
+    expect(
+      groupBusLinesByPlatform(lines)?.map((group) =>
+        group.lines.map((l) => l.id)
+      )
+    ).toEqual([[1, 3], [2]]);
+  });
+
+  it('groupId と停留所 ID が同じ数値でも別グループにする', () => {
+    const withoutGroup = createLine(3, {
+      station: {
+        ...createStation(1, { groupId: null, platformCode: '4' }),
+        __typename: 'StationNested',
+      },
+    });
+    expect(
+      groupBusLinesByPlatform([line(2, '4', 1), withoutGroup])
+    ).toHaveLength(2);
+  });
 });
