@@ -127,3 +127,77 @@ it('単独系統もロード中には選択できない', () => {
   fireEvent.press(ui.getByText('新前橋駅西口線'));
   expect(selected).not.toHaveBeenCalled();
 });
+
+it.each([null, '4'])(
+  '同じ系統番号でも詳細名で選択先を区別できる（のりば: %s）',
+  (platformCode) => {
+    const lines = [
+      {
+        ...first,
+        nameRoman: '中央公園経由',
+        station: {
+          ...createStation(1, { platformCode }),
+          __typename: 'StationNested' as const,
+        },
+      },
+      {
+        ...second,
+        nameShort: first.nameShort,
+        nameRoman: '市役所経由',
+        station: {
+          ...createStation(2, { platformCode }),
+          __typename: 'StationNested' as const,
+        },
+      },
+    ];
+    const selected = jest.fn();
+    const ui = render(
+      <BusRouteList
+        groups={groupBusLinesByRoute(lines)}
+        onLineSelected={selected}
+      />
+    );
+    fireEvent.press(ui.getByText('新前橋駅西口線'));
+    const suffix = platformCode ? ' / 4番のりば' : '';
+    fireEvent.press(ui.getByText(`中央公園経由${suffix}`));
+    expect(selected).toHaveBeenLastCalledWith(lines[0]);
+    fireEvent.press(ui.getByText(`市役所経由${suffix}`));
+    expect(selected).toHaveBeenLastCalledWith(lines[1]);
+  }
+);
+
+it.each([null, '', '  ', '47A', '新前橋駅西口線', '47A 新前橋駅西口線'])(
+  '追加の詳細がなければ既存の表示と選択先を維持する（%s）',
+  (nameRoman) => {
+    const lines = [
+      { ...first, nameRoman },
+      { ...second, nameShort: first.nameShort, nameRoman },
+    ];
+    const selected = jest.fn();
+    const ui = render(
+      <BusRouteList
+        groups={groupBusLinesByRoute(lines)}
+        onLineSelected={selected}
+      />
+    );
+    fireEvent.press(ui.getByText('新前橋駅西口線'));
+    expect(ui.getAllByText('4番のりば')).toHaveLength(2);
+    fireEvent.press(ui.getByTestId('line_2'));
+    expect(selected).toHaveBeenCalledWith(lines[1]);
+  }
+);
+
+it('系統番号が異なるときは詳細名を追加しない', () => {
+  const lines = [
+    { ...first, nameRoman: '中央公園経由' },
+    { ...second, nameRoman: '市役所経由' },
+  ];
+  const ui = render(
+    <BusRouteList
+      groups={groupBusLinesByRoute(lines)}
+      onLineSelected={jest.fn()}
+    />
+  );
+  fireEvent.press(ui.getByText('新前橋駅西口線'));
+  expect(ui.queryByText(/中央公園経由|市役所経由/)).toBeNull();
+});

@@ -39,6 +39,23 @@ const RouteCard = memo(
         : '';
     };
     const codes = group.lines.map((line) => getBusRouteLabel(line).code);
+    const codeCounts = new Map<string, number>();
+    for (const code of codes) {
+      codeCounts.set(code, (codeCounts.get(code) ?? 0) + 1);
+    }
+    const routeDescription = (line: Line) => {
+      const { code } = getBusRouteLabel(line);
+      // GTFS の路線長名（翻訳があれば英語）は nameRoman に格納されています。
+      // 同じ系統番号が並ぶ場合だけ、取得済みの詳細名を補足します。
+      const detail = line.nameRoman?.trim();
+      const showDetail =
+        (codeCounts.get(code) ?? 0) > 1 &&
+        detail &&
+        ![code, group.name, line.nameShort?.trim()].includes(detail);
+      return [showDetail ? detail : '', platformLabel(line)]
+        .filter(Boolean)
+        .join(' / ');
+    };
     const subtitle = [
       [...new Set(codes)].filter((code) => code !== title).join('・'),
       multiple
@@ -92,7 +109,7 @@ const RouteCard = memo(
                     </Typography>
                   </View>
                   <Typography style={styles.routeName}>
-                    {platformLabel(line)}
+                    {routeDescription(line)}
                   </Typography>
                   <CardChevron stroke={colors.text} />
                 </TouchableOpacity>
