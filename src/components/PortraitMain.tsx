@@ -232,7 +232,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   lineName: {
-    flexShrink: 1,
+    // 路線名は文字サイズと1行表示を維持し、末尾を省略しない。
+    flexShrink: 0,
     marginLeft: 10,
     fontSize: RFValue(12),
     fontWeight: 'bold',
@@ -1682,7 +1683,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
             style={[styles.lineColorBar, { backgroundColor: accentColor }]}
           />
           <Typography
-            // 長い路線名は折り返し、種別・行き先と並んでも末尾を省略しない。
+            numberOfLines={1}
             style={[styles.lineName, { color: colors.text }]}
           >
             {lineName}
