@@ -1,7 +1,21 @@
 import { fireEvent, render } from '@testing-library/react-native';
+import { StyleSheet, View } from 'react-native';
+import { DARK_APP_COLORS, LIGHT_APP_COLORS } from '~/constants/colorScheme';
+import { useAppColors } from '~/providers/AppColorsProvider';
 import { groupBusLinesByPlatform } from '~/utils/groupBusLinesByPlatform';
 import { createLine, createStation } from '~/utils/test/factories';
 import { BusPlatformList } from './BusPlatformList';
+
+jest.mock('~/providers/AppColorsProvider', () => ({
+  useAppColors: jest.fn(
+    () => require('~/constants/colorScheme').LIGHT_APP_COLORS
+  ),
+}));
+
+afterEach(() => {
+  jest.mocked(useAppColors).mockReturnValue(LIGHT_APP_COLORS);
+  jest.clearAllMocks();
+});
 
 jest.mock('../hooks', () => ({
   useBounds: () => ({ bounds: [[], []] }),
@@ -63,4 +77,20 @@ it('ロード中は系統を選択できず、開閉はできる', () => {
   fireEvent.press(ui.getByText('4番のりば'));
   fireEvent.press(ui.getByText(first.nameShort ?? ''));
   expect(selected).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['ライト', LIGHT_APP_COLORS],
+  ['ダーク', DARK_APP_COLORS],
+])('%sでものりば番号は白背景・黒文字で表示する', (_name, colors) => {
+  jest.mocked(useAppColors).mockReturnValue(colors);
+  const ui = render(
+    <BusPlatformList groups={groups} onLineSelected={jest.fn()} />
+  );
+  const number = ui.getByText('4');
+  expect(StyleSheet.flatten(number.props.style).color).toBe('#000');
+  let badge = number.parent;
+  while (badge && badge.type !== View) badge = badge.parent;
+  expect(badge).not.toBeNull();
+  expect(StyleSheet.flatten(badge?.props.style).backgroundColor).toBe('#fff');
 });
