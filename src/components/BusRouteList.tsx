@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import { isJapanese } from '~/translation';
+import { isJapanese, translate } from '~/translation';
 import { generateLineTestId } from '~/utils/generateTestID';
 import {
   type BusRouteGroup,
@@ -56,18 +56,21 @@ const RouteCard = memo(
       <CommonCard
         line={firstLine}
         title={title}
+        subtitle={
+          multiple
+            ? translate('busRouteCount', { count: group.lines.length })
+            : undefined
+        }
         stations={stationsByLineId?.get(firstLine.id ?? -1)}
-        neutral={multiple}
         testID={multiple ? undefined : generateLineTestId(firstLine)}
         disabled={!multiple && disabled}
         onPress={() => onLineSelected(firstLine)}
+        expandedBackgroundColor={firstLine.color ?? '#333'}
         expanded={expanded}
         onExpandedChange={setExpanded}
         expandableContent={
           multiple ? (
-            <View
-              style={[styles.routes, { backgroundColor: colors.cardExpanded }]}
-            >
+            <View style={styles.routes}>
               {group.lines.map((line) => (
                 <TouchableOpacity
                   key={line.id}
@@ -79,7 +82,7 @@ const RouteCard = memo(
                   style={[
                     styles.route,
                     {
-                      backgroundColor: colors.badgeBackground,
+                      backgroundColor: colors.isDark ? '#111214' : '#FFFFFF',
                       opacity: disabled ? 0.5 : 1,
                     },
                   ]}
@@ -148,6 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   routeLabels: { flex: 1, gap: 2 },
-  routeName: { fontSize: 14 },
+  routeName: { fontSize: 14, fontWeight: 'bold' },
   routeDescription: { fontSize: 12 },
 });

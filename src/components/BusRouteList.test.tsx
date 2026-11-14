@@ -38,7 +38,9 @@ jest.mock('~/translation', () => ({
     key === 'busPlatformHeading'
       ? `${values?.number}番のりば`
       : key === 'busRouteCount'
-        ? `${values?.count}系統`
+        ? require('~/translation').isJapanese
+          ? `${values?.count}系統`
+          : `${values?.count} routes`
         : 'その他',
 }));
 
@@ -65,7 +67,7 @@ it('初期表示は折りたたみ、開閉して各系統を選択できる', (
   const selected = jest.fn();
   const ui = render(<BusRouteList groups={groups} onLineSelected={selected} />);
   expect(ui.queryByText('47A')).toBeNull();
-  expect(ui.queryByText(/2系統/)).toBeNull();
+  expect(ui.getByText('2系統')).toBeTruthy();
   fireEvent.press(ui.getByText('新前橋駅西口線'));
   fireEvent.press(ui.getByText('47B'));
   expect(selected).toHaveBeenCalledWith(second);
@@ -89,14 +91,18 @@ it('ロード中は系統を選択できず、開閉はできる', () => {
 it.each([
   ['ライト', LIGHT_APP_COLORS],
   ['ダーク', DARK_APP_COLORS],
-])('%sで見出しは配色に従う', (_name, colors) => {
+])('%sでもグループ見出しは先頭系統のラインカラーを使う', (_name, colors) => {
   jest.mocked(useAppColors).mockReturnValue(colors);
   const ui = render(
     <BusRouteList groups={groups} onLineSelected={jest.fn()} />
   );
   expect(
     StyleSheet.flatten(ui.getByText('新前橋駅西口線').props.style).color
-  ).toBe(colors.text);
+  ).toBe('#fff');
+  const header = ui.UNSAFE_getAllByType(TouchableOpacity)[0];
+  expect(StyleSheet.flatten(header.props.style).backgroundColor).toBe(
+    first.color ?? '#333'
+  );
 });
 
 it('降車などの文字列に番のりばを付けず、単独系統を直接選択する', () => {
@@ -402,9 +408,9 @@ describe('方面表示の復元', () => {
           onLineSelected={selected}
         />
       );
-      expect(ui.getByText(ja ? '終点B方面' : 'for Terminal B')).toBeTruthy();
-      expect(ui.getByText(ja ? '始点方面' : 'for Origin')).toBeTruthy();
-      expect(ui.queryByText(/2系統/)).toBeNull();
+      expect(ui.getByText(ja ? '2系統' : '2 routes')).toBeTruthy();
+      expect(ui.queryByText(ja ? '終点B方面' : 'for Terminal B')).toBeNull();
+      expect(ui.queryByText(ja ? '始点方面' : 'for Origin')).toBeNull();
       fireEvent.press(ui.getByText('新前橋駅西口線'));
       for (const line of lines) {
         const row = ui.getByTestId(`line_${line.id}`);
@@ -446,3 +452,24 @@ describe('方面表示の復元', () => {
     }
   );
 });
+
+it.each([LIGHT_APP_COLORS, DARK_APP_COLORS])(
+  '展開行はテーマごとの背景と太字の路線名を使う',
+  (colors) => {
+    jest.mocked(useAppColors).mockReturnValue(colors);
+    const ui = render(
+      <BusRouteList groups={groups} onLineSelected={jest.fn()} />
+    );
+    fireEvent.press(ui.getByText('新前橋駅西口線'));
+    for (const id of [1, 2]) {
+      const row = ui.getByTestId(`line_${id}`);
+      expect(StyleSheet.flatten(row.props.style).backgroundColor).toBe(
+        colors.isDark ? '#111214' : '#FFFFFF'
+      );
+      expect(
+        StyleSheet.flatten(within(row).getByText('新前橋駅西口線').props.style)
+          .fontWeight
+      ).toBe('bold');
+    }
+  }
+);

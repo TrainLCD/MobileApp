@@ -53,6 +53,8 @@ type Props = {
   onPress?: () => void;
   /** アコーディオンとして展開されるコンテンツ */
   expandableContent?: React.ReactNode;
+  /** 展開部分の背景。未指定なら既存のテーマ配色を使います。 */
+  expandedBackgroundColor?: string;
   /** アコーディオンの展開状態（外部制御用） */
   expanded?: boolean;
   /** アコーディオンの展開状態が変わった時のコールバック */
@@ -286,6 +288,7 @@ export const CommonCard: React.FC<Props> = ({
   loading,
   onPress,
   expandableContent,
+  expandedBackgroundColor,
   expanded,
   onExpandedChange,
 }) => {
@@ -673,7 +676,9 @@ export const CommonCard: React.FC<Props> = ({
           style={[
             styles.expandableWrapper,
             {
-              backgroundColor: isLEDTheme ? '#212121' : colors.cardExpanded,
+              backgroundColor:
+                expandedBackgroundColor ??
+                (isLEDTheme ? '#212121' : colors.cardExpanded),
             },
             expandableHeightStyle,
           ]}
