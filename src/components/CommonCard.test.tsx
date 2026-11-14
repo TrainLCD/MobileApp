@@ -4,6 +4,8 @@ import { useRef } from 'react';
 import { Text } from 'react-native';
 import * as Reanimated from 'react-native-reanimated';
 import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
+import { createStation } from '~/utils/test/factories';
+import { useBounds } from '../hooks';
 import { CommonCard } from './CommonCard';
 
 jest.mock('jotai', () => ({
@@ -113,4 +115,22 @@ describe('CommonCard', () => {
     expect(onExpandedChange).toHaveBeenCalledWith(true);
     expect(onPress).not.toHaveBeenCalled();
   });
+});
+
+it('鉄道の方面表示と明示的な副題の優先を維持する', () => {
+  const terminal = createStation(20, { name: '終点', nameRoman: 'Terminal' });
+  jest.mocked(useBounds).mockReturnValue({
+    bounds: [[terminal], []],
+    directionalStops: [],
+    boundCandidates: [],
+  });
+  const ui = render(<CommonCard line={line} stations={[terminal]} />);
+  expect(ui.getByText(/終点方面|for Terminal/)).toBeTruthy();
+  ui.rerender(
+    <CommonCard line={line} stations={[terminal]} subtitle="指定区間" />
+  );
+  expect(ui.getByText('指定区間')).toBeTruthy();
+  expect(ui.queryByText(/終点方面|for Terminal/)).toBeNull();
+  ui.rerender(<CommonCard line={line} stations={[]} />);
+  expect(ui.queryByText(/終点方面|for Terminal/)).toBeNull();
 });

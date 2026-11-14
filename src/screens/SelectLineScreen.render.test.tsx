@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { render, within } from '@testing-library/react-native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station } from '~/@types/graphql';
@@ -85,7 +85,9 @@ jest.mock('~/components/CommonCard', () => ({
   CommonCard: ({
     testID,
     line,
+    stations,
   }: {
+    stations?: Station[];
     testID?: string;
     line: { nameShort?: string };
   }) => {
@@ -93,6 +95,7 @@ jest.mock('~/components/CommonCard', () => ({
     return (
       <View testID={testID ?? 'common-card'}>
         <Text>{line?.nameShort ?? ''}</Text>
+        <Text>{stations?.map((s) => s.name).join(',')}</Text>
       </View>
     );
   },
@@ -673,4 +676,22 @@ describe('SelectLineScreen', () => {
       expect(useStationsCache).toHaveBeenCalledWith(null);
     });
   });
+});
+
+it('鉄道とバスが混在し、キャッシュ順が違っても路線IDで停留所を対応づける', () => {
+  const bus = createLine(200, {
+    nameShort: 'バス',
+    transportType: TransportType.Bus,
+  });
+  const rail = createLine(100, { nameShort: '鉄道', transportType: null });
+  setupDefaults({
+    station: createStation(1, { lines: [bus, rail] as Station['lines'] }),
+    stationsCache: [
+      [createStation(10, { name: '鉄道終点', line: { id: 100 } })],
+      [createStation(20, { name: 'バス終点', line: { id: 200 } })],
+    ],
+  });
+  const ui = render(<SelectLineScreen />);
+  expect(within(ui.getByTestId('line_100')).getByText('鉄道終点')).toBeTruthy();
+  expect(within(ui.getByTestId('line_200')).getByText('バス終点')).toBeTruthy();
 });
