@@ -32,8 +32,6 @@ type Props = {
   line: Line;
   /** 路線名でまとめる一覧用の、配色設定に従うカード。 */
   neutral?: boolean;
-  /** バス路線一覧の採用済みA案の配色。 */
-  busRouteCard?: boolean;
   /** のりばなど、路線マーク以外を見出しの先頭に表示する場合に指定します。 */
   leadingContent?: React.ReactNode;
   targetStation?: Station;
@@ -55,6 +53,8 @@ type Props = {
   onPress?: () => void;
   /** アコーディオンとして展開されるコンテンツ */
   expandableContent?: React.ReactNode;
+  /** 展開部分の背景。未指定なら既存のテーマ配色を使います。 */
+  expandedBackgroundColor?: string;
   /** アコーディオンの展開状態（外部制御用） */
   expanded?: boolean;
   /** アコーディオンの展開状態が変わった時のコールバック */
@@ -273,7 +273,6 @@ const ACCORDION_EASING = Easing.inOut(Easing.ease);
 export const CommonCard: React.FC<Props> = ({
   line,
   neutral = false,
-  busRouteCard = false,
   targetStation,
   leadingContent,
   stations = EMPTY_STATIONS,
@@ -289,6 +288,7 @@ export const CommonCard: React.FC<Props> = ({
   loading,
   onPress,
   expandableContent,
+  expandedBackgroundColor,
   expanded,
   onExpandedChange,
 }) => {
@@ -442,33 +442,22 @@ export const CommonCard: React.FC<Props> = ({
     };
   }, [titleOrLineName, shrinkBoundAffix, isBus, title]);
 
-  const cardBackground = busRouteCard
-    ? colors.isDark
-      ? '#111214'
-      : colors.cardExpanded
-    : neutral
-      ? colors.cardExpanded
-      : (line.color ?? '#333');
-  const cardText = busRouteCard || neutral ? colors.text : undefined;
-  const cardSecondaryText =
-    busRouteCard || neutral ? colors.secondaryText : undefined;
-
   const additionalRootStyle = useMemo(
     () => ({
-      backgroundColor: cardBackground,
+      backgroundColor: neutral ? colors.cardExpanded : (line.color ?? '#333'),
       opacity: disabled ? 0.5 : 1,
     }),
-    [disabled, cardBackground]
+    [disabled, line.color, neutral, colors.cardExpanded]
   );
 
   const cardRadius = isLEDTheme ? 0 : neutral ? 12 : 8;
   const wrapperRadiusStyle = useMemo(
     () => ({
       borderRadius: cardRadius,
-      backgroundColor: cardBackground,
+      backgroundColor: neutral ? colors.cardExpanded : (line.color ?? '#333'),
       overflow: 'hidden' as const,
     }),
-    [cardRadius, cardBackground]
+    [cardRadius, line.color, neutral, colors.cardExpanded]
   );
   const headerRadiusStyle = useMemo(() => {
     if (!hasAccordion) {
@@ -490,11 +479,11 @@ export const CommonCard: React.FC<Props> = ({
   }, [cardRadius, expanded, hasAccordion]);
   const colorBarRadiusStyle = useMemo(
     () => ({
-      backgroundColor: cardBackground,
+      backgroundColor: neutral ? colors.cardExpanded : (line.color ?? '#333'),
       borderTopLeftRadius: cardRadius,
       borderBottomLeftRadius: cardRadius,
     }),
-    [cardRadius, cardBackground]
+    [cardRadius, line.color, neutral, colors.cardExpanded]
   );
   const rootShadowStyle = hasAccordion ? undefined : styles.cardShadow;
   // 背景から浮かせるための縁取り。ダークモードでは白縁だと悪目立ちするため配色に追従させる
@@ -575,8 +564,7 @@ export const CommonCard: React.FC<Props> = ({
           <Typography
             style={[
               styles.title,
-              neutral ? { color: cardText, fontSize: 19 } : undefined,
-              busRouteCard ? { color: cardText } : undefined,
+              neutral ? { color: colors.text, fontSize: 19 } : undefined,
             ]}
             // バス系統名は長くなりがちなので 3 行まで許容する
             numberOfLines={isBus ? 3 : 1}
@@ -586,7 +574,7 @@ export const CommonCard: React.FC<Props> = ({
               <Typography
                 style={[
                   styles.titleAffix,
-                  cardText ? { color: cardText } : undefined,
+                  neutral ? { color: colors.text } : undefined,
                 ]}
               >
                 {titlePrefix}
@@ -600,7 +588,7 @@ export const CommonCard: React.FC<Props> = ({
                     key={`${index}-${part.text}`}
                     style={[
                       styles.titleParens,
-                      cardText ? { color: cardText } : undefined,
+                      neutral ? { color: colors.text } : undefined,
                     ]}
                   >
                     {index > 0 && !/\s$/.test(prevText) ? ' ' : ''}
@@ -614,7 +602,7 @@ export const CommonCard: React.FC<Props> = ({
                     key={`${index}-${part.text}`}
                     style={[
                       styles.titleAffix,
-                      cardText ? { color: cardText } : undefined,
+                      neutral ? { color: colors.text } : undefined,
                     ]}
                   >
                     {part.text}
@@ -627,7 +615,7 @@ export const CommonCard: React.FC<Props> = ({
               <Typography
                 style={[
                   styles.titleAffix,
-                  cardText ? { color: cardText } : undefined,
+                  neutral ? { color: colors.text } : undefined,
                 ]}
               >
                 {titleSuffix}
@@ -636,7 +624,7 @@ export const CommonCard: React.FC<Props> = ({
           </Typography>
           {subtitle && (
             <Subtitle
-              color={cardSecondaryText}
+              color={neutral ? colors.secondaryText : undefined}
               inboundText={subtitle}
               outboundText=""
               numberOfLines={subtitleNumberOfLines}
@@ -646,7 +634,7 @@ export const CommonCard: React.FC<Props> = ({
           {!subtitle && (
             <LineBounds
               stations={stations}
-              color={cardSecondaryText}
+              color={neutral ? colors.secondaryText : undefined}
               numberOfLines={subtitleNumberOfLines}
               loading={loading}
             />
@@ -655,10 +643,12 @@ export const CommonCard: React.FC<Props> = ({
         <View style={styles.chevron}>
           {!hideChevron && hasAccordion && (
             <Animated.View style={chevronRotationStyle}>
-              <CardChevron stroke={cardText} />
+              <CardChevron stroke={neutral ? colors.text : undefined} />
             </Animated.View>
           )}
-          {!hideChevron && !hasAccordion && <CardChevron stroke={cardText} />}
+          {!hideChevron && !hasAccordion && (
+            <CardChevron stroke={neutral ? colors.text : undefined} />
+          )}
           {hideChevron && !checked && (
             <Svg width={24} height={24} viewBox="0 0 24 24">
               <Path
@@ -686,7 +676,9 @@ export const CommonCard: React.FC<Props> = ({
           style={[
             styles.expandableWrapper,
             {
-              backgroundColor: isLEDTheme ? '#212121' : colors.cardExpanded,
+              backgroundColor:
+                expandedBackgroundColor ??
+                (isLEDTheme ? '#212121' : colors.cardExpanded),
             },
             expandableHeightStyle,
           ]}

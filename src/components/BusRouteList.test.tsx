@@ -89,22 +89,19 @@ it('ロード中は系統を選択できず、開閉はできる', () => {
 it.each([
   ['ライト', LIGHT_APP_COLORS],
   ['ダーク', DARK_APP_COLORS],
-])(
-  '%sでもグループ見出しは無彩色の背景とテーマの文字色を使う',
-  (_name, colors) => {
-    jest.mocked(useAppColors).mockReturnValue(colors);
-    const ui = render(
-      <BusRouteList groups={groups} onLineSelected={jest.fn()} />
-    );
-    expect(
-      StyleSheet.flatten(ui.getByText('新前橋駅西口線').props.style).color
-    ).toBe(colors.text);
-    const header = ui.UNSAFE_getAllByType(TouchableOpacity)[0];
-    expect(StyleSheet.flatten(header.props.style).backgroundColor).toBe(
-      colors.isDark ? '#111214' : colors.cardExpanded
-    );
-  }
-);
+])('%sでもグループ見出しは先頭系統のラインカラーを使う', (_name, colors) => {
+  jest.mocked(useAppColors).mockReturnValue(colors);
+  const ui = render(
+    <BusRouteList groups={groups} onLineSelected={jest.fn()} />
+  );
+  expect(
+    StyleSheet.flatten(ui.getByText('新前橋駅西口線').props.style).color
+  ).toBe('#fff');
+  const header = ui.UNSAFE_getAllByType(TouchableOpacity)[0];
+  expect(StyleSheet.flatten(header.props.style).backgroundColor).toBe(
+    first.color ?? '#333'
+  );
+});
 
 it('降車などの文字列に番のりばを付けず、単独系統を直接選択する', () => {
   const bus = {
@@ -266,7 +263,7 @@ it('同じ系統番号で詳細名ものりばもない場合に本文が空に�
 it.each([
   ['ライト', LIGHT_APP_COLORS],
   ['ダーク', DARK_APP_COLORS],
-])('%sでも単独系統のカードはA案の背景を使う', (_name, colors) => {
+])('%sでも単独系統のカードは路線カラーを使う', (_name, colors) => {
   jest.mocked(useAppColors).mockReturnValue(colors);
   const line = { ...first, color: '#a35400' };
   const ui = render(
@@ -276,12 +273,10 @@ it.each([
     />
   );
   const card = ui.UNSAFE_getByType(TouchableOpacity);
-  expect(StyleSheet.flatten(card.props.style).backgroundColor).toBe(
-    colors.isDark ? '#111214' : colors.cardExpanded
-  );
+  expect(StyleSheet.flatten(card.props.style).backgroundColor).toBe('#a35400');
   expect(
     StyleSheet.flatten(ui.getByText('新前橋駅西口線').props.style).color
-  ).toBe(colors.text);
+  ).toBe('#fff');
 });
 
 it.each([null, '4'])(
@@ -455,3 +450,24 @@ describe('方面表示の復元', () => {
     }
   );
 });
+
+it.each([LIGHT_APP_COLORS, DARK_APP_COLORS])(
+  '展開行はテーマごとの背景と太字の路線名を使う',
+  (colors) => {
+    jest.mocked(useAppColors).mockReturnValue(colors);
+    const ui = render(
+      <BusRouteList groups={groups} onLineSelected={jest.fn()} />
+    );
+    fireEvent.press(ui.getByText('新前橋駅西口線'));
+    for (const id of [1, 2]) {
+      const row = ui.getByTestId(`line_${id}`);
+      expect(StyleSheet.flatten(row.props.style).backgroundColor).toBe(
+        colors.isDark ? '#111214' : '#FFFFFF'
+      );
+      expect(
+        StyleSheet.flatten(within(row).getByText('新前橋駅西口線').props.style)
+          .fontWeight
+      ).toBe('bold');
+    }
+  }
+);
