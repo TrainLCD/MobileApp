@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Line, LineNested } from '~/@types/graphql';
+import type { Line, LineNested, Station } from '~/@types/graphql';
 import { BusRouteList } from '~/components/BusRouteList';
 import { CommonCard } from '~/components/CommonCard';
 import { CurrentStationUnavailableCard } from '~/components/CurrentStationUnavailableCard';
@@ -218,6 +218,16 @@ const SelectLineScreen = () => {
     );
   }, [station?.lines]);
 
+  // キャッシュは鉄道・バス共通です。表示順や集約後の添字では参照しません。
+  const stationsByLineId = useMemo(() => {
+    const result = new Map<number, Station[]>();
+    for (const stations of stationsCache) {
+      const lineId = stations[0]?.line?.id;
+      if (lineId != null) result.set(lineId, stations);
+    }
+    return result;
+  }, [stationsCache]);
+
   const busRouteGroups = useMemo(
     () => groupBusLinesByRoute(busesLines),
     [busesLines]
@@ -266,7 +276,7 @@ const SelectLineScreen = () => {
 
   // --- レンダーコールバック ---
   const renderLineCard = useCallback(
-    (line: Line, index: number) => {
+    (line: Line) => {
       if (fetchStationsByLineIdLoading) {
         return <NearbyStationLoader />;
       }
@@ -276,13 +286,13 @@ const SelectLineScreen = () => {
           targetStation={line.station ?? undefined}
           line={line}
           onPress={() => handleLineSelected(line)}
-          stations={stationsCache[index] ?? []}
-          loading={!stationsCache[index]}
+          stations={stationsByLineId.get(line.id ?? -1)}
+          loading={!stationsByLineId.has(line.id ?? -1)}
           testID={generateLineTestId(line)}
         />
       );
     },
-    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
+    [fetchStationsByLineIdLoading, handleLineSelected, stationsByLineId]
   );
 
   const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
@@ -314,14 +324,13 @@ const SelectLineScreen = () => {
                 : undefined
             }
           >
-            {rowLines.map((line, colIndex) => {
-              const index = rowIndex * numColumns + colIndex;
+            {rowLines.map((line) => {
               return (
                 <View
                   key={line.id as number}
                   style={isTablet ? { flex: 1 } : undefined}
                 >
-                  {renderLineCard(line, index)}
+                  {renderLineCard(line)}
                 </View>
               );
             })}
@@ -422,6 +431,7 @@ const SelectLineScreen = () => {
                   <BusRouteList
                     key={station?.id}
                     groups={busRouteGroups}
+                    stationsByLineId={stationsByLineId}
                     onLineSelected={handleLineSelected}
                     disabled={fetchStationsByLineIdLoading}
                   />
