@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { useAppColors } from '~/providers/AppColorsProvider';
-import { isJapanese } from '~/translation';
+import { isJapanese, translate } from '~/translation';
 import { generateLineTestId } from '~/utils/generateTestID';
 import {
   type BusRouteGroup,
@@ -56,6 +56,11 @@ const RouteCard = memo(
       <CommonCard
         line={firstLine}
         title={title}
+        subtitle={
+          multiple
+            ? translate('busRouteCount', { count: group.lines.length })
+            : undefined
+        }
         stations={stationsByLineId?.get(firstLine.id ?? -1)}
         testID={multiple ? undefined : generateLineTestId(firstLine)}
         disabled={!multiple && disabled}
