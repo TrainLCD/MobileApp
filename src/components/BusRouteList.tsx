@@ -77,7 +77,6 @@ const RouteCard = memo(
         onPress={() => onLineSelected(firstLine)}
         expanded={expanded}
         onExpandedChange={setExpanded}
-        leadingContent={<View />}
         expandableContent={
           multiple ? (
             <View

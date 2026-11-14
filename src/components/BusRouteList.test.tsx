@@ -1,5 +1,6 @@
 import { fireEvent, render, within } from '@testing-library/react-native';
 import { StyleSheet, TouchableOpacity } from 'react-native';
+import { TransportType } from '~/@types/graphql';
 import { DARK_APP_COLORS, LIGHT_APP_COLORS } from '~/constants/colorScheme';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { groupBusLinesByRoute } from '~/utils/groupBusLinesByRoute';
@@ -9,6 +10,7 @@ import {
   createStation,
 } from '~/utils/test/factories';
 import { BusRouteList } from './BusRouteList';
+import TransferLineMark from './TransferLineMark';
 
 jest.mock('~/providers/AppColorsProvider', () => ({
   useAppColors: jest.fn(
@@ -319,3 +321,25 @@ it('英語表示では路線名を主行に表示し、詳細名を補足に重�
   expect(row.getAllByText('Via Central Park')).toHaveLength(1);
   expect(row.getByText('4番のりば')).toBeTruthy();
 });
+
+it.each([LIGHT_APP_COLORS, DARK_APP_COLORS])(
+  '配色やのりばの有無にかかわらず単独とグループの見出しにアイコンを表示する',
+  (colors) => {
+    jest.mocked(useAppColors).mockReturnValue(colors);
+    const lines = [first, second, other].map((line) => ({
+      ...line,
+      transportType: TransportType.Bus,
+    }));
+    const routeGroups = groupBusLinesByRoute(lines);
+    const ui = render(
+      <BusRouteList groups={routeGroups} onLineSelected={jest.fn()} />
+    );
+    const marks = ui.UNSAFE_getAllByType(TransferLineMark);
+    expect(marks).toHaveLength(routeGroups.length);
+    routeGroups.forEach((group, index) => {
+      expect(marks[index].props.line).toBe(group.lines[0]);
+      expect(marks[index].props.stationNumber).toBe(group.lines[0].nameShort);
+      expect(marks[index].props.withOutline).toBe(true);
+    });
+  }
+);
