@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import type { Line } from '~/@types/graphql';
+import type { Line, Station } from '~/@types/graphql';
 import { useAppColors } from '~/providers/AppColorsProvider';
 import { isJapanese, translate } from '~/translation';
 import { generateLineTestId } from '~/utils/generateTestID';
@@ -9,11 +9,12 @@ import {
   getBusRouteLabel,
 } from '~/utils/groupBusLinesByRoute';
 import { CardChevron } from './CardChevron';
-import { CommonCard } from './CommonCard';
+import { CommonCard, LineBounds } from './CommonCard';
 import Typography from './Typography';
 
 type Props = {
   groups: BusRouteGroup[];
+  stationsByLineId?: ReadonlyMap<number, Station[]>;
   onLineSelected: (line: Line) => void;
   disabled?: boolean;
 };
@@ -21,6 +22,7 @@ type Props = {
 const RouteCard = memo(
   ({
     group,
+    stationsByLineId,
     onLineSelected,
     disabled,
   }: Omit<Props, 'groups'> & {
@@ -32,12 +34,6 @@ const RouteCard = memo(
     if (!firstLine) return null;
     const multiple = group.lines.length > 1;
     const title = isJapanese ? group.name : firstLine.nameRoman || group.name;
-    const platformLabel = (line: Line) => {
-      const code = line.station?.platformCode?.trim();
-      return code && /^\d+$/.test(code)
-        ? translate('busPlatformHeading', { number: code })
-        : '';
-    };
     const codes = group.lines.map((line) => getBusRouteLabel(line).code);
     const codeCounts = new Map<string, number>();
     for (const code of codes) {
@@ -53,35 +49,28 @@ const RouteCard = memo(
         (codeCounts.get(code) ?? 0) > 1 &&
         detail &&
         ![code, group.name, line.nameShort?.trim()].includes(detail);
-      return [showDetail ? detail : '', platformLabel(line)]
-        .filter(Boolean)
-        .join(' / ');
+      return showDetail ? detail : '';
     };
-    const subtitle = [
-      [...new Set(codes)].filter((code) => code !== title).join('・'),
-      multiple
-        ? translate('busRouteCount', { count: group.lines.length })
-        : platformLabel(firstLine),
-    ]
-      .filter(Boolean)
-      .join(' / ');
 
     return (
       <CommonCard
         line={firstLine}
         title={title}
-        subtitle={subtitle}
-        neutral={multiple}
+        subtitle={
+          multiple
+            ? translate('busRouteCount', { count: group.lines.length })
+            : undefined
+        }
+        stations={stationsByLineId?.get(firstLine.id ?? -1)}
         testID={multiple ? undefined : generateLineTestId(firstLine)}
         disabled={!multiple && disabled}
         onPress={() => onLineSelected(firstLine)}
+        expandedBackgroundColor={firstLine.color ?? '#333'}
         expanded={expanded}
         onExpandedChange={setExpanded}
         expandableContent={
           multiple ? (
-            <View
-              style={[styles.routes, { backgroundColor: colors.cardExpanded }]}
-            >
+            <View style={styles.routes}>
               {group.lines.map((line) => (
                 <TouchableOpacity
                   key={line.id}
@@ -93,7 +82,7 @@ const RouteCard = memo(
                   style={[
                     styles.route,
                     {
-                      backgroundColor: colors.badgeBackground,
+                      backgroundColor: colors.isDark ? '#111214' : '#FFFFFF',
                       opacity: disabled ? 0.5 : 1,
                     },
                   ]}
@@ -124,6 +113,10 @@ const RouteCard = memo(
                         {routeDescription(line)}
                       </Typography>
                     )}
+                    <LineBounds
+                      stations={stationsByLineId?.get(line.id ?? -1)}
+                      color={colors.mutedText}
+                    />
                   </View>
                   <CardChevron stroke={colors.text} />
                 </TouchableOpacity>
@@ -158,6 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   routeLabels: { flex: 1, gap: 2 },
-  routeName: { fontSize: 14 },
+  routeName: { fontSize: 14, fontWeight: 'bold' },
   routeDescription: { fontSize: 12 },
 });

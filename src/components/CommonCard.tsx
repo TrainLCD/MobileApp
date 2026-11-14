@@ -53,6 +53,8 @@ type Props = {
   onPress?: () => void;
   /** アコーディオンとして展開されるコンテンツ */
   expandableContent?: React.ReactNode;
+  /** 展開部分の背景。未指定なら既存のテーマ配色を使います。 */
+  expandedBackgroundColor?: string;
   /** アコーディオンの展開状態（外部制御用） */
   expanded?: boolean;
   /** アコーディオンの展開状態が変わった時のコールバック */
@@ -196,7 +198,7 @@ const Subtitle = memo(
             <Path
               d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
               fill="none"
-              stroke="#fff"
+              stroke={color ?? '#fff'}
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -209,6 +211,57 @@ const Subtitle = memo(
           </Typography>
         ) : null}
       </View>
+    );
+  }
+);
+
+/** 路線カードとバスの展開行で、同じ方面計算・表記を使用します。 */
+export const LineBounds = memo(
+  ({
+    stations = EMPTY_STATIONS,
+    numberOfLines,
+    loading,
+    color,
+  }: {
+    stations?: Station[];
+    numberOfLines?: number;
+    loading?: boolean;
+    color?: string;
+  }) => {
+    const { bounds } = useBounds(stations);
+    const [inboundText, outboundText] = useMemo(() => {
+      if (!stations?.length) {
+        // フォールバックは何も表示しない
+        return ['', ''];
+      }
+      const format = (arr: Station[]): string => {
+        const ja = arr
+          .slice(0, 2)
+          .map((s) => s.name)
+          .filter(Boolean)
+          .join('・');
+        const en = arr
+          .slice(0, 2)
+          .map((s) => s.nameRoman || s.name)
+          .filter(Boolean)
+          .join(' & ');
+        if (isJapanese) return ja ? `${ja}方面` : '';
+        return en ? `for ${en}` : '';
+      };
+
+      const [inbound, outbound] = bounds;
+      return [format(inbound), format(outbound)];
+    }, [bounds, stations]);
+
+    if (!inboundText && !outboundText) return null;
+    return (
+      <Subtitle
+        inboundText={inboundText}
+        outboundText={outboundText}
+        numberOfLines={numberOfLines}
+        loading={loading}
+        color={color}
+      />
     );
   }
 );
@@ -235,6 +288,7 @@ export const CommonCard: React.FC<Props> = ({
   loading,
   onPress,
   expandableContent,
+  expandedBackgroundColor,
   expanded,
   onExpandedChange,
 }) => {
@@ -268,7 +322,6 @@ export const CommonCard: React.FC<Props> = ({
     }
     return m;
   }, [getLineMark, line, targetStation]);
-  const { bounds } = useBounds(stations);
 
   const isBus = isBusLine(line);
 
@@ -313,30 +366,6 @@ export const CommonCard: React.FC<Props> = ({
   const chevronRotationStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${progress.value * 90}deg` }],
   }));
-
-  const [inboundText, outboundText] = useMemo(() => {
-    if (!stations?.length) {
-      // フォールバックは何も表示しない
-      return ['', ''];
-    }
-    const format = (arr: Station[]): string => {
-      const ja = arr
-        .slice(0, 2)
-        .map((s) => s.name)
-        .filter(Boolean)
-        .join('・');
-      const en = arr
-        .slice(0, 2)
-        .map((s) => s.nameRoman || s.name)
-        .filter(Boolean)
-        .join(' & ');
-      if (isJapanese) return ja ? `${ja}方面` : '';
-      return en ? `for ${en}` : '';
-    };
-
-    const [inbound, outbound] = bounds;
-    return [format(inbound), format(outbound)];
-  }, [bounds, stations]);
 
   const titleOrLineName = useMemo(() => {
     return title ?? getLocalizedLineName(line, isJapanese);
@@ -602,10 +631,10 @@ export const CommonCard: React.FC<Props> = ({
               loading={loading}
             />
           )}
-          {!subtitle && (!!inboundText || !!outboundText) && (
-            <Subtitle
-              inboundText={inboundText}
-              outboundText={outboundText}
+          {!subtitle && (
+            <LineBounds
+              stations={stations}
+              color={neutral ? colors.secondaryText : undefined}
               numberOfLines={subtitleNumberOfLines}
               loading={loading}
             />
@@ -647,7 +676,9 @@ export const CommonCard: React.FC<Props> = ({
           style={[
             styles.expandableWrapper,
             {
-              backgroundColor: isLEDTheme ? '#212121' : colors.cardExpanded,
+              backgroundColor:
+                expandedBackgroundColor ??
+                (isLEDTheme ? '#212121' : colors.cardExpanded),
             },
             expandableHeightStyle,
           ]}

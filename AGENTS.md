@@ -39,7 +39,7 @@ docs/・README・PR のタイトルと本文・レビュー返信・issue（他�
 
 ### 日本語の文体
 
-日本語で書く公開物が対象。英語の構文をそのまま移した文にしない。敬体（です・ます）で統一する。
+日本語で書く公開物が対象。英語の構文をそのまま移した文にしない。本文の説明文は敬体（です・ます）で統一する。Issueタイトルは下記「Required issue linkage」に従い、課題・要望を簡潔に表す。本文の敬体ルールをIssueタイトルへ機械的に適用しない。
 
 - 一文一義で切る。読点が3つを超えたら分割を検討する。
 - 無生物を主語にしない。「この変更が効く前提は確定していない」ではなく、何が起きるかを人や物事の動きで書く。
@@ -135,6 +135,7 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 - Every PR must reference at least one issue for the same work in its `関連Issue` section. This applies to documentation, dependency updates, and release/canary PRs as well as code and data changes.
 - Before creating a PR, search existing issues by the problem, requested behavior, and affected component. Read candidate issues and reuse an issue for the same work, including one in another repository; do not create a duplicate merely to obtain an issue number.
 - If no issue covers the work, create one before opening the PR. Describe the problem or purpose, scope, and acceptance criteria, and assign it to `@TinyKitten`.
+- **Distinguish issue titles from PR titles.** An issue title states the problem, desired outcome, or investigation topic; a PR title describes the proposed change. Do not copy a PR's change declaration into an issue title or apply body-prose politeness rules to it. For Japanese issue titles, use concise wording such as `方面表示が欠落する` (problem), `バス路線一覧の方面表示の復元` (request), or `路線と運行系統の対応関係の調査` (investigation), rather than `方面表示を復元します`. That change declaration is suitable for the PR title. Judge the title by its meaning, not a mechanical suffix ban, and preserve an explicitly supplied user title. This applies to every issue-creation path, including PR, release/canary, and sync workflows.
 - Use `Closes #123` when the PR completes the issue, or `Refs #123` for partial work or a reference that must stay open. For cross-repository issues, use `Closes TrainLCD/Repository#123` or `Refs TrainLCD/Repository#123`. Check the issue's remaining scope before choosing a closing keyword.
 - Do not leave the section empty, retain only its template comment, or write "none" because the request came from chat. Verify the referenced issue exists and matches the PR before publishing or updating the PR.
 - This requirement takes precedence over any optional `related_issue` input or empty-issue fallback in PR creation instructions. Release/canary PRs may reuse the issues covered by their changes; do not close unfinished issues just to satisfy this rule.
@@ -144,3 +145,14 @@ After:  精度が足りないことは失敗の理由になりません。粗い
 - Secrets and endpoints go in `.env.local` (template: `.env.example`); code reads API URLs from environment variables (`src/lib/gql.ts`). Never commit credentials, tokens, or endpoint URLs, including in docs. Protect Expo credentials with 2FA.
 - After dependency upgrades or Expo SDK migrations, run `expo-doctor`, `npm run lint`, `npm test`, `npm run typecheck`, and record the results in `docs/changelog.md`.
 - Open an issue with reproduction steps for regressions or flaky tests. After incidents or hot fixes, append learnings to `docs/changelog.md`.
+
+## Investigate Impact Before Changing Code
+
+- **Finish the relevant investigation before editing application code.** Record the requested outcome, existing behavior and its evidence, dependencies, expected impact, and a concrete validation plan in the task discussion before implementation. Carry that record into the PR. A promise to investigate later is not a substitute.
+- **Trace the complete data flow.** Follow producers through callers, indirect consumers, shared state and caches to displayed output or external effects. Check cache keys and ordering, prefetch versus on-demand requests, and what happens after user actions, retries, or failures. A missing prop or a single unused reference does not prove that data is unused. Treat similar UI or API paths separately until their dependencies are verified.
+- **Define the impact and tests first.** Identify what will change and what must remain unchanged for normal cases, boundaries, empty or missing data, and failures. Map each preservation claim to a specific test or inspection. For performance work, distinguish fewer requests or smaller payloads from measured latency; do not promise a speedup without measurement.
+- **Resolve material unknowns before dependent changes.** Investigate facts available in the repository or connected sources instead of asking the user to do that work. If intended behavior remains ambiguous, explain the evidence and concrete alternatives, then ask before implementing the dependent change. Continue independent investigation. Do not treat agent-written issues or review suggestions as authorization to change behavior.
+- **Preserve the approved contract.** Do not hide missing data by dropping items, or change filters, search criteria, ordering, selection priorities, fallbacks, or error behavior without authorization. Do not weaken existing tests to make a new implementation pass. Reuse prior authorization rather than asking again for the same scope.
+- **Report evidence precisely.** Separate planned checks from completed checks and automated tests from real UI or deployed-service verification. Do not call behavior unchanged, data unused, or a fix verified until the relevant path has been checked. State any remaining validation limits in the PR.
+
+For this app, trace GraphQL fields through atoms and hooks to both the initial card and the post-tap screens. Check rail and bus paths, iOS and Android where applicable, and the correspondence between line IDs and cached station arrays.
