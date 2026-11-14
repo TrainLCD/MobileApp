@@ -65,7 +65,7 @@ it('初期表示は折りたたみ、開閉して各系統を選択できる', (
   const selected = jest.fn();
   const ui = render(<BusRouteList groups={groups} onLineSelected={selected} />);
   expect(ui.queryByText('47A')).toBeNull();
-  expect(ui.getByText(/2系統/)).toBeTruthy();
+  expect(ui.queryByText(/2系統/)).toBeNull();
   fireEvent.press(ui.getByText('新前橋駅西口線'));
   fireEvent.press(ui.getByText('47B'));
   expect(selected).toHaveBeenCalledWith(second);
@@ -402,7 +402,9 @@ describe('方面表示の復元', () => {
           onLineSelected={selected}
         />
       );
-      expect(ui.queryByText(ja ? '終点A方面' : 'for Terminal A')).toBeNull();
+      expect(ui.getByText(ja ? '終点B方面' : 'for Terminal B')).toBeTruthy();
+      expect(ui.getByText(ja ? '始点方面' : 'for Origin')).toBeTruthy();
+      expect(ui.queryByText(/2系統/)).toBeNull();
       fireEvent.press(ui.getByText('新前橋駅西口線'));
       for (const line of lines) {
         const row = ui.getByTestId(`line_${line.id}`);
