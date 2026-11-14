@@ -58,6 +58,7 @@ const RouteCard = memo(
         title={title}
         stations={stationsByLineId?.get(firstLine.id ?? -1)}
         neutral={multiple}
+        busRouteCard
         testID={multiple ? undefined : generateLineTestId(firstLine)}
         disabled={!multiple && disabled}
         onPress={() => onLineSelected(firstLine)}
