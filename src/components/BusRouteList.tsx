@@ -51,12 +51,9 @@ const RouteCard = memo(
         ![code, group.name, line.nameShort?.trim()].includes(detail);
       return showDetail ? detail : '';
     };
-    const subtitle = [
-      [...new Set(codes)].filter((code) => code !== title).join('・'),
-      multiple ? translate('busRouteCount', { count: group.lines.length }) : '',
-    ]
-      .filter(Boolean)
-      .join(' / ');
+    const subtitle = multiple
+      ? translate('busRouteCount', { count: group.lines.length })
+      : undefined;
 
     return (
       <CommonCard
@@ -66,7 +63,6 @@ const RouteCard = memo(
         stations={
           multiple ? undefined : stationsByLineId?.get(firstLine.id ?? -1)
         }
-        showBoundsWithSubtitle={!multiple}
         neutral={multiple}
         testID={multiple ? undefined : generateLineTestId(firstLine)}
         disabled={!multiple && disabled}

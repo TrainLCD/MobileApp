@@ -366,7 +366,7 @@ describe('方面表示の復元', () => {
   });
 
   it.each([true, false])(
-    '単独系統の補足と方面を併記する（日本語: %s）',
+    '単独系統は既存の方面文言だけを表示する（日本語: %s）',
     (ja) => {
       jest.replaceProperty(require('~/translation'), 'isJapanese', ja);
       const selected = jest.fn();
@@ -379,7 +379,7 @@ describe('方面表示の復元', () => {
       );
       expect(ui.getByText(ja ? '終点A方面' : 'for Terminal A')).toBeTruthy();
       expect(ui.getByText(ja ? '始点方面' : 'for Origin')).toBeTruthy();
-      expect(ui.getByText('47A')).toBeTruthy();
+      expect(ui.queryByText('47A')).toBeNull();
       expect(ui.queryByText(/番のりば/)).toBeNull();
       fireEvent.press(ui.getByTestId('line_1'));
       expect(selected).toHaveBeenCalledWith(first);
@@ -429,7 +429,7 @@ describe('方面表示の復元', () => {
         />
       );
       expect(ui.queryByText(/方面/)).toBeNull();
-      expect(ui.getByText('47A')).toBeTruthy();
+      expect(ui.queryByText('47A')).toBeNull();
       expect(ui.queryByText(/番のりば/)).toBeNull();
       fireEvent.press(ui.getByTestId('line_1'));
       expect(selected).toHaveBeenCalledWith(first);

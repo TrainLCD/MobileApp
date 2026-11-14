@@ -42,8 +42,6 @@ type Props = {
   /** 方面を表す接辞（日本語の末尾「方面」/英語の先頭「for 」）を小さいフォントで表示する */
   shrinkBoundAffix?: boolean;
   subtitle?: string;
-  /** 系統番号の補足と、従来の方面表示を併記します。 */
-  showBoundsWithSubtitle?: boolean;
   subtitleNumberOfLines?: number;
   /** 右端のシェブロンを非表示にする */
   hideChevron?: boolean;
@@ -280,7 +278,6 @@ export const CommonCard: React.FC<Props> = ({
   hideParens,
   shrinkBoundAffix,
   subtitle,
-  showBoundsWithSubtitle = false,
   subtitleNumberOfLines,
   hideChevron,
   checked,
@@ -631,7 +628,7 @@ export const CommonCard: React.FC<Props> = ({
               loading={loading}
             />
           )}
-          {(!subtitle || showBoundsWithSubtitle) && (
+          {!subtitle && (
             <LineBounds
               stations={stations}
               color={neutral ? colors.secondaryText : undefined}
