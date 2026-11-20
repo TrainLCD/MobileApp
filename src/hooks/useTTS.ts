@@ -64,15 +64,20 @@ export const useTTS = (): void => {
   // コールバックが、後続の発話の再生状態を壊すのを防ぐ
   const speechRunIdRef = useRef(0);
   const isLoadableRef = useRef(true);
-  const pendingRef = useRef<{ textJa: string; textEn: string } | null>(null);
-  const speechWithTextRef = useRef<((ja: string, en: string) => void) | null>(
-    null
-  );
+  const pendingRef = useRef<{
+    textJa: string;
+    textEn: string;
+    remoteEn: string;
+  } | null>(null);
+  const speechWithTextRef = useRef<
+    ((ja: string, en: string, remoteEn: string) => void) | null
+  >(null);
   const isBus = currentLine?.transportType === TransportType.Bus;
   const ttsResult = useTTSText(firstSpeechRef.current, enabled, isBus);
   const ttsText = ttsResult.text;
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
+  const remoteEn = ttsResult.remoteTextEn ?? textEn;
   const shouldSpeakJapanese = ttsEnabledLanguages.includes('JA');
   const shouldSpeakEnglish = ttsEnabledLanguages.includes('EN');
 
@@ -174,7 +179,11 @@ export const useTTS = (): void => {
     const pending = pendingRef.current;
     if (pending) {
       pendingRef.current = null;
-      speechWithTextRef.current?.(pending.textJa, pending.textEn);
+      speechWithTextRef.current?.(
+        pending.textJa,
+        pending.textEn,
+        pending.remoteEn
+      );
     } else {
       // 後続の発話が控えていない場合のみ解除する。pending がある場合は
       // 直後に再度発話が始まりダッキングを再度張るため、解除は不要。
@@ -208,7 +217,7 @@ export const useTTS = (): void => {
   );
 
   const speechWithText = useCallback(
-    (ja: string, en: string) => {
+    (ja: string, en: string, remoteEn: string) => {
       if (!ja.length || !en.length || !isLoadableRef.current) {
         return;
       }
@@ -304,21 +313,24 @@ export const useTTS = (): void => {
           return;
         }
 
-        remoteEngine.speak(request, {
-          onSpeechStarted,
-          onSettled,
-          // 圏外・トンネル・API 障害で合成できなかった回は、その放送だけ
-          // 端末内で読み上げてアナウンスの欠落を防ぐ
-          onUnavailable: () => {
-            if (isStaleRun()) {
-              return;
-            }
-            console.warn(
-              '[useTTS] Remote TTS unavailable, falling back to on-device TTS'
-            );
-            speakOnDevice();
-          },
-        });
+        remoteEngine.speak(
+          { ...request, ssmlEn: remoteEn },
+          {
+            onSpeechStarted,
+            onSettled,
+            // 圏外・トンネル・API 障害で合成できなかった回は、その放送だけ
+            // 端末内で読み上げてアナウンスの欠落を防ぐ
+            onUnavailable: () => {
+              if (isStaleRun()) {
+                return;
+              }
+              console.warn(
+                '[useTTS] Remote TTS unavailable, falling back to on-device TTS'
+              );
+              speakOnDevice();
+            },
+          }
+        );
       })();
     },
     [
@@ -354,7 +366,7 @@ export const useTTS = (): void => {
       return;
     }
 
-    if (!textJa || !textEn) {
+    if (!textJa || !textEn || !remoteEn) {
       pendingRef.current = null;
       return;
     }
@@ -374,16 +386,17 @@ export const useTTS = (): void => {
     // 再生中なら最新のテキストをpendingに記録して完了時にトリガー
     if (playingRef.current) {
       console.warn('[useTTS] Already playing, queuing text as pending');
-      pendingRef.current = { textJa, textEn };
+      pendingRef.current = { textJa, textEn, remoteEn };
       return;
     }
 
     pendingRef.current = null;
-    speechWithTextRef.current?.(textJa, textEn);
+    speechWithTextRef.current?.(textJa, textEn, remoteEn);
   }, [
     arrived,
     enabled,
     prevStoppingState,
+    remoteEn,
     prevTextEn,
     prevTextJa,
     stoppingState,

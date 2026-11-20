@@ -73,9 +73,9 @@ describe('toSpeakableText', () => {
         'remote'
       )
     ).toBe('The next station is Keisei-Ueno, KS 1.');
-    // JR の置換はサーバー側が J-R を素通しする前提なので、リモートでも適用する
+    // リモート英語は会社名も元の綴りで送る。
     expect(toSpeakableText('the JR Kobe Line', 'EN', 'remote')).toBe(
-      'the J-R Kobe Line'
+      'the JR Kobe Line'
     );
   });
 

@@ -154,6 +154,7 @@ const JR_WEST: ThemeTemplate = {
 // - 他社線直通の境界駅では御礼の後に「この電車は、◯◯線直通、…行きです。」を放送する。
 // - 通過駅の案内は「◯◯の次は、◯◯にとまります。」「通過する、◯◯においでの方は、
 //   お乗り換えです。」(到着前放送のみ)。
+// - 人を指す「方」は音声エンジンの「ほう」という誤読を避けるため「かた」と記す。
 const TOEI: ThemeTemplate = {
   NEXT: t(
     '{#if isNextStopTerminus}{currentLineCompanyJa}をご利用くださいまして、ありがとうございました。{/if}',
@@ -172,7 +173,7 @@ const TOEI: ThemeTemplate = {
   ARRIVING: t(
     'まもなく、{nextStationJa}、{nextStationJa}です。',
     '{#if shouldAnnounceAfterNextStop}{nextStationJa}の次は、{#if isAfterNextStopTerminus}終点、{/if}{afterNextStationJa}にとまります。{/if}',
-    '{#if hasBetweenStations}通過する、{betweenStationsListJa}においでの方は、お乗り換えです。{/if}',
+    '{#if hasBetweenStations}通過する、{betweenStationsListJa}においでのかたは、お乗り換えです。{/if}',
     '{#if isNextStopTerminus}{vehicleJa}は、{nextStationJa}止まりです。お忘れ物のないよう、ご注意ください。{/if}'
   ),
 };

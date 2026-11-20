@@ -33,12 +33,13 @@ export const toSpeakableText = (
   language: 'JA' | 'EN',
   engine: SpeechEngineKind
 ): string => {
-  const plain = fixJrReading(
-    ssmlToPlainText(ssml, {
-      breakReplacement: language === 'JA' ? '、' : ' ',
-    }),
-    language
-  );
+  const text = ssmlToPlainText(ssml, {
+    breakReplacement: language === 'JA' ? '、' : ' ',
+  });
+  const plain =
+    language === 'EN' && engine === 'remote'
+      ? text
+      : fixJrReading(text, language);
 
   if (language === 'JA') {
     return plain;

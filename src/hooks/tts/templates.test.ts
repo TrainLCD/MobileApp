@@ -1,4 +1,5 @@
 import { APP_THEME } from '~/models/Theme';
+import { toSpeakableText } from '~/utils/speakableText';
 import { EN_TEMPLATES, JA_TEMPLATES } from './templates';
 
 describe('TTSテンプレート', () => {
@@ -117,5 +118,38 @@ describe('315系風のTTS', () => {
     expect(JA_TEMPLATES.JR_315.ARRIVING(simple)).toBe(
       'まもなく、金山です。ドアから手を離してお待ちください。'
     );
+  });
+});
+
+describe('都営テーマの通過駅案内', () => {
+  const context = {
+    nextStationJa: '大島',
+    hasBetweenStations: true,
+    betweenStationsListJa: '東大島、船堀',
+  };
+
+  it.each(['native', 'remote'] as const)(
+    '%s向けの音声入力で人を指す方をかたと読む',
+    (engine) => {
+      const text = JA_TEMPLATES.TOEI.ARRIVING(context);
+      expect(toSpeakableText(text, 'JA', engine)).toBe(
+        'まもなく、大島、大島です。通過する、東大島、船堀においでのかたは、お乗り換えです。'
+      );
+    }
+  );
+
+  it('通過駅がない場合は案内しない', () => {
+    expect(
+      JA_TEMPLATES.TOEI.ARRIVING({ ...context, hasBetweenStations: false })
+    ).toBe('まもなく、大島、大島です。');
+  });
+
+  it('駅名に含まれる方は置換しない', () => {
+    expect(
+      JA_TEMPLATES.TOEI.ARRIVING({
+        ...context,
+        betweenStationsListJa: '方南町',
+      })
+    ).toContain('方南町においでのかたは、お乗り換えです。');
   });
 });

@@ -1052,13 +1052,20 @@ describe('useTTS', () => {
       setPlatformOS('android');
       mockedIsRemoteTTSEnabled.mockReturnValue(true);
 
+      jest.requireMock('./useTTSText').useTTSText.mockReturnValue({
+        text: ['ja text', 'Kaysei Main Line'],
+        remoteTextEn: 'Keisei Main Line',
+      });
       const store = createStore();
       store.set(speechState, defaultSpeechState);
 
       renderHook(() => useTTS(), { wrapper: createWrapper(store) });
       await flushAsync();
 
-      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      expect(mockRemoteSpeak).toHaveBeenCalledWith(
+        expect.objectContaining({ ssmlEn: 'Keisei Main Line' }),
+        expect.any(Object)
+      );
       expect(mockSpeak).toHaveBeenNthCalledWith(
         1,
         'ja text',
@@ -1066,7 +1073,7 @@ describe('useTTS', () => {
       );
       expect(mockSpeak).toHaveBeenNthCalledWith(
         2,
-        'en text',
+        'Kaysei Main Line',
         expect.objectContaining({ language: 'en-US' })
       );
     });
