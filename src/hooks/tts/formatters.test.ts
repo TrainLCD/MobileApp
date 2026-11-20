@@ -216,7 +216,7 @@ describe('formatJrWestStopsListEn', () => {
       makeStop(3, 'Uji'),
     ];
     expect(formatJrWestStopsListEn(stops, () => false)).toBe(
-      'Tofukugee, Rokugeezo, and Ugee'
+      '<sub alias="Tofukugee">Tofukuji</sub>, <sub alias="Rokugeezo">Rokujizo</sub>, and <sub alias="Ugee">Uji</sub>'
     );
   });
 
@@ -228,14 +228,14 @@ describe('formatJrWestStopsListEn', () => {
       makeStop(4, 'Nara'),
     ];
     expect(formatJrWestStopsListEn(stops, (s) => s.id === 4)).toBe(
-      'Joe-yo, Tamamizu, and Kizu before arriving at Nara'
+      '<sub alias="Joe-yo">Joyo</sub>, Tamamizu, and Kizu before arriving at Nara'
     );
   });
 
   it('joins two stops with a plain "and" (no serial comma)', () => {
     const stops = [makeStop(1, 'Tofukuji'), makeStop(2, 'Rokujizo')];
     expect(formatJrWestStopsListEn(stops, () => false)).toBe(
-      'Tofukugee and Rokugeezo'
+      '<sub alias="Tofukugee">Tofukuji</sub> and <sub alias="Rokugeezo">Rokujizo</sub>'
     );
   });
 

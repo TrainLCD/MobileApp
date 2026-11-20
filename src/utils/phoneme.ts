@@ -91,6 +91,15 @@ export const stripJapaneseCharacters = (text: string): string =>
     .replace(/[\t ]+/g, ' ')
     .trim();
 
+// 両方の綴りを発話時まで保持する。端末内合成は alias、リモート合成は本文を使う。
+const wrapNameReading = (name: string): string => {
+  const reading = fixRomanizedNameReading(name);
+  const original = escapeXml(name);
+  return reading === name
+    ? original
+    : `<sub alias="${escapeXmlAttr(reading)}">${original}</sub>`;
+};
+
 /**
  * TtsSegment 配列を SSML 文字列に変換する。連続する IPA セグメントは単一の phoneme タグに結合する。segments が空の場合は fallback を返す。
  *
@@ -105,12 +114,11 @@ export const wrapPhoneme = (
   segments: TtsSegment[] | null | undefined,
   fallback?: string | null
 ): string => {
-  if (!segments?.length)
-    return fallback ? escapeXml(fixRomanizedNameReading(fallback)) : '';
+  if (!segments?.length) return fallback ? wrapNameReading(fallback) : '';
 
   const built = buildFromSegments(segments);
   if (fallback && JAPANESE_CHAR_REGEXP.test(stripTagsForInspection(built))) {
-    return escapeXml(fixRomanizedNameReading(fallback));
+    return wrapNameReading(fallback);
   }
   return built;
 };
@@ -133,9 +141,9 @@ const buildFromSegments = (segments: TtsSegment[]): string => {
             return acc;
           }, [])
           .join('');
-        return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(ph)}">${escapeXml(fixRomanizedNameReading(inner))}</phoneme>${escapeXml(group.trailingSeparator)}`;
+        return `<phoneme alphabet="ipa" ph="${escapeXmlAttr(ph)}">${wrapNameReading(inner)}</phoneme>${escapeXml(group.trailingSeparator)}`;
       }
-      return escapeXml(fixRomanizedNameReading(group.text));
+      return wrapNameReading(group.text);
     })
     .join('');
 };

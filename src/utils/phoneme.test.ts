@@ -23,9 +23,11 @@ const ipaSegment = (
 
 describe('wrapPhoneme', () => {
   it.each(['native', 'remote'] as const)(
-    '%s向けに固有名詞をセグメントの有無によらず補正する',
+    '%s向けに固有名詞をセグメントの有無によらずエンジンに応じた表記で渡す',
     (engine) => {
       for (const [roman, japanese, reading] of [
+        ['Keisei Main Line', '京成本線', 'Kaysei Main Line'],
+        ['Keihin-Tohoku Line', '京浜東北線', 'Kayhin-Tohoku Line'],
         ['Oshiage', '押上', 'Oshia-gay'],
         ['Meidaimae', '明大前', 'May-daimae'],
         ['Eifukucho', '永福町', 'Eh-fukucho'],
@@ -40,7 +42,9 @@ describe('wrapPhoneme', () => {
           const name = wrapPhoneme(segments, roman);
           expect(
             toSpeakableText(`We are arriving at ${name}.`, 'EN', engine)
-          ).toBe(`We are arriving at ${reading}.`);
+          ).toBe(
+            `We are arriving at ${engine === 'native' ? reading : roman}.`
+          );
         }
         expect(toSpeakableText(`次は、${japanese}です。`, 'JA', engine)).toBe(
           `次は、${japanese}です。`
@@ -59,16 +63,18 @@ describe('wrapPhoneme', () => {
         'Seibo-Byōin-Iriguchi'
       );
       expect(toSpeakableText(`The next stop is ${name}.`, 'EN', engine)).toBe(
-        'The next stop is Seibo-Bee-oh-in-Iriguchi.'
+        engine === 'native'
+          ? 'The next stop is Seibo-Bee-oh-in-Iriguchi.'
+          : 'The next stop is Seibo-Byōin-Iriguchi.'
       );
     }
   );
 
   it.each([
-    ['', 'Joe-etsu'],
-    ['-', 'Joe-etsu'],
-    [' ', 'Joe etsu'],
-    [' & ', 'Joe &amp; etsu'],
+    ['', '<sub alias="Joe-etsu">Joetsu</sub>'],
+    ['-', '<sub alias="Joe-etsu">Jo-etsu</sub>'],
+    [' ', '<sub alias="Joe etsu">Jo etsu</sub>'],
+    [' & ', '<sub alias="Joe &amp; etsu">Jo &amp; etsu</sub>'],
   ])('通常セグメントを結合し区切り%sを維持する', (separator, expected) => {
     expect(
       wrapPhoneme([
@@ -87,7 +93,7 @@ describe('wrapPhoneme', () => {
         ipaSegment('Tokyo', 'toːkjoː', null, '.'),
       ])
     ).toBe(
-      '<phoneme alphabet="ipa" ph="oːsaki">Osaki</phoneme>, Joe-etsu &amp; <phoneme alphabet="ipa" ph="toːkjoː">Tokyo</phoneme>.'
+      '<phoneme alphabet="ipa" ph="oːsaki">Osaki</phoneme>, <sub alias="Joe-etsu &amp; ">Joetsu &amp; </sub><phoneme alphabet="ipa" ph="toːkjoː">Tokyo</phoneme>.'
     );
   });
 
@@ -104,7 +110,11 @@ describe('wrapPhoneme', () => {
           'EN',
           engine
         )
-      ).toBe('Enjoy your journey. The next station is Geenbocho.');
+      ).toBe(
+        engine === 'native'
+          ? 'Enjoy your journey. The next station is Geenbocho.'
+          : 'Enjoy your journey. The next station is Jinbocho.'
+      );
       expect(toSpeakableText('次は、神保町です。', 'JA', engine)).toBe(
         '次は、神保町です。'
       );
@@ -112,13 +122,15 @@ describe('wrapPhoneme', () => {
   );
 
   it('セグメントなし・日本語からのフォールバック・通常セグメントも補正する', () => {
-    expect(wrapPhoneme([], 'Tojo')).toBe('To-joe');
-    expect(wrapPhoneme([ipaSegment('王子', 'oːdʑi')], 'Oji')).toBe('Ogee');
+    expect(wrapPhoneme([], 'Tojo')).toBe('<sub alias="To-joe">Tojo</sub>');
+    expect(wrapPhoneme([ipaSegment('王子', 'oːdʑi')], 'Oji')).toBe(
+      '<sub alias="Ogee">Oji</sub>'
+    );
     expect(
       wrapPhoneme([
         { ...ipaSegment('Joetsu & Oji', ''), alphabet: TtsAlphabet.Ipa },
       ])
-    ).toBe('Joe-etsu &amp; Ogee');
+    ).toBe('<sub alias="Joe-etsu &amp; Ogee">Joetsu &amp; Oji</sub>');
   });
 
   it('ローマ字の表記を持つセグメントはphonemeタグに変換する', () => {
@@ -166,7 +178,7 @@ describe('wrapPhoneme', () => {
       'Shinjuku'
     );
     expect(result).toBe(
-      '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ">Shin-jew-ku</phoneme>'
+      '<phoneme alphabet="ipa" ph="ɕiɲdʑɯkɯ"><sub alias="Shin-jew-ku">Shinjuku</sub></phoneme>'
     );
   });
 });

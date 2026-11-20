@@ -78,25 +78,14 @@ const renderEngineWithSpeed = (
 
 describe('useRemoteSpeechEngine', () => {
   it.each([
-    ['Oshiage', 'Oshia-gay'],
-    ['Meidaimae', 'May-daimae'],
-    ['Eifukucho', 'Eh-fukucho'],
-    ['Seibo-Byōin-Iriguchi', 'Seibo-Bee-oh-in-Iriguchi'],
-    ['Shinjuku-sanchome', 'Shin-jew-ku-san-choh-meh'],
-    ['Daigaku-byoin', 'Daigaku-bee-oh-in'],
-    ['Byoin-mae', 'Bee-oh-in-mae'],
-    ['Keisatsusho', 'Kaysatsusho'],
-    ['Ginza-itchome', 'Ginza-itch-oh-meh'],
-    ['Aoyama-itchome', 'Aoyama-itch-oh-meh'],
-    ['Mejiro', 'Megeero'],
-    ['Higashi-Mejiro', 'Higashi-Megeero'],
-    ['Jinja', 'Geen-jah'],
-    ['Oji', 'Ogee'],
-    ['Shinjuku', 'Shin-jew-ku'],
-    ['Jefu', 'Jeh-fu'],
-    ['Joetsu', 'Joe-etsu'],
-    ['Jo\u0304ban', 'Joe-ban'],
-  ])('%sの補正結果をタグなしの本文でTTSへ渡す', async (name, reading) => {
+    'Oshiage',
+    'Keisei Main Line',
+    'Keihin-Tohoku Line',
+    'Keisei-Ueno',
+    'Seibu',
+    'Mine',
+    'Seibo-Byōin-Iriguchi',
+  ])('%sの元の綴りをリモートTTSへ渡す', async (name) => {
     const { result } = renderEngine();
     const stationName = wrapPhoneme(null, name);
     result.current.speak(
@@ -111,7 +100,7 @@ describe('useRemoteSpeechEngine', () => {
 
     expect(mockFetchSpeechAudio).toHaveBeenCalledWith(
       expect.objectContaining({
-        textEn: `Enjoy your journey. The next station is ${reading}.`,
+        textEn: `Enjoy your journey. The next station is ${name}.`,
         textJa: '次は、神社前です。',
       })
     );
