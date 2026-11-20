@@ -305,9 +305,7 @@ describe('useTTSText (bus mode)', () => {
     );
     const [jaText, enText] = result.current.text;
     expect(jaText).toContain('聖母病院入口');
-    expect(enText).toContain(
-      '<sub alias="Seibo-Bee-oh-in-Iriguchi">Seibo-Byōin-Iriguchi</sub>'
-    );
+    expect(enText).toContain('Seibo-Bee-oh-in-Iriguchi');
     expect(enText).not.toContain('Seibo Hp.');
   });
 

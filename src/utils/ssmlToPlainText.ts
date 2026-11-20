@@ -13,7 +13,6 @@ export interface SsmlToPlainTextOptions {
   // <break/> の置き換え文字。日本語は「、」、英語はテンプレ側にカンマが
   // 既に含まれるため半角スペースを想定している。
   breakReplacement?: string;
-  useSubAlias?: boolean;
 }
 
 export const ssmlToPlainText = (
@@ -27,8 +26,7 @@ export const ssmlToPlainText = (
       // 表記の代わりに alias を読み上げさせる (漢字誤読の防止)
       .replace(
         /<sub\b[^>]*\balias="([^"]*)"[^>]*>([^<]*)<\/sub>/gi,
-        (_match, alias, original) =>
-          options?.useSubAlias === false ? original : alias
+        (_match, alias) => alias
       )
       .replace(/<break\b[^>]*>/gi, breakReplacement)
       .replace(/<[^>]+>/g, '')
