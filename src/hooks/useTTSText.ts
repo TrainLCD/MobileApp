@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
 import { parenthesisRegexp } from '../constants';
 import { APP_THEME, type AppTheme } from '../models/Theme';
@@ -11,7 +11,7 @@ import {
 import { themeAtom } from '../store/atoms/theme';
 import { getBusPlatformCodeForStop } from '../utils/busPlatform';
 import getIsPass from '../utils/isPass';
-import { wrapPhoneme as ph } from '../utils/phoneme';
+import { escapeXml, wrapPhoneme } from '../utils/phoneme';
 import { getIsRapid } from '../utils/trainTypeString';
 import {
   appendSpokenBusPlatform,
@@ -45,6 +45,7 @@ import { useTransferLines } from './useTransferLines';
 
 export interface TTSTextResult {
   text: [string, string] | [];
+  remoteTextEn?: string;
 }
 
 const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
@@ -181,16 +182,6 @@ export const useTTSText = (
       isPartiallyLoopLine,
       loopLineBoundJa?.boundFor,
     ]
-  );
-
-  const boundForEn = useMemo(
-    () =>
-      isLoopLine
-        ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
-        : directionalStopsForTTS
-            .map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
-            .join(' and '),
-    [directionalStopsForTTS, isLoopLine, loopLineBoundEn?.boundFor]
   );
 
   const nextStationNumberText = useMemo(() => {
@@ -347,236 +338,252 @@ export const useTTSText = (
     return sortedStops[0];
   }, [allStops]);
 
-  const context = useMemo<TemplateContext | null>(() => {
-    // nextStation が未解決のまま context を組み立てると
-    // `次は、各駅停車です` のような無関係案内が流れる可能性があるため
-    // currentLine / selectedBound と同様に early return のゲートに含める (#5917)。
-    if (!currentLine || !selectedBound || !nextStation) return null;
+  const buildContext = useCallback(
+    (ph: typeof wrapPhoneme): TemplateContext | null => {
+      // nextStation が未解決のまま context を組み立てると
+      // `次は、各駅停車です` のような無関係案内が流れる可能性があるため
+      // currentLine / selectedBound と同様に early return のゲートに含める (#5917)。
+      if (!currentLine || !selectedBound || !nextStation) return null;
 
-    const isBoundStop = (s: Station): boolean =>
-      s.groupId === selectedBound?.groupId && !isLoopLine;
+      const isBoundStop = (s: Station): boolean =>
+        s.groupId === selectedBound?.groupId && !isLoopLine;
 
-    // 同名停留所の判定には経路全体の元データを使う。読み仮名・IPA のタグの外に番号を添える。
-    const platformFor = (stop: Station) =>
-      isBus ? getBusPlatformCodeForStop(stations, stop) : undefined;
-    const spokenStopJa = (stop: Station) =>
-      appendSpokenBusPlatform(
-        replaceJapaneseText(stop.name, stop.nameKatakana),
-        platformFor(stop),
-        'ja'
+      // 同名停留所の判定には経路全体の元データを使う。読み仮名・IPA のタグの外に番号を添える。
+      const platformFor = (stop: Station) =>
+        isBus ? getBusPlatformCodeForStop(stations, stop) : undefined;
+      const spokenStopJa = (stop: Station) =>
+        appendSpokenBusPlatform(
+          replaceJapaneseText(stop.name, stop.nameKatakana),
+          platformFor(stop),
+          'ja'
+        );
+      const spokenStopEn = (stop: Station) =>
+        appendSpokenBusPlatform(
+          ph(stop.nameTtsSegments, stop.nameRoman),
+          platformFor(stop),
+          'en'
+        );
+
+      // バスは元アナウンス上「列車種別」概念を持たないので、
+      // テンプレ側の `{#if hasTrainType}` で 各駅停車/Local Service 等の挿入を抑止する。
+      // 鉄道時は常に true (列車種別未設定でも `各駅停車` / `Local` にフォールバックする既存挙動を維持)。
+      const hasTrainType = !isBus;
+      // 鉄道は列車種別が無いと「次の停車駅」案内を出さない (各駅停車では自明)。
+      // バスは元アナウンスが常に「次の停車駅」を案内するため、列車種別の有無を問わず
+      // afterNextStation があれば announce する。
+      const shouldAnnounceAfterNextStop = isBus
+        ? !!afterNextStation
+        : !!(currentTrainType && afterNextStation);
+
+      const nextStationIsBound =
+        nextStation?.groupId === selectedBound?.groupId && !isLoopLine;
+
+      // 次駅が現在路線の最終駅で、その先が他路線へ直通する境界駅かどうか。
+      // 公式放送では境界駅の手前で自社線利用への御礼と直通先の列車案内を行う
+      // (東急・都営は実車放送、東京メトロは終点形と同一の御礼文言で確認)。
+      const throughLine = stationAfterNextStop?.line;
+      const isNextStopThroughBoundary =
+        !isBus &&
+        !isLoopLine &&
+        !isNextStopTerminus &&
+        !nextStationIsBound &&
+        !!throughLine?.id &&
+        throughLine.id !== currentLine.id;
+
+      const currentLineJa = replaceJapaneseText(
+        currentLine.nameShort,
+        currentLine.nameKatakana
       );
-    const spokenStopEn = (stop: Station) =>
-      appendSpokenBusPlatform(
-        ph(stop.nameTtsSegments, stop.nameRoman),
-        platformFor(stop),
-        'en'
+      const currentLineEn = ph(
+        currentLine.nameTtsSegments,
+        currentLine.nameRoman
       );
+      const currentTrainTypeJa = currentTrainType
+        ? replaceJapaneseText(
+            currentTrainType.name,
+            currentTrainType.nameKatakana
+          )
+        : '';
+      const currentTrainTypeEn = currentTrainType
+        ? ph(currentTrainType.nameTtsSegments, currentTrainType.nameRoman)
+        : '';
 
-    // バスは元アナウンス上「列車種別」概念を持たないので、
-    // テンプレ側の `{#if hasTrainType}` で 各駅停車/Local Service 等の挿入を抑止する。
-    // 鉄道時は常に true (列車種別未設定でも `各駅停車` / `Local` にフォールバックする既存挙動を維持)。
-    const hasTrainType = !isBus;
-    // 鉄道は列車種別が無いと「次の停車駅」案内を出さない (各駅停車では自明)。
-    // バスは元アナウンスが常に「次の停車駅」を案内するため、列車種別の有無を問わず
-    // afterNextStation があれば announce する。
-    const shouldAnnounceAfterNextStop = isBus
-      ? !!afterNextStation
-      : !!(currentTrainType && afterNextStation);
+      return {
+        // フラグ
+        firstSpeech,
+        isBus,
+        isNextStopTerminus,
+        isAfterNextStopTerminus,
+        hasTransferLines: ttsTransferLines.length > 0,
+        hasConnectedLines: connectedLines.length > 0,
+        hasBetweenStations: betweenNextStation.length > 0,
+        hasAfterNextStation: !!afterNextStation,
+        hasTrainType,
+        shouldAnnounceAfterNextStop,
+        jr315ShouldAnnounceAfterNextStop:
+          shouldAnnounceAfterNextStop &&
+          getIsRapid(currentTrainType) &&
+          !isNextStopTerminus,
+        hasAfterNextStationNumberText: afterNextStationNumberText.length > 0,
+        afterNextStationNumberText,
+        hasViaStation: !!viaStation,
+        nextStationIsBound,
+        isNextStopThroughBoundary,
+        lastAnnouncedStopIsBound:
+          lastAnnouncedStop?.groupId === selectedBound?.groupId,
+        shouldAnnounceJrWestStopList,
+        hasNextStationNumberLineSymbol: !!nextStationNumber?.lineSymbol?.length,
+        hasNextStationNumberText: nextStationNumberText.length > 0,
 
-    const nextStationIsBound =
-      nextStation?.groupId === selectedBound?.groupId && !isLoopLine;
+        // 乗り物名 (アナウンスで `この電車` / `この列車` / `このバス` をテーマと
+        // モードで切り替える)。JR_KYUSHU の鉄道のみ歴史的に `この列車` を使うため
+        // 個別分岐させる。
+        vehicleJa: isBus
+          ? 'このバス'
+          : theme === APP_THEME.JR_KYUSHU
+            ? 'この列車'
+            : 'この電車',
+        vehicleEn: isBus ? 'bus' : 'train',
+        // 「次の停車場」を表す語。バスアナウンスは慣習的に "stop" を用いる。
+        // 鉄道は既存表記 "station" を維持。
+        placeEn: isBus ? 'stop' : 'station',
 
-    // 次駅が現在路線の最終駅で、その先が他路線へ直通する境界駅かどうか。
-    // 公式放送では境界駅の手前で自社線利用への御礼と直通先の列車案内を行う
-    // (東急・都営は実車放送、東京メトロは終点形と同一の御礼文言で確認)。
-    const throughLine = stationAfterNextStop?.line;
-    const isNextStopThroughBoundary =
-      !isBus &&
-      !isLoopLine &&
-      !isNextStopTerminus &&
-      !nextStationIsBound &&
-      !!throughLine?.id &&
-      throughLine.id !== currentLine.id;
+        // 日本語
+        nextStationJa: spokenStopJa(nextStation),
+        currentLineJa,
+        currentLineShortJa: currentLine.nameShort ?? '',
+        currentLineCompanyJa: replaceJapaneseText(
+          currentLine.company?.nameShort,
+          currentLine.company?.nameKatakana
+        ),
+        currentLineCompanyShortJa: currentLine.company?.nameShort ?? '',
+        boundForJa: boundForJa ?? '',
+        // TOKYO_METRO/TY/TOEI 用 (各駅停車 デフォルト)
+        trainTypeJa: yamanoteTrainTypeJa ?? (currentTrainTypeJa || '各駅停車'),
+        // JR_WEST 用 (各駅停車 デフォルト)。
+        // 以前は replaceJapaneseText の暗黙フォールバックに依存していたが、
+        // ヘルパは値欠落時に空文字を返すよう変更されたため、ここで明示する (#5917)。
+        trainTypeJaPlain:
+          yamanoteTrainTypeJa ?? (currentTrainTypeJa || '各駅停車'),
+        // JR_KYUSHU 用 (普通 デフォルト)
+        trainTypeJaKyushu:
+          yamanoteTrainTypeJa ?? (currentTrainTypeJa || '普通'),
+        trainTypeJa315: currentTrainTypeJa || '普通',
+        // JR東日本 (YAMANOTE/SAIKYO) の列車案内
+        // 「この電車は、◯◯線、(種別、)◯◯ゆきです。」に入る路線+種別の塊。
+        // 山手線は公式が「山手線内回り/外回り」と読むため専用文言で置き換える。
+        // 種別が無い普通列車は公式同様に路線名のみ (各駅停車とは読まない)。
+        jrEastTrainDescJa:
+          yamanoteTrainTypeJa ??
+          [currentLineJa, currentTrainTypeJa].filter(Boolean).join('、'),
+        transferLinesListJa: formatLinesListJa(ttsTransferLines),
+        connectedLinesListJa: formatLinesListJa(connectedLines),
+        betweenStationsListJa: formatStationsListJa(betweenNextStation),
+        afterNextStationJa: afterNextStation
+          ? spokenStopJa(afterNextStation)
+          : '',
+        viaStationJa: viaStation
+          ? replaceJapaneseText(viaStation.name, viaStation.nameKatakana)
+          : '',
+        jrWestStopsListJa: formatJrWestStopsListJa(
+          allStops,
+          isBoundStop,
+          spokenStopJa
+        ),
+        lastAnnouncedStopJa: lastAnnouncedStop
+          ? spokenStopJa(lastAnnouncedStop)
+          : '',
+        // 直通境界駅で案内する直通先路線
+        nextLineJa: isNextStopThroughBoundary
+          ? replaceJapaneseText(
+              throughLine?.nameShort,
+              throughLine?.nameKatakana
+            )
+          : '',
 
-    const currentLineJa = replaceJapaneseText(
-      currentLine.nameShort,
-      currentLine.nameKatakana
-    );
-    const currentLineEn = ph(
-      currentLine.nameTtsSegments,
-      currentLine.nameRoman
-    );
-    const currentTrainTypeJa = currentTrainType
-      ? replaceJapaneseText(
-          currentTrainType.name,
-          currentTrainType.nameKatakana
-        )
-      : '';
-    const currentTrainTypeEn = currentTrainType
-      ? ph(currentTrainType.nameTtsSegments, currentTrainType.nameRoman)
-      : '';
-
-    return {
-      // フラグ
-      firstSpeech,
-      isBus,
-      isNextStopTerminus,
-      isAfterNextStopTerminus,
-      hasTransferLines: ttsTransferLines.length > 0,
-      hasConnectedLines: connectedLines.length > 0,
-      hasBetweenStations: betweenNextStation.length > 0,
-      hasAfterNextStation: !!afterNextStation,
-      hasTrainType,
-      shouldAnnounceAfterNextStop,
-      jr315ShouldAnnounceAfterNextStop:
-        shouldAnnounceAfterNextStop &&
-        getIsRapid(currentTrainType) &&
-        !isNextStopTerminus,
-      hasAfterNextStationNumberText: afterNextStationNumberText.length > 0,
+        // 英語
+        nextStationEn: spokenStopEn(nextStation),
+        currentLineEn,
+        currentLineCompanyEn: currentLine.company?.nameEnglishShort ?? '',
+        // "Thank you for using the X" に差し込む語。鉄道は路線名 (e.g. "Tokyo Metro Tozai Line")、
+        // バスは路線レコードに英語名が無いケースが多いので会社名 (e.g. "Toei Bus") を使う。
+        // 旧 useBusTTSText が `station.line.company.nameEnglishShort` を採用していた挙動に揃える。
+        currentLineThanksEn: isBus
+          ? (currentLine.company?.nameEnglishShort ?? '')
+          : ph(currentLine.nameTtsSegments, currentLine.nameRoman),
+        boundForEn: isLoopLine
+          ? (loopLineBoundEn?.boundFor?.replaceAll('&', ' and ') ?? '')
+          : directionalStopsForTTS
+              .map((s) => ph(s?.nameTtsSegments, s?.nameRoman))
+              .join(' and '),
+        // 多くのテーマで使う共通形 (yamanote ?? phoneme || 'Local')
+        trainTypeEn: yamanoteTrainTypeEn ?? (currentTrainTypeEn || 'Local'),
+        // JR東日本 (YAMANOTE/SAIKYO) の列車案内 (路線名 + 種別)。
+        // 公式: "This is the Yamanote Line train bound for ..." /
+        // "This is a Chuo Line rapid service train for ..." 形。
+        jrEastTrainDescEn:
+          yamanoteTrainTypeEn ??
+          `${currentLineEn}${currentTrainTypeEn ? ` ${currentTrainTypeEn} service` : ''}`,
+        transferLinesEnList: formatLinesListEn(ttsTransferLines, ph),
+        connectedLineEnPhrase: formatFirstConnectedLineEnPhrase(
+          connectedLines,
+          ph
+        ),
+        afterNextStationEn: afterNextStation
+          ? spokenStopEn(afterNextStation)
+          : '',
+        viaStationEn: viaStation
+          ? ph(viaStation.nameTtsSegments, viaStation.nameRoman)
+          : '',
+        jrWestStopsListEn: formatJrWestStopsListEn(
+          allStops,
+          isBoundStop,
+          spokenStopEn
+        ),
+        lastAnnouncedStopEn: lastAnnouncedStop
+          ? spokenStopEn(lastAnnouncedStop)
+          : '',
+        // 直通境界駅で案内する直通先路線
+        nextLineEn: isNextStopThroughBoundary
+          ? ph(throughLine?.nameTtsSegments, throughLine?.nameRoman)
+          : '',
+        nextStationNumberText,
+        nextStationNumberTextNoPeriod: nextStationNumberText.replace(/\.$/, ''),
+      };
+    },
+    [
+      afterNextStation,
       afterNextStationNumberText,
-      hasViaStation: !!viaStation,
-      nextStationIsBound,
-      isNextStopThroughBoundary,
-      lastAnnouncedStopIsBound:
-        lastAnnouncedStop?.groupId === selectedBound?.groupId,
-      shouldAnnounceJrWestStopList,
-      hasNextStationNumberLineSymbol: !!nextStationNumber?.lineSymbol?.length,
-      hasNextStationNumberText: nextStationNumberText.length > 0,
-
-      // 乗り物名 (アナウンスで `この電車` / `この列車` / `このバス` をテーマと
-      // モードで切り替える)。JR_KYUSHU の鉄道のみ歴史的に `この列車` を使うため
-      // 個別分岐させる。
-      vehicleJa: isBus
-        ? 'このバス'
-        : theme === APP_THEME.JR_KYUSHU
-          ? 'この列車'
-          : 'この電車',
-      vehicleEn: isBus ? 'bus' : 'train',
-      // 「次の停車場」を表す語。バスアナウンスは慣習的に "stop" を用いる。
-      // 鉄道は既存表記 "station" を維持。
-      placeEn: isBus ? 'stop' : 'station',
-
-      // 日本語
-      nextStationJa: spokenStopJa(nextStation),
-      currentLineJa,
-      currentLineShortJa: currentLine.nameShort ?? '',
-      currentLineCompanyJa: replaceJapaneseText(
-        currentLine.company?.nameShort,
-        currentLine.company?.nameKatakana
-      ),
-      currentLineCompanyShortJa: currentLine.company?.nameShort ?? '',
-      boundForJa: boundForJa ?? '',
-      // TOKYO_METRO/TY/TOEI 用 (各駅停車 デフォルト)
-      trainTypeJa: yamanoteTrainTypeJa ?? (currentTrainTypeJa || '各駅停車'),
-      // JR_WEST 用 (各駅停車 デフォルト)。
-      // 以前は replaceJapaneseText の暗黙フォールバックに依存していたが、
-      // ヘルパは値欠落時に空文字を返すよう変更されたため、ここで明示する (#5917)。
-      trainTypeJaPlain:
-        yamanoteTrainTypeJa ?? (currentTrainTypeJa || '各駅停車'),
-      // JR_KYUSHU 用 (普通 デフォルト)
-      trainTypeJaKyushu: yamanoteTrainTypeJa ?? (currentTrainTypeJa || '普通'),
-      trainTypeJa315: currentTrainTypeJa || '普通',
-      // JR東日本 (YAMANOTE/SAIKYO) の列車案内
-      // 「この電車は、◯◯線、(種別、)◯◯ゆきです。」に入る路線+種別の塊。
-      // 山手線は公式が「山手線内回り/外回り」と読むため専用文言で置き換える。
-      // 種別が無い普通列車は公式同様に路線名のみ (各駅停車とは読まない)。
-      jrEastTrainDescJa:
-        yamanoteTrainTypeJa ??
-        [currentLineJa, currentTrainTypeJa].filter(Boolean).join('、'),
-      transferLinesListJa: formatLinesListJa(ttsTransferLines),
-      connectedLinesListJa: formatLinesListJa(connectedLines),
-      betweenStationsListJa: formatStationsListJa(betweenNextStation),
-      afterNextStationJa: afterNextStation
-        ? spokenStopJa(afterNextStation)
-        : '',
-      viaStationJa: viaStation
-        ? replaceJapaneseText(viaStation.name, viaStation.nameKatakana)
-        : '',
-      jrWestStopsListJa: formatJrWestStopsListJa(
-        allStops,
-        isBoundStop,
-        spokenStopJa
-      ),
-      lastAnnouncedStopJa: lastAnnouncedStop
-        ? spokenStopJa(lastAnnouncedStop)
-        : '',
-      // 直通境界駅で案内する直通先路線
-      nextLineJa: isNextStopThroughBoundary
-        ? replaceJapaneseText(throughLine?.nameShort, throughLine?.nameKatakana)
-        : '',
-
-      // 英語
-      nextStationEn: spokenStopEn(nextStation),
-      currentLineEn,
-      currentLineCompanyEn: currentLine.company?.nameEnglishShort ?? '',
-      // "Thank you for using the X" に差し込む語。鉄道は路線名 (e.g. "Tokyo Metro Tozai Line")、
-      // バスは路線レコードに英語名が無いケースが多いので会社名 (e.g. "Toei Bus") を使う。
-      // 旧 useBusTTSText が `station.line.company.nameEnglishShort` を採用していた挙動に揃える。
-      currentLineThanksEn: isBus
-        ? (currentLine.company?.nameEnglishShort ?? '')
-        : ph(currentLine.nameTtsSegments, currentLine.nameRoman),
-      boundForEn,
-      // 多くのテーマで使う共通形 (yamanote ?? phoneme || 'Local')
-      trainTypeEn: yamanoteTrainTypeEn ?? (currentTrainTypeEn || 'Local'),
-      // JR東日本 (YAMANOTE/SAIKYO) の列車案内 (路線名 + 種別)。
-      // 公式: "This is the Yamanote Line train bound for ..." /
-      // "This is a Chuo Line rapid service train for ..." 形。
-      jrEastTrainDescEn:
-        yamanoteTrainTypeEn ??
-        `${currentLineEn}${currentTrainTypeEn ? ` ${currentTrainTypeEn} service` : ''}`,
-      transferLinesEnList: formatLinesListEn(ttsTransferLines),
-      connectedLineEnPhrase: formatFirstConnectedLineEnPhrase(connectedLines),
-      afterNextStationEn: afterNextStation
-        ? spokenStopEn(afterNextStation)
-        : '',
-      viaStationEn: viaStation
-        ? ph(viaStation.nameTtsSegments, viaStation.nameRoman)
-        : '',
-      jrWestStopsListEn: formatJrWestStopsListEn(
-        allStops,
-        isBoundStop,
-        spokenStopEn
-      ),
-      lastAnnouncedStopEn: lastAnnouncedStop
-        ? spokenStopEn(lastAnnouncedStop)
-        : '',
-      // 直通境界駅で案内する直通先路線
-      nextLineEn: isNextStopThroughBoundary
-        ? ph(throughLine?.nameTtsSegments, throughLine?.nameRoman)
-        : '',
+      allStops,
+      betweenNextStation,
+      directionalStopsForTTS,
+      loopLineBoundEn?.boundFor,
+      boundForJa,
+      connectedLines,
+      currentLine,
+      currentTrainType,
+      firstSpeech,
+      isAfterNextStopTerminus,
+      isBus,
+      isLoopLine,
+      isNextStopTerminus,
+      lastAnnouncedStop,
+      nextStation,
+      nextStationNumber?.lineSymbol?.length,
       nextStationNumberText,
-      nextStationNumberTextNoPeriod: nextStationNumberText.replace(/\.$/, ''),
-    };
-  }, [
-    afterNextStation,
-    afterNextStationNumberText,
-    allStops,
-    betweenNextStation,
-    boundForEn,
-    boundForJa,
-    connectedLines,
-    currentLine,
-    currentTrainType,
-    firstSpeech,
-    isAfterNextStopTerminus,
-    isBus,
-    isLoopLine,
-    isNextStopTerminus,
-    lastAnnouncedStop,
-    nextStation,
-    nextStationNumber?.lineSymbol?.length,
-    nextStationNumberText,
-    selectedBound,
-    shouldAnnounceJrWestStopList,
-    stationAfterNextStop,
-    stations,
-    theme,
-    ttsTransferLines,
-    viaStation,
-    yamanoteTrainTypeEn,
-    yamanoteTrainTypeJa,
-  ]);
+      selectedBound,
+      shouldAnnounceJrWestStopList,
+      stationAfterNextStop,
+      stations,
+      theme,
+      ttsTransferLines,
+      viaStation,
+      yamanoteTrainTypeEn,
+      yamanoteTrainTypeJa,
+    ]
+  );
 
+  const context = useMemo(() => buildContext(wrapPhoneme), [buildContext]);
   const resolved = resolveTemplateTheme(theme);
 
   const jaText = useMemo(() => {
@@ -591,11 +598,35 @@ export const useTTSText = (
     return EN_TEMPLATES[resolved][stoppingState](context);
   }, [context, resolved, stoppingState]);
 
+  const remoteTextEn = useMemo(() => {
+    if (!enabled || (stoppingState !== 'NEXT' && stoppingState !== 'ARRIVING'))
+      return '';
+    const remoteContext = buildContext((segments, roman) =>
+      escapeXml(
+        roman ||
+          (segments ?? [])
+            .map(
+              (segment) =>
+                (segment.surface || segment.fallbackText || '') +
+                (segment.separator ?? '')
+            )
+            .join('')
+      )
+    );
+    return remoteContext
+      ? EN_TEMPLATES[resolved]
+          [stoppingState](remoteContext)
+          .trim()
+          .replace(parenthesisRegexp, '')
+      : '';
+  }, [enabled, buildContext, resolved, stoppingState]);
+
   if (!enabled) {
     return { text: [] };
   }
 
   return {
+    remoteTextEn,
     text: [
       jaText.trim().replace(parenthesisRegexp, ''),
       enText.trim().replace(parenthesisRegexp, ''),

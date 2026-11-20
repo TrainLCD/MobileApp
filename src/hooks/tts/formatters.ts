@@ -138,15 +138,18 @@ export const formatStationsListJa = (stations: Station[]): string =>
  *   ピリオドを足すと文法が壊れる
  * - 文末で使うテーマはテンプレ側で `.` を付与する
  */
-export const formatLinesListEn = (lines: Line[]): string => {
+export const formatLinesListEn = (
+  lines: Line[],
+  formatName = wrapPhoneme
+): string => {
   if (lines.length === 0) return '';
   if (lines.length === 1) {
     const l = lines[0];
     if (!l) return '';
-    return `the ${wrapPhoneme(l.nameTtsSegments, l.nameRoman)}`;
+    return `the ${formatName(l.nameTtsSegments, l.nameRoman)}`;
   }
   const items = lines.map((l, i) => {
-    const name = wrapPhoneme(l.nameTtsSegments, l.nameRoman);
+    const name = formatName(l.nameTtsSegments, l.nameRoman);
     if (i === lines.length - 1) return `and the ${name}`;
     return `the ${name},<break time="200ms"/>`;
   });
@@ -199,10 +202,13 @@ export const formatJrWestStopsListEn = (
  * segments が空でも `nameRoman` のみ埋まっているケースで wrapPhoneme の fallback が
  * 効かず句が丸ごと消えていた (#5917)。
  */
-export const formatFirstConnectedLineEnPhrase = (lines: Line[]): string => {
+export const formatFirstConnectedLineEnPhrase = (
+  lines: Line[],
+  formatName = wrapPhoneme
+): string => {
   const first = lines[0];
   if (!first) return '';
-  const name = wrapPhoneme(first.nameTtsSegments, first.nameRoman);
+  const name = formatName(first.nameTtsSegments, first.nameRoman);
   if (!name) return '';
   return `on the ${name}`;
 };

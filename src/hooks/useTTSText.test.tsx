@@ -129,6 +129,9 @@ describe('Without trainType & With numbering', () => {
           wrapper: wrapper,
         }
       );
+      expect(result.current.remoteTextEn).toContain(
+        'The next stop is Shinjuku-sanchome'
+      );
       expect(result.current.text).toEqual([
         '次は<sub alias="シンジュクサンチョウメ">新宿三丁目</sub>です。<sub alias="トウキョウメトロマルノウチセン">東京メトロ丸ノ内線</sub>、<sub alias="トウキョウメトロフクトシンセン">東京メトロ副都心線</sub>はお乗り換えです。',
         'The next stop is Shin-jew-ku-san-choh-meh S <say-as interpret-as="cardinal">2</say-as>. Please change here for the Tokyo Metro Marunouchi Line,<break time="200ms"/> and the Tokyo Metro Fukutoshin Line.',
