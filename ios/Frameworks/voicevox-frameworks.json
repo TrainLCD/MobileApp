@@ -22,12 +22,12 @@
       "files": [
         {
           "path": "onnxruntime_c_api.h",
-          "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.23.2/include/onnxruntime/core/session/onnxruntime_c_api.h",
+          "url": "https://cdn.jsdelivr.net/gh/microsoft/onnxruntime@v1.23.2/include/onnxruntime/core/session/onnxruntime_c_api.h",
           "sha256": "71125e66180a991d65c9bdbad4aa20daaa1f7a48c7a5c0fa5f18f250ac839a02"
         },
         {
           "path": "onnxruntime_ep_c_api.h",
-          "url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.23.2/include/onnxruntime/core/session/onnxruntime_ep_c_api.h",
+          "url": "https://cdn.jsdelivr.net/gh/microsoft/onnxruntime@v1.23.2/include/onnxruntime/core/session/onnxruntime_ep_c_api.h",
           "sha256": "b92778f50c36ecdf53d0344e0129a78b306afed653f81bba8a9597e3e6e9546f"
         }
       ]
