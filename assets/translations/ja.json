@@ -413,6 +413,7 @@
   "rideReviewPrefectureTotal": "/ %{total} 都道府県",
   "rideReviewPrefectureCountLabel": "%{total}都道府県のうち%{count}都道府県",
   "rideReviewPrefecturesShowAll": "すべて表示（ほか %{count} 都道府県）",
+  "rideReviewLinesShowAll": "すべて表示（ほか %{count} 路線）",
   "rideReviewPrefecturesUnrecorded": "都道府県が分からない乗車（%{count}回）は、この集計に入れていません。都道府県を記録する前の乗車も、これに含まれます。",
   "rideReviewPrefecturesNone": "この期間の乗車は、どれも都道府県が分かりません。都道府県を記録する前の乗車も、これに含まれます。",
   "rideReviewLineValue": "%{count}回・%{distance} km",
