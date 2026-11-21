@@ -1,0 +1,29 @@
+name: Check canary widget registration
+on:
+  push:
+    branches: [diagnose/ios-3038-upload]
+    paths: [.github/workflows/check_widget_registration.yml]
+permissions: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check App Store Connect registration
+        env:
+          ISSUER: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          SIGNING_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          node --input-type=module <<'JS'
+          import { sign } from 'node:crypto';
+          const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
+          const now = Math.floor(Date.now()/1000);
+          const payload = encode({alg:'ES256',kid:process.env.KEY_ID,typ:'JWT'}) + '.' + encode({iss:process.env.ISSUER,iat:now-10,exp:now+120,aud:'appstoreconnect-v1',scope:['GET /v1/bundleIds']});
+          const signature = sign('sha256',Buffer.from(payload),{key:Buffer.from(process.env.SIGNING_KEY,'base64'),dsaEncoding:'ieee-p1363'}).toString('base64url');
+          const identifier = 'me.tinykitten.trainlcd.dev.watchkitapp.watchwidget';
+          const url = new URL('https://api.appstoreconnect.apple.com/v1/bundleIds');
+          url.searchParams.set('filter[identifier]',identifier);
+          const response = await fetch(url,{headers:{Authorization:'Bearer '+payload+'.'+signature},redirect:'error'});
+          const body = await response.json();
+          console.log('Apple HTTP',response.status,'matching App IDs',body.data?.length,'error codes',body.errors?.map(e=>e.code));
+          JS
