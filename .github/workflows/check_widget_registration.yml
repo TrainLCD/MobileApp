@@ -34,13 +34,14 @@ jobs:
           const caps=await api('bundleIds/'+widget.id+'/bundleIdCapabilities');
           if(!caps.some(x=>x.attributes.capabilityType==='APP_GROUPS'))await api('bundleIdCapabilities',{type:'bundleIdCapabilities',attributes:{capabilityType:'APP_GROUPS'},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}}}});
           console.log('APP_GROUPS capability enabled');
-          const active=await api('profiles?filter[profileState]=ACTIVE&filter[profileType]=IOS_APP_DEVELOPMENT&limit=200&include=bundleId');
-          let template=active.find(p=>p.relationships.bundleId.data?.id===previous.id);
-          if(!template){
-           const parent=await lookup(identifier.replace('.watchwidget',''));
-           template=active.find(p=>p.relationships.bundleId.data?.id===parent.id);
+          let template;
+          for(const id of [previous.attributes.identifier,identifier.replace('.watchwidget',''),'me.tinykitten.trainlcd.dev']){
+           const target=await lookup(id);const list=await api('bundleIds/'+target.id+'/profiles?limit=200&fields[profiles]=profileState,profileType,expirationDate');
+           template=list.filter(p=>p.attributes.profileState==='ACTIVE'&&p.attributes.profileType==='IOS_APP_DEVELOPMENT').sort((a,b)=>b.attributes.expirationDate.localeCompare(a.attributes.expirationDate))[0];
+           console.log('Development profile found',id,!!template);
+           if(template)break;
           }
-          if(!template)throw Error('No matching active development profile in first page');
+          if(!template)throw Error('No active development profile');
           const existing=await api('bundleIds/'+widget.id+'/profiles?limit=200');
           const type='IOS_APP_DEVELOPMENT';
           let profile=existing.find(p=>p.attributes.profileType===type&&p.attributes.profileState==='ACTIVE');
