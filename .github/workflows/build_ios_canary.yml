@@ -195,7 +195,7 @@ jobs:
             -authenticationKeyPath "$API_KEY_PATH" \
             -authenticationKeyID "$API_KEY_ID" \
             -authenticationKeyIssuerID "$API_ISSUER_ID" \
-            archive
+            archive > "$RUNNER_TEMP/archive.log" 2>&1 || { tail -80 "$RUNNER_TEMP/archive.log"; exit 1; }
 
           dsym_path="$RUNNER_TEMP/TrainLCD.xcarchive/dSYMs/CanaryTrainLCD.app.dSYM"
           if [ ! -d "$dsym_path" ]; then
