@@ -12,7 +12,7 @@ env:
 on:
   push:
     branches:
-      - canary
+      - fix/ios-canary-3038-watch
   workflow_dispatch:
     inputs:
       publish_to_testflight:
