@@ -18,7 +18,7 @@ jobs:
           import { sign } from 'node:crypto';
           const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
           const now = Math.floor(Date.now()/1000);
-          const payload = encode({alg:'ES256',kid:process.env.KEY_ID,typ:'JWT'}) + '.' + encode({iss:process.env.ISSUER,iat:now-10,exp:now+120,aud:'appstoreconnect-v1',scope:['GET /v1/bundleIds']});
+          const payload = encode({alg:'ES256',kid:process.env.KEY_ID,typ:'JWT'}) + '.' + encode({iss:process.env.ISSUER,iat:now-10,exp:now+120,aud:'appstoreconnect-v1'});
           const signature = sign('sha256',Buffer.from(payload),{key:Buffer.from(process.env.SIGNING_KEY,'base64'),dsaEncoding:'ieee-p1363'}).toString('base64url');
           const identifier = 'me.tinykitten.trainlcd.dev.watchkitapp.watchwidget';
           const url = new URL('https://api.appstoreconnect.apple.com/v1/bundleIds');
