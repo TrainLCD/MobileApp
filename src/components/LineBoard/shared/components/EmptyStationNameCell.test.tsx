@@ -37,10 +37,40 @@ jest.mock('../../../BarTerminalEast', () => {
   };
 });
 
+jest.mock('../../../BarTerminalSaikyo', () => ({
+  BarTerminalSaikyo: jest.fn(() => null),
+}));
+
 describe('EmptyStationNameCell', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  it.each([false, true])(
+    '埼京線風グラデ=%pを空き枠にも適用する',
+    (saikyoGradient) => {
+      const { UNSAFE_getAllByType } = render(
+        <EmptyStationNameCell
+          lastLineColor="#f60"
+          isLast={true}
+          hasTerminus={false}
+          saikyoGradient={saikyoGradient}
+        />
+      );
+      const { LinearGradient } = require('expo-linear-gradient');
+      const gradient = UNSAFE_getAllByType(LinearGradient)[0];
+      expect(gradient.props.colors).toEqual(
+        saikyoGradient
+          ? ['#fff', '#000', '#000']
+          : ['#fff', '#000', '#000', '#fff']
+      );
+      expect(gradient.props.locations).toEqual(
+        saikyoGradient ? [0.1, 0.5, 0.9] : [0.5, 0.5, 0.5, 0.9]
+      );
+      const { BarTerminalSaikyo } = require('../../../BarTerminalSaikyo');
+      expect(BarTerminalSaikyo).toHaveBeenCalledTimes(saikyoGradient ? 1 : 0);
+    }
+  );
 
   it('isLast=false の場合、BarTerminalEastは表示されない', () => {
     const { queryByTestId } = render(

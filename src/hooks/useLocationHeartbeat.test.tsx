@@ -192,7 +192,10 @@ describe('useLocationHeartbeat', () => {
 
     expect(mockWatchPositionAsync).toHaveBeenCalledTimes(1);
     // 重複排除・精度フィルタ・EMAを継続測位と共有するため、必ずこの入口を通す
-    expect(mockHandleTrackingLocation).toHaveBeenCalledWith(makeLocation(NOW));
+    expect(mockHandleTrackingLocation).toHaveBeenCalledWith(
+      makeLocation(NOW),
+      'foreground-heartbeat'
+    );
   });
 
   it.each(['stale', 'duplicate'] as const)(
@@ -216,7 +219,10 @@ describe('useLocationHeartbeat', () => {
       const fresh = makeLocation(Date.now());
       await act(async () => watch.emit(fresh));
       expect(watch.remove).toHaveBeenCalledTimes(1);
-      expect(mockHandleTrackingLocation).toHaveBeenCalledWith(fresh);
+      expect(mockHandleTrackingLocation).toHaveBeenCalledWith(
+        fresh,
+        'foreground-heartbeat'
+      );
       expect(getLocationHeartbeatStats().succeeded).toBe(1);
     }
   );
@@ -447,7 +453,10 @@ describe('useLocationHeartbeat', () => {
       watches[1].emit(location);
     });
 
-    expect(mockHandleTrackingLocation).toHaveBeenCalledWith(location);
+    expect(mockHandleTrackingLocation).toHaveBeenCalledWith(
+      location,
+      'foreground-heartbeat'
+    );
   });
 
   it('継続測位と同じ精度で取得する', async () => {

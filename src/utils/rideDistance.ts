@@ -3,7 +3,7 @@ import type { Station } from '~/@types/graphql';
 import type { RideDistanceSource } from '~/lib/rideLog';
 import { getTrackDistance } from '~/lib/trackDistances';
 
-type StationCoords = Pick<Station, 'id' | 'latitude' | 'longitude'>;
+type StationCoords = Pick<Station, 'id' | 'groupId' | 'latitude' | 'longitude'>;
 
 const hasCoords = (
   s: StationCoords | undefined
@@ -35,10 +35,13 @@ const sumAlong = (path: StationCoords[]): SegmentSum => {
   for (let i = 1; i < path.length; i++) {
     const prev = path[i - 1];
     const cur = path[i];
+    // 区間の境目に並ぶ同じ駅グループの乗換駅は、乗車距離に含めません。
     const track =
-      prev.id != null && cur.id != null
-        ? getTrackDistance(prev.id, cur.id)
-        : null;
+      prev.groupId != null && prev.groupId === cur.groupId
+        ? 0
+        : prev.id != null && cur.id != null
+          ? getTrackDistance(prev.id, cur.id)
+          : null;
     if (track != null) {
       sum.meters += track;
       sum.trackSegments += 1;

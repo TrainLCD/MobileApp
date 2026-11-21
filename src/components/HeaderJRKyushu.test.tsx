@@ -1,7 +1,12 @@
 import { render } from '@testing-library/react-native';
-import type React from 'react';
+import { type TrainType, TrainTypeKind } from '~/@types/graphql';
 import { createMockHeaderProps } from '~/__fixtures__/headerProps';
+import { TOEI_SHINJUKU_LINE_LOCAL } from '~/__fixtures__/line';
+import { useHeaderAnimation } from '../hooks';
+import * as tabletModule from '../utils/isTablet';
+import AnimatedTypography from './AnimatedTypography';
 import HeaderJRKyushu from './HeaderJRKyushu';
+import TrainTypeBox from './TrainTypeBox';
 
 // Mock dependencies
 jest.mock('jotai', () => ({
@@ -37,9 +42,14 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
-jest.mock('expo-linear-gradient', () => ({
-  LinearGradient: ({ children }: { children: React.ReactNode }) => children,
-}));
+jest.mock('expo-linear-gradient', () => {
+  const { View } = require('react-native');
+  return {
+    LinearGradient: (props: Record<string, unknown>) => (
+      <View {...props} testID="linear-gradient" />
+    ),
+  };
+});
 
 jest.mock('~/store/atoms/navigation', () => ({
   __esModule: true,
@@ -122,7 +132,9 @@ jest.mock('~/hooks', () => ({
 
 jest.mock('~/utils/isTablet', () => ({
   __esModule: true,
-  default: false,
+  get default() {
+    return false;
+  },
 }));
 
 jest.mock('~/utils/numbering', () => ({
@@ -140,6 +152,13 @@ jest.mock('./NumberingIcon', () => {
   };
 });
 
+jest.mock('./TrainTypeBox', () => {
+  const { View } = require('react-native');
+  return jest.fn(function MockTrainTypeBox() {
+    return <View testID="TrainTypeBox" />;
+  });
+});
+
 jest.mock('./TrainTypeBoxJRKyushu', () => {
   const { View } = require('react-native');
   return function MockTrainTypeBoxJRKyushu() {
@@ -150,6 +169,211 @@ jest.mock('./TrainTypeBoxJRKyushu', () => {
 describe('HeaderJRKyushu', () => {
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  it.each([
+    [true, 'EN', 'for Tajimi', 'Bound for Tajimi'],
+    [true, 'EN', 'for Tajimi via Kanayama', 'Bound for Tajimi via Kanayama'],
+    [true, 'EN', 'Bound for Tajimi', 'Bound for Tajimi'],
+    [false, 'EN', 'for Tajimi', 'for Tajimi'],
+    [true, 'JA', '多治見 行き', '多治見 行き'],
+  ] as const)(
+    '315系=%s・言語=%sの行先表示を整形する',
+    (is315, headerLangState, boundText, expected) => {
+      const props = createMockHeaderProps({
+        boundText,
+        headerLangState,
+        selectedBound: createMockHeaderProps().currentStation,
+      });
+      const { getByText } = render(<HeaderJRKyushu {...props} is315={is315} />);
+      expect(getByText(expected)).toBeTruthy();
+      expect(getByText(expected).props.numberOfLines).toBe(
+        is315 && headerLangState === 'EN' ? 1 : undefined
+      );
+      expect(getByText(expected).props.adjustsFontSizeToFit).toBe(
+        is315 && headerLangState === 'EN' ? true : undefined
+      );
+      if (is315 && headerLangState === 'EN') {
+        let ancestor = getByText(expected).parent;
+        while (ancestor) {
+          expect(ancestor.type).not.toBe(AnimatedTypography);
+          ancestor = ancestor.parent;
+        }
+      }
+      expect(useHeaderAnimation).toHaveBeenLastCalledWith(
+        expect.objectContaining({ boundText: expected })
+      );
+    }
+  );
+
+  it.each([
+    [true, 'Bound for Hikarigaoka via Tochomae', true],
+    [true, '多治見 行', false],
+    [false, 'Bound for Hikarigaoka via Tochomae', false],
+  ] as const)(
+    '315系=%sの旧行先「%s」も英語だけ1行に収める',
+    (is315, previousText, shouldFit) => {
+      const mockAnimation = jest.mocked(useHeaderAnimation);
+      const implementation = mockAnimation.getMockImplementation();
+      if (!implementation) throw new Error('Header animation mock is missing');
+      const animation = implementation(createMockHeaderProps());
+      mockAnimation.mockReturnValueOnce({
+        ...animation,
+        prevBoundText: previousText,
+      });
+      const { getByText } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({
+            boundText: 'たじみ ゆき',
+            headerLangState: 'KANA',
+            selectedBound: createMockHeaderProps().currentStation,
+          })}
+          is315={is315}
+        />
+      );
+      if (shouldFit) {
+        let ancestor = getByText(previousText).parent;
+        while (ancestor) {
+          expect(ancestor.type).not.toBe(AnimatedTypography);
+          ancestor = ancestor.parent;
+        }
+      }
+      expect(getByText(previousText).props.numberOfLines).toBe(
+        shouldFit ? 1 : undefined
+      );
+      expect(getByText(previousText).props.adjustsFontSizeToFit).toBe(
+        shouldFit ? true : undefined
+      );
+    }
+  );
+
+  describe('315系の種別表示と配色', () => {
+    it.each([
+      [false, 1.3, 1.4],
+      [true, 1, 1],
+    ])(
+      'タブレット=%pで種別表示の寸法倍率を切り替える',
+      (isTablet, heightScale, widthScale) => {
+        jest.spyOn(tabletModule, 'default', 'get').mockReturnValue(isTablet);
+        const { getByTestId, queryByTestId } = render(
+          <HeaderJRKyushu {...createMockHeaderProps()} is315 />
+        );
+        expect(getByTestId('TrainTypeBox')).toBeTruthy();
+        expect(jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0]).toEqual(
+          expect.objectContaining({
+            darkenColor: true,
+            jr315Gradient: true,
+            fitTextToHeight: true,
+            heightScale,
+            widthScale,
+            borderRadius: 4,
+            borderColor: '#000000',
+            colorOverride: '#000000',
+          })
+        );
+        expect(queryByTestId('TrainTypeBoxJRKyushu')).toBeNull();
+      }
+    );
+
+    it.each([
+      TrainTypeKind.Rapid,
+      TrainTypeKind.HighSpeedRapid,
+      TrainTypeKind.CommuterRapid,
+      TrainTypeKind.Default,
+      TrainTypeKind.LimitedExpress,
+    ])('%sは普通を黒・快速系を青にし、枠も表示色に揃える', (kind) => {
+      const trainType: TrainType = {
+        __typename: 'TrainType',
+        id: 1,
+        typeId: 102,
+        groupId: 109,
+        name: '快速',
+        nameKatakana: 'カイソク',
+        nameRoman: 'Rapid',
+        nameIpa: null,
+        nameRomanIpa: null,
+        nameTtsSegments: null,
+        nameChinese: null,
+        nameKorean: null,
+        color: '#dc143c',
+        direction: null,
+        kind,
+        line: null,
+        lines: null,
+      };
+      render(
+        <HeaderJRKyushu {...createMockHeaderProps({ trainType })} is315 />
+      );
+      const expected =
+        kind === TrainTypeKind.Default
+          ? '#000000'
+          : kind === TrainTypeKind.Rapid ||
+              kind === TrainTypeKind.HighSpeedRapid
+            ? '#1e8ad2'
+            : '#dc143c';
+      const props = jest.mocked(TrainTypeBox).mock.calls.at(-1)?.[0];
+      expect(props).toMatchObject({
+        colorOverride: expected,
+        borderColor: expected,
+      });
+      expect(props?.trainType).toBe(trainType);
+    });
+
+    it('上端は指定の固定色にし、区切り線には現在の路線色を使う', () => {
+      const { getAllByTestId, UNSAFE_getAllByType } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({
+            currentLine: { ...TOEI_SHINJUKU_LINE_LOCAL, color: '#0068B7' },
+          })}
+          is315
+        />
+      );
+      const { View, StyleSheet } = require('react-native');
+      expect(getAllByTestId('linear-gradient')[0].props.colors).toEqual([
+        '#fff',
+        '#FA7D28bb',
+        '#FA7D28bb',
+        '#FA7D28bb',
+        '#fff',
+      ]);
+      expect(getAllByTestId('linear-gradient')[1].props.colors).toEqual([
+        '#fff',
+        '#fff',
+      ]);
+      const views = UNSAFE_getAllByType(View);
+      expect(
+        StyleSheet.flatten(views[views.length - 1].props.style).backgroundColor
+      ).toBe('#0068B7');
+    });
+
+    it('路線がなくても上端は指定の固定色を使う', () => {
+      const { getAllByTestId } = render(
+        <HeaderJRKyushu
+          {...createMockHeaderProps({ currentLine: null })}
+          is315
+        />
+      );
+      expect(getAllByTestId('linear-gradient')[0].props.colors[1]).toBe(
+        '#FA7D28bb'
+      );
+    });
+
+    it('JR九州風には上端を追加せず赤い区切り線を保つ', () => {
+      const { getAllByTestId, UNSAFE_getAllByType } = render(
+        <HeaderJRKyushu {...createMockHeaderProps()} />
+      );
+      const { View, StyleSheet } = require('react-native');
+      expect(getAllByTestId('linear-gradient')).toHaveLength(1);
+      expect(getAllByTestId('linear-gradient')[0].props.colors).toEqual([
+        '#fcfcfc',
+        '#ccc',
+      ]);
+      const views = UNSAFE_getAllByType(View);
+      expect(
+        StyleSheet.flatten(views[views.length - 1].props.style).backgroundColor
+      ).toBe('#E50012');
+    });
   });
 
   describe('Component rendering', () => {
@@ -273,6 +497,63 @@ describe('HeaderJRKyushu', () => {
         render(<HeaderJRKyushu {...createMockHeaderProps()} />);
       }).not.toThrow();
     });
+  });
+
+  it.each([
+    [true, 'KANA', false],
+    [true, 'JA', true],
+    [true, 'EN', false],
+    [false, 'KANA', true],
+  ] as const)(
+    '315系=%s・言語=%sの直通案内表示',
+    (is315, headerLangState, visible) => {
+      const props = createMockHeaderProps({
+        selectedBound: createMockHeaderProps().currentStation,
+        connectedLines: [TOEI_SHINJUKU_LINE_LOCAL],
+        connectionText: '中央本線',
+        boundText: 'たじみ ゆき',
+        headerLangState,
+        isJapaneseState: headerLangState !== 'EN',
+      });
+      const { queryByText, getByText } = render(
+        <HeaderJRKyushu {...props} is315={is315} />
+      );
+      expect(Boolean(queryByText('中央本線直通 '))).toBe(visible);
+      expect(getByText('たじみ ゆき')).toBeTruthy();
+      expect(
+        jest.mocked(useHeaderAnimation).mock.calls.at(-1)?.[0].connectionText
+      ).toBe(is315 && headerLangState === 'KANA' ? '' : '中央本線');
+    }
+  );
+
+  it('かなから漢字に切り替える際に旧表示へ直通の文字だけを残さない', () => {
+    const props = createMockHeaderProps({
+      selectedBound: createMockHeaderProps().currentStation,
+      connectedLines: [TOEI_SHINJUKU_LINE_LOCAL],
+      connectionText: '中央本線',
+      boundText: 'たじみ ゆき',
+      headerLangState: 'KANA',
+    });
+    const { rerender, queryByText, getAllByText } = render(
+      <HeaderJRKyushu {...props} is315 />
+    );
+    const previous = jest.mocked(useHeaderAnimation).mock.results.at(-1)?.value;
+    jest.mocked(useHeaderAnimation).mockReturnValueOnce({
+      ...previous,
+      prevBoundText: 'たじみ ゆき',
+      prevConnectionText: '',
+      prevIsJapaneseState: true,
+    });
+    rerender(
+      <HeaderJRKyushu
+        {...props}
+        is315
+        headerLangState="JA"
+        boundText="多治見 行"
+      />
+    );
+    expect(getAllByText('中央本線直通 ')).toHaveLength(1);
+    expect(queryByText(/^直通\s*$/)).toBeNull();
   });
 
   describe('Connected lines handling', () => {

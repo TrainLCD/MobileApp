@@ -91,7 +91,9 @@ describe('ETAの進行量上限による棄却', () => {
     const before = store.get(locationAtom)?.coords.latitude;
 
     // 10秒後、6駅目付近(=4駅先)の座標が届く
-    setLocation(makeLocation(stations[5].latitude as number, t0 + 11_000));
+    expect(
+      setLocation(makeLocation(stations[5].latitude as number, t0 + 11_000))
+    ).toBe('rejectedByEta');
 
     expect(store.get(locationAtom)?.coords.latitude).toBe(before);
   });

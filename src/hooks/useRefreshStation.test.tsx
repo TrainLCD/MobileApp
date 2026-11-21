@@ -60,6 +60,7 @@ const mockStation: Station = {
   nameTtsSegments: null,
   nameKorean: undefined,
   threeLetterCode: undefined,
+  platformCode: undefined,
   trackDistanceFromPrevious: null,
   latitude: 35.0,
   longitude: 135.0,

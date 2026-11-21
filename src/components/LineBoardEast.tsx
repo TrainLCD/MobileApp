@@ -11,8 +11,6 @@ import {
   useLandscapeWindowDimensions,
   useTransferLinesFromStation,
 } from '~/hooks';
-import { useAfterNextStation } from '~/hooks/useAfterNextStation';
-import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
 import { useScale } from '~/hooks/useScale';
 import { arrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
@@ -22,18 +20,19 @@ import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
 import { BarTerminalOdakyu } from './BarTerminalOdakyu';
 import type { ChevronColor } from './ChevronTY';
-import { Heading } from './Heading';
 import {
   BlinkingChevron,
   EmptyStationNameCell,
   LineDot,
   StationName,
 } from './LineBoard/shared/components';
+import { NextStopBanner } from './LineBoard/shared/components/NextStopBanner';
 import {
   useBarStyles,
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   STATION_NAME_CONTAINER_BOTTOM,
   commonLineBoardStyles as styles,
@@ -59,17 +58,6 @@ const localStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'visible',
-  },
-  nextStopBanner: {
-    position: 'absolute',
-    bottom: 0,
-    left: '12.5%',
-    right: '12.5%',
-  },
-  nextStopBannerText: {
-    color: '#212121',
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
 
@@ -120,6 +108,7 @@ interface StationNameCellProps {
   chevronColors: readonly [ChevronColor, ChevronColor];
   isOdakyu?: boolean;
   estimatedMinutes?: number | null;
+  boardPaddingBottom?: number;
 }
 
 // Helper for bar gradients
@@ -332,6 +321,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   chevronColors,
   isOdakyu,
   estimatedMinutes,
+  boardPaddingBottom,
 }: StationNameCellProps) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
@@ -477,7 +467,9 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           additionalChevronStyle,
           {
             bottom: isTablet
-              ? dim.height / 3.5 + (STATION_NAME_CONTAINER_BOTTOM ?? 0) - 52
+              ? (boardPaddingBottom ?? 0) +
+                (STATION_NAME_CONTAINER_BOTTOM ?? 0) -
+                52
               : 32,
             marginLeft: widthScale(14),
           },
@@ -511,10 +503,6 @@ const LineBoardEast: React.FC<Props> = ({
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
-  // useAfterNextStation が案内面共通の次駅 (useDisplayNextStation) 起点に
-  // なったため、バナーの「◯◯のつぎは」側も同じ次駅を参照して整合を保つ
-  const nextStation = useDisplayNextStation();
-  const afterNextStation = useAfterNextStation();
   // 小田急テーマはETA表示の対象外のためクエリごと実行しない
   const { route: estimatedRoute } = useEstimateArrivalTimes({
     skip: isOdakyu,
@@ -524,24 +512,11 @@ const LineBoardEast: React.FC<Props> = ({
 
   const dim = useLandscapeWindowDimensions();
 
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
+
   const line = useMemo(
     () => currentLine || selectedLine,
     [currentLine, selectedLine]
-  );
-
-  const hasPassStation = useMemo(
-    () => stations.some((s) => getIsPass(s)),
-    [stations]
-  );
-
-  const showNextStopBanner = useMemo(
-    () =>
-      isOdakyu &&
-      isTablet &&
-      hasPassStation &&
-      !!nextStation?.name &&
-      !!afterNextStation?.name,
-    [isOdakyu, hasPassStation, nextStation?.name, afterNextStation?.name]
   );
 
   // 旧実装の点滅順(初期=pair[1]、次=pair[0])を保ったままBlinkingChevronへ渡す
@@ -590,6 +565,7 @@ const LineBoardEast: React.FC<Props> = ({
             arrivingLineColor={arrivingLineColor}
             hasTerminus={hasTerminus}
             chevronColors={chevronColors}
+            boardPaddingBottom={boardPaddingBottom}
             isOdakyu={isOdakyu}
             estimatedMinutes={
               s.id != null ? estimatedMinutesByStationId.get(s.id) : null
@@ -600,6 +576,7 @@ const LineBoardEast: React.FC<Props> = ({
     },
     [
       chevronColors,
+      boardPaddingBottom,
       hasTerminus,
       line,
       lineColors,
@@ -612,27 +589,17 @@ const LineBoardEast: React.FC<Props> = ({
 
   return (
     <View
+      testID="line-board-east"
+      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
-          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+          paddingBottom: boardPaddingBottom,
         },
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
-      {showNextStopBanner ? (
-        <LinearGradient
-          colors={['white', '#ccc', '#ccc', 'white']}
-          start={[0, 1]}
-          end={[1, 0]}
-          locations={[0, 0.1, 0.9, 1]}
-          style={localStyles.nextStopBanner}
-        >
-          <Heading style={localStyles.nextStopBannerText}>
-            {`${nextStation?.name}のつぎは${afterNextStation?.name}にとまります`}
-          </Heading>
-        </LinearGradient>
-      ) : null}
+      {isOdakyu && isTablet ? <NextStopBanner stations={stations} /> : null}
     </View>
   );
 };

@@ -86,7 +86,7 @@ bump 専用 PR は作成しない。PR 作成本体は **`create-pr`** スキル
 | `head` | 準備した `release/canary-...` ブランチ |
 | `title` | `canary` |
 | `summary` | dev の変更とビルド番号更新を含む canary リリースである旨 |
-| `related_issue` | 省略 |
+| `related_issue` | 含まれる変更の既存Issueを指定します。未確定なら `create-pr` の「Issueの確定」で検索・必要時の起票を行い、必ず紐づけます。未完了のIssueには `Refs` を使います。 |
 | `skip_checks` | 実際の実行結果に従う。未実行の項目を ON にしない |
 | `labels` | `["skip-version-bump"]` |
 

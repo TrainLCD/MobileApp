@@ -18,17 +18,20 @@ import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { BarTerminalEast } from './BarTerminalEast';
+import { BarTerminalSaikyo } from './BarTerminalSaikyo';
 import {
   BlinkingChevron,
   EmptyStationNameCell,
   LineDot,
   StationName,
 } from './LineBoard/shared/components';
+import { NextStopBanner } from './LineBoard/shared/components/NextStopBanner';
 import {
   useBarStyles,
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 import {
   getLineColorBarSegments,
@@ -45,6 +48,8 @@ type Props = {
   arrivingLineColor?: string | null;
   stations: Station[];
   hasTerminus: boolean;
+  saikyoGradient?: boolean;
+  showNextStopBanner?: boolean;
 };
 
 // JRKyushuはヘッダーが他のテーマより高いため、独自のbottomオフセットを使用
@@ -78,6 +83,8 @@ interface StationNameCellProps {
   arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
+  boardPaddingBottom?: number;
+  saikyoGradient: boolean;
 }
 
 // Helper: Determine if the bar should be split at current station
@@ -200,6 +207,7 @@ const BarGradients: React.FC<{
   showFutureBar: boolean;
   firstHalfBarProps: { left: number; width: number };
   secondHalfBarProps: { left: number; width: number };
+  saikyoGradient: boolean;
 }> = ({
   line,
   lineColors,
@@ -212,11 +220,16 @@ const BarGradients: React.FC<{
   showFutureBar,
   firstHalfBarProps,
   secondHalfBarProps,
+  saikyoGradient,
 }) => (
   <>
     <LinearGradient
-      colors={['#fff', '#000', '#000', '#fff']}
-      locations={[0.5, 0.5, 0.5, 0.9]}
+      colors={
+        saikyoGradient
+          ? ['#fff', '#000', '#000']
+          : ['#fff', '#000', '#000', '#fff']
+      }
+      locations={saikyoGradient ? [0.1, 0.5, 0.9] : [0.5, 0.5, 0.5, 0.9]}
       style={[styles.bar, { left: barLeft, width: barWidth }]}
     />
     <LinearGradient
@@ -226,8 +239,12 @@ const BarGradients: React.FC<{
 
     {showFutureBar ? (
       <LinearGradient
-        colors={['#fff', '#000', '#000', '#fff']}
-        locations={[0.5, 0.5, 0.5, 0.9]}
+        colors={
+          saikyoGradient
+            ? ['#fff', '#000', '#000']
+            : ['#fff', '#000', '#000', '#fff']
+        }
+        locations={saikyoGradient ? [0.1, 0.5, 0.9] : [0.5, 0.5, 0.5, 0.9]}
         style={[styles.bar, { left: barLeft, width: barWidth }]}
       />
     ) : null}
@@ -281,7 +298,10 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
+  boardPaddingBottom,
+  saikyoGradient,
 }: StationNameCellProps) => {
+  const BarTerminal = saikyoGradient ? BarTerminalSaikyo : BarTerminalEast;
   const dim = useLandscapeWindowDimensions();
   const {
     currentStationIndex,
@@ -360,6 +380,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
         <NumberingIconView station={station} />
 
         <BarGradients
+          saikyoGradient={saikyoGradient}
           line={line}
           lineColors={lineColors}
           arrivingLineColor={arrivingLineColor}
@@ -384,7 +405,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
         />
 
         {stations.length - 1 === index ? (
-          <BarTerminalEast
+          <BarTerminal
             width={isTablet ? 41 : 27}
             height={isTablet ? 48 : 32}
             style={[
@@ -406,7 +427,9 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           additionalChevronStyle,
           {
             bottom: isTablet
-              ? dim.height / 3.5 + (JR_KYUSHU_CONTAINER_BOTTOM ?? 0) - 52
+              ? (boardPaddingBottom ?? 0) +
+                (JR_KYUSHU_CONTAINER_BOTTOM ?? 0) -
+                52
               : 32,
             marginLeft: widthScale(14),
           },
@@ -429,10 +452,13 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   hasTerminus,
   lineColors,
   arrivingLineColor,
+  saikyoGradient = false,
+  showNextStopBanner = false,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
   const padCount = Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
   const { route: estimatedRoute } = useEstimateArrivalTimes();
@@ -451,6 +477,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       if (!s) {
         return (
           <EmptyStationNameCell
+            saikyoGradient={saikyoGradient}
             lastLineColor={lineColors.at(-1) || line?.color || '#fff'}
             key={`empty-${i}`}
             isLast={isLast}
@@ -466,6 +493,8 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       return (
         <React.Fragment key={s.id}>
           <StationNameCell
+            saikyoGradient={saikyoGradient}
+            boardPaddingBottom={boardPaddingBottom}
             station={s}
             stations={stations}
             index={i}
@@ -481,6 +510,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       );
     },
     [
+      boardPaddingBottom,
       hasTerminus,
       line,
       lineColors,
@@ -488,6 +518,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
       stations,
       totalStations,
       estimatedMinutesByStationId,
+      saikyoGradient,
     ]
   );
 
@@ -502,14 +533,19 @@ const LineBoardJRKyushu: React.FC<Props> = ({
 
   return (
     <View
+      testID="line-board-jrkyushu"
+      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
-          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+          paddingBottom: boardPaddingBottom,
         },
       ]}
     >
       {stationsWithEmpty.map(stationNameCellForMap)}
+      {showNextStopBanner && isTablet ? (
+        <NextStopBanner stations={stations} />
+      ) : null}
     </View>
   );
 };

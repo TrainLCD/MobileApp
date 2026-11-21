@@ -1,6 +1,6 @@
 import { CommonActions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
-import { useSetAtom } from 'jotai';
+import { useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
 import {
   type Station,
@@ -19,11 +19,12 @@ import {
   ROUTE_RESOLVER_TIMEOUT_MS,
   resolveSidsFromShortId,
 } from '~/lib/routeResolver';
+import { confirmExternalRouteSwitch } from '~/utils/confirmExternalRouteSwitch';
 import type { LineDirection } from '../models/Bound';
 import { APP_THEME, type ThemePreference } from '../models/Theme';
 import { navigationRef } from '../stacks/rootNavigation';
 import lineState from '../store/atoms/line';
-import navigationState from '../store/atoms/navigation';
+import navigationState, { presetRoutesAtom } from '../store/atoms/navigation';
 import stationState from '../store/atoms/station';
 import { themePreferenceAtom } from '../store/atoms/theme';
 import { navigateToSelectLine } from '../utils/navigateToSelectLine';
@@ -86,6 +87,7 @@ const waitForNavReady = (): Promise<boolean> =>
   });
 
 export const useDeepLink = () => {
+  const store = useStore();
   const setStationState = useSetAtom(stationState);
   const setNavigationState = useSetAtom(navigationState);
   const setLineState = useSetAtom(lineState);
@@ -420,6 +422,10 @@ export const useDeepLink = () => {
         if (typeof preset !== 'string' || !PRESET_ID_PATTERN.test(preset)) {
           return;
         }
+        const presetRoute = store
+          .get(presetRoutesAtom)
+          .find((route) => route.id === preset);
+        if (!(await confirmExternalRouteSwitch(presetRoute))) return;
         setNavigationState((prev) => ({
           ...prev,
           pendingQuickActionRouteId: preset,
@@ -449,6 +455,7 @@ export const useDeepLink = () => {
         if (typeof id !== 'string' || !ROUTE_RESOLVER_ID_PATTERN.test(id)) {
           return;
         }
+        if (!(await confirmExternalRouteSwitch())) return;
         const controller = new AbortController();
         const timeoutId = setTimeout(
           () => controller.abort(),
@@ -539,6 +546,7 @@ export const useDeepLink = () => {
           skipIndices = new Set(parsedSkips);
         }
 
+        if (!(await confirmExternalRouteSwitch())) return;
         await openRouteByStationIds({
           stationIds,
           skipIndices,
@@ -581,6 +589,7 @@ export const useDeepLink = () => {
         lineGroupId = Number(rawLineGroupId);
       }
 
+      if (!(await confirmExternalRouteSwitch())) return;
       await openLink({
         stationGroupId,
         direction,
@@ -591,7 +600,7 @@ export const useDeepLink = () => {
         theme: parsedTheme,
       });
     },
-    [openLink, openRouteByStationIds, setNavigationState]
+    [openLink, openRouteByStationIds, setNavigationState, store]
   );
 
   const [initialUrlProcessed, setInitialUrlProcessed] = useState(false);

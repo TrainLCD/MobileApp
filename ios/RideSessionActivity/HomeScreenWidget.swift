@@ -111,17 +111,20 @@ struct LineNumberingBadge: View {
   let diameter: CGFloat
 
   var body: some View {
-    ZStack {
-      Circle()
-        .fill(lineForegroundColor(for: lineColor))
-      Text(lineSymbol)
-        .font(.system(size: diameter * 0.4, weight: .heavy, design: .rounded))
-        .foregroundStyle(Color(hex: lineColor))
-        .minimumScaleFactor(0.5)
-        .lineLimit(1)
-        .padding(diameter * 0.18)
-    }
-    .frame(width: diameter, height: diameter)
+    Circle()
+      .fill(lineForegroundColor(for: lineColor))
+      .frame(width: diameter, height: diameter)
+      .overlay(alignment: .center) {
+        Text(lineSymbol)
+          .font(.system(size: diameter * 0.4, weight: .heavy, design: .rounded))
+          .foregroundStyle(Color(hex: lineColor))
+          .minimumScaleFactor(0.5)
+          .lineLimit(1)
+          // 縮小された文字も中央揃えにし、円の寸法は文字幅に左右されないようにします。
+          .multilineTextAlignment(.center)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+          .padding(diameter * 0.18)
+      }
     // 面に浮いて見えるだけの最小限の影。強くすると路線色が濁る
     .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
   }
@@ -151,6 +154,9 @@ struct WidgetLineHeader: View {
   let lineSymbol: String
   let lineName: String
   var boundFor: String = ""
+  var boundFontSize: CGFloat = 14
+  var boundFontWeight: Font.Weight = .regular
+  var lineNameLineLimit: Int = 2
 
   var body: some View {
     HStack(spacing: 8) {
@@ -158,11 +164,11 @@ struct WidgetLineHeader: View {
       VStack(alignment: .leading, spacing: 2) {
         Text(lineName)
           .font(.system(size: 12, weight: .semibold))
-          .lineLimit(2)
+          .lineLimit(lineNameLineLimit)
           .minimumScaleFactor(0.8)
         if !boundFor.isEmpty {
           Text(boundFor)
-            .font(.system(size: 14))
+            .font(.system(size: boundFontSize, weight: boundFontWeight))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
         }
@@ -175,33 +181,65 @@ struct WidgetStations: View {
   let from: String
   let to: String
   let vertical: Bool
-  var fontSize: CGFloat = 22
+  var fontSize: CGFloat = 24
+  var fromNumber: String = ""
+  var toNumber: String = ""
 
-  private func station(_ name: String) -> some View {
-    Text(name)
+  // 表示する駅の片方でも番号を持つ場合だけ、両側に番号用の領域を確保します。
+  private var showsNumberSlot: Bool {
+    (!from.isEmpty && !fromNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+      || (!to.isEmpty && !toNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+  }
+
+  /// 番号欄が必要な場合に、駅名の下に番号を中央揃えで表示します。
+  private func station(_ name: String, number: String) -> some View {
+    let formattedNumber = number.trimmingCharacters(in: .whitespacesAndNewlines)
+      .replacingOccurrences(of: "^([A-Za-z]+)([0-9]+)$", with: "$1-$2", options: .regularExpression)
+    return Text(name)
       .font(.system(size: fontSize, weight: .bold))
       .lineLimit(1)
       .minimumScaleFactor(0.6)
-      // 横並びは乗車中・プリセットとも駅名の幅に合わせ、矢印との間隔を保ちます。
-      .frame(maxWidth: vertical ? .infinity : nil, alignment: .leading)
+      // 高さ不足で駅名まで縮めず、横幅が足りない場合だけ縮小します。
+      .fixedSize(horizontal: false, vertical: true)
+      .frame(height: fontSize)
+      // 片方でも番号がある場合は、欠番側にも同じ最小幅を使います。
+      .frame(minWidth: showsNumberSlot ? 48 : 0)
+      // 番号の行高14ptに2ptの間隔を加え、駅名から離して表示します。
+      // 番号の文字幅は駅名の配置に影響させません。
+      .padding(.bottom, showsNumberSlot ? 16 : 0)
+      .overlay(alignment: .bottom) {
+        if showsNumberSlot {
+          Text(formattedNumber.isEmpty ? " " : formattedNumber)
+            .font(.system(size: 11, weight: .bold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .frame(maxWidth: .infinity)
+            .frame(height: 14)
+            .accessibilityHidden(formattedNumber.isEmpty)
+        }
+      }
+    // 中央揃えは駅名の幅の中だけで行い、横並びの8pt間隔は維持します。
+    .frame(maxWidth: vertical ? .infinity : nil, alignment: .leading)
   }
 
   var body: some View {
     if vertical {
-      VStack(alignment: .leading, spacing: 2) {
-        if !from.isEmpty { station(from) }
+      VStack(alignment: .leading, spacing: 0) {
+        if !from.isEmpty { station(from, number: fromNumber) }
         if !from.isEmpty && !to.isEmpty {
-          Image(systemName: "arrow.down").font(.system(size: 12, weight: .semibold))
+          Image(systemName: "arrow.down")
+            .font(.system(size: 10, weight: .semibold))
+            .frame(height: 12)
         }
-        if !to.isEmpty { station(to) }
+        if !to.isEmpty { station(to, number: toNumber) }
       }
     } else {
       HStack(spacing: 8) {
-        if !from.isEmpty { station(from) }
+        if !from.isEmpty { station(from, number: fromNumber) }
         if !from.isEmpty && !to.isEmpty {
           Image(systemName: "arrow.right").font(.system(size: 14, weight: .semibold))
         }
-        if !to.isEmpty { station(to) }
+        if !to.isEmpty { station(to, number: toNumber) }
       }
     }
   }
@@ -211,9 +249,13 @@ struct HomeScreenWidgetEntryView: View {
   let entry: LockScreenEntry
   @Environment(\.widgetFamily) var family
 
+  private var hasStationInfo: Bool {
+    entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
+  }
+
   var body: some View {
     // 見出しと駅名の間を伸ばさず、内容全体を上下中央に置く。
-    VStack(alignment: .leading, spacing: family == .systemSmall ? 8 : 12) {
+    VStack(alignment: .leading, spacing: family == .systemSmall ? 2 : 6) {
       if family == .systemMedium {
         HStack(spacing: 4) {
           Image(systemName: entry.loaded ? "tram.fill" : "tram")
@@ -226,11 +268,13 @@ struct HomeScreenWidgetEntryView: View {
         lineColor: entry.displayLineColor,
         lineSymbol: entry.displayLineSymbol,
         lineName: entry.lineName,
-        boundFor: entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty)
-          ? entry.boundFor : "")
-      if entry.loaded && (!entry.stationName.isEmpty || !entry.nextStationName.isEmpty) {
+        boundFor: hasStationInfo ? entry.boundFor : "",
+        // 駅情報がない場合は縦方向に余裕があるため、路線名を2行で表示します。
+        lineNameLineLimit: family == .systemSmall && hasStationInfo ? 1 : 2)
+      if hasStationInfo {
         WidgetStations(from: entry.stationName, to: entry.nextStationName,
-                       vertical: family == .systemSmall, fontSize: family == .systemSmall ? 20 : 22)
+                       vertical: family == .systemSmall, fontSize: 24,
+                       fromNumber: entry.stationNumber, toNumber: entry.nextStationNumber)
       } else {
         // 更新前の保存データ・未乗車でも架空の駅名を補わず、従来の方面を表示する。
         Text(entry.boundFor)
@@ -288,6 +332,28 @@ struct HomeScreenWidget: Widget {
   }
 }
 
+// 一覧の24ptと見出しの28ptで、1文字・複数文字・代替文字の中心を比較します。
+struct LineNumberingBadge_Previews: PreviewProvider {
+  static var previews: some View {
+    VStack(spacing: 16) {
+      ForEach([CGFloat(24), CGFloat(28)], id: \.self) { diameter in
+        HStack(spacing: 16) {
+          ForEach(["H", "JC", "W", "ABC", "東", "?"], id: \.self) { symbol in
+            LineNumberingBadge(lineColor: "F15A22", lineSymbol: symbol, diameter: diameter)
+              .overlay {
+                // 円と文字を同じ中心線で確認するためのガイドです。
+                Rectangle().fill(Color.blue.opacity(0.4)).frame(width: 0.5)
+              }
+          }
+        }
+      }
+    }
+    .padding()
+    .background(Color.gray)
+    .previewLayout(.sizeThatFits)
+  }
+}
+
 struct HomeScreenWidget_Previews: PreviewProvider {
   private static var entry: LockScreenEntry {
     LockScreenEntry(
@@ -299,6 +365,8 @@ struct HomeScreenWidget_Previews: PreviewProvider {
       boundFor: "新宿・渋谷方面",
       stationName: "新宿",
       nextStationName: "代々木",
+      stationNumber: "JY-17",
+      nextStationNumber: "JY-18",
       updatedAt: .now
     )
   }
@@ -311,6 +379,41 @@ struct HomeScreenWidget_Previews: PreviewProvider {
       HomeScreenWidgetEntryView(entry: entry)
         .lineColorContainerBackground(entry.displayLineColor)
         .previewContext(WidgetPreviewContext(family: .systemMedium))
+    }
+  }
+}
+
+// 駅情報・路線記号がない場合も、長い路線名を複数行で識別できることを確認します。
+struct HomeScreenWidgetMissingStations_Previews: PreviewProvider {
+  static var previews: some View {
+    HomeScreenWidgetEntryView(entry: LockScreenEntry(
+      date: .now, loaded: true, lineColor: "F9C900",
+      lineName: "名古屋市営地下鉄東山線", lineSymbol: "", boundFor: "藤が丘方面",
+      stationName: "", nextStationName: ""))
+      .lineColorContainerBackground("F9C900")
+      .previewContext(WidgetPreviewContext(family: .systemSmall))
+  }
+}
+
+// 片方が欠番でも位置が揃い、両方が欠番なら番号用の領域がなくなることを確認します。
+struct WidgetStationNumbers_Previews: PreviewProvider {
+  static var previews: some View {
+    Group {
+      ForEach([true, false], id: \.self) { vertical in
+        VStack(alignment: .leading, spacing: 16) {
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical,
+                         fromNumber: "E-35", toNumber: "E-36")
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical,
+                         fromNumber: "E-35", toNumber: "")
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical,
+                         fromNumber: "", toNumber: "E-36")
+          WidgetStations(from: "練馬", to: "豊島園", vertical: vertical)
+          WidgetStations(from: "練馬", to: "", vertical: vertical,
+                         fromNumber: "", toNumber: "E-36")
+        }
+        .padding()
+        .previewLayout(.sizeThatFits)
+      }
     }
   }
 }

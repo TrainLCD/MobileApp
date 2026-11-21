@@ -43,6 +43,7 @@ import {
   stationAtom,
 } from '~/store/atoms/station';
 import { getAccuracyBonus } from '~/utils/accuracyBonus';
+import { getBackgroundLocationDiagnostics } from '~/utils/backgroundLocationDiagnostics';
 import { copyTextToClipboard } from '~/utils/clipboard';
 import { formatDevDiagnosticsSnapshot } from '~/utils/devDiagnosticsSnapshot';
 import {
@@ -51,6 +52,7 @@ import {
 } from '~/utils/displacementSpeed';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isDevApp } from '~/utils/isDevApp';
+import { getLocationDeliveryDiagnostics } from '~/utils/locationDeliveryDiagnostics';
 import { getLocationHeartbeatStats } from '~/utils/locationHeartbeatStats';
 import {
   getLocationInputDisplacementHistory,
@@ -593,44 +595,47 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
 
     // 実際に載ったときだけ COPIED を出す。失敗しているのに成功表示を出すと、
     // 貼り付けてみるまで気付けない。
+    const diagnosticsInput = {
+      // レンダー中ではなくイベントハンドラ内なので Date.now() を直接読んでよい
+      nowMs: Date.now(),
+      appVersion: Application.nativeApplicationVersion ?? 'unknown',
+      buildNumber: Application.nativeBuildVersion ?? 'unknown',
+      channel: isDevApp ? ('canary' as const) : ('production' as const),
+      platform: Platform.OS,
+      osVersion: Platform.Version,
+      autoModeEnabled,
+      telemetryEnabled: isTelemetryEnabled,
+      backgroundLocationTracking: isBackgroundLocationTracking,
+      rawLocation,
+      filteredLocation: simulatedLocation,
+      accuracyHistory: chartHistory,
+      filterAccuracyHistory,
+      displacementHistory: getLocationInputDisplacementHistory(),
+      accuracyOutlier,
+      pipelineCounts: getLocationPipelineCounts(),
+      heartbeat: getLocationHeartbeatStats(),
+      locationDelivery: getLocationDeliveryDiagnostics(),
+      skipSmoothing: smoothingDecision.skipSmoothing,
+      lineType: smoothingDecision.lineType,
+      effectiveSpeedMps: effectiveSpeed,
+      hasMeasuredSpeed: hasEverMeasuredSpeed,
+      maxPermitAccuracy,
+      etaAssistEnabled,
+      etaPhase,
+      etaAnchor,
+      currentStation,
+      arrived,
+      approaching,
+      nearestStation,
+      distanceToNearestStation,
+      arrivedThreshold: arrivedThreshold + accuracyBonus,
+      approachingThreshold: approachingThreshold + accuracyBonus,
+      nextStation,
+      distanceToNextStation,
+    };
+    const backgroundHeartbeat = await getBackgroundLocationDiagnostics();
     const copied = await copyTextToClipboard(
-      formatDevDiagnosticsSnapshot({
-        // レンダー中ではなくイベントハンドラ内なので Date.now() を直接読んでよい
-        nowMs: Date.now(),
-        appVersion: Application.nativeApplicationVersion ?? 'unknown',
-        buildNumber: Application.nativeBuildVersion ?? 'unknown',
-        channel: isDevApp ? 'canary' : 'production',
-        platform: Platform.OS,
-        osVersion: Platform.Version,
-        autoModeEnabled,
-        telemetryEnabled: isTelemetryEnabled,
-        backgroundLocationTracking: isBackgroundLocationTracking,
-        rawLocation,
-        filteredLocation: simulatedLocation,
-        accuracyHistory: chartHistory,
-        filterAccuracyHistory,
-        displacementHistory: getLocationInputDisplacementHistory(),
-        accuracyOutlier,
-        pipelineCounts: getLocationPipelineCounts(),
-        heartbeat: getLocationHeartbeatStats(),
-        skipSmoothing: smoothingDecision.skipSmoothing,
-        lineType: smoothingDecision.lineType,
-        effectiveSpeedMps: effectiveSpeed,
-        hasMeasuredSpeed: hasEverMeasuredSpeed,
-        maxPermitAccuracy,
-        etaAssistEnabled,
-        etaPhase,
-        etaAnchor,
-        currentStation,
-        arrived,
-        approaching,
-        nearestStation,
-        distanceToNearestStation,
-        arrivedThreshold: arrivedThreshold + accuracyBonus,
-        approachingThreshold: approachingThreshold + accuracyBonus,
-        nextStation,
-        distanceToNextStation,
-      })
+      formatDevDiagnosticsSnapshot({ ...diagnosticsInput, backgroundHeartbeat })
     );
     if (copiedTimerRef.current !== null) {
       clearTimeout(copiedTimerRef.current);

@@ -1,7 +1,7 @@
 import type { MapStyleElement } from 'react-native-maps';
 
 // Google マップ(Android)の地図スタイル。iOS の Apple マップはこれを使わず、
-// userInterfaceStyle で明暗を切り替える。
+// colorScheme（iOS 16 は userInterfaceStyle）で明暗を切り替える。
 
 // 店舗などの目印を消し、描いた経路を読み取りやすくする
 export const LIGHT_MAP_STYLE: MapStyleElement[] = [

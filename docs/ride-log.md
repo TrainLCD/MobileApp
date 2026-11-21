@@ -68,7 +68,8 @@ StationAPI はこの値を「返す並びで直前にある駅からの長さ」
 `stations(ids)` は、指定した ID の順に駅を返します。`sids` のディープリンクで開いた経路は、この問い合わせで駅を取ります。
 一方アプリは、経路検索で並びを逆にしたり途中の駅を間引いたりしてから駅リストに入れます。
 そのため、`gqlRequest` が応答を受け取った時点で駅の組ごとの表に直して覚え（`src/lib/trackDistances.ts`）、距離を求めるときは組で引きます。
-線路の長さが無い区間は、駅どうしの直線距離で代えます。
+同じ駅グループ（`groupId`）の乗換駅間は、0 m の線路距離として数えます。
+それ以外で線路の長さが無い区間は、駅どうしの直線距離で代えます。
 
 `ride_stops.distanceSource` は距離の求め方です。
 
@@ -136,7 +137,7 @@ StationAPI の `Station.prefectureId`（1〜47）をそのまま入れます。
 - 同じ区間を通った乗車が多いほど、線を太くします。期間でいちばん多い回数に対する割合で、3段階に分けます。
 - 駅の座標が無い乗車は描きません。その回数をカードに添えます。期間の乗車がすべてそうなら、地図の代わりに理由を出します。
 
-地図の表示には `react-native-maps` を使います。地図の地は、Android では Google マップ、iOS では Apple マップです。
+地図の表示には iOS 17 以降と Android で `expo-maps`、iOS 16.4〜16.7 では `react-native-maps` を使います。最低対応版の iOS 16.4 は変更しません。地図の地は、Android では Google マップ、iOS では Apple マップです。
 Android の Google マップのキーは、ビルド時の環境変数 `GOOGLE_MAPS_API_KEY` から
 `AndroidManifest.xml` に入れます（`android/app/build.gradle` の `manifestPlaceholders`）。
 キーはリポジトリに置きません。手元では `.env.local` に書きます。

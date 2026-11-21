@@ -3,15 +3,15 @@ import { useAtomValue } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import { createLine, createStation } from '~/utils/test/factories';
-import lineState from '../store/atoms/line';
-import stationState from '../store/atoms/station';
+import { selectedLineAtom } from '../store/atoms/line';
+import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 
 jest.mock('jotai', () => ({
   __esModule: true,
   useAtomValue: jest.fn(),
-  atom: jest.fn(),
+  atom: jest.requireActual('jotai').atom,
 }));
 
 jest.mock('./useCurrentStation', () => ({
@@ -49,17 +49,9 @@ describe('useCurrentLine', () => {
     mockUseCurrentStation.mockReturnValue(station1);
 
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return {
-          stations: [station1, station2],
-          selectedDirection: 'INBOUND',
-        };
-      }
-      if (atom === lineState) {
-        return {
-          selectedLine: lineA,
-        };
-      }
+      if (atom === stationsAtom) return [station1, station2];
+      if (atom === selectedDirectionAtom) return 'INBOUND';
+      if (atom === selectedLineAtom) return lineA;
       throw new Error('unknown atom');
     });
 
@@ -80,17 +72,9 @@ describe('useCurrentLine', () => {
     mockUseCurrentStation.mockReturnValue(station1);
 
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return {
-          stations: [station1],
-          selectedDirection: 'INBOUND',
-        };
-      }
-      if (atom === lineState) {
-        return {
-          selectedLine: null,
-        };
-      }
+      if (atom === stationsAtom) return [station1];
+      if (atom === selectedDirectionAtom) return 'INBOUND';
+      if (atom === selectedLineAtom) return null;
       throw new Error('unknown atom');
     });
 
@@ -104,17 +88,9 @@ describe('useCurrentLine', () => {
     mockUseCurrentStation.mockReturnValue(undefined);
 
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return {
-          stations: [],
-          selectedDirection: 'INBOUND',
-        };
-      }
-      if (atom === lineState) {
-        return {
-          selectedLine: lineA,
-        };
-      }
+      if (atom === stationsAtom) return [];
+      if (atom === selectedDirectionAtom) return 'INBOUND';
+      if (atom === selectedLineAtom) return lineA;
       throw new Error('unknown atom');
     });
 
@@ -138,17 +114,9 @@ describe('useCurrentLine', () => {
     mockUseCurrentStation.mockReturnValue(station1);
 
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return {
-          stations: [station1, station2],
-          selectedDirection: 'INBOUND',
-        };
-      }
-      if (atom === lineState) {
-        return {
-          selectedLine: lineB,
-        };
-      }
+      if (atom === stationsAtom) return [station1, station2];
+      if (atom === selectedDirectionAtom) return 'INBOUND';
+      if (atom === selectedLineAtom) return lineB;
       throw new Error('unknown atom');
     });
 
@@ -175,17 +143,9 @@ describe('useCurrentLine', () => {
     mockUseCurrentStation.mockReturnValue(station1);
 
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === stationState) {
-        return {
-          stations: [station1, station2],
-          selectedDirection: 'OUTBOUND',
-        };
-      }
-      if (atom === lineState) {
-        return {
-          selectedLine: lineA,
-        };
-      }
+      if (atom === stationsAtom) return [station1, station2];
+      if (atom === selectedDirectionAtom) return 'OUTBOUND';
+      if (atom === selectedLineAtom) return lineA;
       throw new Error('unknown atom');
     });
 

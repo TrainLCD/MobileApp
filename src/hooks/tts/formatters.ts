@@ -76,12 +76,28 @@ export const replaceJapaneseText = (
   return `<sub alias="${alias}">${escapeXml(name)}</sub>`;
 };
 
+export const appendSpokenBusPlatform = (
+  name: string,
+  code: string | undefined,
+  locale: 'ja' | 'en'
+): string => {
+  if (!name || !code) return name;
+  const number = `<say-as interpret-as="cardinal">${code}</say-as>`;
+  return locale === 'ja'
+    ? `${name}、${number}番のりば`
+    : `${name}, bay ${number}`;
+};
+
 const replaceLineNameJa = (line: Pick<Line, 'nameShort' | 'nameKatakana'>) =>
   replaceJapaneseText(line.nameShort, line.nameKatakana);
 
 const replaceStationNameJa = (
   station: Pick<Station, 'name' | 'nameKatakana'>
 ) => replaceJapaneseText(station.name, station.nameKatakana);
+
+const replaceStationNameEn = (
+  station: Pick<Station, 'nameTtsSegments' | 'nameRoman'>
+) => wrapPhoneme(station.nameTtsSegments, station.nameRoman);
 
 /** 路線名を sub alias 付きで `、` 連結する。 */
 export const formatLinesListJa = (lines: Line[]): string =>
@@ -122,15 +138,18 @@ export const formatStationsListJa = (stations: Station[]): string =>
  *   ピリオドを足すと文法が壊れる
  * - 文末で使うテーマはテンプレ側で `.` を付与する
  */
-export const formatLinesListEn = (lines: Line[]): string => {
+export const formatLinesListEn = (
+  lines: Line[],
+  formatName = wrapPhoneme
+): string => {
   if (lines.length === 0) return '';
   if (lines.length === 1) {
     const l = lines[0];
     if (!l) return '';
-    return `the ${wrapPhoneme(l.nameTtsSegments, l.nameRoman)}`;
+    return `the ${formatName(l.nameTtsSegments, l.nameRoman)}`;
   }
   const items = lines.map((l, i) => {
-    const name = wrapPhoneme(l.nameTtsSegments, l.nameRoman);
+    const name = formatName(l.nameTtsSegments, l.nameRoman);
     if (i === lines.length - 1) return `and the ${name}`;
     return `the ${name},<break time="200ms"/>`;
   });
@@ -143,15 +162,12 @@ export const formatLinesListEn = (lines: Line[]): string => {
  */
 export const formatJrWestStopsListJa = (
   stops: Station[],
-  isBoundStop: (s: Station) => boolean
+  isBoundStop: (s: Station) => boolean,
+  formatStop: (stop: Station) => string = replaceStationNameJa
 ): string =>
   stops
     .slice(0, 5)
-    .map((s) =>
-      isBoundStop(s)
-        ? `終点、${replaceStationNameJa(s)}`
-        : replaceStationNameJa(s)
-    )
+    .map((s) => (isBoundStop(s) ? `終点、${formatStop(s)}` : formatStop(s)))
     .join('、');
 
 /**
@@ -161,7 +177,8 @@ export const formatJrWestStopsListJa = (
  */
 export const formatJrWestStopsListEn = (
   stops: Station[],
-  isBoundStop: (s: Station) => boolean
+  isBoundStop: (s: Station) => boolean,
+  formatStop: (stop: Station) => string = replaceStationNameEn
 ): string => {
   const joinWithAnd = (names: string[]): string => {
     if (names.length <= 1) return names[0] ?? '';
@@ -170,7 +187,7 @@ export const formatJrWestStopsListEn = (
     return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
   };
   const batch = stops.slice(0, 5);
-  const names = batch.map((s) => wrapPhoneme(s.nameTtsSegments, s.nameRoman));
+  const names = batch.map(formatStop);
   const last = batch[batch.length - 1];
   if (last && isBoundStop(last) && names.length > 1) {
     return `${joinWithAnd(names.slice(0, -1))} before arriving at ${names[names.length - 1]}`;
@@ -185,10 +202,30 @@ export const formatJrWestStopsListEn = (
  * segments が空でも `nameRoman` のみ埋まっているケースで wrapPhoneme の fallback が
  * 効かず句が丸ごと消えていた (#5917)。
  */
-export const formatFirstConnectedLineEnPhrase = (lines: Line[]): string => {
+export const formatFirstConnectedLineEnPhrase = (
+  lines: Line[],
+  formatName = wrapPhoneme
+): string => {
   const first = lines[0];
   if (!first) return '';
-  const name = wrapPhoneme(first.nameTtsSegments, first.nameRoman);
+  const name = formatName(first.nameTtsSegments, first.nameRoman);
   if (!name) return '';
   return `on the ${name}`;
+};
+
+/** 315系の次々駅案内用。駅番号をSSMLにし、番号が無ければ案内を省く。 */
+export const formatJr315StationNumberEn = (
+  stationNumber?: string | null
+): string => {
+  if (!stationNumber) return '';
+  const parts = stationNumber.split('-');
+  const hasSymbol = parts.length > 1;
+  const numbers = hasSymbol ? parts.slice(1) : parts;
+  if (!numbers.every((part) => /^\d+$/.test(part))) return '';
+  const numberText = numbers
+    .map((part) => `<say-as interpret-as="cardinal">${Number(part)}</say-as>`)
+    .join('-');
+  return hasSymbol
+    ? `${escapeXml(parts[0]?.split('').join(' ') ?? '')} ${numberText}`
+    : `Station Number ${numberText}`;
 };

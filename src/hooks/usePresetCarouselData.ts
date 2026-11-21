@@ -133,9 +133,11 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
         const trainTypeRoutes = routes.filter((r) => r.hasTrainType);
 
         // !hasTrainType のルートを lineListStations で一括取得
-        const validLineRoutes = lineRoutes.filter((r) => r.lineId !== null);
-        if (validLineRoutes.length > 0) {
-          const lineIds = validLineRoutes.map((r) => r.lineId);
+        const lineIds = [...new Set(lineRoutes.map((r) => r.lineId))].filter(
+          (id) => !lineStationsCache.has(id)
+        );
+        const fetchLines = async () => {
+          if (!lineIds.length) return;
           const result = await gqlClient.query<{
             lineListStations: Station[];
           }>({
@@ -159,13 +161,14 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
           for (const lineId of lineIds) {
             lineStationsCache.set(lineId, fetched.get(lineId) ?? []);
           }
-        }
+        };
 
         // hasTrainType のルート(乗換経路は全区間)を lineGroupListStations で一括取得
-        if (trainTypeRoutes.length > 0) {
-          const lineGroupIds = [
-            ...new Set(trainTypeRoutes.flatMap(lineGroupIdsOf)),
-          ];
+        const lineGroupIds = [
+          ...new Set(trainTypeRoutes.flatMap(lineGroupIdsOf)),
+        ].filter((id) => !trainTypeStationsCache.has(id));
+        const fetchTrainTypes = async () => {
+          if (!lineGroupIds.length) return;
           const result = await gqlClient.query<{
             lineGroupListStations: Station[];
           }>({
@@ -188,6 +191,15 @@ export const usePresetCarouselData = (): UsePresetCarouselDataResult => {
           for (const groupId of lineGroupIds) {
             trainTypeStationsCache.set(groupId, fetched.get(groupId) ?? []);
           }
+        };
+
+        // 独立した取得を並行させる。失敗時も両方の完了を待ってから再試行を許可する。
+        const results = await Promise.allSettled([
+          fetchLines(),
+          fetchTrainTypes(),
+        ]);
+        for (const result of results) {
+          if (result.status === 'rejected') throw result.reason;
         }
 
         if (requestId !== currentRequestIdRef.current) return;

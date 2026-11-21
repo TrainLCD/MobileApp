@@ -85,10 +85,56 @@ describe('usePresetsWidgetSync', () => {
         name: '通勤',
         fromStationName: isJapanese ? '東京' : 'Tokyo',
         toStationName: isJapanese ? '新宿' : 'Shinjuku',
+        fromStationNumber: '',
+        toStationNumber: '',
         lineName: isJapanese ? '山手線' : 'Yamanote Line',
         lineColor: '#80C241',
         lineSymbol: 'JY',
       },
+    ]);
+  });
+
+  it('直通先の終着駅にはその駅の路線の番号を送り、欠損時は空欄に更新する', () => {
+    const item = createLoopItem({
+      stations: [
+        createStation(1, '光が丘', 'Hikarigaoka', {
+          line: { ...line, lineSymbols: [{ symbol: 'E' }] },
+          stationNumbers: [{ lineSymbol: 'E', stationNumber: 'E38' }],
+        } as Partial<Station>),
+        createStation(2, '渋谷', 'Shibuya', {
+          line: { ...line, lineSymbols: [{ symbol: 'TY' }] },
+          stationNumbers: [
+            { lineSymbol: 'F', stationNumber: 'F-16' },
+            { lineSymbol: 'TY', stationNumber: 'TY-01' },
+          ],
+        } as Partial<Station>),
+      ],
+    });
+    const { rerender } = renderHook(
+      ({ carouselData }: { carouselData: LoopItem[] }) =>
+        usePresetsWidgetSync({
+          carouselData,
+          routes: [createRoute(item.id)],
+          isRoutesDBInitialized: true,
+        }),
+      { initialProps: { carouselData: [item] } }
+    );
+    expect(mockUpdatePresetsWidget).toHaveBeenLastCalledWith([
+      expect.objectContaining({
+        fromStationNumber: 'E-38',
+        toStationNumber: 'TY-01',
+      }),
+    ]);
+    rerender({
+      carouselData: [
+        {
+          ...item,
+          stations: item.stations.map((s) => ({ ...s, stationNumbers: [] })),
+        },
+      ],
+    });
+    expect(mockUpdatePresetsWidget).toHaveBeenLastCalledWith([
+      expect.objectContaining({ fromStationNumber: '', toStationNumber: '' }),
     ]);
   });
 

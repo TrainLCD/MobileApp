@@ -30,6 +30,10 @@ import Typography from './Typography';
 
 type Props = {
   line: Line;
+  /** 路線名でまとめる一覧用の、配色設定に従うカード。 */
+  neutral?: boolean;
+  /** のりばなど、路線マーク以外を見出しの先頭に表示する場合に指定します。 */
+  leadingContent?: React.ReactNode;
   targetStation?: Station;
   stations?: Station[];
   title?: string;
@@ -49,6 +53,8 @@ type Props = {
   onPress?: () => void;
   /** アコーディオンとして展開されるコンテンツ */
   expandableContent?: React.ReactNode;
+  /** 展開部分の背景。未指定なら既存のテーマ配色を使います。 */
+  expandedBackgroundColor?: string;
   /** アコーディオンの展開状態（外部制御用） */
   expanded?: boolean;
   /** アコーディオンの展開状態が変わった時のコールバック */
@@ -156,10 +162,17 @@ type SubtitleProps = {
   outboundText: string;
   numberOfLines?: number;
   loading?: boolean;
+  color?: string;
 };
 
 const Subtitle = memo(
-  ({ inboundText, outboundText, numberOfLines, loading }: SubtitleProps) => {
+  ({
+    inboundText,
+    outboundText,
+    numberOfLines,
+    loading,
+    color,
+  }: SubtitleProps) => {
     if (loading) {
       return (
         <View style={styles.subtitleContainer}>
@@ -173,7 +186,10 @@ const Subtitle = memo(
     return (
       <View style={styles.subtitleContainer}>
         {inboundText ? (
-          <Typography style={styles.subtitle} numberOfLines={numberOfLines}>
+          <Typography
+            style={[styles.subtitle, color ? { color } : undefined]}
+            numberOfLines={numberOfLines}
+          >
             {inboundText}
           </Typography>
         ) : null}
@@ -182,7 +198,7 @@ const Subtitle = memo(
             <Path
               d="M5 12h14M5 12l3-3M5 12l3 3M19 12l-3-3M19 12l-3 3"
               fill="none"
-              stroke="#fff"
+              stroke={color ?? '#fff'}
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -190,9 +206,62 @@ const Subtitle = memo(
           </Svg>
         ) : null}
         {outboundText ? (
-          <Typography style={styles.subtitle}>{outboundText}</Typography>
+          <Typography style={[styles.subtitle, color ? { color } : undefined]}>
+            {outboundText}
+          </Typography>
         ) : null}
       </View>
+    );
+  }
+);
+
+/** 路線カードとバスの展開行で、同じ方面計算・表記を使用します。 */
+export const LineBounds = memo(
+  ({
+    stations = EMPTY_STATIONS,
+    numberOfLines,
+    loading,
+    color,
+  }: {
+    stations?: Station[];
+    numberOfLines?: number;
+    loading?: boolean;
+    color?: string;
+  }) => {
+    const { bounds } = useBounds(stations);
+    const [inboundText, outboundText] = useMemo(() => {
+      if (!stations?.length) {
+        // フォールバックは何も表示しない
+        return ['', ''];
+      }
+      const format = (arr: Station[]): string => {
+        const ja = arr
+          .slice(0, 2)
+          .map((s) => s.name)
+          .filter(Boolean)
+          .join('・');
+        const en = arr
+          .slice(0, 2)
+          .map((s) => s.nameRoman || s.name)
+          .filter(Boolean)
+          .join(' & ');
+        if (isJapanese) return ja ? `${ja}方面` : '';
+        return en ? `for ${en}` : '';
+      };
+
+      const [inbound, outbound] = bounds;
+      return [format(inbound), format(outbound)];
+    }, [bounds, stations]);
+
+    if (!inboundText && !outboundText) return null;
+    return (
+      <Subtitle
+        inboundText={inboundText}
+        outboundText={outboundText}
+        numberOfLines={numberOfLines}
+        loading={loading}
+        color={color}
+      />
     );
   }
 );
@@ -203,7 +272,9 @@ const ACCORDION_EASING = Easing.inOut(Easing.ease);
 
 export const CommonCard: React.FC<Props> = ({
   line,
+  neutral = false,
   targetStation,
+  leadingContent,
   stations = EMPTY_STATIONS,
   title,
   hideParens,
@@ -217,6 +288,7 @@ export const CommonCard: React.FC<Props> = ({
   loading,
   onPress,
   expandableContent,
+  expandedBackgroundColor,
   expanded,
   onExpandedChange,
 }) => {
@@ -250,7 +322,6 @@ export const CommonCard: React.FC<Props> = ({
     }
     return m;
   }, [getLineMark, line, targetStation]);
-  const { bounds } = useBounds(stations);
 
   const isBus = isBusLine(line);
 
@@ -295,30 +366,6 @@ export const CommonCard: React.FC<Props> = ({
   const chevronRotationStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${progress.value * 90}deg` }],
   }));
-
-  const [inboundText, outboundText] = useMemo(() => {
-    if (!stations?.length) {
-      // フォールバックは何も表示しない
-      return ['', ''];
-    }
-    const format = (arr: Station[]): string => {
-      const ja = arr
-        .slice(0, 2)
-        .map((s) => s.name)
-        .filter(Boolean)
-        .join('・');
-      const en = arr
-        .slice(0, 2)
-        .map((s) => s.nameRoman || s.name)
-        .filter(Boolean)
-        .join(' & ');
-      if (isJapanese) return ja ? `${ja}方面` : '';
-      return en ? `for ${en}` : '';
-    };
-
-    const [inbound, outbound] = bounds;
-    return [format(inbound), format(outbound)];
-  }, [bounds, stations]);
 
   const titleOrLineName = useMemo(() => {
     return title ?? getLocalizedLineName(line, isJapanese);
@@ -397,20 +444,20 @@ export const CommonCard: React.FC<Props> = ({
 
   const additionalRootStyle = useMemo(
     () => ({
-      backgroundColor: line.color ?? '#333',
+      backgroundColor: neutral ? colors.cardExpanded : (line.color ?? '#333'),
       opacity: disabled ? 0.5 : 1,
     }),
-    [disabled, line.color]
+    [disabled, line.color, neutral, colors.cardExpanded]
   );
 
-  const cardRadius = isLEDTheme ? 0 : 8;
+  const cardRadius = isLEDTheme ? 0 : neutral ? 12 : 8;
   const wrapperRadiusStyle = useMemo(
     () => ({
       borderRadius: cardRadius,
-      backgroundColor: line.color ?? '#333',
+      backgroundColor: neutral ? colors.cardExpanded : (line.color ?? '#333'),
       overflow: 'hidden' as const,
     }),
-    [cardRadius, line.color]
+    [cardRadius, line.color, neutral, colors.cardExpanded]
   );
   const headerRadiusStyle = useMemo(() => {
     if (!hasAccordion) {
@@ -432,11 +479,11 @@ export const CommonCard: React.FC<Props> = ({
   }, [cardRadius, expanded, hasAccordion]);
   const colorBarRadiusStyle = useMemo(
     () => ({
-      backgroundColor: line.color ?? '#333',
+      backgroundColor: neutral ? colors.cardExpanded : (line.color ?? '#333'),
       borderTopLeftRadius: cardRadius,
       borderBottomLeftRadius: cardRadius,
     }),
-    [cardRadius, line.color]
+    [cardRadius, line.color, neutral, colors.cardExpanded]
   );
   const rootShadowStyle = hasAccordion ? undefined : styles.cardShadow;
   // 背景から浮かせるための縁取り。ダークモードでは白縁だと悪目立ちするため配色に追従させる
@@ -465,6 +512,11 @@ export const CommonCard: React.FC<Props> = ({
         onPress={disabled ? undefined : handlePress}
         activeOpacity={1}
         disabled={disabled}
+        accessibilityRole="button"
+        accessibilityState={{
+          disabled: !!disabled,
+          ...(hasAccordion ? { expanded: !!expanded } : {}),
+        }}
         testID={testID}
         style={[
           styles.root,
@@ -474,7 +526,9 @@ export const CommonCard: React.FC<Props> = ({
           additionalRootStyle,
         ]}
       >
-        {mark ? (
+        {leadingContent != null ? (
+          leadingContent
+        ) : mark ? (
           <View style={[styles.mark, markScaleStyle]}>
             <TransferLineMark
               line={line}
@@ -508,13 +562,23 @@ export const CommonCard: React.FC<Props> = ({
         )}
         <View style={styles.texts}>
           <Typography
-            style={styles.title}
+            style={[
+              styles.title,
+              neutral ? { color: colors.text, fontSize: 19 } : undefined,
+            ]}
             // バス系統名は長くなりがちなので 3 行まで許容する
             numberOfLines={isBus ? 3 : 1}
             adjustsFontSizeToFit
           >
             {titlePrefix ? (
-              <Typography style={styles.titleAffix}>{titlePrefix}</Typography>
+              <Typography
+                style={[
+                  styles.titleAffix,
+                  neutral ? { color: colors.text } : undefined,
+                ]}
+              >
+                {titlePrefix}
+              </Typography>
             ) : null}
             {titleParts.map((part, index) => {
               if (part.kind === 'parens') {
@@ -522,7 +586,10 @@ export const CommonCard: React.FC<Props> = ({
                 return (
                   <Typography
                     key={`${index}-${part.text}`}
-                    style={styles.titleParens}
+                    style={[
+                      styles.titleParens,
+                      neutral ? { color: colors.text } : undefined,
+                    ]}
                   >
                     {index > 0 && !/\s$/.test(prevText) ? ' ' : ''}
                     {hideParens ? part.text.slice(1, -1) : part.text}
@@ -533,7 +600,10 @@ export const CommonCard: React.FC<Props> = ({
                 return (
                   <Typography
                     key={`${index}-${part.text}`}
-                    style={styles.titleAffix}
+                    style={[
+                      styles.titleAffix,
+                      neutral ? { color: colors.text } : undefined,
+                    ]}
                   >
                     {part.text}
                   </Typography>
@@ -542,21 +612,29 @@ export const CommonCard: React.FC<Props> = ({
               return part.text;
             })}
             {titleSuffix ? (
-              <Typography style={styles.titleAffix}>{titleSuffix}</Typography>
+              <Typography
+                style={[
+                  styles.titleAffix,
+                  neutral ? { color: colors.text } : undefined,
+                ]}
+              >
+                {titleSuffix}
+              </Typography>
             ) : null}
           </Typography>
           {subtitle && (
             <Subtitle
+              color={neutral ? colors.secondaryText : undefined}
               inboundText={subtitle}
               outboundText=""
               numberOfLines={subtitleNumberOfLines}
               loading={loading}
             />
           )}
-          {!subtitle && (!!inboundText || !!outboundText) && (
-            <Subtitle
-              inboundText={inboundText}
-              outboundText={outboundText}
+          {!subtitle && (
+            <LineBounds
+              stations={stations}
+              color={neutral ? colors.secondaryText : undefined}
               numberOfLines={subtitleNumberOfLines}
               loading={loading}
             />
@@ -565,10 +643,12 @@ export const CommonCard: React.FC<Props> = ({
         <View style={styles.chevron}>
           {!hideChevron && hasAccordion && (
             <Animated.View style={chevronRotationStyle}>
-              <CardChevron />
+              <CardChevron stroke={neutral ? colors.text : undefined} />
             </Animated.View>
           )}
-          {!hideChevron && !hasAccordion && <CardChevron />}
+          {!hideChevron && !hasAccordion && (
+            <CardChevron stroke={neutral ? colors.text : undefined} />
+          )}
           {hideChevron && !checked && (
             <Svg width={24} height={24} viewBox="0 0 24 24">
               <Path
@@ -590,10 +670,15 @@ export const CommonCard: React.FC<Props> = ({
       </TouchableOpacity>
       {hasAccordion && (
         <Animated.View
+          pointerEvents={expanded ? 'auto' : 'none'}
+          accessibilityElementsHidden={!expanded}
+          importantForAccessibility={expanded ? 'auto' : 'no-hide-descendants'}
           style={[
             styles.expandableWrapper,
             {
-              backgroundColor: isLEDTheme ? '#212121' : colors.cardExpanded,
+              backgroundColor:
+                expandedBackgroundColor ??
+                (isLEDTheme ? '#212121' : colors.cardExpanded),
             },
             expandableHeightStyle,
           ]}

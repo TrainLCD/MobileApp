@@ -36,14 +36,21 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
    - 0 件なら「master は dev に対して進んでいない。同期 PR 不要」で中断し報告。
    - 1 件以上あれば続行。コミット件名リストは後で本文に使うので保持。
 
-2. **既存 open PR のガード**
+2. **既存 open PR の確認とIssueの確定**
 
    ```bash
    gh pr list --base dev --head chore/dev-from-master --state open --json number,url
    ```
 
-   - 既に open なら新規作成せず、既存 URL を返して中断。
-   - close 済み or merged のみなら続行。
+   **関連Issueの確定（新規作成・既存PRとも必須）**:
+
+   - [create-pr](../create-pr/SKILL.md) の「Issueの確定（新規作成・更新とも必須）」に従い、同期で取り込む変更に対応する既存Issueを検索し、本文を確認して再利用する。open・closedと他リポジトリのIssueも対象にする。
+   - 該当するIssueがなければ、同期の目的・対応範囲・完了条件を記載して起票し、`@TinyKitten` にアサインする。検索失敗を「該当なし」とみなさない。検索・取得・起票のいずれかに失敗した場合は、ブランチの削除・作成・pushへ進まず停止する。
+   - 同期によってIssueの対応が完了する場合は `Closes #123`、部分対応や閉じない参照は `Refs #123` とする。他リポジトリは `Closes TrainLCD/Repository#123` または `Refs TrainLCD/Repository#123` を使う。未完了のIssueを閉じない。
+   - 確定した参照を `<確定したIssue参照>` に入れる。空欄・コメントのみ・「なし」や未置換のプレースホルダーのままPRを作成しない。
+
+   - 既に open なら新規作成しない。上で確定した参照を既存PRにも反映し、有効な参照と説明を維持して不足分を補う。更新後の本文を再取得して参照を確認し、既存 URL を返して中断。
+   - 既存 open PR がなく、Issueの確定が成功した場合だけ手順 3 へ進む。
 
 3. **既存 `chore/dev-from-master` の安全な削除・再作成**
 
@@ -113,6 +120,8 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    `.github/pull_request_template.md` の節構成をそのまま使う。**全ての節でテンプレの `<!-- ... -->` コメントを残さず実内容に置換する**（過去の雑な埋め方をやめる）。
 
+   手順 2 で確定したIssue参照を本文に反映する。
+
    本文テンプレ（`<...>` は実値に置換）:
 
    ```markdown
@@ -145,7 +154,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    ## 関連Issue
 
-   なし（リリース後の同期PR）。
+   <確定したIssue参照>
 
    ## スクリーンショット（任意）
 
@@ -177,6 +186,7 @@ description: Open a dev<-master merge PR that syncs master back into dev after a
 
    - タイトルは **`dev<-master` 固定**（PR #5467 以降全てこの表記）。
    - Assignee は `TinyKitten`（CLAUDE.md）。
+   - 作成後のPR本文を再取得し、手順 2 で確定したIssue参照が残っていることを確認する。
 
 7. **完了報告（マージ方法を強調）**
 

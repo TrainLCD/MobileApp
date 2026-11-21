@@ -7,6 +7,7 @@ import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import { getEtaPhaseNow } from '~/utils/etaPhaseNow';
 import { isBeyondEtaProgress } from '~/utils/etaProgressBound';
+import type { LocationProcessingOutcome } from '~/utils/locationDeliveryDiagnostics';
 import {
   countAcceptedLocation,
   countLocationRejectedByAccuracy,
@@ -60,6 +61,11 @@ const legacyAlphaToLagSec = (alpha: number): number =>
 // どこに置いても両立しない。精度が良い帯(σが到着圏に対して十分小さい)に限って
 // 正規化する。
 const LOW_ACCURACY_ALPHA = 0.3;
+
+// getDistanceの既定分解能(1m)で0〜1mの更新だけを同位置の再観測として扱う。
+// 報告精度(最大数km)を半径に使うと駅間移動や粗い座標の揺れまで再観測になる。
+// これは測位精度や実際の停車を保証する値ではなく、平滑化の遅れを詰める条件。
+const COARSE_REPEAT_DISTANCE_M = 1;
 
 // GPS精度に応じた許容追従遅れ(秒)を返す（精度が良いほど新しい値を信頼して遅れを詰める）
 const getSmoothingLagSec = (accuracy: number | null): number => {
@@ -300,7 +306,9 @@ const isImplausibleByEta = (location: Location.LocationObject): boolean => {
 
 // 受理した測位が反映される唯一の入口。継続測位の正常系に加え、ワンショット取得や
 // 手動選択(StationSearchModal/useInitialNearbyStation/Privacy等)もここを通る。
-export const setLocation = (location: Location.LocationObject) => {
+export const setLocation = (
+  location: Location.LocationObject
+): LocationProcessingOutcome => {
   // 新しい測位を受け取った時点で「直近の測位が精度外れ値だった」状態は解消されるため、
   // ここで外れ値フラグを解除する。解除をhandleTrackingLocationだけに置くと、継続測位で
   // 一度立ったフラグがdirect setLocation経由の良好な測位では解除されず、arrivedがfalseに
@@ -380,7 +388,7 @@ export const setLocation = (location: Location.LocationObject) => {
     recovery.candidate = null;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedByEta();
-    return;
+    return 'rejectedByEta';
   }
 
   // スキップ時は生座標を反映する。iOSでは次の粗い測位用に基準も更新する。
@@ -391,12 +399,12 @@ export const setLocation = (location: Location.LocationObject) => {
       // 駅で精度が戻った点は即時反映し、次の粗い測位もこの位置を基準にする。
       // 過去の地上位置を残すと、次の低精度EMAが駅から後方へ引き戻す。
       resyncLocationReference(location, updatedHistory, isIosTracking);
-      return;
+      return 'accepted';
     }
     store.set(locationAtom, location);
     store.set(accuracyHistoryAtom, updatedHistory);
     countAcceptedLocation();
-    return;
+    return 'accepted';
   }
 
   // 精度履歴だけが安定しても、ETAで棄却されていれば基準は古いまま。
@@ -411,7 +419,7 @@ export const setLocation = (location: Location.LocationObject) => {
     if (!isGoodAccuracy) {
       store.set(accuracyHistoryAtom, updatedHistory);
       countLocationRejectedByAccuracy();
-      return;
+      return 'rejectedByAccuracy';
     }
     const candidate = recovery.candidate;
     const elapsed = candidate ? location.timestamp - candidate.timestamp : 0;
@@ -424,7 +432,7 @@ export const setLocation = (location: Location.LocationObject) => {
       recovery.pending = false;
       recovery.candidate = null;
       resyncLocationReference(location, updatedHistory, isIosTracking);
-      return;
+      return 'accepted';
     }
     // 既存候補から飛んだ点で候補を上書きすると、その近傍の異常測位が
     // 続いただけで再同期してしまう。候補がないときだけ確認を始める。
@@ -433,14 +441,14 @@ export const setLocation = (location: Location.LocationObject) => {
     if (candidate == null || elapsed <= 0) recovery.candidate = location;
     store.set(accuracyHistoryAtom, updatedHistory);
     countLocationRejectedBySpeed();
-    return;
+    return 'rejectedBySpeed';
   }
   if (!isGoodAccuracy) recovery.candidate = null;
 
   // 基準が無い場合（初回起動時や地下鉄→地上の復帰直後）
   if (filteredPrev == null || rawPrev == null) {
     resyncLocationReference(location, updatedHistory, isIosTracking);
-    return;
+    return 'accepted';
   }
 
   // #5665で避けた「ノイズの多い地下測位を基準に、正常な復帰点を棄却する」
@@ -454,7 +462,7 @@ export const setLocation = (location: Location.LocationObject) => {
     rawPrev.coords.accuracy > MAX_PERMIT_ACCURACY
   ) {
     resyncLocationReference(location, updatedHistory, isIosTracking);
-    return;
+    return 'accepted';
   }
 
   // 前回の座標が存在する場合、速度ベースの異常値フィルタを適用する。
@@ -465,6 +473,7 @@ export const setLocation = (location: Location.LocationObject) => {
   // 経過時間が延びても成立するため。ここを飛ばすと、間隔が空いた直後の1点に限って
   // ワープ対策が無効になる。
   const dt = (location.timestamp - rawPrev.timestamp) / 1000; // 秒
+  let isRepeatedRawPosition = false;
   if (dt > 0) {
     const dist = getDistance(
       {
@@ -476,6 +485,7 @@ export const setLocation = (location: Location.LocationObject) => {
         longitude: location.coords.longitude,
       }
     );
+    isRepeatedRawPosition = dist <= COARSE_REPEAT_DISTANCE_M;
     const speed = dist / dt;
 
     // 物理的にありえない速度の場合は座標を棄却し、前回値を維持する
@@ -488,11 +498,11 @@ export const setLocation = (location: Location.LocationObject) => {
         MAX_CONSECUTIVE_SPEED_REJECTIONS
       ) {
         resyncLocationReference(location, updatedHistory, isIosTracking);
-        return;
+        return 'accepted';
       }
       store.set(accuracyHistoryAtom, updatedHistory);
       countLocationRejectedBySpeed();
-      return;
+      return 'rejectedBySpeed';
     }
   }
 
@@ -504,16 +514,26 @@ export const setLocation = (location: Location.LocationObject) => {
   // 再棄却…という復帰不能ループの原因になる。
   if (location.timestamp - rawPrev.timestamp >= STALE_REFERENCE_MS) {
     resyncLocationReference(location, updatedHistory, isIosTracking);
-    return;
+    return 'accepted';
   }
 
   // EMA(指数移動平均)で座標をスムージングする
   // 精度が良いほど、また配信間隔が空くほどαが大きくなり、新しい測位値をより信頼する。
   // 間隔で正規化することで、追従遅れが配信間隔に依存しなくなる。
-  const alpha = getSmoothingAlpha(
-    newAccuracy,
-    (location.timestamp - rawPrev.timestamp) / 1000
-  );
+  // #7276の単発ジャンプ抑制と#6917の低精度ノイズ対策は維持する。
+  // iOSの粗い生座標が再観測された場合だけ、配信間隔によるEMAの遅れを詰める。
+  // 基準は棄却した入力ではなく採用済み生座標。駅との距離やETAの発停車は使わない。
+  // 1秒未満の連続配信では従来の係数を維持する。1秒なら補正後も0.3と一致する。
+  const canNormalizeCoarseRepeat =
+    isCoarseIosLocation &&
+    rawPrev.coords.accuracy != null &&
+    Number.isFinite(rawPrev.coords.accuracy) &&
+    rawPrev.coords.accuracy > MAX_PERMIT_ACCURACY &&
+    dt >= LEGACY_ALPHA_INTERVAL_SEC &&
+    isRepeatedRawPosition;
+  const alpha = canNormalizeCoarseRepeat
+    ? dt / (dt + legacyAlphaToLagSec(LOW_ACCURACY_ALPHA))
+    : getSmoothingAlpha(newAccuracy, dt);
   const smoothedLat =
     alpha * location.coords.latitude +
     (1 - alpha) * filteredPrev.coords.latitude;
@@ -536,4 +556,5 @@ export const setLocation = (location: Location.LocationObject) => {
   store.set(rawReferenceAtom, location);
   store.set(accuracyHistoryAtom, updatedHistory);
   countAcceptedLocation();
+  return 'accepted';
 };

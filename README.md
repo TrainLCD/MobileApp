@@ -47,7 +47,7 @@ This app recreates the authentic experience of Japanese train travel by displayi
 - **🚆 Authentic LCD**: Experience genuine Japanese train LCD interfaces with accurate styling from major railway companies
 - **📍 Real-time Location Tracking**: Automatically detect your current position and display relevant station information
 - **🔔 Smart Notifications**: Get notified when approaching or arriving at your destination station
-- **🎨 Multiple Themes**: Choose from various railway company themes including JR East, JR West, Tokyo Metro, and more
+- **🎨 Multiple Themes**: Choose from various railway company themes including JR East, JR West, Tokyo Metro, and the 315 series
 - **📱 Cross-platform**: Available on both iOS and Android devices
 - **🌐 Offline Support**: Core functionality works without internet connection
 - **🗾 Comprehensive Coverage**: Supports major railway lines across Japan

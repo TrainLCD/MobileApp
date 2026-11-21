@@ -42,6 +42,8 @@ const Header = () => {
       return <HeaderLED {...commonData} />;
     case APP_THEME.JL:
       return <HeaderJL {...commonData} />;
+    case APP_THEME.JR_315:
+      return <HeaderJRKyushu {...commonData} is315 />;
     case APP_THEME.JR_KYUSHU:
       return <HeaderJRKyushu {...commonData} />;
     case APP_THEME.ODAKYU:

@@ -7,4 +7,6 @@
   -->
   <dimen name="widget_preset_circle_size">30dp</dimen>
   <dimen name="widget_preset_row_corner_radius">10dp</dimen>
+  <!-- 11sp太字の2文字記号+ハイフン+2桁番号に余白を持たせ、欠番でも同じ幅を確保します。 -->
+  <dimen name="widget_station_min_width">48sp</dimen>
 </resources>

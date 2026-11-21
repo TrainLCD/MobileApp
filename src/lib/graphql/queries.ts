@@ -127,6 +127,7 @@ export const LINE_IN_STATION_FRAGMENT = gql`
     station {
       id
       groupId
+      platformCode
       name
       nameRoman
       nameChinese
@@ -192,6 +193,7 @@ export const STATION_FRAGMENT = gql`
       ...TtsSegmentFields
     }
     threeLetterCode
+    platformCode
     latitude
     longitude
     prefectureId
@@ -208,6 +210,17 @@ export const STATION_FRAGMENT = gql`
     }
     trainType {
       ...TrainTypeNestedFields
+    }
+  }
+`;
+
+export const GET_NEARBY_BUS_STOPS = gql`
+  ${LINE_IN_STATION_FRAGMENT}
+  query GetNearbyBusStops($latitude: Float!, $longitude: Float!) {
+    nearbyBusStops(latitude: $latitude, longitude: $longitude) {
+      line {
+        ...LineInStationFields
+      }
     }
   }
 `;

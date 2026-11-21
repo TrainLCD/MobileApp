@@ -1,16 +1,25 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Animated as RNAnimated, StyleSheet, View } from 'react-native';
 import AnimatedTypography from '~/components/AnimatedTypography';
 import { STATION_NAME_FONT_SIZE } from '../constants';
 import { useHeaderAnimation } from '../hooks';
 import isTablet from '../utils/isTablet';
 import { RFValue } from '../utils/rfValue';
+import {
+  getIsCommuterRapid,
+  getIsLocal,
+  getIsRapid,
+} from '../utils/trainTypeString';
 import type { CommonHeaderProps } from './Header.types';
+import HeaderBar from './HeaderBar';
 import HeaderStationName from './HeaderStationName';
 import NumberingIcon from './NumberingIcon';
+import TrainTypeBox from './TrainTypeBox';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 import Typography from './Typography';
+
+const JR_315_HEADER_COLOR = '#FA7D28';
 
 const styles = StyleSheet.create({
   root: {
@@ -22,6 +31,9 @@ const styles = StyleSheet.create({
     paddingRight: 21,
     paddingLeft: 21,
     overflow: 'hidden',
+  },
+  gradientRoot315: {
+    paddingTop: 0,
   },
   bottom: {
     height: isTablet ? 128 : 84,
@@ -42,6 +54,15 @@ const styles = StyleSheet.create({
   },
   boundTextContainer: {
     position: 'absolute',
+  },
+  fittedBoundTextContainer: {
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  fittedBoundText: {
+    flex: 1,
   },
   boundText: {
     color: '#555',
@@ -107,29 +128,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  headerTexts315: {
+    // 上の余白を詰めた分だけ下へ移し、駅名と区切り線の位置を保つ。
+    marginBottom: 14,
+  },
   numberingIconContainer: {
     alignSelf: 'center',
   },
 });
 
-const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
+type Props = CommonHeaderProps & { is315?: boolean };
+
+const HeaderJRKyushu: React.FC<Props> = (props) => {
   const {
+    is315 = false,
+    currentLine,
     selectedBound,
     headerState,
     headerTransitionDelay,
     stationText,
     stateText,
     stateTextRight,
-    boundText,
+    boundText: rawBoundText,
+    headerLangState,
     currentStationNumber,
     threeLetterCode,
     numberingColor,
     trainType,
     firstStop,
     connectedLines,
-    connectionText,
+    connectionText: rawConnectionText,
     isJapaneseState,
   } = props;
+
+  const boundText =
+    is315 && headerLangState === 'EN'
+      ? rawBoundText.replace(/^for /, 'Bound for ')
+      : rawBoundText;
+
+  // 315系のかな表示では直通案内を省き、切替前の表示も同じ値で保持する。
+  const connectionText =
+    is315 && headerLangState === 'KANA' ? '' : rawConnectionText;
 
   const animation = useHeaderAnimation({
     selectedBound,
@@ -143,21 +182,69 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
     isJapaneseState,
   });
 
+  const fitBoundText = is315 && headerLangState === 'EN';
+  // Bound forは315系の英語表示だけに付くため、現在の言語に依存せず旧表示を判定できる。
+  const fitPreviousBoundText =
+    is315 && animation.prevBoundText.startsWith('Bound for ');
+  // 縮小指定は入れ子のTextでは効かないため、英語行先だけViewを外枠にする。
+  const BoundTextContainer = fitBoundText
+    ? RNAnimated.View
+    : AnimatedTypography;
+  const PreviousBoundTextContainer = fitPreviousBoundText
+    ? RNAnimated.View
+    : AnimatedTypography;
+  const boundTextFitProps = fitBoundText
+    ? { numberOfLines: 1, adjustsFontSizeToFit: true }
+    : {};
+  const previousBoundTextFitProps = fitPreviousBoundText
+    ? { numberOfLines: 1, adjustsFontSizeToFit: true }
+    : {};
+
+  const lineColor = currentLine?.color ?? '#FF6D00';
+  const jr315TrainTypeColor = getIsLocal(trainType)
+    ? '#000000'
+    : getIsRapid(trainType) && !getIsCommuterRapid(trainType)
+      ? '#1e8ad2'
+      : (trainType?.color ?? '#1f63c6');
+
   return (
     <View style={styles.root}>
+      {is315 ? (
+        <HeaderBar
+          height={15}
+          lineColor={JR_315_HEADER_COLOR}
+          edgeColor="#fff"
+        />
+      ) : null}
       <LinearGradient
-        colors={['#fcfcfc', '#ccc']}
+        colors={is315 ? ['#fff', '#fff'] : ['#fcfcfc', '#ccc']}
         locations={[0, 1]}
-        style={styles.gradientRoot}
+        style={[styles.gradientRoot, is315 && styles.gradientRoot315]}
       >
-        <View style={styles.headerTexts}>
-          <TrainTypeBoxJRKyushu trainType={trainType} />
+        <View style={[styles.headerTexts, is315 && styles.headerTexts315]}>
+          {is315 ? (
+            <TrainTypeBox
+              trainType={trainType}
+              darkenColor
+              jr315Gradient
+              fitTextToHeight
+              // タブレットでは埼京線の種別箱と同じ基準寸法を使う。
+              heightScale={isTablet ? 1 : 1.3}
+              widthScale={isTablet ? 1 : 1.4}
+              borderRadius={4}
+              colorOverride={jr315TrainTypeColor}
+              borderColor={jr315TrainTypeColor}
+            />
+          ) : (
+            <TrainTypeBoxJRKyushu trainType={trainType} />
+          )}
           {selectedBound && !firstStop ? (
             <View style={styles.boundWrapper}>
-              <AnimatedTypography
+              <BoundTextContainer
                 style={[
                   animation.boundTopAnimatedStyles,
                   styles.boundTextContainer,
+                  fitBoundText && styles.fittedBoundTextContainer,
                 ]}
               >
                 <Typography
@@ -165,16 +252,25 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                   numberOfLines={1}
                   style={styles.connectedLines}
                 >
-                  {connectedLines?.length && isJapaneseState
+                  {connectedLines?.length && isJapaneseState && connectionText
                     ? `${connectionText}直通 `
                     : null}
                 </Typography>
-                <Typography style={styles.boundText}>{boundText}</Typography>
-              </AnimatedTypography>
-              <AnimatedTypography
+                <Typography
+                  {...boundTextFitProps}
+                  style={[
+                    styles.boundText,
+                    fitBoundText && styles.fittedBoundText,
+                  ]}
+                >
+                  {boundText}
+                </Typography>
+              </BoundTextContainer>
+              <PreviousBoundTextContainer
                 style={[
                   animation.boundBottomAnimatedStyles,
                   styles.boundTextContainer,
+                  fitPreviousBoundText && styles.fittedBoundTextContainer,
                 ]}
               >
                 <Typography
@@ -182,14 +278,22 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
                   numberOfLines={1}
                   style={styles.connectedLines}
                 >
-                  {connectedLines?.length && animation.prevIsJapaneseState
+                  {connectedLines?.length &&
+                  animation.prevIsJapaneseState &&
+                  animation.prevConnectionText
                     ? `${animation.prevConnectionText}直通 `
                     : null}
                 </Typography>
-                <Typography style={styles.boundText}>
+                <Typography
+                  {...previousBoundTextFitProps}
+                  style={[
+                    styles.boundText,
+                    fitPreviousBoundText && styles.fittedBoundText,
+                  ]}
+                >
                   {animation.prevBoundText}
                 </Typography>
-              </AnimatedTypography>
+              </PreviousBoundTextContainer>
             </View>
           ) : null}
         </View>
@@ -283,7 +387,7 @@ const HeaderJRKyushu: React.FC<CommonHeaderProps> = (props) => {
           )}
         </View>
       </LinearGradient>
-      <View style={styles.divider} />
+      <View style={[styles.divider, is315 && { backgroundColor: lineColor }]} />
     </View>
   );
 };

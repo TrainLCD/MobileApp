@@ -52,5 +52,9 @@ export const useCurrentLine = (): Line | null => {
   );
 
   // NOTE: selectedLineがnullishの時はcurrentLineもnullishであってほしい
-  return (selectedLine && actualCurrentStation?.line) ?? null;
+  // 手動指定では種別の経路に含まれない駅も選べる。
+  return (
+    (selectedLine && (actualCurrentStation?.line ?? currentStation?.line)) ??
+    null
+  );
 };

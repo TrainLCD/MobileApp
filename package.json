@@ -34,6 +34,8 @@
     "@react-navigation/native-stack": "^7.3.1",
     "@sentry/react-native": "~8.28.0",
     "@shopify/flash-list": "2.3.2",
+    "@tanstack/query-db-collection": "1.4.8",
+    "@tanstack/react-db": "0.5.12",
     "@tanstack/react-query": "^5.101.0",
     "dayjs": "^1.11.19",
     "expo": "~58.0.13",
@@ -58,6 +60,7 @@
     "expo-linking": "~58.0.13",
     "expo-localization": "~58.0.4",
     "expo-location": "~58.0.16",
+    "expo-maps": "~58.0.11",
     "expo-network": "~58.0.3",
     "expo-notifications": "~58.1.4",
     "expo-quick-actions": "^6.0.1",
@@ -170,5 +173,5 @@
     }
   },
   "name": "trainlcd",
-  "version": "10.19.2"
+  "version": "10.20.0"
 }

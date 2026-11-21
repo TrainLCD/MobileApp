@@ -108,6 +108,8 @@ describe('useUpdateWidget フック', () => {
       boundStationName: '新宿・渋谷方面',
       stationName: '新宿',
       nextStationName: '代々木',
+      stationNumber: '',
+      nextStationNumber: '',
     });
   });
 
@@ -152,6 +154,44 @@ describe('useUpdateWidget フック', () => {
       expect.objectContaining({
         stationName: '代々木',
         nextStationName: '原宿',
+      })
+    );
+  });
+
+  it('現在駅と次駅の番号を対応する駅名と一緒に送り、番号が消えた更新も送る', () => {
+    setAtomValues({ selectedBound: makeStation('大崎') });
+    (useCurrentStation as jest.Mock).mockReturnValue({
+      ...makeStation('新宿'),
+      groupId: 1,
+      stationNumbers: [{ stationNumber: 'JY-17' }],
+    });
+    (useDisplayNextStation as jest.Mock).mockReturnValue({
+      ...makeStation('代々木'),
+      groupId: 2,
+      stationNumbers: [{ stationNumber: 'JY18' }],
+    });
+    const { rerender } = render(<TestComponent />);
+    expect(updateWidget).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stationName: '新宿',
+        stationNumber: 'JY-17',
+        nextStationName: '代々木',
+        nextStationNumber: 'JY-18',
+      })
+    );
+    (useCurrentStation as jest.Mock).mockReturnValue({
+      ...makeStation('新宿'),
+      groupId: 1,
+    });
+    (useDisplayNextStation as jest.Mock).mockReturnValue({
+      ...makeStation('代々木'),
+      groupId: 2,
+    });
+    rerender(<TestComponent />);
+    expect(updateWidget).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        stationNumber: '',
+        nextStationNumber: '',
       })
     );
   });

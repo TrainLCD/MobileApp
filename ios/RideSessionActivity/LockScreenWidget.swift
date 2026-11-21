@@ -37,6 +37,8 @@ struct LockScreenEntry: TimelineEntry {
   let boundFor: String
   var stationName: String = ""
   var nextStationName: String = ""
+  var stationNumber: String = ""
+  var nextStationNumber: String = ""
   var updatedAt: Date? = nil
 
   // Color(hex:)は空文字を渡すとほぼ透明になるため、描画に使う路線色は必ずここを経由する
@@ -89,6 +91,8 @@ struct LockScreenEntry: TimelineEntry {
       boundFor: defaults.string(forKey: "boundStationName") ?? "",
       stationName: defaults.string(forKey: "stationName") ?? "",
       nextStationName: defaults.string(forKey: "nextStationName") ?? "",
+      stationNumber: defaults.string(forKey: "stationNumber") ?? "",
+      nextStationNumber: defaults.string(forKey: "nextStationNumber") ?? "",
       updatedAt: (defaults.object(forKey: "widgetUpdatedAt") as? Double).flatMap {
         $0.isFinite && $0 > 0 ? Date(timeIntervalSince1970: $0) : nil
       }

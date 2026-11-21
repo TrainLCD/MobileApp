@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { render, within } from '@testing-library/react-native';
 import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import type { Line, Station } from '~/@types/graphql';
@@ -71,7 +71,14 @@ jest.mock('react-native-skeleton-placeholder', () => {
 });
 
 // カスタムフック
-jest.mock('~/hooks/useInitialNearbyStation');
+jest.mock('~/hooks/useInitialNearbyStation', () => ({
+  useInitialNearbyStation: jest.fn(),
+}));
+jest.mock('~/hooks/useNearbyBusLines', () => ({
+  useNearbyBusLines: (station: Station | null) => ({
+    stationWithNearbyBuses: station,
+  }),
+}));
 jest.mock('~/hooks/useStationsCache');
 jest.mock('~/hooks/usePresetCarouselData');
 jest.mock('~/hooks/useLineSelection');
@@ -83,7 +90,9 @@ jest.mock('~/components/CommonCard', () => ({
   CommonCard: ({
     testID,
     line,
+    stations,
   }: {
+    stations?: Station[];
     testID?: string;
     line: { nameShort?: string };
   }) => {
@@ -91,6 +100,7 @@ jest.mock('~/components/CommonCard', () => ({
     return (
       <View testID={testID ?? 'common-card'}>
         <Text>{line?.nameShort ?? ''}</Text>
+        <Text>{stations?.map((s) => s.name).join(',')}</Text>
       </View>
     );
   },
@@ -216,6 +226,7 @@ jest.mock('../utils/generateTestID', () => ({
 }));
 
 jest.mock('~/utils/line', () => ({
+  ...jest.requireActual('~/utils/line'),
   isBusLine: jest.fn(
     (line: { transportType?: string } | null) =>
       line?.transportType === 'BUS' || line?.transportType === 'Bus'
@@ -417,6 +428,35 @@ describe('SelectLineScreen', () => {
       expect(getByTestId('line_100')).toBeTruthy();
       expect(getByTestId('line_200')).toBeTruthy();
     });
+  });
+
+  it('単独系統はのりば情報の有無によらず直接選択カードを表示する', () => {
+    const bus = createLine(200, {
+      nameShort: '47A',
+      transportType: TransportType.Bus,
+      station: {
+        ...createStation(1, { platformCode: '4' }),
+        __typename: 'StationNested',
+      },
+    });
+    setupDefaults({
+      station: createStation(1, { lines: [bus] as Station['lines'] }),
+      stationsCache: [[]],
+    });
+    const ui = render(<SelectLineScreen />);
+    // A案では単独系統を直接選択できます。
+    expect(ui.getByTestId('line_200')).toBeTruthy();
+    const noPlatform = {
+      ...bus,
+      station: { ...bus.station, platformCode: null },
+    };
+    setupDefaults({
+      station: createStation(1, { lines: [noPlatform] as Station['lines'] }),
+      stationsCache: [[]],
+    });
+    ui.unmount();
+    const fallback = render(<SelectLineScreen />);
+    expect(fallback.getByTestId('line_200')).toBeTruthy();
   });
 
   describe('NowHeader', () => {
@@ -641,4 +681,22 @@ describe('SelectLineScreen', () => {
       expect(useStationsCache).toHaveBeenCalledWith(null);
     });
   });
+});
+
+it('鉄道とバスが混在し、キャッシュ順が違っても路線IDで停留所を対応づける', () => {
+  const bus = createLine(200, {
+    nameShort: 'バス',
+    transportType: TransportType.Bus,
+  });
+  const rail = createLine(100, { nameShort: '鉄道', transportType: null });
+  setupDefaults({
+    station: createStation(1, { lines: [bus, rail] as Station['lines'] }),
+    stationsCache: [
+      [createStation(10, { name: '鉄道終点', line: { id: 100 } })],
+      [createStation(20, { name: 'バス終点', line: { id: 200 } })],
+    ],
+  });
+  const ui = render(<SelectLineScreen />);
+  expect(within(ui.getByTestId('line_100')).getByText('鉄道終点')).toBeTruthy();
+  expect(within(ui.getByTestId('line_200')).getByText('バス終点')).toBeTruthy();
 });
