@@ -49,7 +49,7 @@ const ACCENT_COLOR = '#0A84FF';
 const CHART_HEIGHT = 96;
 const ROUTE_MAP_HEIGHT = 200;
 const EMPTY_BAR_HEIGHT = 2;
-const TOP_LINES_LIMIT = 5;
+const TOP_LINES_LIMIT = 4;
 // これを超えたら、残りの都道府県は「すべて表示」を押すまで出さない
 const TOP_PREFECTURES_LIMIT = 5;
 const PREFECTURE_COUNT = 47;
@@ -493,9 +493,42 @@ const RouteMapCard = ({
   );
 };
 
+const RankingToggle = ({
+  expanded,
+  onPress,
+  label,
+  testID,
+}: {
+  expanded: boolean;
+  onPress: () => void;
+  label: string;
+  testID: string;
+}) => (
+  <Pressable
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityState={{ expanded }}
+    hitSlop={8}
+    style={styles.prefectureToggle}
+    testID={testID}
+  >
+    <Typography
+      style={[styles.prefectureToggleText, { color: ACCENT_COLOR }]}
+    >
+      {expanded ? translate('close') : label}
+    </Typography>
+    <Ionicons
+      name={expanded ? 'chevron-up' : 'chevron-down'}
+      size={16}
+      color={ACCENT_COLOR}
+    />
+  </Pressable>
+);
+
 const TopLines = ({ stats }: { stats: RideStats }) => {
   const colors = useAppColors();
-  const lines = stats.lines.slice(0, TOP_LINES_LIMIT);
+  const [expanded, setExpanded] = useState(false);
+  const lines = expanded ? stats.lines : stats.lines.slice(0, TOP_LINES_LIMIT);
   const max = lines[0]?.rideCount ?? 0;
   if (lines.length === 0) {
     return null;
@@ -540,6 +573,16 @@ const TopLines = ({ stats }: { stats: RideStats }) => {
             </View>
           );
         })}
+        {stats.lines.length > TOP_LINES_LIMIT ? (
+          <RankingToggle
+            expanded={expanded}
+            onPress={() => setExpanded((prev) => !prev)}
+            label={translate('rideReviewLinesShowAll', {
+              count: stats.lines.length - TOP_LINES_LIMIT,
+            })}
+            testID="ride-review-lines-toggle"
+          />
+        ) : null}
       </Card>
     </>
   );
@@ -557,7 +600,6 @@ const Prefectures = ({ prefectures }: { prefectures: RidePrefectures }) => {
   const shown =
     collapsible && !expanded ? all.slice(0, TOP_PREFECTURES_LIMIT) : all;
   const max = all[0]?.distanceMeters ?? 0;
-  const toggleColor = ACCENT_COLOR;
 
   return (
     <>
@@ -625,29 +667,14 @@ const Prefectures = ({ prefectures }: { prefectures: RidePrefectures }) => {
               </View>
             ))}
             {collapsible ? (
-              <Pressable
+              <RankingToggle
+                expanded={expanded}
                 onPress={() => setExpanded((prev) => !prev)}
-                accessibilityRole="button"
-                accessibilityState={{ expanded }}
-                hitSlop={8}
-                style={styles.prefectureToggle}
+                label={translate('rideReviewPrefecturesShowAll', {
+                  count: all.length - TOP_PREFECTURES_LIMIT,
+                })}
                 testID="ride-review-prefectures-toggle"
-              >
-                <Typography
-                  style={[styles.prefectureToggleText, { color: toggleColor }]}
-                >
-                  {expanded
-                    ? translate('close')
-                    : translate('rideReviewPrefecturesShowAll', {
-                        count: all.length - TOP_PREFECTURES_LIMIT,
-                      })}
-                </Typography>
-                <Ionicons
-                  name={expanded ? 'chevron-up' : 'chevron-down'}
-                  size={16}
-                  color={toggleColor}
-                />
-              </Pressable>
+              />
             ) : null}
           </>
         )}
@@ -814,7 +841,7 @@ const Report = ({
                 collapsable={false}
                 style={styles.walkthroughGroup}
               >
-                <TopLines stats={state.stats} />
+                <TopLines key={period} stats={state.stats} />
               </View>
               <Prefectures key={period} prefectures={state.prefectures} />
               <Typography
