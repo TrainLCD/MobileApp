@@ -49,7 +49,7 @@ const ACCENT_COLOR = '#0A84FF';
 const CHART_HEIGHT = 96;
 const ROUTE_MAP_HEIGHT = 200;
 const EMPTY_BAR_HEIGHT = 2;
-const TOP_LINES_LIMIT = 4;
+const TOP_LINES_LIMIT = 5;
 // これを超えたら、残りの都道府県は「すべて表示」を押すまで出さない
 const TOP_PREFECTURES_LIMIT = 5;
 const PREFECTURE_COUNT = 47;
