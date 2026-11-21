@@ -44,11 +44,11 @@ jobs:
           if(!template)throw Error('No active development profile');
           const existing=await api('bundleIds/'+widget.id+'/profiles?limit=200');
           const type='IOS_APP_STORE';
-          let profile=existing.find(p=>p.attributes.profileType===type&&p.attributes.profileState==='ACTIVE');
+          let profile=existing.find(p=>p.attributes.name==='TrainLCD Canary Watch Widget App Group 3038'&&p.attributes.profileType===type&&p.attributes.profileState==='ACTIVE');
           if(!profile) {
            const links=async rel=>(await api('profiles/'+template.id+'/'+rel+'?limit=200')).map(({id,type})=>({id,type}));
            const certificates=await links('certificates');
-           profile=await api('profiles',{type:'profiles',attributes:{name:'TrainLCD Canary Watch Widget App Store 3038',profileType:type},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}},certificates:{data:certificates}}});
+           profile=await api('profiles',{type:'profiles',attributes:{name:'TrainLCD Canary Watch Widget App Group 3038',profileType:type},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}},certificates:{data:certificates}}});
           }
           const {execFileSync}=await import('node:child_process');
           const plist=execFileSync('openssl',['cms','-verify','-inform','DER','-noverify'],{input:Buffer.from(profile.attributes.profileContent,'base64'),stdio:['pipe','pipe','ignore']});
