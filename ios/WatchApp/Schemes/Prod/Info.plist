@@ -27,7 +27,9 @@
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
 	<string>me.tinykitten.trainlcd</string>
-	<key>WKWatchKitApp</key>
+	<key>APP_GROUP_ID</key>
+	<string>$(APP_GROUP_ID)</string>
+	<key>WKApplication</key>
 	<true/>
 </dict>
 </plist>
