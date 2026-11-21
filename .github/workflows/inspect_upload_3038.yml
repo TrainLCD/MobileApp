@@ -12,5 +12,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api repos/TrainLCD/MobileApp/actions/jobs/136694063959/logs > "$RUNNER_TEMP/job.log"
-          sed -n '/export_options_path=.*ExportOptions.plist/,$p' "$RUNNER_TEMP/job.log" | grep -Ei 'error:|error ITMS|asset validation|invalid bundle|validation failed|ITMS-[0-9]+|upload failed' | tail -40
+          gh run view 44854707160 --repo TrainLCD/MobileApp --job 136694063959 --log-failed | grep -F 'Upload to TestFlight' | tail -70
