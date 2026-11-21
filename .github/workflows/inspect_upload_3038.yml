@@ -1,0 +1,16 @@
+name: Inspect TestFlight validation
+on:
+  push:
+    branches: [diagnose/ios-3038-upload]
+permissions:
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read validation messages from upload step
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/TrainLCD/MobileApp/actions/jobs/136694063959/logs > "$RUNNER_TEMP/job.log"
+          sed -n '/export_options_path=.*ExportOptions.plist/,$p' "$RUNNER_TEMP/job.log" | grep -Ei 'error:|error ITMS|asset validation|invalid bundle|validation failed|ITMS-[0-9]+|upload failed' | tail -40
