@@ -204,6 +204,37 @@ describe('RideReviewScreen', () => {
     expect(getByText('中央線快速')).toBeTruthy();
   });
 
+  it.each([5, 6])('%i路線のうち6件目以降だけを折りたたむ', async (count) => {
+    const rides = Array.from({ length: count }, (_, index) => {
+      const ride = sampleRide();
+      const lineId = index + 1;
+      const lineName = `路線${lineId}`;
+      return {
+        ...ride,
+        id: String(lineId),
+        lineId,
+        lineName,
+        stops: ride.stops.map((stop) => ({ ...stop, lineId, lineName })),
+      };
+    });
+    mockGetRides.mockResolvedValueOnce(rides);
+    const { findByText, queryByText, queryByTestId, getByText } =
+      renderScreen(true);
+
+    expect(await findByText('路線5')).toBeTruthy();
+    expect(queryByText('路線6')).toBeNull();
+    if (count === 5) {
+      expect(queryByTestId('ride-review-lines-toggle')).toBeNull();
+      return;
+    }
+
+    fireEvent.press(getByText('rideReviewLinesShowAll:{"count":1}'));
+    expect(getByText('路線6')).toBeTruthy();
+    fireEvent.press(getByText('close'));
+    expect(queryByText('路線6')).toBeNull();
+    expect(getByText('路線5')).toBeTruthy();
+  });
+
   it('グラフの棒に、日付と距離を読み上げるラベルを付ける', async () => {
     mockGetRides.mockResolvedValueOnce([sampleRide()]);
     const { findByTestId, getByLabelText } = renderScreen(true);
