@@ -34,7 +34,7 @@ it('現在地の有無に応じてバス路線を切り替え、同じ路線は�
   });
   (useAtomValue as jest.Mock).mockReturnValue(null);
   const { result, rerender } = renderHook(() => useNearbyBusLines(station));
-  expect(result.current).toBe(station);
+  expect(result.current.stationWithNearbyBuses).toBe(station);
   expect(useQuery).toHaveBeenLastCalledWith(
     expect.objectContaining({ enabled: false })
   );
@@ -45,5 +45,23 @@ it('現在地の有無に応じてバス路線を切り替え、同じ路線は�
   expect(useQuery).toHaveBeenLastCalledWith(
     expect.objectContaining({ queryKey: [coords], enabled: true })
   );
-  expect(result.current?.lines).toEqual([station.lines?.[0], bus]);
+  expect(result.current.stationWithNearbyBuses?.lines).toEqual([
+    station.lines?.[0],
+    bus,
+  ]);
+});
+
+it('座標が同じでも初回取得に失敗したバス停を再取得できる', async () => {
+  const refetch = jest.fn().mockResolvedValue({});
+  (useQuery as jest.Mock).mockReturnValue({
+    data: undefined,
+    isError: true,
+    refetch,
+  });
+  (useAtomValue as jest.Mock).mockReturnValue({
+    coords: { latitude: 35, longitude: 139 },
+  });
+  const { result } = renderHook(() => useNearbyBusLines(createStation(1)));
+  await result.current.refetchBusStops?.();
+  expect(refetch).toHaveBeenCalledTimes(1);
 });

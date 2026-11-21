@@ -15,17 +15,18 @@ export const useNearbyBusLines = (station: Station | null) => {
   const longitude = location?.coords.longitude;
   const hasLocation = latitude != null && longitude != null;
   const variables = { latitude, longitude };
-  const { data } = useQuery({
+  const enabled = hasLocation && station != null;
+  const { data, refetch } = useQuery({
     queryKey: graphqlQueryKey(GET_NEARBY_BUS_STOPS, variables),
     queryFn: () =>
       gqlRequest<{ nearbyBusStops: BusStop[] }>(
         GET_NEARBY_BUS_STOPS,
         variables
       ),
-    enabled: hasLocation && station != null,
+    enabled,
   });
 
-  return useMemo(() => {
+  const stationWithNearbyBuses = useMemo(() => {
     if (!station || !hasLocation) return station;
     const railLines = (station.lines ?? []).filter((line) => !isBusLine(line));
     // API は距離順で返すため、同じ路線では最寄りの乗り場を使う。
@@ -36,4 +37,9 @@ export const useNearbyBusLines = (station: Station | null) => {
     }
     return { ...station, lines: [...railLines, ...buses.values()] };
   }, [station, hasLocation, data]);
+
+  return {
+    stationWithNearbyBuses,
+    refetchBusStops: enabled ? refetch : undefined,
+  };
 };

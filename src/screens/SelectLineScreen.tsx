@@ -114,7 +114,8 @@ const SelectLineScreen = () => {
 
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
-  const stationWithNearbyBuses = useNearbyBusLines(station);
+  const { stationWithNearbyBuses, refetchBusStops } =
+    useNearbyBusLines(station);
   useStationsCache(stationWithNearbyBuses);
   const { carouselData, routes, isRoutesDBInitialized } =
     usePresetCarouselData();
@@ -270,11 +271,11 @@ const SelectLineScreen = () => {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetch(), refetchBusStops?.()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, refetchBusStops]);
 
   // --- レンダーコールバック ---
   const renderLineCard = useCallback(
