@@ -412,6 +412,7 @@
   "rideReviewPrefectureTotal": "/ %{total} prefectures",
   "rideReviewPrefectureCountLabel": "%{count} of %{total} prefectures",
   "rideReviewPrefecturesShowAll": "Show all (%{count} more)",
+  "rideReviewLinesShowAll": "Show all (%{count} more)",
   "rideReviewPrefecturesUnrecorded": "Rides whose prefectures are unknown (%{count}) are not included. These include rides recorded before prefectures were saved.",
   "rideReviewPrefecturesNone": "The prefectures of the rides in this period are unknown. These include rides recorded before prefectures were saved.",
   "rideReviewLineValue": "%{count} rides · %{distance} km",
