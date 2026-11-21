@@ -21,9 +21,19 @@ jobs:
           const payload = encode({alg:'ES256',kid:process.env.KEY_ID,typ:'JWT'}) + '.' + encode({iss:process.env.ISSUER,iat:now-10,exp:now+120,aud:'appstoreconnect-v1'});
           const signature = sign('sha256',Buffer.from(payload),{key:Buffer.from(process.env.SIGNING_KEY,'base64'),dsaEncoding:'ieee-p1363'}).toString('base64url');
           const identifier = 'me.tinykitten.trainlcd.dev.watchkitapp.watchwidget';
-          const url = new URL('https://api.appstoreconnect.apple.com/v1/bundleIds');
-          url.searchParams.set('filter[identifier]',identifier);
-          const response = await fetch(url,{headers:{Authorization:'Bearer '+payload+'.'+signature},redirect:'error'});
-          const body = await response.json();
-          console.log('Apple HTTP',response.status,'matching App IDs',body.data?.length,'error codes',body.errors?.map(e=>e.code));
+          const api = async (path,data) => {
+            const res = await fetch('https://api.appstoreconnect.apple.com/v1/'+path,{method:data?'POST':'GET',headers:{Authorization:'Bearer '+payload+'.'+signature,'Content-Type':'application/json'},body:data?JSON.stringify({data}):undefined,redirect:'error'});
+            const b=await res.json(); if(!res.ok) throw Error(res.status+' '+JSON.stringify(b.errors.map(e=>[e.code,e.detail]))); return b.data;
+          };
+          const lookup=async id=>(await api('bundleIds?filter[identifier]='+id))[0];
+          const previous=await lookup(identifier.replace('.watchwidget','.watchkitextension.watchwidget'));
+          if(!previous)throw Error('Previous widget identifier not found');
+          let widget=await lookup(identifier);
+          if(!widget) widget=await api('bundleIds',{type:'bundleIds',attributes:{identifier,name:'TrainLCD Canary Watch Widget',platform:previous.attributes.platform}});
+          console.log('Widget registration confirmed',widget.attributes.identifier);
+          const caps=await api('bundleIds/'+widget.id+'/bundleIdCapabilities');
+          if(!caps.some(x=>x.attributes.capabilityType==='APP_GROUPS'))await api('bundleIdCapabilities',{type:'bundleIdCapabilities',attributes:{capabilityType:'APP_GROUPS'},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}}}});
+          console.log('APP_GROUPS capability enabled');
+          const profiles=await api('bundleIds/'+previous.id+'/profiles?limit=200');
+          console.log('Previous widget profile types',profiles.map(x=>[x.attributes.profileType,x.attributes.profileState]));
           JS
