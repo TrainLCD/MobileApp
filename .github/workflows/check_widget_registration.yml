@@ -52,6 +52,6 @@ jobs:
           }
           const {execFileSync}=await import('node:child_process');
           const plist=execFileSync('openssl',['cms','-verify','-inform','DER','-noverify'],{input:Buffer.from(profile.attributes.profileContent,'base64'),stdio:['pipe','pipe','ignore']});
-          const check=execFileSync('python3',['-c',"import plistlib,sys; e=plistlib.loads(sys.stdin.buffer.read())['Entitlements']; print('GROUP_AUTHORIZED', 'group.me.tinykitten.trainlcd.dev' in e.get('com.apple.security.application-groups', []))"],{input:plist}).toString().trim();
+          const check=execFileSync('python3',['-c',"import plistlib,sys; e=plistlib.loads(sys.stdin.buffer.read())['Entitlements']; print('Group entitlement:',e.get('com.apple.security.application-groups', []))"],{input:plist}).toString().trim();
           console.log('App Store profile',profile.attributes.profileState,check);
           JS
