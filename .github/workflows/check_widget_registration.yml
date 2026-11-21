@@ -34,6 +34,23 @@ jobs:
           const caps=await api('bundleIds/'+widget.id+'/bundleIdCapabilities');
           if(!caps.some(x=>x.attributes.capabilityType==='APP_GROUPS'))await api('bundleIdCapabilities',{type:'bundleIdCapabilities',attributes:{capabilityType:'APP_GROUPS'},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}}}});
           console.log('APP_GROUPS capability enabled');
-          const profiles=await api('bundleIds/'+previous.id+'/profiles?limit=200');
-          console.log('Previous widget profile types',profiles.map(x=>[x.attributes.profileType,x.attributes.profileState]));
+          const active=await api('profiles?filter[profileState]=ACTIVE&filter[profileType]=IOS_APP_DEVELOPMENT&limit=200&include=bundleId');
+          let template=active.find(p=>p.relationships.bundleId.data?.id===previous.id);
+          if(!template){
+           const parent=await lookup(identifier.replace('.watchwidget',''));
+           template=active.find(p=>p.relationships.bundleId.data?.id===parent.id);
+          }
+          if(!template)throw Error('No matching active development profile in first page');
+          const existing=await api('bundleIds/'+widget.id+'/profiles?limit=200');
+          const type='IOS_APP_DEVELOPMENT';
+          let profile=existing.find(p=>p.attributes.profileType===type&&p.attributes.profileState==='ACTIVE');
+          if(!profile) {
+           const links=async rel=>(await api('profiles/'+template.id+'/'+rel+'?limit=200')).map(({id,type})=>({id,type}));
+           const certificates=await links('certificates'),devices=await links('devices');
+           profile=await api('profiles',{type:'profiles',attributes:{name:'TrainLCD Canary Watch Widget Development 3038',profileType:type},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}},certificates:{data:certificates},devices:{data:devices}}});
+          }
+          const {execFileSync}=await import('node:child_process');
+          const plist=execFileSync('openssl',['cms','-verify','-inform','DER','-noverify'],{input:Buffer.from(profile.attributes.profileContent,'base64'),stdio:['pipe','pipe','ignore']});
+          const check=execFileSync('python3',['-c',"import plistlib,sys; e=plistlib.loads(sys.stdin.buffer.read())['Entitlements']; print('GROUP_AUTHORIZED', 'group.me.tinykitten.trainlcd.dev' in e.get('com.apple.security.application-groups', []))"],{input:plist}).toString().trim();
+          console.log('Development profile',profile.attributes.profileState,check);
           JS
