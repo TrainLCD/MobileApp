@@ -214,6 +214,17 @@ export const STATION_FRAGMENT = gql`
   }
 `;
 
+export const GET_NEARBY_BUS_STOPS = gql`
+  ${LINE_IN_STATION_FRAGMENT}
+  query GetNearbyBusStops($latitude: Float!, $longitude: Float!) {
+    nearbyBusStops(latitude: $latitude, longitude: $longitude) {
+      line {
+        ...LineInStationFields
+      }
+    }
+  }
+`;
+
 // Query for getting stations by coordinates (nearby stations)
 export const GET_STATIONS_NEARBY = gql`
   ${STATION_FRAGMENT}
