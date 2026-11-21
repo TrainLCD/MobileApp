@@ -37,21 +37,21 @@ jobs:
           let template;
           for(const id of [previous.attributes.identifier,identifier.replace('.watchwidget',''),'me.tinykitten.trainlcd.dev']){
            const target=await lookup(id);const list=await api('bundleIds/'+target.id+'/profiles?limit=200&fields[profiles]=profileState,profileType,expirationDate');
-           template=list.filter(p=>p.attributes.profileState==='ACTIVE'&&p.attributes.profileType==='IOS_APP_DEVELOPMENT').sort((a,b)=>b.attributes.expirationDate.localeCompare(a.attributes.expirationDate))[0];
-           console.log('Development profile found',id,!!template);
+           template=list.filter(p=>p.attributes.profileState==='ACTIVE'&&p.attributes.profileType==='IOS_APP_STORE').sort((a,b)=>b.attributes.expirationDate.localeCompare(a.attributes.expirationDate))[0];
+           console.log('App Store profile found',id,!!template);
            if(template)break;
           }
           if(!template)throw Error('No active development profile');
           const existing=await api('bundleIds/'+widget.id+'/profiles?limit=200');
-          const type='IOS_APP_DEVELOPMENT';
+          const type='IOS_APP_STORE';
           let profile=existing.find(p=>p.attributes.profileType===type&&p.attributes.profileState==='ACTIVE');
           if(!profile) {
            const links=async rel=>(await api('profiles/'+template.id+'/'+rel+'?limit=200')).map(({id,type})=>({id,type}));
-           const certificates=await links('certificates'),devices=await links('devices');
-           profile=await api('profiles',{type:'profiles',attributes:{name:'TrainLCD Canary Watch Widget Development 3038',profileType:type},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}},certificates:{data:certificates},devices:{data:devices}}});
+           const certificates=await links('certificates');
+           profile=await api('profiles',{type:'profiles',attributes:{name:'TrainLCD Canary Watch Widget App Store 3038',profileType:type},relationships:{bundleId:{data:{type:'bundleIds',id:widget.id}},certificates:{data:certificates}}});
           }
           const {execFileSync}=await import('node:child_process');
           const plist=execFileSync('openssl',['cms','-verify','-inform','DER','-noverify'],{input:Buffer.from(profile.attributes.profileContent,'base64'),stdio:['pipe','pipe','ignore']});
           const check=execFileSync('python3',['-c',"import plistlib,sys; e=plistlib.loads(sys.stdin.buffer.read())['Entitlements']; print('GROUP_AUTHORIZED', 'group.me.tinykitten.trainlcd.dev' in e.get('com.apple.security.application-groups', []))"],{input:plist}).toString().trim();
-          console.log('Development profile',profile.attributes.profileState,check);
+          console.log('App Store profile',profile.attributes.profileState,check);
           JS
