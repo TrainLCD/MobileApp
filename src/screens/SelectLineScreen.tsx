@@ -29,6 +29,7 @@ import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useInitialNearbyStation } from '~/hooks/useInitialNearbyStation';
 import { useLineSelection } from '~/hooks/useLineSelection';
+import { useNearbyBusLines } from '~/hooks/useNearbyBusLines';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
 import { usePresetsWidgetSync } from '~/hooks/usePresetsWidgetSync';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
@@ -113,7 +114,8 @@ const SelectLineScreen = () => {
 
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
-  useStationsCache(station);
+  const stationWithNearbyBuses = useNearbyBusLines(station);
+  useStationsCache(stationWithNearbyBuses);
   const { carouselData, routes, isRoutesDBInitialized } =
     usePresetCarouselData();
   const {
@@ -213,10 +215,10 @@ const SelectLineScreen = () => {
     );
   }, [station?.lines]);
   const busesLines = useMemo<Line[]>(() => {
-    return (station?.lines ?? []).filter(
+    return (stationWithNearbyBuses?.lines ?? []).filter(
       (line): line is LineNested => line?.id != null && isBusLine(line)
     );
-  }, [station?.lines]);
+  }, [stationWithNearbyBuses?.lines]);
 
   // キャッシュは鉄道・バス共通です。表示順や集約後の添字では参照しません。
   const stationsByLineId = useMemo(() => {

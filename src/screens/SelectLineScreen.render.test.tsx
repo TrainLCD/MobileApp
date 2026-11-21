@@ -74,6 +74,9 @@ jest.mock('react-native-skeleton-placeholder', () => {
 jest.mock('~/hooks/useInitialNearbyStation', () => ({
   useInitialNearbyStation: jest.fn(),
 }));
+jest.mock('~/hooks/useNearbyBusLines', () => ({
+  useNearbyBusLines: (station: Station | null) => station,
+}));
 jest.mock('~/hooks/useStationsCache');
 jest.mock('~/hooks/usePresetCarouselData');
 jest.mock('~/hooks/useLineSelection');

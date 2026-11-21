@@ -1,5 +1,5 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import type { LineNested, Station } from '~/@types/graphql';
 import { gqlClient } from '~/lib/gql';
 import { GET_LINE_LIST_STATIONS_LIGHT } from '~/lib/graphql/queries';
@@ -7,7 +7,8 @@ import stationState from '../store/atoms/station';
 
 const updateStationsCache = async (
   station: Station,
-  setStationState: ReturnType<typeof useSetAtom<typeof stationState>>
+  setStationState: ReturnType<typeof useSetAtom<typeof stationState>>,
+  isCurrent: () => boolean
 ) => {
   const fetchedLines = (station.lines ?? []).filter(
     (line): line is LineNested => line?.id != null
@@ -45,6 +46,7 @@ const updateStationsCache = async (
     (line) => stationsByLineId.get(line.id as number) ?? []
   );
 
+  if (!isCurrent()) return;
   setStationState((prev) => ({
     ...prev,
     stationsCache,
@@ -54,15 +56,12 @@ const updateStationsCache = async (
 export const useStationsCache = (station: Station | null): void => {
   const setStationState = useSetAtom(stationState);
 
-  const updateCache = useCallback(
-    async (station: Station) => {
-      await updateStationsCache(station, setStationState);
-    },
-    [setStationState]
-  );
-
   useEffect(() => {
     if (!station) return;
-    updateCache(station);
-  }, [station, updateCache]);
+    let current = true;
+    void updateStationsCache(station, setStationState, () => current);
+    return () => {
+      current = false;
+    };
+  }, [station, setStationState]);
 };
