@@ -349,6 +349,39 @@ describe('LineBoardJRKyushu', () => {
     );
   });
 
+  it.each([0, 1, 2, 4, 7, 8])(
+    'タブレットで%d駅を表示するときは実駅の末尾だけに終端を描く',
+    (count) => {
+      jest.replaceProperty(require('~/utils/isTablet'), 'default', true);
+      const stations = Array.from({ length: count }, (_, i) => ({
+        ...mockStations[0],
+        id: i + 1,
+        groupId: i + 1,
+      }));
+      render(
+        <LineBoardJRKyushu
+          stations={stations}
+          lineColors={stations.map(() => '#f60')}
+          hasTerminus={true}
+          saikyoGradient
+        />
+      );
+      const { EmptyStationNameCell } = require('./LineBoard/shared/components');
+      const { BarTerminalSaikyo } = require('./BarTerminalSaikyo');
+      expect(EmptyStationNameCell).not.toHaveBeenCalled();
+      expect(BarTerminalSaikyo).toHaveBeenCalledTimes(count ? 1 : 0);
+      if (count) {
+        const {
+          useBarStyles,
+        } = require('./LineBoard/shared/hooks/useBarStyles');
+        expect(useBarStyles).toHaveBeenCalledWith({
+          index: 0,
+          stationsLength: count,
+        });
+      }
+    }
+  );
+
   it('駅数が8未満の場合、EmptyStationNameCellで埋められる', () => {
     const { EmptyStationNameCell } = require('./LineBoard/shared/components');
     render(
