@@ -78,6 +78,37 @@ it('初期表示は折りたたみ、開閉して各系統を選択できる', (
   expect(selected).toHaveBeenLastCalledWith(other);
 });
 
+it('列数を切り替えても各カードは1列分の幅を保ち、展開中の系統を選択できる', () => {
+  const selected = jest.fn();
+  const routes = groupBusLinesByRoute([
+    first,
+    second,
+    other,
+    createLine(4, { nameShort: '別路線' }),
+  ]);
+  const list = (numColumns: number) => (
+    <BusRouteList
+      groups={routes}
+      numColumns={numColumns}
+      onLineSelected={selected}
+    />
+  );
+  const ui = render(list(1));
+  fireEvent.press(ui.getByText('新前橋駅西口線'));
+  for (const columns of [1, 2, 3]) {
+    ui.rerender(list(columns));
+    expect(ui.root).toHaveStyle({ flexDirection: 'row', flexWrap: 'wrap' });
+    expect(ui.root.children).toHaveLength(3);
+    for (const cell of ui.root.children) {
+      expect(
+        typeof cell === 'object' && StyleSheet.flatten(cell.props.style).width
+      ).toBe(`${100 / columns}%`);
+    }
+  }
+  fireEvent.press(ui.getByTestId('line_2'));
+  expect(selected).toHaveBeenCalledWith(second);
+});
+
 it('ロード中は系統を選択できず、開閉はできる', () => {
   const selected = jest.fn();
   const ui = render(
