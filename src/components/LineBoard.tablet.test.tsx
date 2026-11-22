@@ -6,6 +6,7 @@ import type { Line, Station } from '~/@types/graphql';
 import { useAfterNextStation } from '~/hooks/useAfterNextStation';
 import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
 import { enabledLanguagesAtom } from '~/store/atoms/navigation';
+import { isEnAtom } from '~/store/selectors/isEn';
 import getIsPass from '~/utils/isPass';
 import { StationRow } from './LineBoard/shared/components/StationRow';
 import {
@@ -278,6 +279,7 @@ it('Androidタブレットでは長い停留所名を縮小せず、表示幅で
       id: i + 1,
       groupId: i + 1,
       name: '伊勢崎市文化会館前',
+      nameRoman: 'Culture Hall',
       stationNumbers: [],
     }));
     const result = render(
@@ -323,6 +325,33 @@ it('Androidタブレットでは長い停留所名を縮小せず、表示幅で
           Math.ceil(width * Math.sin(rad) + height * Math.cos(rad) - 170)
         )
       );
+    }
+    const englishLabel = result
+      .UNSAFE_getAllByType(Typography)
+      .find((label) => label.props.children === 'Culture Hall');
+    expect(englishLabel?.props.accessibilityElementsHidden).toBe(true);
+    if (!englishLabel) throw new Error('英語駅名がありません');
+    fireEvent(englishLabel, 'layout', {
+      nativeEvent: { layout: { width, height: 120 } },
+    });
+    const boardStyle = () =>
+      StyleSheet.flatten(result.getByTestId('line-board-jo').props.style);
+    const shift = boardStyle().transform[0].translateY;
+    expect(shift).toBeGreaterThan(0);
+    for (const english of [true, false]) {
+      jest
+        .mocked(useAtomValue)
+        .mockImplementation((atom) => atom === isEnAtom && english);
+      result.rerender(
+        <LineBoardJO stations={stops} lineColors={stops.map(() => '#ff8000')} />
+      );
+      expect(
+        result
+          .UNSAFE_getAllByType(Typography)
+          .find((label) => label.props.children === 'Culture Hall')?.props
+          .accessibilityElementsHidden
+      ).toBe(!english);
+      expect(boardStyle().transform[0].translateY).toBe(shift);
     }
   } finally {
     Platform.OS = os;

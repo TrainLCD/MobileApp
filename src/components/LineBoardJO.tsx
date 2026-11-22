@@ -132,6 +132,7 @@ interface StationNameProps {
   reportLabelHeight: ReportLabelHeight;
   station: Station;
   en?: boolean;
+  hidden?: boolean;
   horizontal?: boolean;
   passed?: boolean;
   diagonalLayout?: { left: number; width: number };
@@ -140,6 +141,7 @@ interface StationNameProps {
 const StationName: React.FC<StationNameProps> = ({
   station,
   en,
+  hidden,
   horizontal,
   passed,
   diagonalLayout,
@@ -156,6 +158,9 @@ const StationName: React.FC<StationNameProps> = ({
   if (en || horizontal) {
     return (
       <Typography
+        accessibilityElementsHidden={hidden}
+        importantForAccessibility={hidden ? 'no-hide-descendants' : undefined}
+        pointerEvents={hidden ? 'none' : undefined}
         onLayout={
           measureLabel
             ? ({ nativeEvent: { layout } }) => {
@@ -169,6 +174,7 @@ const StationName: React.FC<StationNameProps> = ({
         }
         style={[
           styles.stationNameEnJO,
+          hidden && { opacity: 0 },
           passed ? styles.grayColor : null,
           diagonalLayout && {
             ...diagonalLayout,
@@ -185,6 +191,7 @@ const StationName: React.FC<StationNameProps> = ({
       </Typography>
     );
   }
+  if (hidden) return null;
   return (
     <View style={styles.verticalStationNameJO}>
       {station.name?.split('').map((c, j) => (
@@ -277,25 +284,30 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         },
       ]}
     >
-      <StationName
-        index={index}
-        reportLabelHeight={reportLabelHeight}
-        station={stationInLoop}
-        en={isEn}
-        horizontal={includesLongStationName}
-        passed={isPass}
-        diagonalLayout={
-          androidTablet
-            ? {
-                left: dotCenterInCell,
-                width: getJODiagonalLabelWidth(
-                  dim.height,
-                  dim.width - 48 - dotCenter
-                ),
-              }
-            : undefined
-        }
-      />
+      {/* 日英を同じ幅で同時に測定し、表示言語の切り替えでは測定結果を破棄しない。 */}
+      {(androidTablet ? [false, true] : [isEn]).map((english) => (
+        <StationName
+          key={english ? 'en' : 'ja'}
+          index={index * 2 + Number(english)}
+          reportLabelHeight={reportLabelHeight}
+          station={stationInLoop}
+          en={english}
+          hidden={androidTablet && english !== isEn}
+          horizontal={includesLongStationName}
+          passed={isPass}
+          diagonalLayout={
+            androidTablet
+              ? {
+                  left: dotCenterInCell,
+                  width: getJODiagonalLabelWidth(
+                    dim.height,
+                    dim.width - 48 - dotCenter
+                  ),
+                }
+              : undefined
+          }
+        />
+      ))}
 
       <View
         style={[
@@ -342,7 +354,11 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     Math.max(
       0,
       ...stations.map(
-        (_, index) => (labelHeights[index] ?? 0) - getLabelSpace(height)
+        (_, index) =>
+          Math.max(
+            labelHeights[index * 2] ?? 0,
+            labelHeights[index * 2 + 1] ?? 0
+          ) - getLabelSpace(height)
       )
     )
   );
