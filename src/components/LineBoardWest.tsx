@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { type StyleProp, type TextStyle, View } from 'react-native';
+import { Platform, type StyleProp, type TextStyle, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -344,6 +344,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
 }: StationNameCellProps) => {
+  const androidTablet = isTablet && Platform.OS === 'android';
   const allStations = useAtomValue(stationsAtom);
   const isEn = useAtomValue(isEnAtom);
   const { width: windowWidth } = useLandscapeWindowDimensions();
@@ -389,10 +390,12 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 
   return (
     <View
+      testID="station-name-cell-west"
       style={[
         styles.stationNameContainerWestJO,
         {
           width: windowWidth / 9,
+          ...(androidTablet && { height: '100%' as const }),
         },
       ]}
     >
@@ -400,6 +403,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         testID="station-name-wrapper-west"
         style={[
           { bottom: stationNameBottom },
+          // 駅名の行数をセルの寸法に反映させず、駅番号・乗換案内と同じ下端を基準にする。
+          androidTablet && { position: 'absolute', left: 0, right: 0 },
           isEn || includesLongStationName
             ? {
                 transform: [{ rotate: '-55deg' }],

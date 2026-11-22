@@ -5,7 +5,10 @@ import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { useAfterNextStation } from '~/hooks/useAfterNextStation';
 import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
-import { enabledLanguagesAtom } from '~/store/atoms/navigation';
+import {
+  enabledLanguagesAtom,
+  leftStationsAtom,
+} from '~/store/atoms/navigation';
 import { isEnAtom } from '~/store/selectors/isEn';
 import getIsPass from '~/utils/isPass';
 import { StationRow } from './LineBoard/shared/components/StationRow';
@@ -19,6 +22,7 @@ import LineBoardJO from './LineBoardJO';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardToei from './LineBoardToei';
+import LineBoardWest from './LineBoardWest';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
 
@@ -30,6 +34,10 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: () => ({ width: 960, height: 600 }),
   useIsPassing: () => false,
+  useCurrentStation: () => ({ groupId: 1 }),
+  useNextStation: () => null,
+  usePreviousStation: () => null,
+  useHasPassStationInRegion: () => false,
   useCurrentLine: () => ({ id: 1, color: '#c3bd44' }),
   useDisplayCurrentStation: () => ({ groupId: 1 }),
   useEstimateArrivalTimes: () => ({ route: null }),
@@ -376,6 +384,50 @@ it('JOの乗換案内は路線バーの下端に追従し、駅番号の表示�
       { top: '100%', marginTop: 118 },
       { top: '100%', marginTop: 78 },
     ]);
+  } finally {
+    Platform.OS = os;
+  }
+});
+
+it('JRWの駅名は日英を切り替えてもセルの高さと下端を変えない', () => {
+  const os = Platform.OS;
+  Platform.OS = 'android';
+  try {
+    const stops = [
+      { ...stations[0], name: '大阪', nameRoman: 'Osaka-Central-Station' },
+    ];
+    const component = () => (
+      <LineBoardWest stations={stops} lineColors={['#00a7db']} />
+    );
+    const setLanguage = (english: boolean) =>
+      jest.mocked(useAtomValue).mockImplementation((atom) => {
+        if (atom === leftStationsAtom) return stops;
+        return atom === isEnAtom && english;
+      });
+    setLanguage(false);
+    const result = render(component());
+    for (const english of [false, true, false]) {
+      setLanguage(english);
+      result.rerender(
+        <LineBoardWest stations={[...stops]} lineColors={['#00a7db']} />
+      );
+      const label = result.getByTestId('station-name-wrapper-west');
+      const style = StyleSheet.flatten(label.props.style);
+      expect(style).toMatchObject({
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+      });
+      expect(style.transform).toEqual(
+        english ? [{ rotate: '-55deg' }] : undefined
+      );
+      expect(
+        StyleSheet.flatten(
+          result.getByTestId('station-name-cell-west').props.style
+        ).height
+      ).toBe('100%');
+    }
   } finally {
     Platform.OS = os;
   }
