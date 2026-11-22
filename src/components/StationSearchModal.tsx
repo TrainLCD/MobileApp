@@ -2,17 +2,31 @@ import { FlashList } from '@shopify/flash-list';
 import { BlurView } from 'expo-blur';
 import { useAtomValue } from 'jotai';
 import uniqBy from 'lodash/uniqBy';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { Station } from '~/@types/graphql';
+import type {
+  GetStationSearchCandidatesQueryVariables,
+  Station,
+} from '~/@types/graphql';
 import { LED_THEME_BG_COLOR } from '~/constants/color';
 import { PREFECTURES_JA } from '~/constants/province';
 import { useAIAgentFeatureEnabled } from '~/hooks/useAIAgentFeatureEnabled';
 import { useFetchCurrentLocationOnce } from '~/hooks/useFetchCurrentLocationOnce';
 import { useLazyGraphQLQuery } from '~/hooks/useLazyGraphQLQuery';
 import { useNearbyStations } from '~/hooks/useNearbyStations';
-import { GET_STATIONS_BY_NAME } from '~/lib/graphql/queries';
+import { gqlClient } from '~/lib/gql';
+import {
+  GET_STATION_SEARCH_CANDIDATES,
+  GET_STATIONS_BY_IDS,
+} from '~/lib/graphql/queries';
 import { appColorsAtom } from '~/store/atoms/colorScheme';
 import { locationAtom } from '~/store/atoms/location';
 import { stationAtom } from '~/store/atoms/station';
@@ -34,12 +48,6 @@ import Typography from './Typography';
 
 type GetStationsByNameData = {
   stationsByName: Station[];
-};
-
-type GetStationsByNameVariables = {
-  name: string;
-  limit?: number;
-  fromStationGroupId?: number;
 };
 
 const getStationUniqueKey = (station: Station) => {
@@ -165,9 +173,10 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
       error: fetchStationsByNameError,
       called: fetchStationsByNameCalled,
     },
-  ] = useLazyGraphQLQuery<GetStationsByNameData, GetStationsByNameVariables>(
-    GET_STATIONS_BY_NAME
-  );
+  ] = useLazyGraphQLQuery<
+    GetStationsByNameData,
+    GetStationSearchCandidatesQueryVariables
+  >(GET_STATION_SEARCH_CANDIDATES);
 
   useEffect(() => {
     if (!visible) {
@@ -201,7 +210,12 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   }, [visible, fetchCurrentLocation, skipLocationRefresh]);
 
   useEffect(() => {
-    if (fetchStationsByNameError || fetchStationsNearbyError) {
+    if (
+      visible &&
+      (fetchStationsByNameCalled
+        ? fetchStationsByNameError
+        : fetchStationsNearbyError)
+    ) {
       // StrictMode の二重実行でダイアログが重複しないよう共有ガードを使う
       showDialogWhilePresenting(
         'stationSearchModalFetchError',
@@ -209,7 +223,61 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         translate('failedToFetchStation')
       );
     }
-  }, [fetchStationsByNameError, fetchStationsNearbyError]);
+  }, [
+    visible,
+    fetchStationsByNameCalled,
+    fetchStationsByNameError,
+    fetchStationsNearbyError,
+  ]);
+
+  const selectionVersion = useRef(0);
+  const [pendingStationId, setPendingStationId] = useState<number | null>(null);
+  const cancelSelection = useCallback(() => {
+    selectionVersion.current++;
+    setPendingStationId(null);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!visible) cancelSelection();
+    return () => {
+      selectionVersion.current++;
+    };
+  }, [visible, cancelSelection]);
+
+  const selectCandidate = useCallback(
+    async (item: Station) => {
+      if (!fetchStationsByNameCalled) {
+        onSelect(item);
+        return;
+      }
+      const version = ++selectionVersion.current;
+      try {
+        if (item.id == null) throw new Error('Missing station ID');
+        setPendingStationId(item.id);
+        const { data } = await gqlClient.query<{ stations: Station[] }>({
+          query: GET_STATIONS_BY_IDS,
+          variables: { ids: [item.id] },
+        });
+        if (version !== selectionVersion.current) return;
+        const station = data.stations.find(
+          (candidate) => candidate.id === item.id
+        );
+        if (!station) throw new Error('Station no longer available');
+        onSelect(station);
+      } catch {
+        if (version === selectionVersion.current) {
+          showDialogWhilePresenting(
+            'stationSearchModalFetchError',
+            translate('errorTitle'),
+            translate('failedToFetchStation')
+          );
+        }
+      } finally {
+        if (version === selectionVersion.current) setPendingStationId(null);
+      }
+    },
+    [fetchStationsByNameCalled, onSelect]
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: Station }) => {
@@ -229,13 +297,12 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
           title={title}
           subtitle={subtitle}
           subtitleNumberOfLines={1}
-          onPress={() => {
-            onSelect(item);
-          }}
+          loading={pendingStationId != null && item.id === pendingStationId}
+          onPress={() => selectCandidate(item)}
         />
       );
     },
-    [onSelect]
+    [pendingStationId, selectCandidate]
   );
 
   const keyExtractor = useCallback(
@@ -249,12 +316,15 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
         return;
       }
 
+      cancelSelection();
       fetchStationsByName({ variables: { name: query } });
     },
-    [fetchStationsByName]
+    [cancelSelection, fetchStationsByName]
   );
 
-  const isLoading = fetchStationsByNameLoading || fetchStationsNearbyLoading;
+  const isLoading = fetchStationsByNameCalled
+    ? fetchStationsByNameLoading
+    : fetchStationsNearbyLoading;
 
   const stations = useMemo(
     () =>
@@ -272,8 +342,9 @@ export const StationSearchModal = ({ visible, onClose, onSelect }: Props) => {
   );
 
   const handleClose = useCallback(() => {
+    cancelSelection();
     onClose();
-  }, [onClose]);
+  }, [cancelSelection, onClose]);
 
   // ヘッダー(150) + アイテム(80*件数) + セパレーター(8*(件数-1)) + フッター(72)
   const dynamicMinHeight = useMemo(() => {

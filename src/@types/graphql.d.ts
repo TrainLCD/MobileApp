@@ -3128,6 +3128,79 @@ export type GetLineStationsQuery = {
   }>;
 };
 
+export type GetStationSearchCandidatesQueryVariables = Exact<{
+  name: string;
+}>;
+
+export type GetStationSearchCandidatesQuery = {
+  stationsByName: Array<{
+    __typename: 'Station';
+    id: number | null | undefined;
+    groupId: number | null | undefined;
+    name: string | null | undefined;
+    nameRoman: string | null | undefined;
+    prefectureId: number | null | undefined;
+    threeLetterCode: string | null | undefined;
+    stationNumbers:
+      | Array<{
+          __typename: 'StationNumber';
+          lineSymbol: string | null | undefined;
+          lineSymbolColor: string | null | undefined;
+          lineSymbolShape: string | null | undefined;
+          stationNumber: string | null | undefined;
+        }>
+      | null
+      | undefined;
+    line:
+      | {
+          __typename: 'LineNested';
+          id: number | null | undefined;
+          nameShort: string | null | undefined;
+          nameRoman: string | null | undefined;
+          color: string | null | undefined;
+          lineType: LineType | null | undefined;
+          transportType: TransportType | null | undefined;
+          company:
+            | { __typename: 'Company'; id: number | null | undefined }
+            | null
+            | undefined;
+          lineSymbols:
+            | Array<{
+                __typename: 'LineSymbol';
+                color: string | null | undefined;
+                shape: string | null | undefined;
+                symbol: string | null | undefined;
+              }>
+            | null
+            | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                stationNumbers:
+                  | Array<{
+                      __typename: 'StationNumber';
+                      lineSymbol: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+        }
+      | null
+      | undefined;
+    lines:
+      | Array<{
+          __typename: 'LineNested';
+          nameShort: string | null | undefined;
+          nameRoman: string | null | undefined;
+          transportType: TransportType | null | undefined;
+        }>
+      | null
+      | undefined;
+  }>;
+};
+
 export type GetStationsByNameQueryVariables = Exact<{
   name: Scalars['String']['input'];
   limit: InputMaybe<Scalars['Int']['input']>;
