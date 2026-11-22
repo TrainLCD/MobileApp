@@ -134,11 +134,18 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
     trainTypeName != null &&
     japaneseRegexp.test(trainTypeName);
 
-  const chars = isJapaneseChars ? trainTypeName.split('') : null;
+  const chars = isJapaneseChars ? Array.from(trainTypeName) : null;
 
   const adjustedFontSize = useMemo(() => {
-    if (!trainTypeName || boxWidth === 0 || chars) {
+    if (!trainTypeName || boxWidth === 0) {
       return FONT_SIZE;
+    }
+    if (chars) {
+      // 傾いた文字の左右にも余白を残し、各文字を等分した区画に収める。
+      return Math.min(
+        FONT_SIZE,
+        Math.max(1, (boxWidth - SKEW_SHIFT) / chars.length)
+      );
     }
     let estimatedWidth = 0;
     for (const ch of trainTypeName) {
@@ -157,12 +164,16 @@ const TrainTypeBoxJO: React.FC<Props> = ({ trainType }: Props) => {
       <Svg width="100%" height={BOX_HEIGHT}>
         <G transform={SKEW_TRANSFORM}>
           {chars
-            ? chars.map((char, i) => (
+            ? boxWidth > 0 &&
+              chars.map((char, i) => (
                 <SvgText
                   key={`${char}_${i.toString()}`}
-                  x={`${((i + 0.5) / chars.length) * 100}%`}
+                  x={
+                    SKEW_SHIFT / 2 +
+                    ((i + 0.5) * (boxWidth - SKEW_SHIFT)) / chars.length
+                  }
                   y={BOX_HEIGHT / 2}
-                  fontSize={FONT_SIZE}
+                  fontSize={adjustedFontSize}
                   fontWeight={fontWeight}
                   fill={trainTypeColor}
                   textAnchor="middle"

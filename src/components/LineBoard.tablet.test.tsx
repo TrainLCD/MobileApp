@@ -11,10 +11,12 @@ import { StationRow } from './LineBoard/shared/components/StationRow';
 import { STATION_NAME_CONTAINER_BOTTOM } from './LineBoard/shared/styles/commonStyles';
 import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
+import LineBoardJO from './LineBoardJO';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardToei from './LineBoardToei';
 import PadLineMarks from './PadLineMarks';
+import Typography from './Typography';
 
 jest.mock('~/utils/isTablet', () => ({ __esModule: true, default: true }));
 jest.mock('jotai', () => ({
@@ -23,6 +25,7 @@ jest.mock('jotai', () => ({
 }));
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: () => ({ width: 960, height: 600 }),
+  useIsPassing: () => false,
   useCurrentLine: () => ({ id: 1, color: '#c3bd44' }),
   useDisplayCurrentStation: () => ({ groupId: 1 }),
   useEstimateArrivalTimes: () => ({ route: null }),
@@ -46,7 +49,9 @@ jest.mock('~/utils/isPass', () => ({
 jest.mock('./LineBoard/shared/hooks/useBarStyles', () => ({
   useBarStyles: () => ({ left: 0, width: 100 }),
   useChevronPosition: () => ({}),
-  useIncludesLongStationName: () => false,
+  useIncludesLongStationName: jest.requireActual(
+    './LineBoard/shared/hooks/useIncludesLongStationName'
+  ).useIncludesLongStationName,
 }));
 jest.mock('./LineBoard/shared/components', () => ({
   BlinkingChevron: () => null,
@@ -258,4 +263,44 @@ describe.each([
     expect(StyleSheet.flatten(banner?.props.style).position).toBe('absolute');
     expect(row.findAll((node) => node === banner).length === 0).toBe(true);
   });
+});
+
+it('Androidタブレットでは最後の停留所の長い名前もヘッダー下・画面右端の内側に収める', () => {
+  const os = Platform.OS;
+  Platform.OS = 'android';
+  try {
+    jest.mocked(useAtomValue).mockReturnValue(false);
+    const stops = Array.from({ length: 8 }, (_, i) => ({
+      ...stations[0],
+      id: i + 1,
+      groupId: i + 1,
+      name: '伊勢崎市文化会館前',
+      stationNumbers: [],
+    }));
+    const result = render(
+      <LineBoardJO stations={stops} lineColors={stops.map(() => '#ff8000')} />
+    );
+    const labels = result
+      .UNSAFE_getAllByType(Typography)
+      .filter((label) => label.props.children === stops[0].name);
+    expect(labels).toHaveLength(8);
+    for (const [i, label] of labels.entries()) {
+      const style = StyleSheet.flatten(label.props.style);
+      expect(label.props.adjustsFontSizeToFit).toBe(true);
+      expect(label.props.numberOfLines).toBe(1);
+      expect(style.transformOrigin).toBe('left bottom');
+      const rad = (55 * Math.PI) / 180;
+      const anchorX = 48 + ((960 - 120) / 8) * (i + 0.5) + 16;
+      const anchorY = (600 - 200) * 0.54 - 110;
+      expect(style.width).toBeGreaterThan(0);
+      expect(
+        style.width * Math.sin(rad) + style.height * Math.cos(rad)
+      ).toBeLessThanOrEqual(anchorY + 0.001);
+      expect(anchorX + style.width * Math.cos(rad)).toBeLessThanOrEqual(
+        960.001
+      );
+    }
+  } finally {
+    Platform.OS = os;
+  }
 });
