@@ -12,6 +12,7 @@ import {
   useStationNumberIndexFunc,
   useTransferLinesFromStation,
 } from '~/hooks';
+import { HEADER_E235_TABLET_HEIGHT } from '../constants';
 import { selectedLineAtom } from '../store/atoms/line';
 import { arrivedAtom } from '../store/atoms/station';
 import { isEnAtom } from '../store/selectors/isEn';
@@ -30,6 +31,7 @@ import {
   BAR_BOTTOM_JO,
   BAR_HEIGHT_JO,
   commonLineBoardStyles,
+  HORIZONTAL_STATION_NAME_FONT_SIZE,
 } from './LineBoard/shared/styles/commonStyles';
 import NumberingIcon from './NumberingIcon';
 import PadLineMarks from './PadLineMarks';
@@ -59,13 +61,39 @@ const BAR_TAIL_EXTENSION_JO = isTablet ? 24 : 14;
 const ESTIMATED_MINUTES_BADGE_WIDTH = isTablet ? 96 : 64;
 const ESTIMATED_MINUTES_BADGE_HEIGHT = isTablet ? 40 : 30;
 
+// JO・JLともタブレットのヘッダーは200dp。路線図の上方移動と同じ割合で
+// ヘッダー下に残る高さを求め、回転した文字の右上端まで収める。
+const ANDROID_TABLET_RAISE_PERCENT = 46;
+const TABLET_LABEL_BOTTOM = BAR_BOTTOM_JO + BAR_HEIGHT_JO + 14;
+const LABEL_ANGLE = 55;
+const labelRadians = (LABEL_ANGLE * Math.PI) / 180;
+const labelHeight = Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4);
+
+const getJODiagonalLabelWidth = (height: number, rightSpace: number) => {
+  const visibleHeight =
+    (height - HEADER_E235_TABLET_HEIGHT) *
+      (1 - ANDROID_TABLET_RAISE_PERCENT / 100) -
+    TABLET_LABEL_BOTTOM;
+  return Math.max(
+    1,
+    Math.min(
+      (visibleHeight - labelHeight * Math.cos(labelRadians)) /
+        Math.sin(labelRadians),
+      rightSpace / Math.cos(labelRadians)
+    )
+  );
+};
+
 // Local style overrides specific to JO
 const localStyles = StyleSheet.create({
   root: {
     flex: 1,
     height: '100%',
     bottom: isTablet
-      ? Platform.select({ android: '46%', default: '40%' })
+      ? Platform.select({
+          android: `${ANDROID_TABLET_RAISE_PERCENT}%` as const,
+          default: '40%',
+        })
       : undefined,
     marginLeft: isTablet ? 48 : 32,
   },
@@ -100,6 +128,7 @@ interface StationNameProps {
   en?: boolean;
   horizontal?: boolean;
   passed?: boolean;
+  diagonalLayout?: { left: number; width: number };
 }
 
 const StationName: React.FC<StationNameProps> = ({
@@ -107,24 +136,31 @@ const StationName: React.FC<StationNameProps> = ({
   en,
   horizontal,
   passed,
+  diagonalLayout,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
 
-  if (en) {
+  if (en || horizontal) {
     return (
       <Typography
-        style={[styles.stationNameEnJO, passed ? styles.grayColor : null]}
+        adjustsFontSizeToFit={!!diagonalLayout}
+        numberOfLines={diagonalLayout ? 1 : undefined}
+        style={[
+          styles.stationNameEnJO,
+          passed ? styles.grayColor : null,
+          diagonalLayout && {
+            ...diagonalLayout,
+            position: 'absolute',
+            bottom: 0,
+            marginLeft: 0,
+            marginBottom: 0,
+            height: labelHeight,
+            transformOrigin: 'left bottom',
+            transform: [{ rotate: `-${LABEL_ANGLE}deg` }],
+          },
+        ]}
       >
-        {stationNameR}
-      </Typography>
-    );
-  }
-  if (horizontal) {
-    return (
-      <Typography
-        style={[styles.stationNameEnJO, passed ? styles.grayColor : null]}
-      >
-        {station.name}
+        {en ? stationNameR : station.name}
       </Typography>
     );
   }
@@ -203,25 +239,21 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
 
   const barWidth = useBarWidth();
-  // ドット中央とstationNameContainer中央の水平位置差分を補正
-  const numberingLeftOffset = useMemo(() => {
-    if (!isTablet || Platform.OS !== 'android') {
-      return undefined;
-    }
-    const containerWidth = dim.width / 9;
-    const dotCenter = barWidth * (index + 1) - barWidth / 2;
-    const wrapperMarginLeft = barWidth / 2.5;
-    const containerCenter =
-      wrapperMarginLeft + index * containerWidth + containerWidth / 2;
-    return dotCenter - containerCenter + 16;
-  }, [barWidth, dim.width, index]);
+  const cellWidth = dim.width / 9;
+  const dotCenter = barWidth * (index + 0.5) + LEGACY_DOT_SIZE / 2;
+  const dotCenterInCell = dotCenter - barWidth / 2.5 - index * cellWidth;
+  const androidTablet = isTablet && Platform.OS === 'android';
+  const numberingLeftOffset = androidTablet
+    ? dotCenterInCell - cellWidth / 2
+    : undefined;
 
   return (
     <View
       style={[
         styles.stationNameContainerJO,
         {
-          width: dim.width / 9,
+          width: cellWidth,
+          ...(androidTablet && { bottom: TABLET_LABEL_BOTTOM }),
         },
       ]}
     >
@@ -230,6 +262,17 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         en={isEn}
         horizontal={includesLongStationName}
         passed={isPass}
+        diagonalLayout={
+          androidTablet
+            ? {
+                left: dotCenterInCell,
+                width: getJODiagonalLabelWidth(
+                  dim.height,
+                  dim.width - 48 - dotCenter
+                ),
+              }
+            : undefined
+        }
       />
 
       <View

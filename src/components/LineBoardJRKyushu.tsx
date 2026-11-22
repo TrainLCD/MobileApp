@@ -322,7 +322,10 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
     omitRepeatingLine: true,
   });
 
-  const { left: barLeft, width: barWidth } = useBarStyles({ index });
+  const { left: barLeft, width: barWidth } = useBarStyles({
+    index,
+    stationsLength: stations.length,
+  });
   const { widthScale } = useScale();
   const additionalChevronStyle = useChevronPosition(index, arrived, passed);
   const { isSplitPosition } = useBarSplitConfig(
@@ -462,7 +465,8 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
   const boardPaddingBottom = getBoardPaddingBottom(dim.height);
-  const padCount = Math.max(0, 8 - stations.length);
+  // タブレットは最後の実駅セルに終端を描くため、空き枠に帯を追加しない。
+  const padCount = isTablet ? 0 : Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
   const { route: estimatedRoute } = useEstimateArrivalTimes();
   const estimatedMinutesByStationId =
