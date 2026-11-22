@@ -27,11 +27,14 @@ import {
 } from './LineBoard/shared/components';
 import { NextStopBanner } from './LineBoard/shared/components/NextStopBanner';
 import {
+  getBoardPaddingBottom,
+  StationRow,
+} from './LineBoard/shared/components/StationRow';
+import {
   useBarStyles,
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
-import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
 import {
   getLineColorBarSegments,
@@ -458,7 +461,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
-  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
+  const boardPaddingBottom = getBoardPaddingBottom(dim.height);
   const padCount = Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
   const { route: estimatedRoute } = useEstimateArrivalTimes();
@@ -534,7 +537,6 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   return (
     <View
       testID="line-board-jrkyushu"
-      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
@@ -542,7 +544,7 @@ const LineBoardJRKyushu: React.FC<Props> = ({
         },
       ]}
     >
-      {stationsWithEmpty.map(stationNameCellForMap)}
+      <StationRow>{stationsWithEmpty.map(stationNameCellForMap)}</StationRow>
       {showNextStopBanner && isTablet ? (
         <NextStopBanner stations={stations} />
       ) : null}

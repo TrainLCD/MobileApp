@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import { Platform, StyleSheet, View } from 'react-native';
@@ -7,6 +7,7 @@ import { useAfterNextStation } from '~/hooks/useAfterNextStation';
 import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
 import { enabledLanguagesAtom } from '~/store/atoms/navigation';
 import getIsPass from '~/utils/isPass';
+import { StationRow } from './LineBoard/shared/components/StationRow';
 import { STATION_NAME_CONTAINER_BOTTOM } from './LineBoard/shared/styles/commonStyles';
 import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
@@ -156,22 +157,21 @@ describe.each(variants)(
         />
       );
       const board = result.getByTestId(`line-board-${id}`);
-      for (const height of [392, 320, 480]) {
-        fireEvent(board, 'layout', { nativeEvent: { layout: { height } } });
-        const padding = StyleSheet.flatten(board.props.style).paddingBottom;
-        const expectedPadding = (height * 3) / 7;
-        expect(padding).toBeCloseTo(expectedPadding);
-        const chevron = result.UNSAFE_getAllByType(View).find((view) => {
-          const style = StyleSheet.flatten(view.props.style);
-          return (
-            style?.position === 'absolute' &&
-            style?.marginLeft === (id === 'toei' ? 15 : 14)
-          );
-        });
-        expect(StyleSheet.flatten(chevron?.props.style).bottom).toBeCloseTo(
-          expectedPadding + (bottom ?? 0) - 52
+      expect(board.props.onLayout).toBeUndefined();
+      const row = result.UNSAFE_getByType(StationRow).findByType(View);
+      expect(StyleSheet.flatten(row.props.style).height).toBe(
+        `${(4 / 7) * 100}%`
+      );
+      const chevron = row.findAllByType(View).find((view) => {
+        const style = StyleSheet.flatten(view.props.style);
+        return (
+          style?.position === 'absolute' &&
+          style?.marginLeft === (id === 'toei' ? 15 : 14)
         );
-      }
+      });
+      expect(StyleSheet.flatten(chevron?.props.style).bottom).toBe(
+        (bottom ?? 0) - 52
+      );
     });
 
     it('iPad は従来の配置を保つ', () => {
@@ -231,38 +231,31 @@ describe.each([
       />
     );
     const board = result.getByTestId(`line-board-${id}`);
-    for (const height of [320, 480]) {
-      fireEvent(board, 'layout', { nativeEvent: { layout: { height } } });
-      expect(StyleSheet.flatten(board.props.style).paddingBottom).toBeCloseTo(
-        (height * 3) / 7
-      );
-      const cells = board.findAll(
-        (node) =>
-          node.type === View &&
-          StyleSheet.flatten(node.props.style)?.justifyContent === 'flex-end' &&
-          StyleSheet.flatten(node.props.style)?.width === 960 / 9
-      );
-      expect(cells).toHaveLength(2);
-      for (const cell of cells) {
-        expect(
-          cell.findByType(PadLineMarks).props.transferLines[0].nameShort
-        ).toBe('名城線');
-        expect(
-          cell
-            .findAllByType(LinearGradient)
-            .some(
-              (layer) => StyleSheet.flatten(layer.props.style)?.bottom === -52
-            )
-        ).toBe(true);
-      }
-      const banner = board
-        .findAllByType(LinearGradient)
-        .find((layer) => StyleSheet.flatten(layer.props.style)?.bottom === 16);
-      expect(banner).toBeDefined();
-      expect(StyleSheet.flatten(banner?.props.style).position).toBe('absolute');
+    const row = result.UNSAFE_getByType(StationRow);
+    const cells = row.findAll(
+      (node) =>
+        node.type === View &&
+        StyleSheet.flatten(node.props.style)?.justifyContent === 'flex-end' &&
+        StyleSheet.flatten(node.props.style)?.width === 960 / 9
+    );
+    expect(cells).toHaveLength(2);
+    for (const cell of cells) {
       expect(
-        cells.every((cell) => !cell.findAll((node) => node === banner).length)
+        cell.findByType(PadLineMarks).props.transferLines[0].nameShort
+      ).toBe('名城線');
+      expect(
+        cell
+          .findAllByType(LinearGradient)
+          .some(
+            (layer) => StyleSheet.flatten(layer.props.style)?.bottom === -52
+          )
       ).toBe(true);
     }
+    const banner = board
+      .findAllByType(LinearGradient)
+      .find((layer) => StyleSheet.flatten(layer.props.style)?.bottom === 16);
+    expect(banner).toBeDefined();
+    expect(StyleSheet.flatten(banner?.props.style).position).toBe('absolute');
+    expect(row.findAll((node) => node === banner).length === 0).toBe(true);
   });
 });
