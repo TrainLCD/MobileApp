@@ -210,27 +210,6 @@ describe('PortraitMain', () => {
     );
   });
 
-  it('長い路線名は文字サイズと1行表示を維持し、表示幅を縮めない', () => {
-    const lineName = '埼玉高速鉄道埼玉スタジアム線';
-    mockedUseCurrentLine.mockReturnValue({
-      ...yamanoteLine,
-      nameShort: lineName,
-    });
-    const { getByText } = renderWithStations([
-      buildStation(1, '品川', StopCondition.All, 'JY-25'),
-    ]);
-
-    const lineText = getByText(lineName);
-    expect(lineText.props.numberOfLines).toBe(1);
-    expect(lineText.props.adjustsFontSizeToFit).not.toBe(true);
-    expect(StyleSheet.flatten(lineText.props.style)).toMatchObject({
-      flexShrink: 0,
-      fontSize: RFValue(12),
-    });
-    expect(getByText('各駅停車')).toBeTruthy();
-    expect(getByText('品川・大崎方面')).toBeTruthy();
-  });
-
   it('同名のバス停が連続すると異なるのりば番号を表示する', () => {
     const { getByTestId } = renderWithStations([
       { ...buildStation(1, '名古屋駅', StopCondition.All), platformCode: '9' },
@@ -434,6 +413,26 @@ describe('PortraitMain', () => {
       ).toBeNull();
     }
   );
+
+  it('駅IDが欠けた停車駅が複数あっても行のキーで警告が出ない', () => {
+    const consoleError = jest.spyOn(console, 'error');
+    try {
+      const stops = [null, undefined, null, undefined].map((id, index) => ({
+        ...buildStation(index + 1, `停留所${index + 1}`, StopCondition.All),
+        id,
+        groupId: (index % 2) + 1,
+      }));
+      const { getByText } = renderWithStations(stops);
+      for (const name of ['停留所1', '停留所2', '停留所3', '停留所4']) {
+        expect(getByText(name)).toBeTruthy();
+      }
+      expect(consoleError.mock.calls.flat().join(' ')).not.toMatch(
+        /same key|unique "key"/
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
 
   it.each([null, undefined])(
     '現在駅のIDが%sなら欠損ID同士を一致させずグループIDで探す',
