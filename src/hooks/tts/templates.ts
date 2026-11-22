@@ -94,6 +94,25 @@ const JR_EAST: ThemeTemplate = {
   ),
 };
 
+// 文言の参考: https://jrcc5000.memo.wiki/d/315%b7%cf%c5%c5%bc%d6%bc%d6%c6%e2%ca%fc%c1%f7
+// 編成両数・トイレ位置・出口方向は取得できないため案内しない。
+const JR_315: ThemeTemplate = {
+  NEXT: t(
+    '{#if firstSpeech}',
+    '今日も{currentLineCompanyJa}をご利用くださいまして、ありがとうございます。',
+    '{#if hasTrainType}{trainTypeJa315}、{/if}{boundForJa}行きです。',
+    '{/if}',
+    '次は{#if isNextStopTerminus}終点{/if}{nextStationJa}です。'
+  ),
+  ARRIVING: t(
+    'まもなく、{#if isNextStopTerminus}終点{/if}{nextStationJa}です。',
+    '{#if hasTransferLines}{transferLinesListJa}はお乗り換えです。{/if}',
+    '{#if jr315ShouldAnnounceAfterNextStop}{nextStationJa}を出ますと次は{#if isAfterNextStopTerminus}終点{/if}{afterNextStationJa}に停まります。{/if}',
+    '{#if isNextStopTerminus}お忘れ物のないよう、お確かめください。今日も{currentLineCompanyJa}をご利用くださいまして、ありがとうございました。{/if}',
+    'ドアから手を離してお待ちください。'
+  ),
+};
+
 // 文言の出典: JR西日本 近郊型車両 (223系/225系) 自動放送 (みやこ路快速書き起こし)。
 // - 乗換案内は到着前放送のみ (発車後の次駅案内には含まれない)。
 // - 終点到着前は「ご乗車ありがとうございました。まもなく終点・◯◯、◯◯です。…
@@ -135,6 +154,7 @@ const JR_WEST: ThemeTemplate = {
 // - 他社線直通の境界駅では御礼の後に「この電車は、◯◯線直通、…行きです。」を放送する。
 // - 通過駅の案内は「◯◯の次は、◯◯にとまります。」「通過する、◯◯においでの方は、
 //   お乗り換えです。」(到着前放送のみ)。
+// - 人を指す「方」は音声エンジンの「ほう」という誤読を避けるため「かた」と記す。
 const TOEI: ThemeTemplate = {
   NEXT: t(
     '{#if isNextStopTerminus}{currentLineCompanyJa}をご利用くださいまして、ありがとうございました。{/if}',
@@ -153,7 +173,7 @@ const TOEI: ThemeTemplate = {
   ARRIVING: t(
     'まもなく、{nextStationJa}、{nextStationJa}です。',
     '{#if shouldAnnounceAfterNextStop}{nextStationJa}の次は、{#if isAfterNextStopTerminus}終点、{/if}{afterNextStationJa}にとまります。{/if}',
-    '{#if hasBetweenStations}通過する、{betweenStationsListJa}においでの方は、お乗り換えです。{/if}',
+    '{#if hasBetweenStations}通過する、{betweenStationsListJa}においでのかたは、お乗り換えです。{/if}',
     '{#if isNextStopTerminus}{vehicleJa}は、{nextStationJa}止まりです。お忘れ物のないよう、ご注意ください。{/if}'
   ),
 };
@@ -193,17 +213,17 @@ const TY_EN: ThemeTemplate = {
     '{:else}This {vehicleEn} is bound for {boundForEn}. {/if}',
     '{/if}',
     'The next {placeEn} is {nextStationEn}{#if hasNextStationNumberText} {nextStationNumberTextNoPeriod}{/if}{#if isNextStopTerminus}, this is the last stop of this line{/if}.',
-    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this station.{/if}',
+    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this {placeEn}.{/if}',
     '{#if isNextStopThroughBoundary} This {vehicleEn} will merge and continue traveling on the {nextLineEn} to {boundForEn}. Thank you for using the {currentLineThanksEn}.{/if}'
   ),
   ARRIVING: t(
     '{#if isNextStopTerminus}',
     'We will soon be arriving at {nextStationEn}{#if hasNextStationNumberText} {nextStationNumberTextNoPeriod}{/if}.',
-    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this station.{/if}',
+    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this {placeEn}.{/if}',
     ' Thank you for using the {currentLineThanksEn}.',
     '{:else}',
     'We will soon make a brief stop at {nextStationEn}{#if hasNextStationNumberText} {nextStationNumberTextNoPeriod}{/if}.',
-    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this station.{/if}',
+    '{#if hasTransferLines} Passengers changing to {transferLinesEnList}, please transfer at this {placeEn}.{/if}',
     '{#if isNextStopThroughBoundary} This {vehicleEn} will merge and continue traveling on the {nextLineEn} to {boundForEn}. Thank you for using the {currentLineThanksEn}.{/if}',
     '{/if}'
   ),
@@ -220,6 +240,23 @@ const JR_EAST_EN: ThemeTemplate = {
     '{#if hasTransferLines} Please change here for {transferLinesEnList}.{/if}',
     '{#if shouldAnnounceAfterNextStop} The stop after {nextStationEn} will be {afterNextStationEn}.{/if}',
     '{#if isNextStopTerminus} Thank you for traveling with us. And we look forward to serving you again.{/if}'
+  ),
+};
+
+const JR_315_EN: ThemeTemplate = {
+  NEXT: t(
+    '{#if firstSpeech}',
+    'Thank you for traveling with {currentLineCompanyEn}. ',
+    'This is the {#if hasTrainType}{trainTypeEn} {/if}{vehicleEn} bound for {boundForEn}. ',
+    '{/if}',
+    'The next stop is {nextStationEn}{#if hasNextStationNumberText}, {nextStationNumberTextNoPeriod}{/if}{#if isNextStopTerminus}, the final stop{/if}.'
+  ),
+  ARRIVING: t(
+    'We will soon make a brief stop at {nextStationEn}{#if hasNextStationNumberText}, {nextStationNumberTextNoPeriod}{/if}{#if isNextStopTerminus}, the final stop{/if}.',
+    '{#if hasTransferLines} Passengers transferring to {transferLinesEnList}, please {#if isBus}transfer{:else}change trains{/if} here.{/if}',
+    '{#if jr315ShouldAnnounceAfterNextStop} After leaving {nextStationEn}, we will stop at {afterNextStationEn}{#if hasAfterNextStationNumberText}, {afterNextStationNumberText}{/if}{#if isAfterNextStopTerminus}, the final stop{/if}.{/if}',
+    '{#if isNextStopTerminus} Please take care not to leave any items. Thank you for traveling with {currentLineCompanyEn}.{/if}',
+    ' Please refrain from touching the doors and wait for them to open.'
   ),
 };
 
@@ -298,6 +335,7 @@ export const JA_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JR_WEST]: JR_WEST,
   [APP_THEME.SAIKYO]: JR_EAST,
   [APP_THEME.TOEI]: TOEI,
+  [APP_THEME.JR_315]: JR_315,
   [APP_THEME.JR_KYUSHU]: JR_KYUSHU,
   [APP_THEME.LED]: EMPTY_THEME,
   [APP_THEME.JO]: EMPTY_THEME,
@@ -316,6 +354,7 @@ export const EN_TEMPLATES: Record<AppTheme, ThemeTemplate> = {
   [APP_THEME.JR_WEST]: JR_WEST_EN,
   [APP_THEME.SAIKYO]: JR_EAST_EN,
   [APP_THEME.TOEI]: TOEI_EN,
+  [APP_THEME.JR_315]: JR_315_EN,
   [APP_THEME.JR_KYUSHU]: JR_KYUSHU_EN,
   [APP_THEME.LED]: EMPTY_THEME,
   [APP_THEME.JO]: EMPTY_THEME,

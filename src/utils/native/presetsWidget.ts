@@ -15,6 +15,8 @@ export type PresetsWidgetItem = {
   name: string;
   fromStationName: string;
   toStationName: string;
+  fromStationNumber?: string;
+  toStationNumber?: string;
   lineName: string;
   /** `#RRGGBB`。未取得時は空文字を渡し、ネイティブ側でブランドカラーへフォールバックする */
   lineColor: string;

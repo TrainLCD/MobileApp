@@ -17,6 +17,10 @@ import {
 import type { HeaderStoppingState } from '../models/HeaderTransitionState';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { selectedDirectionAtom, stationsAtom } from '../store/atoms/station';
+import {
+  appendBusPlatform,
+  getBusPlatformCodeForStop,
+} from '../utils/busPlatform';
 import Marquee from './Marquee';
 import Typography from './Typography';
 
@@ -296,6 +300,20 @@ const LineBoardLED = () => {
   const transferLines = useTransferLines();
   const [nextStationNumber] = useNumbering();
   const afterNextStation = useAfterNextStation();
+  const [displayNextStop, displayAfterNextStop] = useMemo(
+    () =>
+      [nextStation, afterNextStation].map((stop) => {
+        if (!stop) return stop;
+        const code = getBusPlatformCodeForStop(stations, stop);
+        if (!code) return stop;
+        return {
+          ...stop,
+          name: appendBusPlatform(stop.name, code, 'ja'),
+          nameRoman: appendBusPlatform(stop.nameRoman, code, 'en'),
+        };
+      }),
+    [nextStation, afterNextStation, stations]
+  );
   const {
     isLoopLine,
     isPartiallyLoopLine,
@@ -364,8 +382,8 @@ const LineBoardLED = () => {
       <Marquee>
         <View style={styles.container}>
           <ArrivingContent
-            nextStation={nextStation}
-            afterNextStation={afterNextStation}
+            nextStation={displayNextStop}
+            afterNextStation={displayAfterNextStop}
             transferLines={transferLines}
             nextStationNumber={nextStationNumber}
           />
@@ -392,8 +410,8 @@ const LineBoardLED = () => {
     <Marquee>
       <View style={styles.container}>
         <NextStopContent
-          nextStation={nextStation}
-          afterNextStation={afterNextStation}
+          nextStation={displayNextStop}
+          afterNextStation={displayAfterNextStop}
           transferLines={transferLines}
           nextStationNumber={nextStationNumber}
         />

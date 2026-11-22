@@ -84,22 +84,19 @@ jest.mock("react-native-device-info", () =>
   require("react-native-device-info/jest/react-native-device-info-mock")
 );
 
-// react-native-maps は読み込むだけでネイティブモジュール(RNMapsAirModule)を要求するため、
-// 地図と図形を props と子要素をそのまま持つ View に置き換える
-jest.mock("react-native-maps", () => {
+// 地図のネイティブビューをpropsを持つViewに置き換える。
+jest.mock("expo-maps", () => {
   const React = require("react");
   const { View } = require("react-native");
   const make = (name) => {
-    const Component = (props) => React.createElement(View, props, props.children);
+    const Component = (props) => React.createElement(View, props);
     Component.displayName = name;
     return Component;
   };
+  const MapColorScheme = { DARK: "DARK", LIGHT: "LIGHT" };
   return {
-    __esModule: true,
-    default: make("MapView"),
-    Marker: make("Marker"),
-    Polyline: make("Polyline"),
-    Circle: make("Circle"),
+    AppleMaps: { View: make("AppleMaps"), MapColorScheme },
+    GoogleMaps: { View: make("GoogleMaps"), MapColorScheme },
   };
 });
 
@@ -126,4 +123,23 @@ beforeEach(() => {
   // インメモリ実装）をテストごとに空へ戻す
   const { storage } = require("./src/lib/storage");
   storage.clearAll();
+});
+
+// react-native-maps は読み込むだけでネイティブモジュール(RNMapsAirModule)を要求するため、
+// 地図と図形を props と子要素をそのまま持つ View に置き換える
+jest.mock("react-native-maps", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  const make = (name) => {
+    const Component = (props) => React.createElement(View, props, props.children);
+    Component.displayName = name;
+    return Component;
+  };
+  return {
+    __esModule: true,
+    default: make("MapView"),
+    Marker: make("Marker"),
+    Polyline: make("Polyline"),
+    Circle: make("Circle"),
+  };
 });

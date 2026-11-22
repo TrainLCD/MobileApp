@@ -13,6 +13,7 @@ export type CommonHeaderProps = {
   currentStation: Station;
   currentLine: Line | null;
   nextStation: Station | undefined;
+  displayNextStation?: Station;
 
   // グローバル状態
   selectedBound: Station | null;

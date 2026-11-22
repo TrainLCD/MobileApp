@@ -6,6 +6,7 @@ import {
   setRawLocation,
 } from '~/store/atoms/location';
 import { isDevApp } from './isDevApp';
+import { beginLocationDelivery } from './locationDeliveryDiagnostics';
 import {
   countLocationRejectedAsDuplicate,
   countLocationRejectedByAccuracy,
@@ -90,7 +91,30 @@ export const setOneShotLocation = (location: Location.LocationObject): void => {
 // watchPositionAsync / startLocationUpdatesAsync 双方の継続測位の共通入口。
 // 経路ごとにMAX_PERMIT_ACCURACYの適用漏れが起きないよう、精度フィルタをここへ集約する。
 // （駅検索などのワンショットはsetOneShotLocationへ通し、時刻判定だけ共有する）
-export const handleTrackingLocation = (location: Location.LocationObject) => {
+export const handleTrackingLocation = (
+  location: Location.LocationObject,
+  source: 'task' | 'watch' | 'foreground-heartbeat' = 'watch'
+) => {
+  const finish = beginLocationDelivery(location, source);
+  try {
+    // Keep transport metadata out of application state and downstream consumers.
+    let trackingLocation = location;
+    if ('trainLCDDiagnostic' in location) {
+      const copy = { ...location } as Location.LocationObject & {
+        trainLCDDiagnostic?: unknown;
+      };
+      delete copy.trainLCDDiagnostic;
+      trackingLocation = copy;
+    }
+    const outcome = processTrackingLocation(trackingLocation);
+    finish(outcome ?? 'unreported');
+  } catch (error) {
+    finish('error');
+    throw error;
+  }
+};
+
+const processTrackingLocation = (location: Location.LocationObject) => {
   // 重複・順序逆転した測位の破棄。Android 16(API 36)ではJobSchedulerクォータ対策で
   // TaskManagerとwatchPositionAsyncの直接コールバックを併用しており、同一の測位が
   // 2系統から届く。破棄しないと同じ測位にEMAスムージングが二重適用されて座標が歪み、
@@ -101,7 +125,7 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     // 破棄した事実だけ数える。重複排除はlastProcessedAtMsを更新する前に抜けるので、
     // 経過時間からは「OSが呼んでいない」状態と区別が付かない(locationPipelineStats)。
     countLocationRejectedAsDuplicate();
-    return;
+    return 'rejectedAsDuplicate' as const;
   }
   lastProcessedAtMs = monotonicNow();
   lastLocationAgeAtDeliveryMs = Number.isFinite(location.timestamp)
@@ -128,8 +152,8 @@ export const handleTrackingLocation = (location: Location.LocationObject) => {
     // 本関数を経由しない経路でも確実に解除するため）。
     setLocationAccuracyOutlier(true);
     countLocationRejectedByAccuracy();
-    return;
+    return 'rejectedByAccuracy' as const;
   }
 
-  setLocation(location);
+  return setLocation(location);
 };

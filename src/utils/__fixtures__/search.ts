@@ -27,6 +27,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -93,6 +94,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -159,6 +161,7 @@ export const AMAGASAKI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -228,6 +231,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -294,6 +298,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -360,6 +365,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -426,6 +432,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -492,6 +499,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -558,6 +566,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -624,6 +633,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {
@@ -690,6 +700,7 @@ export const OCHIAI_STATIONS_FROM_SEARCH: Station[] = [
     nameRomanIpa: null,
     nameTtsSegments: null,
     threeLetterCode: undefined,
+    platformCode: undefined,
     trackDistanceFromPrevious: null,
     lines: [],
     line: {

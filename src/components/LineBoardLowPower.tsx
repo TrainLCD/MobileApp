@@ -33,8 +33,12 @@ type Metrics = {
   markSize: number;
 };
 
+type DisplayStation = Station & {
+  hasPlatformLabel?: { ja: boolean; en: boolean };
+};
+
 type ColumnProps = {
-  station: Station;
+  station: DisplayStation;
   metrics: Metrics;
   isEn: boolean;
   /** 列車が今いる駅 */
@@ -121,6 +125,7 @@ const StationColumn: React.FC<ColumnProps> = ({
   }, [transferLines]);
 
   const etaText = minutes != null ? String(Math.round(minutes)) : unitLabel;
+  const hasPlatformLabel = station.hasPlatformLabel?.[isEn ? 'en' : 'ja'];
 
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
@@ -155,7 +160,9 @@ const StationColumn: React.FC<ColumnProps> = ({
       </Typography>
       <Typography
         numberOfLines={2}
+        adjustsFontSizeToFit={hasPlatformLabel}
         style={{
+          maxWidth: hasPlatformLabel ? '100%' : undefined,
           height: metrics.nameRowHeight,
           paddingTop: 6 * scale,
           paddingHorizontal: 2 * scale,
@@ -200,7 +207,7 @@ const StationColumn: React.FC<ColumnProps> = ({
 };
 
 export type Props = {
-  stations: Station[];
+  stations: DisplayStation[];
 };
 
 /**

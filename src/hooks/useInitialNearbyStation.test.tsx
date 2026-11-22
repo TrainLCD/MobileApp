@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native';
 import { act, render } from '@testing-library/react-native';
 import * as Location from 'expo-location';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -7,6 +8,8 @@ import { storage } from '~/lib/storage';
 import { store } from '~/store';
 import { locationAtom, resetLocationState } from '~/store/atoms/location';
 import {
+  completePresentedDialogDismissal,
+  dismissPresentedDialog,
   getDialogPresentationSnapshot,
   resetDialogPresentationForTests,
 } from '~/utils/dialogPresentation';
@@ -24,6 +27,10 @@ import {
   type UseInitialNearbyStationResult,
   useInitialNearbyStation,
 } from './useInitialNearbyStation';
+
+jest.mock('@sentry/react-native', () => ({
+  captureException: jest.fn(),
+}));
 
 jest.mock('jotai', () => ({
   __esModule: true,
@@ -160,6 +167,63 @@ describe('useInitialNearbyStation', () => {
       },
     });
   });
+  it('初回案内のOKで保存し、次回マウントでは案内しない', () => {
+    storage.remove(STORAGE_KEYS.FIRST_LAUNCH_PASSED);
+    const view = render(<HookBridge onReady={() => {}} />);
+
+    act(() => {
+      dismissPresentedDialog(0);
+      completePresentedDialogDismissal();
+    });
+
+    expect(storage.getString(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe('true');
+    expect(Sentry.captureException).not.toHaveBeenCalled();
+    view.unmount();
+    render(<HookBridge onReady={() => {}} />);
+    expect(getDialogPresentationSnapshot().request).toBeNull();
+  });
+
+  it('保存失敗でも案内を閉じ、次回の案内から保存を再試行できる', () => {
+    storage.remove(STORAGE_KEYS.FIRST_LAUNCH_PASSED);
+    const view = render(<HookBridge onReady={() => {}} />);
+    const error = new Error('Failed to write first launch flag');
+    const setSpy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw error;
+    });
+
+    try {
+      expect(() => {
+        act(() => {
+          dismissPresentedDialog(0);
+          completePresentedDialogDismissal();
+        });
+      }).not.toThrow();
+      expect(Sentry.captureException).toHaveBeenCalledWith(error);
+      expect(Sentry.captureException).toHaveBeenCalledTimes(1);
+      expect(storage.contains(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe(false);
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+      expect(setSpy).toHaveBeenCalledTimes(1);
+
+      view.unmount();
+      const retryView = render(<HookBridge onReady={() => {}} />);
+      expect(getDialogPresentationSnapshot()).toMatchObject({
+        visible: true,
+        request: { message: 'firstAlertText' },
+      });
+      act(() => {
+        dismissPresentedDialog(0);
+        completePresentedDialogDismissal();
+      });
+      expect(storage.getString(STORAGE_KEYS.FIRST_LAUNCH_PASSED)).toBe('true');
+      expect(setSpy).toHaveBeenCalledTimes(2);
+      retryView.unmount();
+      render(<HookBridge onReady={() => {}} />);
+      expect(getDialogPresentationSnapshot().request).toBeNull();
+    } finally {
+      setSpy.mockRestore();
+    }
+  });
+
   it.each(['initial', 'refetch'])(
     '古い%sの応答でも駅検索を続け、現在地は戻さない',
     async (mode) => {

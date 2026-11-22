@@ -36,10 +36,15 @@ jest.mock('~/hooks', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
-jest.mock('~/translation', () => ({
-  isJapanese: true,
-  translate: (key: string) => key,
-}));
+jest.mock('~/translation', () => {
+  const translation = jest.requireActual('~/translation');
+  translation.setI18nConfig();
+  return {
+    isJapanese: true,
+    translate: (key: string, config?: Record<string, string | number>) =>
+      key === 'busPlatform' ? translation.translate(key, config) : key,
+  };
+});
 const mockNumbering = jest.fn();
 jest.mock('./NumberingIcon', () => (props: unknown) => {
   mockNumbering(props);
@@ -119,6 +124,24 @@ function setup() {
 function latest(): SquareMainViewProps {
   return mockView.mock.calls.at(-1)?.[0];
 }
+it('同名の停留所にのりばを添えて停車一覧に渡す', () => {
+  const { store } = setup();
+
+  act(() => {
+    store.set(stationsAtom, [
+      { ...stations[0], name: '名古屋駅', platformCode: '9' },
+      { ...stations[1], name: '名古屋駅', platformCode: '21' },
+      { ...stations[2], name: '柳橋西', platformCode: '1' },
+    ]);
+  });
+
+  expect(latest().stops.map((stop) => stop.name)).toEqual([
+    '名古屋駅（9番のりば）',
+    '名古屋駅（21番のりば）',
+    '柳橋西',
+  ]);
+});
+
 it('uses API numbering shape, color and three-letter code, and existing settings owner', () => {
   const r = setup();
   expect(mockNumbering).toHaveBeenCalledWith(

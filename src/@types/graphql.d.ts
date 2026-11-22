@@ -169,6 +169,7 @@ export type Query = {
   stationTrainTypes: Array<TrainType>;
   stations: Array<Station>;
   stationsByName: Array<Station>;
+  nearbyBusStops: Array<Station>;
   stationsNearby: Array<Station>;
   trainRoute: TrainRouteResponse;
 };
@@ -238,6 +239,11 @@ export type QueryRoutesArgs = {
   pageToken: InputMaybe<Scalars['String']['input']>;
   toStationGroupId: Scalars['Int']['input'];
   viaLineId: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryNearbyBusStopsArgs = {
+  latitude: Scalars['Float']['input'];
+  longitude: Scalars['Float']['input'];
 };
 
 export type QueryStationArgs = {
@@ -335,6 +341,7 @@ export type Station = {
   nameRomanIpa: Maybe<Scalars['String']['output']>;
   nameTtsSegments: Maybe<Array<TtsSegment>>;
   openedAt: Maybe<Scalars['String']['output']>;
+  platformCode: Maybe<Scalars['String']['output']>;
   postalCode: Maybe<Scalars['String']['output']>;
   prefectureId: Maybe<Scalars['Int']['output']>;
   stationNumbers: Maybe<Array<StationNumber>>;
@@ -367,6 +374,7 @@ export type StationNested = {
   nameRomanIpa: Maybe<Scalars['String']['output']>;
   nameTtsSegments: Maybe<Array<TtsSegment>>;
   openedAt: Maybe<Scalars['String']['output']>;
+  platformCode: Maybe<Scalars['String']['output']>;
   postalCode: Maybe<Scalars['String']['output']>;
   prefectureId: Maybe<Scalars['Int']['output']>;
   stationNumbers: Maybe<Array<StationNumber>>;
@@ -707,6 +715,7 @@ export type LineInStationFieldsFragment = {
         __typename: 'StationNested';
         id: number | null | undefined;
         groupId: number | null | undefined;
+        platformCode: string | null | undefined;
         name: string | null | undefined;
         nameRoman: string | null | undefined;
         nameChinese: string | null | undefined;
@@ -1007,6 +1016,7 @@ export type StationFieldsFragment = {
   nameChinese: string | null | undefined;
   nameKorean: string | null | undefined;
   threeLetterCode: string | null | undefined;
+  platformCode: string | null | undefined;
   latitude: number | null | undefined;
   longitude: number | null | undefined;
   prefectureId: number | null | undefined;
@@ -1070,6 +1080,7 @@ export type StationFieldsFragment = {
               __typename: 'StationNested';
               id: number | null | undefined;
               groupId: number | null | undefined;
+              platformCode: string | null | undefined;
               name: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
@@ -1139,6 +1150,7 @@ export type StationFieldsFragment = {
               __typename: 'StationNested';
               id: number | null | undefined;
               groupId: number | null | undefined;
+              platformCode: string | null | undefined;
               name: string | null | undefined;
               nameRoman: string | null | undefined;
               nameChinese: string | null | undefined;
@@ -1434,6 +1446,87 @@ export type StationFieldsFragment = {
     | undefined;
 };
 
+export type GetNearbyBusStopsQueryVariables = Exact<{
+  latitude: number;
+  longitude: number;
+}>;
+
+export type GetNearbyBusStopsQuery = {
+  nearbyBusStops: Array<{
+    __typename: 'Station';
+    line:
+      | {
+          __typename: 'LineNested';
+          id: number | null | undefined;
+          color: string | null | undefined;
+          lineType: LineType | null | undefined;
+          nameKatakana: string | null | undefined;
+          nameRoman: string | null | undefined;
+          nameShort: string | null | undefined;
+          nameChinese: string | null | undefined;
+          nameKorean: string | null | undefined;
+          transportType: TransportType | null | undefined;
+          company:
+            | {
+                __typename: 'Company';
+                id: number | null | undefined;
+                nameEnglishShort: string | null | undefined;
+                nameKatakana: string | null | undefined;
+                nameShort: string | null | undefined;
+              }
+            | null
+            | undefined;
+          lineSymbols:
+            | Array<{
+                __typename: 'LineSymbol';
+                color: string | null | undefined;
+                shape: string | null | undefined;
+                symbol: string | null | undefined;
+              }>
+            | null
+            | undefined;
+          station:
+            | {
+                __typename: 'StationNested';
+                id: number | null | undefined;
+                groupId: number | null | undefined;
+                platformCode: string | null | undefined;
+                name: string | null | undefined;
+                nameRoman: string | null | undefined;
+                nameChinese: string | null | undefined;
+                nameKorean: string | null | undefined;
+                hasTrainTypes: boolean | null | undefined;
+                stationNumbers:
+                  | Array<{
+                      __typename: 'StationNumber';
+                      lineSymbol: string | null | undefined;
+                      lineSymbolColor: string | null | undefined;
+                      lineSymbolShape: string | null | undefined;
+                      stationNumber: string | null | undefined;
+                    }>
+                  | null
+                  | undefined;
+              }
+            | null
+            | undefined;
+          nameTtsSegments:
+            | Array<{
+                __typename: 'TtsSegment';
+                alphabet: TtsAlphabet | null | undefined;
+                fallbackText: string | null | undefined;
+                lang: string | null | undefined;
+                pronunciation: string | null | undefined;
+                separator: string | null | undefined;
+                surface: string | null | undefined;
+              }>
+            | null
+            | undefined;
+        }
+      | null
+      | undefined;
+  }>;
+};
+
 export type GetStationsNearbyQueryVariables = Exact<{
   latitude: Scalars['Float']['input'];
   longitude: Scalars['Float']['input'];
@@ -1452,6 +1545,7 @@ export type GetStationsNearbyQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -1515,6 +1609,7 @@ export type GetStationsNearbyQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -1584,6 +1679,7 @@ export type GetStationsNearbyQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2153,6 +2249,7 @@ export type GetLineListStationsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -2216,6 +2313,7 @@ export type GetLineListStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2285,6 +2383,7 @@ export type GetLineListStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2598,6 +2697,7 @@ export type GetLineStationsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -2661,6 +2761,7 @@ export type GetLineStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -2730,6 +2831,7 @@ export type GetLineStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3043,6 +3145,7 @@ export type GetStationsByNameQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -3106,6 +3209,7 @@ export type GetStationsByNameQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3175,6 +3279,7 @@ export type GetStationsByNameQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3487,6 +3592,7 @@ export type GetLineGroupStationsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -3550,6 +3656,7 @@ export type GetLineGroupStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3619,6 +3726,7 @@ export type GetLineGroupStationsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -3931,6 +4039,7 @@ export type GetStationsByIdsQuery = {
     nameChinese: string | null | undefined;
     nameKorean: string | null | undefined;
     threeLetterCode: string | null | undefined;
+    platformCode: string | null | undefined;
     latitude: number | null | undefined;
     longitude: number | null | undefined;
     prefectureId: number | null | undefined;
@@ -3994,6 +4103,7 @@ export type GetStationsByIdsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -4063,6 +4173,7 @@ export type GetStationsByIdsQuery = {
                 __typename: 'StationNested';
                 id: number | null | undefined;
                 groupId: number | null | undefined;
+                platformCode: string | null | undefined;
                 name: string | null | undefined;
                 nameRoman: string | null | undefined;
                 nameChinese: string | null | undefined;
@@ -4722,6 +4833,7 @@ export type GetConnectedRoutesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
@@ -4785,6 +4897,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -4854,6 +4967,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5203,6 +5317,7 @@ export type GetConnectedRoutesQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
@@ -5266,6 +5381,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5335,6 +5451,7 @@ export type GetConnectedRoutesQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5845,6 +5962,7 @@ export type GetConnectedRoutesSortedQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
@@ -5908,6 +6026,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -5977,6 +6096,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -6326,6 +6446,7 @@ export type GetConnectedRoutesSortedQuery = {
                 nameChinese: string | null | undefined;
                 nameKorean: string | null | undefined;
                 threeLetterCode: string | null | undefined;
+                platformCode: string | null | undefined;
                 latitude: number | null | undefined;
                 longitude: number | null | undefined;
                 prefectureId: number | null | undefined;
@@ -6389,6 +6510,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;
@@ -6458,6 +6580,7 @@ export type GetConnectedRoutesSortedQuery = {
                             __typename: 'StationNested';
                             id: number | null | undefined;
                             groupId: number | null | undefined;
+                            platformCode: string | null | undefined;
                             name: string | null | undefined;
                             nameRoman: string | null | undefined;
                             nameChinese: string | null | undefined;

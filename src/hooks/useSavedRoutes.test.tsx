@@ -2,452 +2,245 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { Provider as JotaiProvider } from 'jotai';
 import { createStore } from 'jotai/vanilla';
 import type { ReactNode } from 'react';
+import {
+  readSavedRoutes,
+  SAVED_ROUTES_KEY,
+  writeSavedRoutes,
+} from '~/lib/savedRoutesStorage';
+import { storage } from '~/lib/storage';
 import type {
   SavedRoute,
-  SavedRouteWithoutTrainTypeInput,
   SavedRouteWithTrainTypeInput,
 } from '~/models/SavedRoute';
 import navigationState, {
   initialNavigationState,
 } from '~/store/atoms/navigation';
+import { useSavedRoutes } from './useSavedRoutes';
 
-// randomUUID をモック（安定した ID を生成）
 let mockIdCounter = 0;
 jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => {
     mockIdCounter += 1;
-    return `550e8400-e29b-41d4-a716-446655440000${mockIdCounter}`;
+    return `550e8400-e29b-41d4-a716-${String(mockIdCounter).padStart(12, '0')}`;
   }),
 }));
 
-// SQLite をモック（実装が execAsync/getAllAsync/runAsync を使うためそれらを用意）
-interface MockDb {
-  execAsync: (sql: string) => Promise<void>;
-  getAllAsync: (sql: string, params?: unknown) => Promise<unknown[]>;
-  runAsync: (sql: string, params: unknown[]) => Promise<void>;
-}
-const mockDb: jest.Mocked<MockDb> = {
-  execAsync: jest.fn(),
-  getAllAsync: jest.fn(),
-  runAsync: jest.fn(),
-};
-
-jest.mock('expo-sqlite', () => ({
-  openDatabaseSync: jest.fn(() => mockDb),
+const mockReadLegacy = jest.fn();
+jest.mock('~/lib/legacySavedRoutes', () => ({
+  readLegacySavedRoutes: () => mockReadLegacy(),
 }));
 
-// 各テストを独立させるため Jotai のストアを毎回作り直す
 const withJotaiProvider = (store: ReturnType<typeof createStore>) =>
   function Wrapper({ children }: { children: ReactNode }) {
     return <JotaiProvider store={store}>{children}</JotaiProvider>;
   };
 
+const input: SavedRouteWithTrainTypeInput = {
+  hasTrainType: true,
+  lineId: 100,
+  trainTypeId: 50,
+  wantedDestinationId: 7,
+  originStationId: 1,
+  direction: 'INBOUND',
+  notifyStationIds: [2, 7],
+  name: '通勤',
+  createdAt: new Date('2025-01-01'),
+  legs: [
+    {
+      lineGroupId: 50,
+      fromStationId: 10,
+      toStationId: 20,
+      stationGroupIds: [1, 2],
+    },
+    {
+      lineGroupId: 60,
+      fromStationId: 21,
+      toStationId: 70,
+      stationGroupIds: [2, 7],
+    },
+  ],
+};
+const existing: SavedRoute = {
+  ...input,
+  id: '550e8400-e29b-41d4-a716-446655440000',
+};
+const renderRoutes = (store = createStore()) =>
+  renderHook(() => useSavedRoutes(), { wrapper: withJotaiProvider(store) });
+
 describe('useSavedRoutes', () => {
   beforeEach(() => {
+    storage.remove(SAVED_ROUTES_KEY);
     mockIdCounter = 0;
-    mockDb.execAsync.mockResolvedValue();
-    mockDb.getAllAsync.mockResolvedValue([]);
-    mockDb.runAsync.mockResolvedValue();
+    mockReadLegacy.mockReset().mockResolvedValue([]);
   });
-
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
-  describe('initialization', () => {
-    it('DB 初期化でテーブルとインデックスを作成し presetsFetched を true にする', async () => {
-      const store = createStore();
-      store.set(navigationState, initialNavigationState);
-      const { result } = renderHook(
-        () => require('./useSavedRoutes').useSavedRoutes(),
-        {
-          wrapper: withJotaiProvider(store),
-        }
-      );
-
-      await waitFor(() => expect(mockDb.execAsync).toHaveBeenCalledTimes(9));
-      expect(mockDb.execAsync).toHaveBeenNthCalledWith(
-        1,
-        expect.stringContaining('CREATE TABLE IF NOT EXISTS saved_routes')
-      );
-      expect(mockDb.execAsync).toHaveBeenNthCalledWith(
-        2,
-        expect.stringContaining(
-          'CREATE INDEX IF NOT EXISTS idx_saved_routes_createdAt'
-        )
-      );
-      expect(mockDb.execAsync).toHaveBeenNthCalledWith(
-        3,
-        expect.stringContaining(
-          'CREATE INDEX IF NOT EXISTS idx_saved_routes_line_dest_has'
-        )
-      );
-      expect(mockDb.execAsync).toHaveBeenNthCalledWith(
-        4,
-        expect.stringContaining(
-          'CREATE INDEX IF NOT EXISTS idx_saved_routes_ttype_dest_has'
-        )
-      );
-      // 乗換経路の区間を保存する列を、既存のテーブルにも追加する
-      expect(mockDb.execAsync).toHaveBeenNthCalledWith(
-        9,
-        'ALTER TABLE saved_routes ADD COLUMN legs TEXT;'
-      );
-
-      await waitFor(() => expect(result.current.isInitialized).toBe(true));
-      expect(store.get(navigationState).presetsFetched).toBe(true);
-    });
+  it('MMKVから復元し、SQLiteの移行処理を呼ばない', () => {
+    writeSavedRoutes([existing]);
+    const { result } = renderRoutes();
+    expect(result.current.isInitialized).toBe(true);
+    expect(result.current.routes).toEqual([existing]);
+    expect(result.current.routes[0].createdAt).toBeInstanceOf(Date);
+    expect(mockReadLegacy).not.toHaveBeenCalled();
   });
 
-  describe('updateRoutes', () => {
-    it('DB から取得して routes を更新する（hasTrainType の変換含む）', async () => {
-      const rows = [
-        {
-          id: '1',
-          name: 'With TrainType',
-          lineId: 10,
-          trainTypeId: 5,
-          hasTrainType: 1,
-          createdAt: '2025-01-01T00:00:00.000Z',
-        },
-        {
-          id: '2',
-          name: 'Without TrainType',
-          lineId: 11,
-          trainTypeId: 999,
-          hasTrainType: 0,
-          createdAt: '2025-01-02T00:00:00.000Z',
-        },
-      ];
-      mockDb.getAllAsync.mockResolvedValue(rows as unknown[]);
-
-      const store = createStore();
-      store.set(navigationState, {
-        ...initialNavigationState,
-        presetsFetched: true,
-      });
-      const { result } = renderHook(
-        () => require('./useSavedRoutes').useSavedRoutes(),
-        {
-          wrapper: withJotaiProvider(store),
-        }
-      );
-
-      await act(async () => {
-        await result.current.updateRoutes();
-      });
-
-      await waitFor(() => expect(result.current.routes.length).toBe(2));
-      const [r1, r2] = result.current.routes;
-      expect(r1.hasTrainType).toBe(true);
-      expect(r1.trainTypeId).toBe(5);
-      expect(r1.createdAt).toBeInstanceOf(Date);
-
-      expect(r2.hasTrainType).toBe(false);
-      expect(r2.trainTypeId).toBeNull();
-
-      expect(mockDb.getAllAsync).toHaveBeenCalledWith(
-        'SELECT * FROM saved_routes ORDER BY createdAt DESC'
-      );
-    });
-
-    it('破損レコード（hasTrainType=1 かつ trainTypeId=null）は除外する', async () => {
-      mockDb.getAllAsync.mockResolvedValue([
-        {
-          id: 'x',
-          name: 'Invalid',
-          lineId: 1,
-          trainTypeId: null,
-          hasTrainType: 1,
-          createdAt: '2025-01-01T00:00:00.000Z',
-        },
-      ] as unknown[]);
-
-      const store = createStore();
-      store.set(navigationState, {
-        ...initialNavigationState,
-        presetsFetched: true,
-      });
-      const { result } = renderHook(
-        () => require('./useSavedRoutes').useSavedRoutes(),
-        {
-          wrapper: withJotaiProvider(store),
-        }
-      );
-
-      await act(async () => {
-        await result.current.updateRoutes();
-      });
-
-      await waitFor(() => expect(result.current.routes).toEqual([]));
-    });
+  it('複数の利用元が同時に初期化しても移行を一度だけ実行する', async () => {
+    mockReadLegacy.mockResolvedValue([existing]);
+    const store = createStore();
+    const first = renderRoutes(store);
+    const second = renderRoutes(store);
+    await waitFor(() => expect(first.result.current.isInitialized).toBe(true));
+    expect(mockReadLegacy).toHaveBeenCalledTimes(1);
+    expect(second.result.current.routes).toEqual([existing]);
+    expect(readSavedRoutes()).toEqual([existing]);
   });
 
-  describe('save / remove', () => {
-    const withType: SavedRouteWithTrainTypeInput = {
-      hasTrainType: true,
-      lineId: 1,
-      trainTypeId: 9,
-      wantedDestinationId: null,
-      originStationId: null,
-      direction: null,
-      notifyStationIds: [],
-      name: 'WithType',
-      createdAt: new Date('2025-01-01T00:00:00.000Z'),
-    };
-    const withoutType: SavedRouteWithoutTrainTypeInput = {
-      hasTrainType: false,
-      lineId: 2,
-      trainTypeId: null,
-      wantedDestinationId: null,
-      originStationId: null,
-      direction: null,
-      notifyStationIds: [],
-      name: 'WithoutType',
-      createdAt: new Date('2025-01-02T00:00:00.000Z'),
-    };
-
-    it('save: 正しく INSERT され、routes が更新される', async () => {
-      const store = createStore();
-      store.set(navigationState, {
-        ...initialNavigationState,
-        presetsFetched: true,
-      });
-      const { result } = renderHook(
-        () => require('./useSavedRoutes').useSavedRoutes(),
-        {
-          wrapper: withJotaiProvider(store),
-        }
-      );
-
-      let saved1: SavedRoute | undefined;
-      await act(async () => {
-        saved1 = await result.current.save(withType);
-      });
-
-      expect(saved1).toBeDefined();
-      if (!saved1) {
-        throw new Error('save should return route with train type');
-      }
-      const saved1Defined: SavedRoute = saved1;
-      expect(saved1Defined.id).toMatch(
-        /^550e8400-e29b-41d4-a716-4466554400001$/
-      );
-      expect(mockDb.runAsync).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO saved_routes'),
-        [
-          saved1Defined.id,
-          withType.name,
-          withType.lineId,
-          withType.trainTypeId,
-          withType.wantedDestinationId,
-          withType.originStationId,
-          withType.direction,
-          null,
-          null,
-          1,
-          saved1Defined.createdAt.toISOString(),
-        ]
-      );
-
-      await waitFor(() =>
-        expect(result.current.routes[0]?.id).toBe(saved1Defined.id)
-      );
-
-      let saved2: SavedRoute | undefined;
-      await act(async () => {
-        saved2 = await result.current.save(withoutType);
-      });
-      expect(saved2).toBeDefined();
-      if (!saved2) {
-        throw new Error('save should return route without train type');
-      }
-      const saved2Defined: SavedRoute = saved2;
-      expect(saved2Defined.hasTrainType).toBe(false);
-      expect(saved2Defined.trainTypeId).toBeNull();
-      expect(mockDb.runAsync).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO saved_routes'),
-        expect.arrayContaining([
-          saved2Defined.id,
-          withoutType.name,
-          withoutType.lineId,
-          null,
-          0,
-          saved2Defined.createdAt.toISOString(),
-        ])
-      );
-
-      await waitFor(() => expect(result.current.routes.length).toBe(2));
-      expect(
-        result.current.routes.map((route: SavedRoute) => route.id)
-      ).toEqual([saved2Defined.id, saved1Defined.id]);
+  it('連続した保存を取りこぼさず、区間・通知駅・方向・日付を再起動後も復元する', async () => {
+    writeSavedRoutes([]);
+    const { result, unmount } = renderRoutes();
+    await act(async () => {
+      await Promise.all([
+        result.current.save(input),
+        result.current.save({ ...input, name: '帰り' }),
+      ]);
     });
+    const saved = result.current.routes;
+    expect(saved.map((r) => r.name)).toEqual(['帰り', '通勤']);
+    expect(saved[0].id).not.toBe(saved[1].id);
+    expect(saved[1]).toMatchObject({ ...input, createdAt: expect.any(Date) });
+    unmount();
+    const reopened = renderRoutes();
+    expect(reopened.result.current.routes).toEqual(saved);
+  });
 
-    it('save: wantedDestinationId / originStationId が non-null で正しく保存・復元される', async () => {
-      const withDest: SavedRouteWithTrainTypeInput = {
-        hasTrainType: true,
-        lineId: 10,
-        trainTypeId: 50,
-        wantedDestinationId: 999,
-        originStationId: 777,
-        direction: 'INBOUND',
-        notifyStationIds: [1, 2, 3],
-        name: 'WithDest',
-        createdAt: new Date('2025-02-01T00:00:00.000Z'),
-      };
-
-      const store = createStore();
-      store.set(navigationState, {
-        ...initialNavigationState,
-        presetsFetched: true,
-      });
-      const { result } = renderHook(
-        () => require('./useSavedRoutes').useSavedRoutes(),
-        {
-          wrapper: withJotaiProvider(store),
-        }
-      );
-
-      let saved: SavedRoute | undefined;
-      await act(async () => {
-        saved = await result.current.save(withDest);
-      });
-
-      expect(saved).toBeDefined();
-      if (!saved) {
-        throw new Error('save should return route with wantedDestinationId');
-      }
-      expect(saved.wantedDestinationId).toBe(999);
-      expect(saved.originStationId).toBe(777);
-      expect(saved.direction).toBe('INBOUND');
-      expect(saved.notifyStationIds).toEqual([1, 2, 3]);
-      expect(mockDb.runAsync).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO saved_routes'),
-        [
-          saved.id,
-          withDest.name,
-          withDest.lineId,
-          withDest.trainTypeId,
-          999,
-          777,
-          'INBOUND',
-          '[1,2,3]',
-          null,
-          1,
-          saved.createdAt.toISOString(),
-        ]
-      );
-
-      await waitFor(() => expect(result.current.routes.length).toBe(1));
-      expect(result.current.routes[0].wantedDestinationId).toBe(999);
-      expect(result.current.routes[0].originStationId).toBe(777);
-      expect(result.current.routes[0].direction).toBe('INBOUND');
-      expect(result.current.routes[0].notifyStationIds).toEqual([1, 2, 3]);
+  it('削除後に再起動しても旧SQLiteのプリセットを復活させない', async () => {
+    writeSavedRoutes([existing]);
+    const { result, unmount } = renderRoutes();
+    await act(async () => {
+      await result.current.remove(existing.id);
     });
+    expect(readSavedRoutes()).toEqual([]);
+    unmount();
+    expect(renderRoutes().result.current.routes).toEqual([]);
+    expect(mockReadLegacy).not.toHaveBeenCalled();
+  });
 
-    it('find: 同じ路線・種別でも wantedDestinationId が異なれば別プリセット', async () => {
-      const routeNoDest: SavedRoute = {
-        id: 'route-no-dest',
-        hasTrainType: true,
+  it('種別なしの経路を保存・復元し、行き先が違うプリセットと区別する', async () => {
+    writeSavedRoutes([]);
+    const { result, unmount } = renderRoutes();
+    await act(async () => {
+      await result.current.save({
+        hasTrainType: false,
+        trainTypeId: null,
         lineId: 100,
-        trainTypeId: 50,
-        wantedDestinationId: null,
-        originStationId: null,
-        direction: null,
-        notifyStationIds: [],
-        name: 'No Dest',
-        createdAt: new Date('2025-02-01T00:00:00.000Z'),
-      };
-      const routeWithDest: SavedRoute = {
-        id: 'route-with-dest',
-        hasTrainType: true,
-        lineId: 100,
-        trainTypeId: 50,
-        wantedDestinationId: 999,
-        originStationId: null,
+        wantedDestinationId: 7,
+        originStationId: 1,
         direction: 'INBOUND',
-        notifyStationIds: [],
-        name: 'With Dest',
-        createdAt: new Date('2025-02-02T00:00:00.000Z'),
-      };
-
-      const store = createStore();
-      store.set(navigationState, {
-        ...initialNavigationState,
-        presetRoutes: [routeNoDest, routeWithDest],
+        notifyStationIds: [7],
+        name: '普通',
+        createdAt: new Date(),
       });
-      const { result } = renderHook(
-        () => require('./useSavedRoutes').useSavedRoutes(),
-        {
-          wrapper: withJotaiProvider(store),
-        }
-      );
-
-      await waitFor(() =>
-        expect(store.get(navigationState).presetsFetched).toBe(true)
-      );
-
-      expect(
-        result.current.find({
-          lineId: 100,
-          trainTypeId: 50,
-          wantedDestinationId: null,
-          originStationId: null,
-        })
-      ).toBe(routeNoDest);
-
-      expect(
-        result.current.find({
-          lineId: 100,
-          trainTypeId: 50,
-          wantedDestinationId: 999,
-          originStationId: null,
-        })
-      ).toBe(routeWithDest);
-
-      expect(
-        result.current.find({
-          lineId: 100,
-          trainTypeId: 50,
-          wantedDestinationId: 888,
-          originStationId: null,
-        })
-      ).toBeNull();
     });
+    const saved = result.current.routes[0];
+    expect(
+      result.current.find({
+        lineId: 100,
+        trainTypeId: null,
+        wantedDestinationId: 7,
+      })
+    ).toBe(saved);
+    expect(
+      result.current.find({
+        lineId: 100,
+        trainTypeId: null,
+        wantedDestinationId: 8,
+      })
+    ).toBeNull();
+    unmount();
+    expect(renderRoutes().result.current.routes).toEqual([saved]);
+  });
 
-    it('remove: 指定 ID を削除し routes からも取り除く', async () => {
-      const store = createStore();
-      store.set(navigationState, {
-        ...initialNavigationState,
-        presetsFetched: true,
-      });
-      const { result } = renderHook(
-        () => require('./useSavedRoutes').useSavedRoutes(),
-        {
-          wrapper: withJotaiProvider(store),
-        }
-      );
-
-      let saved: SavedRoute | undefined;
-      await act(async () => {
-        saved = await result.current.save(withType);
-      });
-      expect(saved).toBeDefined();
-      if (!saved) {
-        throw new Error('save should return route before removing');
-      }
-      const savedDefined: SavedRoute = saved;
-      await waitFor(() => expect(result.current.routes.length).toBe(1));
-
-      await act(async () => {
-        await result.current.remove(savedDefined.id);
-      });
-      expect(mockDb.runAsync).toHaveBeenCalledWith(
-        'DELETE FROM saved_routes WHERE id = ?',
-        [savedDefined.id]
-      );
-      await waitFor(() => expect(result.current.routes.length).toBe(0));
+  it('移行先の保存に失敗した場合は次の試行で移行元を再読込する', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockReadLegacy.mockResolvedValue([existing]);
+    const set = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw new Error('disk full');
     });
+    const { result } = renderRoutes();
+    await waitFor(() => expect(console.error).toHaveBeenCalled());
+    expect(result.current.isInitialized).toBe(false);
+    expect(storage.contains(SAVED_ROUTES_KEY)).toBe(false);
+    set.mockRestore();
+    await act(async () => {
+      await result.current.updateRoutes();
+    });
+    expect(readSavedRoutes()).toEqual([existing]);
+    expect(mockReadLegacy).toHaveBeenCalledTimes(2);
+  });
+
+  it('保存失敗時は画面の状態を変更しない', async () => {
+    writeSavedRoutes([existing]);
+    const { result } = renderRoutes();
+    jest.spyOn(storage, 'set').mockImplementation(() => {
+      throw new Error('disk full');
+    });
+    await act(async () => {
+      await expect(result.current.save(input)).rejects.toThrow('disk full');
+      await expect(result.current.remove(existing.id)).rejects.toThrow(
+        'disk full'
+      );
+    });
+    expect(result.current.routes).toEqual([existing]);
+  });
+
+  it('移行失敗時は完了扱いにせず、再試行して既存データを保存する', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockReadLegacy.mockRejectedValueOnce(new Error('read failed'));
+    const { result } = renderRoutes();
+    await waitFor(() => expect(console.error).toHaveBeenCalled());
+    expect(result.current.isInitialized).toBe(false);
+    expect(storage.contains(SAVED_ROUTES_KEY)).toBe(false);
+    mockReadLegacy.mockResolvedValue([existing]);
+    await act(async () => {
+      await result.current.updateRoutes();
+    });
+    expect(result.current.routes).toEqual([existing]);
+  });
+
+  it('壊れたMMKVデータを空の一覧や旧SQLiteで上書きしない', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    storage.set(SAVED_ROUTES_KEY, '{broken');
+    const { result } = renderRoutes();
+    await act(async () => {
+      await expect(result.current.save(input)).rejects.toThrow();
+    });
+    expect(result.current.isInitialized).toBe(false);
+    expect(storage.getString(SAVED_ROUTES_KEY)).toBe('{broken');
+    expect(mockReadLegacy).not.toHaveBeenCalled();
+  });
+
+  it('移行中の保存は既存データを引き継いでから追加する', async () => {
+    let resolveMigration!: (routes: SavedRoute[]) => void;
+    mockReadLegacy.mockReturnValue(
+      new Promise((resolve) => {
+        resolveMigration = resolve;
+      })
+    );
+    const { result } = renderRoutes();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      const saving = result.current.save(input);
+      resolveMigration([existing]);
+      await saving;
+    });
+    expect(result.current.routes).toHaveLength(2);
+    expect(result.current.routes[1]).toEqual(existing);
+    expect(readSavedRoutes()).toEqual(result.current.routes);
   });
 
   describe('find', () => {
@@ -480,6 +273,7 @@ describe('useSavedRoutes', () => {
       const store = createStore();
       store.set(navigationState, {
         ...initialNavigationState,
+        presetsFetched: true,
         presetRoutes: [withTrainType, withoutTrainType],
       });
       const { result } = renderHook(
@@ -625,6 +419,7 @@ describe('useSavedRoutes', () => {
       const store = createStore();
       store.set(navigationState, {
         ...initialNavigationState,
+        presetsFetched: true,
         presetRoutes: [route1, route2, routeNoTrainType],
       });
       const { result } = renderHook(
@@ -698,6 +493,7 @@ describe('useSavedRoutes', () => {
       const store = createStore();
       store.set(navigationState, {
         ...initialNavigationState,
+        presetsFetched: true,
         presetRoutes: [sunriseLine],
       });
       const { result } = renderHook(
@@ -784,74 +580,6 @@ describe('useSavedRoutes', () => {
       );
       return { result };
     };
-
-    it('save: 区間を JSON で保存し、routes にも区間を持たせる', async () => {
-      const { result } = renderSavedRoutes();
-
-      let saved: SavedRoute | undefined;
-      await act(async () => {
-        saved = await result.current.save(transferInput);
-      });
-      if (!saved) throw new Error('save should return transfer route');
-
-      expect(mockDb.runAsync).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO saved_routes'),
-        [
-          saved.id,
-          transferInput.name,
-          99301,
-          900,
-          7,
-          1,
-          'INBOUND',
-          null,
-          JSON.stringify(legs),
-          1,
-          saved.createdAt.toISOString(),
-        ]
-      );
-      await waitFor(() => expect(result.current.routes.length).toBe(1));
-      expect(result.current.routes[0].legs).toEqual(legs);
-    });
-
-    it('updateRoutes: 区間を復元し、読めない区間を持つ行は読み飛ばす', async () => {
-      const row = {
-        name: 'transfer',
-        lineId: 99301,
-        trainTypeId: 900,
-        wantedDestinationId: 7,
-        originStationId: 1,
-        direction: 'INBOUND',
-        notifyStationIds: null,
-        hasTrainType: 1,
-        createdAt: '2025-03-01T00:00:00.000Z',
-      };
-      mockDb.getAllAsync.mockResolvedValue([
-        { ...row, id: 'transfer-ok', legs: JSON.stringify(legs) },
-        { ...row, id: 'transfer-broken', legs: '{not json' },
-        // 1 区間だけの区間は乗換経路として組み直せない
-        {
-          ...row,
-          id: 'transfer-single',
-          legs: JSON.stringify(legs.slice(0, 1)),
-        },
-        { ...row, id: 'plain', legs: null },
-      ] as unknown[]);
-      const { result } = renderSavedRoutes();
-
-      await act(async () => {
-        await result.current.updateRoutes();
-      });
-
-      await waitFor(() =>
-        expect(result.current.routes.map((r: SavedRoute) => r.id)).toEqual([
-          'transfer-ok',
-          'plain',
-        ])
-      );
-      expect(result.current.routes[0].legs).toEqual(legs);
-      expect(result.current.routes[1].legs).toBeUndefined();
-    });
 
     it('find: 区間が同じ乗換経路のプリセットを返し、最初の区間の系統だけの検索には当てない', async () => {
       const transferRoute: SavedRoute = {

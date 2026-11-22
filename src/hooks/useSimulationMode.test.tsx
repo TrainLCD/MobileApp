@@ -390,6 +390,65 @@ describe('useSimulationMode', () => {
     }
   );
 
+  it.each(['INBOUND', 'OUTBOUND'] as const)(
+    '経路外の同一グループ駅では移動せず、経路上の接続駅は補正する（%s）',
+    (direction) => {
+      const start = mockStation(1, 1, 35, 139);
+      const junctionBefore = mockStation(2, 2, 35.01, 139);
+      const junctionAfter = mockStation(3, 2, 35.011, 139);
+      const end = mockStation(4, 4, 35.02, 139);
+      const stations = [start, junctionBefore, junctionAfter, end];
+      const kept = direction === 'INBOUND' ? junctionBefore : junctionAfter;
+      const dropped = direction === 'INBOUND' ? junctionAfter : junctionBefore;
+      const walkOrder =
+        direction === 'INBOUND' ? [start, kept, end] : [end, kept, start];
+      const state = {
+        stations,
+        station: walkOrder[0],
+        selectedDirection: direction,
+      };
+      setupAtomMocks(state, { autoModeEnabled: true });
+      mockTrainRoute(walkOrder);
+      const { rerender } = renderHook(useSimulationMode);
+      act(() => jest.advanceTimersByTime(5000));
+
+      const select = (station: Station) => {
+        state.station = station;
+        seedStore(manualStationCorrectionAtom, {
+          station,
+          stations,
+          location: store.get(locationAtom),
+        });
+        rerender({});
+      };
+      const movingLocation = store.get(locationAtom);
+      select(mockStation(5, 2, 35.012, 139));
+      expect(store.get(locationAtom)).toBe(movingLocation);
+      act(() => jest.advanceTimersByTime(1000));
+      expect(
+        Math.abs(
+          (store.get(locationAtom)?.coords.latitude ?? 0) -
+            (walkOrder[0].latitude ?? 0)
+        )
+      ).toBeLessThan(0.001);
+
+      // 同じIDの別オブジェクトでも、残された経路駅への直接指定は維持する。
+      select({ ...kept });
+      expect(store.get(locationAtom)?.coords.latitude).toBe(kept.latitude);
+      act(() => jest.advanceTimersByTime(3000));
+      expect(store.get(locationAtom)?.coords.latitude).not.toBe(kept.latitude);
+
+      // 方向によって除かれた接続駅は、経路に含まれるので同じグループへ補正する。
+      select(dropped);
+      expect(store.get(locationAtom)?.coords.latitude).toBe(kept.latitude);
+      act(() => jest.advanceTimersByTime(3000));
+      const after = store.get(locationAtom)?.coords.latitude ?? 0;
+      if (direction === 'INBOUND')
+        expect(after).toBeGreaterThan(kept.latitude ?? 0);
+      else expect(after).toBeLessThan(kept.latitude ?? 0);
+    }
+  );
+
   it('通常の現在駅更新では走行位置を戻さず、終点での手動指定では停車待ちを解除する', () => {
     const stations = [
       mockStation(1, 1, 35, 139),

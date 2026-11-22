@@ -15,7 +15,9 @@ data class WidgetState(
     val boundStationName: String,
     val stationName: String = "",
     val nextStationName: String = "",
-    val updatedAt: Long = 0L
+    val updatedAt: Long = 0L,
+    val stationNumber: String = "",
+    val nextStationNumber: String = ""
 )
 
 /**
@@ -32,6 +34,8 @@ object WidgetStateStore {
     private const val KEY_LINE_SYMBOL = "lineSymbol"
     private const val KEY_STATION_NAME = "stationName"
     private const val KEY_NEXT_STATION_NAME = "nextStationName"
+    private const val KEY_STATION_NUMBER = "stationNumber"
+    private const val KEY_NEXT_STATION_NUMBER = "nextStationNumber"
     private const val KEY_BOUND_STATION_NAME = "boundStationName"
 
     /** 未乗車時にiOS版が使っているプレースホルダー色に合わせる */
@@ -51,7 +55,9 @@ object WidgetStateStore {
         lineSymbol: String,
         boundStationName: String,
         stationName: String = "",
-        nextStationName: String = ""
+        nextStationName: String = "",
+        stationNumber: String = "",
+        nextStationNumber: String = ""
     ): Boolean {
         val prefs = prefs(context)
         val unchanged = prefs.getBoolean(KEY_LOADED, false) &&
@@ -60,7 +66,9 @@ object WidgetStateStore {
             prefs.getString(KEY_LINE_SYMBOL, "") == lineSymbol &&
             prefs.getString(KEY_BOUND_STATION_NAME, "") == boundStationName &&
             prefs.getString(KEY_STATION_NAME, "") == stationName &&
-            prefs.getString(KEY_NEXT_STATION_NAME, "") == nextStationName
+            prefs.getString(KEY_NEXT_STATION_NAME, "") == nextStationName &&
+            prefs.getString(KEY_STATION_NUMBER, "") == stationNumber &&
+            prefs.getString(KEY_NEXT_STATION_NUMBER, "") == nextStationNumber
         if (unchanged) {
             return false
         }
@@ -75,6 +83,8 @@ object WidgetStateStore {
             .putString(KEY_BOUND_STATION_NAME, boundStationName)
             .putString(KEY_STATION_NAME, stationName)
             .putString(KEY_NEXT_STATION_NAME, nextStationName)
+            .putString(KEY_STATION_NUMBER, stationNumber)
+            .putString(KEY_NEXT_STATION_NUMBER, nextStationNumber)
             .apply()
         return true
     }
@@ -99,7 +109,9 @@ object WidgetStateStore {
             boundStationName = prefs.getString(KEY_BOUND_STATION_NAME, "").orEmpty(),
             stationName = prefs.getString(KEY_STATION_NAME, "").orEmpty(),
             nextStationName = prefs.getString(KEY_NEXT_STATION_NAME, "").orEmpty(),
-            updatedAt = prefs.getLong(KEY_UPDATED_AT, 0L)
+            updatedAt = prefs.getLong(KEY_UPDATED_AT, 0L),
+            stationNumber = prefs.getString(KEY_STATION_NUMBER, "").orEmpty(),
+            nextStationNumber = prefs.getString(KEY_NEXT_STATION_NUMBER, "").orEmpty()
         )
     }
 

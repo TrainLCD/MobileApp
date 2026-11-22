@@ -29,8 +29,7 @@ export const LOCATION_TIME_INTERVAL = 10000;
 //   更新頻度を決めるため、0にすると約1Hzで配信され電池を著しく消費する。実車検証済みの
 //   旧既定値10mへ戻す。10mであれば停車中もGPSの揺らぎで測位が届き続ける一方、25mでは
 //   揺らぎが閾値を超えず停車中の更新が止まりやすい。
-// 背景かつ通常測位のiOSだけはexpo-locationのパッチでネイティブの変位ゲートを外す。
-// 前景復帰・省電力への切り替えではこの設定値へ戻し、背景のJS配信は10秒でまとめる。
+// iOSは背景でもこの距離制限を適用し、背景のJS配信は10秒でまとめる。
 // パッチ: patches/expo-location+58.0.16.patch
 export const LOCATION_DISTANCE_INTERVAL = Platform.OS === 'ios' ? 10 : 0;
 
@@ -50,6 +49,10 @@ export const NEEDS_LOCATION_HEARTBEAT =
 // 点検を置き直す(useLocationHeartbeat)。固定間隔にすると、自分が取得した測位で
 // 途絶タイマーが巻き戻るぶん必ず1回空振りし、実際の取得間隔がこの値の2倍まで開く。
 export const LOCATION_HEARTBEAT_STALE_THRESHOLD = LOCATION_TIME_INTERVAL;
+
+// 背景の補完開始だけを5秒へ早める。前景の10秒、取得上限30秒、
+// 再試行待ち10秒、測位の鮮度上限10秒は従来の値を維持する。
+export const LOCATION_BACKGROUND_HEARTBEAT_START_DELAY = 5_000;
 
 // 補完測位の取得を待つ上限(ms)。補完測位は継続測位と同じstartUpdatingLocationで1件を
 // 待つ(useLocationHeartbeat)ので、測位が得られない地下では購読が延々と待ち続ける。

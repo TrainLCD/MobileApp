@@ -18,6 +18,8 @@ class PresetsWidgetModule: NSObject {
     "name",
     "fromStationName",
     "toStationName",
+    "fromStationNumber",
+    "toStationNumber",
     "lineName",
     "lineColor",
     "lineSymbol",

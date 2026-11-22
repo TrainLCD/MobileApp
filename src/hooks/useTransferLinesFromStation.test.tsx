@@ -82,6 +82,7 @@ const createStationNested = (id: number): StationNested => ({
   status: undefined,
   stopCondition: undefined,
   threeLetterCode: null,
+  platformCode: null,
   trackDistanceFromPrevious: null,
   trainType: null,
   transportType: undefined,
@@ -113,7 +114,7 @@ describe('useTransferLinesFromStation', () => {
     expect(getByTestId('transferLines').props.children).toBe('[]');
   });
 
-  it('バス路線を除外する', () => {
+  it('鉄道駅では近くのバス路線を除外する', () => {
     const currentLine = createLineNested({ id: 1, nameShort: '中央線' });
     const railLine = createLineNested({
       id: 2,
@@ -138,6 +139,38 @@ describe('useTransferLinesFromStation', () => {
 
     expect(lines.map((l: Line) => l.id)).toEqual([2]);
     expect(lines.find((l: Line) => l.id === 3)).toBeUndefined();
+  });
+
+  it('バス停ではバス系統を除き、近くの鉄道路線を案内する', () => {
+    const currentLine = createLineNested({
+      id: 1,
+      nameShort: '池86',
+      transportType: TransportType.Bus,
+    });
+    const otherBusLine = createLineNested({
+      id: 2,
+      nameShort: '都02',
+      station: createStationNested(200),
+      transportType: TransportType.Bus,
+    });
+    const railLine = createLineNested({
+      id: 3,
+      nameShort: '丸ノ内線',
+      station: createStationNested(300),
+      transportType: TransportType.Rail,
+    });
+    const station = createStation(100, {
+      line: currentLine,
+      lines: [currentLine, otherBusLine, railLine],
+    });
+    stationAtomValue.stations = [station];
+
+    const { getByTestId } = render(<TestComponent station={station} />);
+    const lines = JSON.parse(
+      getByTestId('transferLines').props.children as string
+    );
+
+    expect(lines).toEqual([railLine]);
   });
 
   it('現在路線は除外する', () => {

@@ -736,7 +736,7 @@ const resolveLineSymbolImage = (
 };
 
 export const getLineSymbolImage = (
-  line: Line,
+  line: Pick<Line, 'id'>,
   grayscale: boolean
 ): LineSymbolImage | null => {
   if (line?.id == null) {

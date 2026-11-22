@@ -1,5 +1,11 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import * as Location from 'expo-location';
+import {
+  getMaxPermitAccuracy,
+  subscribeRemoteConfig,
+} from '~/lib/remoteConfig';
+import { store } from '~/store';
+import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import {
   LOCATION_ACCURACY,
   LOCATION_START_MAX_RETRIES,
@@ -22,6 +28,10 @@ jest.mock('../constants/native', () => ({
 
 jest.mock('expo-battery', () => ({
   useLowPowerMode: () => mockSystemLowPowerMode,
+}));
+jest.mock('~/lib/remoteConfig', () => ({
+  getMaxPermitAccuracy: jest.fn(() => 1500),
+  subscribeRemoteConfig: jest.fn(() => () => {}),
 }));
 jest.mock('expo-location');
 jest.mock('./useLocationPermissionsGranted');
@@ -78,7 +88,9 @@ describe('useStartBackgroundLocationUpdates', () => {
     jest.clearAllMocks();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await new Promise(process.nextTick);
+    jest.mocked(getMaxPermitAccuracy).mockReturnValue(1500);
     // React Testing Libraryのauto-cleanupはafterEachでフックをunmountし、
     // effectクリーンアップ（stopLocationUpdatesAsync等）を発火する。
     // このクリーンアップは登録順の関係でafterEachよりも後に実行されるため、
@@ -165,6 +177,7 @@ describe('useStartBackgroundLocationUpdates', () => {
       await new Promise(process.nextTick);
 
       unmount();
+      await new Promise(process.nextTick);
 
       expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME
@@ -214,6 +227,7 @@ describe('useStartBackgroundLocationUpdates', () => {
 
       // アンマウント時のクリーンアップでstopが呼ばれることを確認
       unmount();
+      await new Promise(process.nextTick);
       expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME
       );
@@ -327,8 +341,8 @@ describe('useStartBackgroundLocationUpdates', () => {
       resolveStart();
       await new Promise(process.nextTick);
 
-      // クリーンアップのstop + cancelled検知後のstopで2回呼ばれる
-      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledTimes(2);
+      // 開始完了後、キュー内のクリーンアップで1回だけ停止する。
+      expect(mockStopLocationUpdatesAsync).toHaveBeenCalledTimes(1);
       expect(mockStopLocationUpdatesAsync).toHaveBeenCalledWith(
         LOCATION_TASK_NAME
       );
@@ -370,6 +384,129 @@ describe('useStartBackgroundLocationUpdates', () => {
       );
 
       consoleWarnSpy.mockRestore();
+    });
+
+    test('許容精度更新時は旧startと旧stopが完了してから新startを実行する', async () => {
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+      let notify: (() => void) | undefined;
+      jest.mocked(subscribeRemoteConfig).mockImplementationOnce((listener) => {
+        notify = listener;
+        return () => {};
+      });
+      let finishOldStart!: () => void;
+      let finishOldStop!: () => void;
+      const events: string[] = [];
+      mockStartLocationUpdatesAsync
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              events.push('old-start');
+              finishOldStart = () => {
+                events.push('old-start-finished');
+                resolve();
+              };
+            })
+        )
+        .mockImplementationOnce(async () => {
+          events.push('new-start');
+        });
+      mockStopLocationUpdatesAsync.mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            events.push('old-stop');
+            finishOldStop = () => {
+              events.push('old-stop-finished');
+              resolve();
+            };
+          })
+      );
+      const { unmount } = renderHook(() => useStartBackgroundLocationUpdates());
+      await new Promise(process.nextTick);
+      jest.mocked(getMaxPermitAccuracy).mockReturnValue(3000);
+      act(() => notify?.());
+      await new Promise(process.nextTick);
+      expect(events).toEqual(['old-start']);
+      finishOldStart();
+      await new Promise(process.nextTick);
+      expect(events).toEqual(['old-start', 'old-start-finished', 'old-stop']);
+      expect(store.set).not.toHaveBeenCalledWith(
+        backgroundLocationTrackingAtom,
+        true
+      );
+      finishOldStop();
+      await new Promise(process.nextTick);
+      expect(events).toEqual([
+        'old-start',
+        'old-start-finished',
+        'old-stop',
+        'old-stop-finished',
+        'new-start',
+      ]);
+      expect(mockStartLocationUpdatesAsync).toHaveBeenLastCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining({
+          trainLCDBackgroundHeartbeatMaxAccuracy: 3000,
+        })
+      );
+      expect(store.set).toHaveBeenLastCalledWith(
+        backgroundLocationTrackingAtom,
+        true
+      );
+      unmount();
+      await new Promise(process.nextTick);
+    });
+
+    test('旧stopが失敗しても次の測位開始を妨げない', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+      const { rerender, unmount } = renderHook(() =>
+        useStartBackgroundLocationUpdates()
+      );
+      await new Promise(process.nextTick);
+      mockStopLocationUpdatesAsync.mockRejectedValueOnce(
+        new Error('Stop failed')
+      );
+      mockSystemLowPowerMode = true;
+      rerender({});
+      await new Promise(process.nextTick);
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(2);
+      expect(mockStartLocationUpdatesAsync).toHaveBeenLastCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining(LOCATION_TASK_OPTIONS_POWER_SAVING)
+      );
+      expect(warn).toHaveBeenCalledWith(
+        'バックグラウンド位置情報の更新停止に失敗しました:',
+        expect.any(Error)
+      );
+      unmount();
+      await new Promise(process.nextTick);
+      warn.mockRestore();
+    });
+
+    test('取り消した旧startが失敗しても再試行せず新しい設定で開始する', async () => {
+      mockUseLocationPermissionsGranted.mockReturnValue(true);
+      let failOldStart!: (error: Error) => void;
+      mockStartLocationUpdatesAsync.mockImplementationOnce(
+        () =>
+          new Promise<void>((_resolve, reject) => {
+            failOldStart = reject;
+          })
+      );
+      const { rerender, unmount } = renderHook(() =>
+        useStartBackgroundLocationUpdates()
+      );
+      await new Promise(process.nextTick);
+      mockSystemLowPowerMode = true;
+      rerender({});
+      failOldStart(new Error('Old start failed'));
+      await new Promise(process.nextTick);
+      expect(mockStartLocationUpdatesAsync).toHaveBeenCalledTimes(2);
+      expect(mockStartLocationUpdatesAsync).toHaveBeenLastCalledWith(
+        LOCATION_TASK_NAME,
+        expect.objectContaining(LOCATION_TASK_OPTIONS_POWER_SAVING)
+      );
+      unmount();
+      await new Promise(process.nextTick);
     });
 
     test('should stop retrying on cleanup', async () => {

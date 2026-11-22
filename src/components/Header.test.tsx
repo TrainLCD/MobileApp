@@ -101,10 +101,10 @@ jest.mock('./HeaderJL', () => {
 
 jest.mock('./HeaderJRKyushu', () => {
   const { View, Text } = require('react-native');
-  return function MockHeaderJRKyushu() {
+  return function MockHeaderJRKyushu({ is315 }: { is315?: boolean }) {
     return (
       <View testID="HeaderJRKyushu">
-        <Text>HeaderJRKyushu</Text>
+        <Text>{is315 ? 'Header315' : 'HeaderJRKyushu'}</Text>
       </View>
     );
   };
@@ -215,6 +215,11 @@ describe('Header', () => {
       const { getByTestId, getByText } = render(<Header />);
       expect(getByTestId('HeaderJL')).toBeTruthy();
       expect(getByText('HeaderJL')).toBeTruthy();
+    });
+
+    it('315系テーマでは共通ヘッダーの315系表示を使う', () => {
+      setTheme(APP_THEME.JR_315);
+      expect(render(<Header />).getByText('Header315')).toBeTruthy();
     });
 
     it('should render HeaderJRKyushu for JR_KYUSHU theme', () => {

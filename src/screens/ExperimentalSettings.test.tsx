@@ -8,12 +8,13 @@ import {
   resetRemoteTTSOverrideForTests,
 } from '~/lib/remoteTTSOverride';
 import { storage } from '~/lib/storage';
-import { iosBackgroundDistanceFilterBypassAtom } from '~/store/atoms/locationSettings';
+import { servicePatternDetectionEnabledAtom } from '~/store/atoms/servicePatternMismatch';
 import tuningState from '~/store/atoms/tuning';
 import {
   getDialogPresentationSnapshot,
   resetDialogPresentationForTests,
 } from '~/utils/dialogPresentation';
+import * as appVariant from '~/utils/isDevApp';
 import ExperimentalSettingsScreen from './ExperimentalSettings';
 
 jest.mock('@react-navigation/native', () => ({
@@ -59,6 +60,31 @@ describe('ExperimentalSettingsScreen', () => {
     jest.restoreAllMocks();
     resetDialogPresentationForTests();
     resetRemoteTTSOverrideForTests();
+  });
+
+  it('種別違いの検知設定を通常版に表示しない', () => {
+    expect(
+      renderWithStore().queryByLabelText('servicePatternDetectionTitle')
+    ).toBeNull();
+  });
+
+  it('カナリア版で種別違いの検知を明示的に有効化し、オフに戻せる', () => {
+    jest.replaceProperty(appVariant, 'isCanaryApp', true);
+    const { getByLabelText, store } = renderWithStore();
+    const toggle = () => getByLabelText('servicePatternDetectionTitle');
+
+    expect(toggle().props.accessibilityState.checked).toBe(false);
+    fireEvent.press(toggle());
+    expect(store.get(servicePatternDetectionEnabledAtom)).toBe(true);
+    expect(
+      storage.getString(STORAGE_KEYS.SERVICE_PATTERN_DETECTION_ENABLED)
+    ).toBe('true');
+
+    fireEvent.press(toggle());
+    expect(store.get(servicePatternDetectionEnabledAtom)).toBe(false);
+    expect(
+      storage.getString(STORAGE_KEYS.SERVICE_PATTERN_DETECTION_ENABLED)
+    ).toBe('false');
   });
 
   it('ポートレートモードのトグルは外観設定へ移設され表示されない', () => {
@@ -228,38 +254,8 @@ describe('背景測位の距離制限', () => {
   afterEach(() => {
     Platform.OS = originalOS;
   });
-  it('iOSでON/OFFを保存して表示へ反映する', () => {
-    Platform.OS = 'ios';
-    const { getByLabelText, store } = renderWithStore();
-    const toggle = () => getByLabelText('backgroundDistanceFilterBypassTitle');
-    expect(toggle().props.accessibilityState.checked).toBe(true);
-    fireEvent.press(toggle());
-    expect(store.get(iosBackgroundDistanceFilterBypassAtom)).toBe(false);
-    expect(
-      storage.getString(STORAGE_KEYS.IOS_BACKGROUND_DISTANCE_FILTER_BYPASS)
-    ).toBe('false');
-    expect(toggle().props.accessibilityState.checked).toBe(false);
-    fireEvent.press(toggle());
-    expect(
-      storage.getString(STORAGE_KEYS.IOS_BACKGROUND_DISTANCE_FILTER_BYPASS)
-    ).toBe('true');
-  });
-  it('保存失敗時は設定を変えずエラーを表示する', () => {
-    Platform.OS = 'ios';
-    const { getByLabelText, store } = renderWithStore();
-    const spy = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
-      throw new Error('storage failure');
-    });
-    const log = jest.spyOn(console, 'error').mockImplementation(() => {});
-    fireEvent.press(getByLabelText('backgroundDistanceFilterBypassTitle'));
-    expect(store.get(iosBackgroundDistanceFilterBypassAtom)).toBe(true);
-    expect(getDialogPresentationSnapshot()).toMatchObject({ visible: true });
-    spy.mockRestore();
-    log.mockRestore();
-    resetDialogPresentationForTests();
-  });
-  it('Androidには表示しない', () => {
-    Platform.OS = 'android';
+  it.each(['ios', 'android'] as const)('%sには解除設定を表示しない', (os) => {
+    Platform.OS = os;
     expect(
       renderWithStore().queryByLabelText('backgroundDistanceFilterBypassTitle')
     ).toBeNull();

@@ -130,6 +130,7 @@ export const useTransferLinesFromStation = (
 
     const filtered: Line[] = [];
     for (const line of station.lines) {
+      // バス乗車中も、乗換案内には鉄道路線だけを載せる。
       if (!line || isBusLine(line)) continue;
       if (line.id === stationLineId) continue;
       if (stripParen(line.nameShort) === stationLineNameNorm) continue;

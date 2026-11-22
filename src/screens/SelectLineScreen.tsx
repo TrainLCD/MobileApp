@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
-import type { Line, LineNested } from '~/@types/graphql';
+import type { Line, LineNested, Station } from '~/@types/graphql';
+import { BusRouteList } from '~/components/BusRouteList';
 import { CommonCard } from '~/components/CommonCard';
 import { CurrentStationUnavailableCard } from '~/components/CurrentStationUnavailableCard';
 import { EmptyLineSeparator } from '~/components/EmptyLineSeparator';
@@ -28,11 +29,13 @@ import WalkthroughOverlay from '~/components/WalkthroughOverlay';
 import { useDeviceOrientation } from '~/hooks/useDeviceOrientation';
 import { useInitialNearbyStation } from '~/hooks/useInitialNearbyStation';
 import { useLineSelection } from '~/hooks/useLineSelection';
+import { useNearbyBusLines } from '~/hooks/useNearbyBusLines';
 import { usePresetCarouselData } from '~/hooks/usePresetCarouselData';
 import { usePresetsWidgetSync } from '~/hooks/usePresetsWidgetSync';
 import { useSelectLineWalkthrough } from '~/hooks/useSelectLineWalkthrough';
 import { useStationsCache } from '~/hooks/useStationsCache';
 import { useAppColors } from '~/providers/AppColorsProvider';
+import { groupBusLinesByRoute } from '~/utils/groupBusLinesByRoute';
 import isTablet from '~/utils/isTablet';
 import { isBusLine } from '~/utils/line';
 import FooterTabBar, { useFooterHeight } from '../components/FooterTabBar';
@@ -111,7 +114,9 @@ const SelectLineScreen = () => {
 
   // --- カスタムフック ---
   const { station, nearbyStationLoading, refetch } = useInitialNearbyStation();
-  useStationsCache(station);
+  const { stationWithNearbyBuses, refetchBusStops } =
+    useNearbyBusLines(station);
+  useStationsCache(stationWithNearbyBuses);
   const { carouselData, routes, isRoutesDBInitialized } =
     usePresetCarouselData();
   const {
@@ -211,10 +216,25 @@ const SelectLineScreen = () => {
     );
   }, [station?.lines]);
   const busesLines = useMemo<Line[]>(() => {
-    return (station?.lines ?? []).filter(
+    return (stationWithNearbyBuses?.lines ?? []).filter(
       (line): line is LineNested => line?.id != null && isBusLine(line)
     );
-  }, [station?.lines]);
+  }, [stationWithNearbyBuses?.lines]);
+
+  // キャッシュは鉄道・バス共通です。表示順や集約後の添字では参照しません。
+  const stationsByLineId = useMemo(() => {
+    const result = new Map<number, Station[]>();
+    for (const stations of stationsCache) {
+      const lineId = stations[0]?.line?.id;
+      if (lineId != null) result.set(lineId, stations);
+    }
+    return result;
+  }, [stationsCache]);
+
+  const busRouteGroups = useMemo(
+    () => groupBusLinesByRoute(busesLines),
+    [busesLines]
+  );
 
   const headingTitleForRailway = useMemo(() => {
     if (!station) return translate('selectLineTitle');
@@ -251,15 +271,15 @@ const SelectLineScreen = () => {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetch(), refetchBusStops?.()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetch, refetchBusStops]);
 
   // --- レンダーコールバック ---
   const renderLineCard = useCallback(
-    (line: Line, index: number) => {
+    (line: Line) => {
       if (fetchStationsByLineIdLoading) {
         return <NearbyStationLoader />;
       }
@@ -269,13 +289,13 @@ const SelectLineScreen = () => {
           targetStation={line.station ?? undefined}
           line={line}
           onPress={() => handleLineSelected(line)}
-          stations={stationsCache[index] ?? []}
-          loading={!stationsCache[index]}
+          stations={stationsByLineId.get(line.id ?? -1)}
+          loading={!stationsByLineId.has(line.id ?? -1)}
           testID={generateLineTestId(line)}
         />
       );
     },
-    [fetchStationsByLineIdLoading, handleLineSelected, stationsCache]
+    [fetchStationsByLineIdLoading, handleLineSelected, stationsByLineId]
   );
 
   const renderPlaceholders = useCallback((rowIndex: number, count: number) => {
@@ -307,14 +327,13 @@ const SelectLineScreen = () => {
                 : undefined
             }
           >
-            {rowLines.map((line, colIndex) => {
-              const index = rowIndex * numColumns + colIndex;
+            {rowLines.map((line) => {
               return (
                 <View
                   key={line.id as number}
                   style={isTablet ? { flex: 1 } : undefined}
                 >
-                  {renderLineCard(line, index)}
+                  {renderLineCard(line)}
                 </View>
               );
             })}
@@ -412,23 +431,13 @@ const SelectLineScreen = () => {
                   <Heading style={styles.busHeading} singleLine>
                     {translate('busStopsNearby')}
                   </Heading>
-                  {Array.from({
-                    length: Math.ceil(busesLines.length / numColumns),
-                  }).map((_, rowIndex) => {
-                    const rowLines = busesLines.slice(
-                      rowIndex * numColumns,
-                      (rowIndex + 1) * numColumns
-                    );
-                    const rowKey = rowLines.map((l) => l.id).join('-');
-                    return (
-                      <React.Fragment key={rowKey}>
-                        {renderLineRow(
-                          rowLines,
-                          rowIndex + stationLines.length
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
+                  <BusRouteList
+                    key={station?.id}
+                    groups={busRouteGroups}
+                    stationsByLineId={stationsByLineId}
+                    onLineSelected={handleLineSelected}
+                    disabled={fetchStationsByLineIdLoading}
+                  />
                 </>
               )}
             </>

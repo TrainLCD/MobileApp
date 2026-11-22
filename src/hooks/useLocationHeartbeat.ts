@@ -358,7 +358,7 @@ export const useLocationHeartbeat = (): void => {
           countLocationHeartbeatSucceeded();
           // 継続測位と同じ入口へ通す。同じ測位が返ってきた場合は重複排除で捨てられ、
           // 精度フィルタ・EMA・速度フィルタも継続測位とまったく同じ扱いになる。
-          handleTrackingLocation(location);
+          handleTrackingLocation(location, 'foreground-heartbeat');
         })
         .catch((error) => {
           // 見切った要求(abandoned)と、画面を離れる・稼働条件から外れるときに捨てた

@@ -32,6 +32,7 @@ import {
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
+import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   commonLineBoardStyles,
   getHorizontalStationNameOffset,
@@ -250,6 +251,7 @@ interface StationNameCellProps {
   arrivingLineColor?: string | null;
   hasTerminus: boolean;
   estimatedMinutes?: number | null;
+  boardPaddingBottom?: number;
 }
 
 // Helper: Check if station is at middle position
@@ -395,6 +397,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   arrivingLineColor,
   hasTerminus,
   estimatedMinutes,
+  boardPaddingBottom,
 }: StationNameCellProps) => {
   const arrived = useAtomValue(arrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
@@ -542,7 +545,9 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           additionalChevronStyle,
           {
             bottom: isTablet
-              ? dim.height / 3.5 + (STATION_NAME_CONTAINER_BOTTOM ?? 0) - 52
+              ? (boardPaddingBottom ?? 0) +
+                (STATION_NAME_CONTAINER_BOTTOM ?? 0) -
+                52
               : 32,
             marginLeft: widthScale(15),
           },
@@ -570,6 +575,7 @@ const LineBoardToei: React.FC<Props> = ({
   const currentLine = useCurrentLine();
 
   const dim = useLandscapeWindowDimensions();
+  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
   const { route: estimatedRoute } = useEstimateArrivalTimes();
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
@@ -604,6 +610,7 @@ const LineBoardToei: React.FC<Props> = ({
       return (
         <React.Fragment key={s.id}>
           <StationNameCell
+            boardPaddingBottom={boardPaddingBottom}
             station={s}
             stations={stations}
             index={i}
@@ -619,6 +626,7 @@ const LineBoardToei: React.FC<Props> = ({
       );
     },
     [
+      boardPaddingBottom,
       arrivingLineColor,
       hasTerminus,
       line,
@@ -639,10 +647,12 @@ const LineBoardToei: React.FC<Props> = ({
 
   return (
     <View
+      testID="line-board-toei"
+      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
-          paddingBottom: isTablet ? dim.height / 3.5 : undefined,
+          paddingBottom: boardPaddingBottom,
         },
       ]}
     >

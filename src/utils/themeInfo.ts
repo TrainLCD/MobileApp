@@ -59,6 +59,11 @@ const APP_THEME_INFO_MAP: Record<AppTheme, ThemeInfoData> = {
     spImage: require('../../assets/images/themes/jl-sp.webp'),
     tabletImage: require('../../assets/images/themes/jl-tablet.webp'),
   },
+  [APP_THEME.JR_315]: {
+    descriptionKey: 'themeDescriptionJr315',
+    spImage: require('../../assets/images/themes/jr-315-sp.webp'),
+    tabletImage: require('../../assets/images/themes/jr-315-tablet.webp'),
+  },
   [APP_THEME.JR_KYUSHU]: {
     descriptionKey: 'themeDescriptionJrKyushu',
     spImage: require('../../assets/images/themes/jr-kyushu-sp.webp'),

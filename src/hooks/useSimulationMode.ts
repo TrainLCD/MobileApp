@@ -696,9 +696,9 @@ export const useSimulationMode = (): void => {
       selectedIndex >= 0
         ? selectedIndex
         : maybeRevsersedStations.findIndex((s) => s.id === selected.id);
-    // 接続駅は進行方向によって片側の駅オブジェクトが除かれる。
+    // 経路上の接続駅は進行方向によって片側の駅オブジェクトが除かれる。
     const targetIndex =
-      directIndex >= 0
+      directIndex >= 0 || !manualCorrection.stations.includes(selected)
         ? directIndex
         : maybeRevsersedStations.findIndex(
             (s) => s.groupId === selected.groupId

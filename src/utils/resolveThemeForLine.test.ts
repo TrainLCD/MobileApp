@@ -105,6 +105,12 @@ describe('resolveThemeForLine', () => {
     ).toBe(APP_THEME.JR_WEST);
   });
 
+  it.each([11411, null])('JR東海の路線（ID=%s）はJR_315を返す', (id) => {
+    expect(
+      resolveThemeForLine(makeLine({ id, company: makeCompany('JR東海') }))
+    ).toBe(APP_THEME.JR_315);
+  });
+
   it('東急の路線はTYを返す', () => {
     expect(
       resolveThemeForLine(makeLine({ id: 26001, company: makeCompany('東急') }))
