@@ -1,14 +1,20 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
+import { useAfterNextStation } from '~/hooks/useAfterNextStation';
+import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
 import { enabledLanguagesAtom } from '~/store/atoms/navigation';
+import getIsPass from '~/utils/isPass';
+import { StationRow } from './LineBoard/shared/components/StationRow';
 import { STATION_NAME_CONTAINER_BOTTOM } from './LineBoard/shared/styles/commonStyles';
 import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardToei from './LineBoardToei';
+import PadLineMarks from './PadLineMarks';
 
 jest.mock('~/utils/isTablet', () => ({ __esModule: true, default: true }));
 jest.mock('jotai', () => ({
@@ -21,19 +27,22 @@ jest.mock('~/hooks', () => ({
   useDisplayCurrentStation: () => ({ groupId: 1 }),
   useEstimateArrivalTimes: () => ({ route: null }),
   useEstimatedMinutesByStationId: () => new Map(),
-  useTransferLinesFromStation: () => [],
+  useTransferLinesFromStation: () => [{ id: 2, nameShort: '名城線' }],
   useStationNumberIndexFunc: () => () => 0,
 }));
 jest.mock('~/hooks/useAfterNextStation', () => ({
-  useAfterNextStation: () => undefined,
+  useAfterNextStation: jest.fn(),
 }));
 jest.mock('~/hooks/useDisplayNextStation', () => ({
-  useDisplayNextStation: () => undefined,
+  useDisplayNextStation: jest.fn(),
 }));
 jest.mock('~/hooks/useScale', () => ({
   useScale: () => ({ widthScale: (value: number) => value }),
 }));
-jest.mock('~/utils/isPass', () => ({ __esModule: true, default: () => false }));
+jest.mock('~/utils/isPass', () => ({
+  __esModule: true,
+  default: jest.fn(() => false),
+}));
 jest.mock('./LineBoard/shared/hooks/useBarStyles', () => ({
   useBarStyles: () => ({ left: 0, width: 100 }),
   useChevronPosition: () => ({}),
@@ -42,7 +51,7 @@ jest.mock('./LineBoard/shared/hooks/useBarStyles', () => ({
 jest.mock('./LineBoard/shared/components', () => ({
   BlinkingChevron: () => null,
   EmptyStationNameCell: () => null,
-  LineDot: () => null,
+  LineDot: jest.requireActual('./LineBoard/shared/components/LineDot').LineDot,
   StationName: () => null,
 }));
 jest.mock('./PadLineMarks', () => ({ __esModule: true, default: () => null }));
@@ -106,6 +115,13 @@ const variants = [
     bottom: STATION_NAME_CONTAINER_BOTTOM,
   },
   {
+    name: '315系',
+    Component: LineBoardJRKyushu,
+    id: 'jrkyushu',
+    props: { saikyoGradient: true, showNextStopBanner: true },
+    bottom: Platform.select({ android: 32, default: 84 }),
+  },
+  {
     name: 'JR九州',
     Component: LineBoardJRKyushu,
     id: 'jrkyushu',
@@ -141,22 +157,21 @@ describe.each(variants)(
         />
       );
       const board = result.getByTestId(`line-board-${id}`);
-      for (const height of [392, 320, 480]) {
-        fireEvent(board, 'layout', { nativeEvent: { layout: { height } } });
-        const padding = StyleSheet.flatten(board.props.style).paddingBottom;
-        expect(padding).toBeCloseTo(height / 3.5);
-        expect(padding).toBeLessThan(600 / 3.5);
-        const chevron = result.UNSAFE_getAllByType(View).find((view) => {
-          const style = StyleSheet.flatten(view.props.style);
-          return (
-            style?.position === 'absolute' &&
-            style?.marginLeft === (id === 'toei' ? 15 : 14)
-          );
-        });
-        expect(StyleSheet.flatten(chevron?.props.style).bottom).toBeCloseTo(
-          height / 3.5 + (bottom ?? 0) - 52
+      expect(board.props.onLayout).toBeUndefined();
+      const row = result.UNSAFE_getByType(StationRow).findByType(View);
+      expect(StyleSheet.flatten(row.props.style).height).toBe(
+        `${(4 / 7) * 100}%`
+      );
+      const chevron = row.findAllByType(View).find((view) => {
+        const style = StyleSheet.flatten(view.props.style);
+        return (
+          style?.position === 'absolute' &&
+          style?.marginLeft === (id === 'toei' ? 15 : 14)
         );
-      }
+      });
+      expect(StyleSheet.flatten(chevron?.props.style).bottom).toBe(
+        (bottom ?? 0) - 52
+      );
     });
 
     it('iPad は従来の配置を保つ', () => {
@@ -177,3 +192,70 @@ describe.each(variants)(
     });
   }
 );
+
+describe.each([
+  {
+    name: '315系',
+    Component: LineBoardJRKyushu,
+    props: { showNextStopBanner: true },
+    id: 'jrkyushu',
+  },
+  {
+    name: '小田急',
+    Component: LineBoardEast,
+    props: { isOdakyu: true },
+    id: 'east',
+  },
+])('$name の乗換案内と停車案内', ({ Component, props, id }) => {
+  const originalOS = Platform.OS;
+  afterEach(() => {
+    Platform.OS = originalOS;
+    jest.mocked(getIsPass).mockReset().mockReturnValue(false);
+    jest.mocked(useAfterNextStation).mockReset();
+    jest.mocked(useDisplayNextStation).mockReset();
+  });
+
+  it('乗換案内とバーを同じ駅セルに置き、停車案内を路線図の下端に固定する', () => {
+    Platform.OS = 'android';
+    const stop = stations[0];
+    const pass = { ...stop, id: 2, groupId: 2 };
+    jest.mocked(getIsPass).mockImplementation((s) => s?.id === pass.id);
+    jest.mocked(useDisplayNextStation).mockReturnValue(stop);
+    jest.mocked(useAfterNextStation).mockReturnValue(stop);
+    const result = render(
+      <Component
+        stations={[stop, pass]}
+        lineColors={['#c3bd44', '#c3bd44']}
+        hasTerminus={false}
+        {...props}
+      />
+    );
+    const board = result.getByTestId(`line-board-${id}`);
+    const row = result.UNSAFE_getByType(StationRow);
+    const cells = row.findAll(
+      (node) =>
+        node.type === View &&
+        StyleSheet.flatten(node.props.style)?.justifyContent === 'flex-end' &&
+        StyleSheet.flatten(node.props.style)?.width === 960 / 9
+    );
+    expect(cells).toHaveLength(2);
+    for (const cell of cells) {
+      expect(
+        cell.findByType(PadLineMarks).props.transferLines[0].nameShort
+      ).toBe('名城線');
+      expect(
+        cell
+          .findAllByType(LinearGradient)
+          .some(
+            (layer) => StyleSheet.flatten(layer.props.style)?.bottom === -52
+          )
+      ).toBe(true);
+    }
+    const banner = board
+      .findAllByType(LinearGradient)
+      .find((layer) => StyleSheet.flatten(layer.props.style)?.bottom === 16);
+    expect(banner).toBeDefined();
+    expect(StyleSheet.flatten(banner?.props.style).position).toBe('absolute');
+    expect(row.findAll((node) => node === banner).length === 0).toBe(true);
+  });
+});

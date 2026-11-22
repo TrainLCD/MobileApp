@@ -28,11 +28,14 @@ import {
   LineDot,
 } from './LineBoard/shared/components';
 import {
+  getBoardPaddingBottom,
+  StationRow,
+} from './LineBoard/shared/components/StationRow';
+import {
   useBarStyles,
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
-import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   commonLineBoardStyles,
   getHorizontalStationNameOffset,
@@ -575,7 +578,7 @@ const LineBoardToei: React.FC<Props> = ({
   const currentLine = useCurrentLine();
 
   const dim = useLandscapeWindowDimensions();
-  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
+  const boardPaddingBottom = getBoardPaddingBottom(dim.height);
   const { route: estimatedRoute } = useEstimateArrivalTimes();
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
@@ -648,7 +651,6 @@ const LineBoardToei: React.FC<Props> = ({
   return (
     <View
       testID="line-board-toei"
-      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
@@ -656,7 +658,7 @@ const LineBoardToei: React.FC<Props> = ({
         },
       ]}
     >
-      {stationsWithEmpty.map(stationNameCellForMap)}
+      <StationRow>{stationsWithEmpty.map(stationNameCellForMap)}</StationRow>
     </View>
   );
 };

@@ -28,11 +28,14 @@ import {
 } from './LineBoard/shared/components';
 import { NextStopBanner } from './LineBoard/shared/components/NextStopBanner';
 import {
+  getBoardPaddingBottom,
+  StationRow,
+} from './LineBoard/shared/components/StationRow';
+import {
   useBarStyles,
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
-import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   STATION_NAME_CONTAINER_BOTTOM,
   commonLineBoardStyles as styles,
@@ -512,7 +515,7 @@ const LineBoardEast: React.FC<Props> = ({
 
   const dim = useLandscapeWindowDimensions();
 
-  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
+  const boardPaddingBottom = getBoardPaddingBottom(dim.height);
 
   const line = useMemo(
     () => currentLine || selectedLine,
@@ -590,7 +593,6 @@ const LineBoardEast: React.FC<Props> = ({
   return (
     <View
       testID="line-board-east"
-      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
@@ -598,7 +600,7 @@ const LineBoardEast: React.FC<Props> = ({
         },
       ]}
     >
-      {stationsWithEmpty.map(stationNameCellForMap)}
+      <StationRow>{stationsWithEmpty.map(stationNameCellForMap)}</StationRow>
       {isOdakyu && isTablet ? <NextStopBanner stations={stations} /> : null}
     </View>
   );

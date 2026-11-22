@@ -268,3 +268,29 @@ describe('StationName', () => {
     );
   });
 });
+
+it('Androidタブレットの斜め駅名は下端を固定し、改行後の高さを文字の測定に任せる', () => {
+  jest.isolateModules(() => {
+    const { Platform } = require('react-native');
+    const platform = jest.replaceProperty(Platform, 'OS', 'android');
+    const tablet = jest.replaceProperty(
+      require('~/utils/isTablet'),
+      'default',
+      true
+    );
+    try {
+      const { stationNameHorizontal } =
+        require('../styles/commonStyles').commonLineBoardStyles;
+      expect(stationNameHorizontal).toMatchObject({
+        position: 'absolute',
+        bottom: 0,
+      });
+      expect(stationNameHorizontal.top).toBeUndefined();
+      expect(stationNameHorizontal.height).toBeUndefined();
+      expect(stationNameHorizontal.maxHeight).toBeUndefined();
+    } finally {
+      tablet.restore();
+      platform.restore();
+    }
+  });
+});
