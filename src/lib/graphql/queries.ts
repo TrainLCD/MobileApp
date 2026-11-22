@@ -359,7 +359,49 @@ export const GET_LINE_STATIONS = gql`
   }
 `;
 
-// Query for getting stations by name
+// 候補カードに使う項目だけを取得し、選択時にその駅の詳細を読み込みます。
+export const GET_STATION_SEARCH_CANDIDATES = gql`
+  ${LINE_SYMBOL_FRAGMENT}
+  ${STATION_NUMBER_FRAGMENT}
+  query GetStationSearchCandidates($name: String!) {
+    stationsByName(name: $name) {
+      id
+      groupId
+      name
+      nameRoman
+      prefectureId
+      threeLetterCode
+      stationNumbers {
+        ...StationNumberFields
+      }
+      line {
+        id
+        nameShort
+        nameRoman
+        color
+        lineType
+        transportType
+        company {
+          id
+        }
+        lineSymbols {
+          ...LineSymbolFields
+        }
+        station {
+          stationNumbers {
+            lineSymbol
+          }
+        }
+      }
+      lines {
+        nameShort
+        nameRoman
+        transportType
+      }
+    }
+  }
+`;
+
 export const GET_STATIONS_BY_NAME = gql`
   ${STATION_FRAGMENT}
   query GetStationsByName(
