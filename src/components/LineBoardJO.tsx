@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import type { Station, StationNumber } from '~/@types/graphql';
 import {
@@ -69,11 +69,13 @@ const LABEL_ANGLE = 55;
 const labelRadians = (LABEL_ANGLE * Math.PI) / 180;
 const labelHeight = Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4);
 
+const getLabelSpace = (height: number) =>
+  (height - HEADER_E235_TABLET_HEIGHT) *
+    (1 - ANDROID_TABLET_RAISE_PERCENT / 100) -
+  TABLET_LABEL_BOTTOM;
+
 const getJODiagonalLabelWidth = (height: number, rightSpace: number) => {
-  const visibleHeight =
-    (height - HEADER_E235_TABLET_HEIGHT) *
-      (1 - ANDROID_TABLET_RAISE_PERCENT / 100) -
-    TABLET_LABEL_BOTTOM;
+  const visibleHeight = getLabelSpace(height);
   return Math.max(
     1,
     Math.min(
@@ -123,7 +125,11 @@ const localStyles = StyleSheet.create({
 
 const styles = { ...commonLineBoardStyles, ...localStyles };
 
+type ReportLabelHeight = (id: number, height: number) => void;
+
 interface StationNameProps {
+  index: number;
+  reportLabelHeight: ReportLabelHeight;
   station: Station;
   en?: boolean;
   horizontal?: boolean;
@@ -137,12 +143,30 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
   diagonalLayout,
+  index,
+  reportLabelHeight,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
+
+  const measureLabel = !!diagonalLayout && !!(en || horizontal);
+  useEffect(() => {
+    if (measureLabel) return () => reportLabelHeight(index, 0);
+  }, [measureLabel, reportLabelHeight, index]);
 
   if (en || horizontal) {
     return (
       <Typography
+        onLayout={
+          measureLabel
+            ? ({ nativeEvent: { layout } }) => {
+                reportLabelHeight(
+                  index,
+                  layout.width * Math.sin(labelRadians) +
+                    layout.height * Math.cos(labelRadians)
+                );
+              }
+            : undefined
+        }
         style={[
           styles.stationNameEnJO,
           passed ? styles.grayColor : null,
@@ -176,6 +200,7 @@ const StationName: React.FC<StationNameProps> = ({
 };
 
 interface StationNameCellProps {
+  reportLabelHeight: ReportLabelHeight;
   arrived: boolean;
   stations: Station[];
   station: Station;
@@ -187,6 +212,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
   station: stationInLoop,
+  reportLabelHeight,
   hasNumberedStation,
   index,
 }: StationNameCellProps) => {
@@ -252,6 +278,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       ]}
     >
       <StationName
+        index={index}
+        reportLabelHeight={reportLabelHeight}
         station={stationInLoop}
         en={isEn}
         horizontal={includesLongStationName}
@@ -298,6 +326,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
+  const { height } = useLandscapeWindowDimensions();
+  const [labelHeights, setLabelHeights] = useState<Record<number, number>>({});
+  const reportLabelHeight = useCallback<ReportLabelHeight>((id, extent) => {
+    setLabelHeights((previous) => {
+      if ((previous[id] ?? 0) === extent) return previous;
+      const next = { ...previous };
+      if (extent) next[id] = extent;
+      else delete next[id];
+      return next;
+    });
+  }, []);
+  // 幅を再計算すると再改行が起きるため、実測した不足分だけ路線図全体を下げる。
+  const offset = Math.ceil(
+    Math.max(
+      0,
+      ...stations.map(
+        (_, index) => (labelHeights[index] ?? 0) - getLabelSpace(height)
+      )
+    )
+  );
   const arrived = useAtomValue(arrivedAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const isPassing = useIsPassing();
@@ -323,7 +371,8 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     (s: Station, i: number) => {
       return (
         <StationNameCell
-          key={s.id}
+          key={i}
+          reportLabelHeight={reportLabelHeight}
           index={i}
           station={s}
           stations={stations}
@@ -332,7 +381,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         />
       );
     },
-    [isPassing, stations]
+    [isPassing, stations, reportLabelHeight]
   );
 
   const emptyArray = useMemo(() => {
@@ -372,7 +421,15 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   }
 
   return (
-    <View style={styles.root}>
+    <View
+      testID="line-board-jo"
+      style={[
+        styles.root,
+        offset > 0 &&
+          isTablet &&
+          Platform.OS === 'android' && { transform: [{ translateY: offset }] },
+      ]}
+    >
       {[...lineColors, ...emptyArray].map((lc, i, segments) => {
         const stationId = stations[i]?.id;
         const estimatedMinutes =

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import { Platform, StyleSheet, View } from 'react-native';
@@ -304,6 +304,24 @@ it('Androidタブレットでは長い停留所名を縮小せず、表示幅で
       );
       expect(anchorX + style.width * Math.cos(rad)).toBeLessThanOrEqual(
         960.001
+      );
+    }
+    const width = StyleSheet.flatten(labels[0].props.style).width;
+    const rad = (55 * Math.PI) / 180;
+    for (const lines of [2, 3, 1]) {
+      const height = lines * Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4);
+      fireEvent(labels[0], 'layout', {
+        nativeEvent: { layout: { width, height } },
+      });
+      const board = StyleSheet.flatten(
+        result.getByTestId('line-board-jo').props.style
+      );
+      const shift = board.transform?.[0].translateY ?? 0;
+      expect(shift).toBe(
+        Math.max(
+          0,
+          Math.ceil(width * Math.sin(rad) + height * Math.cos(rad) - 170)
+        )
       );
     }
   } finally {
