@@ -1,5 +1,5 @@
 import { useAtomValue } from 'jotai';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import type { Station, StationNumber } from '~/@types/graphql';
 import {
@@ -62,18 +62,20 @@ const ESTIMATED_MINUTES_BADGE_WIDTH = isTablet ? 96 : 64;
 const ESTIMATED_MINUTES_BADGE_HEIGHT = isTablet ? 40 : 30;
 
 // JO・JLともタブレットのヘッダーは200dp。路線図の上方移動と同じ割合で
-// ヘッダー下に残る高さを求め、回転した文字の右上端まで収める。
-const ANDROID_TABLET_RAISE_PERCENT = 46;
+// ヘッダー下に残る高さから、斜めの駅名を折り返す幅を求める。
+const ANDROID_TABLET_RAISE_PERCENT = 30;
 const TABLET_LABEL_BOTTOM = BAR_BOTTOM_JO + BAR_HEIGHT_JO + 14;
 const LABEL_ANGLE = 55;
 const labelRadians = (LABEL_ANGLE * Math.PI) / 180;
 const labelHeight = Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4);
 
+const getLabelSpace = (height: number) =>
+  (height - HEADER_E235_TABLET_HEIGHT) *
+    (1 - ANDROID_TABLET_RAISE_PERCENT / 100) -
+  TABLET_LABEL_BOTTOM;
+
 const getJODiagonalLabelWidth = (height: number, rightSpace: number) => {
-  const visibleHeight =
-    (height - HEADER_E235_TABLET_HEIGHT) *
-      (1 - ANDROID_TABLET_RAISE_PERCENT / 100) -
-    TABLET_LABEL_BOTTOM;
+  const visibleHeight = getLabelSpace(height);
   return Math.max(
     1,
     Math.min(
@@ -123,7 +125,11 @@ const localStyles = StyleSheet.create({
 
 const styles = { ...commonLineBoardStyles, ...localStyles };
 
+type ReportLabelHeight = (id: number, height: number) => void;
+
 interface StationNameProps {
+  index: number;
+  reportLabelHeight: ReportLabelHeight;
   station: Station;
   en?: boolean;
   horizontal?: boolean;
@@ -137,14 +143,30 @@ const StationName: React.FC<StationNameProps> = ({
   horizontal,
   passed,
   diagonalLayout,
+  index,
+  reportLabelHeight,
 }: StationNameProps) => {
   const stationNameR = useMemo(() => getStationNameR(station), [station]);
+
+  const measureLabel = !!diagonalLayout && !!(en || horizontal);
+  useEffect(() => {
+    if (measureLabel) return () => reportLabelHeight(index, 0);
+  }, [measureLabel, reportLabelHeight, index]);
 
   if (en || horizontal) {
     return (
       <Typography
-        adjustsFontSizeToFit={!!diagonalLayout}
-        numberOfLines={diagonalLayout ? 1 : undefined}
+        onLayout={
+          measureLabel
+            ? ({ nativeEvent: { layout } }) => {
+                reportLabelHeight(
+                  index,
+                  layout.width * Math.sin(labelRadians) +
+                    layout.height * Math.cos(labelRadians)
+                );
+              }
+            : undefined
+        }
         style={[
           styles.stationNameEnJO,
           passed ? styles.grayColor : null,
@@ -154,7 +176,6 @@ const StationName: React.FC<StationNameProps> = ({
             bottom: 0,
             marginLeft: 0,
             marginBottom: 0,
-            height: labelHeight,
             transformOrigin: 'left bottom',
             transform: [{ rotate: `-${LABEL_ANGLE}deg` }],
           },
@@ -179,6 +200,7 @@ const StationName: React.FC<StationNameProps> = ({
 };
 
 interface StationNameCellProps {
+  reportLabelHeight: ReportLabelHeight;
   arrived: boolean;
   stations: Station[];
   station: Station;
@@ -190,6 +212,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   stations,
   arrived,
   station: stationInLoop,
+  reportLabelHeight,
   hasNumberedStation,
   index,
 }: StationNameCellProps) => {
@@ -212,21 +235,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
   const dim = useLandscapeWindowDimensions();
 
-  const additionalPadLineMarksContainerStyle = useMemo(() => {
-    // rootWestJOのbottomがAndroidでは'30%'、iPadでは'40%'のため、
-    // 差分の10%をdim.heightに基づいて動的に補正
-    const androidOffset =
-      Platform.OS === 'android' && isTablet ? Math.round(dim.height * 0.1) : 0;
-    if (!stationInLoop.stationNumbers?.length) {
-      return {
-        top: dim.height - 130 + androidOffset,
-      };
-    }
-    return {
-      top: dim.height - 90 + androidOffset,
-    };
-  }, [stationInLoop.stationNumbers, dim.height]);
-
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -243,6 +251,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const dotCenter = barWidth * (index + 0.5) + LEGACY_DOT_SIZE / 2;
   const dotCenterInCell = dotCenter - barWidth / 2.5 - index * cellWidth;
   const androidTablet = isTablet && Platform.OS === 'android';
+  const shape = numberingObj?.lineSymbolShape;
+  const stationNumber = numberingObj?.stationNumber;
+  const showNumberingIcon =
+    isTablet && hasNumberedStation && !!shape && !!stationNumber;
+  // 駅名セルの下端は路線図の下端より TABLET_LABEL_BOTTOM だけ上にある。
+  const transferPosition = androidTablet
+    ? {
+        top: '100%' as const,
+        marginTop:
+          TABLET_LABEL_BOTTOM - BAR_BOTTOM_JO + (showNumberingIcon ? 40 : 0),
+      }
+    : { top: dim.height - (stationInLoop.stationNumbers?.length ? 90 : 130) };
   const numberingLeftOffset = androidTablet
     ? dotCenterInCell - cellWidth / 2
     : undefined;
@@ -258,6 +278,8 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       ]}
     >
       <StationName
+        index={index}
+        reportLabelHeight={reportLabelHeight}
         station={stationInLoop}
         en={isEn}
         horizontal={includesLongStationName}
@@ -281,27 +303,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           numberingLeftOffset != null && { left: numberingLeftOffset },
         ]}
       >
-        {numberingObj &&
-        isTablet &&
-        hasNumberedStation &&
-        numberingObj.lineSymbolShape &&
-        numberingObj.stationNumber ? (
+        {showNumberingIcon ? (
           <NumberingIcon
-            shape={numberingObj.lineSymbolShape}
+            shape={shape}
             lineColor={numberingColor}
-            stationNumber={numberingObj.stationNumber}
+            stationNumber={stationNumber}
             threeLetterCode={stationInLoop.threeLetterCode}
             allowScaling={false}
           />
         ) : null}
       </View>
 
-      <View
-        style={[
-          styles.padLineMarksContainerJO,
-          additionalPadLineMarksContainerStyle,
-        ]}
-      >
+      <View style={[styles.padLineMarksContainerJO, transferPosition]}>
         <PadLineMarks
           shouldGrayscale={isPass}
           transferLines={transferLines}
@@ -313,6 +326,26 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
 };
 
 const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
+  const { height } = useLandscapeWindowDimensions();
+  const [labelHeights, setLabelHeights] = useState<Record<number, number>>({});
+  const reportLabelHeight = useCallback<ReportLabelHeight>((id, extent) => {
+    setLabelHeights((previous) => {
+      if ((previous[id] ?? 0) === extent) return previous;
+      const next = { ...previous };
+      if (extent) next[id] = extent;
+      else delete next[id];
+      return next;
+    });
+  }, []);
+  // 幅を再計算すると再改行が起きるため、実測した不足分だけ路線図全体を下げる。
+  const offset = Math.ceil(
+    Math.max(
+      0,
+      ...stations.map(
+        (_, index) => (labelHeights[index] ?? 0) - getLabelSpace(height)
+      )
+    )
+  );
   const arrived = useAtomValue(arrivedAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const isPassing = useIsPassing();
@@ -338,7 +371,8 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
     (s: Station, i: number) => {
       return (
         <StationNameCell
-          key={s.id}
+          key={i}
+          reportLabelHeight={reportLabelHeight}
           index={i}
           station={s}
           stations={stations}
@@ -347,7 +381,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
         />
       );
     },
-    [isPassing, stations]
+    [isPassing, stations, reportLabelHeight]
   );
 
   const emptyArray = useMemo(() => {
@@ -387,7 +421,15 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
   }
 
   return (
-    <View style={styles.root}>
+    <View
+      testID="line-board-jo"
+      style={[
+        styles.root,
+        offset > 0 &&
+          isTablet &&
+          Platform.OS === 'android' && { transform: [{ translateY: offset }] },
+      ]}
+    >
       {[...lineColors, ...emptyArray].map((lc, i, segments) => {
         const stationId = stations[i]?.id;
         const estimatedMinutes =
