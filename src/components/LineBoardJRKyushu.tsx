@@ -458,7 +458,14 @@ const LineBoardJRKyushu: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
-  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
+  const { boardPaddingBottom: basePadding, onBoardLayout } = useBoardLayout(
+    dim.height
+  );
+  // 315系のAndroidタブレットでは、乗換案内と下部の停車案内の間に余白を取る。
+  const boardPaddingBottom =
+    showNextStopBanner && Platform.OS === 'android' && basePadding != null
+      ? basePadding * 1.5
+      : basePadding;
   const padCount = Math.max(0, 8 - stations.length);
   const totalStations = stations.length + padCount;
   const { route: estimatedRoute } = useEstimateArrivalTimes();

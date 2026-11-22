@@ -106,6 +106,14 @@ const variants = [
     bottom: STATION_NAME_CONTAINER_BOTTOM,
   },
   {
+    name: '315系',
+    Component: LineBoardJRKyushu,
+    id: 'jrkyushu',
+    props: { saikyoGradient: true, showNextStopBanner: true },
+    bottom: Platform.select({ android: 32, default: 84 }),
+    paddingScale: 1.5,
+  },
+  {
     name: 'JR九州',
     Component: LineBoardJRKyushu,
     id: 'jrkyushu',
@@ -116,7 +124,7 @@ const variants = [
 
 describe.each(variants)(
   '$name のタブレット配置',
-  ({ Component, id, props, bottom }) => {
+  ({ Component, id, props, bottom, paddingScale = 1 }) => {
     const originalOS = Platform.OS;
     beforeEach(() => {
       jest
@@ -144,8 +152,11 @@ describe.each(variants)(
       for (const height of [392, 320, 480]) {
         fireEvent(board, 'layout', { nativeEvent: { layout: { height } } });
         const padding = StyleSheet.flatten(board.props.style).paddingBottom;
-        expect(padding).toBeCloseTo(height / 3.5);
-        expect(padding).toBeLessThan(600 / 3.5);
+        const expectedPadding = (height / 3.5) * paddingScale;
+        expect(padding).toBeCloseTo(expectedPadding);
+        if (paddingScale === 1) {
+          expect(padding).toBeLessThan(600 / 3.5);
+        }
         const chevron = result.UNSAFE_getAllByType(View).find((view) => {
           const style = StyleSheet.flatten(view.props.style);
           return (
@@ -154,7 +165,7 @@ describe.each(variants)(
           );
         });
         expect(StyleSheet.flatten(chevron?.props.style).bottom).toBeCloseTo(
-          height / 3.5 + (bottom ?? 0) - 52
+          expectedPadding + (bottom ?? 0) - 52
         );
       }
     });
