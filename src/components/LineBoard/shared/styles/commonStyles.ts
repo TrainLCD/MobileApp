@@ -180,6 +180,11 @@ export const commonLineBoardStyles = StyleSheet.create({
     marginBottom: Platform.select({ android: isTablet ? -8 : -6, ios: 0 }),
   },
   stationNameHorizontal: {
+    // 幅だけを制約して全文の高さを測り、駅番号側の下端に揃える。
+    // 通常フローでは下余白が測定可能な高さを削り、3行目の途中で切れる。
+    ...(isTablet && Platform.OS === 'android'
+      ? { position: 'absolute' as const, bottom: 0 }
+      : {}),
     fontSize: HORIZONTAL_STATION_NAME_FONT_SIZE,
     fontWeight: 'bold',
     transform: [{ rotate: '-55deg' }],
