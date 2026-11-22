@@ -212,21 +212,6 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   );
   const dim = useLandscapeWindowDimensions();
 
-  const additionalPadLineMarksContainerStyle = useMemo(() => {
-    // rootWestJOのbottomがAndroidでは'30%'、iPadでは'40%'のため、
-    // 差分の10%をdim.heightに基づいて動的に補正
-    const androidOffset =
-      Platform.OS === 'android' && isTablet ? Math.round(dim.height * 0.1) : 0;
-    if (!stationInLoop.stationNumbers?.length) {
-      return {
-        top: dim.height - 130 + androidOffset,
-      };
-    }
-    return {
-      top: dim.height - 90 + androidOffset,
-    };
-  }, [stationInLoop.stationNumbers, dim.height]);
-
   const numberingColor = useMemo(
     () =>
       getNumberingColor(
@@ -243,6 +228,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const dotCenter = barWidth * (index + 0.5) + LEGACY_DOT_SIZE / 2;
   const dotCenterInCell = dotCenter - barWidth / 2.5 - index * cellWidth;
   const androidTablet = isTablet && Platform.OS === 'android';
+  const shape = numberingObj?.lineSymbolShape;
+  const stationNumber = numberingObj?.stationNumber;
+  const showNumberingIcon =
+    isTablet && hasNumberedStation && !!shape && !!stationNumber;
+  // 駅名セルの下端は路線図の下端より TABLET_LABEL_BOTTOM だけ上にある。
+  const transferPosition = androidTablet
+    ? {
+        top: '100%' as const,
+        marginTop:
+          TABLET_LABEL_BOTTOM - BAR_BOTTOM_JO + (showNumberingIcon ? 40 : 0),
+      }
+    : { top: dim.height - (stationInLoop.stationNumbers?.length ? 90 : 130) };
   const numberingLeftOffset = androidTablet
     ? dotCenterInCell - cellWidth / 2
     : undefined;
@@ -281,27 +278,18 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           numberingLeftOffset != null && { left: numberingLeftOffset },
         ]}
       >
-        {numberingObj &&
-        isTablet &&
-        hasNumberedStation &&
-        numberingObj.lineSymbolShape &&
-        numberingObj.stationNumber ? (
+        {showNumberingIcon ? (
           <NumberingIcon
-            shape={numberingObj.lineSymbolShape}
+            shape={shape}
             lineColor={numberingColor}
-            stationNumber={numberingObj.stationNumber}
+            stationNumber={stationNumber}
             threeLetterCode={stationInLoop.threeLetterCode}
             allowScaling={false}
           />
         ) : null}
       </View>
 
-      <View
-        style={[
-          styles.padLineMarksContainerJO,
-          additionalPadLineMarksContainerStyle,
-        ]}
-      >
+      <View style={[styles.padLineMarksContainerJO, transferPosition]}>
         <PadLineMarks
           shouldGrayscale={isPass}
           transferLines={transferLines}

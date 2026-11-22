@@ -304,3 +304,26 @@ it('Androidタブレットでは最後の停留所の長い名前もヘッダー
     Platform.OS = os;
   }
 });
+
+it('JOの乗換案内は路線バーの下端に追従し、駅番号の表示分だけ間隔を空ける', () => {
+  const os = Platform.OS;
+  Platform.OS = 'android';
+  try {
+    const stops = [
+      stations[0],
+      { ...stations[0], id: 2, groupId: 2, stationNumbers: [] },
+    ];
+    const result = render(
+      <LineBoardJO stations={stops} lineColors={['#fff', '#fff']} />
+    );
+    const positions = result
+      .UNSAFE_getAllByType(PadLineMarks)
+      .map((mark) => StyleSheet.flatten(mark.parent?.props.style));
+    expect(positions).toMatchObject([
+      { top: '100%', marginTop: 118 },
+      { top: '100%', marginTop: 78 },
+    ]);
+  } finally {
+    Platform.OS = os;
+  }
+});
