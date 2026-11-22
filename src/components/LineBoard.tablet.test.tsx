@@ -8,7 +8,10 @@ import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
 import { enabledLanguagesAtom } from '~/store/atoms/navigation';
 import getIsPass from '~/utils/isPass';
 import { StationRow } from './LineBoard/shared/components/StationRow';
-import { STATION_NAME_CONTAINER_BOTTOM } from './LineBoard/shared/styles/commonStyles';
+import {
+  HORIZONTAL_STATION_NAME_FONT_SIZE,
+  STATION_NAME_CONTAINER_BOTTOM,
+} from './LineBoard/shared/styles/commonStyles';
 import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
 import LineBoardJO from './LineBoardJO';
@@ -292,7 +295,13 @@ it('Androidタブレットでは長い停留所名を縮小せず、表示幅で
       expect(style.transformOrigin).toBe('left bottom');
       const rad = (55 * Math.PI) / 180;
       const anchorX = 48 + ((960 - 120) / 8) * (i + 0.5) + 16;
-      expect(style.width).toBeGreaterThan(0);
+      // 600dpからヘッダー200dpを除いた400dpのうち、30%だけ持ち上げる。
+      // バー上端まで184dp、駅名の基点まで170dpを使える。
+      const textHeight = Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4);
+      const availableWidth = (170 - textHeight * Math.cos(rad)) / Math.sin(rad);
+      expect(style.width).toBeCloseTo(
+        Math.min(availableWidth, (960 - anchorX) / Math.cos(rad))
+      );
       expect(anchorX + style.width * Math.cos(rad)).toBeLessThanOrEqual(
         960.001
       );

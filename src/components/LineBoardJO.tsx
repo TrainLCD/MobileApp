@@ -63,7 +63,7 @@ const ESTIMATED_MINUTES_BADGE_HEIGHT = isTablet ? 40 : 30;
 
 // JO・JLともタブレットのヘッダーは200dp。路線図の上方移動と同じ割合で
 // ヘッダー下に残る高さから、斜めの駅名を折り返す幅を求める。
-const ANDROID_TABLET_RAISE_PERCENT = 46;
+const ANDROID_TABLET_RAISE_PERCENT = 30;
 const TABLET_LABEL_BOTTOM = BAR_BOTTOM_JO + BAR_HEIGHT_JO + 14;
 const LABEL_ANGLE = 55;
 const labelRadians = (LABEL_ANGLE * Math.PI) / 180;
