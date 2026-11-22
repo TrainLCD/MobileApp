@@ -64,7 +64,9 @@ const localStyles = StyleSheet.create({
   root: {
     flex: 1,
     height: '100%',
-    bottom: isTablet ? '40%' : undefined,
+    bottom: isTablet
+      ? Platform.select({ android: '46%', default: '40%' })
+      : undefined,
     marginLeft: isTablet ? 48 : 32,
   },
   // 最終ドットの右にドットと同じ高さで縦中央揃え。

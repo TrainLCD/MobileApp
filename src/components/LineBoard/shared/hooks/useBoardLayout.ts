@@ -12,9 +12,11 @@ export const useBoardLayout = (windowHeight: number) => {
 
   // 従来の画面高 / 3.5 では、ヘッダーが高いほど駅名の領域が不足する。
   // Androidタブレットはヘッダーを除いた実測高を使う。端末別のセルの
-  // bottomオフセットは各テーマ側で維持し、矢印にも同じ下余白を渡す。
+  // bottomオフセットは各テーマ側で維持し、乗換案内のために実測高の3/7を下に空ける。
   const boardPaddingBottom = isTablet
-    ? (fitBelowHeader ? boardHeight : windowHeight) / 3.5
+    ? fitBelowHeader
+      ? (boardHeight * 3) / 7
+      : windowHeight / 3.5
     : undefined;
 
   return {
