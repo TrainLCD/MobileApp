@@ -23,11 +23,14 @@ import {
   StationName,
 } from './LineBoard/shared/components';
 import {
+  getBoardPaddingBottom,
+  StationRow,
+} from './LineBoard/shared/components/StationRow';
+import {
   useBarStyles,
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
-import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   commonLineBoardStyles,
   STATION_NAME_CONTAINER_BOTTOM,
@@ -371,7 +374,7 @@ const LineBoardE231: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
-  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
+  const boardPaddingBottom = getBoardPaddingBottom(dim.height);
   const { route: estimatedRoute } = useEstimateArrivalTimes();
   const estimatedMinutesByStationId =
     useEstimatedMinutesByStationId(estimatedRoute);
@@ -428,7 +431,6 @@ const LineBoardE231: React.FC<Props> = ({
   return (
     <View
       testID="line-board-e231"
-      onLayout={onBoardLayout}
       style={[
         commonLineBoardStyles.root,
         localStyles.root,
@@ -437,7 +439,7 @@ const LineBoardE231: React.FC<Props> = ({
         },
       ]}
     >
-      {stationsWithEmpty.map(stationNameCellForMap)}
+      <StationRow>{stationsWithEmpty.map(stationNameCellForMap)}</StationRow>
     </View>
   );
 };
