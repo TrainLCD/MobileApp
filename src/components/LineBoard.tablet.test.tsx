@@ -415,10 +415,18 @@ it('JRWの駅名は日英を切り替えてもセルの高さと下端を変え�
       const style = StyleSheet.flatten(label.props.style);
       expect(style).toMatchObject({
         position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        bottom: english ? 24 : 0,
+        left: english ? 24 : 0,
+        right: english ? undefined : 0,
       });
+      if (english) {
+        expect(style.transformOrigin).toBe('left bottom');
+        const text = result
+          .UNSAFE_getAllByType(Typography)
+          .find((node) => node.props.children === 'Osaka-\nCentral-\nStation');
+        expect(text).toBeDefined();
+        expect(StyleSheet.flatten(text?.props.style).marginBottom ?? 0).toBe(0);
+      }
       expect(style.transform).toEqual(
         english ? [{ rotate: '-55deg' }] : undefined
       );
