@@ -414,6 +414,26 @@ describe('PortraitMain', () => {
     }
   );
 
+  it('駅IDが欠けた停車駅が複数あっても行のキーで警告が出ない', () => {
+    const consoleError = jest.spyOn(console, 'error');
+    try {
+      const stops = [null, undefined, null, undefined].map((id, index) => ({
+        ...buildStation(index + 1, `停留所${index + 1}`, StopCondition.All),
+        id,
+        groupId: (index % 2) + 1,
+      }));
+      const { getByText } = renderWithStations(stops);
+      for (const name of ['停留所1', '停留所2', '停留所3', '停留所4']) {
+        expect(getByText(name)).toBeTruthy();
+      }
+      expect(consoleError.mock.calls.flat().join(' ')).not.toMatch(
+        /same key|unique "key"/
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   it.each([null, undefined])(
     '現在駅のIDが%sなら欠損ID同士を一致させずグループIDで探す',
     (id) => {
