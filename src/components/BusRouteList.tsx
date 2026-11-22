@@ -129,16 +129,29 @@ const RouteCard = memo(
   }
 );
 
-export const BusRouteList = memo(({ groups, ...props }: Props) => (
-  <View style={styles.list}>
-    {groups.map((group) => (
-      <RouteCard key={group.key} group={group} {...props} />
-    ))}
-  </View>
-));
+export const BusRouteList = memo(
+  ({ groups, numColumns = 1, ...props }: Props & { numColumns?: number }) => (
+    <View style={[styles.list, numColumns > 1 && styles.multiColumnList]}>
+      {groups.map((group) => (
+        <View
+          key={group.key}
+          style={[
+            { width: `${100 / numColumns}%` },
+            numColumns > 1 && styles.multiColumnCell,
+          ]}
+        >
+          <RouteCard group={group} {...props} />
+        </View>
+      ))}
+    </View>
+  )
+);
 
 const styles = StyleSheet.create({
-  list: { gap: 18 },
+  list: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 18 },
+  // 左右の余白を相殺して、鉄道と同じ列間隔16と両端の位置にそろえます。
+  multiColumnList: { marginHorizontal: -8 },
+  multiColumnCell: { paddingHorizontal: 8 },
   badge: { padding: 6, borderRadius: 7, flexShrink: 1 },
   badgeText: { fontSize: 14, fontWeight: 'bold', color: '#fff' },
   routes: { gap: 6 },
