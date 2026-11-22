@@ -1,20 +1,28 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
 import { Platform, StyleSheet, View } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import { useAfterNextStation } from '~/hooks/useAfterNextStation';
 import { useDisplayNextStation } from '~/hooks/useDisplayNextStation';
-import { enabledLanguagesAtom } from '~/store/atoms/navigation';
+import {
+  enabledLanguagesAtom,
+  leftStationsAtom,
+} from '~/store/atoms/navigation';
+import { isEnAtom } from '~/store/selectors/isEn';
 import getIsPass from '~/utils/isPass';
 import { StationRow } from './LineBoard/shared/components/StationRow';
-import { STATION_NAME_CONTAINER_BOTTOM } from './LineBoard/shared/styles/commonStyles';
+import {
+  HORIZONTAL_STATION_NAME_FONT_SIZE,
+  STATION_NAME_CONTAINER_BOTTOM,
+} from './LineBoard/shared/styles/commonStyles';
 import LineBoardE231 from './LineBoardE231';
 import LineBoardEast from './LineBoardEast';
 import LineBoardJO from './LineBoardJO';
 import LineBoardJRKyushu from './LineBoardJRKyushu';
 import LineBoardSaikyo from './LineBoardSaikyo';
 import LineBoardToei from './LineBoardToei';
+import LineBoardWest from './LineBoardWest';
 import PadLineMarks from './PadLineMarks';
 import Typography from './Typography';
 
@@ -26,6 +34,10 @@ jest.mock('jotai', () => ({
 jest.mock('~/hooks', () => ({
   useLandscapeWindowDimensions: () => ({ width: 960, height: 600 }),
   useIsPassing: () => false,
+  useCurrentStation: () => ({ groupId: 1 }),
+  useNextStation: () => null,
+  usePreviousStation: () => null,
+  useHasPassStationInRegion: () => false,
   useCurrentLine: () => ({ id: 1, color: '#c3bd44' }),
   useDisplayCurrentStation: () => ({ groupId: 1 }),
   useEstimateArrivalTimes: () => ({ route: null }),
@@ -265,7 +277,7 @@ describe.each([
   });
 });
 
-it('Androidタブレットでは最後の停留所の長い名前もヘッダー下・画面右端の内側に収める', () => {
+it('Androidタブレットでは長い停留所名を縮小せず、表示幅で折り返す', () => {
   const os = Platform.OS;
   Platform.OS = 'android';
   try {
@@ -275,6 +287,7 @@ it('Androidタブレットでは最後の停留所の長い名前もヘッダー
       id: i + 1,
       groupId: i + 1,
       name: '伊勢崎市文化会館前',
+      nameRoman: 'Culture Hall',
       stationNumbers: [],
     }));
     const result = render(
@@ -286,19 +299,142 @@ it('Androidタブレットでは最後の停留所の長い名前もヘッダー
     expect(labels).toHaveLength(8);
     for (const [i, label] of labels.entries()) {
       const style = StyleSheet.flatten(label.props.style);
-      expect(label.props.adjustsFontSizeToFit).toBe(true);
-      expect(label.props.numberOfLines).toBe(1);
+      expect(label.props.adjustsFontSizeToFit).toBeFalsy();
+      expect(label.props.numberOfLines).toBeUndefined();
+      expect(style.height).toBeUndefined();
       expect(style.transformOrigin).toBe('left bottom');
       const rad = (55 * Math.PI) / 180;
       const anchorX = 48 + ((960 - 120) / 8) * (i + 0.5) + 16;
-      const anchorY = (600 - 200) * 0.54 - 110;
-      expect(style.width).toBeGreaterThan(0);
-      expect(
-        style.width * Math.sin(rad) + style.height * Math.cos(rad)
-      ).toBeLessThanOrEqual(anchorY + 0.001);
+      // 600dpからヘッダー200dpを除いた400dpのうち、30%だけ持ち上げる。
+      // バー上端まで184dp、駅名の基点まで170dpを使える。
+      const textHeight = Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4);
+      const availableWidth = (170 - textHeight * Math.cos(rad)) / Math.sin(rad);
+      expect(style.width).toBeCloseTo(
+        Math.min(availableWidth, (960 - anchorX) / Math.cos(rad))
+      );
       expect(anchorX + style.width * Math.cos(rad)).toBeLessThanOrEqual(
         960.001
       );
+    }
+    const width = StyleSheet.flatten(labels[0].props.style).width;
+    const rad = (55 * Math.PI) / 180;
+    for (const lines of [2, 3, 1]) {
+      const height = lines * Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4);
+      fireEvent(labels[0], 'layout', {
+        nativeEvent: { layout: { width, height } },
+      });
+      const board = StyleSheet.flatten(
+        result.getByTestId('line-board-jo').props.style
+      );
+      const shift = board.transform?.[0].translateY ?? 0;
+      expect(shift).toBe(
+        Math.max(
+          0,
+          Math.ceil(width * Math.sin(rad) + height * Math.cos(rad) - 170)
+        )
+      );
+    }
+    const englishLabel = result
+      .UNSAFE_getAllByType(Typography)
+      .find((label) => label.props.children === 'Culture Hall');
+    expect(englishLabel?.props.accessibilityElementsHidden).toBe(true);
+    if (!englishLabel) throw new Error('英語駅名がありません');
+    fireEvent(englishLabel, 'layout', {
+      nativeEvent: { layout: { width, height: 120 } },
+    });
+    const boardStyle = () =>
+      StyleSheet.flatten(result.getByTestId('line-board-jo').props.style);
+    const shift = boardStyle().transform[0].translateY;
+    expect(shift).toBeGreaterThan(0);
+    for (const english of [true, false]) {
+      jest
+        .mocked(useAtomValue)
+        .mockImplementation((atom) => atom === isEnAtom && english);
+      result.rerender(
+        <LineBoardJO stations={stops} lineColors={stops.map(() => '#ff8000')} />
+      );
+      expect(
+        result
+          .UNSAFE_getAllByType(Typography)
+          .find((label) => label.props.children === 'Culture Hall')?.props
+          .accessibilityElementsHidden
+      ).toBe(!english);
+      expect(boardStyle().transform[0].translateY).toBe(shift);
+    }
+  } finally {
+    Platform.OS = os;
+  }
+});
+
+it('JOの乗換案内は路線バーの下端に追従し、駅番号の表示分だけ間隔を空ける', () => {
+  const os = Platform.OS;
+  Platform.OS = 'android';
+  try {
+    const stops = [
+      stations[0],
+      { ...stations[0], id: 2, groupId: 2, stationNumbers: [] },
+    ];
+    const result = render(
+      <LineBoardJO stations={stops} lineColors={['#fff', '#fff']} />
+    );
+    const positions = result
+      .UNSAFE_getAllByType(PadLineMarks)
+      .map((mark) => StyleSheet.flatten(mark.parent?.props.style));
+    expect(positions).toMatchObject([
+      { top: '100%', marginTop: 118 },
+      { top: '100%', marginTop: 78 },
+    ]);
+  } finally {
+    Platform.OS = os;
+  }
+});
+
+it('JRWの駅名は日英を切り替えてもセルの高さと下端を変えない', () => {
+  const os = Platform.OS;
+  Platform.OS = 'android';
+  try {
+    const stops = [
+      { ...stations[0], name: '大阪', nameRoman: 'Osaka-Central-Station' },
+    ];
+    const component = () => (
+      <LineBoardWest stations={stops} lineColors={['#00a7db']} />
+    );
+    const setLanguage = (english: boolean) =>
+      jest.mocked(useAtomValue).mockImplementation((atom) => {
+        if (atom === leftStationsAtom) return stops;
+        return atom === isEnAtom && english;
+      });
+    setLanguage(false);
+    const result = render(component());
+    for (const english of [false, true, false]) {
+      setLanguage(english);
+      result.rerender(
+        <LineBoardWest stations={[...stops]} lineColors={['#00a7db']} />
+      );
+      const label = result.getByTestId('station-name-wrapper-west');
+      const style = StyleSheet.flatten(label.props.style);
+      expect(style).toMatchObject({
+        position: 'absolute',
+        bottom: english ? 24 : 0,
+        left: english ? 24 : 0,
+        right: english ? undefined : 0,
+      });
+      if (english) {
+        expect(style.transformOrigin).toBe('left bottom');
+        const text = result
+          .UNSAFE_getAllByType(Typography)
+          .find((node) => node.props.children === 'Osaka-\nCentral-\nStation');
+        expect(text).toBeDefined();
+        expect(StyleSheet.flatten(text?.props.style).marginBottom ?? 0).toBe(0);
+      }
+      expect(style.transform).toEqual(
+        english ? [{ rotate: '-55deg' }] : undefined
+      );
+      expect(
+        StyleSheet.flatten(
+          result.getByTestId('station-name-cell-west').props.style
+        ).height
+      ).toBe('100%');
     }
   } finally {
     Platform.OS = os;
