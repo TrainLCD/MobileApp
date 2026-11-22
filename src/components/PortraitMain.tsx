@@ -232,8 +232,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   lineName: {
-    // 路線名は文字サイズと1行表示を維持し、末尾を省略しない。
-    flexShrink: 0,
+    flexShrink: 1,
     marginLeft: 10,
     fontSize: RFValue(12),
     fontWeight: 'bold',
