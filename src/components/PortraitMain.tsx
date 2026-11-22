@@ -1838,7 +1838,8 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
               const departed = index < markerRowIndex;
               return (
                 <StopRow
-                  key={station.id}
+                  // ID欠損時は同一グループの再訪を行位置で区別する。
+                  key={station.id ?? `stop-${station.groupId}-${index}`}
                   index={index}
                   station={station}
                   platformCode={getBusPlatformCode(stops, index)}
