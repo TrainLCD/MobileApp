@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import {
+  getBackgroundHeartbeatStartDelay,
   getMaxPermitAccuracy,
   subscribeRemoteConfig,
 } from '~/lib/remoteConfig';
@@ -16,6 +17,7 @@ import {
 import { useLocationProfile } from './useLocationProfile';
 
 jest.mock('~/lib/remoteConfig', () => ({
+  getBackgroundHeartbeatStartDelay: jest.fn(() => 10000),
   getMaxPermitAccuracy: jest.fn(() => 1500),
   subscribeRemoteConfig: jest.fn(() => () => {}),
 }));
@@ -108,11 +110,33 @@ describe('useLocationProfile', () => {
     expect(result.current.taskOptions).not.toBe(initial);
     expect(result.current.taskOptions).toMatchObject({
       trainLCDBackgroundHeartbeatMaxAccuracy: 3000,
-      trainLCDBackgroundHeartbeatStartDelay: 5000,
+      trainLCDBackgroundHeartbeatStartDelay: 10000,
       trainLCDBackgroundHeartbeatInterval: 10000,
       trainLCDBackgroundHeartbeatTimeout: 30000,
     });
     jest.mocked(getMaxPermitAccuracy).mockReturnValue(1500);
+  });
+
+  it('起動後に取得した補完開始待ちをiOSの通常タスクに反映する', () => {
+    Platform.OS = 'ios';
+    const listeners = new Set<() => void>();
+    jest.mocked(subscribeRemoteConfig).mockImplementation((listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    });
+    const { result } = renderHook(() => useLocationProfile());
+    jest.mocked(getBackgroundHeartbeatStartDelay).mockReturnValue(20000);
+    act(() => {
+      for (const notify of listeners) notify();
+    });
+    expect(result.current.taskOptions).toMatchObject({
+      trainLCDBackgroundHeartbeatStartDelay: 20000,
+      trainLCDBackgroundHeartbeatInterval: 10000,
+      trainLCDBackgroundHeartbeatTimeout: 30000,
+    });
+    jest.mocked(getBackgroundHeartbeatStartDelay).mockReturnValue(10000);
   });
 
   // 呼び出し側(useStartBackgroundLocationUpdates)はこの返り値をeffect依存に置く。

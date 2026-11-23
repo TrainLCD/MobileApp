@@ -497,6 +497,62 @@ describe('useTTS', () => {
     );
   });
 
+  it('同じ次駅の文面更新は一度だけ読み、次駅とまもなくの案内は読み分ける', async () => {
+    const previous = jest.requireMock('./usePrevious').usePrevious as jest.Mock;
+    previous.mockImplementation(
+      jest.requireActual('./usePrevious').usePrevious
+    );
+    const tts = jest.requireMock('./useTTSText').useTTSText as jest.Mock;
+    const state = jest.requireMock('./useStoppingState')
+      .useStoppingState as jest.Mock;
+    state.mockReturnValue('NEXT');
+    const store = createStore();
+    store.set(speechState, {
+      ...defaultSpeechState,
+      ttsEnabledLanguages: ['JA'],
+    });
+    tts.mockReturnValue({ text: ['', ''] });
+    try {
+      const { rerender } = renderHook(() => useTTS(), {
+        wrapper: createWrapper(store),
+      });
+      const update = async (
+        nextAnnouncementKey: string | undefined,
+        ja: string,
+        en: string
+      ) => {
+        tts.mockReturnValue({ nextAnnouncementKey, text: [ja, en] });
+        rerender({});
+        await flushAsync();
+      };
+      await update('A', '次は、前橋です', 'Maebashi');
+      await update('A', '次は、前橋です', 'Maebashi Station');
+      await update('A', '次は、前橋です', 'Next stop, Maebashi Station');
+      act(finishAllUtterances);
+      await flushAsync();
+      await update('A', '次は、前橋です。乗り換えです', 'Maebashi');
+      await update('B', '次は、新前橋です', 'Shin-Maebashi');
+      state.mockReturnValue('ARRIVING');
+      await update(undefined, 'まもなく、新前橋です', 'Arriving');
+      act(finishAllUtterances);
+      await flushAsync();
+      act(finishAllUtterances);
+      await flushAsync();
+      state.mockReturnValue('NEXT');
+      await update('B', '次は、新前橋です', 'Shin-Maebashi');
+      await update('C', '次は、井野です', 'Ino');
+      expect(mockSpeak.mock.calls.map(([text]) => text)).toEqual([
+        '次は、前橋です',
+        '次は、新前橋です',
+        'まもなく、新前橋です',
+        '次は、井野です',
+      ]);
+    } finally {
+      previous.mockImplementation(() => ['', '']);
+      state.mockReturnValue('CURRENT');
+    }
+  });
+
   it('テキスト空時にpendingをクリアする', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;
@@ -576,6 +632,44 @@ describe('useTTS', () => {
 
     warnSpy.mockRestore();
   });
+
+  it.each([
+    { started: false, expectedCalls: 2 },
+    { started: true, expectedCalls: 1 },
+  ])(
+    'タイムアウト後の同じ次駅の再試行は開始通知に従う (started=$started)',
+    async ({ started, expectedCalls }) => {
+      setPlatformOS('ios');
+      mockRemoteSpeak.mockImplementation(
+        (
+          _request,
+          callbacks: { onSpeechStarted?: () => void; onSettled: () => void }
+        ) => {
+          if (started) callbacks.onSpeechStarted?.();
+        }
+      );
+      const tts = jest.requireMock('./useTTSText').useTTSText as jest.Mock;
+      tts.mockReturnValue({
+        nextAnnouncementKey: 'A',
+        text: ['次は、前橋です', 'Maebashi'],
+      });
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+      const { rerender } = renderHook(() => useTTS(), {
+        wrapper: createWrapper(store),
+      });
+      await flushAsync();
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      act(() => jest.advanceTimersByTime(300_000));
+      tts.mockReturnValue({
+        nextAnnouncementKey: 'A',
+        text: ['次は、前橋です', 'Next stop, Maebashi'],
+      });
+      rerender({});
+      await flushAsync();
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(expectedCalls);
+    }
+  );
 
   it('発話エラーも完了として扱い、全発話が終わったらpendingへ進む', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {

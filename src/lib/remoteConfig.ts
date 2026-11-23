@@ -1,5 +1,9 @@
 import { Platform } from 'react-native';
-import { MAX_PERMIT_ACCURACY } from '~/constants/location';
+import {
+  LOCATION_BACKGROUND_HEARTBEAT_START_DELAY,
+  LOCATION_HEARTBEAT_MAX_PENDING,
+  MAX_PERMIT_ACCURACY,
+} from '~/constants/location';
 import { VOICEVOX_DEFAULT_STYLE_ID } from '~/constants/voicevox';
 import { getRemoteTTSOverride, REMOTE_TTS_OVERRIDE } from './remoteTTSOverride';
 import { workerUrl } from './workerApi';
@@ -8,6 +12,8 @@ import { workerUrl } from './workerApi';
 export const REMOTE_CONFIG_KEYS = {
   // 継続測位で受理する測位精度の上限(m)。これを超える測位はワープ対策で棄却される。
   MAX_PERMIT_ACCURACY: 'max_permit_accuracy',
+  IOS_BACKGROUND_HEARTBEAT_START_DELAY_MS:
+    'ios_background_heartbeat_start_delay_ms',
   // ETAフォールバック(GPS精度劣化・喪失時にETAデータで接近/到着状態を推定する機能)の有効/無効。
   ETA_ASSIST_ENABLED: 'eta_assist_enabled',
   // ETAフォールバックの到着確定マージン(秒)。ETA上の到着時刻からこの秒数が経過するまでは
@@ -63,6 +69,7 @@ export const REMOTE_CONFIG_KEYS = {
 
 type RemoteConfigResponse = {
   max_permit_accuracy?: number;
+  ios_background_heartbeat_start_delay_ms?: number;
   eta_assist_enabled?: boolean;
   eta_fallback_arrival_confirm_margin_sec?: number;
   eta_fallback_max_duration_min?: number;
@@ -148,6 +155,7 @@ const parseNonNegativeInteger = (value: unknown): number | null => {
 // getMaxPermitAccuracy 等はGPS更新のたびに
 // 呼ばれるホットパスのため、起動時に /config/remote から取得した値をモジュール内に
 // キャッシュし、以降は同期的に返す。取得失敗時はキャッシュせずフォールバックを返す。
+let backgroundHeartbeatStartDelay = LOCATION_BACKGROUND_HEARTBEAT_START_DELAY;
 let cachedMaxPermitAccuracy: number | null = null;
 let cachedEtaAssistEnabled: boolean | null = null;
 let cachedEtaFallbackArrivalConfirmMarginSec: number | null = null;
@@ -185,6 +193,7 @@ const notifyRemoteConfigListeners = (): void => {
 
 // テスト用および値の再取得時にキャッシュを破棄する。
 export const resetRemoteConfigCache = (): void => {
+  backgroundHeartbeatStartDelay = LOCATION_BACKGROUND_HEARTBEAT_START_DELAY;
   cachedMaxPermitAccuracy = null;
   cachedEtaAssistEnabled = null;
   cachedEtaFallbackArrivalConfirmMarginSec = null;
@@ -214,6 +223,16 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   const data = (await res.json()) as RemoteConfigResponse;
 
+  const delay = data.ios_background_heartbeat_start_delay_ms;
+  // 従来の最短待ち5秒から、補完要求1回の取得上限30秒までを許容する。
+  if (
+    typeof delay === 'number' &&
+    Number.isInteger(delay) &&
+    delay >= 5_000 &&
+    delay <= LOCATION_HEARTBEAT_MAX_PENDING
+  ) {
+    backgroundHeartbeatStartDelay = delay;
+  }
   const maxAccuracy = parsePositiveFiniteNumber(data.max_permit_accuracy);
   if (maxAccuracy != null) {
     cachedMaxPermitAccuracy = maxAccuracy;
@@ -272,6 +291,9 @@ export const setupRemoteConfig = async (): Promise<void> => {
   }
   notifyRemoteConfigListeners();
 };
+
+export const getBackgroundHeartbeatStartDelay = (): number =>
+  backgroundHeartbeatStartDelay;
 
 // 最大許容精度(m)を同期的に取得する。setupRemoteConfig 完了後は取得済みの
 // リモート値を、未完了・未設定・取得失敗時は MAX_PERMIT_ACCURACY をフォールバックとして返す。

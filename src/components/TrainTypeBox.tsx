@@ -1,12 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAtomValue } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Easing,
   Platform,
@@ -149,7 +143,6 @@ const TrainTypeBox: React.FC<Props> = ({
     () => [styles.gradient, boxSizeStyle, { borderRadius }],
     [borderRadius, boxSizeStyle]
   );
-  const [fadeOutFinished, setFadeOutFinished] = useState(false);
 
   const { width: windowWidth } = useLandscapeWindowDimensions();
   const headerState = useAtomValue(headerStateAtom);
@@ -260,50 +253,32 @@ const TrainTypeBox: React.FC<Props> = ({
     }),
     [animatedTextBaseStyle, headerLangState, trainTypeName]
   );
+  const [settledName, setSettledName] = useState(trainTypeName);
+  // 同じ文字列のフォント・行高は即座に更新し、文字列が変わる間だけ旧表示を保持する。
   const prevTrainTypeDisplayState = useLazyPrevious(
     trainTypeDisplayState,
-    fadeOutFinished
+    settledName === trainTypeName
   );
   const prevTrainTypeName = prevTrainTypeDisplayState.name;
 
-  const handleFinish = useCallback((finished: boolean | undefined) => {
-    if (finished) {
-      setFadeOutFinished(true);
-    }
-  }, []);
-
-  const resetValue = useCallback(() => {
+  useEffect(() => {
     textOpacityAnim.setValue(0);
-  }, [textOpacityAnim]);
+    if (prevTrainTypeName === trainTypeName) return;
 
-  const updateOpacity = useCallback(() => {
     RNAnimated.timing(textOpacityAnim, {
       toValue: 1,
       duration: headerTransitionDelay,
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
     }).start(({ finished }) => {
-      handleFinish(finished);
+      if (finished) setSettledName(trainTypeName);
     });
-  }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
-
-  // 表示内容または表示設定が変更されたときのみfadeOutFinishedをリセット
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 前回表示状態の変更時にもアニメーション状態をリセットする必要がある
-  useEffect(() => {
-    setFadeOutFinished(false);
-  }, [trainTypeDisplayState, prevTrainTypeDisplayState]);
-
-  useEffect(() => {
-    if (prevTrainTypeDisplayState !== trainTypeDisplayState) {
-      updateOpacity();
-    } else {
-      resetValue();
-    }
+    return () => textOpacityAnim.stopAnimation();
   }, [
-    prevTrainTypeDisplayState,
-    resetValue,
-    trainTypeDisplayState,
-    updateOpacity,
+    headerTransitionDelay,
+    prevTrainTypeName,
+    textOpacityAnim,
+    trainTypeName,
   ]);
 
   const textTopAnimatedStyles = useMemo(

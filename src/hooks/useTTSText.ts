@@ -46,6 +46,7 @@ import { useTransferLines } from './useTransferLines';
 export interface TTSTextResult {
   text: [string, string] | [];
   remoteTextEn?: string;
+  nextAnnouncementKey?: string;
 }
 
 const resolveTemplateTheme = (theme: AppTheme): AppTheme => {
@@ -626,6 +627,14 @@ export const useTTSText = (
   }
 
   return {
+    nextAnnouncementKey:
+      stoppingState === 'NEXT' && nextStation && selectedBound
+        ? JSON.stringify([
+            nextStation.groupId,
+            selectedBound.id,
+            selectedDirection,
+          ])
+        : undefined,
     remoteTextEn,
     text: [
       jaText.trim().replace(parenthesisRegexp, ''),

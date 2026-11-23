@@ -3,7 +3,10 @@ import type { Line, Station } from '~/@types/graphql';
 
 export const useStationNumberIndexFunc = () => {
   const func = useCallback(
-    (station: Station | undefined, line?: Line | null) => {
+    (
+      station: Pick<Station, 'stationNumbers'> | undefined,
+      line?: Line | null
+    ) => {
       const stationNumbers = station?.stationNumbers;
       const lineSymbols = line?.lineSymbols;
 
