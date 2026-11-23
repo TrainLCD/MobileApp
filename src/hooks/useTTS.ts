@@ -36,6 +36,13 @@ const SILENT_SPEECH_ENGINE: SpeechEngine = {
   stop: () => {},
 };
 
+type Announcement = {
+  textJa: string;
+  textEn: string;
+  remoteEn: string;
+  nextKey?: string;
+};
+
 export const useTTS = (): void => {
   const { enabled, backgroundEnabled, ttsEnabledLanguages } =
     useAtomValue(speechState);
@@ -64,16 +71,17 @@ export const useTTS = (): void => {
   // コールバックが、後続の発話の再生状態を壊すのを防ぐ
   const speechRunIdRef = useRef(0);
   const isLoadableRef = useRef(true);
-  const pendingRef = useRef<{
-    textJa: string;
-    textEn: string;
-    remoteEn: string;
-  } | null>(null);
+  const pendingRef = useRef<Announcement | null>(null);
+  const lastNextKeyRef = useRef<string | undefined>(undefined);
   const speechWithTextRef = useRef<
-    ((ja: string, en: string, remoteEn: string) => void) | null
+    ((announcement: Announcement) => void) | null
   >(null);
   const isBus = currentLine?.transportType === TransportType.Bus;
   const ttsResult = useTTSText(firstSpeechRef.current, enabled, isBus);
+  const nextKey = ttsResult.nextAnnouncementKey
+    ? `${resetFirstSpeech}:${ttsResult.nextAnnouncementKey}`
+    : undefined;
+  const previousNextKey = usePrevious(nextKey);
   const ttsText = ttsResult.text;
   const [prevTextJa, prevTextEn] = usePrevious(ttsText);
   const [textJa, textEn] = ttsText;
@@ -179,11 +187,7 @@ export const useTTS = (): void => {
     const pending = pendingRef.current;
     if (pending) {
       pendingRef.current = null;
-      speechWithTextRef.current?.(
-        pending.textJa,
-        pending.textEn,
-        pending.remoteEn
-      );
+      speechWithTextRef.current?.(pending);
     } else {
       // 後続の発話が控えていない場合のみ解除する。pending がある場合は
       // 直後に再度発話が始まりダッキングを再度張るため、解除は不要。
@@ -217,7 +221,7 @@ export const useTTS = (): void => {
   );
 
   const speechWithText = useCallback(
-    (ja: string, en: string, remoteEn: string) => {
+    ({ textJa: ja, textEn: en, remoteEn, nextKey }: Announcement) => {
       if (!ja.length || !en.length || !isLoadableRef.current) {
         return;
       }
@@ -228,6 +232,7 @@ export const useTTS = (): void => {
       const runId = speechRunIdRef.current + 1;
       speechRunIdRef.current = runId;
       playingRef.current = true;
+      lastNextKeyRef.current = nextKey;
       armPlaybackWatchdog(runId);
 
       const isStaleRun = () =>
@@ -242,7 +247,9 @@ export const useTTS = (): void => {
         speakEn: shouldSpeakEnglish,
       };
 
+      let started = false;
       const onSpeechStarted = () => {
+        started = true;
         if (firstSpeechRef.current) {
           firstSpeechRef.current = false;
           suppressPostFirstSpeechRef.current = true;
@@ -253,6 +260,7 @@ export const useTTS = (): void => {
         if (isStaleRun()) {
           return;
         }
+        if (!started) lastNextKeyRef.current = undefined;
         finishPlaying();
       };
 
@@ -362,7 +370,12 @@ export const useTTS = (): void => {
   }, [selectedBound]);
 
   useEffect(() => {
-    if (!enabled || (prevTextJa === textJa && prevTextEn === textEn)) {
+    if (
+      !enabled ||
+      (prevTextJa === textJa &&
+        prevTextEn === textEn &&
+        previousNextKey === nextKey)
+    ) {
       return;
     }
 
@@ -371,30 +384,38 @@ export const useTTS = (): void => {
       return;
     }
 
-    if (
-      computeSuppressionDecision({
-        suppressPostFirstSpeechRef,
-        firstSpeechRef,
-        suppressFirstSpeechUntilDepartureRef,
-        arrived,
-        stoppingStateChanged: stoppingState !== prevStoppingState,
-      })
-    ) {
+    const suppressed = computeSuppressionDecision({
+      suppressPostFirstSpeechRef,
+      firstSpeechRef,
+      suppressFirstSpeechUntilDepartureRef,
+      arrived,
+      stoppingStateChanged:
+        stoppingState !== prevStoppingState ||
+        (!!nextKey && nextKey !== previousNextKey),
+    });
+    // 同じ次駅の案内は、再生中・再生後に乗換情報などが更新されても繰り返さない。
+    if (nextKey && nextKey === lastNextKeyRef.current) {
+      pendingRef.current = null;
       return;
     }
+    if (suppressed) return;
+
+    const announcement = { textJa, textEn, remoteEn, nextKey };
 
     // 再生中なら最新のテキストをpendingに記録して完了時にトリガー
     if (playingRef.current) {
       console.warn('[useTTS] Already playing, queuing text as pending');
-      pendingRef.current = { textJa, textEn, remoteEn };
+      pendingRef.current = announcement;
       return;
     }
 
     pendingRef.current = null;
-    speechWithTextRef.current?.(textJa, textEn, remoteEn);
+    speechWithTextRef.current?.(announcement);
   }, [
     arrived,
     enabled,
+    nextKey,
+    previousNextKey,
     prevStoppingState,
     remoteEn,
     prevTextEn,
