@@ -701,6 +701,37 @@ const LINE_SYMBOL_IMAGE_GRAYSCALE: Record<number, LineSymbolImageSource> = {
   99501: { signPath: () => require('../assets/marks/izukyu/iz_g.webp') }, // 伊豆急行線
 } as const satisfies Record<number, LineSymbolImageSource>;
 
+// 複数画像を持つ路線では、API の lineSymbols の順序と独立して画像を選ぶ。
+const symbolImageSlots: Readonly<
+  Record<number, Readonly<Record<string, keyof LineSymbolImage>>>
+> = {
+  11311: { JC: 'signPath', CO: 'subSignPath' },
+  21002: { TI: 'signPath', TS: 'subSignPath' },
+  23006: { KS: 'signPath', HS: 'subSignPath' },
+  11610: { W: 'signPath', X: 'subSignPath' },
+  11611: { G: 'signPath', R: 'subSignPath' },
+  11629: { G: 'signPath', A: 'subSignPath' },
+  11630: { G: 'signPath', A: 'subSignPath' },
+  11631: { A: 'signPath', N: 'subSignPath' },
+};
+
+export const getStationSymbolImagePath = (
+  line: Line,
+  image: LineSymbolImage | null,
+  symbol: string | null | undefined
+): number | undefined => {
+  if (line.id == null || !image) return undefined;
+  const slots = symbolImageSlots[line.id];
+  if (slots) {
+    const slot = symbol ? slots[symbol] : undefined;
+    return slot ? image[slot] : undefined;
+  }
+  if (symbol && !line.lineSymbols?.some((entry) => entry.symbol === symbol)) {
+    return undefined;
+  }
+  return image?.signPath;
+};
+
 const resolvedCache = {
   color: new Map<number, LineSymbolImage>(),
   grayscale: new Map<number, LineSymbolImage>(),

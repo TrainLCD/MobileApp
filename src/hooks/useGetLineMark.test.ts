@@ -38,6 +38,26 @@ describe('useGetLineMark', () => {
     }
   );
 
+  it('路線の記号一覧が逆順でもTS画像を選ぶ', () => {
+    const { result } = renderHook(useGetLineMark);
+    expect(
+      result.current({
+        line: { ...line, lineSymbols: [...(line.lineSymbols ?? [])].reverse() },
+        stationNumbers: [createStationNumber('TS', 'TS-01')],
+      })?.signPath
+    ).toBe(12);
+  });
+
+  it('登録されていない駅記号には他の記号の画像を使わない', () => {
+    const { result } = renderHook(useGetLineMark);
+    expect(
+      result.current({
+        line,
+        stationNumbers: [createStationNumber('G', 'G-19')],
+      })
+    ).toMatchObject({ sign: 'G', signPath: undefined });
+  });
+
   it('他路線の駅番号が先頭でも対象路線の記号と画像を選ぶ', () => {
     const { result } = renderHook(useGetLineMark);
     const stationNumbers = [

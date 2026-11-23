@@ -6,7 +6,10 @@ import {
   type StationNumber,
 } from '~/@types/graphql';
 import { MARK_SHAPE } from '../constants';
-import { getLineSymbolImage } from '../lineSymbolImage';
+import {
+  getLineSymbolImage,
+  getStationSymbolImagePath,
+} from '../lineSymbolImage';
 import type { LineMark } from '../models/LineMark';
 import { useStationNumberIndexFunc } from './useStationNumberIndexFunc';
 
@@ -46,23 +49,10 @@ export const useGetLineMark = () => {
 
       const stationIndex = getNumberingIndex({ stationNumbers }, line);
       const number = stationNumbers?.[stationIndex];
-      // 駅番号と路線記号画像の並びは別々。浅草の駅番号は TS のみだが、
-      // 東武伊勢崎線の画像は TI、TS の順に登録されている。
-      const symbolIndex = line.lineSymbols?.findIndex(
-        ({ symbol }) => symbol != null && symbol === number?.lineSymbol
-      );
-      const imageIndex =
-        symbolIndex == null || symbolIndex < 0 ? 0 : symbolIndex;
-      const signPath = [
-        image?.signPath,
-        image?.subSignPath ?? image?.signPath,
-        image?.extraSignPath ?? image?.subSignPath ?? image?.signPath,
-      ][imageIndex];
-
       return {
         sign: number?.lineSymbol ?? undefined,
         signShape: number?.lineSymbolShape ?? undefined,
-        signPath,
+        signPath: getStationSymbolImagePath(line, image, number?.lineSymbol),
       };
     },
     [getNumberingIndex]
