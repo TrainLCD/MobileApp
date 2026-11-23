@@ -1,22 +1,11 @@
 import { useAtomValue } from 'jotai';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import {
-  Easing,
-  Platform,
-  Animated as RNAnimated,
-  StyleSheet,
-  View,
-} from 'react-native';
+import React, { useMemo } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
 import AnimatedTypography from '~/components/AnimatedTypography';
 import { FONTS, parenthesisRegexp } from '../constants';
-import { useCurrentLine, useLazyPrevious, usePrevious } from '../hooks';
+import { useCurrentLine } from '../hooks';
+import { useTrainTypeNameFade } from '../hooks/useTrainTypeNameFade';
 import type { HeaderLangState } from '../models/HeaderTransitionState';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -64,14 +53,10 @@ const styles = StyleSheet.create({
 });
 
 const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
-  const [fadeOutFinished, setFadeOutFinished] = useState(false);
-
   const headerState = useAtomValue(headerStateAtom);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const currentLine = useCurrentLine();
   const isLEDTheme = useAtomValue(isLEDThemeAtom);
-
-  const textOpacityAnim = useRef(new RNAnimated.Value(0)).current;
 
   const isBus = isBusLine(currentLine);
 
@@ -146,51 +131,18 @@ const TrainTypeBoxJRKyushu: React.FC<Props> = ({ trainType }: Props) => {
     return 0;
   }, [trainTypeName?.length]);
 
-  const prevMarginLeft = usePrevious(marginLeft);
-  const prevLetterSpacing = usePrevious(letterSpacing);
+  const { prevTrainTypeName, textOpacityAnim } = useTrainTypeNameFade(
+    trainTypeName,
+    headerTransitionDelay
+  );
+  const prevLetterSpacing = prevTrainTypeName?.length === 2 ? 8 : 0;
+  const prevMarginLeft = Platform.OS === 'ios' ? prevLetterSpacing : 0;
   const animatedTextBaseStyle = useMemo(
     () => ({
       fontFamily: isLEDTheme ? FONTS.JFDotJiskan24h : FONTS.RobotoBold,
     }),
     [isLEDTheme]
   );
-
-  const prevTrainTypeName = useLazyPrevious(trainTypeName, fadeOutFinished);
-
-  const handleFinish = useCallback((finished: boolean | undefined) => {
-    if (finished) {
-      setFadeOutFinished(true);
-    }
-  }, []);
-
-  const resetValue = useCallback(() => {
-    textOpacityAnim.setValue(0);
-  }, [textOpacityAnim]);
-
-  const updateOpacity = useCallback(() => {
-    RNAnimated.timing(textOpacityAnim, {
-      toValue: 1,
-      duration: headerTransitionDelay,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      handleFinish(finished);
-    });
-  }, [handleFinish, headerTransitionDelay, textOpacityAnim]);
-
-  // 電車種別が変更されたときのみfadeOutFinishedをリセット
-  // biome-ignore lint/correctness/useExhaustiveDependencies: prevTrainTypeNameの変更時にもアニメーション状態をリセットする必要がある
-  useEffect(() => {
-    setFadeOutFinished(false);
-  }, [trainTypeName, prevTrainTypeName]);
-
-  useEffect(() => {
-    if (prevTrainTypeName !== trainTypeName) {
-      updateOpacity();
-    } else {
-      resetValue();
-    }
-  }, [prevTrainTypeName, resetValue, trainTypeName, updateOpacity]);
 
   const textTopAnimatedStyles = useMemo(
     () => ({
