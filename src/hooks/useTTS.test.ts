@@ -627,6 +627,44 @@ describe('useTTS', () => {
     warnSpy.mockRestore();
   });
 
+  it.each([
+    { started: false, expectedCalls: 2 },
+    { started: true, expectedCalls: 1 },
+  ])(
+    'タイムアウト後の同じ次駅の再試行は開始通知に従う (started=$started)',
+    async ({ started, expectedCalls }) => {
+      setPlatformOS('ios');
+      mockRemoteSpeak.mockImplementation(
+        (
+          _request,
+          callbacks: { onSpeechStarted?: () => void; onSettled: () => void }
+        ) => {
+          if (started) callbacks.onSpeechStarted?.();
+        }
+      );
+      const tts = jest.requireMock('./useTTSText').useTTSText as jest.Mock;
+      tts.mockReturnValue({
+        nextAnnouncementKey: 'A',
+        text: ['次は、前橋です', 'Maebashi'],
+      });
+      const store = createStore();
+      store.set(speechState, defaultSpeechState);
+      const { rerender } = renderHook(() => useTTS(), {
+        wrapper: createWrapper(store),
+      });
+      await flushAsync();
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(1);
+      act(() => jest.advanceTimersByTime(300_000));
+      tts.mockReturnValue({
+        nextAnnouncementKey: 'A',
+        text: ['次は、前橋です', 'Next stop, Maebashi'],
+      });
+      rerender({});
+      await flushAsync();
+      expect(mockRemoteSpeak).toHaveBeenCalledTimes(expectedCalls);
+    }
+  );
+
   it('発話エラーも完了として扱い、全発話が終わったらpendingへ進む', async () => {
     const { useTTSText } = jest.requireMock('./useTTSText') as {
       useTTSText: jest.Mock;

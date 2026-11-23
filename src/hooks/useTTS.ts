@@ -199,7 +199,7 @@ export const useTTS = (): void => {
   // いずれの通知も届かないままハングした場合でも、playingRef を確実に解放して
   // 以降の発話が詰まらないようにする。
   const armPlaybackWatchdog = useCallback(
-    (runId: number) => {
+    (runId: number, finishRun: () => void) => {
       if (playingTimeoutRef.current) {
         clearTimeout(playingTimeoutRef.current);
       }
@@ -214,10 +214,10 @@ export const useTTS = (): void => {
         // 再生状態へ割り込むのを無効化する
         speechRunIdRef.current += 1;
         stopAllEngines();
-        finishPlaying();
+        finishRun();
       }, PLAYBACK_TIMEOUT_MS);
     },
-    [finishPlaying, stopAllEngines]
+    [stopAllEngines]
   );
 
   const speechWithText = useCallback(
@@ -233,7 +233,6 @@ export const useTTS = (): void => {
       speechRunIdRef.current = runId;
       playingRef.current = true;
       lastNextKeyRef.current = nextKey;
-      armPlaybackWatchdog(runId);
 
       const isStaleRun = () =>
         speechRunIdRef.current !== runId ||
@@ -249,6 +248,7 @@ export const useTTS = (): void => {
 
       let started = false;
       const onSpeechStarted = () => {
+        if (isStaleRun()) return;
         started = true;
         if (firstSpeechRef.current) {
           firstSpeechRef.current = false;
@@ -256,13 +256,16 @@ export const useTTS = (): void => {
         }
       };
 
-      const onSettled = () => {
-        if (isStaleRun()) {
-          return;
-        }
+      const finishRun = () => {
         if (!started) lastNextKeyRef.current = undefined;
         finishPlaying();
       };
+
+      const onSettled = () => {
+        if (!isStaleRun()) finishRun();
+      };
+
+      armPlaybackWatchdog(runId, finishRun);
 
       void (async () => {
         // 実際に読み上げる直前にのみ他アプリ音声のダッキングを有効化する
