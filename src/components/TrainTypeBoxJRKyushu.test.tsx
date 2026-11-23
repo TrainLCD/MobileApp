@@ -1,7 +1,9 @@
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
+import { createStore, Provider } from 'jotai';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import type { TrainType } from '~/@types/graphql';
+import { headerStateAtom } from '~/store/atoms/navigation';
 import AnimatedTypography from './AnimatedTypography';
 import TrainTypeBoxJRKyushu from './TrainTypeBoxJRKyushu';
 
@@ -68,6 +70,35 @@ describe('TrainTypeBoxJRKyushu', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('英語種別名が続く間はフェードせず、切替中の再描画でも旧名を保持する', () => {
+    const store = createStore();
+    store.set(headerStateAtom, 'NEXT_EN');
+    const timing = jest.spyOn(Animated, 'timing').mockImplementation(() => ({
+      start: jest.fn(),
+      stop: jest.fn(),
+      reset: jest.fn(),
+    }));
+    try {
+      const component = (nameRoman: string) => (
+        <Provider store={store}>
+          <TrainTypeBoxJRKyushu trainType={{ ...mockTrainType, nameRoman }} />
+        </Provider>
+      );
+      const { rerender, getByText } = render(component('Local'));
+      act(() => {
+        store.set(headerStateAtom, 'ARRIVING_EN');
+      });
+      expect(timing).not.toHaveBeenCalled();
+      rerender(component('Rapid'));
+      rerender(component('Rapid'));
+      expect(timing).toHaveBeenCalledTimes(1);
+      expect(getByText('Local')).toBeTruthy();
+      expect(getByText('Rapid')).toBeTruthy();
+    } finally {
+      timing.mockRestore();
+    }
   });
 
   describe('Null safety fixes', () => {
