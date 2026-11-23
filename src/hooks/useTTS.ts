@@ -232,7 +232,9 @@ export const useTTS = (): void => {
       const runId = speechRunIdRef.current + 1;
       speechRunIdRef.current = runId;
       playingRef.current = true;
-      lastNextKeyRef.current = nextKey;
+      // 「まもなく」を挟んで同じ次駅へ戻っても、直前の次駅放送を繰り返さない。
+      const previousNextKey = lastNextKeyRef.current;
+      if (nextKey) lastNextKeyRef.current = nextKey;
 
       const isStaleRun = () =>
         speechRunIdRef.current !== runId ||
@@ -257,7 +259,7 @@ export const useTTS = (): void => {
       };
 
       const finishRun = () => {
-        if (!started) lastNextKeyRef.current = undefined;
+        if (!started && nextKey) lastNextKeyRef.current = previousNextKey;
         finishPlaying();
       };
 

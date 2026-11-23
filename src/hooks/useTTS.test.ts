@@ -536,10 +536,16 @@ describe('useTTS', () => {
       await update(undefined, 'まもなく、新前橋です', 'Arriving');
       act(finishAllUtterances);
       await flushAsync();
+      act(finishAllUtterances);
+      await flushAsync();
+      state.mockReturnValue('NEXT');
+      await update('B', '次は、新前橋です', 'Shin-Maebashi');
+      await update('C', '次は、井野です', 'Ino');
       expect(mockSpeak.mock.calls.map(([text]) => text)).toEqual([
         '次は、前橋です',
         '次は、新前橋です',
         'まもなく、新前橋です',
+        '次は、井野です',
       ]);
     } finally {
       previous.mockImplementation(() => ['', '']);
