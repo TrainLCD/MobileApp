@@ -30,6 +30,7 @@ jest.mock('expo-battery', () => ({
   useLowPowerMode: () => mockSystemLowPowerMode,
 }));
 jest.mock('~/lib/remoteConfig', () => ({
+  getBackgroundHeartbeatStartDelay: jest.fn(() => 10000),
   getMaxPermitAccuracy: jest.fn(() => 1500),
   subscribeRemoteConfig: jest.fn(() => () => {}),
 }));
