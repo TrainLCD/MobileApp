@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback, useMemo } from 'react';
-import { type StyleProp, type TextStyle, View } from 'react-native';
+import { Platform, type StyleProp, type TextStyle, View } from 'react-native';
 import type { Line, Station, StationNumber } from '~/@types/graphql';
 import {
   useCurrentLine,
@@ -28,7 +28,10 @@ import getIsPass from '~/utils/isPass';
 import isTablet from '~/utils/isTablet';
 import { ChevronJRWest } from './ChevronJRWest';
 import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
-import { commonLineBoardStyles } from './LineBoard/shared/styles/commonStyles';
+import {
+  BAR_BOTTOM_WEST,
+  commonLineBoardStyles,
+} from './LineBoard/shared/styles/commonStyles';
 import {
   LineBoardCurrentStationContext,
   useLineBoardCurrentStation,
@@ -92,6 +95,10 @@ const StationName: React.FC<StationNameProps> = ({
         width: 180,
         marginBottom: 80,
       };
+    }
+    if (Platform.OS === 'android') {
+      // 折り返す幅と駅番号からの間隔は駅名の親枠で決める。
+      return { width: '100%' };
     }
     return {
       width: 250,
@@ -344,6 +351,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   station,
   index,
 }: StationNameCellProps) => {
+  const androidTablet = isTablet && Platform.OS === 'android';
   const allStations = useAtomValue(stationsAtom);
   const isEn = useAtomValue(isEnAtom);
   const { width: windowWidth } = useLandscapeWindowDimensions();
@@ -387,12 +395,23 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
     return numberingObj ? 110 : 88;
   }, [numberingObj]);
 
+  const diagonal = isEn || includesLongStationName;
+  const numberingMarginBottom = passed && isTablet ? -4 : -6;
+  // セル下端から駅番号（番号なしなら路線バー）の上端までの距離。
+  const anchorBottom = numberingObj
+    ? styles.numberingContainerWest.height + numberingMarginBottom
+    : BAR_BOTTOM_WEST +
+      styles.barWest.height -
+      (styles.stationNameContainerWestJO.bottom ?? 0);
+
   return (
     <View
+      testID="station-name-cell-west"
       style={[
         styles.stationNameContainerWestJO,
         {
           width: windowWidth / 9,
+          ...(androidTablet && { height: '100%' as const }),
         },
       ]}
     >
@@ -400,7 +419,17 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         testID="station-name-wrapper-west"
         style={[
           { bottom: stationNameBottom },
-          isEn || includesLongStationName
+          // 駅名の行数をセルの寸法に反映させず、駅番号・乗換案内と同じ下端を基準にする。
+          androidTablet && { position: 'absolute', left: 0, right: 0 },
+          androidTablet &&
+            diagonal && {
+              left: styles.lineDotWest.width / 2,
+              right: undefined,
+              width: windowWidth / 9,
+              bottom: anchorBottom + 4,
+              transformOrigin: 'left bottom',
+            },
+          diagonal
             ? {
                 transform: [{ rotate: '-55deg' }],
               }
@@ -421,7 +450,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
             styles.numberingContainerWest,
             {
               backgroundColor: stationNumberBGColor,
-              marginBottom: passed && isTablet ? -4 : -6,
+              marginBottom: numberingMarginBottom,
             },
           ]}
         >

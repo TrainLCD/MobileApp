@@ -24,11 +24,14 @@ import {
   StationName,
 } from './LineBoard/shared/components';
 import {
+  getBoardPaddingBottom,
+  StationRow,
+} from './LineBoard/shared/components/StationRow';
+import {
   useBarStyles,
   useChevronPosition,
   useIncludesLongStationName,
 } from './LineBoard/shared/hooks/useBarStyles';
-import { useBoardLayout } from './LineBoard/shared/hooks/useBoardLayout';
 import {
   commonLineBoardStyles,
   STATION_NAME_CONTAINER_BOTTOM,
@@ -343,7 +346,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
   const selectedLine = useAtomValue(selectedLineAtom);
   const currentLine = useCurrentLine();
   const dim = useLandscapeWindowDimensions();
-  const { boardPaddingBottom, onBoardLayout } = useBoardLayout(dim.height);
+  const boardPaddingBottom = getBoardPaddingBottom(dim.height);
   // E131系の車内表示器にはETAが無いため、E131系風ではクエリごと実行しない
   const { route: estimatedRoute } = useEstimateArrivalTimes({
     skip: isE131,
@@ -405,7 +408,6 @@ const LineBoardSaikyo: React.FC<Props> = ({
   return (
     <View
       testID="line-board-saikyo"
-      onLayout={onBoardLayout}
       style={[
         styles.root,
         {
@@ -413,7 +415,7 @@ const LineBoardSaikyo: React.FC<Props> = ({
         },
       ]}
     >
-      {stationsWithEmpty.map(stationNameCellForMap)}
+      <StationRow>{stationsWithEmpty.map(stationNameCellForMap)}</StationRow>
     </View>
   );
 };

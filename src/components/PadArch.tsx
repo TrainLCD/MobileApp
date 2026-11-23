@@ -1,6 +1,6 @@
 import { darken, readableColor } from 'polished';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Platform, StyleSheet, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import type { Line, LineNested, Station } from '~/@types/graphql';
 import { useLandscapeWindowDimensions } from '~/hooks';
@@ -487,7 +487,12 @@ const PadArch: React.FC<Props> = ({
     width: windowWidth,
     height: windowHeight,
     scale: layoutScale,
-  } = getPadArchLayout(rawWindowWidth, rawWindowHeight);
+  } = getPadArchLayout(
+    rawWindowWidth,
+    Platform.OS === 'android' && rawWindowHeight > HEADER_E235_TABLET_HEIGHT
+      ? rawWindowHeight - (rawWindowHeight - HEADER_E235_TABLET_HEIGHT) * 0.06
+      : rawWindowHeight
+  );
 
   // Animated.Value（RN Animated API — Reanimated 4.2 の mapper バグ回避）
   // Animated.loop は中身が単一の timing のときだけネイティブ側でループする。

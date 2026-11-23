@@ -1,6 +1,8 @@
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { useAtomValue } from 'jotai';
 import React from 'react';
+import { View } from 'react-native';
+import { Text as SvgText } from 'react-native-svg';
 import type { TrainType } from '~/@types/graphql';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { stationsAtom } from '../store/atoms/station';
@@ -170,6 +172,25 @@ describe('TrainTypeBoxJO', () => {
   });
 
   describe('Component rendering', () => {
+    it('長い日本語名の各文字が白枠の中で重ならない', () => {
+      const name = 'スマーク伊勢崎線';
+      const result = render(
+        <TrainTypeBoxJO trainType={{ ...mockTrainType, name }} />
+      );
+      const width = 112;
+      fireEvent(result.UNSAFE_getByType(View), 'layout', {
+        nativeEvent: { layout: { width } },
+      });
+      const glyphs = result.UNSAFE_getAllByType(SvgText);
+      expect(glyphs.map((g) => g.props.children).join('')).toBe(name);
+      let right = 0;
+      for (const { props } of glyphs) {
+        expect(props.x - props.fontSize / 2).toBeGreaterThanOrEqual(right);
+        right = props.x + props.fontSize / 2;
+      }
+      expect(right).toBeLessThan(width);
+    });
+
     it('should render without crashing with valid train type', () => {
       expect(() => {
         render(<TrainTypeBoxJO trainType={mockTrainType} />);

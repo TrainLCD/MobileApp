@@ -1,6 +1,6 @@
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import {
   useDisplayCurrentStation,
@@ -14,6 +14,7 @@ import { FONTS, LOW_POWER_THEME_COLORS } from '../constants';
 import { headerStateAtom } from '../store/atoms/navigation';
 import { arrivedAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
+import isTablet from '../utils/isTablet';
 import Typography from './Typography';
 
 const { background, primary, secondary, muted, accent } =
@@ -292,7 +293,7 @@ const LineBoardLowPower: React.FC<Props> = ({ stations }: Props) => {
       style={{
         flex: 1,
         backgroundColor: background,
-        paddingTop: 6 * scale,
+        paddingTop: isTablet && Platform.OS === 'android' ? 0 : 6 * scale,
         paddingBottom: 4 * scale + insets.bottom,
         paddingLeft: 16 * scale + insets.left,
         paddingRight: 16 * scale + insets.right,

@@ -2,6 +2,7 @@ import { useAtomValue } from 'jotai';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 import {
   type LayoutChangeEvent,
+  Platform,
   type StyleProp,
   StyleSheet,
   View,
@@ -99,6 +100,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingTop: isTablet ? 24 : 12,
+    paddingBottom: isTablet && Platform.OS === 'android' ? 32 : 0,
     paddingHorizontal: isTablet ? 32 : 16,
   },
   row: {

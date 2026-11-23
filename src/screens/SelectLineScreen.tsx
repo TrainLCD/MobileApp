@@ -434,6 +434,7 @@ const SelectLineScreen = () => {
                   <BusRouteList
                     key={station?.id}
                     groups={busRouteGroups}
+                    numColumns={numColumns}
                     stationsByLineId={stationsByLineId}
                     onLineSelected={handleLineSelected}
                     disabled={fetchStationsByLineIdLoading}
