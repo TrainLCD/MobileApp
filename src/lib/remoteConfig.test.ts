@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import {
+  getBackgroundHeartbeatStartDelay,
   getEtaFallbackArrivalConfirmMarginSec,
   getEtaFallbackMaxDurationMin,
   getMaxPermitAccuracy,
@@ -54,6 +55,24 @@ afterEach(() => {
 afterAll(() => {
   global.fetch = origFetch;
 });
+
+it.each([5000, 15000, 30000])(
+  '補完開始待ち %i ms をKVから読み込む',
+  async (value) => {
+    mockRemoteConfig({ ios_background_heartbeat_start_delay_ms: value });
+    await setupRemoteConfig();
+    expect(getBackgroundHeartbeatStartDelay()).toBe(value);
+  }
+);
+
+it.each([undefined, null, '15000', 4999, 30001, 9999.5])(
+  '無効な補完開始待ち %s は10秒に戻す',
+  async (value) => {
+    mockRemoteConfig({ ios_background_heartbeat_start_delay_ms: value });
+    await setupRemoteConfig();
+    expect(getBackgroundHeartbeatStartDelay()).toBe(10000);
+  }
+);
 
 describe('getMaxPermitAccuracy', () => {
   it('falls back to MAX_PERMIT_ACCURACY before setup', () => {

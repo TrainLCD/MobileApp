@@ -103,9 +103,9 @@ describe('測位オプション', () => {
     );
   });
 
-  it('背景の開始待ちだけを5秒にし取得上限と再試行間隔を維持する', () => {
+  it('背景の開始待ちの既定値を10秒にし取得上限と再試行間隔を維持する', () => {
     const constants = loadConstants('ios');
-    expect(constants.LOCATION_BACKGROUND_HEARTBEAT_START_DELAY).toBe(5000);
+    expect(constants.LOCATION_BACKGROUND_HEARTBEAT_START_DELAY).toBe(10000);
     expect(constants.LOCATION_HEARTBEAT_STALE_THRESHOLD).toBe(10000);
     expect(constants.LOCATION_HEARTBEAT_MAX_PENDING).toBe(30000);
   });

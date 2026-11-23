@@ -452,6 +452,32 @@ describe('TrainTypeBox language transition', () => {
     jest.restoreAllMocks();
   });
 
+  it('同じ英語種別名を維持し、表示文字列が変わったときだけフェードする', () => {
+    let headerState = 'CURRENT_EN';
+    (useAtomValue as jest.Mock).mockImplementation((atom: unknown) => {
+      if (atom === headerStateAtom) return headerState;
+      if (atom === themeAtom) return APP_THEME.JR_315;
+      if (atom === tuningState) return { headerTransitionDelay: 1000 };
+    });
+    const timing = jest
+      .spyOn(Animated, 'timing')
+      .mockImplementation(
+        () => ({ start: jest.fn(), stop: jest.fn() }) as never
+      );
+    const type = { ...trainType, nameChinese: 'Rapid' };
+    const { rerender } = render(
+      <TrainTypeBox trainType={type} fitTextToHeight />
+    );
+    for (const state of ['NEXT_EN', 'NEXT_ZH']) {
+      headerState = state;
+      rerender(<TrainTypeBox trainType={{ ...type }} fitTextToHeight />);
+      expect(timing).not.toHaveBeenCalled();
+    }
+    headerState = 'NEXT';
+    rerender(<TrainTypeBox trainType={{ ...type }} fitTextToHeight />);
+    expect(timing).toHaveBeenCalledTimes(1);
+  });
+
   it.each(['慢车', '区间\n快车'])(
     '315系の中国語「%s」は自然な行高を使い、フェード中も維持する',
     (nameChinese) => {
