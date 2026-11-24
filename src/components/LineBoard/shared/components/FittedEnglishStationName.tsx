@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type LayoutChangeEvent, View } from 'react-native';
+import { type TextProps, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import getStationNameR from '~/utils/getStationNameR';
 import Typography from '../../../Typography';
@@ -10,6 +10,70 @@ import {
 } from '../styles/commonStyles';
 
 const angle = (HORIZONTAL_STATION_NAME_ROTATION_DEG * Math.PI) / 180;
+const lineHeight = Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.25);
+const lineStyle = { lineHeight, includeFontPadding: false };
+
+const WrappedLines = ({
+  name,
+  width,
+  passed,
+}: {
+  name: string;
+  width: number;
+  passed: boolean;
+}) => {
+  const [lines, setLines] = useState<string[]>([]);
+  const measureLines: TextProps['onTextLayout'] = ({ nativeEvent }) => {
+    setLines(nativeEvent.lines.map((line) => line.text.trimEnd()));
+  };
+
+  // 平行な行同士を1行高だけ離し、各行の左下を同じ高さに揃える。
+  const step = lineHeight / Math.sin(angle);
+  return (
+    <>
+      <Typography
+        accessible={false}
+        importantForAccessibility="no"
+        onTextLayout={measureLines}
+        textBreakStrategy="simple"
+        style={[
+          styles.stationNameHorizontal,
+          lineStyle,
+          {
+            position: 'absolute',
+            opacity: 0,
+            width,
+            transform: [],
+          },
+        ]}
+      >
+        {name}
+      </Typography>
+      {lines.map((line, index) => (
+        <Typography
+          key={`${index}-${line}`}
+          style={[
+            styles.stationNameHorizontal,
+            passed && styles.grayColor,
+            lineStyle,
+            {
+              position: 'absolute',
+              bottom: 0,
+              left:
+                16 +
+                (lineHeight * Math.sin(angle)) / 2 +
+                (index - (lines.length - 1) / 2) * step,
+              transformOrigin: 'left bottom',
+              width,
+            },
+          ]}
+        >
+          {line}
+        </Typography>
+      ))}
+    </>
+  );
+};
 
 export const FittedEnglishStationName = ({
   station,
@@ -20,47 +84,26 @@ export const FittedEnglishStationName = ({
   passed: boolean;
   bottom: number;
 }) => {
-  const [area, setArea] = useState({ width: 0, height: 0 });
-  const measure = ({ nativeEvent: { layout } }: LayoutChangeEvent) =>
-    setArea({ width: layout.width, height: layout.height });
+  const [height, setHeight] = useState(0);
   const name = getStationNameR(station);
-  const lines = name.split('\n').length;
-  // 隣駅との垂直距離（駅の間隔 × sinθ）を超えない行高にする。
-  const height = Math.min(
-    Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.4) * lines,
-    area.width * Math.sin(angle),
-    area.height
-  );
-  // 左下を軸に回転した矩形の縦幅は width × sinθ + height × cosθ。
+  // 1行を回転した後の高さは width × sinθ + lineHeight × cosθ。
   const width = Math.floor(
-    (area.height - height * Math.cos(angle)) / Math.sin(angle)
+    (height - lineHeight * Math.cos(angle)) / Math.sin(angle)
   );
-
   return (
     <View
-      onLayout={measure}
+      accessible
+      accessibilityLabel={station.nameRoman ?? undefined}
+      onLayout={({ nativeEvent }) => setHeight(nativeEvent.layout.height)}
       style={{ flex: 1, width: '100%', marginBottom: bottom }}
     >
-      {width > 0 && height > 0 && (
-        <Typography
-          adjustsFontSizeToFit
-          numberOfLines={lines}
-          style={[
-            styles.stationNameHorizontal,
-            passed && styles.grayColor,
-            {
-              position: 'absolute',
-              bottom: 0,
-              left: (height * Math.sin(angle)) / 2,
-              transformOrigin: 'left bottom',
-              width,
-              height,
-              includeFontPadding: false,
-            },
-          ]}
-        >
-          {name}
-        </Typography>
+      {width > 0 && (
+        <WrappedLines
+          key={`${name}-${width}`}
+          name={name}
+          width={width}
+          passed={passed}
+        />
       )}
     </View>
   );
