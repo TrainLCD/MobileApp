@@ -1,13 +1,11 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { createElement, type ReactNode } from 'react';
-import {
-  REMOTE_TTS_SPEED_RATES,
-  REMOTE_TTS_VOICE_EN,
-  REMOTE_TTS_VOICE_JA,
-} from '~/constants';
+import { REMOTE_TTS_SPEED_RATES, REMOTE_TTS_VOICES } from '~/constants';
+import { APP_THEME } from '~/models/Theme';
 import { TTS_SPEED_PREFERENCE } from '~/models/TTSSpeed';
 import { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
+import { themePreferenceAtom } from '~/store/atoms/theme';
 import { wrapPhoneme } from '~/utils/phoneme';
 import type { SpeechEngineRequest } from './speechEngine';
 import { useRemoteSpeechEngine } from './useRemoteSpeechEngine';
@@ -146,12 +144,33 @@ describe('useRemoteSpeechEngine', () => {
         apiUrl: 'https://worker.example.com/tts',
         idToken: 'test-token',
         // Cloud TTS のボイス名はロケールを含むため日英で別々に指定する
-        jaVoiceName: REMOTE_TTS_VOICE_JA,
-        enVoiceName: REMOTE_TTS_VOICE_EN,
+        jaVoiceName: 'ja-JP-Standard-A',
+        enVoiceName: 'en-US-Standard-G',
         // 設定していなければ「普通」（等速）で要求する
         speed: REMOTE_TTS_SPEED_RATES.NORMAL,
       })
     );
+  });
+
+  it('全テーマで次の放送に選択中の日英の話者を使う', async () => {
+    const store = createStore();
+    const { result } = renderHook(() => useRemoteSpeechEngine(), {
+      wrapper: ({ children }: { children: ReactNode }) =>
+        createElement(Provider, { store }, children),
+    });
+    const themes = Object.values(APP_THEME);
+    const pairs = new Set<string>();
+    for (const theme of themes) {
+      store.set(themePreferenceAtom, theme);
+      result.current.speak(defaultRequest, { onSettled: jest.fn() });
+      await flushAsync();
+      const voices = REMOTE_TTS_VOICES[theme];
+      expect(mockFetchSpeechAudio).toHaveBeenLastCalledWith(
+        expect.objectContaining(voices)
+      );
+      pairs.add(`${voices.jaVoiceName}/${voices.enVoiceName}`);
+    }
+    expect(pairs.size).toBe(themes.length);
   });
 
   it('アナウンス速度の設定を読み上げ速度として要求する', async () => {

@@ -5,7 +5,7 @@
 
 | 読み上げ手段 | 合成 | 再生 |
 | --- | --- | --- |
-| リモート TTS | Worker `/tts` 経由の Google Cloud TTS（女性声 `ja-JP-Standard-B` / `en-US-Standard-G`） | `expo-audio` |
+| リモート TTS | Worker `/tts` 経由の Google Cloud TTS（表示テーマごとの日英の Standard 話者） | `expo-audio` |
 | 端末内蔵 TTS | 端末内蔵 TTS (`expo-speech`) | 端末内蔵 TTS |
 
 キー未配信・取得失敗時のフォールバックは **iOS = リモート TTS / Android = 端末内蔵 TTS**
@@ -155,9 +155,9 @@ SSML を解釈せずタグをそのまま読み上げる。そのため双方の
 - 「JR」→ 日本語 `ジェーアール` / 英語 `J-R`（`Jr.` = ジュニアとの誤読を防ぐ）
 - 英語文に混入した日本語は除去する
 
-Cloud TTS の Standard 系ボイスは読み方のプロンプト指示を受け付けないため、アプリが
-指定するのはボイス名（`src/constants/tts.ts`）だけで、読み上げ速度・声の高さは
-Worker 側の設定（`TTS_SPEED` / `TTS_PITCH`）で決まる。
+Google TTS では、発話開始時の表示テーマに応じて日本語と英語の話者を選びます。
+自動テーマでは、その時点で表示しているテーマの話者を使います。
+全テーマの割り当ては `src/constants/tts.ts` の `REMOTE_TTS_VOICES` にあります。
 
 ## Worker `/tts` の契約
 
