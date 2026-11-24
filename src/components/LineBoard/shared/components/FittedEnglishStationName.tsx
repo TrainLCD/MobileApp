@@ -19,6 +19,7 @@ const DiagonalLabel = ({
   name,
   available,
   left,
+  leftSpace,
   maxWidth,
   band,
   passed,
@@ -26,6 +27,7 @@ const DiagonalLabel = ({
   name: string;
   available: number;
   left: number;
+  leftSpace: number;
   maxWidth: number;
   band: number;
   passed: boolean;
@@ -57,7 +59,18 @@ const DiagonalLabel = ({
           (bottom - line.y) * Math.cos(angle)
       )
     );
-    const fit = Math.min(1, available / height, band / bottom);
+    // The top-left corner of each line travels left around the bottom-left anchor.
+    const overhang = Math.max(
+      ...lines.map(
+        (line) => (bottom - line.y) * Math.sin(angle) - line.x * Math.cos(angle)
+      )
+    );
+    const fit = Math.min(
+      1,
+      available / height,
+      band / bottom,
+      overhang > 0 ? leftSpace / overhang : 1
+    );
     if (fit === 1) {
       state.done = true;
       return;
@@ -119,6 +132,7 @@ export const FittedEnglishStationName = ({
   passed,
   bottom,
   left = 16,
+  leftSpace = Number.POSITIVE_INFINITY,
   rightSpace,
   pitch,
   baselineOffset = 0,
@@ -127,6 +141,7 @@ export const FittedEnglishStationName = ({
   passed: boolean;
   bottom: number;
   left?: number;
+  leftSpace?: number;
   rightSpace?: number;
   pitch: number;
   baselineOffset?: number;
@@ -152,11 +167,12 @@ export const FittedEnglishStationName = ({
     >
       {height > 0 && (
         <DiagonalLabel
-          key={`${name}-${height}-${maxWidth}-${band}`}
+          key={`${name}-${height}-${maxWidth}-${band}-${leftSpace}`}
           name={name}
           available={height}
           band={band}
           left={left}
+          leftSpace={leftSpace}
           maxWidth={maxWidth}
           passed={passed}
         />

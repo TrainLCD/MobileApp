@@ -130,3 +130,32 @@ it('keeps a multi-line label inside the diagonal band above a numbered station',
     87 * style().transform[1].scale + baselineOffset * Math.cos(angle)
   ).toBeLessThanOrEqual(pitch * Math.sin(angle));
 });
+
+it('keeps all four rotated lines inside the left edge of the board', () => {
+  const result = render(
+    <FittedEnglishStationName
+      station={{ nameRoman: 'Nerima-kasugacho' } as Station}
+      passed={false}
+      bottom={0}
+      pitch={128}
+      leftSpace={16}
+      rightSpace={10}
+    />
+  );
+  fireEvent(result.UNSAFE_getByType(View), 'layout', {
+    nativeEvent: { layout: { height: 300 } },
+  });
+  const label = () => result.UNSAFE_getByType(Text);
+  const style = () => StyleSheet.flatten(label().props.style);
+  const lines = [0, 20, 40, 60].map((y) => ({ x: 0, y, width: 1, height: 20 }));
+  const visited = new Set<number>();
+  while (!visited.has(style().width)) {
+    visited.add(style().width);
+    fireEvent(label(), 'textLayout', { nativeEvent: { lines } });
+  }
+  const scale = style().transform[1].scale;
+  for (const line of lines) {
+    const left = 16 - (80 - line.y) * Math.sin((55 * Math.PI) / 180) * scale;
+    expect(left).toBeGreaterThanOrEqual(0);
+  }
+});

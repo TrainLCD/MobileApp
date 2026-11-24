@@ -295,6 +295,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
           passed={isPass}
           bottom={0}
           left={phoneDotCenter - barWidth / 2.5 - index * cellWidth}
+          leftSpace={phoneDotCenter}
           rightSpace={dim.width - 32 - phoneDotCenter}
         />
       ) : (
