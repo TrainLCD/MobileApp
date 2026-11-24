@@ -28,6 +28,7 @@ import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { ChevronSanyo } from './ChevronSanyo';
 import {
+  ENGLISH_STATION_NAME_LINE_HEIGHT,
   getHorizontalStationNameWidth,
   HORIZONTAL_STATION_NAME_FONT_SIZE,
   HORIZONTAL_STATION_NAME_MAX_CHARS,
@@ -69,14 +70,10 @@ const SMALL_CHEVRON_WIDTH = BAR_HEIGHT * 0.24;
 const TRANSFER_RULE_HEIGHT = Math.max(2, Math.round(BAR_HEIGHT * 0.08));
 const TRANSFER_AREA_HEIGHT = isTablet ? 120 : 64;
 const NAME_AREA_PADDING_BOTTOM = isTablet ? 12 : 6;
-// 斜め書きの駅名は中心を軸に回すため、回転で下に出る分だけ持ち上げてバーに重ならないようにする
 // 英語の駅名はほかのテーマと同じ大きさ・同じ角度(55度)で斜めに組む
 const EN_NAME_WIDTH = getHorizontalStationNameWidth(
   HORIZONTAL_STATION_NAME_MAX_CHARS
 );
-const EN_NAME_LINE_HEIGHT = HORIZONTAL_STATION_NAME_FONT_SIZE * 1.2;
-const EN_NAME_COS = Math.cos((55 * Math.PI) / 180);
-const EN_NAME_SIN = Math.sin((55 * Math.PI) / 180);
 const MAX_NAME_FONT_SIZE = isTablet ? 56 : 32;
 // 配色は実物の写真から測った値(盤面の白で色かぶりを補正したもの)
 const NAME_COLOR = '#222';
@@ -134,7 +131,9 @@ const styles = StyleSheet.create({
   nameEn: {
     position: 'absolute',
     fontSize: HORIZONTAL_STATION_NAME_FONT_SIZE,
-    lineHeight: EN_NAME_LINE_HEIGHT,
+    lineHeight: ENGLISH_STATION_NAME_LINE_HEIGHT,
+    bottom: 0,
+    transformOrigin: 'left bottom',
     fontWeight: 'bold',
     textAlign: 'left',
     width: EN_NAME_WIDTH,
@@ -428,32 +427,13 @@ const StationNameVertical: React.FC<{
   );
 };
 
-// 斜め書きの駅名。書き出し(回転後の左下の角)が駅の真上、駅名欄の下端に来るよう置く。
-// 箱は中心を軸に回るため、回転後の左下の角の位置を求め、その分だけ回転前の箱をずらしておく
 const StationNameDiagonal: React.FC<{
   name: string;
   color: string;
   columnWidth: number;
 }> = ({ name, color, columnWidth }) => {
-  const lines = name.split('\n').length;
-  const w = EN_NAME_WIDTH;
-  const h = EN_NAME_LINE_HEIGHT * lines;
-  // 回転後の左下の角の、箱の中心からの位置(右・下が正)
-  const cornerX = (-w / 2) * EN_NAME_COS + (h / 2) * EN_NAME_SIN;
-  const cornerY = (w / 2) * EN_NAME_SIN + (h / 2) * EN_NAME_COS;
-  // 角を (枠の中央, 駅名欄の下端) に合わせたときの箱の中心
-  const centerX = columnWidth / 2 - cornerX;
   return (
-    <Typography
-      style={[
-        styles.nameEn,
-        {
-          color,
-          left: centerX - w / 2,
-          bottom: cornerY - h / 2,
-        },
-      ]}
-    >
+    <Typography style={[styles.nameEn, { color, left: columnWidth / 2 }]}>
       {name}
     </Typography>
   );

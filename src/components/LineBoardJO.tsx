@@ -174,6 +174,7 @@ const StationName: React.FC<StationNameProps> = ({
         }
         style={[
           styles.stationNameEnJO,
+          en && styles.englishStationNameSpacing,
           hidden && { opacity: 0 },
           passed ? styles.grayColor : null,
           diagonalLayout && {

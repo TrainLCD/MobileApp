@@ -163,6 +163,7 @@ const StationNameToeiBase: React.FC<StationNameToeiProps> = ({
       <Typography
         style={[
           styles.stationNameHorizontal,
+          styles.englishStationNameSpacing,
           passed ? styles.grayColor : null,
           horizontalAdditionalStyle,
         ]}

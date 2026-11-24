@@ -1,48 +1,49 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Station } from '~/@types/graphql';
-import {
-  HORIZONTAL_STATION_NAME_FONT_SIZE,
-  HORIZONTAL_STATION_NAME_ROTATION_DEG,
-} from '../styles/commonStyles';
+import { commonLineBoardStyles } from '../styles/commonStyles';
 import { FittedEnglishStationName } from './FittedEnglishStationName';
 
 jest.mock('../../../Typography', () => require('react-native').Text);
 
-it.each([
-  ['Kyūdai-Gakkentoshi', ['Kyūdai-\n', 'Gakken', 'toshi']],
-  ['Itoshimakōkōmae', ['Itoshima', 'kōkō\n', 'mae']],
-  ['Imajuku', ['Imajuku']],
-] as const)('駅名 %s を同じ文字サイズで最終行まで表示する', (roman, lines) => {
-  const { UNSAFE_getByType, UNSAFE_getAllByType } = render(
-    <FittedEnglishStationName
-      station={{ nameRoman: roman } as Station}
-      passed={false}
-      bottom={100}
-    />
-  );
-  for (const available of [112, 80]) {
+it.each(['Kyūdai-Gakkentoshi', 'Itoshimakōkōmae', 'Imajuku'])(
+  '駅名 %s を東京メトロと同じ行送りで一括描画する',
+  (roman) => {
+    const { UNSAFE_getByType } = render(
+      <FittedEnglishStationName
+        station={{ nameRoman: roman } as Station}
+        passed={false}
+        bottom={100}
+      />
+    );
     fireEvent(UNSAFE_getByType(View), 'layout', {
-      nativeEvent: { layout: { width: 98, height: available } },
+      nativeEvent: { layout: { height: 80 } },
     });
-    const [probe] = UNSAFE_getAllByType(Text);
-    expect(probe.props.children.replaceAll('\n', '')).toBe(roman);
-    fireEvent(probe, 'textLayout', {
-      nativeEvent: { lines: lines.map((text) => ({ text })) },
+    const label = () => UNSAFE_getByType(Text);
+    const style = () => StyleSheet.flatten(label().props.style);
+    const before = style().width;
+    fireEvent(label(), 'textLayout', {
+      nativeEvent: {
+        lines: [
+          { x: 0, y: 0, width: before, height: 20 },
+          { x: 0, y: 20, width: 20, height: 20 },
+        ],
+      },
     });
-    const [measurement, ...labels] = UNSAFE_getAllByType(Text);
-    expect(labels.map((label) => label.props.children).join('')).toBe(roman);
-    for (const label of [measurement, ...labels]) {
-      expect(label.props.adjustsFontSizeToFit).toBeFalsy();
-      expect(label.props.numberOfLines).toBeUndefined();
-      const { width, lineHeight, fontSize } = StyleSheet.flatten(
-        label.props.style
-      );
-      expect(fontSize).toBe(HORIZONTAL_STATION_NAME_FONT_SIZE);
-      const angle = (HORIZONTAL_STATION_NAME_ROTATION_DEG * Math.PI) / 180;
-      expect(
-        width * Math.sin(angle) + lineHeight * Math.cos(angle)
-      ).toBeLessThanOrEqual(available);
-    }
+    expect(style().width).toBeLessThan(before);
+    expect(
+      style().width * Math.sin((55 * Math.PI) / 180) +
+        40 * Math.cos((55 * Math.PI) / 180)
+    ).toBeLessThanOrEqual(80);
+    expect(label().props.children.replaceAll('\n', '')).toBe(roman);
+    expect(label().props.adjustsFontSizeToFit).toBeFalsy();
+    expect(label().props.numberOfLines).toBeUndefined();
+    expect(style().lineHeight).toBe(
+      commonLineBoardStyles.englishStationNameSpacing.lineHeight
+    );
+    expect(style().includeFontPadding).toBeUndefined();
+    expect(style().fontSize).toBe(
+      commonLineBoardStyles.stationNameHorizontal.fontSize
+    );
   }
-});
+);

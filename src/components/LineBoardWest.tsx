@@ -111,6 +111,7 @@ const StationName: React.FC<StationNameProps> = ({
       <Typography
         style={[
           styles.stationNameEn,
+          styles.englishStationNameSpacing,
           stationNameEnExtraStyle,
           passed ? styles.grayColor : null,
         ]}

@@ -4,74 +4,87 @@ import type { Station } from '~/@types/graphql';
 import getStationNameR from '~/utils/getStationNameR';
 import Typography from '../../../Typography';
 import {
-  HORIZONTAL_STATION_NAME_FONT_SIZE,
+  getHorizontalStationNameWidth,
+  HORIZONTAL_STATION_NAME_MAX_CHARS,
   HORIZONTAL_STATION_NAME_ROTATION_DEG,
   commonLineBoardStyles as styles,
 } from '../styles/commonStyles';
 
 const angle = (HORIZONTAL_STATION_NAME_ROTATION_DEG * Math.PI) / 180;
-const lineHeight = Math.ceil(HORIZONTAL_STATION_NAME_FONT_SIZE * 1.25);
-const lineStyle = { lineHeight, includeFontPadding: false };
+const metroWidth = getHorizontalStationNameWidth(
+  HORIZONTAL_STATION_NAME_MAX_CHARS
+);
 
-const WrappedLines = ({
+const DiagonalLabel = ({
   name,
-  width,
+  available,
   passed,
 }: {
   name: string;
-  width: number;
+  available: number;
   passed: boolean;
 }) => {
-  const [lines, setLines] = useState<string[]>([]);
-  const measureLines: TextProps['onTextLayout'] = ({ nativeEvent }) => {
-    setLines(nativeEvent.lines.map((line) => line.text.trimEnd()));
+  const initialWidth = Math.min(
+    metroWidth,
+    Math.max(1, Math.floor(available / Math.sin(angle)))
+  );
+  const [width, setWidth] = useState(initialWidth);
+  const [best, setBest] = useState({
+    width: initialWidth,
+    height: Number.POSITIVE_INFINITY,
+  });
+  const [finished, setFinished] = useState(false);
+  const onTextLayout: TextProps['onTextLayout'] = ({
+    nativeEvent: { lines },
+  }) => {
+    if (finished || !lines.length) return;
+    const bottom = lines[lines.length - 1].y + lines[lines.length - 1].height;
+    // 回転後に最も高くなるのは、各行の右上のうち最も上にある点。
+    const height = Math.max(
+      ...lines.map(
+        (line) =>
+          (line.x + line.width) * Math.sin(angle) +
+          (bottom - line.y) * Math.cos(angle)
+      )
+    );
+    if (height <= available) return;
+    const candidate = height < best.height ? { width, height } : best;
+    // 枠から出た行だけが折り返すように幅を詰め、共通の行送りを保って再計測する。
+    const next = Math.floor(
+      Math.min(
+        ...lines.map((line) => {
+          const limit =
+            (available - (bottom - line.y) * Math.cos(angle)) / Math.sin(angle);
+          return line.width > limit ? limit : width;
+        })
+      )
+    );
+    if (next <= 0 || next >= width) {
+      setFinished(true);
+      setWidth(candidate.width);
+    } else {
+      setBest(candidate);
+      setWidth(next);
+    }
   };
-
-  // 平行な行同士を1行高だけ離し、各行の左下を同じ高さに揃える。
-  const step = lineHeight / Math.sin(angle);
   return (
-    <>
-      <Typography
-        accessible={false}
-        importantForAccessibility="no"
-        onTextLayout={measureLines}
-        textBreakStrategy="simple"
-        style={[
-          styles.stationNameHorizontal,
-          lineStyle,
-          {
-            position: 'absolute',
-            opacity: 0,
-            width,
-            transform: [],
-          },
-        ]}
-      >
-        {name}
-      </Typography>
-      {lines.map((line, index) => (
-        <Typography
-          key={`${index}-${line}`}
-          style={[
-            styles.stationNameHorizontal,
-            passed && styles.grayColor,
-            lineStyle,
-            {
-              position: 'absolute',
-              bottom: 0,
-              left:
-                16 +
-                (lineHeight * Math.sin(angle)) / 2 +
-                (index - (lines.length - 1) / 2) * step,
-              transformOrigin: 'left bottom',
-              width,
-            },
-          ]}
-        >
-          {line}
-        </Typography>
-      ))}
-    </>
+    <Typography
+      onTextLayout={onTextLayout}
+      style={[
+        styles.stationNameHorizontal,
+        styles.englishStationNameSpacing,
+        passed && styles.grayColor,
+        {
+          position: 'absolute',
+          bottom: 0,
+          left: 16,
+          transformOrigin: 'left bottom',
+          width,
+        },
+      ]}
+    >
+      {name}
+    </Typography>
   );
 };
 
@@ -86,22 +99,16 @@ export const FittedEnglishStationName = ({
 }) => {
   const [height, setHeight] = useState(0);
   const name = getStationNameR(station);
-  // 1行を回転した後の高さは width × sinθ + lineHeight × cosθ。
-  const width = Math.floor(
-    (height - lineHeight * Math.cos(angle)) / Math.sin(angle)
-  );
   return (
     <View
-      accessible
-      accessibilityLabel={station.nameRoman ?? undefined}
       onLayout={({ nativeEvent }) => setHeight(nativeEvent.layout.height)}
       style={{ flex: 1, width: '100%', marginBottom: bottom }}
     >
-      {width > 0 && (
-        <WrappedLines
-          key={`${name}-${width}`}
+      {height > 0 && (
+        <DiagonalLabel
+          key={`${name}-${height}`}
           name={name}
-          width={width}
+          available={height}
           passed={passed}
         />
       )}
