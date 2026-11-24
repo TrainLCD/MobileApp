@@ -1,14 +1,14 @@
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   REMOTE_TTS_MAX_INPUT_BYTES,
   REMOTE_TTS_SPEED_RATES,
-  REMOTE_TTS_VOICE_EN,
-  REMOTE_TTS_VOICE_JA,
+  REMOTE_TTS_VOICES,
 } from '../../constants';
 import { getSessionToken } from '../../lib/session';
 import { workerUrl } from '../../lib/workerApi';
 import { ttsSpeedPreferenceAtom } from '../../store/atoms/speech';
+import { themeAtom } from '../../store/atoms/theme';
 import {
   toSpeakableText,
   truncateToByteLimit,
@@ -35,6 +35,7 @@ import type {
 export const useRemoteSpeechEngine = (): SpeechEngine => {
   // 発話ごとに採番する世代 ID。停止や新規発話で古い fetch 継続を破棄し、
   // 解決の遅れた音声が後から割り込んで再生されるのを防ぐ。
+  const store = useStore();
   const runIdRef = useRef(0);
   const jaHandleRef = useRef<PlayAudioHandle | null>(null);
   const enHandleRef = useRef<PlayAudioHandle | null>(null);
@@ -142,6 +143,8 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
 
   const speak = useCallback(
     (request: SpeechEngineRequest, callbacks: SpeechEngineCallbacks) => {
+      const theme = store.get(themeAtom);
+      const voices = REMOTE_TTS_VOICES[theme];
       const runId = runIdRef.current + 1;
       runIdRef.current = runId;
       const isStaleRun = () => runIdRef.current !== runId;
@@ -192,8 +195,8 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
             textEn,
             apiUrl: workerUrl('/tts'),
             idToken,
-            jaVoiceName: REMOTE_TTS_VOICE_JA,
-            enVoiceName: REMOTE_TTS_VOICE_EN,
+            theme,
+            ...voices,
             speed: REMOTE_TTS_SPEED_RATES[speedRef.current],
           });
 
@@ -218,7 +221,7 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
         }
       })();
     },
-    [playFetched]
+    [playFetched, store]
   );
 
   useEffect(() => stop, [stop]);

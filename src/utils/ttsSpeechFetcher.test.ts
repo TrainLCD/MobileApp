@@ -321,6 +321,18 @@ describe('fetchSpeechAudio', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 
+  it('単言語でもテーマを送り、同じテーマの音声だけを再利用する', async () => {
+    mockFetch.mockResolvedValue(
+      okResponse({ id: 'tts-131', jaAudioContent: 'QQ==' })
+    );
+    for (const theme of ['JR_315', 'LED', 'JR_315'] as const) {
+      await fetchSpeechAudio({ ...defaultOptions, textEn: '', theme });
+    }
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(parseRequestBody(0).data.theme).toBe('JR_315');
+    expect(parseRequestBody(1).data.theme).toBe('LED');
+  });
+
   it('音声が異なればキャッシュを共有しない', async () => {
     mockFetch.mockResolvedValue(
       okResponse({

@@ -1,6 +1,7 @@
 import { fetch } from 'expo/fetch';
 import { File, Paths } from 'expo-file-system';
 import { REMOTE_TTS_SPEED_RATES } from '../constants/tts';
+import type { AppTheme } from '../models/Theme';
 import { base64ToUint8Array } from './base64ToUint8Array';
 
 // Worker(/tts) の ALLOWED_CLIENT_SPEEDS と一致するプリセット3値。許可リスト外の
@@ -31,6 +32,7 @@ export interface FetchSpeechOptions {
   textEn?: string;
   apiUrl: string;
   idToken: string;
+  theme?: AppTheme;
   // Cloud TTS のボイス名（例: ja-JP-Standard-B）。ロケールを含むため日英で別々に
   // 指定する。声の高さは Worker 側の設定で決まる。
   jaVoiceName?: string;
@@ -215,6 +217,7 @@ const stripMacrons = (text: string): string =>
 const buildCacheKey = (opts: {
   textJa: string;
   textEn: string;
+  theme?: AppTheme;
   jaVoiceName?: string;
   enVoiceName?: string;
   speed?: number;
@@ -222,6 +225,7 @@ const buildCacheKey = (opts: {
   [
     // 空文字は「その言語を要求しない」を意味するため、両方をキーに含めることで
     // 日本語のみ・英語のみ・両方のリクエストが別エントリとして区別される
+    opts.theme ?? '',
     opts.textJa,
     opts.textEn,
     normalizeOptional(opts.jaVoiceName),
@@ -246,6 +250,7 @@ export const fetchSpeechAudio = async (
     textEn,
     apiUrl,
     idToken,
+    theme,
     jaVoiceName,
     enVoiceName,
     speed,
@@ -278,6 +283,7 @@ export const fetchSpeechAudio = async (
     typeof speed === 'number' && ALLOWED_SPEEDS.has(speed) ? speed : undefined;
 
   const cacheKey = buildCacheKey({
+    theme,
     textJa: trimmedTextJa,
     textEn: sanitizedTextEn,
     jaVoiceName: normalizedJaVoiceName,
@@ -292,6 +298,7 @@ export const fetchSpeechAudio = async (
   // 要求しない言語のフィールドは送らない。Worker 側は届いた言語だけを合成する。
   const reqBody = {
     data: {
+      theme,
       ...(wantsJa
         ? {
             textJa: trimmedTextJa,
