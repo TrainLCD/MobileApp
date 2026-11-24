@@ -79,6 +79,7 @@ it.each([true, false])(
     const initial = style().width;
     while (!visited.has(style().width)) {
       const width = style().width;
+      expect(style().opacity).toBe(0);
       visited.add(width);
       const count = width === initial ? 2 : width === 80 ? (hasFit ? 1 : 3) : 6;
       const lines = Array.from({ length: count }, (_, i) => ({
@@ -89,6 +90,7 @@ it.each([true, false])(
       }));
       fireEvent(label(), 'textLayout', { nativeEvent: { lines } });
     }
+    expect(style().opacity).toBe(1);
     expect([...visited][1]).toBeLessThan(80);
     expect(visited.has(80)).toBe(true);
     expect(style().width).toBe(80);

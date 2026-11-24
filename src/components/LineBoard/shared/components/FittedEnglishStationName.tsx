@@ -37,7 +37,8 @@ const DiagonalLabel = ({
     Math.max(1, Math.floor(available / Math.sin(angle)))
   );
   const [width, setWidth] = useState(initialWidth);
-  const [scale, setScale] = useState(1);
+  // Publish the label only once its wrapping width and scale are final.
+  const [scale, setScale] = useState<number | null>(null);
   const search = useRef({
     seen: new Set<number>(),
     best: { width: initialWidth, scale: 0 },
@@ -73,6 +74,7 @@ const DiagonalLabel = ({
     );
     if (fit === 1) {
       state.done = true;
+      setScale(1);
       return;
     }
     if (fit > state.best.scale) state.best = { width, scale: fit };
@@ -116,7 +118,8 @@ const DiagonalLabel = ({
           position: 'absolute',
           bottom: 0,
           left,
-          transform: [{ rotate: '-55deg' }, { scale }],
+          opacity: scale === null ? 0 : 1,
+          transform: [{ rotate: '-55deg' }, { scale: scale ?? 1 }],
           transformOrigin: 'left bottom',
           width,
         },
