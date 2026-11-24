@@ -34,7 +34,7 @@ export const getHorizontalStationNameWidth = (maxChars: number): number =>
   HORIZONTAL_STATION_NAME_FONT_SIZE * maxChars;
 
 /** 斜め書き駅名の回転角(度)。折り返し幅を変えたときの位置補正にも使う */
-const HORIZONTAL_STATION_NAME_ROTATION_DEG = 55;
+export const HORIZONTAL_STATION_NAME_ROTATION_DEG = 55;
 
 /**
  * 折り返し幅を変えたときに必要な位置補正を返す。

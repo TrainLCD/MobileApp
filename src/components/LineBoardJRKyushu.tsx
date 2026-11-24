@@ -25,6 +25,7 @@ import {
   LineDot,
   StationName,
 } from './LineBoard/shared/components';
+import { FittedEnglishStationName } from './LineBoard/shared/components/FittedEnglishStationName';
 import { NextStopBanner } from './LineBoard/shared/components/NextStopBanner';
 import {
   getBoardPaddingBottom,
@@ -367,21 +368,30 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
           { width: dim.width / 9, bottom: JR_KYUSHU_CONTAINER_BOTTOM },
         ]}
       >
-        <View
-          style={[
-            nameCommonStyle,
-            isEn || includesLongStationName
-              ? styles.longOrEnName
-              : styles.jaName,
-          ]}
-        >
-          <StationName
+        {isEn && saikyoGradient && !isTablet && Platform.OS === 'android' ? (
+          <FittedEnglishStationName
             station={station}
-            en={isEn}
-            horizontal={includesLongStationName}
             passed={shouldGrayscale}
+            // 縮小後の駅番号の上端はセル下端から 52 + 32 + 16 dp。
+            bottom={station.stationNumbers?.length ? 100 : 65}
           />
-        </View>
+        ) : (
+          <View
+            style={[
+              nameCommonStyle,
+              isEn || includesLongStationName
+                ? styles.longOrEnName
+                : styles.jaName,
+            ]}
+          >
+            <StationName
+              station={station}
+              en={isEn}
+              horizontal={includesLongStationName}
+              passed={shouldGrayscale}
+            />
+          </View>
+        )}
 
         <NumberingIconView station={station} />
 
