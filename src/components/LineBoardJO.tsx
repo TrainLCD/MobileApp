@@ -290,6 +290,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
       {Platform.OS === 'android' && !isTablet && isEn ? (
         // セルの下余白がバーとの間隔を確保するため、駅名側に下余白を重ねない。
         <FittedEnglishStationName
+          pitch={barWidth}
           station={stationInLoop}
           passed={isPass}
           bottom={0}
