@@ -18,14 +18,18 @@ const metroWidth = getHorizontalStationNameWidth(
 const DiagonalLabel = ({
   name,
   available,
+  left,
+  maxWidth,
   passed,
 }: {
   name: string;
   available: number;
+  left: number;
+  maxWidth: number;
   passed: boolean;
 }) => {
   const initialWidth = Math.min(
-    metroWidth,
+    maxWidth,
     Math.max(1, Math.floor(available / Math.sin(angle)))
   );
   const [width, setWidth] = useState(initialWidth);
@@ -77,7 +81,7 @@ const DiagonalLabel = ({
         {
           position: 'absolute',
           bottom: 0,
-          left: 16,
+          left,
           transformOrigin: 'left bottom',
           width,
         },
@@ -92,13 +96,24 @@ export const FittedEnglishStationName = ({
   station,
   passed,
   bottom,
+  left = 16,
+  rightSpace,
 }: {
   station: Station;
   passed: boolean;
   bottom: number;
+  left?: number;
+  rightSpace?: number;
 }) => {
   const [height, setHeight] = useState(0);
   const name = getStationNameR(station);
+  const maxWidth =
+    rightSpace == null
+      ? metroWidth
+      : Math.max(
+          1,
+          Math.min(metroWidth, Math.floor(rightSpace / Math.cos(angle)))
+        );
   return (
     <View
       onLayout={({ nativeEvent }) => setHeight(nativeEvent.layout.height)}
@@ -106,9 +121,11 @@ export const FittedEnglishStationName = ({
     >
       {height > 0 && (
         <DiagonalLabel
-          key={`${name}-${height}`}
+          key={`${name}-${height}-${maxWidth}`}
           name={name}
           available={height}
+          left={left}
+          maxWidth={maxWidth}
           passed={passed}
         />
       )}
