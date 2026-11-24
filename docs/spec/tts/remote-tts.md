@@ -5,7 +5,7 @@
 
 | 読み上げ手段 | 合成 | 再生 |
 | --- | --- | --- |
-| リモート TTS | Worker `/tts` 経由の Google Cloud TTS（表示テーマごとの日英の Standard 話者） | `expo-audio` |
+| リモート TTS | Worker `/tts` 経由の Google Cloud TTS または ElevenLabs | `expo-audio` |
 | 端末内蔵 TTS | 端末内蔵 TTS (`expo-speech`) | 端末内蔵 TTS |
 
 キー未配信・取得失敗時のフォールバックは **iOS = リモート TTS / Android = 端末内蔵 TTS**
@@ -159,6 +159,8 @@ Google TTS では、発話開始時の表示テーマに応じて日本語と英
 自動テーマでは、その時点で表示しているテーマの話者を使います。
 全テーマの割り当ては `src/constants/tts.ts` の `REMOTE_TTS_VOICES` にあります。
 
+ElevenLabs を使う場合も、アプリは発話開始時の表示テーマを `theme` として送ります。Worker はこのテーマに割り当てた話者で、リクエストに含まれる言語を読み上げます。
+
 ## Worker `/tts` の契約
 
 アプリ側は以下を送受信する。Worker 側の実装は
@@ -172,6 +174,7 @@ Google TTS では、発話開始時の表示テーマに応じて日本語と英
 ```json
 {
   "data": {
+    "theme": "SAIKYO",
     "textJa": "次は、オオサキです",
     "textEn": "The next station is Osaki, J Y 24.",
     "jaVoiceName": "ja-JP-Standard-B",
@@ -212,7 +215,7 @@ Google TTS では、発話開始時の表示テーマに応じて日本語と英
 
 ### サーバー側の実装メモ
 
-合成エンジンは Google Cloud Text-to-Speech（`text:synthesize`、サービスアカウント認証）。
+Worker の `config:tts.provider` で Google Cloud Text-to-Speech と ElevenLabs を切り替えます。
 OpenAI 版・Azure Speech 版からは全面移行済みで、旧エンジン向けのコード・環境変数・
 シークレットは削除された。アプリ側と対応が取れている前提は以下のとおり。
 

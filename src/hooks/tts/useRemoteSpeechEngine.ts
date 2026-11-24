@@ -143,7 +143,8 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
 
   const speak = useCallback(
     (request: SpeechEngineRequest, callbacks: SpeechEngineCallbacks) => {
-      const voices = REMOTE_TTS_VOICES[store.get(themeAtom)];
+      const theme = store.get(themeAtom);
+      const voices = REMOTE_TTS_VOICES[theme];
       const runId = runIdRef.current + 1;
       runIdRef.current = runId;
       const isStaleRun = () => runIdRef.current !== runId;
@@ -194,6 +195,7 @@ export const useRemoteSpeechEngine = (): SpeechEngine => {
             textEn,
             apiUrl: workerUrl('/tts'),
             idToken,
+            theme,
             ...voices,
             speed: REMOTE_TTS_SPEED_RATES[speedRef.current],
           });
