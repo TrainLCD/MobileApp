@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type { Station } from '~/@types/graphql';
 import { StopCondition } from '~/@types/graphql';
+import { ENGLISH_STATION_NAME_LINE_HEIGHT } from './LineBoard/shared/styles/commonStyles';
 import LineBoardLowPower from './LineBoardLowPower';
 
 jest.mock('jotai', () => ({
@@ -104,7 +105,9 @@ describe('LineBoardLowPower', () => {
       <LineBoardLowPower stations={STATIONS} />
     );
 
-    expect(getByText('Jiyugaoka')).toBeTruthy();
+    expect(getByText('Jiyugaoka')).toHaveStyle({
+      lineHeight: ENGLISH_STATION_NAME_LINE_HEIGHT,
+    });
     expect(queryByText('自由が丘')).toBeNull();
   });
 

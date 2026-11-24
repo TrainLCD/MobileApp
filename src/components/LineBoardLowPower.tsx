@@ -15,6 +15,7 @@ import { headerStateAtom } from '../store/atoms/navigation';
 import { arrivedAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
+import { ENGLISH_STATION_NAME_LINE_HEIGHT } from './LineBoard/shared/styles/commonStyles';
 import Typography from './Typography';
 
 const { background, primary, secondary, muted, accent } =
@@ -170,7 +171,7 @@ const StationColumn: React.FC<ColumnProps> = ({
           textAlign: 'center',
           color: nameColor,
           fontSize: (isEn ? 12 : 15) * scale,
-          lineHeight: (isEn ? 14 : 17) * scale,
+          lineHeight: isEn ? ENGLISH_STATION_NAME_LINE_HEIGHT : 17 * scale,
           fontWeight: isCurrent || isNext ? 'bold' : 'normal',
         }}
       >
@@ -236,7 +237,10 @@ const LineBoardLowPower: React.FC<Props> = ({ stations }: Props) => {
       markerRowHeight: 16 * scale,
       markRowHeight: 16 * scale,
       etaRowHeight: 16 * scale,
-      nameRowHeight: 40 * scale,
+      nameRowHeight: Math.max(
+        40 * scale,
+        2 * ENGLISH_STATION_NAME_LINE_HEIGHT + 6 * scale
+      ),
       chipRowHeight: 18 * scale,
       markSize: 14 * scale,
     }),

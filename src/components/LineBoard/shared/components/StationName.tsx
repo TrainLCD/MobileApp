@@ -60,6 +60,7 @@ export const StationName: React.FC<StationNameProps> = React.memo(
         <Typography
           style={[
             styles.stationNameHorizontal,
+            styles.englishStationNameSpacing,
             passed ? styles.grayColor : null,
             horizontalAdditionalStyle,
           ]}

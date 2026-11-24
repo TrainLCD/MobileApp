@@ -19,6 +19,10 @@ export const STATION_NAME_CONTAINER_BOTTOM: number | undefined = isTablet
 
 // 斜め書き駅名のフォントサイズ。1行に収まる文字数を決めるため折り返し幅の算出にも使う
 export const HORIZONTAL_STATION_NAME_FONT_SIZE = RFValue(18);
+// 英語駅名の行送りは、テーマ固有の文字サイズや配置にかかわらず東京メトロと揃える。
+export const ENGLISH_STATION_NAME_LINE_HEIGHT = Math.ceil(
+  HORIZONTAL_STATION_NAME_FONT_SIZE * 1.2
+);
 
 /** 斜め書きで1行に収める全角文字数の既定値 */
 export const HORIZONTAL_STATION_NAME_MAX_CHARS = 8.5;
@@ -179,6 +183,7 @@ export const commonLineBoardStyles = StyleSheet.create({
     marginLeft: 12,
     marginBottom: Platform.select({ android: isTablet ? -8 : -6, ios: 0 }),
   },
+  englishStationNameSpacing: { lineHeight: ENGLISH_STATION_NAME_LINE_HEIGHT },
   stationNameHorizontal: {
     // 幅だけを制約して全文の高さを測り、駅番号側の下端に揃える。
     // 通常フローでは下余白が測定可能な高さを削り、3行目の途中で切れる。
