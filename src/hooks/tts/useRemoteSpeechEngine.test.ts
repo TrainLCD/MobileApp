@@ -166,7 +166,7 @@ describe('useRemoteSpeechEngine', () => {
       await flushAsync();
       const voices = REMOTE_TTS_VOICES[theme];
       expect(mockFetchSpeechAudio).toHaveBeenLastCalledWith(
-        expect.objectContaining(voices)
+        expect.objectContaining({ theme, ...voices })
       );
       pairs.add(`${voices.jaVoiceName}/${voices.enVoiceName}`);
     }
