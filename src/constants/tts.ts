@@ -1,3 +1,4 @@
+import type { AppTheme } from '~/models/Theme';
 import {
   TTS_SPEED_PREFERENCE,
   type TTSSpeedPreference,
@@ -8,12 +9,37 @@ import {
 // remote_tts_enabled_android) が決めるため、端末内蔵 TTS (expo-speech) で読み上げる
 // 構成では参照されない。
 
-// 車内放送に使う女性声。Cloud TTS のボイス名は `<言語>-<地域>-<系統>-<記号>` で
-// ロケールを含むため、多言語共通のプリセットは無く日英で別々に指定する。系統は
-// 端末内蔵 TTS と同水準の Standard で揃える (Studio・Chirp3-HD 等は単価が桁違いで
-// Worker 側の許可リストにも入っていない)。
-export const REMOTE_TTS_VOICE_JA = 'ja-JP-Standard-B';
-export const REMOTE_TTS_VOICE_EN = 'en-US-Standard-G';
+// Google TTS の Standard 話者を日英の組み合わせでテーマごとに選ぶ。
+export const REMOTE_TTS_VOICES = {
+  TOKYO_METRO: {
+    jaVoiceName: 'ja-JP-Standard-A',
+    enVoiceName: 'en-US-Standard-G',
+  },
+  YAMANOTE: {
+    jaVoiceName: 'ja-JP-Standard-B',
+    enVoiceName: 'en-US-Standard-F',
+  },
+  JR_WEST: { jaVoiceName: 'ja-JP-Standard-C', enVoiceName: 'en-US-Standard-G' },
+  TY: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-F' },
+  SAIKYO: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-G' },
+  TOEI: { jaVoiceName: 'ja-JP-Standard-C', enVoiceName: 'en-US-Standard-E' },
+  LED: { jaVoiceName: 'ja-JP-Standard-D', enVoiceName: 'en-US-Standard-F' },
+  JO: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-H' },
+  JL: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-E' },
+  JR_KYUSHU: {
+    jaVoiceName: 'ja-JP-Standard-C',
+    enVoiceName: 'en-US-Standard-H',
+  },
+  JR_315: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-D' },
+  ODAKYU: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-H' },
+  E231: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-E' },
+  E131: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-D' },
+  SANYO: { jaVoiceName: 'ja-JP-Standard-D', enVoiceName: 'en-US-Standard-G' },
+  LOW_POWER: {
+    jaVoiceName: 'ja-JP-Standard-D',
+    enVoiceName: 'en-US-Standard-E',
+  },
+} satisfies Record<AppTheme, { jaVoiceName: string; enVoiceName: string }>;
 
 // 声の高さは Worker の TTS_PITCH で決まる。Standard 系は読み方のプロンプト指示を
 // 受け付けないため、アプリから調整する手段は無い。
