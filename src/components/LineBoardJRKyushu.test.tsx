@@ -65,7 +65,9 @@ jest.mock('./LineBoard/shared/components', () => ({
 jest.mock('./LineBoard/shared/hooks/useBarStyles', () => ({
   useBarStyles: jest.fn(() => ({ left: 0, width: 100 })),
   useChevronPosition: jest.fn(() => ({})),
-  useIncludesLongStationName: jest.fn(() => false),
+  useIncludesLongStationName: jest.requireActual(
+    './LineBoard/shared/hooks/useIncludesLongStationName'
+  ).useIncludesLongStationName,
 }));
 
 jest.mock('./NumberingIcon', () => ({
@@ -242,6 +244,32 @@ describe('LineBoardJRKyushu', () => {
     );
     expect(result.toJSON()).toBeTruthy();
   });
+
+  it.each([
+    [true, '東武動物公園', true],
+    [true, '南栗橋車庫', false],
+    [false, '東武動物公園', false],
+  ] as const)(
+    'スマホの315系=%sで%sを含む全駅の斜め表示は%sになる',
+    (is315, name, horizontal) => {
+      const { StationName } = require('./LineBoard/shared/components');
+      const stations = [mockStations[0], { ...mockStations[1], name }];
+      render(
+        <LineBoardJRKyushu
+          stations={stations}
+          lineColors={['#f60', '#f60']}
+          hasTerminus={false}
+          saikyoGradient={is315}
+        />
+      );
+      for (const station of stations) {
+        expect(StationName).toHaveBeenCalledWith(
+          expect.objectContaining({ station, horizontal }),
+          undefined
+        );
+      }
+    }
+  );
 
   it('StationNameコンポーネントが各駅に対してレンダリングされる', () => {
     const { StationName } = require('./LineBoard/shared/components');

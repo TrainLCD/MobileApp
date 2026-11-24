@@ -155,8 +155,6 @@ const useStationRenderState = (
     [arrived, currentStationIndex, index, passed, station]
   );
 
-  const includesLongStationName = useIncludesLongStationName(stations);
-
   const showFutureBar = (arrived && currentStationIndex < index + 1) || !passed;
   const showChevron =
     (currentStationIndex < 1 && index === 0) || currentStationIndex === index;
@@ -167,7 +165,6 @@ const useStationRenderState = (
     passed,
     shouldGrayscale,
     isEn,
-    includesLongStationName,
     showFutureBar,
     showChevron,
   };
@@ -312,10 +309,14 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
     passed,
     shouldGrayscale,
     isEn,
-    includesLongStationName,
     showFutureBar,
     showChevron,
   } = useStationRenderState(station, index, stations);
+  // スマホの315系はヘッダーと駅番号で縦書きの余地が狭く、6文字から斜めに表示する。
+  const includesLongStationName = useIncludesLongStationName(
+    stations,
+    saikyoGradient && !isTablet ? 5 : undefined
+  );
 
   const transferLines = useTransferLinesFromStation(station, {
     omitJR: true,
