@@ -8,6 +8,7 @@ import {
   resetRemoteTTSOverrideForTests,
 } from '~/lib/remoteTTSOverride';
 import { storage } from '~/lib/storage';
+import { imuShadowEnabledAtom } from '~/store/atoms/imuShadow';
 import { servicePatternDetectionEnabledAtom } from '~/store/atoms/servicePatternMismatch';
 import tuningState from '~/store/atoms/tuning';
 import {
@@ -23,6 +24,12 @@ jest.mock('@react-navigation/native', () => ({
   }),
 }));
 
+let mockIsClip = false;
+
+jest.mock('react-native-app-clip', () => ({
+  isClip: () => mockIsClip,
+}));
+
 jest.mock('~/components/FooterTabBar', () => () => null);
 jest.mock('~/components/SettingsHeader', () => ({
   SettingsHeader: () => null,
@@ -30,6 +37,7 @@ jest.mock('~/components/SettingsHeader', () => ({
 jest.mock('~/components/Button', () => () => null);
 jest.mock('~/translation', () => ({
   translate: (key: string) => key,
+  isJapanese: false,
 }));
 
 const renderWithStore = (
@@ -54,6 +62,7 @@ const renderWithStore = (
 
 describe('ExperimentalSettingsScreen', () => {
   afterEach(() => {
+    mockIsClip = false;
     jest.clearAllMocks();
     // アサーション失敗で個別のmockRestoreに到達しなくても、
     // spyOnした実装が後続テストへ漏れないようここで一括復元する
@@ -85,6 +94,31 @@ describe('ExperimentalSettingsScreen', () => {
     expect(
       storage.getString(STORAGE_KEYS.SERVICE_PATTERN_DETECTION_ENABLED)
     ).toBe('false');
+  });
+
+  it('IMUシャドーモードを通常版に表示しない', () => {
+    jest.replaceProperty(appVariant, 'isDevApp', false);
+    expect(renderWithStore().queryByLabelText('IMU shadow mode')).toBeNull();
+  });
+
+  it('開発版でIMUシャドーモードを明示的にオン・オフできる', () => {
+    jest.replaceProperty(appVariant, 'isDevApp', true);
+    const { getByLabelText, store } = renderWithStore();
+    const toggle = () => getByLabelText('IMU shadow mode');
+
+    expect(store.get(imuShadowEnabledAtom)).toBe(false);
+    expect(toggle().props.accessibilityState.checked).toBe(false);
+    fireEvent.press(toggle());
+    expect(store.get(imuShadowEnabledAtom)).toBe(true);
+    expect(toggle().props.accessibilityState.checked).toBe(true);
+    fireEvent.press(toggle());
+    expect(store.get(imuShadowEnabledAtom)).toBe(false);
+  });
+
+  it('App ClipでIMUシャドーモードを表示しない', () => {
+    jest.replaceProperty(appVariant, 'isDevApp', true);
+    mockIsClip = true;
+    expect(renderWithStore().queryByLabelText('IMU shadow mode')).toBeNull();
   });
 
   it('ポートレートモードのトグルは外観設定へ移設され表示されない', () => {

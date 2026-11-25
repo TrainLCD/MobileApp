@@ -2,11 +2,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useRef, useState } from 'react';
 import {
+  Platform,
   Pressable,
   Animated as RNAnimated,
   StyleSheet,
   View,
 } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import Button from '~/components/Button';
 import FooterTabBar from '~/components/FooterTabBar';
 import { SettingsHeader } from '~/components/SettingsHeader';
@@ -19,12 +21,13 @@ import {
   setRemoteTTSOverride,
 } from '~/lib/remoteTTSOverride';
 import { useAppColors } from '~/providers/AppColorsProvider';
+import { imuShadowEnabledAtom } from '~/store/atoms/imuShadow';
 import { servicePatternDetectionEnabledAtom } from '~/store/atoms/servicePatternMismatch';
 import { isLEDThemeAtom } from '~/store/atoms/theme';
 import tuningState from '~/store/atoms/tuning';
-import { translate } from '~/translation';
+import { isJapanese, translate } from '~/translation';
 import { showDialog } from '~/utils/dialogPresentation';
-import { isCanaryApp } from '~/utils/isDevApp';
+import { isCanaryApp, isDevApp } from '~/utils/isDevApp';
 import { STORAGE_KEYS } from '../constants';
 import { storage } from '../lib/storage';
 
@@ -166,6 +169,7 @@ const ExperimentalSettingsScreen: React.FC = () => {
   const [tuning, setTuning] = useAtom(tuningState);
   const [servicePatternDetectionEnabled, setServicePatternDetectionEnabled] =
     useAtom(servicePatternDetectionEnabledAtom);
+  const [imuShadowEnabled, setImuShadowEnabled] = useAtom(imuShadowEnabledAtom);
   // 値の情報源はモジュール側のキャッシュなので、画面はローカル state を持たず購読する。
   const remoteTTSOverride = useRemoteTTSOverride();
 
@@ -288,6 +292,26 @@ const ExperimentalSettingsScreen: React.FC = () => {
               </Typography>
             </>
           )}
+          {isDevApp &&
+            !isClip() &&
+            (Platform.OS === 'ios' || Platform.OS === 'android') && (
+              <>
+                <View style={styles.toggleSpacer}>
+                  <ToggleItem
+                    title={isJapanese ? 'IMUシャドーモード' : 'IMU shadow mode'}
+                    state={imuShadowEnabled}
+                    onToggle={() => setImuShadowEnabled((prev) => !prev)}
+                  />
+                </View>
+                <Typography
+                  style={[styles.description, { color: colors.secondaryText }]}
+                >
+                  {isJapanese
+                    ? '走行画面で測位の実験記録を作成します。到着判定には反映せず、記録を自動送信しません。'
+                    : 'Record an experiment in the ride screen without changing arrival detection or uploading the recording.'}
+                </Typography>
+              </>
+            )}
           <Typography style={styles.sectionTitle}>
             {translate('remoteTTSOverrideTitle')}
           </Typography>

@@ -19,6 +19,13 @@ export default {
     'expo-quick-actions',
     'expo-secure-store',
     [
+      'expo-sensors',
+      {
+        motionPermission:
+          '位置情報とあわせて乗車中や徒歩などの移動状況を判定するためにモーションセンサーの情報を使用します。',
+      },
+    ],
+    [
       'expo-location',
       {
         locationWhenInUsePermission:
@@ -70,7 +77,7 @@ export default {
     userInterfaceStyle: 'automatic',
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',
-    buildNumber: '3051',
+    buildNumber: '3052',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV
       ? 'me.tinykitten.trainlcd.dev'
@@ -84,7 +91,7 @@ export default {
         ? 'me.tinykitten.trainlcd.dev'
         : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100001043,
+    versionCode: 100001045,
   },
   owner: 'trainlcd',
   experiments: {
