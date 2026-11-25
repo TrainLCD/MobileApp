@@ -19,6 +19,13 @@ export default {
     'expo-quick-actions',
     'expo-secure-store',
     [
+      'expo-sensors',
+      {
+        motionPermission:
+          '位置情報とあわせて乗車中や徒歩などの移動状況を判定するためにモーションセンサーの情報を使用します。',
+      },
+    ],
+    [
       'expo-location',
       {
         locationWhenInUsePermission:

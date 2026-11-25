@@ -7,6 +7,7 @@ import { MAX_PERMIT_ACCURACY } from '~/constants/location';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import * as remoteConfigModule from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import { imuShadowEnabledAtom } from '~/store/atoms/imuShadow';
 import {
   accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
@@ -40,6 +41,18 @@ jest.mock('jotai', () => {
 
 jest.mock('~/utils/backgroundLocationDiagnostics', () => ({
   getBackgroundLocationDiagnostics: jest.fn(),
+}));
+
+let mockIsClip = false;
+jest.mock('react-native-app-clip', () => ({
+  isClip: () => mockIsClip,
+}));
+
+jest.mock('./ImuShadowPanel', () => ({
+  ImuShadowPanel: () => {
+    const { View } = jest.requireActual('react-native');
+    return <View testID="dev-overlay-imu-shadow" />;
+  },
 }));
 
 // Mock expo-application
@@ -143,6 +156,7 @@ describe('DevOverlay', () => {
     },
     backgroundLocationTracking = false,
     autoModeEnabled = false,
+    imuShadowEnabled = false,
     etaPhase = null,
     etaAnchor = null,
     filterAccuracyHistory = [15],
@@ -156,6 +170,7 @@ describe('DevOverlay', () => {
     rawLocation?: unknown;
     backgroundLocationTracking?: boolean;
     autoModeEnabled?: boolean;
+    imuShadowEnabled?: boolean;
     etaPhase?: unknown;
     etaAnchor?: unknown;
     filterAccuracyHistory?: number[];
@@ -178,6 +193,9 @@ describe('DevOverlay', () => {
       }
       if (atom === autoModeEnabledAtom) {
         return autoModeEnabled as never;
+      }
+      if (atom === imuShadowEnabledAtom) {
+        return imuShadowEnabled as never;
       }
       if (atom === etaAnchorAtom) {
         return etaAnchor as never;
@@ -208,6 +226,7 @@ describe('DevOverlay', () => {
   };
 
   beforeEach(() => {
+    mockIsClip = false;
     mockDimensionsGet.mockReturnValue({
       width: 393,
       height: 852,
@@ -287,97 +306,49 @@ describe('DevOverlay', () => {
       expect(getByTestId('dev-overlay-landscape')).toBeTruthy();
     });
 
-    it('機能が無効(isEtaAssistEnabled=false)なら ETA FALLBACK / ANCHOR カードを表示しない', () => {
+    it('ETAの2枚のカードを表示せず、実験設定がオフならIMU欄も表示しない', () => {
       jest
         .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
-        .mockReturnValue(false);
+        .mockReturnValue(true);
       setupAtomValues({
-        etaPhase: null,
+        etaPhase: { kind: 'APPROACHING', targetStationId: 42 },
         etaAnchor: { stationId: 5, kind: 'DEPARTED', observedAtMs: 88_000 },
       });
 
       const { queryByTestId } = render(<DevOverlay />);
       expect(queryByTestId('dev-overlay-eta-fallback-value')).toBeNull();
       expect(queryByTestId('dev-overlay-eta-anchor-value')).toBeNull();
+      expect(queryByTestId('dev-overlay-imu-shadow')).toBeNull();
     });
 
-    it('ETA推定フェーズがあるときは現在フェーズと対象駅・有効フラグを表示する', () => {
-      jest
-        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
-        .mockReturnValue(true);
-      setupAtomValues({
-        etaPhase: { kind: 'APPROACHING', targetStationId: 42 },
-      });
+    it.each([
+      { width: 852, height: 393, unrotated: false },
+      { width: 393, height: 852, unrotated: true },
+    ])(
+      '画面寸法に関係なくIMU欄を1つだけ表示する: %j',
+      ({ width, height, unrotated }) => {
+        mockDimensionsGet.mockReturnValue({
+          width,
+          height,
+          scale: 3,
+          fontScale: 1,
+        } as ReturnType<typeof Dimensions.get>);
+        setupAtomValues({ imuShadowEnabled: true });
 
-      const { getByTestId } = render(<DevOverlay />);
-      expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
-        'APPROACHING'
-      );
-      expect(getByTestId('dev-overlay-eta-fallback-meta')).toHaveTextContent(
-        'assist ON / #42'
-      );
-    });
-
-    it('ETA推定フェーズが DWELLING のときは停車駅IDを表示する', () => {
-      // DWELLINGは targetStationId ではなく stationId を参照するため別途検証する。
-      jest
-        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
-        .mockReturnValue(true);
-      setupAtomValues({
-        etaPhase: { kind: 'DWELLING', stationId: 7 },
-      });
-
-      const { getByTestId } = render(<DevOverlay />);
-      expect(getByTestId('dev-overlay-eta-fallback-value')).toHaveTextContent(
-        'DWELLING'
-      );
-      expect(getByTestId('dev-overlay-eta-fallback-meta')).toHaveTextContent(
-        'assist ON / #7'
-      );
-    });
-
-    it('アンカー未設定時は ETA ANCHOR に no anchor を表示する', () => {
-      jest
-        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
-        .mockReturnValue(true);
-      setupAtomValues({ etaAnchor: null });
-
-      const { getByTestId } = render(<DevOverlay />);
-      expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
-        '--'
-      );
-      expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
-        'no anchor'
-      );
-    });
-
-    it('アンカー設定時は種別・起点駅ID・経過秒を表示する', () => {
-      jest
-        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
-        .mockReturnValue(true);
-      // clearAllMocks は戻り値の差し替えを残すので、ここで戻さないと後続のテストでも
-      // Date.now() が止まったままになる。コピー系の非同期テストは、それで高負荷時に
-      // 5秒のタイムアウトを超えていた
-      const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(100_000);
-      try {
-        setupAtomValues({
-          etaAnchor: {
-            stationId: 5,
-            kind: 'DEPARTED',
-            observedAtMs: 88_000, // 12秒前
-          },
-        });
-
-        const { getByTestId } = render(<DevOverlay />);
-        expect(getByTestId('dev-overlay-eta-anchor-value')).toHaveTextContent(
-          'DEPARTED'
+        const { getAllByTestId, queryByTestId } = render(
+          <DevOverlay unrotated={unrotated} />
         );
-        expect(getByTestId('dev-overlay-eta-anchor-meta')).toHaveTextContent(
-          '#5 · 12s ago'
-        );
-      } finally {
-        dateNowSpy.mockRestore();
+        expect(getAllByTestId('dev-overlay-imu-shadow')).toHaveLength(1);
+        expect(queryByTestId('dev-overlay-eta-fallback-value')).toBeNull();
+        expect(queryByTestId('dev-overlay-eta-anchor-value')).toBeNull();
       }
+    );
+
+    it('App Clipでは実験設定がオンでもIMU欄を表示しない', () => {
+      mockIsClip = true;
+      setupAtomValues({ imuShadowEnabled: true });
+      const { queryByTestId } = render(<DevOverlay />);
+      expect(queryByTestId('dev-overlay-imu-shadow')).toBeNull();
     });
   });
 
@@ -430,6 +401,26 @@ describe('DevOverlay', () => {
       expect(copied.build.appVersion).toBe(
         `${Application.nativeApplicationVersion}(${Application.nativeBuildVersion})`
       );
+    });
+
+    it('ETAカードを取り除いてもETAフェーズとアンカーを診断JSONに残す', async () => {
+      const etaPhase = { kind: 'DWELLING', stationId: 7 };
+      const etaAnchor = {
+        stationId: 5,
+        kind: 'DEPARTED',
+        observedAtMs: 88_000,
+      };
+      jest
+        .spyOn(remoteConfigModule, 'isEtaAssistEnabled')
+        .mockReturnValue(true);
+      setupAtomValues({ etaPhase, etaAnchor });
+
+      const { getByTestId } = render(<DevOverlay />);
+      fireEvent.press(getByTestId('dev-overlay-copy-button'));
+      await act(async () => {});
+      const copied = JSON.parse(mockCopyTextToClipboard.mock.calls[0][0]);
+      expect(copied.eta).toEqual({ phase: etaPhase, anchor: etaAnchor });
+      expect(copied.config.etaAssistEnabled).toBe(true);
     });
 
     it('前景へ戻った後も背景ネイティブの履歴を別枠でコピーする', async () => {
