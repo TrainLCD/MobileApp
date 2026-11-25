@@ -20,6 +20,27 @@ const samePhysicalStop = (a: RouteStop, b: RouteStop): boolean =>
   (a.stationId != null && a.stationId === b.stationId) ||
   (a.stationGroupId != null && a.stationGroupId === b.stationGroupId);
 
+/** Consecutive rows for a junction are one visit. A later visit is ambiguous. */
+export const findImuOriginIndex = (
+  stops: readonly RouteStop[],
+  id: number,
+  groupId?: number | null
+): number | null => {
+  const exact = new Set<number>();
+  const groups = new Set<number>();
+  let firstStop = -1;
+  for (const [index, stop] of stops.entries()) {
+    if (!index || !samePhysicalStop(stops[index - 1], stop)) firstStop = -1;
+    if (!stop.stopsHere || stop.stationId == null) continue;
+    if (firstStop < 0) firstStop = index;
+    if (stop.stationId === id) exact.add(firstStop);
+    if (groupId != null && stop.stationGroupId === groupId)
+      groups.add(firstStop);
+  }
+  const matches = exact.size ? exact : groups;
+  return matches.size === 1 ? [...matches][0] : null;
+};
+
 /** Use ETA's direction-ordered, unfiltered stops, including passing stations. */
 export const buildLeg = (
   stops: readonly RouteStop[],

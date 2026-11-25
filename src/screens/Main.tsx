@@ -25,6 +25,7 @@ import {
   type TrainType,
 } from '~/@types/graphql';
 import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureView';
+import { DevImuArrival } from '~/components/DevImuArrival';
 import DevOverlay from '~/components/DevOverlay';
 import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
@@ -242,6 +243,11 @@ const MainScreenEffects: React.FC = () => {
       <FxTransitionHeaderState />
       <FxRefreshLeftStations />
       <FxRefreshStation />
+      {isDevApp &&
+        !isClip() &&
+        (Platform.OS === 'ios' || Platform.OS === 'android') && (
+          <DevImuArrival />
+        )}
       {isCanaryApp && servicePatternDetectionEnabled && (
         <FxServicePatternMismatch />
       )}

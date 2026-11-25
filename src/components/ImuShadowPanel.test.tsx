@@ -25,6 +25,7 @@ const mockRequestPermissions = jest.fn(async () => ({ granted: true }));
 let mockRouteStops: RouteStop[] | undefined;
 
 jest.mock('~/lib/imuShadowSensor', () => ({
+  ...jest.requireActual('~/lib/imuShadowSensor'),
   loadImuShadowSensor: async () => {
     if (mockLoadGate) await mockLoadGate;
     return {

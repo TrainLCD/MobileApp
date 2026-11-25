@@ -8,7 +8,7 @@ const IS_DEV = process.env.APP_VARIANT === 'dev' || IS_LOCAL;
 export default {
   name: 'TrainLCD',
   slug: 'trainlcd',
-  version: '10.20.3',
+  version: '10.20.4',
   plugins: [
     'expo-image',
     'expo-font',
@@ -77,7 +77,7 @@ export default {
     userInterfaceStyle: 'automatic',
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',
-    buildNumber: '3055',
+    buildNumber: '3056',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV
       ? 'me.tinykitten.trainlcd.dev'
@@ -91,7 +91,7 @@ export default {
         ? 'me.tinykitten.trainlcd.dev'
         : 'me.tinykitten.trainlcd',
     permissions: [],
-    versionCode: 100001051,
+    versionCode: 100001053,
   },
   owner: 'trainlcd',
   experiments: {

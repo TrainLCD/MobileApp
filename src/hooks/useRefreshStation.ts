@@ -4,6 +4,7 @@ import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Station } from '~/@types/graphql';
 import { ARRIVED_GRACE_PERIOD_MS } from '~/constants';
+import { holdingImuArrivalAtom } from '~/store/atoms/imuArrival';
 import { locationAtom } from '~/store/atoms/location';
 import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
 import { stationsAtom } from '~/store/atoms/station';
@@ -236,7 +237,7 @@ export const useRefreshStation = (): void => {
   ]);
 
   useEffect(() => {
-    if (!nearestStation) {
+    if (!nearestStation || store.get(holdingImuArrivalAtom)) {
       return;
     }
 
