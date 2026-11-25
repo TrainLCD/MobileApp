@@ -129,6 +129,8 @@ export type Recording = {
     atMs: number;
     legIndex: number;
     kind: 'departure' | 'arrival' | 'candidate' | 'candidate-lost';
+    /** Automatic departure estimates are not ground-truth labels. */
+    departureSource?: 'imu' | 'location';
     stationId: number;
     estimate: Estimate | null;
     reference: Reference;
@@ -142,6 +144,22 @@ let lastRecording: Recording | null = null;
 export const getLastImuShadowRecording = (): Recording | null => lastRecording;
 export const rememberImuShadowRecording = (recording: Recording): void => {
   lastRecording = recording;
+};
+
+// The recording may survive the panel that stopped it. Keep the final
+// observation associated with the recording, not the current component.
+const finalBatteryObservations = new WeakMap<Recording, Promise<void>>();
+export const rememberFinalBatteryObservation = (
+  recording: Recording,
+  pending: Promise<void>
+): void => {
+  finalBatteryObservations.set(recording, pending);
+};
+
+export const waitForFinalBatteryObservation = async (
+  recording: Recording
+): Promise<void> => {
+  await finalBatteryObservations.get(recording);
 };
 
 export const getLegComparison = (recording: Recording, legIndex: number) => {
@@ -186,6 +204,7 @@ export const getLegComparison = (recording: Recording, legIndex: number) => {
     fromId: leg.fromId,
     toId: leg.toId,
     departureAtMs: departure?.atMs ?? null,
+    departureSource: departure ? (departure.departureSource ?? 'manual') : null,
     actualArrivalAtMs: arrival?.atMs ?? null,
     etaArrivalAtMs: expectedAtMs,
     etaErrorSeconds:
