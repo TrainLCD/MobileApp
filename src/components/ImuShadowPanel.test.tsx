@@ -4,13 +4,16 @@ import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
 import { AppState } from 'react-native';
 import type { Station } from '~/@types/graphql';
+import type { RouteStop } from '~/lib/imuShadow';
 import { getLastImuShadowRecording } from '~/lib/imuShadowRecording';
+import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
   selectedBoundAtom,
   selectedDirectionAtom,
   stationAtom,
+  stationsAtom,
 } from '~/store/atoms/station';
 import { exportImuShadow } from '~/utils/exportImuShadow';
 import { ImuShadowPanel } from './ImuShadowPanel';
@@ -19,6 +22,7 @@ let mockReceive: ((data: DeviceMotionMeasurement) => void) | undefined;
 let mockLoadGate: Promise<void> | undefined;
 const mockIsAvailable = jest.fn(async () => true);
 const mockRequestPermissions = jest.fn(async () => ({ granted: true }));
+let mockRouteStops: RouteStop[] | undefined;
 
 jest.mock('~/lib/imuShadowSensor', () => ({
   loadImuShadowSensor: async () => {
@@ -51,7 +55,7 @@ jest.mock('~/hooks/useEstimateArrivalTimesRoute', () => ({
   useEstimateArrivalTimesRoute: () => ({
     route: {
       id: 1,
-      stops: [
+      stops: mockRouteStops ?? [
         { stationId: 1, stopsHere: true, departureCumulativeMinutes: 0 },
         {
           stationId: 2,
@@ -508,3 +512,139 @@ test('export after terminal auto-stop waits for the final battery sample', async
     jest.useRealTimers();
   }
 });
+
+test.each([1, 2, 3])(
+  'circular route only auto-starts at the unambiguous intermediate station: %s',
+  async (stationId) => {
+    const originalState = AppState.currentState;
+    AppState.currentState = 'active';
+    mockReceive = undefined;
+    mockRequestPermissions.mockClear();
+    mockRouteStops = [
+      {
+        stationId: 1,
+        stationGroupId: 10,
+        stopsHere: true,
+        departureCumulativeMinutes: 0,
+      },
+      {
+        stationId: 2,
+        stationGroupId: 20,
+        stopsHere: true,
+        cumulativeMinutes: 1,
+        departureCumulativeMinutes: 1,
+      },
+      {
+        stationId: 3,
+        stationGroupId: 10,
+        stopsHere: true,
+        cumulativeMinutes: 2,
+      },
+    ];
+    const store = createStore();
+    store.set(stationAtom, {
+      id: stationId,
+      groupId: stationId === 2 ? 20 : 10,
+    } as Station);
+    store.set(selectedBoundAtom, { id: 3 } as Station);
+    store.set(selectedDirectionAtom, 'INBOUND');
+    const previous = getLastImuShadowRecording();
+    try {
+      const screen = render(
+        <Provider store={store}>
+          <ImuShadowPanel />
+        </Provider>
+      );
+      await act(async () => {});
+      if (stationId === 2) {
+        expect(mockRequestPermissions).toHaveBeenCalledTimes(1);
+        expect(getLastImuShadowRecording()?.legs[0]?.leg).toMatchObject({
+          fromId: 2,
+          toId: 3,
+        });
+      } else {
+        expect(mockRequestPermissions).not.toHaveBeenCalled();
+        expect(getLastImuShadowRecording()).toBe(previous);
+        expect(mockReceive).toBeUndefined();
+      }
+      screen.unmount();
+    } finally {
+      mockRouteStops = undefined;
+      AppState.currentState = originalState;
+    }
+  }
+);
+
+test.each(['observed-origin', 'stations-list', 'other-group'] as const)(
+  'maps the location departure anchor to the route origin only for the same station group: %s',
+  async (source) => {
+    jest.useFakeTimers();
+    const originalState = AppState.currentState;
+    AppState.currentState = 'active';
+    mockRouteStops = [
+      {
+        stationId: 100,
+        stationGroupId: 10,
+        stopsHere: true,
+        departureCumulativeMinutes: 0,
+      },
+      {
+        stationId: 300,
+        stationGroupId: 30,
+        stopsHere: true,
+        cumulativeMinutes: 1,
+      },
+    ];
+    const store = createStore();
+    store.set(stationAtom, {
+      id: source === 'observed-origin' ? 200 : 100,
+      groupId: 10,
+    } as Station);
+    store.set(selectedBoundAtom, { id: 300 } as Station);
+    store.set(selectedDirectionAtom, 'INBOUND');
+    if (source !== 'observed-origin') {
+      store.set(stationsAtom, [
+        { id: 200, groupId: source === 'stations-list' ? 10 : 20 } as Station,
+      ]);
+    }
+    try {
+      const screen = render(
+        <Provider store={store}>
+          <ImuShadowPanel />
+        </Provider>
+      );
+      await act(async () => {});
+      const recording = getLastImuShadowRecording();
+      expect(recording?.legs[0]?.leg.fromId).toBe(100);
+      // The last arrived station can change before the periodic observation.
+      await act(async () => {
+        store.set(stationAtom, { id: 300, groupId: 30 } as Station);
+        store.set(arrivedAtom, false);
+        store.set(etaAnchorAtom, {
+          kind: 'DEPARTED',
+          stationId: 200,
+          observedAtMs: Date.now(),
+        });
+        jest.advanceTimersByTime(1000);
+      });
+      const departures = recording?.events.filter(
+        (event) => event.kind === 'departure'
+      );
+      if (source === 'other-group') {
+        expect(departures).toEqual([]);
+      } else {
+        expect(departures).toEqual([
+          expect.objectContaining({
+            stationId: 100,
+            departureSource: 'location',
+          }),
+        ]);
+      }
+      screen.unmount();
+    } finally {
+      mockRouteStops = undefined;
+      AppState.currentState = originalState;
+      jest.useRealTimers();
+    }
+  }
+);

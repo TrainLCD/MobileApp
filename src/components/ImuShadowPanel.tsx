@@ -119,6 +119,7 @@ export const ImuShadowPanel = () => {
   const [arrivalMarked, setArrivalMarked] = useState(false);
   const arrivalMarkedAtRef = useRef<number | null>(null);
   const departureRecordedRef = useRef(false);
+  const originAliasIdsRef = useRef(new Set<number>());
   const [autoAttempted, setAutoAttempted] = useState(false);
   const recordingRef = useRef<Recording | null>(null);
   const estimatorRef = useRef<ImuShadowEstimator | null>(null);
@@ -265,7 +266,7 @@ export const ImuShadowPanel = () => {
   // The current station may use the outgoing line's ID at a junction.
   // Only a unique matching physical stop can start an automatic recording.
   const findAutoStartIndex = (station: typeof currentStation) => {
-    const matches = availableStarts.filter((index) => {
+    const matches = physicalStops.filter((index) => {
       const stop = stops[index];
       return (
         stop.stationId === station?.id ||
@@ -273,7 +274,9 @@ export const ImuShadowPanel = () => {
           stop.stationGroupId === station?.groupId)
       );
     });
-    return matches.length === 1 ? matches[0] : null;
+    return matches.length === 1 && availableStarts.includes(matches[0])
+      ? matches[0]
+      : null;
   };
   const autoStartIndex = findAutoStartIndex(currentStation);
   const selected =
@@ -303,6 +306,16 @@ export const ImuShadowPanel = () => {
         : null;
     lastCandidateRef.current = false;
     departureRecordedRef.current = false;
+    // Keep the actual line-specific station ID even if it is absent from ETA stops.
+    const origin = recording.stops[index];
+    const station = store.get(stationAtom);
+    originAliasIdsRef.current = new Set(
+      station?.id != null &&
+        origin.stationGroupId != null &&
+        station.groupId === origin.stationGroupId
+        ? [station.id]
+        : []
+    );
     arrivalMarkedAtRef.current = null;
     setArrivalMarked(false);
     setEstimate(estimatorRef.current?.snapshot() ?? null);
@@ -380,19 +393,37 @@ export const ImuShadowPanel = () => {
     const origin = recording.stops.find(
       (stop) => stop.stationId === leg.fromId
     );
-    const anchorStop = recording.stops.find(
-      (stop) => stop.stationId === anchor?.stationId
-    );
-    // ETA's location-based departure anchor is available in baseline mode too.
-    const locationDeparture =
+    // The anchor preserves the station ID from navigation, which may differ
+    // from the ETA route's ID. Remember observed origin aliases for this leg
+    // so departure remains resolvable even after the current station advances.
+    const station = store.get(stationAtom);
+    if (
+      station?.id != null &&
+      origin?.stationGroupId != null &&
+      station.groupId === origin.stationGroupId
+    ) {
+      originAliasIdsRef.current.add(station.id);
+    }
+    let locationDeparture: number | null = null;
+    if (
       anchor?.kind === 'DEPARTED' &&
       anchor.observedAtMs >= startedAtMs &&
-      anchor.observedAtMs <= atMs &&
-      (anchor.stationId === leg.fromId ||
+      anchor.observedAtMs <= atMs
+    ) {
+      const anchorGroupId =
+        recording.stops.find((stop) => stop.stationId === anchor.stationId)
+          ?.stationGroupId ??
+        store.get(stationsAtom).find((item) => item.id === anchor.stationId)
+          ?.groupId;
+      if (
+        anchor.stationId === leg.fromId ||
+        originAliasIdsRef.current.has(anchor.stationId) ||
         (origin?.stationGroupId != null &&
-          origin.stationGroupId === anchorStop?.stationGroupId))
-        ? anchor.observedAtMs
-        : null;
+          origin.stationGroupId === anchorGroupId)
+      ) {
+        locationDeparture = anchor.observedAtMs;
+      }
+    }
     const imuDeparture =
       value != null && value.phase !== 'invalid' && value.elapsedSeconds != null
         ? Math.max(startedAtMs, atMs - value.elapsedSeconds * 1000)
