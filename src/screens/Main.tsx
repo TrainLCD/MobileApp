@@ -28,7 +28,6 @@ import AndroidPictureInPictureView from '~/components/AndroidPictureInPictureVie
 import DevOverlay from '~/components/DevOverlay';
 import { FxTTS } from '~/components/FxTTS';
 import Header from '~/components/Header';
-import { ImuShadowPanel } from '~/components/ImuShadowPanel';
 import { SelectBoundModal } from '~/components/SelectBoundModal';
 import {
   IS_LIVE_UPDATE_ELIGIBLE_PLATFORM,
@@ -77,7 +76,6 @@ import { storage } from '~/lib/storage';
 import { getLineSymbolImage } from '~/lineSymbolImage';
 import { APP_THEME } from '~/models/Theme';
 import { portraitModeEnabledAtom } from '~/store/atoms/display';
-import { imuShadowEnabledAtom } from '~/store/atoms/imuShadow';
 import lineState from '~/store/atoms/line';
 import { rideLogEnabledAtom } from '~/store/atoms/rideLog';
 import { servicePatternDetectionEnabledAtom } from '~/store/atoms/servicePatternMismatch';
@@ -235,7 +233,6 @@ const MainScreenEffects: React.FC = () => {
     servicePatternDetectionEnabledAtom
   );
   const rideLogEnabled = useAtomValue(rideLogEnabledAtom);
-  const imuShadowEnabled = useAtomValue(imuShadowEnabledAtom);
   return (
     <>
       <FxSimulationMode />
@@ -259,12 +256,6 @@ const MainScreenEffects: React.FC = () => {
       {Platform.OS === 'android' && <FxUpdateWidget />}
       {Platform.OS === 'android' && <FxAndroidPictureInPicture />}
       {Platform.OS === 'android' && <FxPreventBackInUntouchableMode />}
-      {isDevApp &&
-        imuShadowEnabled &&
-        !isClip() &&
-        (Platform.OS === 'ios' || Platform.OS === 'android') && (
-          <ImuShadowPanel />
-        )}
     </>
   );
 };

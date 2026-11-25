@@ -41,19 +41,19 @@ const label = (ja: string, en: string) => (isJapanese ? ja : en);
 
 const styles = StyleSheet.create({
   root: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 290,
-    maxWidth: '96%',
-    zIndex: 1000,
-    elevation: 20,
-    backgroundColor: '#17202A',
-    borderRadius: 8,
+    alignSelf: 'stretch',
+    backgroundColor: 'rgba(9, 14, 28, 0.7)',
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderRadius: 16,
     padding: 8,
     gap: 5,
   },
-  text: { color: '#FFFFFF', fontSize: 12 },
+  text: { color: '#FFFFFF', fontSize: 11 },
+  metricLabel: { color: 'rgba(199, 210, 254, 0.72)', fontSize: 9 },
+  metricValue: { color: '#f8fafc', fontSize: 15, fontWeight: '700' },
+  metrics: { flexDirection: 'row', gap: 8 },
+  metric: { flex: 1, gap: 3 },
   button: { backgroundColor: '#364657', borderRadius: 4, padding: 6 },
   disabled: { opacity: 0.4 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
@@ -483,10 +483,10 @@ export const ImuShadowPanel = () => {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={styles.root} testID="dev-overlay-imu-shadow">
       <View style={styles.buttons}>
         <Action
-          text={collapsed ? 'IMU +' : 'IMU −'}
+          text={collapsed ? 'IMU SHADOW +' : 'IMU SHADOW −'}
           onPress={() => setCollapsed((prev) => !prev)}
         />
         {running && (
@@ -495,6 +495,32 @@ export const ImuShadowPanel = () => {
             onPress={() => stop('manual-stop')}
           />
         )}
+      </View>
+      <View style={styles.metrics}>
+        <View style={styles.metric}>
+          <Typography style={styles.metricLabel}>IMU POSITION</Typography>
+          <Typography style={styles.metricValue}>
+            {estimate ? `${estimate.distanceM.toFixed(0)} m` : '--'}
+          </Typography>
+          <Typography style={styles.text}>
+            {estimate ? `± ${estimate.sigmaM.toFixed(0)} m` : '--'}
+          </Typography>
+        </View>
+        <View style={styles.metric}>
+          <Typography style={styles.metricLabel}>IMU STATE</Typography>
+          <Typography style={styles.metricValue}>
+            {estimate
+              ? estimate.phase.toUpperCase()
+              : running
+                ? 'BASELINE'
+                : 'IDLE'}
+          </Typography>
+          <Typography style={styles.text}>
+            {estimate
+              ? `${(estimate.speedMps * 3.6).toFixed(1)} km/h · ${estimate.arrivalCandidate ? 'ARRIVAL?' : 'NO'}`
+              : '--'}
+          </Typography>
+        </View>
       </View>
       {!collapsed && (
         <>
@@ -562,11 +588,9 @@ export const ImuShadowPanel = () => {
               <Typography
                 style={styles.text}
               >{`Track: ${displayLeg.distanceM ?? '?'} m / ETA: ${displayLeg.etaSeconds ?? '?'} s`}</Typography>
-              <Typography style={styles.text}>
-                {estimate
-                  ? `${estimate.phase} ${estimate.reason ?? ''}\n${estimate.distanceM.toFixed(1)} ± ${estimate.sigmaM.toFixed(1)} m / ${estimate.speedMps.toFixed(1)} m/s\nCandidate: ${estimate.arrivalCandidate ? 'YES' : 'NO'}`
-                  : 'Baseline (no IMU)'}
-              </Typography>
+              {estimate?.reason && (
+                <Typography style={styles.text}>{estimate.reason}</Typography>
+              )}
               <View style={styles.buttons}>
                 <Action
                   text={label('実発車', 'Actual departure')}

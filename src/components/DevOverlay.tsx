@@ -10,6 +10,7 @@ import {
   PanResponder,
   Platform,
   Pressable,
+  ScrollView,
   type StyleProp,
   StyleSheet,
   type TextStyle,
@@ -17,6 +18,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import { isClip } from 'react-native-app-clip';
 import { BAD_ACCURACY_THRESHOLD } from '~/constants/threshold';
 import {
   useDistanceToNextStation,
@@ -28,6 +30,7 @@ import { useTelemetryEnabled } from '~/hooks/useTelemetryEnabled';
 import { useThreshold } from '~/hooks/useThreshold';
 import { getMaxPermitAccuracy, isEtaAssistEnabled } from '~/lib/remoteConfig';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import { imuShadowEnabledAtom } from '~/store/atoms/imuShadow';
 import {
   accuracyHistoryAtom,
   backgroundLocationTrackingAtom,
@@ -59,6 +62,7 @@ import {
   getLocationPipelineCounts,
 } from '~/utils/locationPipelineStats';
 import AccuracyHistoryChart from './AccuracyHistoryChart';
+import { ImuShadowPanel } from './ImuShadowPanel';
 import Typography from './Typography';
 
 const EXPAND_DURATION = 280;
@@ -405,7 +409,14 @@ type Props = {
 const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedHeight, setExpandedHeight] = useState(0);
-  // アンカーの経過秒表示用の現在時刻。レンダー中に Date.now() を直接呼ぶと純粋性違反に
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const imuShadowEnabled = useAtomValue(imuShadowEnabledAtom);
+  const showImuShadow =
+    imuShadowEnabled &&
+    isDevApp &&
+    !isClip() &&
+    (Platform.OS === 'ios' || Platform.OS === 'android');
+  // 診断JSONに含めるETAフェーズの評価時刻。レンダー中に Date.now() を直接呼ぶと純粋性違反に
   // なる(React Compilerの自動メモ化で更新されなくなる)ため、1秒間隔でstateへ取り込む。
   const [nowTick, setNowTick] = useState(() => Date.now());
   useEffect(() => {
@@ -653,33 +664,6 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
       setHasCopied(false);
     }, COPIED_FEEDBACK_DURATION_MS);
   };
-  // ETA推定フェーズ(RUNNING/APPROACHING/DWELLING)を表示。フェーズ未推定時は IDLE。
-  const etaFallbackValue = etaPhase?.kind ?? 'IDLE';
-  // 推定対象の駅ID(走行/接近中は目標駅、停車中は当該駅)。
-  const etaPhaseTargetId =
-    etaPhase == null
-      ? null
-      : etaPhase.kind === 'DWELLING'
-        ? etaPhase.stationId
-        : etaPhase.targetStationId;
-  // メタ行に有効フラグ(リモート設定の配信状態)と対象駅を出す。
-  const etaFallbackMeta = `assist ${etaAssistEnabled ? 'ON' : 'OFF'}${
-    etaPhaseTargetId != null ? ` / #${etaPhaseTargetId}` : ''
-  }`;
-  // ETA仮想時計の起点(アンカー)。フォールバックが正しい駅から時計を進めているかを
-  // 確認できるよう、種別(到着中/発車)・起点駅ID・観測からの経過秒を出す。
-  // 経過秒は nowTick(1秒間隔で更新するstate)から導出する。
-  const etaAnchorValue = etaAnchor
-    ? etaAnchor.kind === 'AT_STATION'
-      ? 'AT STOP'
-      : 'DEPARTED'
-    : '--';
-  const etaAnchorAgeSec = etaAnchor
-    ? Math.max(0, Math.round((nowTick - etaAnchor.observedAtMs) / 1000))
-    : null;
-  const etaAnchorMeta = etaAnchor
-    ? `#${etaAnchor.stationId} · ${etaAnchorAgeSec}s ago`
-    : 'no anchor';
   const nextStationNumber =
     nextStation?.stationNumbers?.find((item) => !!item?.stationNumber)
       ?.stationNumber ?? undefined;
@@ -746,8 +730,8 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
   const bodyRowStyle = isLandscape ? styles.landscapeBodyRow : null;
   const contentWidth = panelWidth - compactPaddingX * 2;
   const metricsGap = isLandscape ? 8 : 10;
-  // すべてのボックスを2列・均一幅に揃える。横画面はチャートも含めて2列×3段
-  // (チャート/NEXT・精度/速度・FALLBACK/ANCHOR)、縦画面もメトリクスカードを
+  // すべてのボックスを2列・均一幅に揃える。横画面はチャートも含めて2列×2段
+  // (チャート/NEXT・精度/速度)、縦画面もメトリクスカードを
   // 同じ幅に揃える(チャートのみ単独で全幅)。
   const boxWidth = (contentWidth - metricsGap) / 2;
   const chartColumnWidth = isLandscape ? boxWidth : panelWidth;
@@ -926,9 +910,165 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
     ]
   );
 
+  // 実験パネルの操作やスクロールと、DOのドラッグ・開閉を競合させない。
+  // 折りたたみ中は従来通り全体、実験パネル展開中はヘッダーだけで操作する。
+  const dragOnHeader = showImuShadow && isExpanded;
+  const diagnosticsBody = (
+    <View style={{ gap: compactSpacing }}>
+      <View style={[styles.bodyRow, bodyRowStyle]}>
+        {isLandscape ? (
+          <View style={styles.chartColumn} testID="dev-overlay-landscape">
+            <View style={styles.landscapeTopRow}>
+              <View style={{ width: chartColumnWidth }}>
+                <View style={[styles.chartShell, chartShellStyle]}>
+                  <View style={styles.chartShellContent}>
+                    <Typography style={styles.chartLabel}>
+                      ACCURACY HISTORY
+                    </Typography>
+                    <AccuracyHistoryChart
+                      history={chartHistory}
+                      width={accuracyChartWidth}
+                      height={accuracyChartHeight}
+                    />
+                  </View>
+                </View>
+              </View>
+              <MetricCard
+                label="NEXT TARGET"
+                value={
+                  distanceToNextStation ? `${distanceToNextStation}m` : '--'
+                }
+                meta={nextStationMeta}
+                style={[
+                  { width: nextCardWidth },
+                  metricCardStyle,
+                  nextTargetCardStyle,
+                ]}
+                valueTestID="dev-overlay-next-value"
+                metaTestID="dev-overlay-next-meta"
+                labelStyle={metricLabelStyle}
+                valueStyle={metricValueStyle}
+                metaStyle={metricMetaStyle}
+              />
+            </View>
+
+            <View style={styles.landscapeSubGrid}>
+              <MetricCard
+                label="LOCATION ACCURACY"
+                value={accuracyMeters != null ? `${accuracyMeters}` : '--'}
+                suffix="m"
+                style={[{ width: leftMetricWidth }, metricCardStyle]}
+                valueTestID="dev-overlay-accuracy-value"
+                labelStyle={metricLabelStyle}
+                valueStyle={[
+                  metricValueStyle,
+                  isAccuracyWarning && styles.metricValueWarning,
+                  isAccuracyOverLimit && styles.metricValueDanger,
+                ]}
+                suffixStyle={
+                  isAccuracyOverLimit
+                    ? styles.metricValueDanger
+                    : isAccuracyWarning
+                      ? styles.metricValueWarning
+                      : null
+                }
+                metaStyle={metricMetaStyle}
+              />
+              <MetricCard
+                label="CURRENT SPEED"
+                value={speedKMH}
+                suffix="km/h"
+                meta={speedMeta}
+                metaTestID="dev-overlay-speed-meta"
+                style={[{ width: leftMetricWidth }, metricCardStyle]}
+                valueTestID="dev-overlay-speed-value"
+                labelStyle={metricLabelStyle}
+                valueStyle={metricValueStyle}
+                metaStyle={metricMetaStyle}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.chartColumn}>
+            <View style={[styles.chartShell, chartShellStyle]}>
+              <View style={styles.chartShellContent}>
+                <Typography style={styles.chartLabel}>
+                  ACCURACY HISTORY
+                </Typography>
+                <AccuracyHistoryChart
+                  history={chartHistory}
+                  width={accuracyChartWidth}
+                  height={accuracyChartHeight}
+                />
+              </View>
+            </View>
+
+            <View style={[styles.metricsGrid, { gap: metricsGap }]}>
+              <MetricCard
+                label="LOCATION ACCURACY"
+                value={accuracyMeters != null ? `${accuracyMeters}` : '--'}
+                suffix="m"
+                style={[{ width: metricWidth }, metricCardStyle]}
+                valueTestID="dev-overlay-accuracy-value"
+                labelStyle={metricLabelStyle}
+                valueStyle={[
+                  metricValueStyle,
+                  isAccuracyWarning && styles.metricValueWarning,
+                  isAccuracyOverLimit && styles.metricValueDanger,
+                ]}
+                suffixStyle={
+                  isAccuracyOverLimit
+                    ? styles.metricValueDanger
+                    : isAccuracyWarning
+                      ? styles.metricValueWarning
+                      : null
+                }
+                metaStyle={metricMetaStyle}
+              />
+              <MetricCard
+                label="CURRENT SPEED"
+                value={speedKMH}
+                suffix="km/h"
+                meta={speedMeta}
+                metaTestID="dev-overlay-speed-meta"
+                style={[{ width: metricWidth }, metricCardStyle]}
+                valueTestID="dev-overlay-speed-value"
+                labelStyle={metricLabelStyle}
+                valueStyle={metricValueStyle}
+                metaStyle={metricMetaStyle}
+              />
+              <MetricCard
+                label="NEXT TARGET"
+                value={
+                  distanceToNextStation ? `${distanceToNextStation}m` : '--'
+                }
+                meta={nextStationMeta}
+                style={[
+                  { width: nextCardWidth },
+                  metricCardStyle,
+                  nextTargetCardStyle,
+                ]}
+                valueTestID="dev-overlay-next-value"
+                metaTestID="dev-overlay-next-meta"
+                labelStyle={metricLabelStyle}
+                valueStyle={metricValueStyle}
+                metaStyle={metricMetaStyle}
+              />
+            </View>
+          </View>
+        )}
+      </View>
+
+      {showImuShadow && <ImuShadowPanel />}
+      <Typography style={[styles.footerText, footerTextStyle]}>
+        LIVE SENSOR TRACE / INTERNAL BUILD
+      </Typography>
+    </View>
+  );
+
   return (
     <Animated.View
-      {...panResponder.panHandlers}
+      {...(dragOnHeader ? {} : panResponder.panHandlers)}
       style={[
         styles.root,
         {
@@ -980,7 +1120,13 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
             },
           ]}
         >
-          <View style={styles.headerRow}>
+          <View
+            style={styles.headerRow}
+            {...(dragOnHeader ? panResponder.panHandlers : {})}
+            onLayout={(event) =>
+              setHeaderHeight(event.nativeEvent.layout.height)
+            }
+          >
             <View style={styles.headerCopy}>
               <Typography style={styles.eyebrow}>DEV OVERLAY</Typography>
               <Typography style={[styles.title, headerTitleStyle]}>
@@ -1025,222 +1171,28 @@ const DevOverlay: React.FC<Props> = ({ unrotated = false }) => {
             </View>
           </View>
 
-          <View style={[styles.bodyRow, bodyRowStyle]}>
-            {isLandscape ? (
-              <View style={styles.chartColumn} testID="dev-overlay-landscape">
-                <View style={styles.landscapeTopRow}>
-                  <View style={{ width: chartColumnWidth }}>
-                    <View style={[styles.chartShell, chartShellStyle]}>
-                      <View style={styles.chartShellContent}>
-                        <Typography style={styles.chartLabel}>
-                          ACCURACY HISTORY
-                        </Typography>
-                        <AccuracyHistoryChart
-                          history={chartHistory}
-                          width={accuracyChartWidth}
-                          height={accuracyChartHeight}
-                        />
-                      </View>
-                    </View>
-                  </View>
-                  <MetricCard
-                    label="NEXT TARGET"
-                    value={
-                      distanceToNextStation ? `${distanceToNextStation}m` : '--'
-                    }
-                    meta={nextStationMeta}
-                    style={[
-                      { width: nextCardWidth },
-                      metricCardStyle,
-                      nextTargetCardStyle,
-                    ]}
-                    valueTestID="dev-overlay-next-value"
-                    metaTestID="dev-overlay-next-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
-                </View>
-
-                <View style={styles.landscapeSubGrid}>
-                  <MetricCard
-                    label="LOCATION ACCURACY"
-                    value={accuracyMeters != null ? `${accuracyMeters}` : '--'}
-                    suffix="m"
-                    style={[{ width: leftMetricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-accuracy-value"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={[
-                      metricValueStyle,
-                      isAccuracyWarning && styles.metricValueWarning,
-                      isAccuracyOverLimit && styles.metricValueDanger,
-                    ]}
-                    suffixStyle={
-                      isAccuracyOverLimit
-                        ? styles.metricValueDanger
-                        : isAccuracyWarning
-                          ? styles.metricValueWarning
-                          : null
-                    }
-                    metaStyle={metricMetaStyle}
-                  />
-                  <MetricCard
-                    label="CURRENT SPEED"
-                    value={speedKMH}
-                    suffix="km/h"
-                    meta={speedMeta}
-                    metaTestID="dev-overlay-speed-meta"
-                    style={[{ width: leftMetricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-speed-value"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
-                </View>
-
-                {etaAssistEnabled ? (
-                  <View style={styles.landscapeSubGrid}>
-                    <MetricCard
-                      label="ETA FALLBACK"
-                      value={etaFallbackValue}
-                      meta={etaFallbackMeta}
-                      style={[{ width: leftMetricWidth }, metricCardStyle]}
-                      valueTestID="dev-overlay-eta-fallback-value"
-                      metaTestID="dev-overlay-eta-fallback-meta"
-                      labelStyle={metricLabelStyle}
-                      valueStyle={[
-                        metricValueStyle,
-                        etaPhase != null &&
-                          isAccuracyWarning &&
-                          styles.metricValueWarning,
-                      ]}
-                      metaStyle={metricMetaStyle}
-                    />
-                    <MetricCard
-                      label="ETA ANCHOR"
-                      value={etaAnchorValue}
-                      meta={etaAnchorMeta}
-                      style={[{ width: leftMetricWidth }, metricCardStyle]}
-                      valueTestID="dev-overlay-eta-anchor-value"
-                      metaTestID="dev-overlay-eta-anchor-meta"
-                      labelStyle={metricLabelStyle}
-                      valueStyle={metricValueStyle}
-                      metaStyle={metricMetaStyle}
-                    />
-                  </View>
-                ) : null}
-
-                <Typography style={[styles.footerText, footerTextStyle]}>
-                  LIVE SENSOR TRACE / INTERNAL BUILD
-                </Typography>
-              </View>
-            ) : (
-              <View style={styles.chartColumn}>
-                <View style={[styles.chartShell, chartShellStyle]}>
-                  <View style={styles.chartShellContent}>
-                    <Typography style={styles.chartLabel}>
-                      ACCURACY HISTORY
-                    </Typography>
-                    <AccuracyHistoryChart
-                      history={chartHistory}
-                      width={accuracyChartWidth}
-                      height={accuracyChartHeight}
-                    />
-                  </View>
-                </View>
-
-                <View style={[styles.metricsGrid, { gap: metricsGap }]}>
-                  <MetricCard
-                    label="LOCATION ACCURACY"
-                    value={accuracyMeters != null ? `${accuracyMeters}` : '--'}
-                    suffix="m"
-                    style={[{ width: metricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-accuracy-value"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={[
-                      metricValueStyle,
-                      isAccuracyWarning && styles.metricValueWarning,
-                      isAccuracyOverLimit && styles.metricValueDanger,
-                    ]}
-                    suffixStyle={
-                      isAccuracyOverLimit
-                        ? styles.metricValueDanger
-                        : isAccuracyWarning
-                          ? styles.metricValueWarning
-                          : null
-                    }
-                    metaStyle={metricMetaStyle}
-                  />
-                  <MetricCard
-                    label="CURRENT SPEED"
-                    value={speedKMH}
-                    suffix="km/h"
-                    meta={speedMeta}
-                    metaTestID="dev-overlay-speed-meta"
-                    style={[{ width: metricWidth }, metricCardStyle]}
-                    valueTestID="dev-overlay-speed-value"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
-                  <MetricCard
-                    label="NEXT TARGET"
-                    value={
-                      distanceToNextStation ? `${distanceToNextStation}m` : '--'
-                    }
-                    meta={nextStationMeta}
-                    style={[
-                      { width: nextCardWidth },
-                      metricCardStyle,
-                      nextTargetCardStyle,
-                    ]}
-                    valueTestID="dev-overlay-next-value"
-                    metaTestID="dev-overlay-next-meta"
-                    labelStyle={metricLabelStyle}
-                    valueStyle={metricValueStyle}
-                    metaStyle={metricMetaStyle}
-                  />
-                  {etaAssistEnabled ? (
-                    <>
-                      <MetricCard
-                        label="ETA FALLBACK"
-                        value={etaFallbackValue}
-                        meta={etaFallbackMeta}
-                        style={[{ width: metricWidth }, metricCardStyle]}
-                        valueTestID="dev-overlay-eta-fallback-value"
-                        metaTestID="dev-overlay-eta-fallback-meta"
-                        labelStyle={metricLabelStyle}
-                        valueStyle={[
-                          metricValueStyle,
-                          etaPhase != null &&
-                            isAccuracyWarning &&
-                            styles.metricValueWarning,
-                        ]}
-                        metaStyle={metricMetaStyle}
-                      />
-                      <MetricCard
-                        label="ETA ANCHOR"
-                        value={etaAnchorValue}
-                        meta={etaAnchorMeta}
-                        style={[{ width: metricWidth }, metricCardStyle]}
-                        valueTestID="dev-overlay-eta-anchor-value"
-                        metaTestID="dev-overlay-eta-anchor-meta"
-                        labelStyle={metricLabelStyle}
-                        valueStyle={metricValueStyle}
-                        metaStyle={metricMetaStyle}
-                      />
-                    </>
-                  ) : null}
-                </View>
-              </View>
-            )}
-          </View>
-
-          {!isLandscape ? (
-            <Typography style={[styles.footerText, footerTextStyle]}>
-              LIVE SENSOR TRACE / INTERNAL BUILD
-            </Typography>
-          ) : null}
+          {showImuShadow ? (
+            <ScrollView
+              style={{
+                flexGrow: 0,
+                maxHeight: Math.max(
+                  1,
+                  screenHeight -
+                    (isLandscape ? 16 : 24) -
+                    compactPaddingY * 2 -
+                    compactSpacing -
+                    headerHeight -
+                    2
+                ),
+              }}
+              scrollEnabled={isExpanded}
+              keyboardShouldPersistTaps="handled"
+            >
+              {diagnosticsBody}
+            </ScrollView>
+          ) : (
+            diagnosticsBody
+          )}
         </View>
       </Animated.View>
 
