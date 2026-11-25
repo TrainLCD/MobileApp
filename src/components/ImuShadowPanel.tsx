@@ -362,8 +362,15 @@ export const ImuShadowPanel = () => {
     try {
       // Do not resolve the native module on existing JS-only builds unless explicitly requested.
       const sensor = mode === 'imu' ? await loadImuShadowSensor() : null;
+      if (generation !== generationRef.current) {
+        return;
+      }
       if (sensor) {
-        if (!(await sensor.isAvailableAsync())) {
+        const available = await sensor.isAvailableAsync();
+        if (generation !== generationRef.current) {
+          return;
+        }
+        if (!available) {
           throw new Error('sensor-unavailable');
         }
         if (!(await sensor.requestPermissionsAsync()).granted) {

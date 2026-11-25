@@ -240,6 +240,35 @@ describe('native IMU timestamps and receipt watchdog', () => {
     expect(estimator.snapshot().imuSpeedMps).toBeCloseTo(2.7);
   });
 
+  test('a periodic timer before the initial native callbacks allows contiguous integration', () => {
+    const estimator = new ImuShadowEstimator(leg(400), 0);
+    expect(estimator.snapshotForPeriodicObservation(1000)).toMatchObject({
+      phase: 'invalid',
+      reason: 'sample-gap',
+      arrivalCandidate: false,
+    });
+    for (let n = 0; n <= 20; n += 1) {
+      estimator.step(sample(100_000 + n * 100, 1), 1000);
+    }
+    expect(estimator.snapshotForPeriodicObservation(1000).phase).toBe(
+      'accelerating'
+    );
+    expect(estimator.snapshot().imuSpeedMps).toBeCloseTo(2);
+  });
+
+  test('periodic observation permanently invalidates a continued absence of initial samples', () => {
+    const estimator = new ImuShadowEstimator(leg(400), 0);
+    expect(estimator.snapshotForPeriodicObservation(1000)).toMatchObject({
+      phase: 'invalid',
+      reason: 'sample-gap',
+      arrivalCandidate: false,
+    });
+    expect(estimator.snapshotForPeriodicObservation(2000).reason).toBe(
+      'sample-gap'
+    );
+    expect(estimator.step(sample(100_000), 2100).phase).toBe('invalid');
+  });
+
   test('periodic observation permanently invalidates an outage that persists, including duplicate timestamps', () => {
     const estimator = new ImuShadowEstimator(leg(400), 0);
     estimator.step(sample(100_000), 100);

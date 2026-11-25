@@ -279,9 +279,8 @@ export class ImuShadowEstimator {
       return this.snapshot();
     }
     if (
-      this.lastMs == null ||
-      (this.pendingReceiptGapMs != null &&
-        nowMs - this.pendingReceiptGapMs >= MAX_GAP_SECONDS * 1000)
+      this.pendingReceiptGapMs != null &&
+      nowMs - this.pendingReceiptGapMs >= MAX_GAP_SECONDS * 1000
     ) {
       return this.invalidate('sample-gap');
     }

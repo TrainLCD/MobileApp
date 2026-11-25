@@ -7,17 +7,23 @@ import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { ImuShadowPanel } from './ImuShadowPanel';
 
 let mockReceive: ((data: DeviceMotionMeasurement) => void) | undefined;
+let mockLoadGate: Promise<void> | undefined;
+const mockIsAvailable = jest.fn(async () => true);
+const mockRequestPermissions = jest.fn(async () => ({ granted: true }));
 
 jest.mock('~/lib/imuShadowSensor', () => ({
-  loadImuShadowSensor: async () => ({
-    isAvailableAsync: jest.fn(async () => true),
-    requestPermissionsAsync: jest.fn(async () => ({ granted: true })),
-    setUpdateInterval: jest.fn(),
-    addListener: (listener: (data: DeviceMotionMeasurement) => void) => {
-      mockReceive = listener;
-      return { remove: jest.fn() };
-    },
-  }),
+  loadImuShadowSensor: async () => {
+    if (mockLoadGate) await mockLoadGate;
+    return {
+      isAvailableAsync: mockIsAvailable,
+      requestPermissionsAsync: mockRequestPermissions,
+      setUpdateInterval: jest.fn(),
+      addListener: (listener: (data: DeviceMotionMeasurement) => void) => {
+        mockReceive = listener;
+        return { remove: jest.fn() };
+      },
+    };
+  },
 }));
 jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
 jest.mock('expo-application', () => ({
@@ -100,3 +106,60 @@ test('stopping between ticks shows the same invalid estimate as the final observ
     jest.useRealTimers();
   }
 });
+
+test.each(['load', 'availability'] as const)(
+  'cancelling during %s prevents a permission request',
+  async (stage) => {
+    const originalState = AppState.currentState;
+    AppState.currentState = 'active';
+    mockReceive = undefined;
+    mockIsAvailable.mockClear();
+    mockRequestPermissions.mockClear();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    if (stage === 'load') {
+      mockLoadGate = gate;
+    } else {
+      mockIsAvailable.mockImplementationOnce(async () => {
+        await gate;
+        return true;
+      });
+    }
+    const store = createStore();
+    store.set(autoModeEnabledAtom, false);
+    try {
+      const screen = render(
+        <Provider store={store}>
+          <ImuShadowPanel />
+        </Provider>
+      );
+      await act(async () => {
+        fireEvent.press(screen.getByText('Record IMU'));
+      });
+      expect(mockIsAvailable).toHaveBeenCalledTimes(stage === 'load' ? 0 : 1);
+      expect(mockRequestPermissions).not.toHaveBeenCalled();
+      if (stage === 'load') {
+        screen.unmount();
+      } else {
+        await act(async () => {
+          store.set(autoModeEnabledAtom, true);
+        });
+      }
+      await act(async () => {
+        release();
+      });
+      expect(mockIsAvailable).toHaveBeenCalledTimes(stage === 'load' ? 0 : 1);
+      expect(mockRequestPermissions).not.toHaveBeenCalled();
+      expect(mockReceive).toBeUndefined();
+      if (stage === 'availability') screen.unmount();
+    } finally {
+      release();
+      mockLoadGate = undefined;
+      AppState.currentState = originalState;
+      mockIsAvailable.mockClear();
+      mockRequestPermissions.mockClear();
+    }
+  }
+);
