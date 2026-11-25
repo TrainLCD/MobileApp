@@ -3,6 +3,11 @@ import { FONTS } from '~/constants';
 import isTablet from '~/utils/isTablet';
 import { RFValue } from '~/utils/rfValue';
 
+// iOS の標準フォントは一文字ごとの自然な行高が大きいため、縦書きは全角一文字分の高さに揃える。
+const VERTICAL_STATION_NAME_LINE_HEIGHT = Platform.select({
+  ios: RFValue(18),
+});
+
 // Shared bar positioning constants
 export const BAR_BOTTOM_WEST = isTablet ? 32 : 48;
 export const BAR_BOTTOM_JO = isTablet ? 32 : 48;
@@ -162,6 +167,7 @@ export const commonLineBoardStyles = StyleSheet.create({
     marginBottom: 16,
   },
   stationName: {
+    lineHeight: VERTICAL_STATION_NAME_LINE_HEIGHT,
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: 5,
@@ -169,6 +175,7 @@ export const commonLineBoardStyles = StyleSheet.create({
   },
   // Station name variant for West style
   stationNameWest: {
+    lineHeight: VERTICAL_STATION_NAME_LINE_HEIGHT,
     width: isTablet ? 48 : 32,
     fontSize: RFValue(18),
     fontWeight: 'bold',
@@ -178,6 +185,7 @@ export const commonLineBoardStyles = StyleSheet.create({
   },
   // Station name variant for JO style
   stationNameJO: {
+    lineHeight: VERTICAL_STATION_NAME_LINE_HEIGHT,
     fontSize: RFValue(18),
     fontWeight: 'bold',
     marginLeft: 12,
