@@ -9,36 +9,28 @@ import {
 // remote_tts_enabled_android) が決めるため、端末内蔵 TTS (expo-speech) で読み上げる
 // 構成では参照されない。
 
-// Google TTS の Standard 話者を日英の組み合わせでテーマごとに選ぶ。
+const defaultVoices = {
+  jaVoiceName: 'ja-JP-Standard-B',
+  enVoiceName: 'en-US-Standard-G',
+};
+
 export const REMOTE_TTS_VOICES = {
-  TOKYO_METRO: {
-    jaVoiceName: 'ja-JP-Standard-A',
-    enVoiceName: 'en-US-Standard-G',
-  },
-  YAMANOTE: {
-    jaVoiceName: 'ja-JP-Standard-B',
-    enVoiceName: 'en-US-Standard-F',
-  },
-  JR_WEST: { jaVoiceName: 'ja-JP-Standard-C', enVoiceName: 'en-US-Standard-G' },
-  TY: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-F' },
-  SAIKYO: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-G' },
-  TOEI: { jaVoiceName: 'ja-JP-Standard-C', enVoiceName: 'en-US-Standard-E' },
-  LED: { jaVoiceName: 'ja-JP-Standard-D', enVoiceName: 'en-US-Standard-F' },
-  JO: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-H' },
-  JL: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-E' },
-  JR_KYUSHU: {
-    jaVoiceName: 'ja-JP-Standard-C',
-    enVoiceName: 'en-US-Standard-H',
-  },
-  JR_315: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-D' },
-  ODAKYU: { jaVoiceName: 'ja-JP-Standard-A', enVoiceName: 'en-US-Standard-H' },
-  E231: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-E' },
-  E131: { jaVoiceName: 'ja-JP-Standard-B', enVoiceName: 'en-US-Standard-D' },
-  SANYO: { jaVoiceName: 'ja-JP-Standard-D', enVoiceName: 'en-US-Standard-G' },
-  LOW_POWER: {
-    jaVoiceName: 'ja-JP-Standard-D',
-    enVoiceName: 'en-US-Standard-E',
-  },
+  TOKYO_METRO: defaultVoices,
+  YAMANOTE: defaultVoices,
+  JR_WEST: defaultVoices,
+  TY: defaultVoices,
+  SAIKYO: defaultVoices,
+  TOEI: defaultVoices,
+  LED: defaultVoices,
+  JO: defaultVoices,
+  JL: defaultVoices,
+  JR_KYUSHU: defaultVoices,
+  JR_315: defaultVoices,
+  ODAKYU: defaultVoices,
+  E231: defaultVoices,
+  E131: defaultVoices,
+  SANYO: defaultVoices,
+  LOW_POWER: defaultVoices,
 } satisfies Record<AppTheme, { jaVoiceName: string; enVoiceName: string }>;
 
 // 声の高さは Worker の TTS_PITCH で決まる。Standard 系は読み方のプロンプト指示を
