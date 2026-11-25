@@ -1,6 +1,7 @@
 import {
   getLegComparison,
   getLocationArrivalStationId,
+  isManualCorrectionActive,
   type Recording,
   type Reference,
 } from './imuShadowRecording';
@@ -146,6 +147,34 @@ test('requires recent accepted position evidence, not stale or corrected arrival
     legStartedAtMs: 10_000,
   };
   expect(getLocationArrivalStationId(input)).toBe(2);
+  const stations = [input.station];
+  const correction = { location, stations };
+  expect(
+    getLocationArrivalStationId({
+      ...input,
+      manualCorrection: isManualCorrectionActive(
+        correction,
+        location,
+        stations
+      ),
+    })
+  ).toBeNull();
+  const nextLocation = { ...location, timestamp: 40_500 };
+  expect(
+    getLocationArrivalStationId({
+      ...input,
+      raw: nextLocation,
+      filtered: nextLocation,
+      manualCorrection: isManualCorrectionActive(
+        correction,
+        nextLocation,
+        stations
+      ),
+    })
+  ).toBe(2);
+  expect(isManualCorrectionActive(correction, location, [...stations])).toBe(
+    false
+  );
   expect(
     getLocationArrivalStationId({
       ...input,

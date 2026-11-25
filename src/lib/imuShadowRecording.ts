@@ -23,6 +23,19 @@ export type Reference = {
     observedAtMs: number;
   } | null;
 };
+// Match the lifetime of the correction in useRefreshStation.
+export const isManualCorrectionActive = (
+  correction: {
+    location: LocationObject | null;
+    stations: readonly unknown[];
+  } | null,
+  location: LocationObject | null,
+  stations: readonly unknown[]
+): boolean =>
+  correction != null &&
+  correction.location === location &&
+  correction.stations === stations;
+
 // Expo Location reports OS location, not satellite-only GNSS. Require a recent,
 // accepted coordinate that supports the shared arrival state, rather than
 // treating a missing fix, grace period or manual station correction as GPS.

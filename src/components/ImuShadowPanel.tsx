@@ -18,10 +18,12 @@ import {
 import {
   getLastImuShadowRecording,
   getLocationArrivalStationId,
+  isManualCorrectionActive,
   type Mode,
   type Recording,
   rememberImuShadowRecording,
 } from '~/lib/imuShadowRecording';
+import { loadImuShadowSensor } from '~/lib/imuShadowSensor';
 import { getTrackDistance } from '~/lib/trackDistances';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import { locationAtom, rawLocationAtom } from '~/store/atoms/location';
@@ -137,7 +139,11 @@ export const ImuShadowPanel = () => {
               filtered,
               station,
               arrived,
-              manualCorrection: store.get(manualStationCorrectionAtom) != null,
+              manualCorrection: isManualCorrectionActive(
+                store.get(manualStationCorrectionAtom),
+                filtered,
+                store.get(stationsAtom)
+              ),
               arrivedThreshold: arrivedThresholdRef.current,
               atMs,
               legStartedAtMs,
@@ -181,12 +187,17 @@ export const ImuShadowPanel = () => {
       recording.endedAtMs = Date.now();
       recording.endReason = reason;
       // Take a last observation even if the run is interrupted before the next periodic tick.
+      const finalEstimate = readEstimate(recording, recording.endedAtMs);
       recording.observations.push({
         atMs: recording.endedAtMs,
         legIndex: recording.legs.length - 1,
-        estimate: readEstimate(recording, recording.endedAtMs),
+        estimate: finalEstimate,
         reference: readReference(recording.endedAtMs),
       });
+      if (updateUi) {
+        setEstimate(finalEstimate);
+        setNowMs(recording.endedAtMs);
+      }
       void recordBattery(recording);
     }
     recordingRef.current = null;
@@ -320,11 +331,17 @@ export const ImuShadowPanel = () => {
 
   const readEstimate = (
     recording: Recording,
-    atMs: number
+    atMs: number,
+    periodic = false
   ): Estimate | null => {
-    const value =
-      estimatorRef.current?.snapshotAtReceiptTime(performance.now()) ?? null;
-    if (value) recordCandidateChange(recording, atMs, value);
+    const estimator = estimatorRef.current;
+    if (!estimator) return null;
+    const receiptTime = performance.now();
+    const value = periodic
+      ? estimator.snapshotForPeriodicObservation(receiptTime)
+      : estimator.snapshotAtReceiptTime(receiptTime);
+    // A provisional stale snapshot is not a new estimator candidate transition.
+    recordCandidateChange(recording, atMs, estimator.snapshot());
     return value;
   };
 
@@ -344,8 +361,7 @@ export const ImuShadowPanel = () => {
     activeRouteKeyRef.current = routeKey;
     try {
       // Do not resolve the native module on existing JS-only builds unless explicitly requested.
-      const sensor =
-        mode === 'imu' ? (await import('expo-sensors')).DeviceMotion : null;
+      const sensor = mode === 'imu' ? await loadImuShadowSensor() : null;
       if (sensor) {
         if (!(await sensor.isAvailableAsync())) {
           throw new Error('sensor-unavailable');
@@ -389,7 +405,7 @@ export const ImuShadowPanel = () => {
           return;
         }
         const atMs = Date.now();
-        const value = readEstimate(recording, atMs);
+        const value = readEstimate(recording, atMs, true);
         recording.observations.push({
           atMs,
           legIndex: recording.legs.length - 1,

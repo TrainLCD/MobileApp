@@ -178,6 +178,7 @@ const ETA_UPDATE_SECONDS = 10;
 export class ImuShadowEstimator {
   private lastMs: number | null = null;
   private lastReceivedMs: number | null;
+  private pendingReceiptGapMs: number | null = null;
   private startMs: number | null = null;
   private phase: Phase = 'waiting';
   private reason: string | null = null;
@@ -266,6 +267,33 @@ export class ImuShadowEstimator {
     return this.snapshot();
   }
 
+  // A periodic JS timer can run before queued native callbacks after a JS stall.
+  // Hide stale estimates immediately, but allow one observation interval for
+  // advancing native timestamps to arrive before committing the invalidation.
+  snapshotForPeriodicObservation(nowMs: number): Estimate {
+    if (
+      this.phase === 'invalid' ||
+      this.lastReceivedMs == null ||
+      nowMs - this.lastReceivedMs <= MAX_GAP_SECONDS * 1000
+    ) {
+      return this.snapshot();
+    }
+    if (
+      this.lastMs == null ||
+      (this.pendingReceiptGapMs != null &&
+        nowMs - this.pendingReceiptGapMs >= MAX_GAP_SECONDS * 1000)
+    ) {
+      return this.invalidate('sample-gap');
+    }
+    this.pendingReceiptGapMs ??= nowMs;
+    return {
+      ...this.snapshot(),
+      phase: 'invalid',
+      reason: 'sample-gap',
+      arrivalCandidate: false,
+    };
+  }
+
   step(sample: MotionSample, receivedAtMs?: number): Estimate {
     if (this.phase === 'invalid') {
       return this.snapshot();
@@ -278,7 +306,10 @@ export class ImuShadowEstimator {
       return this.snapshot();
     }
     this.lastMs = sample.timeMs;
-    if (receivedAtMs != null) this.lastReceivedMs = receivedAtMs;
+    if (receivedAtMs != null) {
+      this.lastReceivedMs = receivedAtMs;
+      this.pendingReceiptGapMs = null;
+    }
     if (previous == null) {
       return this.snapshot();
     }
