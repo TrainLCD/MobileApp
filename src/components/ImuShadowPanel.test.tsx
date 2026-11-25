@@ -1,4 +1,5 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
+import * as Battery from 'expo-battery';
 import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
 import { AppState } from 'react-native';
@@ -69,7 +70,23 @@ jest.mock('~/hooks/useThreshold', () => ({
 jest.mock('~/lib/trackDistances', () => ({ getTrackDistance: () => 300 }));
 jest.mock('~/translation', () => ({ isJapanese: false }));
 jest.mock('~/utils/etaPhaseNow', () => ({ getEtaPhaseNow: () => null }));
-jest.mock('~/utils/exportImuShadow', () => ({ exportImuShadow: jest.fn() }));
+const mockWriteRecording = jest.fn();
+jest.mock('expo-file-system', () => ({
+  Paths: { cache: 'cache' },
+  File: jest.fn(() => ({
+    uri: 'file:///imu.json',
+    writeSync: mockWriteRecording,
+  })),
+}));
+jest.mock('react-native-share', () => ({
+  __esModule: true,
+  default: { open: jest.fn(async () => undefined) },
+}));
+jest.mock('~/utils/exportImuShadow', () => ({
+  exportImuShadow: jest.fn(
+    jest.requireActual('~/utils/exportImuShadow').exportImuShadow
+  ),
+}));
 
 test('stopping between ticks shows the same invalid estimate as the final observation', async () => {
   jest.useFakeTimers();
@@ -292,5 +309,202 @@ test('waits for a known stopped station instead of starting on the wrong leg', a
   } finally {
     AppState.currentState = originalState;
     mockRequestPermissions.mockClear();
+  }
+});
+
+test.each(['load', 'availability', 'permission'] as const)(
+  'automatic start rechecks the station after %s and waits for the next stop',
+  async (stage) => {
+    const originalState = AppState.currentState;
+    AppState.currentState = 'active';
+    mockReceive = undefined;
+    mockIsAvailable.mockClear();
+    mockRequestPermissions.mockClear();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    if (stage === 'load') mockLoadGate = gate;
+    if (stage === 'availability')
+      mockIsAvailable.mockImplementationOnce(async () => {
+        await gate;
+        return true;
+      });
+    if (stage === 'permission')
+      mockRequestPermissions.mockImplementationOnce(async () => {
+        await gate;
+        return { granted: true };
+      });
+    const store = createStore();
+    store.set(stationAtom, { id: 1 } as Station);
+    store.set(selectedBoundAtom, { id: 3 } as Station);
+    store.set(selectedDirectionAtom, 'INBOUND');
+    store.set(arrivedAtom, true);
+    const previousRecording = getLastImuShadowRecording();
+    try {
+      const screen = render(
+        <Provider store={store}>
+          <ImuShadowPanel />
+        </Provider>
+      );
+      await act(async () => {});
+      await act(async () => {
+        store.set(arrivedAtom, false);
+        store.set(stationAtom, { id: 2 } as Station);
+      });
+      await act(async () => {
+        release();
+      });
+      expect(getLastImuShadowRecording()).toBe(previousRecording);
+      expect(mockReceive).toBeUndefined();
+      expect(mockRequestPermissions).toHaveBeenCalledTimes(
+        stage === 'permission' ? 1 : 0
+      );
+      await act(async () => {
+        store.set(arrivedAtom, true);
+      });
+      expect(getLastImuShadowRecording()?.legs[0]?.leg).toMatchObject({
+        fromId: 2,
+        toId: 3,
+      });
+      expect(mockReceive).toBeDefined();
+      screen.unmount();
+    } finally {
+      release();
+      mockLoadGate = undefined;
+      AppState.currentState = originalState;
+      mockIsAvailable.mockClear();
+      mockRequestPermissions.mockClear();
+    }
+  }
+);
+
+test('automatic start retries when a new stopped station was rendered before permission resolves', async () => {
+  const originalState = AppState.currentState;
+  AppState.currentState = 'active';
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  mockRequestPermissions.mockImplementationOnce(async () => {
+    await gate;
+    return { granted: true };
+  });
+  const store = createStore();
+  store.set(stationAtom, { id: 1 } as Station);
+  store.set(selectedBoundAtom, { id: 3 } as Station);
+  store.set(selectedDirectionAtom, 'INBOUND');
+  try {
+    const screen = render(
+      <Provider store={store}>
+        <ImuShadowPanel />
+      </Provider>
+    );
+    await act(async () => {});
+    await act(async () => {
+      store.set(stationAtom, { id: 2 } as Station);
+    });
+    await act(async () => {
+      release();
+    });
+    expect(getLastImuShadowRecording()?.legs[0]?.leg).toMatchObject({
+      fromId: 2,
+      toId: 3,
+    });
+    screen.unmount();
+  } finally {
+    release();
+    AppState.currentState = originalState;
+  }
+});
+
+test('manual start preserves the explicitly selected station after permission resolves', async () => {
+  const originalState = AppState.currentState;
+  AppState.currentState = 'active';
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  mockRequestPermissions.mockImplementationOnce(async () => {
+    await gate;
+    return { granted: true };
+  });
+  const store = createStore();
+  store.set(stationAtom, { id: 1 } as Station);
+  try {
+    const screen = render(
+      <Provider store={store}>
+        <ImuShadowPanel />
+      </Provider>
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByText('Record IMU'));
+    });
+    await act(async () => {
+      store.set(stationAtom, { id: 2 } as Station);
+      store.set(arrivedAtom, false);
+    });
+    await act(async () => {
+      release();
+    });
+    expect(getLastImuShadowRecording()?.legs[0]?.leg).toMatchObject({
+      fromId: 1,
+      toId: 2,
+    });
+    screen.unmount();
+  } finally {
+    release();
+    AppState.currentState = originalState;
+  }
+});
+
+test('export after terminal auto-stop waits for the final battery sample', async () => {
+  jest.useFakeTimers();
+  const originalState = AppState.currentState;
+  AppState.currentState = 'active';
+  mockWriteRecording.mockClear();
+  const store = createStore();
+  store.set(stationAtom, { id: 2 } as Station);
+  store.set(selectedBoundAtom, { id: 3 } as Station);
+  store.set(selectedDirectionAtom, 'INBOUND');
+  let release!: (level: number) => void;
+  const gate = new Promise<number>((resolve) => {
+    release = resolve;
+  });
+  try {
+    const screen = render(
+      <Provider store={store}>
+        <ImuShadowPanel />
+      </Provider>
+    );
+    await act(async () => {});
+    const recording = getLastImuShadowRecording();
+    expect(recording?.battery).toHaveLength(1);
+    jest
+      .mocked(Battery.getBatteryLevelAsync)
+      .mockImplementationOnce(() => gate);
+    await act(async () => {
+      fireEvent.press(screen.getByText('Actual next arrival'));
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(4000);
+    });
+    expect(recording?.endReason).toBe('terminal');
+    await act(async () => {
+      fireEvent.press(screen.getByText('Export JSON'));
+    });
+    expect(mockWriteRecording).not.toHaveBeenCalled();
+    await act(async () => {
+      release(0.75);
+    });
+    expect(mockWriteRecording).toHaveBeenCalledTimes(1);
+    const data = JSON.parse(mockWriteRecording.mock.calls[0][0]);
+    expect(data.battery).toHaveLength(2);
+    expect(data.battery.at(-1).level).toBe(0.75);
+    screen.unmount();
+  } finally {
+    release(0.75);
+    AppState.currentState = originalState;
+    jest.useRealTimers();
   }
 });

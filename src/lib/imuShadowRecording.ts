@@ -146,6 +146,22 @@ export const rememberImuShadowRecording = (recording: Recording): void => {
   lastRecording = recording;
 };
 
+// The recording may survive the panel that stopped it. Keep the final
+// observation associated with the recording, not the current component.
+const finalBatteryObservations = new WeakMap<Recording, Promise<void>>();
+export const rememberFinalBatteryObservation = (
+  recording: Recording,
+  pending: Promise<void>
+): void => {
+  finalBatteryObservations.set(recording, pending);
+};
+
+export const waitForFinalBatteryObservation = async (
+  recording: Recording
+): Promise<void> => {
+  await finalBatteryObservations.get(recording);
+};
+
 export const getLegComparison = (recording: Recording, legIndex: number) => {
   const leg = recording.legs[legIndex]?.leg;
   if (!leg) {

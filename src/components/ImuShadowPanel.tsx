@@ -21,6 +21,7 @@ import {
   isManualCorrectionActive,
   type Mode,
   type Recording,
+  rememberFinalBatteryObservation,
   rememberImuShadowRecording,
 } from '~/lib/imuShadowRecording';
 import { loadImuShadowSensor } from '~/lib/imuShadowSensor';
@@ -118,7 +119,7 @@ export const ImuShadowPanel = () => {
   const [arrivalMarked, setArrivalMarked] = useState(false);
   const arrivalMarkedAtRef = useRef<number | null>(null);
   const departureRecordedRef = useRef(false);
-  const autoAttemptedRef = useRef(false);
+  const [autoAttempted, setAutoAttempted] = useState(false);
   const recordingRef = useRef<Recording | null>(null);
   const estimatorRef = useRef<ImuShadowEstimator | null>(null);
   const subscriptionRef = useRef<Subscription | null>(null);
@@ -189,7 +190,6 @@ export const ImuShadowPanel = () => {
       intervalRef.current = null;
     }
     const recording = recordingRef.current;
-    let finalBattery: Promise<void> | undefined;
     if (recording && recording.endedAtMs == null) {
       recording.endedAtMs = Date.now();
       recording.endReason = reason;
@@ -204,7 +204,7 @@ export const ImuShadowPanel = () => {
       if (updateUi) {
         setEstimate(finalEstimate);
       }
-      finalBattery = recordBattery(recording);
+      rememberFinalBatteryObservation(recording, recordBattery(recording));
     }
     recordingRef.current = null;
     estimatorRef.current = null;
@@ -214,7 +214,6 @@ export const ImuShadowPanel = () => {
       setStarting(false);
       setMessage(reason);
     }
-    return finalBattery;
   };
 
   useEffect(() => {
@@ -235,7 +234,6 @@ export const ImuShadowPanel = () => {
     return () => {
       subscription.remove();
       stopRef.current('screen-closed', false);
-      autoAttemptedRef.current = false;
     };
   }, []);
 
@@ -266,15 +264,18 @@ export const ImuShadowPanel = () => {
   const availableStarts = physicalStops.slice(0, -1);
   // The current station may use the outgoing line's ID at a junction.
   // Only a unique matching physical stop can start an automatic recording.
-  const matches = availableStarts.filter((index) => {
-    const stop = stops[index];
-    return (
-      stop.stationId === currentStation?.id ||
-      (stop.stationGroupId != null &&
-        stop.stationGroupId === currentStation?.groupId)
-    );
-  });
-  const autoStartIndex = matches.length === 1 ? matches[0] : null;
+  const findAutoStartIndex = (station: typeof currentStation) => {
+    const matches = availableStarts.filter((index) => {
+      const stop = stops[index];
+      return (
+        stop.stationId === station?.id ||
+        (stop.stationGroupId != null &&
+          stop.stationGroupId === station?.groupId)
+      );
+    });
+    return matches.length === 1 ? matches[0] : null;
+  };
+  const autoStartIndex = findAutoStartIndex(currentStation);
   const selected =
     startIndex != null && availableStarts.includes(startIndex)
       ? startIndex
@@ -409,7 +410,7 @@ export const ImuShadowPanel = () => {
     );
   };
 
-  const start = async (mode: Mode, index = selected) => {
+  const start = async (mode: Mode, index = selected, automatic = false) => {
     if (
       index == null ||
       recordingRef.current != null ||
@@ -420,31 +421,46 @@ export const ImuShadowPanel = () => {
     ) {
       return;
     }
-    autoAttemptedRef.current = true;
+    setAutoAttempted(true);
     setStarting(true);
     const generation = ++generationRef.current;
     activeRouteKeyRef.current = routeKey;
+    // Each asynchronous prerequisite can outlive the stop at which it began.
+    // Read the store directly, not the snapshot captured by the render.
+    const stillEligible = () => {
+      if (generation !== generationRef.current) return false;
+      if (
+        automatic &&
+        (!store.get(arrivedAtom) ||
+          findAutoStartIndex(store.get(stationAtom)) !== index ||
+          store.get(selectedBoundAtom)?.id !== bound?.id ||
+          store.get(selectedDirectionAtom) !== direction ||
+          store.get(autoModeEnabledAtom))
+      ) {
+        stopRef.current('station-changed');
+        // Re-evaluate even if the new station rendered while this attempt was pending.
+        setAutoAttempted(false);
+        return false;
+      }
+      return true;
+    };
     try {
       // Do not resolve the native module on existing JS-only builds unless explicitly requested.
       const sensor = mode === 'imu' ? await loadImuShadowSensor() : null;
-      if (generation !== generationRef.current) {
-        return;
-      }
+      if (!stillEligible()) return;
       if (sensor) {
         const available = await sensor.isAvailableAsync();
-        if (generation !== generationRef.current) {
-          return;
-        }
+        if (!stillEligible()) return;
         if (!available) {
           throw new Error('sensor-unavailable');
         }
-        if (!(await sensor.requestPermissionsAsync()).granted) {
+        const permission = await sensor.requestPermissionsAsync();
+        if (!stillEligible()) return;
+        if (!permission.granted) {
           throw new Error('sensor-permission-denied');
         }
       }
-      if (generation !== generationRef.current) {
-        return;
-      }
+      if (!stillEligible()) return;
       if (AppState.currentState !== 'active') {
         throw new Error('foreground-required');
       }
@@ -578,7 +594,7 @@ export const ImuShadowPanel = () => {
   });
   useEffect(() => {
     if (
-      !autoAttemptedRef.current &&
+      !autoAttempted &&
       focused &&
       foreground &&
       !autoMode &&
@@ -587,7 +603,7 @@ export const ImuShadowPanel = () => {
       bound != null &&
       direction != null
     ) {
-      void startRef.current('imu', autoStartIndex);
+      void startRef.current('imu', autoStartIndex, true);
     }
   }, [
     focused,
@@ -597,6 +613,7 @@ export const ImuShadowPanel = () => {
     autoStartIndex,
     bound,
     direction,
+    autoAttempted,
   ]);
 
   const markArrival = () => {
@@ -622,7 +639,7 @@ export const ImuShadowPanel = () => {
   };
   const exportRecording = async () => {
     try {
-      if (recordingRef.current) await stop('manual-stop');
+      if (recordingRef.current) stop('manual-stop');
       await exportImuShadow();
     } catch {
       setMessage('export-failed');
