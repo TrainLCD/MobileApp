@@ -81,9 +81,7 @@ const FatalErrorScreen: React.FC<Props> = ({
       return;
     }
 
-    showDialog(translate('stacktrace'), stacktrace, [
-      { text: 'OK', style: 'cancel' },
-    ]);
+    showDialog(translate('stacktrace'), stacktrace);
   }, [stacktrace]);
 
   return (
