@@ -1,5 +1,6 @@
 import {
   buildLeg,
+  getMotionSampleTimeMs,
   horizontalAcceleration,
   ImuShadowEstimator,
   type Leg,
@@ -192,5 +193,66 @@ describe('IMU shadow estimator', () => {
     expect(estimator.step({ ...sample(2100), acceleration: null }).reason).toBe(
       'missing-motion'
     );
+  });
+});
+
+describe('native IMU timestamps and receipt watchdog', () => {
+  test('converts seconds to milliseconds and rejects absent or invalid native time', () => {
+    expect(getMotionSampleTimeMs(1234.5)).toBe(1234500);
+    expect(getMotionSampleTimeMs(0)).toBe(0);
+    for (const time of [
+      null,
+      undefined,
+      -1,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      Number.MAX_VALUE,
+    ]) {
+      expect(getMotionSampleTimeMs(time)).toBeNull();
+    }
+  });
+
+  test('uses native intervals even when JS receives a batch at the same time', () => {
+    const estimator = new ImuShadowEstimator(leg(400), 0);
+    for (let n = 0; n <= 20; n += 1) {
+      estimator.step(sample(100_000 + n * 100, 1), 2000);
+    }
+    expect(estimator.snapshotAtReceiptTime(2000).phase).toBe('accelerating');
+    expect(estimator.snapshot().imuSpeedMps).toBeCloseTo(2);
+  });
+
+  test('invalidates without another sample and ignores repeated native timestamps', () => {
+    const estimator = new ImuShadowEstimator(leg(400), 1000);
+    estimator.step(sample(100_000), 1100);
+    estimator.step(sample(100_000), 1550);
+    expect(estimator.snapshotAtReceiptTime(1600).phase).toBe('waiting');
+    expect(estimator.snapshotAtReceiptTime(1601).reason).toBe('sample-gap');
+    expect(estimator.step(sample(100_100), 1700).phase).toBe('invalid');
+  });
+
+  test('detects no initial sample and preserves the original invalidation reason', () => {
+    const estimator = new ImuShadowEstimator(leg(400), 0);
+    expect(estimator.snapshotAtReceiptTime(501).reason).toBe('sample-gap');
+    const missing = new ImuShadowEstimator(leg(null), 0);
+    expect(missing.snapshotAtReceiptTime(501).reason).toBe('missing-distance');
+  });
+
+  test('a sensor outage revokes an already published arrival candidate', () => {
+    const estimator = new ImuShadowEstimator(leg(300));
+    expect(
+      run(estimator, [
+        [10, 1],
+        [20, 0],
+        [10, -1],
+        [5, 0],
+      ]).arrivalCandidate
+    ).toBe(true);
+    estimator.step(sample(45_100), 5000);
+    expect(estimator.snapshotAtReceiptTime(5500).arrivalCandidate).toBe(true);
+    expect(estimator.snapshotAtReceiptTime(5501)).toMatchObject({
+      phase: 'invalid',
+      reason: 'sample-gap',
+      arrivalCandidate: false,
+    });
   });
 });

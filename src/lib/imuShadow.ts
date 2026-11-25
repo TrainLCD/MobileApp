@@ -154,6 +154,15 @@ export const horizontalAcceleration = (sample: MotionSample): Vector | null => {
 
 // These are deliberately conservative, uncalibrated PoC parameters, not vehicle specifications.
 const MAX_GAP_SECONDS = 0.5;
+
+/** Native acceleration timestamps are seconds on both iOS and Android. */
+export const getMotionSampleTimeMs = (
+  seconds: number | null | undefined
+): number | null => {
+  if (seconds == null || !Number.isFinite(seconds) || seconds < 0) return null;
+  const ms = seconds * 1000;
+  return Number.isFinite(ms) ? ms : null;
+};
 const MAX_ROTATION_DEG_PER_SECOND = 15;
 const MAX_HORIZONTAL_ACCEL = 2.5;
 const DEPARTURE_ACCEL = 0.3;
@@ -168,6 +177,7 @@ const ETA_UPDATE_SECONDS = 10;
  */
 export class ImuShadowEstimator {
   private lastMs: number | null = null;
+  private lastReceivedMs: number | null;
   private startMs: number | null = null;
   private phase: Phase = 'waiting';
   private reason: string | null = null;
@@ -187,7 +197,11 @@ export class ImuShadowEstimator {
   private sawMovement = false;
   private lastEtaSeconds = 0;
 
-  constructor(readonly leg: Leg) {
+  constructor(
+    readonly leg: Leg,
+    startedReceivingMs: number | null = null
+  ) {
+    this.lastReceivedMs = startedReceivingMs;
     if (
       leg.distanceM == null ||
       !Number.isFinite(leg.distanceM) ||
@@ -198,8 +212,10 @@ export class ImuShadowEstimator {
   }
 
   invalidate(reason: string): Estimate {
-    this.phase = 'invalid';
-    this.reason = reason;
+    if (this.phase !== 'invalid') {
+      this.phase = 'invalid';
+      this.reason = reason;
+    }
     return this.snapshot();
   }
 
@@ -238,7 +254,19 @@ export class ImuShadowEstimator {
     };
   }
 
-  step(sample: MotionSample): Estimate {
+  // Use a separate monotonic receipt clock; it does not share the native sensor epoch.
+  // A stalled sensor (including repeated native timestamps) must not keep a candidate alive.
+  snapshotAtReceiptTime(nowMs: number): Estimate {
+    if (
+      this.lastReceivedMs != null &&
+      nowMs - this.lastReceivedMs > MAX_GAP_SECONDS * 1000
+    ) {
+      return this.invalidate('sample-gap');
+    }
+    return this.snapshot();
+  }
+
+  step(sample: MotionSample, receivedAtMs?: number): Estimate {
     if (this.phase === 'invalid') {
       return this.snapshot();
     }
@@ -250,6 +278,7 @@ export class ImuShadowEstimator {
       return this.snapshot();
     }
     this.lastMs = sample.timeMs;
+    if (receivedAtMs != null) this.lastReceivedMs = receivedAtMs;
     if (previous == null) {
       return this.snapshot();
     }

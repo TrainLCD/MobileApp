@@ -6,15 +6,18 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Typography from '~/components/Typography';
 import { useEstimateArrivalTimesRoute } from '~/hooks/useEstimateArrivalTimesRoute';
+import { useThreshold } from '~/hooks/useThreshold';
 import {
   buildLeg,
   type Estimate,
+  getMotionSampleTimeMs,
   ImuShadowEstimator,
   type MotionSample,
   type RouteStop,
 } from '~/lib/imuShadow';
 import {
   getLastImuShadowRecording,
+  getLocationArrivalStationId,
   type Mode,
   type Recording,
   rememberImuShadowRecording,
@@ -22,6 +25,7 @@ import {
 import { getTrackDistance } from '~/lib/trackDistances';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import { locationAtom, rawLocationAtom } from '~/store/atoms/location';
+import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
@@ -88,6 +92,11 @@ export const ImuShadowPanel = () => {
   const direction = useAtomValue(selectedDirectionAtom);
   const stations = useAtomValue(stationsAtom);
   const { route } = useEstimateArrivalTimesRoute({ skip: autoMode });
+  const { arrivedThreshold } = useThreshold();
+  const arrivedThresholdRef = useRef(arrivedThreshold);
+  useEffect(() => {
+    arrivedThresholdRef.current = arrivedThreshold;
+  }, [arrivedThreshold]);
   const stops: readonly RouteStop[] = route?.stops ?? [];
   const routeKey = JSON.stringify([bound?.id, direction, route?.id, stops]);
   const [startIndex, setStartIndex] = useState<number | null>(null);
@@ -113,13 +122,30 @@ export const ImuShadowPanel = () => {
 
   const readReference = (atMs: number) => {
     const raw = store.get(rawLocationAtom);
+    const filtered = store.get(locationAtom);
+    const station = store.get(stationAtom);
+    const arrived = store.get(arrivedAtom);
+    const legStartedAtMs = recordingRef.current?.legs.at(-1)?.startedAtMs;
     return {
-      stationId: store.get(stationAtom)?.id ?? null,
-      arrived: store.get(arrivedAtom),
+      stationId: station?.id ?? null,
+      arrived,
+      locationArrivalStationId:
+        legStartedAtMs == null
+          ? null
+          : getLocationArrivalStationId({
+              raw,
+              filtered,
+              station,
+              arrived,
+              manualCorrection: store.get(manualStationCorrectionAtom) != null,
+              arrivedThreshold: arrivedThresholdRef.current,
+              atMs,
+              legStartedAtMs,
+            }),
       rawLocationTimeMs: raw?.timestamp ?? null,
       rawAccuracyM: raw?.coords.accuracy ?? null,
       rawSpeedMps: raw?.coords.speed ?? null,
-      filteredLocationTimeMs: store.get(locationAtom)?.timestamp ?? null,
+      filteredLocationTimeMs: filtered?.timestamp ?? null,
       etaPhase: getEtaPhaseNow(atMs),
       etaAnchor: store.get(etaAnchorAtom),
     };
@@ -158,7 +184,7 @@ export const ImuShadowPanel = () => {
       recording.observations.push({
         atMs: recording.endedAtMs,
         legIndex: recording.legs.length - 1,
-        estimate: estimatorRef.current?.snapshot() ?? null,
+        estimate: readEstimate(recording, recording.endedAtMs),
         reference: readReference(recording.endedAtMs),
       });
       void recordBattery(recording);
@@ -246,7 +272,9 @@ export const ImuShadowPanel = () => {
     recording.legs.push({ startedAtMs: Date.now(), leg: result.leg });
     nextIndexRef.current = result.nextIndex;
     estimatorRef.current =
-      recording.mode === 'imu' ? new ImuShadowEstimator(result.leg) : null;
+      recording.mode === 'imu'
+        ? new ImuShadowEstimator(result.leg, performance.now())
+        : null;
     lastCandidateRef.current = false;
     setHasDeparture(false);
     setActualArrivalAt(null);
@@ -270,6 +298,34 @@ export const ImuShadowPanel = () => {
       estimate: value,
       reference: readReference(atMs),
     });
+  };
+
+  const recordCandidateChange = (
+    recording: Recording,
+    atMs: number,
+    value: Estimate
+  ) => {
+    const estimator = estimatorRef.current;
+    if (estimator && value.arrivalCandidate !== lastCandidateRef.current) {
+      lastCandidateRef.current = value.arrivalCandidate;
+      recordEvent(
+        recording,
+        value.arrivalCandidate ? 'candidate' : 'candidate-lost',
+        estimator.leg.toId,
+        atMs,
+        value
+      );
+    }
+  };
+
+  const readEstimate = (
+    recording: Recording,
+    atMs: number
+  ): Estimate | null => {
+    const value =
+      estimatorRef.current?.snapshotAtReceiptTime(performance.now()) ?? null;
+    if (value) recordCandidateChange(recording, atMs, value);
+    return value;
   };
 
   const start = async (mode: Mode) => {
@@ -333,7 +389,7 @@ export const ImuShadowPanel = () => {
           return;
         }
         const atMs = Date.now();
-        const value = estimatorRef.current?.snapshot() ?? null;
+        const value = readEstimate(recording, atMs);
         recording.observations.push({
           atMs,
           legIndex: recording.legs.length - 1,
@@ -366,8 +422,23 @@ export const ImuShadowPanel = () => {
             return;
           }
           const atMs = Date.now();
+          const receivedAtMs = performance.now();
+          const estimator = estimatorRef.current;
+          if (!estimator) return;
+          // Android exposes per-sensor timestamps and may reuse the same acceleration event.
+          // Use the gravity-free acceleration timestamp on both platforms, never JS receipt time.
+          const timeMs = getMotionSampleTimeMs(data.acceleration?.timestamp);
+          if (timeMs == null || !data.accelerationIncludingGravity) {
+            const value = estimator.invalidate(
+              !data.acceleration || !data.accelerationIncludingGravity
+                ? 'missing-motion'
+                : 'invalid-time'
+            );
+            recordCandidateChange(recording, atMs, value);
+            return;
+          }
           const sample: MotionSample = {
-            timeMs: performance.now(),
+            timeMs,
             acceleration: data.acceleration,
             accelerationIncludingGravity: data.accelerationIncludingGravity,
             rotationDegPerSecond:
@@ -385,21 +456,8 @@ export const ImuShadowPanel = () => {
             legIndex: recording.legs.length - 1,
             sample,
           });
-          const estimator = estimatorRef.current;
-          if (!estimator) {
-            return;
-          }
-          const value = estimator.step(sample);
-          if (value.arrivalCandidate !== lastCandidateRef.current) {
-            lastCandidateRef.current = value.arrivalCandidate;
-            recordEvent(
-              recording,
-              value.arrivalCandidate ? 'candidate' : 'candidate-lost',
-              estimator.leg.toId,
-              atMs,
-              value
-            );
-          }
+          const value = estimator.step(sample, receivedAtMs);
+          recordCandidateChange(recording, atMs, value);
         });
       }
       setRunning(true);
@@ -428,12 +486,13 @@ export const ImuShadowPanel = () => {
     ) {
       return;
     }
+    const atMs = Date.now();
     recordEvent(
       recording,
       'departure',
       leg.fromId,
-      Date.now(),
-      estimatorRef.current?.snapshot() ?? null
+      atMs,
+      readEstimate(recording, atMs)
     );
     setHasDeparture(true);
   };
@@ -457,7 +516,7 @@ export const ImuShadowPanel = () => {
       'arrival',
       leg.toId,
       atMs,
-      estimatorRef.current?.snapshot() ?? null
+      readEstimate(recording, atMs)
     );
     setActualArrivalAt(atMs);
   };

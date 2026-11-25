@@ -1,9 +1,14 @@
+import type { LocationObject } from 'expo-location';
+import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
+import { LOCATION_TIME_INTERVAL } from '~/constants/location';
+import { getAccuracyBonus } from '~/utils/accuracyBonus';
 import type { Estimate, Leg, MotionSample, RouteStop } from './imuShadow';
 
 export type Mode = 'imu' | 'baseline';
 export type Reference = {
   stationId: number | null;
   arrived: boolean;
+  locationArrivalStationId: number | null;
   rawLocationTimeMs: number | null;
   rawAccuracyM: number | null;
   rawSpeedMps: number | null;
@@ -18,6 +23,76 @@ export type Reference = {
     observedAtMs: number;
   } | null;
 };
+// Expo Location reports OS location, not satellite-only GNSS. Require a recent,
+// accepted coordinate that supports the shared arrival state, rather than
+// treating a missing fix, grace period or manual station correction as GPS.
+export const getLocationArrivalStationId = ({
+  raw,
+  filtered,
+  station,
+  arrived,
+  manualCorrection,
+  arrivedThreshold,
+  atMs,
+  legStartedAtMs,
+}: {
+  raw: LocationObject | null;
+  filtered: LocationObject | null;
+  station: {
+    id?: number | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  } | null;
+  arrived: boolean;
+  manualCorrection: boolean;
+  arrivedThreshold: number;
+  atMs: number;
+  legStartedAtMs: number;
+}): number | null => {
+  if (
+    !arrived ||
+    manualCorrection ||
+    !raw ||
+    !filtered ||
+    !station ||
+    station.id == null ||
+    raw.timestamp !== filtered.timestamp ||
+    !Number.isFinite(filtered.timestamp) ||
+    filtered.timestamp < legStartedAtMs ||
+    filtered.timestamp > atMs ||
+    atMs - filtered.timestamp > LOCATION_TIME_INTERVAL ||
+    station.latitude == null ||
+    station.longitude == null
+  )
+    return null;
+  const { latitude, longitude, accuracy } = filtered.coords;
+  if (
+    ![
+      latitude,
+      longitude,
+      station.latitude,
+      station.longitude,
+      raw.coords.latitude,
+      raw.coords.longitude,
+      arrivedThreshold,
+    ].every(Number.isFinite) ||
+    accuracy == null ||
+    !Number.isFinite(accuracy) ||
+    accuracy < 0 ||
+    raw.coords.accuracy == null ||
+    !Number.isFinite(raw.coords.accuracy) ||
+    raw.coords.accuracy < 0
+  )
+    return null;
+  return isPointWithinRadius(
+    { latitude, longitude },
+    { latitude: station.latitude, longitude: station.longitude },
+    arrivedThreshold + getAccuracyBonus(accuracy)
+  )
+    ? station.id
+    : null;
+};
+
 export type Recording = {
   schemaVersion: 1;
   mode: Mode;
@@ -82,9 +157,8 @@ export const getLegComparison = (recording: Recording, legIndex: number) => {
   );
   const gpsDetection = observations.find(
     (item) =>
-      item.reference.arrived &&
-      item.reference.stationId != null &&
-      targetIds.includes(item.reference.stationId)
+      item.reference.locationArrivalStationId != null &&
+      targetIds.includes(item.reference.locationArrivalStationId)
   );
   // This matching window is a reporting convention, not a production detection rule.
   const arrivalMatchWindowSeconds = 10;

@@ -1,5 +1,6 @@
 import {
   getLegComparison,
+  getLocationArrivalStationId,
   type Recording,
   type Reference,
 } from './imuShadowRecording';
@@ -7,6 +8,7 @@ import {
 const reference: Reference = {
   stationId: 1,
   arrived: false,
+  locationArrivalStationId: null,
   rawLocationTimeMs: null,
   rawAccuracyM: null,
   rawSpeedMps: null,
@@ -95,4 +97,88 @@ test('does not count missing ground truth or baseline mode as a missed detection
   recording.mode = 'baseline';
   recording.events.push(event(50_000, 'arrival'));
   expect(getLegComparison(recording, 0)?.missedCandidate).toBeNull();
+});
+
+test('does not label the shared arrival state as a GPS detection without coordinate evidence', () => {
+  const recording = makeRecording();
+  recording.events.push(event(50_000, 'arrival'));
+  const observe = (atMs: number, locationArrivalStationId: number | null) => ({
+    atMs,
+    legIndex: 0,
+    estimate: null,
+    reference: {
+      ...reference,
+      arrived: true,
+      stationId: 2,
+      locationArrivalStationId,
+    },
+  });
+  recording.observations.push(
+    observe(30_000, null),
+    observe(40_000, 1),
+    observe(48_000, 3)
+  );
+  expect(getLegComparison(recording, 0)?.gpsArrivalAtMs).toBe(48_000);
+  expect(getLegComparison(recording, 0)?.gpsErrorSeconds).toBe(-2);
+  recording.observations.pop();
+  expect(getLegComparison(recording, 0)?.gpsArrivalAtMs).toBeNull();
+});
+
+test('requires recent accepted position evidence, not stale or corrected arrival state', () => {
+  const coords = {
+    latitude: 35,
+    longitude: 139,
+    accuracy: 10,
+    altitude: null,
+    altitudeAccuracy: null,
+    heading: null,
+    speed: null,
+  };
+  const location = { timestamp: 40_000, coords };
+  const input = {
+    raw: location,
+    filtered: location,
+    station: { id: 2, latitude: 35, longitude: 139 },
+    arrived: true,
+    manualCorrection: false,
+    arrivedThreshold: 100,
+    atMs: 41_000,
+    legStartedAtMs: 10_000,
+  };
+  expect(getLocationArrivalStationId(input)).toBe(2);
+  expect(
+    getLocationArrivalStationId({
+      ...input,
+      station: { ...input.station, id: null },
+    })
+  ).toBeNull();
+  expect(getLocationArrivalStationId({ ...input, atMs: 39_999 })).toBeNull();
+  expect(getLocationArrivalStationId({ ...input, raw: null })).toBeNull();
+  expect(getLocationArrivalStationId({ ...input, filtered: null })).toBeNull();
+  expect(
+    getLocationArrivalStationId({
+      ...input,
+      raw: { ...location, timestamp: 40_500 },
+    })
+  ).toBeNull();
+  expect(getLocationArrivalStationId({ ...input, atMs: 50_001 })).toBeNull();
+  expect(
+    getLocationArrivalStationId({ ...input, legStartedAtMs: 40_001 })
+  ).toBeNull();
+  expect(
+    getLocationArrivalStationId({ ...input, manualCorrection: true })
+  ).toBeNull();
+  expect(getLocationArrivalStationId({ ...input, arrived: false })).toBeNull();
+  expect(
+    getLocationArrivalStationId({
+      ...input,
+      station: { id: 2, latitude: null, longitude: 139 },
+    })
+  ).toBeNull();
+  expect(
+    getLocationArrivalStationId({
+      ...input,
+      station: { id: 2, latitude: 36, longitude: 139 },
+    })
+  ).toBeNull();
 });
