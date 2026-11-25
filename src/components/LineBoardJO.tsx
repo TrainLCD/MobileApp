@@ -26,6 +26,7 @@ import {
   EstimatedMinutesBadge,
   EstimatedMinutesUnitLabel,
 } from './LineBoard/shared/components';
+import { FittedEnglishStationName } from './LineBoard/shared/components/FittedEnglishStationName';
 import { useIncludesLongStationName } from './LineBoard/shared/hooks/useBarStyles';
 import {
   BAR_BOTTOM_JO,
@@ -174,6 +175,7 @@ const StationName: React.FC<StationNameProps> = ({
         }
         style={[
           styles.stationNameEnJO,
+          en && styles.englishStationNameSpacing,
           hidden && { opacity: 0 },
           passed ? styles.grayColor : null,
           diagonalLayout && {
@@ -256,6 +258,7 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
   const barWidth = useBarWidth();
   const cellWidth = dim.width / 9;
   const dotCenter = barWidth * (index + 0.5) + LEGACY_DOT_SIZE / 2;
+  const phoneDotCenter = barWidth * (index + 0.4) + LEGACY_DOT_SIZE / 2;
   const dotCenterInCell = dotCenter - barWidth / 2.5 - index * cellWidth;
   const androidTablet = isTablet && Platform.OS === 'android';
   const shape = numberingObj?.lineSymbolShape;
@@ -284,31 +287,42 @@ const StationNameCell: React.FC<StationNameCellProps> = ({
         },
       ]}
     >
-      {/* 日英を同じ幅で同時に測定し、表示言語の切り替えでは測定結果を破棄しない。 */}
-      {(androidTablet ? [false, true] : [isEn]).map((english) => (
-        <StationName
-          key={english ? 'en' : 'ja'}
-          index={index * 2 + Number(english)}
-          reportLabelHeight={reportLabelHeight}
+      {Platform.OS === 'android' && !isTablet && isEn ? (
+        // セルの下余白がバーとの間隔を確保するため、駅名側に下余白を重ねない。
+        <FittedEnglishStationName
+          pitch={barWidth}
           station={stationInLoop}
-          en={english}
-          hidden={androidTablet && english !== isEn}
-          horizontal={includesLongStationName}
           passed={isPass}
-          diagonalLayout={
-            androidTablet
-              ? {
-                  left: dotCenterInCell,
-                  width: getJODiagonalLabelWidth(
-                    dim.height,
-                    dim.width - 48 - dotCenter
-                  ),
-                }
-              : undefined
-          }
+          bottom={0}
+          left={phoneDotCenter - barWidth / 2.5 - index * cellWidth}
+          leftSpace={phoneDotCenter}
+          rightSpace={dim.width - 32 - phoneDotCenter}
         />
-      ))}
-
+      ) : (
+        (androidTablet ? [false, true] : [isEn]).map((english) => (
+          <StationName
+            key={english ? 'en' : 'ja'}
+            index={index * 2 + Number(english)}
+            reportLabelHeight={reportLabelHeight}
+            station={stationInLoop}
+            en={english}
+            hidden={androidTablet && english !== isEn}
+            horizontal={includesLongStationName}
+            passed={isPass}
+            diagonalLayout={
+              androidTablet
+                ? {
+                    left: dotCenterInCell,
+                    width: getJODiagonalLabelWidth(
+                      dim.height,
+                      dim.width - 48 - dotCenter
+                    ),
+                  }
+                : undefined
+            }
+          />
+        ))
+      )}
       <View
         style={[
           styles.numberingIconContainerJO,

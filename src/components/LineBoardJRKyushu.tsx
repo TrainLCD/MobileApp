@@ -370,6 +370,8 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
       >
         {isEn && saikyoGradient && !isTablet && Platform.OS === 'android' ? (
           <FittedEnglishStationName
+            pitch={dim.width / 9}
+            baselineOffset={station.stationNumbers?.length ? 35 : 0}
             station={station}
             passed={shouldGrayscale}
             // 縮小後の駅番号の上端はセル下端から 52 + 32 + 16 dp。

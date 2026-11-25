@@ -19,6 +19,7 @@ import type { LineMark } from '../models/LineMark';
 import getIsPass from '../utils/isPass';
 import { ChevronYamanote } from './ChevronYamanote';
 import { EstimatedMinutesBadge } from './LineBoard/shared/components';
+import { ENGLISH_STATION_NAME_LINE_HEIGHT } from './LineBoard/shared/styles/commonStyles';
 import NumberingIcon from './NumberingIcon';
 import TransferLineDot from './TransferLineDot';
 import TransferLineMark from './TransferLineMark';
@@ -998,6 +999,7 @@ const PadArch: React.FC<Props> = ({
                   style={[
                     styles.stationName,
                     dynamicStyles.stationName,
+                    isEn && { lineHeight: ENGLISH_STATION_NAME_LINE_HEIGHT },
                     isPass ? styles.halfOpacity : null,
                   ]}
                 >

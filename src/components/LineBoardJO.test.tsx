@@ -1,5 +1,5 @@
-import { render } from '@testing-library/react-native';
-import { StyleSheet, type ViewStyle } from 'react-native';
+import { fireEvent, render, within } from '@testing-library/react-native';
+import { Platform, StyleSheet, View, type ViewStyle } from 'react-native';
 import type { Line, Station } from '~/@types/graphql';
 import LineBoardJO from './LineBoardJO';
 
@@ -132,6 +132,63 @@ describe('LineBoardJO', () => {
       return { selectedLine };
     });
   };
+
+  it('Androidスマホでは英語駅名の全行をバーの上に配置し、右端も画面に収める', () => {
+    const previousOS = Platform.OS;
+    const formatter = jest.mocked(require('~/utils/getStationNameR').default);
+    const previousFormatter = formatter.getMockImplementation();
+    try {
+      Platform.OS = 'android';
+      formatter.mockImplementation(
+        jest.requireActual('~/utils/getStationNameR').default
+      );
+      const names = [
+        'Hikarigaoka',
+        'Nerima-kasugacho',
+        'Toshimaen',
+        'Nerima',
+        'Shin-egota',
+        'Ochiai-minami-nagasaki',
+        'Nakai',
+        'Higashi-nakano',
+      ];
+      const stations = names.map((nameRoman, index) => ({
+        ...mockStations[0],
+        id: index + 1,
+        nameRoman,
+      }));
+      const result = render(
+        <LineBoardJO
+          stations={stations}
+          lineColors={stations.map(() => '#b00068')}
+        />
+      );
+      const {
+        FittedEnglishStationName,
+      } = require('./LineBoard/shared/components/FittedEnglishStationName');
+      const labels = result.UNSAFE_getAllByType(FittedEnglishStationName);
+      for (const index of [1, 5, 7]) {
+        const label = labels[index];
+        const area = within(label).UNSAFE_getByType(View);
+        fireEvent(area, 'layout', { nativeEvent: { layout: { height: 120 } } });
+        const text = result.getByText(names[index].replaceAll('-', '-\n'), {
+          normalizer: (value) => value,
+        });
+        const style = StyleSheet.flatten(text.props.style);
+        expect(style.position).toBe('absolute');
+        expect(style.bottom).toBe(0);
+        expect(StyleSheet.flatten(area.props.style).marginBottom).toBe(0);
+        expect(text.props.numberOfLines).toBeUndefined();
+        expect(text.props.adjustsFontSizeToFit).toBeFalsy();
+        expect(
+          style.width * Math.cos((55 * Math.PI) / 180)
+        ).toBeLessThanOrEqual(label.props.rightSpace);
+      }
+    } finally {
+      Platform.OS = previousOS;
+      formatter.mockImplementation(previousFormatter);
+    }
+  });
 
   beforeEach(() => {
     mockAtoms(true, mockLine);

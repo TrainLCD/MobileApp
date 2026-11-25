@@ -2,6 +2,7 @@ import { render } from '@testing-library/react-native';
 import type React from 'react';
 import type { Station } from '~/@types/graphql';
 import {
+  ENGLISH_STATION_NAME_LINE_HEIGHT,
   getHorizontalStationNameOffset,
   getHorizontalStationNameWidth,
   HORIZONTAL_STATION_NAME_FONT_SIZE,
@@ -80,7 +81,9 @@ describe('StationName', () => {
       <StationName station={mockStation} en={true} />
     );
 
-    expect(getByText('Tokyo')).toBeTruthy();
+    expect(getByText('Tokyo')).toHaveStyle({
+      lineHeight: ENGLISH_STATION_NAME_LINE_HEIGHT,
+    });
   });
 
   it('horizontal=true の場合、駅名を横書きで表示する', () => {
