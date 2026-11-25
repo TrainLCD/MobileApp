@@ -1,6 +1,13 @@
 import { useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { ScrollViewMarker } from 'react-native-screens/experimental';
 import type { Line, Station } from '~/@types/graphql';
 import { NUMBERING_ICON_SIZE, parenthesisRegexp } from '../constants';
 import {
@@ -261,6 +268,15 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
     return null;
   }
 
+  const transferList = (
+    <FlatList
+      contentContainerStyle={styles.transferView}
+      data={lines}
+      keyExtractor={(l) => (l.id ?? 0).toString()}
+      renderItem={renderTransferLine}
+    />
+  );
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -268,12 +284,21 @@ const Transfers: React.FC<Props> = ({ onPress, theme }: Props) => {
       onPress={() => onPress()}
     >
       <TransfersHeading theme={theme} />
-      <FlatList
-        contentContainerStyle={styles.transferView}
-        data={lines}
-        keyExtractor={(l) => (l.id ?? 0).toString()}
-        renderItem={renderTransferLine}
-      />
+      {Platform.OS === 'ios' ? (
+        <ScrollViewMarker
+          style={styles.container}
+          scrollEdgeEffects={{
+            top: 'hidden',
+            bottom: 'hidden',
+            left: 'hidden',
+            right: 'hidden',
+          }}
+        >
+          {transferList}
+        </ScrollViewMarker>
+      ) : (
+        transferList
+      )}
     </TouchableOpacity>
   );
 };

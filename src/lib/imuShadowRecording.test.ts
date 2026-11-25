@@ -211,3 +211,15 @@ test('requires recent accepted position evidence, not stale or corrected arrival
     })
   ).toBeNull();
 });
+
+test('exposes the source of an inferred departure, rather than labeling it ground truth', () => {
+  const recording = makeRecording();
+  recording.events.push(
+    { ...event(5000, 'departure'), departureSource: 'imu' },
+    event(50_000, 'arrival')
+  );
+  expect(getLegComparison(recording, 0)).toMatchObject({
+    departureSource: 'imu',
+    etaErrorSeconds: -5,
+  });
+});
