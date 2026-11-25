@@ -1,5 +1,6 @@
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
+import { holdingImuArrivalAtom } from '~/store/atoms/imuArrival';
 import { etaAnchorAtom } from '../store/atoms/etaFallback';
 import { locationAtom } from '../store/atoms/location';
 import {
@@ -43,7 +44,10 @@ export const useEtaAnchor = (): void => {
   // 軸のずれが固定される。棄却判定はGPS軸なので、そのずれぶん仮想時計が遅れて
   // DWELLINGに張り付き、Aで直したはずの凍結が最初の駅だけで再発しうる。
   const getObservedAtMs = useCallback(
-    (): number | null => store.get(locationAtom)?.timestamp ?? null,
+    (): number | null =>
+      store.get(holdingImuArrivalAtom)
+        ? null
+        : (store.get(locationAtom)?.timestamp ?? null),
     [store]
   );
 

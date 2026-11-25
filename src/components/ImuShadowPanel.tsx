@@ -10,9 +10,7 @@ import { useThreshold } from '~/hooks/useThreshold';
 import {
   buildLeg,
   type Estimate,
-  getMotionSampleTimeMs,
   ImuShadowEstimator,
-  type MotionSample,
   type RouteStop,
 } from '~/lib/imuShadow';
 import {
@@ -24,7 +22,7 @@ import {
   rememberFinalBatteryObservation,
   rememberImuShadowRecording,
 } from '~/lib/imuShadowRecording';
-import { loadImuShadowSensor } from '~/lib/imuShadowSensor';
+import { loadImuShadowSensor, readMotionSample } from '~/lib/imuShadowSensor';
 import { getTrackDistance } from '~/lib/trackDistances';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import { locationAtom, rawLocationAtom } from '~/store/atoms/location';
@@ -571,8 +569,8 @@ export const ImuShadowPanel = () => {
           if (!estimator) return;
           // Android exposes per-sensor timestamps and may reuse the same acceleration event.
           // Use the gravity-free acceleration timestamp on both platforms, never JS receipt time.
-          const timeMs = getMotionSampleTimeMs(data.acceleration?.timestamp);
-          if (timeMs == null || !data.accelerationIncludingGravity) {
+          const sample = readMotionSample(data);
+          if (!sample) {
             const value = estimator.invalidate(
               !data.acceleration || !data.accelerationIncludingGravity
                 ? 'missing-motion'
@@ -581,20 +579,6 @@ export const ImuShadowPanel = () => {
             recordCandidateChange(recording, atMs, value);
             return;
           }
-          const sample: MotionSample = {
-            timeMs,
-            acceleration: data.acceleration,
-            accelerationIncludingGravity: data.accelerationIncludingGravity,
-            rotationDegPerSecond:
-              data.rotationRate == null
-                ? null
-                : Math.hypot(
-                    data.rotationRate.alpha,
-                    data.rotationRate.beta,
-                    data.rotationRate.gamma
-                  ),
-            rotation: data.rotation,
-          };
           recording.motion.push({
             observedAtMs: atMs,
             legIndex: recording.legs.length - 1,
