@@ -1,4 +1,3 @@
-import type { LocationObject } from 'expo-location';
 import { atom } from 'jotai';
 import type { Station } from '~/@types/graphql';
 import { LOCATION_TIME_INTERVAL } from '~/constants/location';
@@ -22,16 +21,17 @@ type LegContext = {
   bound: Station;
   direction: LineDirection;
 };
-const lastArrivalAtom = atom<
-  (LegContext & { location: LocationObject | null }) | null
->(null);
+const lastArrivalAtom = atom<(LegContext & { arrivedAtMs: number }) | null>(
+  null
+);
 
-// Hold the estimate only against the same stale fix on the same ride.
+// Delayed fixes observed before arrival can still be delivered during the same ride.
 export const holdingImuArrivalAtom = atom((get) => {
   const last = get(lastArrivalAtom);
   return (
     !!last &&
-    last.location === get(locationAtom) &&
+    (get(locationAtom)?.timestamp ?? Number.NEGATIVE_INFINITY) <=
+      last.arrivedAtMs &&
     last.stations === get(stationsAtom) &&
     last.target === get(stationAtom) &&
     last.bound === get(selectedBoundAtom) &&
@@ -42,6 +42,7 @@ export const holdingImuArrivalAtom = atom((get) => {
 
 export const applyImuArrivalAtom = atom(null, (get, set, ctx: LegContext) => {
   const fix = get(locationAtom);
+  const arrivedAtMs = Date.now();
   const correction = get(manualStationCorrectionAtom);
   if (
     get(autoModeEnabledAtom) ||
@@ -52,10 +53,10 @@ export const applyImuArrivalAtom = atom(null, (get, set, ctx: LegContext) => {
     (correction &&
       correction.location === fix &&
       correction.stations === ctx.stations) ||
-    (fix && Date.now() - fix.timestamp <= LOCATION_TIME_INTERVAL)
+    (fix && arrivedAtMs - fix.timestamp <= LOCATION_TIME_INTERVAL)
   )
     return;
-  set(lastArrivalAtom, { ...ctx, location: fix });
+  set(lastArrivalAtom, { ...ctx, arrivedAtMs });
   set(stationAtom, ctx.target);
   set(approachingAtom, false);
   set(arrivedAtom, true);

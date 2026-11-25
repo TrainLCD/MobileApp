@@ -6,7 +6,11 @@ import { LineType } from '~/@types/graphql';
 import { useEstimateArrivalTimesRoute } from '~/hooks/useEstimateArrivalTimesRoute';
 import { useIsAppActive } from '~/hooks/useIsAppActive';
 import { useNextStation } from '~/hooks/useNextStation';
-import { buildLeg, ImuShadowEstimator } from '~/lib/imuShadow';
+import {
+  buildLeg,
+  findImuOriginIndex,
+  ImuShadowEstimator,
+} from '~/lib/imuShadow';
 import { loadImuShadowSensor, readMotionSample } from '~/lib/imuShadowSensor';
 import { getTrackDistance } from '~/lib/trackDistances';
 import { applyImuArrivalAtom } from '~/store/atoms/imuArrival';
@@ -52,11 +56,13 @@ export const DevImuArrival = () => {
       origin.id == null
     )
       return;
-    const starts = route.stops.flatMap((stop, i) =>
-      stop.stopsHere && stop.stationId === origin.id ? [i] : []
+    const startIndex = findImuOriginIndex(
+      route.stops,
+      origin.id,
+      origin.groupId
     );
-    if (starts.length !== 1) return;
-    const leg = buildLeg(route.stops, starts[0], getTrackDistance)?.leg;
+    if (startIndex == null) return;
+    const leg = buildLeg(route.stops, startIndex, getTrackDistance)?.leg;
     if (
       !leg?.distanceM ||
       (leg.toId !== target.id && !leg.toAliases?.includes(target.id))
@@ -82,11 +88,16 @@ export const DevImuArrival = () => {
         subscription = sensor.addListener((data) => {
           if (disposed || AppState.currentState !== 'active') return;
           const sample = readMotionSample(data);
-          if (sample && sample.timeMs <= lastSampleTime) return;
-          if (sample) lastSampleTime = sample.timeMs;
-          const value = sample
-            ? estimator.step(sample, performance.now())
-            : estimator.invalidate('missing-motion');
+          // Android may deliver individual sensors before the first complete sample.
+          // The estimator checks the elapsed native time between complete samples.
+          if (
+            !sample ||
+            sample.rotationDegPerSecond == null ||
+            sample.timeMs <= lastSampleTime
+          )
+            return;
+          lastSampleTime = sample.timeMs;
+          const value = estimator.step(sample, performance.now());
           if (value.phase === 'invalid') {
             subscription?.remove();
             subscription = undefined;

@@ -64,6 +64,8 @@ it('starts at the origin without DO and advances on a complete subway stop', asy
     await act(async () => {});
     expect(mockListener).toBeDefined();
     act(() => {
+      mockListener?.({ acceleration: null } as DeviceMotionMeasurement);
+      expect(mockRemove).not.toHaveBeenCalled();
       for (let n = 0; n <= 450; n++) {
         const x = n <= 100 ? 1 : n > 300 && n <= 400 ? -1 : 0;
         mockListener?.({

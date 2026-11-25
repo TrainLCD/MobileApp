@@ -1,5 +1,6 @@
 import {
   buildLeg,
+  findImuOriginIndex,
   getMotionSampleTimeMs,
   horizontalAcceleration,
   ImuShadowEstimator,
@@ -321,4 +322,18 @@ describe('native IMU timestamps and receipt watchdog', () => {
       arrivalCandidate: false,
     });
   });
+});
+
+it('resolves origin aliases within a junction and rejects ambiguous visits', () => {
+  const stop = (stationId: number, stationGroupId: number) => ({
+    stationId,
+    stationGroupId,
+    stopsHere: true,
+  });
+  const junction = [stop(1, 10), stop(2, 10), stop(3, 20)];
+  expect(findImuOriginIndex(junction, 9, 10)).toBe(0);
+  const revisited = [...junction, stop(4, 10)];
+  expect(findImuOriginIndex(revisited, 9, 10)).toBeNull();
+  expect(findImuOriginIndex(revisited, 4, 10)).toBe(3);
+  expect(findImuOriginIndex([...junction, stop(1, 10)], 1, 10)).toBeNull();
 });

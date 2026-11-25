@@ -39,7 +39,9 @@ it('advances to the stop once and releases the stale-fix guard on the next fix',
   expect(store.get(arrivedAtom)).toBe(true);
   expect(store.get(stationForHeaderAtom)).toBe(ctx.target);
   expect(store.get(holdingImuArrivalAtom)).toBe(true);
-  store.set(locationAtom, { timestamp: Date.now() } as LocationObject);
+  store.set(locationAtom, { timestamp: Date.now() - 5000 } as LocationObject);
+  expect(store.get(holdingImuArrivalAtom)).toBe(true);
+  store.set(locationAtom, { timestamp: Date.now() + 1 } as LocationObject);
   expect(store.get(holdingImuArrivalAtom)).toBe(false);
 });
 
