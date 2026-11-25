@@ -129,6 +129,8 @@ export type Recording = {
     atMs: number;
     legIndex: number;
     kind: 'departure' | 'arrival' | 'candidate' | 'candidate-lost';
+    /** Automatic departure estimates are not ground-truth labels. */
+    departureSource?: 'imu' | 'location';
     stationId: number;
     estimate: Estimate | null;
     reference: Reference;
@@ -186,6 +188,7 @@ export const getLegComparison = (recording: Recording, legIndex: number) => {
     fromId: leg.fromId,
     toId: leg.toId,
     departureAtMs: departure?.atMs ?? null,
+    departureSource: departure ? (departure.departureSource ?? 'manual') : null,
     actualArrivalAtMs: arrival?.atMs ?? null,
     etaArrivalAtMs: expectedAtMs,
     etaErrorSeconds:

@@ -93,6 +93,11 @@ export const ImuShadowPanel = () => {
   const bound = useAtomValue(selectedBoundAtom);
   const direction = useAtomValue(selectedDirectionAtom);
   const stations = useAtomValue(stationsAtom);
+  const currentStation = useAtomValue(stationAtom);
+  const arrived = useAtomValue(arrivedAtom);
+  const [foreground, setForeground] = useState(
+    AppState.currentState === 'active'
+  );
   const { route } = useEstimateArrivalTimesRoute({ skip: autoMode });
   const { arrivedThreshold } = useThreshold();
   const arrivedThresholdRef = useRef(arrivedThreshold);
@@ -110,9 +115,10 @@ export const ImuShadowPanel = () => {
     Recording['legs'][number]['leg'] | null
   >(null);
   const [collapsed, setCollapsed] = useState(false);
-  const [hasDeparture, setHasDeparture] = useState(false);
-  const [actualArrivalAt, setActualArrivalAt] = useState<number | null>(null);
-  const [nowMs, setNowMs] = useState(0);
+  const [arrivalMarked, setArrivalMarked] = useState(false);
+  const arrivalMarkedAtRef = useRef<number | null>(null);
+  const departureRecordedRef = useRef(false);
+  const autoAttemptedRef = useRef(false);
   const recordingRef = useRef<Recording | null>(null);
   const estimatorRef = useRef<ImuShadowEstimator | null>(null);
   const subscriptionRef = useRef<Subscription | null>(null);
@@ -183,6 +189,7 @@ export const ImuShadowPanel = () => {
       intervalRef.current = null;
     }
     const recording = recordingRef.current;
+    let finalBattery: Promise<void> | undefined;
     if (recording && recording.endedAtMs == null) {
       recording.endedAtMs = Date.now();
       recording.endReason = reason;
@@ -196,9 +203,8 @@ export const ImuShadowPanel = () => {
       });
       if (updateUi) {
         setEstimate(finalEstimate);
-        setNowMs(recording.endedAtMs);
       }
-      void recordBattery(recording);
+      finalBattery = recordBattery(recording);
     }
     recordingRef.current = null;
     estimatorRef.current = null;
@@ -208,6 +214,7 @@ export const ImuShadowPanel = () => {
       setStarting(false);
       setMessage(reason);
     }
+    return finalBattery;
   };
 
   useEffect(() => {
@@ -216,6 +223,7 @@ export const ImuShadowPanel = () => {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
+      setForeground(state === 'active');
       if (state !== 'active' && recordingRef.current) {
         stopRef.current('foreground-ended');
       }
@@ -227,6 +235,7 @@ export const ImuShadowPanel = () => {
     return () => {
       subscription.remove();
       stopRef.current('screen-closed', false);
+      autoAttemptedRef.current = false;
     };
   }, []);
 
@@ -255,16 +264,21 @@ export const ImuShadowPanel = () => {
     return [index];
   });
   const availableStarts = physicalStops.slice(0, -1);
-  const currentId = store.get(stationAtom)?.id;
-  const matches = availableStarts.filter(
-    (index) => stops[index]?.stationId === currentId
-  );
+  // The current station may use the outgoing line's ID at a junction.
+  // Only a unique matching physical stop can start an automatic recording.
+  const matches = availableStarts.filter((index) => {
+    const stop = stops[index];
+    return (
+      stop.stationId === currentStation?.id ||
+      (stop.stationGroupId != null &&
+        stop.stationGroupId === currentStation?.groupId)
+    );
+  });
+  const autoStartIndex = matches.length === 1 ? matches[0] : null;
   const selected =
     startIndex != null && availableStarts.includes(startIndex)
       ? startIndex
-      : matches.length === 1
-        ? matches[0]
-        : availableStarts[0];
+      : (autoStartIndex ?? availableStarts[0]);
   const selectedPosition =
     selected == null ? -1 : availableStarts.indexOf(selected);
   const stationLabel = (id: number | null | undefined): string => {
@@ -287,8 +301,9 @@ export const ImuShadowPanel = () => {
         ? new ImuShadowEstimator(result.leg, performance.now())
         : null;
     lastCandidateRef.current = false;
-    setHasDeparture(false);
-    setActualArrivalAt(null);
+    departureRecordedRef.current = false;
+    arrivalMarkedAtRef.current = null;
+    setArrivalMarked(false);
     setEstimate(estimatorRef.current?.snapshot() ?? null);
     setDisplayLeg(result.leg);
     return true;
@@ -299,7 +314,8 @@ export const ImuShadowPanel = () => {
     kind: Recording['events'][number]['kind'],
     stationId: number,
     atMs: number,
-    value: Estimate | null
+    value: Estimate | null,
+    departureSource?: 'imu' | 'location'
   ) => {
     recording.events.push({
       atMs,
@@ -307,6 +323,7 @@ export const ImuShadowPanel = () => {
       kind,
       stationId,
       estimate: value,
+      ...(departureSource ? { departureSource } : {}),
       reference: readReference(atMs),
     });
   };
@@ -345,17 +362,65 @@ export const ImuShadowPanel = () => {
     return value;
   };
 
-  const start = async (mode: Mode) => {
+  const recordDeparture = (
+    recording: Recording,
+    atMs: number,
+    value: Estimate | null
+  ) => {
+    const currentLeg = recording.legs.at(-1);
     if (
-      selected == null ||
-      running ||
-      starting ||
+      !currentLeg ||
+      departureRecordedRef.current ||
+      arrivalMarkedAtRef.current != null
+    )
+      return;
+    const { leg, startedAtMs } = currentLeg;
+    const anchor = store.get(etaAnchorAtom);
+    const origin = recording.stops.find(
+      (stop) => stop.stationId === leg.fromId
+    );
+    const anchorStop = recording.stops.find(
+      (stop) => stop.stationId === anchor?.stationId
+    );
+    // ETA's location-based departure anchor is available in baseline mode too.
+    const locationDeparture =
+      anchor?.kind === 'DEPARTED' &&
+      anchor.observedAtMs >= startedAtMs &&
+      anchor.observedAtMs <= atMs &&
+      (anchor.stationId === leg.fromId ||
+        (origin?.stationGroupId != null &&
+          origin.stationGroupId === anchorStop?.stationGroupId))
+        ? anchor.observedAtMs
+        : null;
+    const imuDeparture =
+      value != null && value.phase !== 'invalid' && value.elapsedSeconds != null
+        ? Math.max(startedAtMs, atMs - value.elapsedSeconds * 1000)
+        : null;
+    const departureAtMs = locationDeparture ?? imuDeparture;
+    if (departureAtMs == null) return;
+    departureRecordedRef.current = true;
+    recordEvent(
+      recording,
+      'departure',
+      leg.fromId,
+      departureAtMs,
+      value,
+      locationDeparture != null ? 'location' : 'imu'
+    );
+  };
+
+  const start = async (mode: Mode, index = selected) => {
+    if (
+      index == null ||
+      recordingRef.current != null ||
+      activeRouteKeyRef.current != null ||
       !focused ||
       autoMode ||
       AppState.currentState !== 'active'
     ) {
       return;
     }
+    autoAttemptedRef.current = true;
     setStarting(true);
     const generation = ++generationRef.current;
     activeRouteKeyRef.current = routeKey;
@@ -400,7 +465,7 @@ export const ImuShadowPanel = () => {
         events: [],
         battery: [],
       };
-      if (!initializeLeg(recording, selected)) {
+      if (!initializeLeg(recording, index)) {
         throw new Error('route-unavailable');
       }
       recordingRef.current = recording;
@@ -413,6 +478,7 @@ export const ImuShadowPanel = () => {
         }
         const atMs = Date.now();
         const value = readEstimate(recording, atMs, true);
+        recordDeparture(recording, atMs, value);
         recording.observations.push({
           atMs,
           legIndex: recording.legs.length - 1,
@@ -420,13 +486,21 @@ export const ImuShadowPanel = () => {
           reference: readReference(atMs),
         });
         setEstimate(value);
-        setNowMs(atMs);
         if (atMs - lastBatteryAt >= 30_000) {
           lastBatteryAt = atMs;
           void recordBattery(recording);
         }
         if (atMs - recording.startedAtMs >= MAX_DURATION_MS) {
           stopRef.current('recording-limit');
+          return;
+        }
+        // Keep the arrival observation window of the previous leg, then advance
+        // from the independent user label, never from an IMU/ETA candidate.
+        const markedAt = arrivalMarkedAtRef.current;
+        if (markedAt != null && atMs - markedAt >= 3000) {
+          if (!initializeLeg(recording, nextIndexRef.current)) {
+            stopRef.current('terminal');
+          }
         }
       };
       intervalRef.current = setInterval(tick, 1000);
@@ -480,6 +554,7 @@ export const ImuShadowPanel = () => {
             sample,
           });
           const value = estimator.step(sample, receivedAtMs);
+          recordDeparture(recording, atMs, value);
           recordCandidateChange(recording, atMs, value);
         });
       }
@@ -495,30 +570,35 @@ export const ImuShadowPanel = () => {
     }
   };
 
-  const markDeparture = () => {
-    const recording = recordingRef.current;
-    const leg = recording?.legs.at(-1)?.leg;
+  // Mounting the opt-in panel in an eligible ride starts once, without opening DO.
+  // Explicit stop/export or a failed permission request must not immediately start again.
+  const startRef = useRef(start);
+  useEffect(() => {
+    startRef.current = start;
+  });
+  useEffect(() => {
     if (
-      !recording ||
-      !leg ||
-      recording.events.some(
-        (event) =>
-          event.legIndex === recording.legs.length - 1 &&
-          event.kind === 'departure'
-      )
+      !autoAttemptedRef.current &&
+      focused &&
+      foreground &&
+      !autoMode &&
+      arrived &&
+      autoStartIndex != null &&
+      bound != null &&
+      direction != null
     ) {
-      return;
+      void startRef.current('imu', autoStartIndex);
     }
-    const atMs = Date.now();
-    recordEvent(
-      recording,
-      'departure',
-      leg.fromId,
-      atMs,
-      readEstimate(recording, atMs)
-    );
-    setHasDeparture(true);
-  };
+  }, [
+    focused,
+    foreground,
+    autoMode,
+    arrived,
+    autoStartIndex,
+    bound,
+    direction,
+  ]);
+
   const markArrival = () => {
     const recording = recordingRef.current;
     const leg = recording?.legs.at(-1)?.leg;
@@ -534,30 +614,15 @@ export const ImuShadowPanel = () => {
       return;
     }
     const atMs = Date.now();
-    recordEvent(
-      recording,
-      'arrival',
-      leg.toId,
-      atMs,
-      readEstimate(recording, atMs)
-    );
-    setActualArrivalAt(atMs);
-  };
-  const nextLeg = () => {
-    const recording = recordingRef.current;
-    if (
-      !recording ||
-      actualArrivalAt == null ||
-      Date.now() - actualArrivalAt < 3000
-    ) {
-      return;
-    }
-    if (!initializeLeg(recording, nextIndexRef.current)) {
-      stopRef.current('terminal');
-    }
+    const value = readEstimate(recording, atMs);
+    recordDeparture(recording, atMs, value);
+    recordEvent(recording, 'arrival', leg.toId, atMs, value);
+    arrivalMarkedAtRef.current = atMs;
+    setArrivalMarked(true);
   };
   const exportRecording = async () => {
     try {
+      if (recordingRef.current) await stop('manual-stop');
       await exportImuShadow();
     } catch {
       setMessage('export-failed');
@@ -573,8 +638,10 @@ export const ImuShadowPanel = () => {
         />
         {running && (
           <Action
-            text={label('記録停止', 'Stop')}
-            onPress={() => stop('manual-stop')}
+            text={label('終了・JSON出力', 'Finish & export')}
+            onPress={() => {
+              void exportRecording();
+            }}
           />
         )}
       </View>
@@ -604,6 +671,17 @@ export const ImuShadowPanel = () => {
           </Typography>
         </View>
       </View>
+      {running && displayLeg && (
+        <Action
+          text={
+            arrivalMarked
+              ? label('次区間へ移行中', 'Advancing to next leg')
+              : label('次駅に実到着', 'Actual next arrival')
+          }
+          onPress={markArrival}
+          disabled={arrivalMarked}
+        />
+      )}
       {!collapsed && (
         <>
           <Typography style={styles.text}>
@@ -619,6 +697,14 @@ export const ImuShadowPanel = () => {
           )}
           {!running && (
             <>
+              <Typography style={styles.text}>
+                {starting
+                  ? label('記録準備中', 'Preparing recording')
+                  : label(
+                      '停車駅を特定できると自動記録します。手動でも開始できます。',
+                      'Records automatically at a known stopped station; manual start is also available.'
+                    )}
+              </Typography>
               <Typography style={styles.text}>
                 {label('実際の停車駅を選択:', 'Select actual stopped station:')}{' '}
                 {stationLabel(
@@ -673,35 +759,18 @@ export const ImuShadowPanel = () => {
               {estimate?.reason && (
                 <Typography style={styles.text}>{estimate.reason}</Typography>
               )}
-              <View style={styles.buttons}>
-                <Action
-                  text={label('実発車', 'Actual departure')}
-                  onPress={markDeparture}
-                  disabled={hasDeparture || actualArrivalAt != null}
-                />
-                <Action
-                  text={label('次駅に実到着', 'Actual next arrival')}
-                  onPress={markArrival}
-                  disabled={actualArrivalAt != null}
-                />
-                {actualArrivalAt != null && (
-                  <Action
-                    text={label('次区間を開始', 'Next leg')}
-                    onPress={nextLeg}
-                    disabled={nowMs - actualArrivalAt < 3000}
-                  />
-                )}
-              </View>
             </>
           )}
           {!!message && <Typography style={styles.text}>{message}</Typography>}
-          <Action
-            text={label('JSON書き出し', 'Export JSON')}
-            disabled={running || starting || !getLastImuShadowRecording()}
-            onPress={() => {
-              void exportRecording();
-            }}
-          />
+          {!running && (
+            <Action
+              text={label('JSON書き出し', 'Export JSON')}
+              disabled={starting || !getLastImuShadowRecording()}
+              onPress={() => {
+                void exportRecording();
+              }}
+            />
+          )}
         </>
       )}
     </View>
