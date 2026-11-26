@@ -1,9 +1,10 @@
 import { act, render } from '@testing-library/react-native';
 import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
-import { AppState } from 'react-native';
+import { AppState, DeviceEventEmitter } from 'react-native';
 import { LineType, type Station } from '~/@types/graphql';
 import { rememberTrackDistances } from '~/lib/trackDistances';
+import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { stationForHeaderAtom } from '~/store/atoms/navigation';
 import {
   selectedBoundAtom,
@@ -32,6 +33,7 @@ jest.mock('~/hooks/useEstimateArrivalTimesRoute', () => ({
 jest.mock('~/lib/imuShadowSensor', () => ({
   ...jest.requireActual('~/lib/imuShadowSensor'),
   loadImuShadowSensor: async () => ({
+    getPermissionsAsync: async () => ({ granted: true }),
     isAvailableAsync: async () => true,
     requestPermissionsAsync: async () => ({ granted: true }),
     setUpdateInterval: jest.fn(),
@@ -42,44 +44,72 @@ jest.mock('~/lib/imuShadowSensor', () => ({
   }),
 }));
 
-it('starts at the origin without DO and advances on a complete subway stop', async () => {
-  const store = createStore();
-  const origin = { id: 1, line: { lineType: LineType.Subway } } as Station;
-  store.set(stationAtom, origin);
-  store.set(stationsAtom, [origin, mockTarget]);
-  store.set(selectedDirectionAtom, 'INBOUND');
-  store.set(selectedBoundAtom, mockTarget);
-  rememberTrackDistances([
-    { id: 1 },
-    { id: 2, trackDistanceFromPrevious: 300 },
-  ]);
-  const previous = AppState.currentState;
-  AppState.currentState = 'active';
-  try {
-    const view = render(
-      <Provider store={store}>
-        <DevImuArrival />
-      </Provider>
-    );
-    await act(async () => {});
-    expect(mockListener).toBeDefined();
-    act(() => {
-      mockListener?.({ acceleration: null } as DeviceMotionMeasurement);
-      expect(mockRemove).not.toHaveBeenCalled();
-      for (let n = 0; n <= 450; n++) {
-        const x = n <= 100 ? 1 : n > 300 && n <= 400 ? -1 : 0;
-        mockListener?.({
-          acceleration: { x, y: 0, z: 0, timestamp: n / 10 },
-          accelerationIncludingGravity: { x, y: 0, z: 9.81, timestamp: n / 10 },
-          rotationRate: { alpha: 0, beta: 0, gamma: 0, timestamp: n / 10 },
-        } as DeviceMotionMeasurement);
+it.each([
+  { locked: false, tracking: false, advances: true },
+  { locked: true, tracking: true, advances: true },
+  { locked: true, tracking: false, advances: false },
+])(
+  'handles a complete subway stop (locked=$locked, tracking=$tracking)',
+  async ({ locked, tracking, advances }) => {
+    mockListener = undefined;
+    mockRemove.mockClear();
+    const store = createStore();
+    const origin = { id: 1, line: { lineType: LineType.Subway } } as Station;
+    store.set(backgroundLocationTrackingAtom, tracking);
+    store.set(stationAtom, origin);
+    store.set(stationsAtom, [origin, mockTarget]);
+    store.set(selectedDirectionAtom, 'INBOUND');
+    store.set(selectedBoundAtom, mockTarget);
+    rememberTrackDistances([
+      { id: 1 },
+      { id: 2, trackDistanceFromPrevious: 300 },
+    ]);
+    const previous = AppState.currentState;
+    AppState.currentState = 'active';
+    try {
+      const view = render(
+        <Provider store={store}>
+          <DevImuArrival />
+        </Provider>
+      );
+      await act(async () => {});
+      expect(mockListener).toBeDefined();
+      const sendSamples = (first: number, last: number) => {
+        for (let n = first; n <= last; n++) {
+          const x = n <= 100 ? 1 : n > 300 && n <= 400 ? -1 : 0;
+          mockListener?.({
+            acceleration: { x, y: 0, z: 0, timestamp: n / 10 },
+            accelerationIncludingGravity: {
+              x,
+              y: 0,
+              z: 9.81,
+              timestamp: n / 10,
+            },
+            rotationRate: { alpha: 0, beta: 0, gamma: 0, timestamp: n / 10 },
+          } as DeviceMotionMeasurement);
+        }
+      };
+      act(() => {
+        mockListener?.({ acceleration: null } as DeviceMotionMeasurement);
+        expect(mockRemove).not.toHaveBeenCalled();
+        sendSamples(0, 149);
+      });
+      if (locked) {
+        act(() => {
+          AppState.currentState = 'background';
+          DeviceEventEmitter.emit('appStateDidChange', {
+            app_state: 'background',
+          });
+        });
+        if (tracking) expect(mockRemove).not.toHaveBeenCalled();
       }
-    });
-    expect(store.get(stationAtom)).toBe(mockTarget);
-    expect(store.get(stationForHeaderAtom)).toBe(mockTarget);
-    view.unmount();
-    expect(mockRemove).toHaveBeenCalled();
-  } finally {
-    AppState.currentState = previous;
+      act(() => sendSamples(150, 450));
+      expect(store.get(stationAtom)).toBe(advances ? mockTarget : origin);
+      if (advances) expect(store.get(stationForHeaderAtom)).toBe(mockTarget);
+      view.unmount();
+      expect(mockRemove).toHaveBeenCalled();
+    } finally {
+      AppState.currentState = previous;
+    }
   }
-});
+);

@@ -1,7 +1,8 @@
 import { useIsFocused } from '@react-navigation/native';
+import { requireOptionalNativeModule } from 'expo';
 import { useAtomValue, useStore } from 'jotai';
-import { useEffect } from 'react';
-import { AppState } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { AppState, Platform } from 'react-native';
 import { LineType } from '~/@types/graphql';
 import { useEstimateArrivalTimesRoute } from '~/hooks/useEstimateArrivalTimesRoute';
 import { useIsAppActive } from '~/hooks/useIsAppActive';
@@ -15,6 +16,7 @@ import { loadImuShadowSensor, readMotionSample } from '~/lib/imuShadowSensor';
 import { getTrackDistance } from '~/lib/trackDistances';
 import { applyImuArrivalAtom } from '~/store/atoms/imuArrival';
 import { imuShadowEnabledAtom } from '~/store/atoms/imuShadow';
+import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
@@ -25,6 +27,17 @@ import {
 } from '~/store/atoms/station';
 
 export const DevImuArrival = () => {
+  const nativeMotion = useMemo(
+    () =>
+      Platform.OS === 'android'
+        ? requireOptionalNativeModule<{
+            setRideBackgroundEnabled?: (enabled: boolean) => void;
+          }>('ExponentDeviceMotion')
+        : null,
+    []
+  );
+  const supportsBackground =
+    Platform.OS === 'ios' || !!nativeMotion?.setRideBackgroundEnabled;
   const store = useStore();
   const origin = useAtomValue(stationAtom);
   const target = useNextStation(true, origin ?? undefined);
@@ -35,14 +48,22 @@ export const DevImuArrival = () => {
   const shadow = useAtomValue(imuShadowEnabledAtom);
   const active = useIsAppActive();
   const focused = useIsFocused();
+  const tracking = useAtomValue(backgroundLocationTrackingAtom);
   const enabled =
     focused &&
-    active &&
+    (active || (tracking && supportsBackground)) &&
     !simulation &&
     !shadow &&
     origin?.line?.lineType === LineType.Subway &&
     target?.line?.lineType === LineType.Subway;
   const { route } = useEstimateArrivalTimesRoute({ skip: !enabled });
+
+  useEffect(() => {
+    if (!enabled || !tracking || !nativeMotion?.setRideBackgroundEnabled)
+      return;
+    nativeMotion.setRideBackgroundEnabled(true);
+    return () => nativeMotion.setRideBackgroundEnabled?.(false);
+  }, [enabled, tracking, nativeMotion]);
 
   useEffect(() => {
     if (
@@ -80,13 +101,29 @@ export const DevImuArrival = () => {
         if (disposed) return;
         const available = await sensor.isAvailableAsync();
         if (disposed || !available) return;
-        const permission = await sensor.requestPermissionsAsync();
+        // A new leg can start while locked. Only ask for a new grant in the foreground.
+        let permission = await sensor.getPermissionsAsync();
+        if (disposed) return;
+        if (!permission.granted) {
+          if (AppState.currentState !== 'active') {
+            started = false;
+            return;
+          }
+          permission = await sensor.requestPermissionsAsync();
+        }
         if (disposed || !permission.granted || !store.get(arrivedAtom)) return;
         const estimator = new ImuShadowEstimator(leg);
         let lastSampleTime = Number.NEGATIVE_INFINITY;
         sensor.setUpdateInterval(100);
         subscription = sensor.addListener((data) => {
-          if (disposed || AppState.currentState !== 'active') return;
+          if (
+            disposed ||
+            (AppState.currentState !== 'active' &&
+              !(
+                supportsBackground && store.get(backgroundLocationTrackingAtom)
+              ))
+          )
+            return;
           const sample = readMotionSample(data);
           // Android may deliver individual sensors before the first complete sample.
           // The estimator checks the elapsed native time between complete samples.
@@ -118,11 +155,28 @@ export const DevImuArrival = () => {
     };
     void start();
     const unsubscribe = store.sub(arrivedAtom, () => void start());
+    const appStateSubscription = AppState.addEventListener(
+      'change',
+      (state) => {
+        if (state === 'active') void start();
+      }
+    );
     return () => {
+      appStateSubscription.remove();
       disposed = true;
       unsubscribe();
       subscription?.remove();
     };
-  }, [enabled, route, origin, target, bound, direction, stations, store]);
+  }, [
+    enabled,
+    route,
+    origin,
+    target,
+    bound,
+    direction,
+    stations,
+    store,
+    supportsBackground,
+  ]);
   return null;
 };
