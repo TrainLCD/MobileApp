@@ -601,6 +601,7 @@ export const GET_TRAIN_ROUTE = gql`
     ) {
       segments {
         station {
+          groupId
           trackDistanceFromPrevious
         }
         distanceFromPrevious
@@ -659,6 +660,7 @@ export const GET_ESTIMATED_TRAIN_ROUTE = gql`
     ) {
       segments {
         station {
+          groupId
           trackDistanceFromPrevious
         }
         distanceFromPrevious
