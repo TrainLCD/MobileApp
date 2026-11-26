@@ -483,10 +483,12 @@ export const ImuShadowPanel = () => {
         if (!available) {
           throw new Error('sensor-unavailable');
         }
-        const permission = await sensor.requestPermissionsAsync();
-        if (!stillEligible()) return;
-        if (!permission.granted) {
-          throw new Error('sensor-permission-denied');
+        if (Platform.OS !== 'android') {
+          const permission = await sensor.requestPermissionsAsync();
+          if (!stillEligible()) return;
+          if (!permission.granted) {
+            throw new Error('sensor-permission-denied');
+          }
         }
       }
       if (!stillEligible()) return;

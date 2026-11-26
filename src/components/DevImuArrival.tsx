@@ -101,17 +101,20 @@ export const DevImuArrival = () => {
         if (disposed) return;
         const available = await sensor.isAvailableAsync();
         if (disposed || !available) return;
-        // A new leg can start while locked. Only ask for a new grant in the foreground.
-        let permission = await sensor.getPermissionsAsync();
-        if (disposed) return;
-        if (!permission.granted) {
-          if (AppState.currentState !== 'active') {
-            started = false;
-            return;
+        if (Platform.OS !== 'android') {
+          // A new leg can start while locked. Only ask for a new grant in the foreground.
+          let permission = await sensor.getPermissionsAsync();
+          if (disposed) return;
+          if (!permission.granted) {
+            if (AppState.currentState !== 'active') {
+              started = false;
+              return;
+            }
+            permission = await sensor.requestPermissionsAsync();
           }
-          permission = await sensor.requestPermissionsAsync();
+          if (disposed || !permission.granted) return;
         }
-        if (disposed || !permission.granted || !store.get(arrivedAtom)) return;
+        if (!store.get(arrivedAtom)) return;
         const estimator = new ImuShadowEstimator(leg);
         let lastSampleTime = Number.NEGATIVE_INFINITY;
         sensor.setUpdateInterval(100);
