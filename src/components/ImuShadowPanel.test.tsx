@@ -2,7 +2,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import * as Battery from 'expo-battery';
 import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import type { Station } from '~/@types/graphql';
 import type { RouteStop } from '~/lib/imuShadow';
 import { getLastImuShadowRecording } from '~/lib/imuShadowRecording';
@@ -92,6 +92,30 @@ jest.mock('~/utils/exportImuShadow', () => ({
     jest.requireActual('~/utils/exportImuShadow').exportImuShadow
   ),
 }));
+
+test('records Android motion without requesting physical activity permission', async () => {
+  const os = jest.replaceProperty(Platform, 'OS', 'android');
+  const previousState = AppState.currentState;
+  AppState.currentState = 'active';
+  mockReceive = undefined;
+  mockRequestPermissions.mockClear();
+  try {
+    const screen = render(
+      <Provider store={createStore()}>
+        <ImuShadowPanel />
+      </Provider>
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByText('Record IMU'));
+    });
+    expect(mockRequestPermissions).not.toHaveBeenCalled();
+    expect(mockReceive).toBeDefined();
+    screen.unmount();
+  } finally {
+    AppState.currentState = previousState;
+    os.restore();
+  }
+});
 
 test('stopping between ticks shows the same invalid estimate as the final observation', async () => {
   jest.useFakeTimers();

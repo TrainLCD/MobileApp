@@ -91,6 +91,7 @@ export default {
         ? 'me.tinykitten.trainlcd.dev'
         : 'me.tinykitten.trainlcd',
     permissions: [],
+    blockedPermissions: ['android.permission.ACTIVITY_RECOGNITION'],
     versionCode: 100000947,
   },
   owner: 'trainlcd',
