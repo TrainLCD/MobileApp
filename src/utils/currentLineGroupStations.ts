@@ -104,7 +104,7 @@ export const buildRouteLegInputs = (
 };
 
 /**
- * legs を渡した trainRoute の segments を、進行順に並べた駅リストに揃える。
+ * trainRoute の segments を、進行順に並べた駅リストに揃える。
  *
  * API は区間ごとの駅をそのまま連結して返すので、乗換駅は前の区間の降車駅と次の区間の
  * 乗車駅の 2 回現れる。系統の中で路線が変わる駅(東海道・山陽新幹線の新大阪など)も
@@ -118,7 +118,7 @@ export const buildRouteLegInputs = (
  *   乗換駅の出発の見込みは乗車側(最後)の行にあるので、それを拾うために使う
  * @returns 駅リストと同じ長さの segments。突き合わせられなければ null
  */
-export const alignConnectedTrainRouteSegments = <
+export const alignTrainRouteSegments = <
   T extends { station?: { groupId?: number | null } | null },
 >(
   segments: T[],

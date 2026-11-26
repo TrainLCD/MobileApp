@@ -16,7 +16,7 @@ import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrecti
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import { resetFirstSpeechAtom } from '~/store/atoms/speech';
 import {
-  alignConnectedTrainRouteSegments,
+  alignTrainRouteSegments,
   buildRouteLegInputs,
   type RouteLegInput,
 } from '~/utils/currentLineGroupStations';
@@ -250,14 +250,12 @@ export const useSimulationMode = (): void => {
     ? legacyConnectedError
     : legacySingleError;
 
-  // 区間を渡した trainRoute は乗換駅などを 2 回含むので、進行順の駅リストに揃えてから使う
+  // 単一系統の直通でも乗換経路でも、接続駅は路線ごとに返るため進行順の駅リストに揃える
   const trainRouteSegments = useMemo((): TrainRouteSegment[] | null => {
-    if (!routeLegs) {
-      return singleTrainRouteData?.trainRoute?.segments ?? null;
-    }
-    const segments = connectedTrainRouteData?.trainRoute?.segments;
+    const data = routeLegs ? connectedTrainRouteData : singleTrainRouteData;
+    const segments = data?.trainRoute?.segments;
     return segments
-      ? alignConnectedTrainRouteSegments(
+      ? alignTrainRouteSegments(
           segments,
           maybeRevsersedStations,
           mergeJunctionSegments
@@ -355,8 +353,7 @@ export const useSimulationMode = (): void => {
       return;
     }
 
-    // trainRoute は fromStationId(= maybeRevsersedStations[0])→toStationId(= 末尾)の
-    // 並びで1駅1セグメントを返すため、駅IDではなく配列位置で対応付ける。
+    // 進行順に照合済みの segments を、駅IDではなく配列位置で参照する。
     // 同一駅IDが非隣接位置に複数回出現するケース(接続駅の再登場等)があり、
     // ID をキーにしたルックアップだと後勝ちで別位置の値を誤って使ってしまうため。
     const speedProfiles: number[][] = new Array(maybeRevsersedStations.length);

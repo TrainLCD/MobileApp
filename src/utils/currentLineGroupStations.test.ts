@@ -1,6 +1,6 @@
 import type { Station } from '~/@types/graphql';
 import {
-  alignConnectedTrainRouteSegments,
+  alignTrainRouteSegments,
   buildRouteLegInputs,
   isJoinedLineGroupStations,
 } from './currentLineGroupStations';
@@ -148,7 +148,7 @@ describe('乗換経路の区間指定', () => {
     });
   });
 
-  describe('alignConnectedTrainRouteSegments', () => {
+  describe('alignTrainRouteSegments', () => {
     const group = (groupId: number) =>
       ({ id: groupId, groupId }) as unknown as Station;
     const segment = (name: string, groupId: number) => ({
@@ -163,7 +163,7 @@ describe('乗換経路の区間指定', () => {
       const stations = [group(1), group(2), group(3), group(4)];
       expect(
         names(
-          alignConnectedTrainRouteSegments(
+          alignTrainRouteSegments(
             [
               segment('光が丘', 1),
               segment('都庁前', 2),
@@ -185,7 +185,7 @@ describe('乗換経路の区間指定', () => {
       const stations = [group(1), group(2), group(3), group(4)];
       expect(
         names(
-          alignConnectedTrainRouteSegments(
+          alignTrainRouteSegments(
             [
               segment('東京', 1),
               segment('京都', 2),
@@ -203,7 +203,7 @@ describe('乗換経路の区間指定', () => {
     it('merge を渡すと、同じ駅グループが続く 1 つ目と最後の 1 つから 1 つを作る', () => {
       // 乗換駅の出発の見込みは、次の区間の乗車側(最後)の行にある
       const stations = [group(1), group(2), group(3), group(4)];
-      const aligned = alignConnectedTrainRouteSegments(
+      const aligned = alignTrainRouteSegments(
         [
           segment('東京', 1),
           segment('京都', 2),
@@ -227,14 +227,11 @@ describe('乗換経路の区間指定', () => {
       const stations = [group(1), group(2), group(3)];
       // 途中の駅が欠けている
       expect(
-        alignConnectedTrainRouteSegments(
-          [segment('a', 1), segment('c', 3)],
-          stations
-        )
+        alignTrainRouteSegments([segment('a', 1), segment('c', 3)], stations)
       ).toBeNull();
       // segments が余る
       expect(
-        alignConnectedTrainRouteSegments(
+        alignTrainRouteSegments(
           [segment('a', 1), segment('b', 2), segment('c', 3), segment('d', 4)],
           stations
         )
