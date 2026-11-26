@@ -7160,6 +7160,7 @@ export type GetTrainRouteQuery = {
           station:
             | {
                 __typename: 'StationNested';
+                groupId: number | null | undefined;
                 trackDistanceFromPrevious: number | null | undefined;
               }
             | null
@@ -7222,6 +7223,7 @@ export type GetEstimatedTrainRouteQuery = {
           station:
             | {
                 __typename: 'StationNested';
+                groupId: number | null | undefined;
                 trackDistanceFromPrevious: number | null | undefined;
               }
             | null

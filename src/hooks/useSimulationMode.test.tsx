@@ -186,9 +186,7 @@ const setupAtomMocks = (
 
 /**
  * useGraphQLQuery(GET_TRAIN_ROUTE) のモック応答を設定する。
- * segments はフックが maybeRevsersedStations と同じ並び順・同じ要素数で
- * 返ってくることを前提に位置対応させているため、引数には実際にシミュレーションが
- * 辿る並び順（INBOUND ならそのまま、OUTBOUNDなら reverse 済み）の駅配列を渡す。
+ * 接続駅の重複を含む、API の進行順で駅を渡す。
  */
 const mockTrainRoute = (
   stationsInWalkOrder: Station[],
@@ -196,7 +194,7 @@ const mockTrainRoute = (
     maxSpeed?: number;
     accel?: number;
     decel?: number;
-    // 駅ごとの trackDistanceFromPrevious。省略時は station を返さない(直線距離だけ)
+    // 駅ごとの trackDistanceFromPrevious。省略時は直線距離だけを返す
     trackDistances?: (number | null)[];
     // 駅ごとの [到着, 出発] の見込み(分)。model: Estimated の応答にあたる
     timings?: [number, number][];
@@ -226,12 +224,11 @@ const mockTrainRoute = (
 
     return {
       __typename: 'TrainRouteSegment' as const,
-      station: trackDistances
-        ? {
-            __typename: 'StationNested' as const,
-            trackDistanceFromPrevious: trackDistances[i] ?? null,
-          }
-        : null,
+      station: {
+        __typename: 'StationNested' as const,
+        groupId: s.groupId,
+        trackDistanceFromPrevious: trackDistances?.[i] ?? null,
+      },
       distanceFromPrevious,
       maxAcceleration: accel,
       maxDeceleration: decel,
@@ -1397,6 +1394,121 @@ describe('useSimulationMode', () => {
         expect.objectContaining({ skip: true })
       );
     });
+
+    describe.each(['Estimated', 'Legacy'] as const)(
+      '系統84の直通（%s）',
+      (model) => {
+        it.each([
+          ['INBOUND', '中野', '落合'],
+          ['OUTBOUND', '西船橋', '原木中山'],
+        ] as const)('%sで%sから%sへ走行して停車する', (direction, from, to) => {
+          // 両方の接続駅とその前後だけを抜き出す。座標・距離・時刻はテスト用。
+          const names = [
+            '高円寺',
+            '中野',
+            '中野',
+            '落合',
+            '原木中山',
+            '西船橋',
+            '西船橋',
+            '東海神',
+          ];
+          const stations = names.map((name, i) => ({
+            ...mockStation(
+              i + 1,
+              names.indexOf(name) + 1,
+              35,
+              139 + names.indexOf(name) / 100
+            ),
+            name,
+            trainType: { groupId: 84 } as Station['trainType'],
+          }));
+          const walk =
+            direction === 'INBOUND' ? stations : stations.slice().reverse();
+          const start = walk.find((s) => s.name === from);
+          const next = walk.find((s) => s.name === to);
+          if (start?.longitude == null || next?.longitude == null)
+            throw new Error('テスト区間の座標がありません');
+          setupAtomMocks(
+            { station: start, stations, selectedDirection: direction },
+            { autoModeEnabled: true }
+          );
+          const estimated = model === 'Estimated';
+          (useAutoModeEstimatedEnabled as jest.Mock).mockReturnValue(estimated);
+          let minutes = 0;
+          mockTrainRoute(walk, {
+            trackDistances: walk.map((s, i) =>
+              s.name === walk[i - 1]?.name || i === 0 ? 0 : 300
+            ),
+            timings: estimated
+              ? walk.map((s, i) => {
+                  if (i && s.name !== walk[i - 1].name) minutes++;
+                  const arrival = minutes;
+                  if (s.name !== walk[i + 1]?.name) minutes += 0.25;
+                  return [arrival, minutes];
+                })
+              : undefined,
+          });
+          // Legacy の走行時間を固定して、2 ティックで次駅に着くことを検証する。
+          if (!estimated)
+            jest
+              .spyOn(trainSpeedModule, 'generateTrainSpeedProfile')
+              .mockReturnValue([150, 150]);
+          renderHook(useSimulationMode);
+          jest.advanceTimersByTime(1000);
+          const first = store.get(locationAtom)?.coords.longitude;
+          expect(first).toBeGreaterThan(
+            Math.min(start.longitude, next.longitude)
+          );
+          expect(first).toBeLessThan(Math.max(start.longitude, next.longitude));
+          jest.advanceTimersByTime(estimated ? 59000 : 1000);
+          expect(store.get(locationAtom)?.coords.longitude).toBeCloseTo(
+            next.longitude,
+            10
+          );
+          jest.advanceTimersByTime(estimated ? 15000 : 2000);
+          expect(store.get(locationAtom)?.coords.longitude).toBeCloseTo(
+            next.longitude,
+            10
+          );
+        });
+      }
+    );
+
+    it.each([
+      ['単一系統の直通', 84, GET_TRAIN_ROUTE],
+      ['通常の乗換経路', 85, GET_CONNECTED_TRAIN_ROUTE],
+    ] as const)(
+      '%sで接続駅の直後に通過駅があれば次の停車駅まで距離を積算する',
+      (_, secondGroup, query) => {
+        const stations = [1, 2, 2, 3, 4].map((groupId, i) => ({
+          ...mockStation(i + 1, groupId, 35, 139 + groupId / 100),
+          stopCondition: i === 3 ? StopCondition.Not : StopCondition.All,
+          trainType:
+            i === 3
+              ? null
+              : ({ groupId: i < 2 ? 84 : secondGroup } as Station['trainType']),
+        }));
+        setupAtomMocks(
+          { stations, selectedDirection: 'INBOUND' },
+          { autoModeEnabled: true }
+        );
+        (useAutoModeEstimatedEnabled as jest.Mock).mockReturnValue(false);
+        mockTrainRoute(stations, { trackDistances: [0, 300, 0, 400, 500] });
+        const result = (useGraphQLQuery as jest.Mock)();
+        (useGraphQLQuery as jest.Mock).mockImplementation((doc, { skip }) =>
+          doc === query && !skip ? result : { data: undefined }
+        );
+        const generate = jest.spyOn(
+          trainSpeedModule,
+          'generateTrainSpeedProfile'
+        );
+        renderHook(useSimulationMode);
+        expect(generate.mock.calls.map(([args]) => args.distance)).toEqual([
+          300, 900,
+        ]);
+      }
+    );
 
     describe('乗換経路の区間ごとの走行区間', () => {
       const OEDO = 99301;
