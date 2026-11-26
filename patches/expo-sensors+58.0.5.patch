@@ -1,0 +1,124 @@
+diff --git a/node_modules/expo-sensors/android/src/main/java/expo/modules/sensors/modules/DeviceMotionModule.kt b/node_modules/expo-sensors/android/src/main/java/expo/modules/sensors/modules/DeviceMotionModule.kt
+index 033d076..1809c85 100644
+--- a/node_modules/expo-sensors/android/src/main/java/expo/modules/sensors/modules/DeviceMotionModule.kt
++++ b/node_modules/expo-sensors/android/src/main/java/expo/modules/sensors/modules/DeviceMotionModule.kt
+@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
+ import android.hardware.SensorEventListener2
+ import android.hardware.SensorManager
+ import android.os.Build
++import android.os.PowerManager
+ import android.os.Bundle
+ import android.view.Choreographer
+ import android.view.Surface
+@@ -55,6 +56,29 @@ class DeviceMotionModule : Module(), SensorEventListener2 {
+   private val dispatchEventRunnable = DispatchEventRunnable(WeakReference(this))
+ 
+   private var isObserving = false
++  @Volatile private var inBackground = false
++  private var allowBackground = false
++  @Volatile private var registered = false
++  private var wakeLock: PowerManager.WakeLock? = null
++  private var lastBackgroundSampleNs = 0L
++
++  // Background delivery is opt-in for a ride with an active location service.
++  // Keep the CPU awake only while that ride is observing with the screen hidden.
++  private fun updateRegistration() {
++    val needed = isObserving && (!inBackground || allowBackground)
++    if (needed != registered) {
++      registered = needed
++      if (needed) subscriptions.forEach { it.startObserving() }
++      else subscriptions.forEach { it.stopObserving() }
++    }
++    if (needed && inBackground && wakeLock == null) {
++      val power = appContext.reactContext?.getSystemService(Context.POWER_SERVICE) as? PowerManager
++      wakeLock = power?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TrainLCD:RideMotion")?.apply { acquire() }
++    } else if (!needed || !inBackground) {
++      wakeLock?.release()
++      wakeLock = null
++    }
++  }
+ 
+   private val subscriptions: List<SensorSubscription> by lazy {
+     val context = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+@@ -106,35 +130,50 @@ class DeviceMotionModule : Module(), SensorEventListener2 {
+       }
+     }
+ 
++    Function("setRideBackgroundEnabled") { enabled: Boolean ->
++      synchronized(this@DeviceMotionModule) {
++        allowBackground = enabled
++        updateRegistration()
++      }
++    }
++
+     OnDestroy {
+-      if (isObserving) {
+-        subscriptions.forEach { it.stopObserving() }
++      synchronized(this@DeviceMotionModule) {
++        isObserving = false
++        allowBackground = false
++        updateRegistration()
+       }
++      currentFrameCallback.stop()
+     }
+ 
+     OnStartObserving {
+-      subscriptions.forEach { it.startObserving() }
+-      isObserving = true
++      synchronized(this@DeviceMotionModule) {
++        isObserving = true
++        updateRegistration()
++      }
+     }
+ 
+     OnActivityEntersForeground {
+-      if (isObserving) {
+-        subscriptions.forEach { it.startObserving() }
++      synchronized(this@DeviceMotionModule) {
++        inBackground = false
++        updateRegistration()
+       }
+     }
+ 
+     OnActivityEntersBackground {
+-      if (isObserving) {
+-        subscriptions.forEach { it.stopObserving() }
++      synchronized(this@DeviceMotionModule) {
++        inBackground = true
++        updateRegistration()
+       }
++      currentFrameCallback.stop()
+     }
+ 
+     OnStopObserving {
+-      if (isObserving) {
+-        subscriptions.forEach { it.stopObserving() }
++      synchronized(this@DeviceMotionModule) {
++        isObserving = false
++        updateRegistration()
+       }
+       currentFrameCallback.stop()
+-      isObserving = false
+       accelerationEvent = null
+       accelerationIncludingGravityEvent = null
+       rotationEvent = null
+@@ -163,7 +202,18 @@ class DeviceMotionModule : Module(), SensorEventListener2 {
+       Sensor.TYPE_ROTATION_VECTOR -> rotationEvent = sensorEvent
+       Sensor.TYPE_GRAVITY -> gravityEvent = sensorEvent
+     }
+-    currentFrameCallback.maybePostFromNonUI()
++    if (!registered) return
++    if (inBackground) {
++      // Screen-off delivery cannot use Choreographer's display frames.
++      if (sensor.type == Sensor.TYPE_LINEAR_ACCELERATION &&
++        sensorEvent.timestamp - lastBackgroundSampleNs >= updateInterval * 1_000_000.0
++      ) {
++        lastBackgroundSampleNs = sensorEvent.timestamp
++        sendEvent("deviceMotionDidUpdate", eventsToMap())
++      }
++    } else {
++      currentFrameCallback.maybePostFromNonUI()
++    }
+   }
+ 
+   override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit

@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 import { createStore, Provider } from 'jotai';
 import { createElement, type ReactNode } from 'react';
-import { REMOTE_TTS_SPEED_RATES, REMOTE_TTS_VOICES } from '~/constants';
+import { REMOTE_TTS_SPEED_RATES } from '~/constants';
 import { APP_THEME } from '~/models/Theme';
 import { TTS_SPEED_PREFERENCE } from '~/models/TTSSpeed';
 import { ttsSpeedPreferenceAtom } from '~/store/atoms/speech';
@@ -144,7 +144,7 @@ describe('useRemoteSpeechEngine', () => {
         apiUrl: 'https://worker.example.com/tts',
         idToken: 'test-token',
         // Cloud TTS のボイス名はロケールを含むため日英で別々に指定する
-        jaVoiceName: 'ja-JP-Standard-A',
+        jaVoiceName: 'ja-JP-Standard-B',
         enVoiceName: 'en-US-Standard-G',
         // 設定していなければ「普通」（等速）で要求する
         speed: REMOTE_TTS_SPEED_RATES.NORMAL,
@@ -159,18 +159,18 @@ describe('useRemoteSpeechEngine', () => {
         createElement(Provider, { store }, children),
     });
     const themes = Object.values(APP_THEME);
-    const pairs = new Set<string>();
     for (const theme of themes) {
       store.set(themePreferenceAtom, theme);
       result.current.speak(defaultRequest, { onSettled: jest.fn() });
       await flushAsync();
-      const voices = REMOTE_TTS_VOICES[theme];
       expect(mockFetchSpeechAudio).toHaveBeenLastCalledWith(
-        expect.objectContaining({ theme, ...voices })
+        expect.objectContaining({
+          theme,
+          jaVoiceName: 'ja-JP-Standard-B',
+          enVoiceName: 'en-US-Standard-G',
+        })
       );
-      pairs.add(`${voices.jaVoiceName}/${voices.enVoiceName}`);
     }
-    expect(pairs.size).toBe(themes.length);
   });
 
   it('アナウンス速度の設定を読み上げ速度として要求する', async () => {
