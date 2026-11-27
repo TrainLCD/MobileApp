@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
-import { useAtomValue } from 'jotai';
+import { createStore, Provider, useAtomValue } from 'jotai';
+import type { ReactNode } from 'react';
 import { STORAGE_KEYS } from '~/constants';
 import { useWarningInfo } from '~/hooks/useWarningInfo';
 import { storage } from '~/lib/storage';
@@ -96,6 +97,13 @@ const setAtomValues = ({
   });
 };
 
+const renderWarningInfo = (store = createStore()) =>
+  renderHook(() => useWarningInfo(), {
+    wrapper: ({ children }: { children: ReactNode }) => (
+      <Provider store={store}>{children}</Provider>
+    ),
+  });
+
 describe('useWarningInfo', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -113,12 +121,12 @@ describe('useWarningInfo', () => {
   });
 
   it('オートモード中は通知パネルを表示する', () => {
-    const { result } = renderHook(() => useWarningInfo());
+    const { result } = renderWarningInfo();
     expect(result.current.warningInfo?.text).toBe('autoModeInProgress');
   });
 
   it('タップで閉じたオートモード通知は再表示されない', () => {
-    const { result } = renderHook(() => useWarningInfo());
+    const { result } = renderWarningInfo();
 
     act(() => {
       result.current.clearWarningInfo();
@@ -128,7 +136,7 @@ describe('useWarningInfo', () => {
   });
 
   it('閉じたオートモード通知はオフライン検知を挟んでも復活しない', () => {
-    const { result, rerender } = renderHook(() => useWarningInfo());
+    const { result, rerender } = renderWarningInfo();
 
     act(() => {
       result.current.clearWarningInfo();
@@ -153,7 +161,7 @@ describe('useWarningInfo', () => {
       untouchableModeEnabled: false,
     });
     mockUseConnectivity.mockReturnValue(false);
-    const { result, rerender } = renderHook(() => useWarningInfo());
+    const { result, rerender } = renderWarningInfo();
     expect(result.current.warningInfo?.text).toBe('offlineWarningText');
 
     act(() => {
@@ -169,7 +177,7 @@ describe('useWarningInfo', () => {
   });
 
   it('オートモードを切り直すとオートモード通知が改めて表示される', () => {
-    const { result, rerender } = renderHook(() => useWarningInfo());
+    const { result, rerender } = renderWarningInfo();
 
     act(() => {
       result.current.clearWarningInfo();
@@ -199,7 +207,7 @@ describe('useWarningInfo', () => {
     });
 
     it('長押し案内を閉じたときだけ既読状態が永続化される', () => {
-      const { result } = renderHook(() => useWarningInfo());
+      const { result, unmount } = renderWarningInfo();
       expect(result.current.warningInfo?.text).toBe('longPressNotice');
 
       act(() => {
@@ -211,6 +219,47 @@ describe('useWarningInfo', () => {
       );
       // 長押し案内を閉じると、次点のオートモード通知へ切り替わる
       expect(result.current.warningInfo?.text).toBe('autoModeInProgress');
+      unmount();
+      expect(renderWarningInfo().result.current.warningInfo?.text).toBe(
+        'autoModeInProgress'
+      );
+    });
+
+    it('保存に失敗しても同じセッション中は案内を閉じ、次の起動で再表示する', () => {
+      const session = createStore();
+      const first = renderWarningInfo(session);
+      expect(first.result.current.warningInfo?.text).toBe('longPressNotice');
+
+      const error = new Error('MMKV.set failed');
+      const write = jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+        throw error;
+      });
+      const log = jest.spyOn(console, 'error').mockImplementation(() => {});
+      try {
+        act(() => first.result.current.clearWarningInfo());
+        expect(write).toHaveBeenCalledWith(
+          STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED,
+          'true'
+        );
+        expect(log).toHaveBeenCalledWith(expect.any(String), error);
+        expect(first.result.current.warningInfo?.text).toBe(
+          'autoModeInProgress'
+        );
+      } finally {
+        log.mockRestore();
+        write.mockRestore();
+      }
+
+      first.unmount();
+      const reopened = renderWarningInfo(session);
+      expect(reopened.result.current.warningInfo?.text).toBe(
+        'autoModeInProgress'
+      );
+      reopened.unmount();
+
+      expect(renderWarningInfo().result.current.warningInfo?.text).toBe(
+        'longPressNotice'
+      );
     });
 
     it('権限警告を閉じても長押し案内は既読にならない', () => {
@@ -218,7 +267,7 @@ describe('useWarningInfo', () => {
       mockUseForegroundPermissions.mockReturnValue({ granted: true });
       mockUseLocationPermissionsGranted.mockReturnValue(false);
 
-      const { result } = renderHook(() => useWarningInfo());
+      const { result } = renderWarningInfo();
       expect(result.current.warningInfo?.text).toBe(
         'alwaysPermissionNotGrantedPanelText'
       );
@@ -235,7 +284,7 @@ describe('useWarningInfo', () => {
   });
 
   it('オートモード通知を閉じても、条件が成立した別の警告は表示される', () => {
-    const { result, rerender } = renderHook(() => useWarningInfo());
+    const { result, rerender } = renderWarningInfo();
 
     act(() => {
       result.current.clearWarningInfo();

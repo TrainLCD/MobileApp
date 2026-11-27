@@ -1,5 +1,6 @@
 import { useForegroundPermissions } from 'expo-location';
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
+import { atomWithLazy } from 'jotai/vanilla/utils';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { isClip } from 'react-native-app-clip';
 import { StopCondition } from '~/@types/graphql';
@@ -53,12 +54,17 @@ type WarningCandidate = {
   getText: () => string;
 };
 
+// 保存できなくても、同じセッションで画面を開き直したときは案内を閉じたままにする。
+const longPressNoticeDismissedAtom = atomWithLazy(
+  () => storage.getString(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED) === 'true'
+);
+
 export const useWarningInfo = () => {
   const [dismissedKinds, setDismissedKinds] = useState<readonly WarningKind[]>(
     []
   );
-  const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useState(
-    () => storage.getString(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED) === 'true'
+  const [longPressNoticeDismissed, setLongPressNoticeDismissed] = useAtom(
+    longPressNoticeDismissedAtom
   );
   const [isAlwaysPermissionNotGrantedDismissed] = useState(
     () =>
@@ -280,9 +286,13 @@ export const useWarningInfo = () => {
       !longPressNoticeDismissed
     ) {
       setLongPressNoticeDismissed(true);
-      storage.set(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED, 'true');
+      try {
+        storage.set(STORAGE_KEYS.LONG_PRESS_NOTICE_DISMISSED, 'true');
+      } catch (error) {
+        console.error('Failed to save long press notice dismissal:', error);
+      }
     }
-  }, [currentWarning, longPressNoticeDismissed]);
+  }, [currentWarning, longPressNoticeDismissed, setLongPressNoticeDismissed]);
 
   return { warningInfo, clearWarningInfo };
 };
