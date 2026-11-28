@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "synthetic-example",
+      "group": "synthetic-ride-1",
+      "split": "train",
+      "kind": "synthetic",
+      "directory": "example",
+      "config": "example/config.json",
+      "provenance": "Generated synthetic acceleration profile; not a field measurement."
+    }
+  ]
+}
