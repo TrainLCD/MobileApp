@@ -50,11 +50,6 @@ jest.mock('~/utils/isTablet', () => ({
   default: false,
 }));
 
-jest.mock('./HeaderStationName', () => {
-  const { Text } = require('react-native');
-  return ({ text }: { text: string }) => <Text>{text}</Text>;
-});
-
 jest.mock('./NumberingIcon', () => {
   const { View } = require('react-native');
   return function MockNumberingIcon() {
@@ -131,6 +126,20 @@ describe('HeaderSanyo', () => {
     expect(getByText('ただいま')).toBeTruthy();
     expect(getByText('須磨')).toBeTruthy();
     expect(getByText('这一站')).toBeTruthy();
+  });
+
+  it('館林停車中に主表示と読みを別々に描く', () => {
+    const { getByText } = render(
+      <HeaderSanyo
+        {...createMockHeaderProps({
+          currentStation: { ...suma, name: '館林', nameKatakana: 'タテバヤシ' },
+          headerState: 'CURRENT',
+          headerLangState: 'JA',
+        })}
+      />
+    );
+    expect(getByText('館林')).toBeTruthy();
+    expect(getByText('たてばやし')).toBeTruthy();
   });
 
   it('種別の箱に補足の行の言語を渡す', () => {

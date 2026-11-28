@@ -46,6 +46,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     transformOrigin: 'center',
   },
+  measuredLabel: {
+    alignSelf: 'stretch',
+    textAlign: 'center',
+  },
   viewport: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -130,7 +134,9 @@ const HeaderStationName: React.FC<Props> = ({
           style={[
             styles.scaledText,
             {
-              width: renderTextWidth || MEASURE_TEXT_WIDTH,
+              width: renderTextWidth
+                ? Math.max(containerWidth, renderTextWidth)
+                : MEASURE_TEXT_WIDTH,
               transform: [{ scaleX: widthScale }],
             },
           ]}
@@ -139,7 +145,9 @@ const HeaderStationName: React.FC<Props> = ({
             {...textProps}
             ellipsizeMode="clip"
             numberOfLines={1}
-            style={textStyle}
+            // Give the native text the available width, including the buffer.
+            // A centered, intrinsically sized child can still clip its last glyph.
+            style={[textStyle, renderTextWidth > 0 && styles.measuredLabel]}
           >
             {text}
           </TextComponent>
