@@ -77,6 +77,21 @@ def prepare(manifest, split, allow_download=False, max_archives=1):
     manifest = Path(manifest).resolve()
     root = manifest.parent
     cases = json.loads(manifest.read_text())['cases']
+    directories = {}
+    recordings = {}
+    for case in cases:
+        directory = safe_path(root, case['directory'])
+        spec = case.get('traintrack')
+        source = (spec['archive'], spec.get('innerZip'), tuple(spec['members'][name] for name in SENSORS)) if spec else directory
+        previous = directories.get(directory)
+        if previous and previous[0] != case['split']:
+            raise ValueError('Recording crosses splits: directory')
+        if previous and previous[1] != source:
+            raise ValueError('Directory shared by different recordings')
+        if source in recordings and recordings[source] != case['split']:
+            raise ValueError('Recording crosses splits')
+        directories[directory] = (case['split'], source)
+        recordings[source] = case['split']
     chosen = [c for c in cases if c['split'] == split and c.get('traintrack')]
     if not chosen:
         return
