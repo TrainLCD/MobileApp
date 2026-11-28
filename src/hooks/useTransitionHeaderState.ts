@@ -10,7 +10,7 @@ import navigationState, {
 } from '../store/atoms/navigation';
 import {
   approachingAtom,
-  arrivedAtom,
+  displayArrivedAtom,
   selectedBoundAtom,
 } from '../store/atoms/station';
 import { isLEDThemeAtom } from '../store/atoms/theme';
@@ -115,7 +115,7 @@ const getFallbackStateWithoutJapanese = (
 };
 
 export const useTransitionHeaderState = (): void => {
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const approaching = useAtomValue(approachingAtom);
   const selectedBound = useAtomValue(selectedBoundAtom);
   const isLEDTheme = useAtomValue(isLEDThemeAtom);

@@ -22,7 +22,7 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { headerIsEnglishAtom } from '~/store/atoms/navigation';
-import { arrivedAtom, stationsAtom } from '~/store/atoms/station';
+import { displayArrivedAtom, stationsAtom } from '~/store/atoms/station';
 import getStationNameR from '~/utils/getStationNameR';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
@@ -309,7 +309,7 @@ const useStationCellState = (
   index: number,
   stations: Station[]
 ) => {
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const currentStation = useLineBoardCurrentStation();
   const transferLines = useTransferLinesFromStation(station, {

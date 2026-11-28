@@ -77,7 +77,7 @@ describe('LineBoardJRKyushu', () => {
   const { useAtomValue } = require('jotai');
   const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
   const { selectedLineAtom } = require('~/store/atoms/line');
-  const { arrivedAtom } = require('~/store/atoms/station');
+  const { displayArrivedAtom } = require('~/store/atoms/station');
   const { isEnAtom } = require('~/store/selectors/isEn');
 
   const mockLine: Line = {
@@ -121,7 +121,7 @@ describe('LineBoardJRKyushu', () => {
   beforeEach(() => {
     // 渡されたatomの同一性で読み出し値を出し分ける
     useAtomValue.mockImplementation((a: unknown) => {
-      if (a === arrivedAtom) return true;
+      if (a === displayArrivedAtom) return true;
       if (a === selectedLineAtom) return null;
       if (a === isEnAtom) return false;
       return undefined;
@@ -443,7 +443,7 @@ describe('LineBoardJRKyushu', () => {
   it('lineがnullの場合、駅セルがレンダリングされない', () => {
     useCurrentLine.mockReturnValue(null);
     useAtomValue.mockImplementation((a: unknown) => {
-      if (a === arrivedAtom) return true;
+      if (a === displayArrivedAtom) return true;
       if (a === selectedLineAtom) return null;
       if (a === isEnAtom) return false;
       return undefined;

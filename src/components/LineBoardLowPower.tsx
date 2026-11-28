@@ -12,7 +12,7 @@ import {
 import { isEnAtom } from '~/store/selectors/isEn';
 import { FONTS, LOW_POWER_THEME_COLORS } from '../constants';
 import { headerStateAtom } from '../store/atoms/navigation';
-import { arrivedAtom } from '../store/atoms/station';
+import { displayArrivedAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import isTablet from '../utils/isTablet';
 import { ENGLISH_STATION_NAME_LINE_HEIGHT } from './LineBoard/shared/styles/commonStyles';
@@ -222,7 +222,7 @@ export type Props = {
 const LineBoardLowPower: React.FC<Props> = ({ stations }: Props) => {
   // ヘッダーと同じ実効領域から拡大率を起こし、外周にセーフエリアぶんの余白を足す
   const { scale, insets } = useLowPowerLayout();
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const headerState = useAtomValue(headerStateAtom);
   const isEn = useAtomValue(isEnAtom);
   const currentStation = useDisplayCurrentStation();

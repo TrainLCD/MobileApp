@@ -45,7 +45,7 @@ describe('LineBoardYamanotePad', () => {
   const { useCurrentLine, useDisplayCurrentStation, useNextStation } =
     require('~/hooks');
   const { selectedLineAtom } = require('~/store/atoms/line');
-  const { arrivedAtom } = require('~/store/atoms/station');
+  const { displayArrivedAtom } = require('~/store/atoms/station');
   const { isEnAtom } = require('~/store/selectors/isEn');
   const PadArch = require('./PadArch').default;
 
@@ -106,7 +106,7 @@ describe('LineBoardYamanotePad', () => {
     isEn?: boolean;
   } = {}) => {
     useAtomValue.mockImplementation((a: unknown) => {
-      if (a === arrivedAtom) return arrived;
+      if (a === displayArrivedAtom) return arrived;
       if (a === selectedLineAtom) return selectedLine;
       if (a === isEnAtom) return isEn;
       return undefined;

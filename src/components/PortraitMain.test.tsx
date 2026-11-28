@@ -527,6 +527,35 @@ describe('PortraitMain', () => {
     ).toBe(yamanoteLine.color);
   });
 
+  it.each(['INBOUND', 'OUTBOUND'] as const)(
+    '環状線の末尾を発車すると先頭行にピンを移し、次の停車駅を強調する (%s)',
+    (direction) => {
+      mockedUseLoopLine.mockReturnValue({ isLoopLine: true });
+      const ordered = [
+        buildStation(1, '通過駅', StopCondition.Not),
+        buildStation(2, '次の停車駅', StopCondition.All),
+        buildStation(3, '発車駅', StopCondition.All),
+      ];
+      const { getByTestId, getByText } = renderWithStations(
+        direction === 'OUTBOUND' ? ordered : [...ordered].reverse(),
+        {
+          arrived: false,
+          currentStation: ordered[2],
+          direction,
+        }
+      );
+      expect(
+        within(getByTestId('stop-row-1')).getByTestId('train-chevron')
+      ).toBeTruthy();
+      expect(
+        StyleSheet.flatten(getByText('次の停車駅').props.style).fontSize
+      ).toBe(RFValue(15));
+      expect(StyleSheet.flatten(getByText('発車駅').props.style).fontSize).toBe(
+        RFValue(14)
+      );
+    }
+  );
+
   it('環状線のOUTBOUNDは駅順が進行方向なので反転しない', () => {
     mockedUseLoopLine.mockReturnValue({ isLoopLine: true });
 

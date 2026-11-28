@@ -30,8 +30,10 @@ import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrecti
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
+  clearImuDepartureAtom,
   selectedBoundAtom,
   selectedDirectionAtom,
+  showImuDepartureAtom,
   stationAtom,
   stationsAtom,
 } from '~/store/atoms/station';
@@ -84,7 +86,7 @@ const Action = ({
   </Pressable>
 );
 
-/** Only mounted in opt-in developer builds. Nothing in this panel drives navigation. */
+/** Opt-in ride recording and departure display in developer builds. */
 export const ImuShadowPanel = () => {
   const store = useStore();
   const focused = useIsFocused();
@@ -205,6 +207,8 @@ export const ImuShadowPanel = () => {
       }
       rememberFinalBatteryObservation(recording, recordBattery(recording));
     }
+    const leg = recording?.legs.at(-1)?.leg;
+    if (leg) store.set(clearImuDepartureAtom, leg);
     recordingRef.current = null;
     estimatorRef.current = null;
     activeRouteKeyRef.current = null;
@@ -429,6 +433,15 @@ export const ImuShadowPanel = () => {
     const departureAtMs = locationDeparture ?? imuDeparture;
     if (departureAtMs == null) return;
     departureRecordedRef.current = true;
+    if (locationDeparture == null) {
+      store.set(showImuDepartureAtom, {
+        leg,
+        originGroupId: origin?.stationGroupId,
+        stations,
+        bound,
+        direction,
+      });
+    }
     recordEvent(
       recording,
       'departure',
@@ -651,6 +664,7 @@ export const ImuShadowPanel = () => {
     const value = readEstimate(recording, atMs);
     recordDeparture(recording, atMs, value);
     recordEvent(recording, 'arrival', leg.toId, atMs, value);
+    store.set(clearImuDepartureAtom, leg);
     arrivalMarkedAtRef.current = atMs;
     setArrivalMarked(true);
   };
@@ -720,8 +734,8 @@ export const ImuShadowPanel = () => {
         <>
           <Typography style={styles.text}>
             {label(
-              '実験・本番判定には反映しません',
-              'Experiment only; does not drive arrival'
+              'IMUで発車を検出すると、走行画面を次駅表示に切り替えます。',
+              'The ride screen shows the next stop when the IMU detects departure.'
             )}
           </Typography>
           {autoMode && (

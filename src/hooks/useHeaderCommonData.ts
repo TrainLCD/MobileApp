@@ -5,7 +5,7 @@ import { themeAtom } from '~/store/atoms/theme';
 import type { CommonHeaderProps } from '../components/Header.types';
 import { parenthesisRegexp } from '../constants';
 import { headerStateAtom } from '../store/atoms/navigation';
-import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
+import { displayArrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import tuningState from '../store/atoms/tuning';
 import { getNumberingColor } from '../utils/numbering';
 import { useBoundText } from './useBoundText';
@@ -29,7 +29,7 @@ import { useNumbering } from './useNumbering';
 export const useHeaderCommonData = (): CommonHeaderProps | null => {
   // Atom values
   const selectedBound = useAtomValue(selectedBoundAtom);
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const headerState = useAtomValue(headerStateAtom);
   const { headerTransitionDelay } = useAtomValue(tuningState);
   const theme = useAtomValue(themeAtom);

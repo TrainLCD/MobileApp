@@ -127,7 +127,7 @@ describe('LineBoardToei', () => {
     } = {}) =>
     (atomVal: unknown) => {
       const { enabledLanguagesAtom } = require('~/store/atoms/navigation');
-      const { arrivedAtom } = require('~/store/atoms/station');
+      const { displayArrivedAtom } = require('~/store/atoms/station');
       const { selectedLineAtom } = require('~/store/atoms/line');
       const brand = (atomVal as { __brand?: string } | null)?.__brand;
       if (brand === 'isEnAtom') {
@@ -136,7 +136,7 @@ describe('LineBoardToei', () => {
       if (atomVal === enabledLanguagesAtom) {
         return enabledLanguages;
       }
-      if (atomVal === arrivedAtom) {
+      if (atomVal === displayArrivedAtom) {
         return (stationOverrides.arrived as boolean | undefined) ?? true;
       }
       if (atomVal === selectedLineAtom) {

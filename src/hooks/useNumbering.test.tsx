@@ -10,7 +10,7 @@ import {
   createStation,
   createStationNumber,
 } from '~/utils/test/factories';
-import { arrivedAtom, selectedBoundAtom } from '../store/atoms/station';
+import { displayArrivedAtom, selectedBoundAtom } from '../store/atoms/station';
 import { useCurrentLine } from './useCurrentLine';
 import { useCurrentStation } from './useCurrentStation';
 import { useCurrentTrainType } from './useCurrentTrainType';
@@ -124,7 +124,7 @@ describe('useNumbering', () => {
     selectedBound: Station | null;
   }) => {
     mockUseAtomValue.mockImplementation((atom) => {
-      if (atom === arrivedAtom) {
+      if (atom === displayArrivedAtom) {
         return arrived;
       }
       if (atom === selectedBoundAtom) {
