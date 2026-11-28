@@ -7,6 +7,39 @@ describe('HeaderStationName', () => {
     jest.clearAllMocks();
   });
 
+  it('gives 館林 the available width and remeasures a longer replacement before compressing it', () => {
+    const textStyle = { fontSize: 50 };
+    const { UNSAFE_getAllByType, rerender } = render(
+      <HeaderStationName text="館林" textStyle={textStyle} />
+    );
+    const wrapper = () =>
+      StyleSheet.flatten(UNSAFE_getAllByType(View)[2].props.style);
+    const label = () => UNSAFE_getAllByType(Text)[1];
+    const measure = (width: number) =>
+      fireEvent(UNSAFE_getAllByType(Text)[0], 'textLayout', {
+        nativeEvent: { lines: [{ width }] },
+      });
+
+    fireEvent(UNSAFE_getAllByType(View)[0], 'layout', {
+      nativeEvent: { layout: { width: 300 } },
+    });
+    // Even a measurement only one glyph wide must not clip the second kanji.
+    measure(50);
+    expect(label().props.children).toBe('館林');
+    expect(wrapper().width).toBe(300);
+    expect(wrapper().transform).toEqual([{ scaleX: 1 }]);
+    expect(StyleSheet.flatten(label().props.style).alignSelf).toBe('stretch');
+
+    const longName = '南町田グランベリーパーク';
+    rerender(<HeaderStationName text={longName} textStyle={textStyle} />);
+    expect(label().props.children).toBe(longName);
+    expect(wrapper().width).toBe(10000);
+    measure(600);
+    expect(wrapper().width).toBe(608);
+    expect(wrapper().transform).toEqual([{ scaleX: 300 / 608 }]);
+    expect(StyleSheet.flatten(label().props.style).alignSelf).toBe('stretch');
+  });
+
   it('keeps the font size and compresses text width when the station name is wider than its container', () => {
     const { UNSAFE_getAllByType } = render(
       <HeaderStationName
