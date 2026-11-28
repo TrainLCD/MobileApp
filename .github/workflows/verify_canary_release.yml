@@ -1,0 +1,21 @@
+name: Verify Canary Release
+on:
+  push:
+    branches:
+      - release/canary-a552d50-2c46ff0
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test -- --runInBand scripts/bump-version.test.js
+      - run: npm run typecheck
