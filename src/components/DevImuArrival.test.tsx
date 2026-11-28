@@ -154,16 +154,15 @@ it.each([
       expect(store.get(displayArrivedAtom)).toBe(false);
       await send('stop', 5000);
       expect(store.get(stationAtom)).toBe(stops[0]);
-      expect(view.getByText('Stopped · confirming station')).toBeTruthy();
+      expect(view.toJSON()).toBeNull();
       await send('running', 6000);
-      expect(view.queryByText('Stopped · confirming station')).toBeNull();
       if (gap) {
         act(() => store.set(arrivedAtom, false));
         lastTimeMs = 37000;
         await send('stop', 37100);
         expect(step.mock.lastCall?.[0].timeMs).toBe(37100);
         expect(store.get(stationAtom)).toBe(stops[0]);
-        expect(view.queryByText('Stopped · confirming station')).toBeNull();
+        expect(view.toJSON()).toBeNull();
         const listenerBeforeRefresh = mockListener;
         await act(async () => store.set(stationsAtom, [...stops]));
         expect(mockListener).not.toBe(listenerBeforeRefresh);
@@ -176,11 +175,11 @@ it.each([
       await send('stop', 37500);
       if (!hasRoute) {
         expect(store.get(stationAtom)).toBe(stops[0]);
-        expect(view.getByText('Stopped · confirming station')).toBeTruthy();
+        expect(view.toJSON()).toBeNull();
         act(() =>
           store.set(locationAtom, { timestamp: Date.now() } as LocationObject)
         );
-        expect(view.queryByText('Stopped · confirming station')).toBeNull();
+        expect(store.get(stationAtom)).toBe(stops[0]);
         return;
       }
       expect(store.get(stationAtom)).toBe(stops[1]);

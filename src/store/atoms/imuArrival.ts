@@ -56,26 +56,9 @@ const mayUseImu = (get: Getter, ctx: LegContext, atMs: number) => {
   );
 };
 
-const unlocatedStopAtom = atom<{ ctx: LegContext; atMs: number } | null>(null);
-export const showingUnlocatedImuStopAtom = atom((get) => {
-  const stop = get(unlocatedStopAtom);
-  return !!stop && mayUseImu(get, stop.ctx, stop.atMs);
-});
-export const setUnlocatedImuStopAtom = atom(
-  null,
-  (get, set, ctx: LegContext | null) => {
-    const atMs = Date.now();
-    set(
-      unlocatedStopAtom,
-      ctx && mayUseImu(get, ctx, atMs) ? { ctx, atMs } : null
-    );
-  }
-);
-
 export const applyImuArrivalAtom = atom(null, (get, set, ctx: LegContext) => {
   const arrivedAtMs = Date.now();
   if (!mayUseImu(get, ctx, arrivedAtMs)) return false;
-  set(unlocatedStopAtom, null);
   set(lastArrivalAtom, { ...ctx, arrivedAtMs });
   set(stationAtom, ctx.target);
   set(approachingAtom, false);

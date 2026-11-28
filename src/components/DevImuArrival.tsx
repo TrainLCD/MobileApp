@@ -2,9 +2,8 @@ import { useIsFocused } from '@react-navigation/native';
 import { requireOptionalNativeModule } from 'expo';
 import { type ExtractAtomValue, useAtomValue, useStore } from 'jotai';
 import { useEffect, useMemo, useRef } from 'react';
-import { AppState, Platform, StyleSheet, View } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { type Station, TransportType } from '~/@types/graphql';
-import Typography from '~/components/Typography';
 import { useEstimateArrivalTimesRoute } from '~/hooks/useEstimateArrivalTimesRoute';
 import { useIsAppActive } from '~/hooks/useIsAppActive';
 import { useNextStation } from '~/hooks/useNextStation';
@@ -20,11 +19,7 @@ import { loadImuShadowSensor, readMotionSample } from '~/lib/imuShadowSensor';
 import type { ImuStopTrial, StopTrialPhase } from '~/lib/imuStopTrial';
 import { getTrackDistance } from '~/lib/trackDistances';
 import type { LineDirection } from '~/models/Bound';
-import {
-  applyImuArrivalAtom,
-  setUnlocatedImuStopAtom,
-  showingUnlocatedImuStopAtom,
-} from '~/store/atoms/imuArrival';
+import { applyImuArrivalAtom } from '~/store/atoms/imuArrival';
 import {
   imuShadowEnabledAtom,
   recordedRidePhaseAtom,
@@ -43,7 +38,6 @@ import {
   stationAtom,
   stationsAtom,
 } from '~/store/atoms/station';
-import { isJapanese } from '~/translation';
 
 export const DevImuArrival = () => {
   const nativeMotion = useMemo(
@@ -58,7 +52,6 @@ export const DevImuArrival = () => {
   const supportsBackground =
     Platform.OS === 'ios' || !!nativeMotion?.setRideBackgroundEnabled;
   const store = useStore();
-  const unlocatedStop = useAtomValue(showingUnlocatedImuStopAtom);
   const origin = useAtomValue(stationAtom);
   const target = useNextStation(true, origin ?? undefined);
   const stations = useAtomValue(stationsAtom);
@@ -91,7 +84,6 @@ export const DevImuArrival = () => {
       if (displayedLeg.current)
         store.set(clearImuDepartureAtom, displayedLeg.current);
       displayedLeg.current = null;
-      store.set(setUnlocatedImuStopAtom, null);
       session.current = null;
     };
   }, [rideMode, store]);
@@ -183,7 +175,6 @@ export const DevImuArrival = () => {
       const wasRunning = ride.phase === 'running';
       ride.phase = phase ?? 'waiting';
       if (phase === 'running') {
-        store.set(setUnlocatedImuStopAtom, null);
         ride.firstDepartureMs ??= timeMs;
         ride.correction = store.get(manualStationCorrectionAtom);
         if (
@@ -215,9 +206,8 @@ export const DevImuArrival = () => {
             firstDepartureMs: null,
             distanceInterrupted: false,
           };
-        } else store.set(setUnlocatedImuStopAtom, context);
+        }
       } else if (phase == null) {
-        store.set(setUnlocatedImuStopAtom, null);
         ride.firstDepartureMs = null;
         if (displayedLeg.current)
           store.set(clearImuDepartureAtom, displayedLeg.current);
@@ -295,7 +285,6 @@ export const DevImuArrival = () => {
             // Lost distance cannot be recovered mid-leg. The stop trial can start over.
             estimator = null;
             ride.distanceInterrupted = true;
-            store.set(setUnlocatedImuStopAtom, null);
             ride.trial = new Trial();
             ride.phase = 'waiting';
             ride.firstDepartureMs = null;
@@ -340,26 +329,5 @@ export const DevImuArrival = () => {
     store,
     supportsBackground,
   ]);
-  if (!enabled || !unlocatedStop) return null;
-  return (
-    <View pointerEvents="none" style={styles.stopNotice}>
-      <Typography accessibilityLiveRegion="polite" style={styles.stopText}>
-        {isJapanese ? '停車中・駅を確認中' : 'Stopped · confirming station'}
-      </Typography>
-    </View>
-  );
+  return null;
 };
-
-const styles = StyleSheet.create({
-  stopNotice: {
-    position: 'absolute',
-    bottom: '8%',
-    alignSelf: 'center',
-    zIndex: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    backgroundColor: '#20252b',
-  },
-  stopText: { color: '#fff', fontSize: 14 },
-});
