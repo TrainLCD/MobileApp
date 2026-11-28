@@ -75,9 +75,13 @@ export default {
     // Android は元から固定されておらず、この指定は expo-system-ui を入れないと
     // 無視されるため、iOS 側にだけ置く
     userInterfaceStyle: 'automatic',
+    infoPlist: {
+      UIStatusBarHidden: true,
+      UIViewControllerBasedStatusBarAppearance: true,
+    },
     // Expo SDK 57 の各モジュール（expo / expo-modules-core ほか）は podspec で iOS 16.4 以上を要求する
     deploymentTarget: '16.4',
-    buildNumber: '3061',
+    buildNumber: '3062',
     scheme: IS_DEV ? 'CanaryTrainLCD' : 'ProdTrainLCD',
     bundleIdentifier: IS_DEV
       ? 'me.tinykitten.trainlcd.dev'
@@ -92,7 +96,7 @@ export default {
         : 'me.tinykitten.trainlcd',
     permissions: [],
     blockedPermissions: ['android.permission.ACTIVITY_RECOGNITION'],
-    versionCode: 100001063,
+    versionCode: 100001065,
   },
   owner: 'trainlcd',
   experiments: {
