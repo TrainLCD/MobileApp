@@ -1,10 +1,14 @@
 import { act, render } from '@testing-library/react-native';
+import type { LocationObject } from 'expo-location';
 import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
 import { AppState, DeviceEventEmitter } from 'react-native';
 import { LineType, type Station } from '~/@types/graphql';
 import { rememberTrackDistances } from '~/lib/trackDistances';
-import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
+import {
+  backgroundLocationTrackingAtom,
+  locationAtom,
+} from '~/store/atoms/location';
 import { stationForHeaderAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
@@ -16,7 +20,7 @@ import {
 } from '~/store/atoms/station';
 import { DevImuArrival } from './DevImuArrival';
 
-const mockTarget = { id: 2, line: { lineType: LineType.Subway } } as Station;
+let mockTarget = { id: 2, line: { lineType: LineType.Subway } } as Station;
 const mockRoute = {
   stops: [
     { stationId: 1, stopsHere: true },
@@ -47,18 +51,36 @@ jest.mock('~/lib/imuShadowSensor', () => ({
 }));
 
 it.each([
-  { locked: false, tracking: false, advances: true },
+  { lineType: LineType.Subway, locked: false, tracking: false, advances: true },
+  { lineType: LineType.Normal, locked: false, tracking: false, advances: true },
+  { lineType: null, locked: true, tracking: true, advances: true },
   {
+    lineType: LineType.Normal,
+    locked: true,
+    tracking: true,
+    advances: true,
+    targetType: LineType.Subway,
+  },
+  { lineType: LineType.Subway, locked: true, tracking: true, advances: true },
+  { lineType: LineType.Subway, locked: true, tracking: false, advances: false },
+  {
+    lineType: LineType.Normal,
     locked: false,
     tracking: false,
+    freshFix: true,
     advances: false,
-    lineType: LineType.Normal,
   },
-  { locked: true, tracking: true, advances: true },
-  { locked: true, tracking: false, advances: false },
 ])(
-  'handles departure and arrival (locked=$locked, tracking=$tracking, advances=$advances)',
-  async ({ locked, tracking, advances, lineType = LineType.Subway }) => {
+  'replays a rail leg (type=$lineType, locked=$locked, tracking=$tracking, advances=$advances)',
+  async ({
+    locked,
+    tracking,
+    advances,
+    lineType,
+    targetType = lineType,
+    freshFix,
+  }) => {
+    mockTarget = { id: 2, line: { lineType: targetType } } as Station;
     mockListener = undefined;
     mockRemove.mockClear();
     const store = createStore();
@@ -102,8 +124,7 @@ it.each([
         expect(mockRemove).not.toHaveBeenCalled();
         sendSamples(0, 149);
       });
-      if (lineType === LineType.Normal)
-        expect(mockRemove).toHaveBeenCalledTimes(1);
+      expect(mockRemove).not.toHaveBeenCalled();
       expect(store.get(displayArrivedAtom)).toBe(false);
       expect(store.get(arrivedAtom)).toBe(true);
       if (locked) {
@@ -115,6 +136,8 @@ it.each([
         });
         if (tracking) expect(mockRemove).not.toHaveBeenCalled();
       }
+      if (freshFix)
+        store.set(locationAtom, { timestamp: Date.now() } as LocationObject);
       act(() => sendSamples(150, 450));
       expect(store.get(stationAtom)).toBe(advances ? mockTarget : origin);
       if (advances) expect(store.get(stationForHeaderAtom)).toBe(mockTarget);

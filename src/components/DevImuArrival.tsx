@@ -3,7 +3,6 @@ import { requireOptionalNativeModule } from 'expo';
 import { useAtomValue, useStore } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { AppState, Platform } from 'react-native';
-import { LineType } from '~/@types/graphql';
 import { useEstimateArrivalTimesRoute } from '~/hooks/useEstimateArrivalTimesRoute';
 import { useIsAppActive } from '~/hooks/useIsAppActive';
 import { useNextStation } from '~/hooks/useNextStation';
@@ -52,9 +51,6 @@ export const DevImuArrival = () => {
   const active = useIsAppActive();
   const focused = useIsFocused();
   const tracking = useAtomValue(backgroundLocationTrackingAtom);
-  const subwayLeg =
-    origin?.line?.lineType === LineType.Subway &&
-    target?.line?.lineType === LineType.Subway;
   const enabled =
     focused &&
     !simulation &&
@@ -63,20 +59,15 @@ export const DevImuArrival = () => {
     !!target?.line &&
     !isBusLine(origin.line) &&
     !isBusLine(target.line) &&
-    (active || (subwayLeg && tracking && supportsBackground));
+    (active || (tracking && supportsBackground));
   const { route } = useEstimateArrivalTimesRoute({ skip: !enabled });
 
   useEffect(() => {
-    if (
-      !enabled ||
-      !subwayLeg ||
-      !tracking ||
-      !nativeMotion?.setRideBackgroundEnabled
-    )
+    if (!enabled || !tracking || !nativeMotion?.setRideBackgroundEnabled)
       return;
     nativeMotion.setRideBackgroundEnabled(true);
     return () => nativeMotion.setRideBackgroundEnabled?.(false);
-  }, [enabled, subwayLeg, tracking, nativeMotion]);
+  }, [enabled, tracking, nativeMotion]);
 
   useEffect(() => {
     if (
@@ -137,9 +128,7 @@ export const DevImuArrival = () => {
             disposed ||
             (AppState.currentState !== 'active' &&
               !(
-                subwayLeg &&
-                supportsBackground &&
-                store.get(backgroundLocationTrackingAtom)
+                supportsBackground && store.get(backgroundLocationTrackingAtom)
               ))
           )
             return;
@@ -164,11 +153,11 @@ export const DevImuArrival = () => {
               bound,
             });
           }
-          if (value.phase === 'invalid' || (departureDetected && !subwayLeg)) {
+          if (value.phase === 'invalid') {
             subscription?.remove();
             subscription = undefined;
           }
-          if (subwayLeg && value.arrivalCandidate) {
+          if (value.arrivalCandidate) {
             store.set(applyImuArrivalAtom, {
               origin,
               target,
@@ -207,7 +196,6 @@ export const DevImuArrival = () => {
     stations,
     store,
     supportsBackground,
-    subwayLeg,
   ]);
   return null;
 };
