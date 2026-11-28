@@ -22,7 +22,12 @@ import {
   rememberFinalBatteryObservation,
   rememberImuShadowRecording,
 } from '~/lib/imuShadowRecording';
-import { loadImuShadowSensor, readMotionSample } from '~/lib/imuShadowSensor';
+import {
+  loadImuShadowSensor,
+  readMotionSample,
+  subscribeImuTrialField,
+} from '~/lib/imuShadowSensor';
+import type { StopTrialObservation, StopTrialPhase } from '~/lib/imuStopTrial';
 import { getTrackDistance } from '~/lib/trackDistances';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import { locationAtom, rawLocationAtom } from '~/store/atoms/location';
@@ -45,6 +50,12 @@ type Subscription = { remove(): void };
 const MAX_DURATION_MS = 30 * 60 * 1000;
 const MAX_MOTION_SAMPLES = 20_000;
 const label = (ja: string, en: string) => (isJapanese ? ja : en);
+
+const trialPhaseLabel = (phase: StopTrialPhase) => {
+  if (phase === 'running') return label('走行', 'Running');
+  if (phase === 'stop') return label('停車候補', 'Stop candidate');
+  return label('発車待ち', 'Waiting for departure');
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -125,6 +136,11 @@ export const ImuShadowPanel = () => {
   const recordingRef = useRef<Recording | null>(null);
   const estimatorRef = useRef<ImuShadowEstimator | null>(null);
   const subscriptionRef = useRef<Subscription | null>(null);
+  const fieldSubscription = useRef<Subscription | null>(null);
+  const [trialOutput, setTrialOutput] = useState<StopTrialObservation | null>(
+    null
+  );
+  const [trialMotionFresh, setTrialMotionFresh] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastCandidateRef = useRef(false);
   const generationRef = useRef(0);
@@ -187,6 +203,8 @@ export const ImuShadowPanel = () => {
     generationRef.current += 1;
     subscriptionRef.current?.remove();
     subscriptionRef.current = null;
+    fieldSubscription.current?.remove();
+    fieldSubscription.current = null;
     if (intervalRef.current != null) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -510,6 +528,13 @@ export const ImuShadowPanel = () => {
       if (AppState.currentState !== 'active') {
         throw new Error('foreground-required');
       }
+      const trialModule: typeof import('~/lib/imuStopTrial') | null = sensor
+        ? require('~/lib/imuStopTrial')
+        : null;
+      const trial = trialModule && new trialModule.ImuStopTrial();
+      setTrialOutput(null);
+      setTrialMotionFresh(false);
+      let latestTrialMotion = Number.NEGATIVE_INFINITY;
       const recording: Recording = {
         schemaVersion: 1,
         mode,
@@ -526,6 +551,13 @@ export const ImuShadowPanel = () => {
         observations: [],
         events: [],
         battery: [],
+        ...(trialModule && {
+          stopTrial: {
+            model: trialModule.STOP_MODEL_ID,
+            field: [],
+            decisions: [],
+          },
+        }),
       };
       if (!initializeLeg(recording, index)) {
         throw new Error('route-unavailable');
@@ -539,6 +571,8 @@ export const ImuShadowPanel = () => {
           return;
         }
         const atMs = Date.now();
+        if (trial)
+          setTrialMotionFresh(performance.now() - latestTrialMotion <= 500);
         const value = readEstimate(recording, atMs, true);
         recordDeparture(recording, atMs, value);
         recording.observations.push({
@@ -569,7 +603,28 @@ export const ImuShadowPanel = () => {
       };
       intervalRef.current = setInterval(tick, 1000);
       tick();
-      if (sensor) {
+      if (sensor && trial) {
+        const trialLog = recording.stopTrial;
+        const active = () =>
+          recordingRef.current === recording &&
+          AppState.currentState === 'active';
+        // The reference arm continues to run when the optional field sensor is unavailable.
+        void subscribeImuTrialField((timeMs, magnitude) => {
+          if (!active() || !trialLog) return;
+          if (trialLog.field.length >= MAX_MOTION_SAMPLES) {
+            stopRef.current('sample-limit');
+            return;
+          }
+          if (trial.addField(timeMs, magnitude))
+            trialLog.field.push({ timeMs, magnitude });
+        }, active)
+          .then((subscription) => {
+            if (active()) fieldSubscription.current = subscription;
+            else subscription?.remove();
+          })
+          .catch(() => {
+            /* IMU-only fallback */
+          });
         sensor.setUpdateInterval(100);
         subscriptionRef.current = sensor.addListener((data) => {
           if (
@@ -605,6 +660,20 @@ export const ImuShadowPanel = () => {
             legIndex: recording.legs.length - 1,
             sample,
           });
+          if (
+            sample.timeMs >
+            (recording.motion.at(-2)?.sample.timeMs ?? Number.NEGATIVE_INFINITY)
+          )
+            latestTrialMotion = receivedAtMs;
+          const decision = trial.step(sample);
+          if (decision && trialLog) {
+            trialLog.decisions.push({
+              ...decision,
+              observedAtMs: atMs,
+              legIndex: recording.legs.length - 1,
+            });
+            setTrialOutput(decision);
+          }
           const value = estimator.step(sample, receivedAtMs);
           recordDeparture(recording, atMs, value);
           recordCandidateChange(recording, atMs, value);
@@ -725,6 +794,39 @@ export const ImuShadowPanel = () => {
           </Typography>
         </View>
       </View>
+      {running && recordingRef.current?.stopTrial && (
+        <View>
+          <Typography style={styles.metricLabel}>
+            {label('停車判定の比較', 'Stop detector comparison')}
+          </Typography>
+          <Typography style={styles.text}>
+            {label('基準', 'Reference')} ·{' '}
+            {trialMotionFresh
+              ? trialPhaseLabel(trialOutput?.baseline ?? 'waiting')
+              : '—'}
+            {' / '}
+            {label('磁気併用', 'With magnetic field')} ·{' '}
+            {trialMotionFresh
+              ? trialPhaseLabel(trialOutput?.magnetic ?? 'waiting')
+              : '—'}
+          </Typography>
+          <Typography style={styles.text}>
+            {!trialMotionFresh
+              ? label('モーション受信待ち', 'Waiting for motion')
+              : trialOutput?.stopProbability == null
+                ? label('停車スコア待ち', 'Waiting for stop score')
+                : trialOutput.magneticSd == null
+                  ? label(
+                      '磁気データ不足・IMUで判定',
+                      'Insufficient magnetic data · IMU only'
+                    )
+                  : label('磁気変動', 'Field variation') +
+                    ' ' +
+                    trialOutput.magneticSd.toFixed(2) +
+                    ' μT'}
+          </Typography>
+        </View>
+      )}
       {!collapsed &&
         running &&
         recordingRef.current?.mode === 'imu' &&

@@ -20,6 +20,8 @@ import { exportImuShadow } from '~/utils/exportImuShadow';
 import { ImuShadowPanel } from './ImuShadowPanel';
 
 let mockReceive: ((data: DeviceMotionMeasurement) => void) | undefined;
+let mockField: ((timeMs: number, magnitude: number) => void) | undefined;
+const mockRemoveField = jest.fn();
 let mockLoadGate: Promise<void> | undefined;
 const mockIsAvailable = jest.fn(async () => true);
 const mockRequestPermissions = jest.fn(async () => ({ granted: true }));
@@ -27,6 +29,10 @@ let mockRouteStops: RouteStop[] | undefined;
 
 jest.mock('~/lib/imuShadowSensor', () => ({
   ...jest.requireActual('~/lib/imuShadowSensor'),
+  subscribeImuTrialField: async (receive: typeof mockField) => {
+    mockField = receive;
+    return { remove: mockRemoveField };
+  },
   loadImuShadowSensor: async () => {
     if (mockLoadGate) await mockLoadGate;
     return {
@@ -738,3 +744,57 @@ test.each(['observed-origin', 'stations-list', 'other-group'] as const)(
     }
   }
 );
+
+test('trial decisions and manual labels share the existing DO recording and export', async () => {
+  const previousState = AppState.currentState;
+  AppState.currentState = 'active';
+  mockWriteRecording.mockClear();
+  mockRemoveField.mockClear();
+  const screen = render(
+    <Provider store={createStore()}>
+      <ImuShadowPanel />
+    </Provider>
+  );
+  try {
+    await act(async () => {
+      fireEvent.press(screen.getByText('Record IMU'));
+    });
+    fireEvent.press(screen.getByText('Mark departure for replay'));
+    act(() => {
+      for (let i = 0; i <= 260; i++) {
+        const timestamp = i / 10 + 1;
+        const x = i >= 20 && i < 40 ? 0.5 : 0;
+        mockField?.(timestamp * 1000, 20 + (i % 2) * 12);
+        mockReceive?.({
+          acceleration: { x, y: 0, z: 0, timestamp },
+          accelerationIncludingGravity: { x, y: 0, z: 9.81, timestamp },
+          rotationRate: { alpha: 0, beta: 0, gamma: 0, timestamp },
+        } as DeviceMotionMeasurement);
+      }
+    });
+    expect(screen.getByText('Stop detector comparison')).toBeTruthy();
+    fireEvent.press(screen.getByText('Actual next arrival'));
+    await act(async () => {
+      fireEvent.press(screen.getByText('Finish & export'));
+    });
+    const exported = JSON.parse(mockWriteRecording.mock.calls[0][0]);
+    expect(exported.legs[0].actualDepartureAtMs).toEqual(expect.any(Number));
+    expect(
+      exported.events.some((e: { kind: string }) => e.kind === 'arrival')
+    ).toBe(true);
+    expect(exported.stopTrial.decisions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          legIndex: 0,
+          observedAtMs: expect.any(Number),
+          vetoEvidence: true,
+        }),
+      ])
+    );
+    expect(exported.stopTrial.field).toHaveLength(261);
+    expect(mockRemoveField).toHaveBeenCalled();
+  } finally {
+    screen.unmount();
+    AppState.currentState = previousState;
+  }
+});
