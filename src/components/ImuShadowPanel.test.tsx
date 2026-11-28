@@ -3,13 +3,14 @@ import * as Battery from 'expo-battery';
 import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
 import { AppState, Platform } from 'react-native';
-import type { Station } from '~/@types/graphql';
+import { type Station, TransportType } from '~/@types/graphql';
 import type { RouteStop } from '~/lib/imuShadow';
 import { getLastImuShadowRecording } from '~/lib/imuShadowRecording';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
-import { autoModeEnabledAtom } from '~/store/atoms/navigation';
+import { autoModeEnabledAtom, headerStateAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
+  displayArrivedAtom,
   selectedBoundAtom,
   selectedDirectionAtom,
   stationAtom,
@@ -232,8 +233,12 @@ test('starts automatically at a known stopped station and advances after a singl
   mockRequestPermissions.mockClear();
   jest.mocked(exportImuShadow).mockClear();
   const store = createStore();
-  store.set(stationAtom, { id: 1 } as Station);
-  store.set(selectedBoundAtom, { id: 3 } as Station);
+  const stations = [1, 2, 3].map(
+    (id) => ({ id, line: { transportType: TransportType.Rail } }) as Station
+  );
+  store.set(stationsAtom, stations);
+  store.set(stationAtom, stations[0]);
+  store.set(selectedBoundAtom, stations[2]);
   store.set(selectedDirectionAtom, 'INBOUND');
   store.set(arrivedAtom, true);
   try {
@@ -251,10 +256,31 @@ test('starts automatically at a known stopped station and advances after a singl
     });
     expect(screen.queryByText('Actual departure')).toBeNull();
     expect(screen.queryByText('Next leg')).toBeNull();
+    // Picking up the phone while stopped must not change the main ride display.
+    for (let i = -10; i <= 0; i++) {
+      const timestamp = 2 + i / 10;
+      const x = i < -5 ? 1 : 0;
+      act(() => {
+        mockReceive?.({
+          acceleration: { x, y: 0, z: 0, timestamp },
+          accelerationIncludingGravity: { x, y: 0, z: 9.81, timestamp },
+          rotationRate: { alpha: 35, beta: 0, gamma: 0, timestamp },
+        } as DeviceMotionMeasurement);
+      });
+    }
+    expect(store.get(displayArrivedAtom)).toBe(true);
+    act(() => {
+      store.set(
+        stationsAtom,
+        stations.map((station) => ({ ...station }))
+      );
+      store.set(selectedBoundAtom, { ...stations[2] });
+    });
+    store.set(headerStateAtom, 'CURRENT_EN');
     for (let i = 1; i <= 16; i++) {
       act(() => {
         jest.advanceTimersByTime(100);
-        const timestamp = i / 10;
+        const timestamp = 2 + i / 10;
         mockReceive?.({
           acceleration: { x: 1, y: 0, z: 0, timestamp },
           accelerationIncludingGravity: { x: 1, y: 0, z: 9.81, timestamp },
@@ -265,6 +291,9 @@ test('starts automatically at a known stopped station and advances after a singl
         });
       });
     }
+    expect(store.get(displayArrivedAtom)).toBe(false);
+    expect(store.get(headerStateAtom)).toBe('NEXT_EN');
+    expect(store.get(arrivedAtom)).toBe(true);
     const recording = getLastImuShadowRecording();
     expect(
       recording?.events.filter((event) => event.kind === 'departure')
@@ -281,6 +310,7 @@ test('starts automatically at a known stopped station and advances after a singl
     expect(
       recording?.events.filter((event) => event.kind === 'arrival')
     ).toEqual([expect.objectContaining({ stationId: 2, legIndex: 0 })]);
+    expect(store.get(displayArrivedAtom)).toBe(true);
     expect(screen.getByText('Advancing to next leg')).toBeTruthy();
     await act(async () => {
       jest.advanceTimersByTime(4000);

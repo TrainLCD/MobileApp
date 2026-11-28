@@ -19,7 +19,7 @@ import { selectedLineAtom } from '~/store/atoms/line';
 import { leftStationsAtom } from '~/store/atoms/navigation';
 import {
   approachingAtom,
-  arrivedAtom,
+  displayArrivedAtom,
   stationsAtom,
 } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
@@ -486,7 +486,7 @@ const LineBoardWest: React.FC<Props> = ({
   arrivingLineColor,
 }: Props) => {
   const selectedLine = useAtomValue(selectedLineAtom);
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const approaching = useAtomValue(approachingAtom);
   const barWidth = useBarWidth();
   const dim = useLandscapeWindowDimensions();

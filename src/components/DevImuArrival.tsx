@@ -1,9 +1,9 @@
 import { useIsFocused } from '@react-navigation/native';
 import { requireOptionalNativeModule } from 'expo';
 import { useAtomValue, useStore } from 'jotai';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
-import { LineType } from '~/@types/graphql';
+import { TransportType } from '~/@types/graphql';
 import { useEstimateArrivalTimesRoute } from '~/hooks/useEstimateArrivalTimesRoute';
 import { useIsAppActive } from '~/hooks/useIsAppActive';
 import { useNextStation } from '~/hooks/useNextStation';
@@ -11,6 +11,7 @@ import {
   buildLeg,
   findImuOriginIndex,
   ImuShadowEstimator,
+  type Leg,
 } from '~/lib/imuShadow';
 import { loadImuShadowSensor, readMotionSample } from '~/lib/imuShadowSensor';
 import { getTrackDistance } from '~/lib/trackDistances';
@@ -20,8 +21,10 @@ import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
+  clearImuDepartureAtom,
   selectedBoundAtom,
   selectedDirectionAtom,
+  showImuDepartureAtom,
   stationAtom,
   stationsAtom,
 } from '~/store/atoms/station';
@@ -49,13 +52,21 @@ export const DevImuArrival = () => {
   const active = useIsAppActive();
   const focused = useIsFocused();
   const tracking = useAtomValue(backgroundLocationTrackingAtom);
+  const activeRide = focused && !simulation && !shadow;
+  const displayedLeg = useRef<Leg | null>(null);
+  useEffect(() => {
+    if (!activeRide) return;
+    return () => {
+      if (displayedLeg.current)
+        store.set(clearImuDepartureAtom, displayedLeg.current);
+      displayedLeg.current = null;
+    };
+  }, [activeRide, store]);
   const enabled =
-    focused &&
-    (active || (tracking && supportsBackground)) &&
-    !simulation &&
-    !shadow &&
-    origin?.line?.lineType === LineType.Subway &&
-    target?.line?.lineType === LineType.Subway;
+    activeRide &&
+    origin?.line?.transportType === TransportType.Rail &&
+    target?.line?.transportType === TransportType.Rail &&
+    (active || (tracking && supportsBackground));
   const { route } = useEstimateArrivalTimesRoute({ skip: !enabled });
 
   useEffect(() => {
@@ -116,6 +127,7 @@ export const DevImuArrival = () => {
         }
         if (!store.get(arrivedAtom)) return;
         const estimator = new ImuShadowEstimator(leg);
+        let departureDetected = false;
         let lastSampleTime = Number.NEGATIVE_INFINITY;
         sensor.setUpdateInterval(100);
         subscription = sensor.addListener((data) => {
@@ -138,6 +150,18 @@ export const DevImuArrival = () => {
             return;
           lastSampleTime = sample.timeMs;
           const value = estimator.step(sample, performance.now());
+          if (!departureDetected && value.phase === 'accelerating') {
+            departureDetected = true;
+            const shown = store.set(showImuDepartureAtom, {
+              leg,
+              originGroupId: origin.groupId,
+              stations,
+              direction,
+              bound,
+            });
+            if (shown) displayedLeg.current = leg;
+          }
+          // Loss of distance tracking does not cancel an already confirmed departure.
           if (value.phase === 'invalid') {
             subscription?.remove();
             subscription = undefined;

@@ -3,7 +3,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import type React from 'react';
 import { Text } from 'react-native';
 import { firstStopAtom } from '~/store/atoms/navigation';
-import { arrivedAtom } from '~/store/atoms/station';
+import { displayArrivedAtom } from '~/store/atoms/station';
 import { useFirstStop } from './useFirstStop';
 import { usePrevious } from './usePrevious';
 
@@ -48,7 +48,7 @@ describe('useFirstStop', () => {
       if (atom === firstStopAtom) {
         return firstStop;
       }
-      if (atom === arrivedAtom) {
+      if (atom === displayArrivedAtom) {
         return arrived;
       }
       return undefined;

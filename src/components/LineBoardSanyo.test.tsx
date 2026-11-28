@@ -38,7 +38,7 @@ jest.mock('./PadLineMarks', () => ({
 describe('LineBoardSanyo', () => {
   const { useAtomValue } = require('jotai');
   const { useDisplayCurrentStation } = require('~/hooks');
-  const { arrivedAtom, stationsAtom } = require('~/store/atoms/station');
+  const { displayArrivedAtom, stationsAtom } = require('~/store/atoms/station');
   const { headerIsEnglishAtom } = require('~/store/atoms/navigation');
 
   // 直通先の阪神本線。路線色は山陽のバーの色と異なる
@@ -103,7 +103,7 @@ describe('LineBoardSanyo', () => {
     headerState = 'NEXT';
     allStations = stations;
     useAtomValue.mockImplementation((a: unknown) =>
-      a === arrivedAtom
+      a === displayArrivedAtom
         ? arrived
         : a === headerIsEnglishAtom
           ? headerState.endsWith('_EN')

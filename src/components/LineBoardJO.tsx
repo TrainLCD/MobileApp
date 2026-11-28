@@ -14,7 +14,7 @@ import {
 } from '~/hooks';
 import { HEADER_E235_TABLET_HEIGHT } from '../constants';
 import { selectedLineAtom } from '../store/atoms/line';
-import { arrivedAtom } from '../store/atoms/station';
+import { displayArrivedAtom } from '../store/atoms/station';
 import { isEnAtom } from '../store/selectors/isEn';
 import getStationNameR from '../utils/getStationNameR';
 import getIsPass from '../utils/isPass';
@@ -376,7 +376,7 @@ const LineBoardJO: React.FC<Props> = ({ stations, lineColors }: Props) => {
       )
     )
   );
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const selectedLine = useAtomValue(selectedLineAtom);
   const isPassing = useIsPassing();
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)

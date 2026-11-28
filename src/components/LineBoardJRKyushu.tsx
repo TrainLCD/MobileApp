@@ -12,7 +12,7 @@ import {
   useTransferLinesFromStation,
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
-import { arrivedAtom } from '~/store/atoms/station';
+import { displayArrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
 import { selectedLineAtom } from '../store/atoms/line';
 import getIsPass from '../utils/isPass';
@@ -134,7 +134,7 @@ const useStationRenderState = (
   index: number,
   stations: Station[]
 ) => {
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const currentStation = useLineBoardCurrentStation();
   const isEn = useAtomValue(isEnAtom);

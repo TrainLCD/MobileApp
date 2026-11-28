@@ -86,12 +86,12 @@ describe('LineBoardSaikyo', () => {
   ];
 
   beforeEach(() => {
-    // arrivedAtom/selectedLineAtom/isEnAtomとその他のatomで返す値を分ける
+    // displayArrivedAtom/selectedLineAtom/isEnAtomとその他のatomで返す値を分ける
     useAtomValue.mockImplementation((atomVal: unknown) => {
-      const { arrivedAtom } = require('~/store/atoms/station');
+      const { displayArrivedAtom } = require('~/store/atoms/station');
       const { selectedLineAtom } = require('~/store/atoms/line');
       const brand = (atomVal as { __brand?: string } | null)?.__brand;
-      if (atomVal === arrivedAtom) {
+      if (atomVal === displayArrivedAtom) {
         return true;
       }
       if (atomVal === selectedLineAtom) {

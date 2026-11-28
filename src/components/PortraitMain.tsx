@@ -69,7 +69,7 @@ import {
   enabledLanguagesAtom,
 } from '~/store/atoms/navigation';
 import {
-  arrivedAtom,
+  displayArrivedAtom,
   selectedDirectionAtom,
   stationsAtom,
 } from '~/store/atoms/station';
@@ -1383,7 +1383,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const allStations = useAtomValue(stationsAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
   const currentStation = useCurrentStation();
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
   const { isLoopLine } = useLoopLine();
@@ -1480,9 +1480,18 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   // 終点に到達したあと到着判定が外れると、arrived が false のまま現在駅は最終駅に
   // 留まる(!arrived の間 useRefreshStation は現在駅を進めない)。素直に次駅へ進めると
   // markerRowIndex が範囲外になり、列車ピンが消えて全行が発車済みの淡色になってしまう。
-  // 最終駅より先へは進めないので、その駅に停車しているものとして描く。
+  // 非環状線は終点で停車表示を保ち、環状線は先頭行に戻る。
   const atLastStation = currentIndex >= 0 && currentIndex === stops.length - 1;
-  const stoppedHere = arrived || atLastStation;
+  const wraps = isLoopLine && stops.length > 1 && atLastStation;
+  const stoppedHere = arrived || (atLastStation && !wraps);
+  const followingStopIndex = useMemo(() => {
+    const ahead = stops.findIndex(
+      (station, i) => i > currentIndex && !getIsPass(station)
+    );
+    return ahead < 0 && isLoopLine && stops.length > 1
+      ? stops.findIndex((station) => !getIsPass(station))
+      : ahead;
+  }, [currentIndex, isLoopLine, stops]);
 
   const displayNextIndex = useMemo(() => {
     const next = commonData?.displayNextStation;
@@ -1497,29 +1506,15 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   }, [stops, commonData?.displayNextStation]);
 
   // 強調する停車駅。停車中は現在駅(停車駅)、発車後・通過中は次の停車駅。
-  const currentStopIndex = useMemo(
-    () =>
-      !stoppedHere && displayNextIndex >= 0
-        ? displayNextIndex
-        : stops.findIndex((s, i) => {
-            if (i < currentIndex) {
-              return false;
-            }
-            if (i === currentIndex && !stoppedHere) {
-              return false;
-            }
-            return !getIsPass(s);
-          }),
-    [stops, currentIndex, stoppedHere, displayNextIndex]
-  );
+  const currentStopIndex =
+    !stoppedHere && displayNextIndex >= 0
+      ? displayNextIndex
+      : stoppedHere && currentIndex >= 0 && !getIsPass(stops[currentIndex])
+        ? currentIndex
+        : followingStopIndex;
 
   // カード脇の注記に使う「次の停車駅」の位置。
-  const nextStopIndex = useMemo(() => {
-    if (!stoppedHere) {
-      return currentStopIndex;
-    }
-    return stops.findIndex((s, i) => i > currentIndex && !getIsPass(s));
-  }, [stops, currentIndex, currentStopIndex, stoppedHere]);
+  const nextStopIndex = stoppedHere ? followingStopIndex : currentStopIndex;
 
   // カード脇の注記。いま最寄りにしている駅が通過駅なら「◯◯を通過中」でその駅を
   // 出す(カードは次の停車駅を出しているので、通過駅の名前はここにしか出ない)。
@@ -1561,13 +1556,16 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const skippedStop =
     !stoppedHere &&
     stops.some(
-      (s, i) => i > currentIndex && i < currentStopIndex && !getIsPass(s)
+      (s, i) =>
+        (wraps || i > currentIndex) && i < currentStopIndex && !getIsPass(s)
     );
   const markerRowIndex = stoppedHere
     ? currentIndex
     : skippedStop
       ? currentStopIndex
-      : currentIndex + 1;
+      : wraps
+        ? 0
+        : currentIndex + 1;
   const markerPosition: MarkerPosition = stoppedHere
     ? 'above-dot'
     : 'segment-top';

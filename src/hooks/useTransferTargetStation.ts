@@ -1,7 +1,7 @@
 import { useAtomValue } from 'jotai';
 import { useMemo } from 'react';
 import type { Station } from '~/@types/graphql';
-import { arrivedAtom } from '../store/atoms/station';
+import { displayArrivedAtom } from '../store/atoms/station';
 import getIsPass from '../utils/isPass';
 import { useCurrentStation } from './useCurrentStation';
 import { useDisplayNextStation } from './useDisplayNextStation';
@@ -15,7 +15,7 @@ import { useDisplayNextStation } from './useDisplayNextStation';
  * という不整合が起きる。
  */
 export const useTransferTargetStation = (): Station | undefined => {
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const currentStation = useCurrentStation(false, true);
   const nextStation = useDisplayNextStation();
 
