@@ -26,9 +26,9 @@ class PrepareTests(unittest.TestCase):
         (self.cache / 'sha256sums.txt').write_text(f'{checksum}  {self.archive.name}\n')
         self.case = {'split': 'train', 'directory': 'ride', 'traintrack': {'archive': self.archive.name, 'innerZip': 'recording.zip', 'members': {name: 'sensor/' + name for name in SENSORS}}}
 
-    def run_prepare(self):
+    def run_prepare(self, *other_cases):
         path = self.root / 'manifest.json'
-        path.write_text(json.dumps({'cases': [self.case]}))
+        path.write_text(json.dumps({'cases': [self.case, *other_cases]}))
         prepare(path, 'train')
 
     def test_extracts_nested_csvs_only(self):
@@ -49,6 +49,22 @@ class PrepareTests(unittest.TestCase):
         self.case['directory'] = '../outside'
         with self.assertRaisesRegex(ValueError, 'outside dataset root'):
             self.run_prepare()
+
+    def test_refuses_directory_alias_across_splits_before_extraction(self):
+        other = {'split': 'test', 'directory': './ride'}
+        with self.assertRaisesRegex(ValueError, 'crosses splits'):
+            self.run_prepare(other)
+        self.assertFalse((self.root / 'ride').exists())
+
+    def test_refuses_distinct_recordings_in_same_directory(self):
+        other = {**self.case, 'directory': './ride', 'traintrack': {**self.case['traintrack'], 'innerZip': 'other.zip'}}
+        with self.assertRaisesRegex(ValueError, 'different recordings'):
+            self.run_prepare(other)
+        self.assertFalse((self.root / 'ride').exists())
+
+    def test_allows_segments_from_same_recording_in_same_split(self):
+        self.run_prepare({**self.case, 'directory': './ride'})
+        self.assertEqual(sorted(p.name for p in (self.root / 'ride').iterdir()), sorted(SENSORS))
 
 
 if __name__ == '__main__':
