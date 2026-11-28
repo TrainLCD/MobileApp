@@ -12,16 +12,22 @@ const hash = (value) => createHash('sha256').update(value).digest('hex');
 const mean = (values) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 const absMean = (values) => mean(values.filter(Number.isFinite).map(Math.abs));
 
-export function validateManifest(manifest) {
+export function validateManifest(manifest, root = '/') {
   if (manifest.version !== 1 || !Array.isArray(manifest.cases) || !manifest.cases.length) throw new Error('Invalid manifest');
   const ids = new Set();
   const groups = new Map();
   const recordings = new Map();
+  const directories = new Map();
   for (const c of manifest.cases) {
     if (![c.id, c.group, c.directory, c.config, c.provenance].every((s) => typeof s === 'string' && s.trim()) ||
         !splits.includes(c.split) || !['synthetic', 'real'].includes(c.kind) || ids.has(c.id)) throw new Error('Invalid or duplicate case');
     if (groups.has(c.group) && groups.get(c.group) !== c.split) throw new Error('Journey group crosses splits');
-    const source = c.traintrack ? JSON.stringify([c.traintrack.archive, c.traintrack.innerZip ?? null, c.traintrack.members]) : resolve('/', c.directory);
+    const directory = datasetPath(root, c.directory);
+    const source = c.traintrack ? JSON.stringify([c.traintrack.archive, c.traintrack.innerZip ?? null, sensors.map((name) => c.traintrack.members[name])]) : directory;
+    const previous = directories.get(directory);
+    if (previous && previous.split !== c.split) throw new Error('Recording crosses splits: directory');
+    if (previous && previous.source !== source) throw new Error('Directory shared by different recordings');
+    directories.set(directory, { split: c.split, source });
     if (recordings.has(source) && recordings.get(source) !== c.split) throw new Error('Recording crosses splits');
     recordings.set(source, c.split);
     ids.add(c.id);
@@ -58,7 +64,7 @@ export async function runBenchmark(manifestPath, split, Estimator, estimatorHash
   if (!splits.includes(split)) throw new Error('Invalid split');
   const root = dirname(resolve(manifestPath));
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-  validateManifest(manifest);
+  validateManifest(manifest, root);
   const chosen = manifest.cases.filter((c) => c.split === split).sort((a, b) => a.id.localeCompare(b.id));
   if (!chosen.length) throw new Error('No cases in split');
   if (chosen.some((c) => c.kind !== chosen[0].kind)) throw new Error('Do not mix real and synthetic cases');
