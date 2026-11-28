@@ -101,7 +101,7 @@ describe('ExperimentalSettingsScreen', () => {
     expect(renderWithStore().queryByLabelText('IMU shadow mode')).toBeNull();
   });
 
-  it('開発版でIMUシャドーモードを明示的にオン・オフできる', () => {
+  it('開発版で設定したIMUシャドーモードのオン・オフを次回起動時にも反映する', () => {
     jest.replaceProperty(appVariant, 'isDevApp', true);
     const { getByLabelText, store } = renderWithStore();
     const toggle = () => getByLabelText('IMU shadow mode');
@@ -111,8 +111,28 @@ describe('ExperimentalSettingsScreen', () => {
     fireEvent.press(toggle());
     expect(store.get(imuShadowEnabledAtom)).toBe(true);
     expect(toggle().props.accessibilityState.checked).toBe(true);
+    expect(createStore().get(imuShadowEnabledAtom)).toBe(true);
     fireEvent.press(toggle());
     expect(store.get(imuShadowEnabledAtom)).toBe(false);
+    expect(createStore().get(imuShadowEnabledAtom)).toBe(false);
+  });
+
+  it('IMUシャドーモードの保存に失敗すると以前の設定を維持する', () => {
+    jest.replaceProperty(appVariant, 'isDevApp', true);
+    storage.set(STORAGE_KEYS.IMU_SHADOW_ENABLED, 'true');
+    const { getByLabelText, store } = renderWithStore();
+    jest.spyOn(storage, 'set').mockImplementationOnce(() => {
+      throw new Error('storage unavailable');
+    });
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    fireEvent.press(getByLabelText('IMU shadow mode'));
+
+    expect(store.get(imuShadowEnabledAtom)).toBe(true);
+    expect(createStore().get(imuShadowEnabledAtom)).toBe(true);
+    expect(getDialogPresentationSnapshot().request?.message).toBe(
+      'failedToSavePreference'
+    );
   });
 
   it('App ClipでIMUシャドーモードを表示しない', () => {

@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
   WEEKDAY_ALERT_DISMISSED: '@TrainLCD:weekdayAlertDismissed',
   PARTIALLY_PASS_ALERT_DISMISSED: '@TrainLCD:partiallyPassAlertDismissed',
   TELEMETRY_ENABLED: '@TrainLCD:telemetryEnabled',
+  IMU_SHADOW_ENABLED: '@TrainLCD:imuShadowEnabled',
   DEV_OVERLAY_ENABLED: '@TrainLCD:devOverlayEnabled',
   HEADER_TRANSITION_INTERVAL: '@TrainLCD:headerTransitionInterval',
   HEADER_TRANSITION_DELAY: '@TrainLCD:headerTransitionDelay',
