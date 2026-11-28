@@ -31,3 +31,18 @@ cmp ../../assets/imu/stop-forest.json "$out/forest.json"
 ```
 
 モデルの変換時に学習済みファイルのSHA-256を照合します。アプリでは決定木の分岐と葉の確率を読み、端末上で停車確率を計算します。単体テストはリポジトリ直下から `npm test -- --runInBand imuStopTrial ImuShadowPanel` で実行できます。
+
+## 国内の発着記録で端末用の判定器を再生する
+
+都営新宿線5区間、東京メトロ南北線2区間、都営大江戸線1区間のセンサー記録を、DOと同じ判定器に入力しました。先頭から約10 Hzで抽出した3乗車では、到着タップの前後5秒で停車に切り替わり、次の発車まで維持できたのは0／5駅でした。残りの3駅では次の発車を観測していません。市ヶ谷では到着3.28秒後に停車候補を出しましたが、4.58秒後に走行へ戻りました。六本木一丁目では到着12.12秒前に停車候補を出しました。3乗車には磁気の記録がなく、DOの両方式で同じ結果になりました。
+
+次のコマンドはリポジトリ直下で実行します。同じ乗車の抽出開始位置をずらした再生も含め、停車スコア16,424件とすべての状態遷移を保存済みの結果と照合します。スコアの絶対誤差の許容値は `1e-10` です。
+
+```sh
+data="$HOME/Documents/TrainLCD-imu-data"
+out=$(mktemp -d)
+./node_modules/.bin/tsc --ignoreConfig src/lib/imuStopTrial.ts --module node16 \
+  --target es2022 --skipLibCheck --types node --resolveJsonModule \
+  --esModuleInterop --rootDir . --outDir "$out"
+node research/imu/check-domestic-stop-trial.mjs "$out/src/lib/imuStopTrial.js" "$data"
+```
