@@ -1,5 +1,5 @@
 import { createStore } from 'jotai';
-import type { Station } from '~/@types/graphql';
+import { type Station, StopCondition, TransportType } from '~/@types/graphql';
 import type { Leg } from '~/lib/imuShadow';
 import { manualStationCorrectionAtom } from './manualStationCorrection';
 import { autoModeEnabledAtom, headerStateAtom } from './navigation';
@@ -15,8 +15,15 @@ import stationState, {
 
 const setup = () => {
   const store = createStore();
-  const origin = { id: 1, groupId: 11 } as Station;
-  const bound = { id: 2 } as Station;
+  const origin = {
+    id: 1,
+    groupId: 11,
+    line: { transportType: TransportType.Rail },
+  } as Station;
+  const bound = {
+    id: 2,
+    line: { transportType: TransportType.Rail },
+  } as Station;
   const stations = [origin, bound];
   const leg: Leg = {
     fromId: 1,
@@ -38,7 +45,7 @@ test('ignores a departure from another station, route, direction or simulated ri
   const { store, ctx } = setup();
   for (const invalid of [
     { ...ctx, leg: { ...ctx.leg, fromId: 99 } },
-    { ...ctx, stations: [...ctx.stations] },
+    { ...ctx, stations: ctx.stations.slice().reverse() },
     { ...ctx, direction: 'OUTBOUND' as const },
   ])
     store.set(showImuDepartureAtom, invalid);
@@ -73,3 +80,46 @@ test('a junction alias may depart and an older recording cannot clear its hint',
   store.set(clearImuDepartureAtom, alias.leg);
   expect(store.get(displayArrivedAtom)).toBe(true);
 });
+
+test('a route refetch preserves the hint, but a changed stopping pattern ends it', () => {
+  const { store, ctx } = setup();
+  store.set(showImuDepartureAtom, ctx);
+  const stations = ctx.stations.map((s) => ({ ...s }));
+  store.set(stationState, (prev) => ({
+    ...prev,
+    station: stations[0],
+    selectedBound: stations[1],
+    stations,
+  }));
+  expect(store.get(displayArrivedAtom)).toBe(false);
+  store.set(stationState, (prev) => ({
+    ...prev,
+    stations: [
+      stations[0],
+      { ...stations[1], stopCondition: StopCondition.Not },
+    ],
+  }));
+  store.set(showImuDepartureAtom, ctx);
+  expect(store.get(displayArrivedAtom)).toBe(true);
+  store.set(stationsAtom, ctx.stations);
+  expect(store.get(displayArrivedAtom)).toBe(true);
+});
+
+it.each([0, 1])(
+  'ignores a shadow departure when endpoint %i has unknown transport',
+  (index) => {
+    const { store, ctx } = setup();
+    const stations = ctx.stations.map((s, i) =>
+      i === index ? { ...s, line: null } : s
+    );
+    store.set(stationState, (prev) => ({
+      ...prev,
+      station: stations[0],
+      selectedBound: stations[1],
+      stations,
+    }));
+    store.set(showImuDepartureAtom, { ...ctx, stations, bound: stations[1] });
+    expect(store.get(displayArrivedAtom)).toBe(true);
+    expect(store.get(headerStateAtom)).toBe('CURRENT');
+  }
+);

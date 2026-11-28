@@ -1,9 +1,8 @@
 import { atom, type ExtractAtomValue, type Getter } from 'jotai';
 import type { SetStateAction } from 'react';
-import type { Station } from '~/@types/graphql';
+import { type Station, TransportType } from '~/@types/graphql';
 import type { Leg } from '~/lib/imuShadow';
 import type { HeaderTransitionState } from '~/models/HeaderTransitionState';
-import { isBusLine } from '~/utils/line';
 import type { LineDirection } from '../../models/Bound';
 import { manualStationCorrectionAtom } from './manualStationCorrection';
 import { autoModeEnabledAtom, headerStateAtom } from './navigation';
@@ -46,15 +45,30 @@ const displayDepartureAtom = atom<{
   correction: ExtractAtomValue<typeof manualStationCorrectionAtom>;
 } | null>(null);
 
+// A refetch can replace all station objects while preserving the same service.
+const sameRouteStation = (a: Station | null, b: Station | null) =>
+  a === b ||
+  (a?.id != null &&
+    a.id === b?.id &&
+    a.groupId === b.groupId &&
+    a.line?.id === b.line?.id &&
+    a.line?.transportType === b.line?.transportType &&
+    a.trainType?.groupId === b.trainType?.groupId &&
+    a.stopCondition === b.stopCondition);
+const sameRouteStops = (a: Station[], b: Station[]) =>
+  a === b ||
+  (a.length === b.length &&
+    a.every((station, i) => sameRouteStation(station, b[i])));
+
 export const displayArrivedAtom = atom((get) => {
   if (!get(arrivedAtom)) return false;
   const departure = get(displayDepartureAtom);
   return (
     !departure ||
-    get(stationAtom) !== departure.origin ||
-    get(selectedBoundAtom) !== departure.bound ||
+    !sameRouteStation(get(stationAtom), departure.origin) ||
+    !sameRouteStation(get(selectedBoundAtom), departure.bound) ||
     get(selectedDirectionAtom) !== departure.direction ||
-    get(stationsAtom) !== departure.stations ||
+    !sameRouteStops(get(stationsAtom), departure.stations) ||
     get(manualStationCorrectionAtom) !== departure.correction ||
     get(autoModeEnabledAtom)
   );
@@ -80,25 +94,32 @@ export const showImuDepartureAtom = atom(
     }
   ) => {
     const origin = get(stationAtom);
+    const currentStations = get(stationsAtom);
+    const target =
+      currentStations.find((s) => s.id === leg.toId) ??
+      currentStations.find(
+        (s) => s.id != null && leg.toAliases?.includes(s.id)
+      );
     if (
       !get(arrivedAtom) ||
       !origin ||
       !bound ||
       !direction ||
       get(autoModeEnabledAtom) ||
-      isBusLine(origin.line) ||
-      stations !== get(stationsAtom) ||
-      bound !== get(selectedBoundAtom) ||
+      origin.line?.transportType !== TransportType.Rail ||
+      target?.line?.transportType !== TransportType.Rail ||
+      !sameRouteStops(stations, currentStations) ||
+      !sameRouteStation(bound, get(selectedBoundAtom)) ||
       direction !== get(selectedDirectionAtom) ||
       (origin.id !== leg.fromId &&
         (originGroupId == null || origin.groupId !== originGroupId))
     )
-      return;
+      return false;
     set(displayDepartureAtom, {
       leg,
       origin,
       bound,
-      stations,
+      stations: currentStations,
       direction,
       correction: get(manualStationCorrectionAtom),
     });
@@ -108,6 +129,7 @@ export const showImuDepartureAtom = atom(
       (previous) =>
         previous.replace(/^CURRENT/, 'NEXT') as HeaderTransitionState
     );
+    return true;
   }
 );
 
@@ -138,7 +160,14 @@ const stationState = atom(
     const prev = readStationState(get);
     const next = typeof update === 'function' ? update(prev) : update;
     // Once positioning takes over, a later stop at the same station is a new visit.
-    if (prev.arrived !== next.arrived || prev.station !== next.station) {
+    if (
+      get(displayDepartureAtom) &&
+      (prev.arrived !== next.arrived ||
+        !sameRouteStation(prev.station, next.station) ||
+        !sameRouteStation(prev.selectedBound, next.selectedBound) ||
+        prev.selectedDirection !== next.selectedDirection ||
+        !sameRouteStops(prev.stations, next.stations))
+    ) {
       set(displayDepartureAtom, null);
     }
     if (!Object.is(prev.arrived, next.arrived)) {

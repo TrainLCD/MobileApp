@@ -1,8 +1,9 @@
 import { useIsFocused } from '@react-navigation/native';
 import { requireOptionalNativeModule } from 'expo';
 import { useAtomValue, useStore } from 'jotai';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
+import { TransportType } from '~/@types/graphql';
 import { useEstimateArrivalTimesRoute } from '~/hooks/useEstimateArrivalTimesRoute';
 import { useIsAppActive } from '~/hooks/useIsAppActive';
 import { useNextStation } from '~/hooks/useNextStation';
@@ -10,6 +11,7 @@ import {
   buildLeg,
   findImuOriginIndex,
   ImuShadowEstimator,
+  type Leg,
 } from '~/lib/imuShadow';
 import { loadImuShadowSensor, readMotionSample } from '~/lib/imuShadowSensor';
 import { getTrackDistance } from '~/lib/trackDistances';
@@ -26,7 +28,6 @@ import {
   stationAtom,
   stationsAtom,
 } from '~/store/atoms/station';
-import { isBusLine } from '~/utils/line';
 
 export const DevImuArrival = () => {
   const nativeMotion = useMemo(
@@ -51,14 +52,20 @@ export const DevImuArrival = () => {
   const active = useIsAppActive();
   const focused = useIsFocused();
   const tracking = useAtomValue(backgroundLocationTrackingAtom);
+  const activeRide = focused && !simulation && !shadow;
+  const displayedLeg = useRef<Leg | null>(null);
+  useEffect(() => {
+    if (!activeRide) return;
+    return () => {
+      if (displayedLeg.current)
+        store.set(clearImuDepartureAtom, displayedLeg.current);
+      displayedLeg.current = null;
+    };
+  }, [activeRide, store]);
   const enabled =
-    focused &&
-    !simulation &&
-    !shadow &&
-    !!origin?.line &&
-    !!target?.line &&
-    !isBusLine(origin.line) &&
-    !isBusLine(target.line) &&
+    activeRide &&
+    origin?.line?.transportType === TransportType.Rail &&
+    target?.line?.transportType === TransportType.Rail &&
     (active || (tracking && supportsBackground));
   const { route } = useEstimateArrivalTimesRoute({ skip: !enabled });
 
@@ -145,14 +152,16 @@ export const DevImuArrival = () => {
           const value = estimator.step(sample, performance.now());
           if (!departureDetected && value.phase === 'accelerating') {
             departureDetected = true;
-            store.set(showImuDepartureAtom, {
+            const shown = store.set(showImuDepartureAtom, {
               leg,
               originGroupId: origin.groupId,
               stations,
               direction,
               bound,
             });
+            if (shown) displayedLeg.current = leg;
           }
+          // Loss of distance tracking does not cancel an already confirmed departure.
           if (value.phase === 'invalid') {
             subscription?.remove();
             subscription = undefined;
@@ -182,7 +191,6 @@ export const DevImuArrival = () => {
     return () => {
       appStateSubscription.remove();
       disposed = true;
-      store.set(clearImuDepartureAtom, leg);
       unsubscribe();
       subscription?.remove();
     };

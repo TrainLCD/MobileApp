@@ -3,7 +3,7 @@ import type { LocationObject } from 'expo-location';
 import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
 import { AppState, DeviceEventEmitter } from 'react-native';
-import { LineType, type Station } from '~/@types/graphql';
+import { LineType, type Station, TransportType } from '~/@types/graphql';
 import { rememberTrackDistances } from '~/lib/trackDistances';
 import {
   backgroundLocationTrackingAtom,
@@ -50,6 +50,15 @@ jest.mock('~/lib/imuShadowSensor', () => ({
   }),
 }));
 
+beforeEach(() => {
+  jest
+    .spyOn(AppState, 'addEventListener')
+    .mockImplementation((event, listener) =>
+      DeviceEventEmitter.addListener(event, listener)
+    );
+});
+afterEach(() => jest.restoreAllMocks());
+
 it.each([
   { lineType: LineType.Subway, locked: false, tracking: false, advances: true },
   { lineType: LineType.Normal, locked: false, tracking: false, advances: true },
@@ -70,6 +79,13 @@ it.each([
     freshFix: true,
     advances: false,
   },
+  {
+    lineType: null,
+    locked: false,
+    tracking: false,
+    sampleGap: true,
+    advances: false,
+  },
 ])(
   'replays a rail leg (type=$lineType, locked=$locked, tracking=$tracking, advances=$advances)',
   async ({
@@ -79,12 +95,19 @@ it.each([
     lineType,
     targetType = lineType,
     freshFix,
+    sampleGap,
   }) => {
-    mockTarget = { id: 2, line: { lineType: targetType } } as Station;
+    mockTarget = {
+      id: 2,
+      line: { lineType: targetType, transportType: TransportType.Rail },
+    } as Station;
     mockListener = undefined;
     mockRemove.mockClear();
     const store = createStore();
-    const origin = { id: 1, line: { lineType } } as Station;
+    const origin = {
+      id: 1,
+      line: { lineType, transportType: TransportType.Rail },
+    } as Station;
     store.set(backgroundLocationTrackingAtom, tracking);
     store.set(stationAtom, origin);
     store.set(stationsAtom, [origin, mockTarget]);
@@ -130,19 +153,68 @@ it.each([
       if (locked) {
         act(() => {
           AppState.currentState = 'background';
-          DeviceEventEmitter.emit('appStateDidChange', {
-            app_state: 'background',
-          });
+          DeviceEventEmitter.emit('change', 'background');
         });
         if (tracking) expect(mockRemove).not.toHaveBeenCalled();
       }
       if (freshFix)
         store.set(locationAtom, { timestamp: Date.now() } as LocationObject);
-      act(() => sendSamples(150, 450));
+      act(() => sendSamples(sampleGap ? 170 : 150, 450));
+      if (sampleGap || (locked && !tracking)) {
+        expect(mockRemove).toHaveBeenCalled();
+        expect(store.get(displayArrivedAtom)).toBe(false);
+        if (locked) {
+          await act(async () => {
+            AppState.currentState = 'active';
+            DeviceEventEmitter.emit('change', 'active');
+          });
+          expect(store.get(displayArrivedAtom)).toBe(false);
+        }
+        expect(store.get(arrivedAtom)).toBe(true);
+      }
       expect(store.get(stationAtom)).toBe(advances ? mockTarget : origin);
       if (advances) expect(store.get(stationForHeaderAtom)).toBe(mockTarget);
       view.unmount();
+      if (!advances) expect(store.get(displayArrivedAtom)).toBe(true);
       expect(mockRemove).toHaveBeenCalled();
+    } finally {
+      AppState.currentState = previous;
+    }
+  }
+);
+
+it.each([
+  [null, TransportType.Rail],
+  [TransportType.Rail, null],
+  [TransportType.Bus, TransportType.Rail],
+  [TransportType.Rail, TransportType.RailAndBus],
+])(
+  'skips motion for a leg with transport types %s and %s',
+  async (from, to) => {
+    const store = createStore();
+    const origin = { id: 1, line: { transportType: from } } as Station;
+    mockTarget = { id: 2, line: { transportType: to } } as Station;
+    mockListener = undefined;
+    store.set(stationAtom, origin);
+    store.set(stationsAtom, [origin, mockTarget]);
+    store.set(selectedDirectionAtom, 'INBOUND');
+    store.set(selectedBoundAtom, mockTarget);
+    rememberTrackDistances([
+      { id: 1 },
+      { id: 2, trackDistanceFromPrevious: 300 },
+    ]);
+    const previous = AppState.currentState;
+    AppState.currentState = 'active';
+    try {
+      const view = render(
+        <Provider store={store}>
+          <DevImuArrival />
+        </Provider>
+      );
+      await act(async () => {});
+      expect(mockListener).toBeUndefined();
+      expect(store.get(displayArrivedAtom)).toBe(true);
+      view.unmount();
     } finally {
       AppState.currentState = previous;
     }

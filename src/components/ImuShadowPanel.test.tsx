@@ -3,7 +3,7 @@ import * as Battery from 'expo-battery';
 import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
 import { AppState, Platform } from 'react-native';
-import type { Station } from '~/@types/graphql';
+import { type Station, TransportType } from '~/@types/graphql';
 import type { RouteStop } from '~/lib/imuShadow';
 import { getLastImuShadowRecording } from '~/lib/imuShadowRecording';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
@@ -233,8 +233,12 @@ test('starts automatically at a known stopped station and advances after a singl
   mockRequestPermissions.mockClear();
   jest.mocked(exportImuShadow).mockClear();
   const store = createStore();
-  store.set(stationAtom, { id: 1 } as Station);
-  store.set(selectedBoundAtom, { id: 3 } as Station);
+  const stations = [1, 2, 3].map(
+    (id) => ({ id, line: { transportType: TransportType.Rail } }) as Station
+  );
+  store.set(stationsAtom, stations);
+  store.set(stationAtom, stations[0]);
+  store.set(selectedBoundAtom, stations[2]);
   store.set(selectedDirectionAtom, 'INBOUND');
   store.set(arrivedAtom, true);
   try {
@@ -265,6 +269,13 @@ test('starts automatically at a known stopped station and advances after a singl
       });
     }
     expect(store.get(displayArrivedAtom)).toBe(true);
+    act(() => {
+      store.set(
+        stationsAtom,
+        stations.map((station) => ({ ...station }))
+      );
+      store.set(selectedBoundAtom, { ...stations[2] });
+    });
     store.set(headerStateAtom, 'CURRENT_EN');
     for (let i = 1; i <= 16; i++) {
       act(() => {
