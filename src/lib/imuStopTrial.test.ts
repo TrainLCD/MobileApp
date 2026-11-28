@@ -59,3 +59,68 @@ test('sustained stop evidence changes only the reference while the field is acti
     }
   });
 });
+
+test('a sample just beyond the upper edge of a feature window follows the training clock', () => {
+  const trial = new ImuStopTrial();
+  let last: ReturnType<ImuStopTrial['step']> = null;
+  const now = 260.371803;
+  for (let i = 0; i <= 240; i++) {
+    // Multiplying the observation and the cutoff by 1000 before subtracting
+    // rounds them onto the same side of the five-second boundary.
+    const seconds = i === 190 ? 255.37180300000003 : now + (i - 240) * 0.1;
+    const amplitude = i <= 190 ? 1 : 0.2;
+    const x = i === 190 ? 2 : (((i * 13) % 17) / 17) * amplitude;
+    last = trial.step({
+      timeMs: seconds * 1000,
+      acceleration: { x, y: 0, z: 0 },
+      accelerationIncludingGravity: { x, y: 0, z: 9.81 },
+      rotationDegPerSecond: 0,
+    });
+  }
+  // Frozen scikit-learn forest applied to the same native timestamps.
+  expect(last?.stopProbability).toBeCloseTo(0.19436220501187185, 12);
+});
+
+test.each([
+  { quietUntil: 250, referenceAt: 26200, guardedAt: 28100 },
+  { quietUntil: 262, referenceAt: 27300, guardedAt: 27300 },
+])(
+  'restart after a stop with the phone quiet until tick $quietUntil',
+  ({ quietUntil, referenceAt, guardedAt }) => {
+    jest.isolateModules(() => {
+      jest.doMock('../../assets/imu/stop-forest.json', () => ({
+        sourceSha256: 'test',
+        trees: [[[1]]],
+      }));
+      try {
+        const { ImuStopTrial: Trial } =
+          jest.requireActual<typeof import('./imuStopTrial')>('./imuStopTrial');
+        const trial = new Trial();
+        let referenceRestart: number | null = null;
+        let guardedRestart: number | null = null;
+        for (let i = 0; i <= 285; i++) {
+          const x = (i >= 5 && i <= 22) || i > quietUntil ? 0.6 : 0;
+          const outcome = trial.step({
+            ...sample(i),
+            acceleration: { x, y: 0, z: 0 },
+            accelerationIncludingGravity: { x, y: 0, z: 9.81 },
+          });
+          if (i === 250)
+            expect(outcome).toMatchObject({
+              baseline: 'stop',
+              guardedRestart: 'stop',
+            });
+          if (i <= 250 || !outcome) continue;
+          if (outcome.baseline === 'running')
+            referenceRestart ??= outcome.timeMs;
+          if (outcome.guardedRestart === 'running')
+            guardedRestart ??= outcome.timeMs;
+        }
+        expect(referenceRestart).toBe(referenceAt);
+        expect(guardedRestart).toBe(guardedAt);
+      } finally {
+        jest.dontMock('../../assets/imu/stop-forest.json');
+      }
+    });
+  }
+);

@@ -773,6 +773,7 @@ test('trial decisions and manual labels share the existing DO recording and expo
       }
     });
     expect(screen.getByText('Stop detector comparison')).toBeTruthy();
+    expect(screen.getByText(/Restart check/)).toBeTruthy();
     fireEvent.press(screen.getByText('Actual next arrival'));
     await act(async () => {
       fireEvent.press(screen.getByText('Finish & export'));
@@ -787,6 +788,7 @@ test('trial decisions and manual labels share the existing DO recording and expo
         expect.objectContaining({
           legIndex: 0,
           observedAtMs: expect.any(Number),
+          guardedRestart: expect.any(String),
           vetoEvidence: true,
         }),
       ])

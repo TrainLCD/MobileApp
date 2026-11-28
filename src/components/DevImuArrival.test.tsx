@@ -4,7 +4,13 @@ import type { DeviceMotionMeasurement } from 'expo-sensors';
 import { createStore, Provider } from 'jotai';
 import { AppState, DeviceEventEmitter } from 'react-native';
 import { LineType, type Station, TransportType } from '~/@types/graphql';
+import type { RouteStop } from '~/lib/imuShadow';
+import { ImuStopTrial, type StopTrialPhase } from '~/lib/imuStopTrial';
 import { rememberTrackDistances } from '~/lib/trackDistances';
+import {
+  imuShadowEnabledAtom,
+  recordedRidePhaseAtom,
+} from '~/store/atoms/imuShadow';
 import {
   backgroundLocationTrackingAtom,
   locationAtom,
@@ -21,7 +27,9 @@ import {
 import { DevImuArrival } from './DevImuArrival';
 
 let mockTarget = { id: 2, line: { lineType: LineType.Subway } } as Station;
-const mockRoute = {
+let mockNextByOrigin: Map<number, Station> | null = null;
+let mockHasRoute = true;
+const mockRoute: { stops: RouteStop[] } = {
   stops: [
     { stationId: 1, stopsHere: true },
     { stationId: 2, stopsHere: true },
@@ -31,10 +39,13 @@ let mockListener: ((data: DeviceMotionMeasurement) => void) | undefined;
 const mockRemove = jest.fn();
 jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
 jest.mock('~/hooks/useNextStation', () => ({
-  useNextStation: () => mockTarget,
+  useNextStation: (_ignorePass: boolean, origin?: Station) =>
+    mockNextByOrigin ? mockNextByOrigin.get(origin?.id ?? -1) : mockTarget,
 }));
 jest.mock('~/hooks/useEstimateArrivalTimesRoute', () => ({
-  useEstimateArrivalTimesRoute: () => ({ route: mockRoute }),
+  useEstimateArrivalTimesRoute: () => ({
+    route: mockHasRoute ? mockRoute : null,
+  }),
 }));
 jest.mock('~/lib/imuShadowSensor', () => ({
   ...jest.requireActual('~/lib/imuShadowSensor'),
@@ -51,12 +62,124 @@ jest.mock('~/lib/imuShadowSensor', () => ({
 }));
 
 beforeEach(() => {
+  mockNextByOrigin = null;
+  mockHasRoute = true;
   jest
     .spyOn(AppState, 'addEventListener')
     .mockImplementation((event, listener) =>
       DeviceEventEmitter.addListener(event, listener)
     );
 });
+
+it.each([
+  { recording: false, hasRoute: true },
+  { recording: true, hasRoute: true },
+  { recording: false, hasRoute: false },
+  { recording: true, hasRoute: false },
+])(
+  'uses guarded motion in station guidance (recording=$recording, ETA route=$hasRoute)',
+  async ({ recording, hasRoute }) => {
+    const stops = [101, 102, 103].map(
+      (id) => ({ id, line: { transportType: TransportType.Rail } }) as Station
+    );
+    mockNextByOrigin = new Map([
+      [101, stops[1]],
+      [102, stops[2]],
+    ]);
+    mockHasRoute = hasRoute;
+    const previousStops = mockRoute.stops;
+    mockRoute.stops = stops.map((s, i) => ({
+      stationId: s.id,
+      stopsHere: true,
+      cumulativeMinutes: i,
+      departureCumulativeMinutes: i,
+    }));
+    mockListener = undefined;
+    const store = createStore();
+    store.set(imuShadowEnabledAtom, recording);
+    store.set(stationsAtom, stops);
+    store.set(stationAtom, stops[0]);
+    store.set(selectedBoundAtom, stops[2]);
+    store.set(selectedDirectionAtom, 'INBOUND');
+    const previous = AppState.currentState;
+    AppState.currentState = 'active';
+    let phase: StopTrialPhase = 'waiting';
+    const step = jest
+      .spyOn(ImuStopTrial.prototype, 'step')
+      .mockImplementation((sample) => ({
+        timeMs: sample.timeMs,
+        guardedRestart: phase,
+        baseline: 'waiting',
+        magnetic: 'waiting',
+        stopProbability: null,
+        magneticSd: null,
+        vetoEvidence: false,
+      }));
+    let lastTimeMs = 800;
+    const send = async (next: StopTrialPhase, timeMs: number) => {
+      await act(async () => {
+        if (recording) {
+          store.set(recordedRidePhaseAtom, { phase: next, timeMs });
+        } else {
+          for (let t = lastTimeMs + 100; t <= timeMs; t += 100) {
+            if (t === timeMs) phase = next;
+            const timestamp = t / 1000;
+            mockListener?.({
+              acceleration: { x: 0, y: 0, z: 0, timestamp },
+              accelerationIncludingGravity: { x: 0, y: 0, z: 9.81, timestamp },
+              rotationRate: { alpha: 0, beta: 0, gamma: 0, timestamp },
+            } as DeviceMotionMeasurement);
+          }
+        }
+        lastTimeMs = timeMs;
+      });
+    };
+    const view = render(
+      <Provider store={store}>
+        <DevImuArrival />
+      </Provider>
+    );
+    try {
+      await act(async () => {});
+      if (recording) expect(mockListener).toBeUndefined();
+      else expect(mockListener).toBeDefined();
+      await send('stop', 900);
+      expect(store.get(stationAtom)).toBe(stops[0]);
+      await send('running', 1000);
+      expect(store.get(displayArrivedAtom)).toBe(false);
+      await send('stop', 5000);
+      expect(store.get(stationAtom)).toBe(stops[0]);
+      expect(view.getByText('Stopped · confirming station')).toBeTruthy();
+      await send('running', 6000);
+      expect(view.queryByText('Stopped · confirming station')).toBeNull();
+      await send('stop', 37500);
+      if (!hasRoute) {
+        expect(store.get(stationAtom)).toBe(stops[0]);
+        expect(view.getByText('Stopped · confirming station')).toBeTruthy();
+        act(() =>
+          store.set(locationAtom, { timestamp: Date.now() } as LocationObject)
+        );
+        expect(view.queryByText('Stopped · confirming station')).toBeNull();
+        return;
+      }
+      expect(store.get(stationAtom)).toBe(stops[1]);
+      expect(store.get(stationForHeaderAtom)).toBe(stops[1]);
+      await send('stop', 37600);
+      expect(store.get(displayArrivedAtom)).toBe(true);
+      await send('running', 38000);
+      expect(store.get(displayArrivedAtom)).toBe(false);
+      await send('stop', 75000);
+      expect(store.get(stationAtom)).toBe(stops[2]);
+      expect(store.get(stationForHeaderAtom)).toBe(stops[2]);
+      // The normal ride keeps the same 24-second model history across the arrival.
+      if (!recording) expect(new Set(step.mock.instances).size).toBe(1);
+    } finally {
+      view.unmount();
+      mockRoute.stops = previousStops;
+      AppState.currentState = previous;
+    }
+  }
+);
 afterEach(() => jest.restoreAllMocks());
 
 it.each([

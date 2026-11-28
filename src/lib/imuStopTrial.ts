@@ -1,23 +1,32 @@
 import forest from '../../assets/imu/stop-forest.json';
-import { ImuShadowEstimator, type MotionSample } from './imuShadow';
+import {
+  DEPARTURE_ACCEL,
+  DEPARTURE_SECONDS,
+  horizontalAcceleration,
+  ImuShadowEstimator,
+  MAX_GAP_SECONDS,
+  MAX_ROTATION_DEG_PER_SECOND,
+  type MotionSample,
+} from './imuShadow';
 
 export const STOP_MODEL_ID = forest.sourceSha256;
 const FIELD_CUTOFF = 1.4281582368892662;
-const featureWindows = [
-  [2000, 0],
-  [5000, 2000],
-  [8000, 5000],
-  [15000, 8000],
-  [24000, 15000],
+const featureWindowsSeconds = [
+  [2, 0],
+  [5, 2],
+  [8, 5],
+  [15, 8],
+  [24, 15],
 ] as const;
 const floors = [0.04, 0.04, 1, 0.04, 0.04, 0.04, 1, 0.04, 0.04];
-type Frame = { t: number; signals: number[]; horizontal: number[] };
+type Frame = { seconds: number; signals: number[]; horizontal: number[] };
 type Field = { timeMs: number; magnitude: number };
 export type StopTrialPhase = 'waiting' | 'running' | 'stop';
 export type StopTrialObservation = {
   timeMs: number;
   baseline: StopTrialPhase;
   magnetic: StopTrialPhase;
+  guardedRestart: StopTrialPhase;
   stopProbability: number | null;
   magneticSd: number | null;
   vetoEvidence: boolean;
@@ -40,9 +49,9 @@ const quantile = (values: number[], fraction: number) => {
 
 function probability(frames: Frame[], now: number): number | null {
   const chunks: number[][] = [];
-  for (const [far, near] of featureWindows) {
+  for (const [far, near] of featureWindowsSeconds) {
     const rows = frames.filter(
-      (row) => row.t >= now - far && row.t <= now - near
+      (row) => row.seconds >= now - far && row.seconds <= now - near
     );
     if (rows.length < 2) return null;
     const columns = [0, 1, 2, 3].map((i) => rows.map((row) => row.signals[i]));
@@ -92,10 +101,39 @@ class ConfirmedStop {
   private runningSince = 0;
   private aboveSince: number | null = null;
   private lastScoreAt = Number.NEGATIVE_INFINITY;
+  private stoppedAt: number | null = null;
+  private quietSince: number | null = null;
 
-  step(sample: MotionSample, p: number | null, veto: boolean) {
+  constructor(private readonly guardRestart = false) {}
+
+  private canCheckDeparture(sample: MotionSample, gapMs: number) {
+    if (this.stoppedAt == null) return true;
     const t = sample.timeMs;
-    if (this.phase !== 'running') {
+    // The newest stop feature covers two seconds. Resume departure detection
+    // once that window is replaced, even if the passenger keeps moving the phone.
+    if (t - this.stoppedAt < featureWindowsSeconds[0][0] * 1000) {
+      if (gapMs > MAX_GAP_SECONDS * 1000) this.quietSince = null;
+      const horizontal = horizontalAcceleration(sample);
+      if (
+        !horizontal ||
+        sample.rotationDegPerSecond == null ||
+        sample.rotationDegPerSecond > MAX_ROTATION_DEG_PER_SECOND ||
+        Math.hypot(horizontal.x, horizontal.y, horizontal.z) >= DEPARTURE_ACCEL
+      ) {
+        this.quietSince = null;
+        return false;
+      }
+      this.quietSince ??= t;
+      if (t - this.quietSince < DEPARTURE_SECONDS * 1000) return false;
+    }
+    this.stoppedAt = null;
+    this.quietSince = null;
+    return true;
+  }
+
+  step(sample: MotionSample, p: number | null, veto: boolean, gapMs: number) {
+    const t = sample.timeMs;
+    if (this.phase !== 'running' && this.canCheckDeparture(sample, gapMs)) {
       const { phase } = this.detector.step(sample);
       if (phase === 'invalid') this.detector = departureDetector();
       if (phase === 'accelerating') {
@@ -117,6 +155,7 @@ class ConfirmedStop {
     this.aboveSince ??= t;
     if (t - this.aboveSince >= 1000) {
       this.phase = 'stop';
+      if (this.guardRestart) this.stoppedAt = t;
       this.aboveSince = null;
       this.detector = departureDetector();
     }
@@ -127,9 +166,10 @@ export class ImuStopTrial {
   private frames: Frame[] = [];
   private field: Field[] = [];
   private previous: MotionSample | null = null;
-  private nextScore = Number.NEGATIVE_INFINITY;
+  private nextScoreSeconds = Number.NEGATIVE_INFINITY;
   private baseline = new ConfirmedStop();
   private magnetic = new ConfirmedStop();
+  private guardedRestart = new ConfirmedStop(true);
 
   addField(timeMs: number, magnitude: number) {
     if (
@@ -162,19 +202,25 @@ export class ImuStopTrial {
     ) {
       this.frames = [];
       this.previous = null;
-      this.nextScore = Number.NEGATIVE_INFINITY;
+      this.nextScoreSeconds = Number.NEGATIVE_INFINITY;
       return null;
     }
+    // Use the training clock's units for feature window boundaries. Converting
+    // both sides to milliseconds first can include a different boundary sample.
+    const seconds = t / 1000;
     if (!this.previous) {
-      this.nextScore = t + 24000;
+      this.nextScoreSeconds = seconds + 24;
     }
     const up = gravity.map((v) => v / norm);
     const vertical = a.x * up[0] + a.y * up[1] + a.z * up[2];
     const horizontal = [a.x, a.y, a.z].map((v, i) => v - vertical * up[i]);
     const last = this.previous?.acceleration ?? a;
     const change = Math.hypot(a.x - last.x, a.y - last.y, a.z - last.z);
+    const gapMs = this.previous
+      ? t - this.previous.timeMs
+      : Number.POSITIVE_INFINITY;
     this.frames.push({
-      t,
+      seconds,
       horizontal,
       signals: [
         Math.hypot(...horizontal),
@@ -184,22 +230,24 @@ export class ImuStopTrial {
       ],
     });
     this.previous = sample;
-    while (this.frames.length && this.frames[0].t < t - 24000)
+    while (this.frames.length && this.frames[0].seconds < seconds - 24)
       this.frames.shift();
 
     let p: number | null = null;
     let magneticSd: number | null = null;
     let veto = false;
-    if (t >= this.nextScore) {
-      this.nextScore = t + 450;
+    if (seconds >= this.nextScoreSeconds) {
+      this.nextScoreSeconds = seconds + 0.45;
       // Follow the frozen replay cadence across gaps. A feature window is
       // usable again once it no longer spans a gap between observations.
       if (
         this.frames.every(
-          (frame, i) => i === 0 || frame.t - this.frames[i - 1].t <= 500
+          (frame, i) =>
+            i === 0 ||
+            frame.seconds - this.frames[i - 1].seconds <= MAX_GAP_SECONDS
         )
       ) {
-        p = probability(this.frames, t);
+        p = probability(this.frames, seconds);
       }
       const field = this.field.filter(
         (f) => f.timeMs >= t - 2000 && f.timeMs <= t
@@ -212,7 +260,7 @@ export class ImuStopTrial {
         )
       ) {
         magneticSd = sd(field.map((f) => f.magnitude));
-        const recent = this.frames.filter((row) => row.t >= t - 2000);
+        const recent = this.frames.filter((row) => row.seconds >= seconds - 2);
         veto =
           magneticSd > FIELD_CUTOFF &&
           recent.length >= 8 &&
@@ -224,18 +272,22 @@ export class ImuStopTrial {
     }
     const baseline = this.baseline.phase;
     const magnetic = this.magnetic.phase;
-    this.baseline.step(sample, p, false);
-    this.magnetic.step(sample, p, veto);
+    const guardedRestart = this.guardedRestart.phase;
+    this.baseline.step(sample, p, false, gapMs);
+    this.magnetic.step(sample, p, veto, gapMs);
+    this.guardedRestart.step(sample, p, false, gapMs);
     if (
       p == null &&
       baseline === this.baseline.phase &&
-      magnetic === this.magnetic.phase
+      magnetic === this.magnetic.phase &&
+      guardedRestart === this.guardedRestart.phase
     )
       return null;
     return {
       timeMs: t,
       baseline: this.baseline.phase,
       magnetic: this.magnetic.phase,
+      guardedRestart: this.guardedRestart.phase,
       stopProbability: p,
       magneticSd,
       vetoEvidence: veto,

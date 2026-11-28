@@ -11,6 +11,7 @@ import {
   buildLeg,
   type Estimate,
   ImuShadowEstimator,
+  MAX_GAP_SECONDS,
   type RouteStop,
 } from '~/lib/imuShadow';
 import {
@@ -30,12 +31,14 @@ import {
 import type { StopTrialObservation, StopTrialPhase } from '~/lib/imuStopTrial';
 import { getTrackDistance } from '~/lib/trackDistances';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import { recordedRidePhaseAtom } from '~/store/atoms/imuShadow';
 import { locationAtom, rawLocationAtom } from '~/store/atoms/location';
 import { manualStationCorrectionAtom } from '~/store/atoms/manualStationCorrection';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
   clearImuDepartureAtom,
+  displayArrivedAtom,
   selectedBoundAtom,
   selectedDirectionAtom,
   showImuDepartureAtom,
@@ -228,6 +231,7 @@ export const ImuShadowPanel = () => {
     }
     const leg = recording?.legs.at(-1)?.leg;
     if (leg) store.set(clearImuDepartureAtom, leg);
+    if (recording?.mode === 'imu') store.set(recordedRidePhaseAtom, null);
     recordingRef.current = null;
     estimatorRef.current = null;
     activeRouteKeyRef.current = null;
@@ -453,7 +457,11 @@ export const ImuShadowPanel = () => {
     const departureAtMs = locationDeparture ?? imuDeparture;
     if (departureAtMs == null) return;
     departureRecordedRef.current = true;
-    if (locationDeparture == null) {
+    if (
+      locationDeparture == null &&
+      store.get(recordedRidePhaseAtom)?.phase === 'running' &&
+      store.get(displayArrivedAtom)
+    ) {
       store.set(showImuDepartureAtom, {
         leg,
         originGroupId: origin?.stationGroupId,
@@ -535,6 +543,7 @@ export const ImuShadowPanel = () => {
       setTrialOutput(null);
       setTrialMotionFresh(false);
       let latestTrialMotion = Number.NEGATIVE_INFINITY;
+      let lastGuidancePhase: StopTrialPhase = 'waiting';
       const recording: Recording = {
         schemaVersion: 1,
         mode,
@@ -660,13 +669,23 @@ export const ImuShadowPanel = () => {
             legIndex: recording.legs.length - 1,
             sample,
           });
+          const previousTime = recording.motion.at(-2)?.sample.timeMs;
           if (
-            sample.timeMs >
-            (recording.motion.at(-2)?.sample.timeMs ?? Number.NEGATIVE_INFINITY)
+            previousTime != null &&
+            sample.timeMs - previousTime > MAX_GAP_SECONDS * 1000
           )
+            store.set(recordedRidePhaseAtom, null);
+          if (previousTime == null || sample.timeMs > previousTime)
             latestTrialMotion = receivedAtMs;
           const decision = trial.step(sample);
           if (decision && trialLog) {
+            if (decision.guardedRestart !== lastGuidancePhase) {
+              lastGuidancePhase = decision.guardedRestart;
+              store.set(recordedRidePhaseAtom, {
+                phase: lastGuidancePhase,
+                timeMs: decision.timeMs,
+              });
+            }
             trialLog.decisions.push({
               ...decision,
               observedAtMs: atMs,
@@ -808,6 +827,12 @@ export const ImuShadowPanel = () => {
             {label('磁気併用', 'With magnetic field')} ·{' '}
             {trialMotionFresh
               ? trialPhaseLabel(trialOutput?.magnetic ?? 'waiting')
+              : '—'}
+          </Typography>
+          <Typography style={styles.text}>
+            {label('再発車確認', 'Restart check')} ·{' '}
+            {trialMotionFresh
+              ? trialPhaseLabel(trialOutput?.guardedRestart ?? 'waiting')
               : '—'}
           </Typography>
           <Typography style={styles.text}>
