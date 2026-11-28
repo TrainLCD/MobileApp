@@ -80,6 +80,8 @@ def prepare(manifest, split, allow_download=False, max_archives=1):
     directories = {}
     recordings = {}
     for case in cases:
+        if 'shadowFile' in case:
+            continue
         directory = safe_path(root, case['directory'])
         spec = case.get('traintrack')
         source = (spec['archive'], spec.get('innerZip'), tuple(spec['members'][name] for name in SENSORS)) if spec else directory

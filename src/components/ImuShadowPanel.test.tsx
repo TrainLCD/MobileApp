@@ -305,6 +305,41 @@ test('starts automatically at a known stopped station and advances after a singl
   }
 });
 
+test('retains ten seconds after a manually labelled arrival and resets the departure mark on the next leg', async () => {
+  jest.useFakeTimers();
+  const originalState = AppState.currentState;
+  AppState.currentState = 'active';
+  const store = createStore();
+  store.set(stationAtom, { id: 1 } as Station);
+  store.set(selectedBoundAtom, { id: 3 } as Station);
+  store.set(selectedDirectionAtom, 'INBOUND');
+  store.set(arrivedAtom, true);
+  try {
+    const screen = render(
+      <Provider store={store}>
+        <ImuShadowPanel />
+      </Provider>
+    );
+    await act(async () => {});
+    act(() => jest.advanceTimersByTime(1000));
+    fireEvent.press(screen.getByText('Mark departure for replay'));
+    const recording = getLastImuShadowRecording();
+    expect(recording?.legs[0].actualDepartureAtMs).toBe(Date.now());
+    act(() => jest.advanceTimersByTime(1000));
+    fireEvent.press(screen.getByText('Actual next arrival'));
+    act(() => jest.advanceTimersByTime(9000));
+    expect(recording?.legs).toHaveLength(1);
+    act(() => jest.advanceTimersByTime(1000));
+    expect(recording?.legs).toHaveLength(2);
+    expect(recording?.legs[1].actualDepartureAtMs).toBeUndefined();
+    expect(screen.getByText('Mark departure for replay')).toBeTruthy();
+    screen.unmount();
+  } finally {
+    AppState.currentState = originalState;
+    jest.useRealTimers();
+  }
+});
+
 test('waits for a known stopped station instead of starting on the wrong leg', async () => {
   const originalState = AppState.currentState;
   AppState.currentState = 'active';

@@ -71,3 +71,35 @@ test('batch uses actual CSV pipeline, fingerprints inputs and retains failures',
     assert.notEqual(changed.cases[0].fingerprint, result.cases[0].fingerprint);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test('shadow replay scores receipt time, preserves native sample time and rejects inferred labels', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'shadow-batch-'));
+  try {
+    const path = join(dir, 'manifest.json');
+    const c = { id: 'leg-1', group: 'ride', kind: 'synthetic', split: 'train', provenance: 'fixture', shadowFile: 'ride.json', legIndex: 0 };
+    await writeFile(path, JSON.stringify(manifest(c)));
+    assert.throws(() => validateManifest(manifest(c, {...c, id: 'b', legIndex: 1, group: 'other', split: 'test'})), /crosses splits/);
+    const recording = {
+      schemaVersion: 1, mode: 'imu', endedAtMs: 30000,
+      legs: [{startedAtMs: 10000, actualDepartureAtMs: 11000, leg: {fromId: 1, toId: 2, distanceM: 300, etaSeconds: null}}],
+      events: [{legIndex: 0, kind: 'arrival', stationId: 2, atMs: 20000}],
+      motion: Array.from({length: 201}, (_, i) => ({legIndex: 0, observedAtMs: 10000 + i * 100, sample: {timeMs: 888000 + i * 100}})),
+    };
+    class Stub {
+      step(sample) {
+        return {phase: 'stopped', arrivalCandidate: sample.timeMs >= 898100, distanceM: 300, imuDistanceM: 300, sigmaM: 1};
+      }
+    }
+    const run = async () => {
+      await writeFile(join(dir, c.shadowFile), JSON.stringify(recording));
+      return (await runBenchmark(path, 'train', Stub, 'stub')).cases[0];
+    };
+    assert.equal((await run()).report.matchedCandidateErrorSeconds, 0.1);
+    recording.endedAtMs--;
+    assert.match((await run()).error, /post-arrival/);
+    recording.endedAtMs++;
+    delete recording.legs[0].actualDepartureAtMs;
+    recording.events.push({kind: 'departure', legIndex: 0, stationId: 1, atMs: 11000, departureSource: 'imu'});
+    assert.match((await run()).error, /observed departure/);
+  } finally { await rm(dir, {recursive: true, force: true}); }
+});

@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { evaluate, motionSamples, parseVectorCsv } from './replay.mjs';
 
+import { evaluateShadow } from './shadow.mjs';
+
 const here = dirname(fileURLToPath(import.meta.url));
 const splits = ['train', 'validation', 'test'];
 const sensors = ['Accelerometer.csv', 'Gravity.csv', 'Gyroscope.csv'];
@@ -18,10 +20,25 @@ export function validateManifest(manifest, root = '/') {
   const groups = new Map();
   const recordings = new Map();
   const directories = new Map();
+  const shadowLegs = new Set();
   for (const c of manifest.cases) {
-    if (![c.id, c.group, c.directory, c.config, c.provenance].every((s) => typeof s === 'string' && s.trim()) ||
+    if (![c.id, c.group, c.provenance].every((s) => typeof s === 'string' && s.trim()) ||
         !splits.includes(c.split) || !['synthetic', 'real'].includes(c.kind) || ids.has(c.id)) throw new Error('Invalid or duplicate case');
     if (groups.has(c.group) && groups.get(c.group) !== c.split) throw new Error('Journey group crosses splits');
+    ids.add(c.id);
+    groups.set(c.group, c.split);
+    if (c.shadowFile !== undefined) {
+      if (typeof c.shadowFile !== 'string' || !c.shadowFile.trim() || c.traintrack || c.directory || c.config ||
+          !Number.isSafeInteger(c.legIndex) || c.legIndex < 0) throw new Error('Invalid shadow case');
+      const file = datasetPath(root, c.shadowFile);
+      const key = JSON.stringify([file, c.legIndex]);
+      if (shadowLegs.has(key)) throw new Error('Duplicate shadow leg');
+      shadowLegs.add(key);
+      if (recordings.has(file) && recordings.get(file) !== c.split) throw new Error('Recording crosses splits');
+      recordings.set(file, c.split);
+      continue;
+    }
+    if (![c.directory, c.config].every(s => typeof s === 'string' && s.trim())) throw new Error('Invalid CSV case');
     const directory = datasetPath(root, c.directory);
     const source = c.traintrack ? JSON.stringify([c.traintrack.archive, c.traintrack.innerZip ?? null, sensors.map((name) => c.traintrack.members[name])]) : directory;
     const previous = directories.get(directory);
@@ -30,8 +47,6 @@ export function validateManifest(manifest, root = '/') {
     directories.set(directory, { split: c.split, source });
     if (recordings.has(source) && recordings.get(source) !== c.split) throw new Error('Recording crosses splits');
     recordings.set(source, c.split);
-    ids.add(c.id);
-    groups.set(c.group, c.split);
   }
 }
 
@@ -78,6 +93,13 @@ export async function runBenchmark(manifestPath, split, Estimator, estimatorHash
   for (const c of chosen) {
     let fingerprint = null;
     try {
+      if (c.shadowFile !== undefined) {
+        const bytes = await readFile(datasetPath(root, c.shadowFile));
+        fingerprint = hash(JSON.stringify([c.id, c.group, c.kind, c.provenance, c.legIndex, hash(bytes)]));
+        const report = evaluateShadow(Estimator, JSON.parse(bytes), c.legIndex);
+        cases.push({ id: c.id, group: c.group, fingerprint, report });
+        continue;
+      }
       const configBytes = await readFile(datasetPath(root, c.config));
       const bytes = await Promise.all(sensors.map((name) => readFile(resolve(datasetPath(root, c.directory), name))));
       fingerprint = hash(JSON.stringify([c.id, c.group, c.kind, c.provenance, hash(configBytes), ...bytes.map(hash)]));
@@ -89,7 +111,7 @@ export async function runBenchmark(manifestPath, split, Estimator, estimatorHash
       cases.push({ id: c.id, group: c.group, fingerprint, error: String(error.message ?? error) });
     }
   }
-  const protocol = hash(JSON.stringify(await Promise.all(['benchmark.mjs', 'replay.mjs'].map(async (name) => hash(await readFile(resolve(here, name)))))));
+  const protocol = hash(JSON.stringify(await Promise.all(['benchmark.mjs', 'replay.mjs', 'shadow.mjs'].map(async (name) => hash(await readFile(resolve(here, name)))))));
   return { version: 1, protocol, estimatorHash, split, kind: chosen[0].kind, cases, summary: summarize(cases) };
 }
 
