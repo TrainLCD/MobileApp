@@ -29,6 +29,22 @@ test('uses only past measurements and does not fill an acceleration gap', () => 
   assert.throws(() => [...motionSamples(rows(), rows(9.81).map((v) => ({ ...v, timeMs: v.timeMs + 10 })), rows(), config)], /Missing synchronized/);
 });
 
+test('keeps a boundary sample when downsampling would introduce a gap', () => {
+  const source = [0, 50, 550, 650].map((timeMs) => ({ timeMs, x: 0, y: 0, z: 0 }));
+  const gravity = source.map((v) => ({ ...v, z: 9.81 }));
+  const samples = [...motionSamples(source, gravity, source, { ...config, endMs: 650 })];
+  assert.deepEqual(samples.map((s) => s.timeMs), [0, 50, 550, 650]);
+  assert.deepEqual([...motionSamples(rows(), rows(9.81), rows(), config)].map((s) => s.timeMs), rows().map((s) => s.timeMs));
+});
+
+test('does not hide a real gap at a downsampling boundary', () => {
+  const source = [0, 50, 551, 650].map((timeMs) => ({ timeMs, x: 0, y: 0, z: 0 }));
+  const gravity = source.map((v) => ({ ...v, z: 9.81 }));
+  const samples = [...motionSamples(source, gravity, source, { ...config, endMs: 650 })];
+  assert.deepEqual(samples.map((s) => s.timeMs), [0, 50, 551, 650]);
+  assert.equal(samples[2].timeMs - samples[1].timeMs, 501);
+});
+
 test('evaluation passes only motion samples to estimator and scores candidate edges', () => {
   class StubEstimator {
     constructor(leg) { assert.equal(leg.distanceM, 100); }
