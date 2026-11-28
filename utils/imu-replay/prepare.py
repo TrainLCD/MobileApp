@@ -81,6 +81,8 @@ def prepare(manifest, split, allow_download=False, max_archives=1):
     recordings = {}
     for case in cases:
         if 'shadowFile' in case:
+            if 'traintrack' in case:
+                raise ValueError('Cannot specify both shadowFile and traintrack')
             continue
         directory = safe_path(root, case['directory'])
         spec = case.get('traintrack')

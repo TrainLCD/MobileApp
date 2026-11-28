@@ -133,11 +133,13 @@ beside the manifest outside the repository. Add one case for each planned leg
 }
 ```
 
+Use a separate case for each TrainTrack input.
 Run the same batch and comparison commands as for CSVs. Before freezing the
 manifest, verify that the recorded distance is known and the train remained
 stopped for at least ten seconds after the arrival tap. The replay integrates
 the native sample timestamps and scores candidate times on the JS observation
-clock used by the taps. Automatic departures cannot supply ground truth.
+clock used by the taps. Only samples with advancing native timestamps count
+toward coverage, including distinct samples received in one batch. Automatic departures cannot supply ground truth.
 Exports from the older manual-departure UI can be read if they contain the
 required labels and observation window. This offline replay evaluates motion
 samples; it does not reproduce native delivery or the app's periodic timers.

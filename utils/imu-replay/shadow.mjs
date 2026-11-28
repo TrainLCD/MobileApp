@@ -34,6 +34,7 @@ export function evaluateShadow(Estimator, recording, legIndex) {
     throw new Error('Incomplete post-arrival window');
   const motion = [];
   let previous = entry.startedAtMs;
+  let lastNativeMs = Number.NEGATIVE_INFINITY;
   for (const row of recording.motion) {
     if (row.legIndex !== legIndex) continue;
     if (
@@ -43,7 +44,12 @@ export function evaluateShadow(Estimator, recording, legIndex) {
     )
       throw new Error('Invalid observation clock');
     previous = row.observedAtMs;
-    if (row.observedAtMs <= endMs) motion.push(row);
+    if (row.observedAtMs > endMs) continue;
+    const nativeMs = row.sample?.timeMs;
+    if (!Number.isFinite(nativeMs)) throw new Error('Invalid native sample time');
+    if (nativeMs <= lastNativeMs) continue;
+    lastNativeMs = nativeMs;
+    motion.push(row);
   }
   const config = {
     leg: entry.leg,

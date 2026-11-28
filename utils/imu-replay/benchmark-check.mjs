@@ -79,6 +79,7 @@ test('shadow replay scores receipt time, preserves native sample time and reject
     const c = { id: 'leg-1', group: 'ride', kind: 'synthetic', split: 'train', provenance: 'fixture', shadowFile: 'ride.json', legIndex: 0 };
     await writeFile(path, JSON.stringify(manifest(c)));
     assert.throws(() => validateManifest(manifest(c, {...c, id: 'b', legIndex: 1, group: 'other', split: 'test'})), /crosses splits/);
+    assert.throws(() => validateManifest(manifest({...c, traintrack: null})), /Invalid shadow case/);
     const recording = {
       schemaVersion: 1, mode: 'imu', endedAtMs: 30000,
       legs: [{startedAtMs: 10000, actualDepartureAtMs: 11000, leg: {fromId: 1, toId: 2, distanceM: 300, etaSeconds: null}}],
@@ -95,6 +96,25 @@ test('shadow replay scores receipt time, preserves native sample time and reject
       return (await runBenchmark(path, 'train', Stub, 'stub')).cases[0];
     };
     assert.equal((await run()).report.matchedCandidateErrorSeconds, 0.1);
+    const originalMotion = recording.motion;
+    recording.motion = originalMotion.map(row => ({...row, sample: originalMotion[0].sample}));
+    assert.match((await run()).error ?? '', /coverage is incomplete/);
+
+    recording.motion = [{...originalMotion[0], sample: {}}, ...originalMotion.slice(1)];
+    assert.match((await run()).error, /Invalid native sample time/);
+
+    recording.motion = originalMotion.slice();
+    // Distinct native samples can arrive together. Only stale native samples are skipped.
+    const burst = originalMotion[101];
+    recording.motion.splice(102, 0,
+      {...burst},
+      {...burst, sample: originalMotion[100].sample},
+      {...burst, sample: {timeMs: burst.sample.timeMs + 1}},
+    );
+    const batched = (await run()).report;
+    assert.equal(batched.sampleCount, originalMotion.length + 1);
+    assert.equal(batched.matchedCandidateErrorSeconds, 0.1);
+    recording.motion = originalMotion;
     recording.endedAtMs--;
     assert.match((await run()).error, /post-arrival/);
     recording.endedAtMs++;

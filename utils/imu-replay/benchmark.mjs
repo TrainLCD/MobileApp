@@ -28,7 +28,7 @@ export function validateManifest(manifest, root = '/') {
     ids.add(c.id);
     groups.set(c.group, c.split);
     if (c.shadowFile !== undefined) {
-      if (typeof c.shadowFile !== 'string' || !c.shadowFile.trim() || c.traintrack || c.directory || c.config ||
+      if (typeof c.shadowFile !== 'string' || !c.shadowFile.trim() || c.traintrack !== undefined || c.directory || c.config ||
           !Number.isSafeInteger(c.legIndex) || c.legIndex < 0) throw new Error('Invalid shadow case');
       const file = datasetPath(root, c.shadowFile);
       const key = JSON.stringify([file, c.legIndex]);

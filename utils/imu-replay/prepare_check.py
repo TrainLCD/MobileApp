@@ -35,6 +35,16 @@ class PrepareTests(unittest.TestCase):
         self.run_prepare()
         self.assertEqual(sorted(p.name for p in (self.root / 'ride').iterdir()), sorted(SENSORS))
 
+    def test_rejects_mixed_shadow_and_traintrack_before_extracting_any_split(self):
+        mixed = {**self.case, 'split': 'test', 'shadowFile': 'ride.json'}
+        with self.assertRaisesRegex(ValueError, 'shadowFile.*traintrack'):
+            self.run_prepare(mixed)
+        self.assertFalse((self.root / 'ride').exists())
+
+    def test_skips_shadow_only_case_without_a_directory(self):
+        self.run_prepare({'split': 'train', 'shadowFile': 'ride.json', 'legIndex': 0})
+        self.assertTrue((self.root / 'ride' / SENSORS[0]).is_file())
+
     def test_refuses_corrupt_archive(self):
         self.archive.write_bytes(b'corrupt')
         with self.assertRaisesRegex(ValueError, 'Checksum mismatch'):
