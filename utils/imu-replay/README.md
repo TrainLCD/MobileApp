@@ -41,3 +41,18 @@ JSON出力には到着候補の実到着時刻からの誤差、±10秒を基準
 - `replay-check.mjs` はCSV変換、同期、欠損、単位変換、評価をテストします。推定器はスタブを使っています。
 - 本番の `ImuShadowEstimator` に対する実行は上記CLIを使用します。
 - 実データの精度、バックグラウンド取得、消費電力、車両・端末間の一般化は対象外です。
+
+## 発車後のETAと低加速度で停車候補を探す
+
+手動の到着記録があるシャドーJSONから、既存の距離推定と、ETA付近で加速度が小さくなる時点を使う実験方式の候補時刻を比較できます。
+
+```bash
+node --experimental-transform-types utils/imu-replay/eta-quiet.mjs /path/to/imu-shadow.json
+node --experimental-transform-types --test utils/imu-replay/eta-quiet-check.mjs
+```
+
+発車時刻は既存のIMU推定器で求めます。実験方式では、重力除去済み加速度の大きさが0.2 m/s²を超えた後、0.2 m/s²以下の状態が3秒続いた時点を判定します。その時点が予想到着の前後30秒に入っていれば、候補を1件記録します。欠測や0.5秒を超えるセンサー時刻の空白で連続時間をリセットします。これらの値は比較用の仮設定です。
+
+区間別の `baseline` と `experiment` に、手動到着に対する候補の秒差を記録します。正は手動記録より後です。±10秒以内の候補を最大1件まで一致とし、残りを `falseCandidates`、10秒を超えて早いものを `earlyCandidates` に数えます。途中の信号停車と駅停車は加速度だけでは区別できません。
+
+`lastSampleRelativeToArrivalSeconds` は手動到着から最終サンプルまでの秒数です。10秒未満の区間では評価窓の後半を観測できないため、結果は記録範囲内の比較に限ります。到着ラベルのない区間や記録欠損も出力に残します。独立した実発車ラベルを必要とする正式なベンチマークは `BENCHMARK.md` の手順を使います。
