@@ -117,7 +117,12 @@ export type Recording = {
   endedAtMs: number | null;
   endReason: string | null;
   stops: RouteStop[];
-  legs: { startedAtMs: number; leg: Leg }[];
+  legs: {
+    startedAtMs: number;
+    leg: Leg;
+    actualDepartureAtMs?: number;
+    missingMotionSample?: boolean;
+  }[];
   motion: { observedAtMs: number; legIndex: number; sample: MotionSample }[];
   observations: {
     atMs: number;
