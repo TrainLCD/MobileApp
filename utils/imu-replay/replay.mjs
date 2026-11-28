@@ -69,7 +69,7 @@ export function* motionSamples(accel, gravity, gyro, config) {
   }
 }
 
-export function evaluate(Estimator, samples, config) {
+export function evaluate(Estimator, samples, config, observationTime = (sample) => config.startMs + sample.timeMs) {
   const { leg, startMs, endMs, departureMs, arrivalMs } = config;
   if (!leg || !(leg.distanceM > 0) || !Number.isFinite(leg.distanceM) ||
       (leg.etaSeconds !== null && !(Number.isFinite(leg.etaSeconds) && leg.etaSeconds > 0)) ||
@@ -87,7 +87,7 @@ export function evaluate(Estimator, samples, config) {
   let lastMs = null;
   let count = 0;
   for (const sample of samples) {
-    const timeMs = startMs + sample.timeMs;
+    const timeMs = observationTime(sample, count);
     firstMs ??= timeMs;
     lastMs = timeMs;
     count++;

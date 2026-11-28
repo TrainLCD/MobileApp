@@ -113,3 +113,31 @@ Open the repository with Codex or Claude Code and say:
 
 Do not claim a real-data result until a real manifest has been curated and run.
 This tooling does not automatically improve the algorithm on its own.
+
+## App shadow exports
+
+For a manually observed ride from the [shadow recording panel](../../docs/imu-shadow.md),
+use a case like the following in the same version 1 manifest. Place the export
+beside the manifest outside the repository. Add one case for each planned leg
+(zero-based index), and use the same split and group for all devices on a ride.
+
+```json
+{
+  "id": "ride-a-leg-0",
+  "group": "ride-a",
+  "split": "train",
+  "kind": "real",
+  "shadowFile": "ride-a.json",
+  "legIndex": 0,
+  "provenance": "Manual departure and arrival taps; recorded StationAPI track distance."
+}
+```
+
+Run the same batch and comparison commands as for CSVs. Before freezing the
+manifest, verify that the recorded distance is known and the train remained
+stopped for at least ten seconds after the arrival tap. The replay integrates
+the native sample timestamps and scores candidate times on the JS observation
+clock used by the taps. Automatic departures cannot supply ground truth.
+Exports from the older manual-departure UI can be read if they contain the
+required labels and observation window. This offline replay evaluates motion
+samples; it does not reproduce native delivery or the app's periodic timers.

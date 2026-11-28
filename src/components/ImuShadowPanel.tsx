@@ -114,6 +114,7 @@ export const ImuShadowPanel = () => {
     Recording['legs'][number]['leg'] | null
   >(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [departureMarked, setDepartureMarked] = useState(false);
   const [arrivalMarked, setArrivalMarked] = useState(false);
   const arrivalMarkedAtRef = useRef<number | null>(null);
   const departureRecordedRef = useRef(false);
@@ -315,6 +316,7 @@ export const ImuShadowPanel = () => {
         : []
     );
     arrivalMarkedAtRef.current = null;
+    setDepartureMarked(false);
     setArrivalMarked(false);
     setEstimate(estimatorRef.current?.snapshot() ?? null);
     setDisplayLeg(result.leg);
@@ -544,7 +546,9 @@ export const ImuShadowPanel = () => {
         // Keep the arrival observation window of the previous leg, then advance
         // from the independent user label, never from an IMU/ETA candidate.
         const markedAt = arrivalMarkedAtRef.current;
-        if (markedAt != null && atMs - markedAt >= 3000) {
+        const dwellMs =
+          recording.legs.at(-1)?.actualDepartureAtMs != null ? 10_000 : 3000;
+        if (markedAt != null && atMs - markedAt >= dwellMs) {
           if (!initializeLeg(recording, nextIndexRef.current)) {
             stopRef.current('terminal');
           }
@@ -573,6 +577,8 @@ export const ImuShadowPanel = () => {
           // Use the gravity-free acceleration timestamp on both platforms, never JS receipt time.
           const sample = readMotionSample(data);
           if (!sample) {
+            const leg = recording.legs.at(-1);
+            if (leg) leg.missingMotionSample = true;
             const value = estimator.invalidate(
               !data.acceleration || !data.accelerationIncludingGravity
                 ? 'missing-motion'
@@ -705,6 +711,30 @@ export const ImuShadowPanel = () => {
           </Typography>
         </View>
       </View>
+      {!collapsed &&
+        running &&
+        recordingRef.current?.mode === 'imu' &&
+        !arrivalMarked && (
+          <Action
+            text={
+              departureMarked
+                ? label('実発車を記録済み', 'Departure marked')
+                : label('評価用に実発車を記録', 'Mark departure for replay')
+            }
+            disabled={departureMarked}
+            onPress={() => {
+              const leg = recordingRef.current?.legs.at(-1);
+              if (
+                !leg ||
+                leg.actualDepartureAtMs != null ||
+                arrivalMarkedAtRef.current != null
+              )
+                return;
+              leg.actualDepartureAtMs = Date.now();
+              setDepartureMarked(true);
+            }}
+          />
+        )}
       {running && displayLeg && (
         <Action
           text={
