@@ -1,4 +1,5 @@
 import type { LocationObject } from 'expo-location';
+import type { DeviceMotionMeasurement } from 'expo-sensors';
 import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { LOCATION_TIME_INTERVAL } from '~/constants/location';
 import { getAccuracyBonus } from '~/utils/accuracyBonus';
@@ -124,7 +125,13 @@ export type Recording = {
     actualDepartureAtMs?: number;
     missingMotionSample?: boolean;
   }[];
-  motion: { observedAtMs: number; legIndex: number; sample: MotionSample }[];
+  motion: {
+    observedAtMs: number;
+    legIndex: number;
+    sample: MotionSample & {
+      rotationRate?: DeviceMotionMeasurement['rotationRate'];
+    };
+  }[];
   observations: {
     atMs: number;
     legIndex: number;

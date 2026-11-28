@@ -603,7 +603,7 @@ export const ImuShadowPanel = () => {
           recording.motion.push({
             observedAtMs: atMs,
             legIndex: recording.legs.length - 1,
-            sample,
+            sample: { ...sample, rotationRate: data.rotationRate },
           });
           const value = estimator.step(sample, receivedAtMs);
           recordDeparture(recording, atMs, value);

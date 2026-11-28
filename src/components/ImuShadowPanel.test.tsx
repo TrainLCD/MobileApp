@@ -5,7 +5,10 @@ import { createStore, Provider } from 'jotai';
 import { AppState, Platform } from 'react-native';
 import { type Station, TransportType } from '~/@types/graphql';
 import type { RouteStop } from '~/lib/imuShadow';
-import { getLastImuShadowRecording } from '~/lib/imuShadowRecording';
+import {
+  getLastImuShadowRecording,
+  serializeImuShadowRecording,
+} from '~/lib/imuShadowRecording';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
 import { autoModeEnabledAtom, headerStateAtom } from '~/store/atoms/navigation';
 import {
@@ -264,7 +267,12 @@ test('starts automatically at a known stopped station and advances after a singl
         mockReceive?.({
           acceleration: { x, y: 0, z: 0, timestamp },
           accelerationIncludingGravity: { x, y: 0, z: 9.81, timestamp },
-          rotationRate: { alpha: 35, beta: 0, gamma: 0, timestamp },
+          rotationRate: {
+            alpha: -35,
+            beta: 2,
+            gamma: -4,
+            timestamp: timestamp - 0.01,
+          },
         } as DeviceMotionMeasurement);
       });
     }
@@ -295,6 +303,14 @@ test('starts automatically at a known stopped station and advances after a singl
     expect(store.get(headerStateAtom)).toBe('NEXT_EN');
     expect(store.get(arrivedAtom)).toBe(true);
     const recording = getLastImuShadowRecording();
+    if (!recording) throw new Error('Expected an active shadow recording');
+    const exported = JSON.parse(serializeImuShadowRecording(recording));
+    expect(exported.motion[0].sample.rotationRate).toEqual({
+      alpha: -35,
+      beta: 2,
+      gamma: -4,
+      timestamp: 0.99,
+    });
     expect(
       recording?.events.filter((event) => event.kind === 'departure')
     ).toEqual([
