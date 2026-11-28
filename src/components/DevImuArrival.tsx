@@ -83,6 +83,7 @@ export const DevImuArrival = () => {
     timeMs: number | null;
     phase: StopTrialPhase;
     firstDepartureMs: number | null;
+    distanceInterrupted: boolean;
   } | null>(null);
   useEffect(() => {
     if (!rideMode) return;
@@ -173,6 +174,7 @@ export const DevImuArrival = () => {
             timeMs: null,
             phase: 'waiting' as StopTrialPhase,
             firstDepartureMs: null,
+            distanceInterrupted: false,
           };
     ride.target = target;
     session.current = ride;
@@ -211,6 +213,7 @@ export const DevImuArrival = () => {
             station: target,
             target: null,
             firstDepartureMs: null,
+            distanceInterrupted: false,
           };
         } else store.set(setUnlocatedImuStopAtom, context);
       } else if (phase == null) {
@@ -222,18 +225,19 @@ export const DevImuArrival = () => {
       }
     };
     if (shadow) {
-      return store.sub(recordedRidePhaseAtom, () => {
+      const applyRecordedPhase = () => {
         const change = store.get(recordedRidePhaseAtom);
         applyPhase(change?.phase ?? null, change?.timeMs ?? 0);
-      });
+      };
+      applyRecordedPhase();
+      return store.sub(recordedRidePhaseAtom, applyRecordedPhase);
     }
 
     let disposed = false;
     let started = false;
     let subscription: { remove(): void } | undefined;
     const start = async () => {
-      if (started || (!store.get(arrivedAtom) && ride.phase !== 'running'))
-        return;
+      if (started || (!store.get(arrivedAtom) && ride.timeMs == null)) return;
       started = true;
       try {
         const sensor = await loadImuShadowSensor();
@@ -253,12 +257,17 @@ export const DevImuArrival = () => {
           }
           if (disposed || !permission.granted) return;
         }
-        if (!store.get(arrivedAtom) && ride.phase !== 'running') return;
-        const estimator = leg.distanceM ? new ImuShadowEstimator(leg) : null;
+        if (!store.get(arrivedAtom) && ride.timeMs == null) {
+          started = false;
+          return;
+        }
+        let estimator =
+          leg.distanceM && !ride.distanceInterrupted
+            ? new ImuShadowEstimator(leg)
+            : null;
         const { ImuStopTrial: Trial } =
           require('~/lib/imuStopTrial') as typeof import('~/lib/imuStopTrial');
         ride.trial ??= new Trial();
-        let firstInput = true;
         sensor.setUpdateInterval(100);
         subscription = sensor.addListener((data) => {
           if (
@@ -283,19 +292,14 @@ export const DevImuArrival = () => {
             ride.timeMs != null &&
             sample.timeMs - ride.timeMs > MAX_GAP_SECONDS * 1000
           ) {
-            // A new subscription cannot carry a launch/stop across a break in motion.
+            // Lost distance cannot be recovered mid-leg. The stop trial can start over.
+            estimator = null;
+            ride.distanceInterrupted = true;
             store.set(setUnlocatedImuStopAtom, null);
             ride.trial = new Trial();
             ride.phase = 'waiting';
             ride.firstDepartureMs = null;
-            if (!firstInput) {
-              disposed = true;
-              subscription?.remove();
-              subscription = undefined;
-              return;
-            }
           }
-          firstInput = false;
           ride.timeMs = sample.timeMs;
           const decision = ride.trial?.step(sample);
           if (decision) applyPhase(decision.guardedRestart, decision.timeMs);

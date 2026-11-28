@@ -11,6 +11,12 @@ import numpy as np
 import running_baseline as base
 
 HERE = Path(__file__).resolve().parent
+EVENT_COLUMNS = ('cohort', 'track', 'leg', 'kind', 'confirmed', 'decision_s', 'arrival_offset_s',
+                 'magnetic_sd', 'magnetic_state', 'gyro_q90_deg_s', 'gyro_state', 'veto_evidence')
+PAIR_COLUMNS = ('cohort', 'track', 'leg', 'run_s', 'dwell_s', 'has_next_departure', *(
+    f'{arm}_{metric}' for arm in ('baseline', 'magnetic') for metric in (
+        'confirmed_stops_in_run', 'early_stop_lead_s', 'timely_stop_held_to_next_departure',
+        'dwell_result', 'first_stopped_s', 'running_in_run_s', 'running_in_dwell_s')))
 
 
 def read(path):
@@ -31,9 +37,9 @@ def route(name, directory, key, data, *, optional_field=False):
     return legs, base.read_field(field)
 
 
-def save(path, rows):
+def save(path, columns, rows):
     with path.open('w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=rows[0])
+        writer = csv.DictWriter(f, fieldnames=columns)
         writer.writeheader()
         writer.writerows(rows)
 
@@ -141,7 +147,8 @@ def compare_track(identity, samples, legs, evidence, models, baseline, revised):
         next_observed = i+1 < len(legs) and legs[i+1][1] <= clock[-1]
         end = legs[i+1][1] if next_observed else clock[-1]
         row = dict(**identity, leg=leg, run_s=round(arrival-departure, 3),
-                   dwell_s=round(end-arrival, 3), has_next_departure=int(next_observed))
+                   dwell_s=round(end-arrival, 3) if end > arrival else '',
+                   has_next_departure=int(next_observed))
         for label, events, spans in arms:
             state, decisions = score_leg(spans, events, departure, arrival, end, next_observed)
             row.update({f'{label}_{key}': value for key, value in state.items()})
@@ -214,8 +221,8 @@ def run(dataset, extra, output, check_domestic):
                 traces.extend(events)
                 paired.extend(rows)
     output.mkdir(exist_ok=True, parents=True)
-    save(output/'imu-magnetic-stop-events.csv', traces)
-    save(output/'imu-magnetic-stop-pairs.csv', paired)
+    save(output/'imu-magnetic-stop-events.csv', EVENT_COLUMNS, traces)
+    save(output/'imu-magnetic-stop-pairs.csv', PAIR_COLUMNS, paired)
 
 
 if __name__ == '__main__':

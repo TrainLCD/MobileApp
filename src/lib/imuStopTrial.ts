@@ -171,6 +171,10 @@ export class ImuStopTrial {
   private magnetic = new ConfirmedStop();
   private guardedRestart = new ConfirmedStop(true);
 
+  get lastMotionTimeMs() {
+    return this.previous?.timeMs ?? null;
+  }
+
   addField(timeMs: number, magnitude: number) {
     if (
       !Number.isFinite(timeMs) ||

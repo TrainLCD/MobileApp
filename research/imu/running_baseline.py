@@ -94,6 +94,8 @@ def train(entries, dataset):
         xx.extend(x[eligible])
         yy.extend(move[eligible])
         recordings.extend([recording]*eligible.sum())
+    if not xx:
+        raise ValueError('No eligible motion windows for training')
     x, y, keys = np.array(xx), np.array(yy), np.array(recordings)
     models = {}
     for n in (2, 3):

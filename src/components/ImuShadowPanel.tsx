@@ -543,6 +543,12 @@ export const ImuShadowPanel = () => {
       setTrialOutput(null);
       setTrialMotionFresh(false);
       let latestTrialMotion = Number.NEGATIVE_INFINITY;
+      let lastAcceptedTimeMs: number | null = null;
+      const clearTrialDisplay = () => {
+        latestTrialMotion = Number.NEGATIVE_INFINITY;
+        setTrialMotionFresh(false);
+        setTrialOutput(null);
+      };
       let lastGuidancePhase: StopTrialPhase = 'waiting';
       const recording: Recording = {
         schemaVersion: 1,
@@ -654,6 +660,7 @@ export const ImuShadowPanel = () => {
           // Use the gravity-free acceleration timestamp on both platforms, never JS receipt time.
           const sample = readMotionSample(data);
           if (!sample) {
+            clearTrialDisplay();
             const leg = recording.legs.at(-1);
             if (leg) leg.missingMotionSample = true;
             const value = estimator.invalidate(
@@ -669,15 +676,23 @@ export const ImuShadowPanel = () => {
             legIndex: recording.legs.length - 1,
             sample,
           });
-          const previousTime = recording.motion.at(-2)?.sample.timeMs;
-          if (
-            previousTime != null &&
-            sample.timeMs - previousTime > MAX_GAP_SECONDS * 1000
-          )
-            store.set(recordedRidePhaseAtom, null);
-          if (previousTime == null || sample.timeMs > previousTime)
+          const advances =
+            lastAcceptedTimeMs == null || sample.timeMs > lastAcceptedTimeMs;
+          const decision = advances ? trial.step(sample) : null;
+          if (advances && trial.lastMotionTimeMs === sample.timeMs) {
+            if (
+              lastAcceptedTimeMs != null &&
+              sample.timeMs - lastAcceptedTimeMs > MAX_GAP_SECONDS * 1000
+            ) {
+              lastGuidancePhase = 'waiting';
+              store.set(recordedRidePhaseAtom, null);
+              setTrialOutput(null);
+            }
             latestTrialMotion = receivedAtMs;
-          const decision = trial.step(sample);
+            lastAcceptedTimeMs = sample.timeMs;
+          } else if (advances) {
+            clearTrialDisplay();
+          }
           if (decision && trialLog) {
             if (decision.guardedRestart !== lastGuidancePhase) {
               lastGuidancePhase = decision.guardedRestart;

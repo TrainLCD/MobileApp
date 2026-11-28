@@ -76,9 +76,10 @@ it.each([
   { recording: true, hasRoute: true },
   { recording: false, hasRoute: false },
   { recording: true, hasRoute: false },
+  { recording: false, hasRoute: true, gap: true },
 ])(
   'uses guarded motion in station guidance (recording=$recording, ETA route=$hasRoute)',
-  async ({ recording, hasRoute }) => {
+  async ({ recording, hasRoute, gap }) => {
     const stops = [101, 102, 103].map(
       (id) => ({ id, line: { transportType: TransportType.Rail } }) as Station
     );
@@ -101,6 +102,8 @@ it.each([
     store.set(stationAtom, stops[0]);
     store.set(selectedBoundAtom, stops[2]);
     store.set(selectedDirectionAtom, 'INBOUND');
+    if (recording)
+      store.set(recordedRidePhaseAtom, { phase: 'running', timeMs: 1000 });
     const previous = AppState.currentState;
     AppState.currentState = 'active';
     let phase: StopTrialPhase = 'waiting';
@@ -143,15 +146,33 @@ it.each([
       await act(async () => {});
       if (recording) expect(mockListener).toBeUndefined();
       else expect(mockListener).toBeDefined();
-      await send('stop', 900);
-      expect(store.get(stationAtom)).toBe(stops[0]);
-      await send('running', 1000);
+      if (!recording) {
+        await send('stop', 900);
+        expect(store.get(stationAtom)).toBe(stops[0]);
+        await send('running', 1000);
+      }
       expect(store.get(displayArrivedAtom)).toBe(false);
       await send('stop', 5000);
       expect(store.get(stationAtom)).toBe(stops[0]);
       expect(view.getByText('Stopped · confirming station')).toBeTruthy();
       await send('running', 6000);
       expect(view.queryByText('Stopped · confirming station')).toBeNull();
+      if (gap) {
+        act(() => store.set(arrivedAtom, false));
+        lastTimeMs = 37000;
+        await send('stop', 37100);
+        expect(step.mock.lastCall?.[0].timeMs).toBe(37100);
+        expect(store.get(stationAtom)).toBe(stops[0]);
+        expect(view.queryByText('Stopped · confirming station')).toBeNull();
+        const listenerBeforeRefresh = mockListener;
+        await act(async () => store.set(stationsAtom, [...stops]));
+        expect(mockListener).not.toBe(listenerBeforeRefresh);
+        await send('running', 37200);
+        await send('stop', 73500);
+        expect(store.get(stationAtom)).toBe(stops[1]);
+        expect(new Set(step.mock.instances).size).toBe(2);
+        return;
+      }
       await send('stop', 37500);
       if (!hasRoute) {
         expect(store.get(stationAtom)).toBe(stops[0]);
@@ -283,16 +304,18 @@ it.each([
       if (freshFix)
         store.set(locationAtom, { timestamp: Date.now() } as LocationObject);
       act(() => sendSamples(sampleGap ? 170 : 150, 450));
-      if (sampleGap || (locked && !tracking)) {
+      if (sampleGap) {
+        expect(mockRemove).not.toHaveBeenCalled();
+        expect(store.get(displayArrivedAtom)).toBe(false);
+      }
+      if (locked && !tracking) {
         expect(mockRemove).toHaveBeenCalled();
         expect(store.get(displayArrivedAtom)).toBe(false);
-        if (locked) {
-          await act(async () => {
-            AppState.currentState = 'active';
-            DeviceEventEmitter.emit('change', 'active');
-          });
-          expect(store.get(displayArrivedAtom)).toBe(false);
-        }
+        await act(async () => {
+          AppState.currentState = 'active';
+          DeviceEventEmitter.emit('change', 'active');
+        });
+        expect(store.get(displayArrivedAtom)).toBe(false);
         expect(store.get(arrivedAtom)).toBe(true);
       }
       expect(store.get(stationAtom)).toBe(advances ? mockTarget : origin);
