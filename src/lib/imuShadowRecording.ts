@@ -4,6 +4,8 @@ import { LOCATION_TIME_INTERVAL } from '~/constants/location';
 import { getAccuracyBonus } from '~/utils/accuracyBonus';
 import type { Estimate, Leg, MotionSample, RouteStop } from './imuShadow';
 
+import type { StopTrialObservation } from './imuStopTrial';
+
 export type Mode = 'imu' | 'baseline';
 export type Reference = {
   stationId: number | null;
@@ -117,8 +119,21 @@ export type Recording = {
   endedAtMs: number | null;
   endReason: string | null;
   stops: RouteStop[];
-  legs: { startedAtMs: number; leg: Leg }[];
+  legs: {
+    startedAtMs: number;
+    leg: Leg;
+    actualDepartureAtMs?: number;
+    missingMotionSample?: boolean;
+  }[];
   motion: { observedAtMs: number; legIndex: number; sample: MotionSample }[];
+  stopTrial?: {
+    model: string;
+    field: { timeMs: number; magnitude: number }[];
+    decisions: (StopTrialObservation & {
+      observedAtMs: number;
+      legIndex: number;
+    })[];
+  };
   observations: {
     atMs: number;
     legIndex: number;

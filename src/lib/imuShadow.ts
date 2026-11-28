@@ -174,7 +174,7 @@ export const horizontalAcceleration = (sample: MotionSample): Vector | null => {
 };
 
 // These are deliberately conservative, uncalibrated PoC parameters, not vehicle specifications.
-const MAX_GAP_SECONDS = 0.5;
+export const MAX_GAP_SECONDS = 0.5;
 
 /** Native acceleration timestamps are seconds on both iOS and Android. */
 export const getMotionSampleTimeMs = (
@@ -184,12 +184,19 @@ export const getMotionSampleTimeMs = (
   const ms = seconds * 1000;
   return Number.isFinite(ms) ? ms : null;
 };
-const MAX_ROTATION_DEG_PER_SECOND = 15;
+export const MAX_ROTATION_DEG_PER_SECOND = 15;
 const MAX_HORIZONTAL_ACCEL = 2.5;
-const DEPARTURE_ACCEL = 0.3;
-const DEPARTURE_SECONDS = 1;
+export const DEPARTURE_ACCEL = 0.3;
+export const DEPARTURE_SECONDS = 1;
 const STOP_SECONDS = 2;
 const ETA_UPDATE_SECONDS = 10;
+
+export const hasReachedImuArrivalTime = (
+  etaSeconds: number | null,
+  elapsedSeconds: number | null
+) =>
+  etaSeconds == null ||
+  (elapsedSeconds != null && elapsedSeconds >= etaSeconds * 0.6);
 
 /**
  * One-dimensional constant-acceleration Kalman prediction with a deliberately weak ETA
@@ -271,8 +278,7 @@ export class ImuShadowEstimator {
         sigmaM <= tolerance &&
         Math.abs(length - this.x) <= tolerance &&
         Math.abs(length - this.imuX) <= tolerance &&
-        (eta == null ||
-          (elapsedSeconds != null && elapsedSeconds >= eta * 0.6)),
+        hasReachedImuArrivalTime(eta, elapsedSeconds),
     };
   }
 

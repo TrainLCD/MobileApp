@@ -1,0 +1,13 @@
+{
+  "startMs": 0,
+  "endMs": 54000,
+  "departureMs": 2000,
+  "arrivalMs": 42000,
+  "leg": {
+    "fromId": 1,
+    "toId": 2,
+    "distanceM": 300,
+    "etaSeconds": 43,
+    "missingPairs": []
+  }
+}
