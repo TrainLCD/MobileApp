@@ -17,6 +17,18 @@ test('manifest rejects duplicate cases and journey leakage', () => {
   assert.throws(() => validateManifest(manifest(sampleCase, { ...sampleCase, id: 'b', group: 'ride-2', split: 'test' })), /Recording crosses splits/);
 });
 
+test('directory aliases cannot bypass split or recording checks', () => {
+  const members = { 'Accelerometer.csv': 'a', 'Gravity.csv': 'g', 'Gyroscope.csv': 'w' };
+  const traintrack = { archive: 'traintrack_data_001.zip', innerZip: 'ride.zip', members };
+  const a = { ...sampleCase, traintrack };
+  const b = { ...sampleCase, id: 'b', group: 'ride-2', directory: './example' };
+  assert.throws(() => validateManifest(manifest(a, { ...b, split: 'test' })), /crosses splits/);
+  assert.throws(() => validateManifest(manifest(a, { ...b, traintrack: { ...traintrack, innerZip: 'other.zip' } })), /different recordings/);
+  assert.throws(() => validateManifest(manifest(a, b)), /different recordings/);
+  validateManifest(manifest(a, { ...b, traintrack: { ...traintrack, members: { 'Gyroscope.csv': 'w', 'Gravity.csv': 'g', 'Accelerometer.csv': 'a' } } }));
+  assert.throws(() => validateManifest(manifest(a, { ...b, traintrack, directory: 'elsewhere', split: 'test' })), /crosses splits/);
+});
+
 test('misses are penalized and null errors are not zero', () => {
   const summary = summarize([{ report: report(2) }, { report: report(null, { fusedDistanceErrorM: null }) }, { error: 'broken' }]);
   assert.equal(summary.inputFailures, 1);
