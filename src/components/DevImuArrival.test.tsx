@@ -7,6 +7,8 @@ import { rememberTrackDistances } from '~/lib/trackDistances';
 import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { stationForHeaderAtom } from '~/store/atoms/navigation';
 import {
+  arrivedAtom,
+  displayArrivedAtom,
   selectedBoundAtom,
   selectedDirectionAtom,
   stationAtom,
@@ -46,15 +48,21 @@ jest.mock('~/lib/imuShadowSensor', () => ({
 
 it.each([
   { locked: false, tracking: false, advances: true },
+  {
+    locked: false,
+    tracking: false,
+    advances: false,
+    lineType: LineType.Normal,
+  },
   { locked: true, tracking: true, advances: true },
   { locked: true, tracking: false, advances: false },
 ])(
-  'handles a complete subway stop (locked=$locked, tracking=$tracking)',
-  async ({ locked, tracking, advances }) => {
+  'handles departure and arrival (locked=$locked, tracking=$tracking, advances=$advances)',
+  async ({ locked, tracking, advances, lineType = LineType.Subway }) => {
     mockListener = undefined;
     mockRemove.mockClear();
     const store = createStore();
-    const origin = { id: 1, line: { lineType: LineType.Subway } } as Station;
+    const origin = { id: 1, line: { lineType } } as Station;
     store.set(backgroundLocationTrackingAtom, tracking);
     store.set(stationAtom, origin);
     store.set(stationsAtom, [origin, mockTarget]);
@@ -94,6 +102,10 @@ it.each([
         expect(mockRemove).not.toHaveBeenCalled();
         sendSamples(0, 149);
       });
+      if (lineType === LineType.Normal)
+        expect(mockRemove).toHaveBeenCalledTimes(1);
+      expect(store.get(displayArrivedAtom)).toBe(false);
+      expect(store.get(arrivedAtom)).toBe(true);
       if (locked) {
         act(() => {
           AppState.currentState = 'background';

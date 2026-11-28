@@ -25,7 +25,7 @@ jest.mock('../store/atoms/navigation', () => ({
 jest.mock('../store/atoms/station', () => ({
   __esModule: true,
   default: 'STATION_ATOM',
-  arrivedAtom: 'ARRIVED_ATOM',
+  displayArrivedAtom: 'ARRIVED_ATOM',
   approachingAtom: 'APPROACHING_ATOM',
   selectedBoundAtom: 'SELECTED_BOUND_ATOM',
 }));

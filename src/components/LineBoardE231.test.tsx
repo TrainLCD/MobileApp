@@ -72,7 +72,7 @@ describe('LineBoardE231', () => {
   const { useAtomValue } = require('jotai');
   const { useCurrentLine, useDisplayCurrentStation } = require('~/hooks');
   const { selectedLineAtom } = require('~/store/atoms/line');
-  const { arrivedAtom } = require('~/store/atoms/station');
+  const { displayArrivedAtom } = require('~/store/atoms/station');
   const { isEnAtom } = require('~/store/selectors/isEn');
 
   const mockLine: Line = {
@@ -99,7 +99,7 @@ describe('LineBoardE231', () => {
 
   beforeEach(() => {
     useAtomValue.mockImplementation((a: unknown) => {
-      if (a === arrivedAtom) return true;
+      if (a === displayArrivedAtom) return true;
       if (a === selectedLineAtom) return null;
       if (a === isEnAtom) return false;
       return undefined;

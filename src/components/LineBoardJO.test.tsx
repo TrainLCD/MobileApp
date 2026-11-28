@@ -122,12 +122,12 @@ describe('LineBoardJO', () => {
     } as unknown as Station,
   ];
 
-  // arrivedAtom/selectedLineAtomとその他のatomで返す値を分けるディスパッチ型モック
+  // displayArrivedAtom/selectedLineAtomとその他のatomで返す値を分けるディスパッチ型モック
   const mockAtoms = (arrived: boolean, selectedLine: Line | null) => {
-    const { arrivedAtom } = require('~/store/atoms/station');
+    const { displayArrivedAtom } = require('~/store/atoms/station');
     const { selectedLineAtom } = require('~/store/atoms/line');
     useAtomValue.mockImplementation((a: unknown) => {
-      if (a === arrivedAtom) return arrived;
+      if (a === displayArrivedAtom) return arrived;
       if (a === selectedLineAtom) return selectedLine;
       return { selectedLine };
     });

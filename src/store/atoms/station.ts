@@ -1,7 +1,12 @@
-import { atom, type Getter } from 'jotai';
+import { atom, type ExtractAtomValue, type Getter } from 'jotai';
 import type { SetStateAction } from 'react';
 import type { Station } from '~/@types/graphql';
+import type { Leg } from '~/lib/imuShadow';
+import type { HeaderTransitionState } from '~/models/HeaderTransitionState';
+import { isBusLine } from '~/utils/line';
 import type { LineDirection } from '../../models/Bound';
+import { manualStationCorrectionAtom } from './manualStationCorrection';
+import { autoModeEnabledAtom, headerStateAtom } from './navigation';
 
 export interface StationState {
   arrived: boolean;
@@ -30,6 +35,86 @@ export const selectedDirectionAtom = atom<LineDirection | null>(null);
 export const selectedBoundAtom = atom<Station | null>(null);
 export const wantedDestinationAtom = atom<Station | null>(null);
 
+// Only the ride display uses the IMU hint. GPS, ETA anchors and shadow
+// recordings continue to observe arrivedAtom independently.
+const displayDepartureAtom = atom<{
+  leg: Leg;
+  origin: Station;
+  bound: Station;
+  stations: Station[];
+  direction: LineDirection;
+  correction: ExtractAtomValue<typeof manualStationCorrectionAtom>;
+} | null>(null);
+
+export const displayArrivedAtom = atom((get) => {
+  if (!get(arrivedAtom)) return false;
+  const departure = get(displayDepartureAtom);
+  return (
+    !departure ||
+    get(stationAtom) !== departure.origin ||
+    get(selectedBoundAtom) !== departure.bound ||
+    get(selectedDirectionAtom) !== departure.direction ||
+    get(stationsAtom) !== departure.stations ||
+    get(manualStationCorrectionAtom) !== departure.correction ||
+    get(autoModeEnabledAtom)
+  );
+});
+
+export const showImuDepartureAtom = atom(
+  null,
+  (
+    get,
+    set,
+    {
+      leg,
+      originGroupId,
+      stations,
+      bound,
+      direction,
+    }: {
+      leg: Leg;
+      originGroupId?: number | null;
+      stations: Station[];
+      bound: Station | null;
+      direction: LineDirection | null;
+    }
+  ) => {
+    const origin = get(stationAtom);
+    if (
+      !get(arrivedAtom) ||
+      !origin ||
+      !bound ||
+      !direction ||
+      get(autoModeEnabledAtom) ||
+      isBusLine(origin.line) ||
+      stations !== get(stationsAtom) ||
+      bound !== get(selectedBoundAtom) ||
+      direction !== get(selectedDirectionAtom) ||
+      (origin.id !== leg.fromId &&
+        (originGroupId == null || origin.groupId !== originGroupId))
+    )
+      return;
+    set(displayDepartureAtom, {
+      leg,
+      origin,
+      bound,
+      stations,
+      direction,
+      correction: get(manualStationCorrectionAtom),
+    });
+    // Switch the station name immediately, even midway through a language cycle.
+    set(
+      headerStateAtom,
+      (previous) =>
+        previous.replace(/^CURRENT/, 'NEXT') as HeaderTransitionState
+    );
+  }
+);
+
+export const clearImuDepartureAtom = atom(null, (get, set, leg: Leg) => {
+  if (get(displayDepartureAtom)?.leg === leg) set(displayDepartureAtom, null);
+});
+
 const readStationState = (get: Getter): StationState => ({
   arrived: get(arrivedAtom),
   approaching: get(approachingAtom),
@@ -52,6 +137,10 @@ const stationState = atom(
   (get, set, update: SetStateAction<StationState>) => {
     const prev = readStationState(get);
     const next = typeof update === 'function' ? update(prev) : update;
+    // Once positioning takes over, a later stop at the same station is a new visit.
+    if (prev.arrived !== next.arrived || prev.station !== next.station) {
+      set(displayDepartureAtom, null);
+    }
     if (!Object.is(prev.arrived, next.arrived)) {
       set(arrivedAtom, next.arrived);
     }

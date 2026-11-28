@@ -32,7 +32,7 @@ const {
   useTransferLinesFromStation,
 } = require('~/hooks');
 const { headerStateAtom } = require('~/store/atoms/navigation');
-const { arrivedAtom } = require('~/store/atoms/station');
+const { displayArrivedAtom } = require('~/store/atoms/station');
 const { isEnAtom } = require('~/store/selectors/isEn');
 
 const makeStation = (id: number, name: string, nameRoman: string): Station =>
@@ -61,7 +61,7 @@ const setAtomValues = ({
   isEn?: boolean;
 } = {}) => {
   useAtomValue.mockImplementation((atom: unknown) => {
-    if (atom === arrivedAtom) return arrived;
+    if (atom === displayArrivedAtom) return arrived;
     if (atom === headerStateAtom) return headerState;
     if (atom === isEnAtom) return isEn;
     return undefined;

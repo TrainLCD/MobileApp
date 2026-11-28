@@ -12,7 +12,7 @@ import {
   useTransferLines,
 } from '~/hooks';
 import { selectedLineAtom } from '~/store/atoms/line';
-import { arrivedAtom } from '~/store/atoms/station';
+import { displayArrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
 import getIsPass from '~/utils/isPass';
 import PadArch from './PadArch';
@@ -22,7 +22,7 @@ interface Props {
 }
 
 const LineBoardYamanotePad: React.FC<Props> = ({ stations }: Props) => {
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const station = useDisplayCurrentStation();
   const selectedLine = useAtomValue(selectedLineAtom);

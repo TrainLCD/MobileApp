@@ -69,7 +69,7 @@ import {
   enabledLanguagesAtom,
 } from '~/store/atoms/navigation';
 import {
-  arrivedAtom,
+  displayArrivedAtom,
   selectedDirectionAtom,
   stationsAtom,
 } from '~/store/atoms/station';
@@ -1383,7 +1383,7 @@ const PortraitMain: React.FC<Props> = ({ onPress, onTransferPress }) => {
   const allStations = useAtomValue(stationsAtom);
   const selectedDirection = useAtomValue(selectedDirectionAtom);
   const currentStation = useCurrentStation();
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   const currentLine = useCurrentLine();
   const trainType = useCurrentTrainType();
   const { isLoopLine } = useLoopLine();

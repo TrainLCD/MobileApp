@@ -20,11 +20,14 @@ import { backgroundLocationTrackingAtom } from '~/store/atoms/location';
 import { autoModeEnabledAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
+  clearImuDepartureAtom,
   selectedBoundAtom,
   selectedDirectionAtom,
+  showImuDepartureAtom,
   stationAtom,
   stationsAtom,
 } from '~/store/atoms/station';
+import { isBusLine } from '~/utils/line';
 
 export const DevImuArrival = () => {
   const nativeMotion = useMemo(
@@ -49,21 +52,31 @@ export const DevImuArrival = () => {
   const active = useIsAppActive();
   const focused = useIsFocused();
   const tracking = useAtomValue(backgroundLocationTrackingAtom);
-  const enabled =
-    focused &&
-    (active || (tracking && supportsBackground)) &&
-    !simulation &&
-    !shadow &&
+  const subwayLeg =
     origin?.line?.lineType === LineType.Subway &&
     target?.line?.lineType === LineType.Subway;
+  const enabled =
+    focused &&
+    !simulation &&
+    !shadow &&
+    !!origin?.line &&
+    !!target?.line &&
+    !isBusLine(origin.line) &&
+    !isBusLine(target.line) &&
+    (active || (subwayLeg && tracking && supportsBackground));
   const { route } = useEstimateArrivalTimesRoute({ skip: !enabled });
 
   useEffect(() => {
-    if (!enabled || !tracking || !nativeMotion?.setRideBackgroundEnabled)
+    if (
+      !enabled ||
+      !subwayLeg ||
+      !tracking ||
+      !nativeMotion?.setRideBackgroundEnabled
+    )
       return;
     nativeMotion.setRideBackgroundEnabled(true);
     return () => nativeMotion.setRideBackgroundEnabled?.(false);
-  }, [enabled, tracking, nativeMotion]);
+  }, [enabled, subwayLeg, tracking, nativeMotion]);
 
   useEffect(() => {
     if (
@@ -116,6 +129,7 @@ export const DevImuArrival = () => {
         }
         if (!store.get(arrivedAtom)) return;
         const estimator = new ImuShadowEstimator(leg);
+        let departureDetected = false;
         let lastSampleTime = Number.NEGATIVE_INFINITY;
         sensor.setUpdateInterval(100);
         subscription = sensor.addListener((data) => {
@@ -123,7 +137,9 @@ export const DevImuArrival = () => {
             disposed ||
             (AppState.currentState !== 'active' &&
               !(
-                supportsBackground && store.get(backgroundLocationTrackingAtom)
+                subwayLeg &&
+                supportsBackground &&
+                store.get(backgroundLocationTrackingAtom)
               ))
           )
             return;
@@ -138,11 +154,21 @@ export const DevImuArrival = () => {
             return;
           lastSampleTime = sample.timeMs;
           const value = estimator.step(sample, performance.now());
-          if (value.phase === 'invalid') {
+          if (!departureDetected && value.phase === 'accelerating') {
+            departureDetected = true;
+            store.set(showImuDepartureAtom, {
+              leg,
+              originGroupId: origin.groupId,
+              stations,
+              direction,
+              bound,
+            });
+          }
+          if (value.phase === 'invalid' || (departureDetected && !subwayLeg)) {
             subscription?.remove();
             subscription = undefined;
           }
-          if (value.arrivalCandidate) {
+          if (subwayLeg && value.arrivalCandidate) {
             store.set(applyImuArrivalAtom, {
               origin,
               target,
@@ -167,6 +193,7 @@ export const DevImuArrival = () => {
     return () => {
       appStateSubscription.remove();
       disposed = true;
+      store.set(clearImuDepartureAtom, leg);
       unsubscribe();
       subscription?.remove();
     };
@@ -180,6 +207,7 @@ export const DevImuArrival = () => {
     stations,
     store,
     supportsBackground,
+    subwayLeg,
   ]);
   return null;
 };

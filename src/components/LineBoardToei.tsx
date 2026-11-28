@@ -14,7 +14,7 @@ import {
 } from '~/hooks';
 import { useScale } from '~/hooks/useScale';
 import { enabledLanguagesAtom } from '~/store/atoms/navigation';
-import { arrivedAtom } from '~/store/atoms/station';
+import { displayArrivedAtom } from '~/store/atoms/station';
 import { isEnAtom } from '~/store/selectors/isEn';
 import getStationNameR from '~/utils/getStationNameR';
 import { RFValue } from '~/utils/rfValue';
@@ -403,7 +403,7 @@ const StationNameCellBase: React.FC<StationNameCellProps> = ({
   estimatedMinutes,
   boardPaddingBottom,
 }: StationNameCellProps) => {
-  const arrived = useAtomValue(arrivedAtom);
+  const arrived = useAtomValue(displayArrivedAtom);
   // 現在地基準の現在駅(到着取りこぼし時はヘッダーの「まもなく」と一致する側へ自己修復)
   const currentStation = useLineBoardCurrentStation();
   const isEn = useAtomValue(isEnAtom);
