@@ -46,7 +46,7 @@ const displayDepartureAtom = atom<{
 } | null>(null);
 
 // A refetch can replace all station objects while preserving the same service.
-const sameRouteStation = (a: Station | null, b: Station | null) =>
+export const sameRouteStation = (a: Station | null, b: Station | null) =>
   a === b ||
   (a?.id != null &&
     a.id === b?.id &&
@@ -55,7 +55,7 @@ const sameRouteStation = (a: Station | null, b: Station | null) =>
     a.line?.transportType === b.line?.transportType &&
     a.trainType?.groupId === b.trainType?.groupId &&
     a.stopCondition === b.stopCondition);
-const sameRouteStops = (a: Station[], b: Station[]) =>
+export const sameRouteStops = (a: Station[], b: Station[]) =>
   a === b ||
   (a.length === b.length &&
     a.every((station, i) => sameRouteStation(station, b[i])));

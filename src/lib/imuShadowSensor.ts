@@ -24,3 +24,16 @@ export const readMotionSample = (
     rotation: data.rotation,
   };
 };
+
+export const subscribeImuTrialField = async (
+  receive: (timeMs: number, magnitude: number) => void,
+  isActive: () => boolean
+) => {
+  const { Magnetometer } = await import('expo-sensors');
+  if (!(await Magnetometer.isAvailableAsync()) || !isActive()) return null;
+  Magnetometer.setUpdateInterval(100);
+  return Magnetometer.addListener(({ timestamp, x, y, z }) => {
+    const t = getMotionSampleTimeMs(timestamp);
+    if (t != null) receive(t, Math.hypot(x, y, z));
+  });
+};

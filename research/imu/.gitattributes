@@ -1,0 +1,2 @@
+# Keep byte-for-byte comparisons with the replay tools' CSV output portable.
+*.csv -text whitespace=cr-at-eol

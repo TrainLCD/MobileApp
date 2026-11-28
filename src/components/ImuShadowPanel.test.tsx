@@ -7,6 +7,7 @@ import { type Station, TransportType } from '~/@types/graphql';
 import type { RouteStop } from '~/lib/imuShadow';
 import { getLastImuShadowRecording } from '~/lib/imuShadowRecording';
 import { etaAnchorAtom } from '~/store/atoms/etaFallback';
+import { recordedRidePhaseAtom } from '~/store/atoms/imuShadow';
 import { autoModeEnabledAtom, headerStateAtom } from '~/store/atoms/navigation';
 import {
   arrivedAtom,
@@ -20,6 +21,8 @@ import { exportImuShadow } from '~/utils/exportImuShadow';
 import { ImuShadowPanel } from './ImuShadowPanel';
 
 let mockReceive: ((data: DeviceMotionMeasurement) => void) | undefined;
+let mockField: ((timeMs: number, magnitude: number) => void) | undefined;
+const mockRemoveField = jest.fn();
 let mockLoadGate: Promise<void> | undefined;
 const mockIsAvailable = jest.fn(async () => true);
 const mockRequestPermissions = jest.fn(async () => ({ granted: true }));
@@ -27,6 +30,10 @@ let mockRouteStops: RouteStop[] | undefined;
 
 jest.mock('~/lib/imuShadowSensor', () => ({
   ...jest.requireActual('~/lib/imuShadowSensor'),
+  subscribeImuTrialField: async (receive: typeof mockField) => {
+    mockField = receive;
+    return { remove: mockRemoveField };
+  },
   loadImuShadowSensor: async () => {
     if (mockLoadGate) await mockLoadGate;
     return {
@@ -738,3 +745,122 @@ test.each(['observed-origin', 'stations-list', 'other-group'] as const)(
     }
   }
 );
+
+test('trial decisions and manual labels share the existing DO recording and export', async () => {
+  const previousState = AppState.currentState;
+  AppState.currentState = 'active';
+  mockWriteRecording.mockClear();
+  mockRemoveField.mockClear();
+  const screen = render(
+    <Provider store={createStore()}>
+      <ImuShadowPanel />
+    </Provider>
+  );
+  try {
+    await act(async () => {
+      fireEvent.press(screen.getByText('Record IMU'));
+    });
+    fireEvent.press(screen.getByText('Mark departure for replay'));
+    act(() => {
+      for (let i = 0; i <= 260; i++) {
+        const timestamp = i / 10 + 1;
+        const x = i >= 20 && i < 40 ? 0.5 : 0;
+        mockField?.(timestamp * 1000, 20 + (i % 2) * 12);
+        mockReceive?.({
+          acceleration: { x, y: 0, z: 0, timestamp },
+          accelerationIncludingGravity: { x, y: 0, z: 9.81, timestamp },
+          rotationRate: { alpha: 0, beta: 0, gamma: 0, timestamp },
+        } as DeviceMotionMeasurement);
+      }
+    });
+    expect(screen.getByText('Stop detector comparison')).toBeTruthy();
+    expect(screen.getByText(/Restart check/)).toBeTruthy();
+    fireEvent.press(screen.getByText('Actual next arrival'));
+    await act(async () => {
+      fireEvent.press(screen.getByText('Finish & export'));
+    });
+    const exported = JSON.parse(mockWriteRecording.mock.calls[0][0]);
+    expect(exported.legs[0].actualDepartureAtMs).toEqual(expect.any(Number));
+    expect(
+      exported.events.some((e: { kind: string }) => e.kind === 'arrival')
+    ).toBe(true);
+    expect(exported.stopTrial.decisions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          legIndex: 0,
+          observedAtMs: expect.any(Number),
+          guardedRestart: expect.any(String),
+          vetoEvidence: true,
+        }),
+      ])
+    );
+    expect(exported.stopTrial.field).toHaveLength(261);
+    expect(mockRemoveField).toHaveBeenCalled();
+  } finally {
+    screen.unmount();
+    AppState.currentState = previousState;
+  }
+});
+
+test('republishes running after a gap and clears stale comparison results on missing rotation', async () => {
+  jest.useFakeTimers();
+  const previousState = AppState.currentState;
+  AppState.currentState = 'active';
+  let receipt = 0;
+  const clock = jest
+    .spyOn(performance, 'now')
+    .mockImplementation(() => receipt);
+  const store = createStore();
+  const phases: (string | null)[] = [];
+  const unsubscribe = store.sub(recordedRidePhaseAtom, () =>
+    phases.push(store.get(recordedRidePhaseAtom)?.phase ?? null)
+  );
+  const screen = render(
+    <Provider store={store}>
+      <ImuShadowPanel />
+    </Provider>
+  );
+  const receive = (i: number, hasRotation = true) => {
+    const timestamp = i / 10;
+    receipt = i * 100;
+    const x = i < 35 ? 0.5 : 0;
+    mockField?.(receipt, 20 + (i % 2) * 12);
+    mockReceive?.({
+      acceleration: { x, y: 0, z: 0, timestamp },
+      accelerationIncludingGravity: { x, y: 0, z: 9.81, timestamp },
+      rotationRate: hasRotation
+        ? { alpha: 0, beta: 0, gamma: 0, timestamp }
+        : null,
+    } as DeviceMotionMeasurement);
+  };
+  try {
+    await act(async () => fireEvent.press(screen.getByText('Record IMU')));
+    act(() => {
+      for (let i = 10; i <= 35; i++) receive(i);
+    });
+    expect(phases).toEqual(['running']);
+    act(() => receive(50));
+    expect(store.get(recordedRidePhaseAtom)).toBeNull();
+    act(() => {
+      for (let i = 51; i <= 310; i++) receive(i);
+      jest.advanceTimersByTime(1000);
+    });
+    expect(phases.slice(0, 3)).toEqual(['running', null, 'running']);
+    expect(screen.getByText(/Field variation/)).toBeTruthy();
+    act(() => receive(311));
+    expect(screen.getByText(/Field variation/)).toBeTruthy();
+    act(() => receive(312, false));
+    expect(screen.getByText('Waiting for motion')).toBeTruthy();
+    act(() => {
+      receive(313);
+      jest.advanceTimersByTime(1000);
+    });
+    expect(screen.getByText('Waiting for stop score')).toBeTruthy();
+  } finally {
+    unsubscribe();
+    screen.unmount();
+    clock.mockRestore();
+    AppState.currentState = previousState;
+    jest.useRealTimers();
+  }
+});

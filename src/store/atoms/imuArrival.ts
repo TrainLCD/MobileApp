@@ -1,4 +1,4 @@
-import { atom } from 'jotai';
+import { atom, type Getter } from 'jotai';
 import type { Station } from '~/@types/graphql';
 import { LOCATION_TIME_INTERVAL } from '~/constants/location';
 import type { LineDirection } from '~/models/Bound';
@@ -40,11 +40,10 @@ export const holdingImuArrivalAtom = atom((get) => {
   );
 });
 
-export const applyImuArrivalAtom = atom(null, (get, set, ctx: LegContext) => {
+const mayUseImu = (get: Getter, ctx: LegContext, atMs: number) => {
   const fix = get(locationAtom);
-  const arrivedAtMs = Date.now();
   const correction = get(manualStationCorrectionAtom);
-  if (
+  return !(
     get(autoModeEnabledAtom) ||
     get(stationAtom) !== ctx.origin ||
     get(stationsAtom) !== ctx.stations ||
@@ -53,12 +52,17 @@ export const applyImuArrivalAtom = atom(null, (get, set, ctx: LegContext) => {
     (correction &&
       correction.location === fix &&
       correction.stations === ctx.stations) ||
-    (fix && arrivedAtMs - fix.timestamp <= LOCATION_TIME_INTERVAL)
-  )
-    return;
+    (fix && atMs - fix.timestamp <= LOCATION_TIME_INTERVAL)
+  );
+};
+
+export const applyImuArrivalAtom = atom(null, (get, set, ctx: LegContext) => {
+  const arrivedAtMs = Date.now();
+  if (!mayUseImu(get, ctx, arrivedAtMs)) return false;
   set(lastArrivalAtom, { ...ctx, arrivedAtMs });
   set(stationAtom, ctx.target);
   set(approachingAtom, false);
   set(arrivedAtom, true);
   set(stationForHeaderAtom, ctx.target);
+  return true;
 });
