@@ -42,15 +42,24 @@ export function* motionSamples(accel, gravity, gyro, config) {
   const gravityAt = causalLookup(gravity);
   const gyroAt = causalLookup(gyro);
   let nextMs = startMs;
-  for (const a of accel) {
-    if (a.timeMs < nextMs || a.timeMs > endMs) continue;
+  let lastEmittedMs = null;
+  for (const [index, a] of accel.entries()) {
+    if (a.timeMs < startMs || a.timeMs > endMs) continue;
+    const next = accel[index + 1];
+    // Keep a boundary sample if dropping it would introduce a sensor gap.
+    if (
+      a.timeMs < nextMs &&
+      !(lastEmittedMs !== null && next && next.timeMs <= endMs &&
+        next.timeMs - lastEmittedMs > 500)
+    ) continue;
     const g = gravityAt(a.timeMs);
     const w = gyroAt(a.timeMs);
     if (!g || !w || a.timeMs - g.timeMs > maxSkewMs || a.timeMs - w.timeMs > maxSkewMs) {
       throw new Error(`Missing synchronized gravity/gyro at ${a.timeMs} ms`);
     }
     // Preserve actual sample time; do not interpolate gaps or invent stationary data.
-    nextMs = startMs + (Math.floor((a.timeMs - startMs) / intervalMs) + 1) * intervalMs;
+    nextMs = Math.max(nextMs, startMs + (Math.floor((a.timeMs - startMs) / intervalMs) + 1) * intervalMs);
+    lastEmittedMs = a.timeMs;
     yield {
       timeMs: a.timeMs - startMs,
       acceleration: { x: a.x, y: a.y, z: a.z },
