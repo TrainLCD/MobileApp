@@ -13,7 +13,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { Provider, useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 // biome-ignore lint/style/noRestrictedImports: Configure native Text defaults globally, including third-party components; Typography cannot configure those defaults.
-import { Platform, StatusBar, Text } from 'react-native';
+import { Platform, Text } from 'react-native';
 import { SystemBars } from 'react-native-edge-to-edge';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CommonDialogPresenter from './components/CommonDialogPresenter';
@@ -41,6 +41,8 @@ const Stack = createNativeStackNavigator();
 
 const screenOptions: NativeStackNavigationOptions = {
   headerShown: false,
+  // iOS のシーンでは、表示中の画面がステータスバーの表示を制御する。
+  statusBarHidden: Platform.select({ ios: true }),
 };
 const options: NativeStackNavigationOptions = {
   animation: 'none' as const,
@@ -103,11 +105,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      {Platform.OS === 'ios' ? (
-        <StatusBar hidden />
-      ) : (
-        <SystemBars hidden style="auto" />
-      )}
+      {Platform.OS !== 'ios' && <SystemBars hidden style="auto" />}
 
       <Stack.Navigator screenOptions={screenOptions}>
         {!permStatus?.granted ? (
