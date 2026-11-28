@@ -3,6 +3,7 @@ import isPointWithinRadius from 'geolib/es/isPointWithinRadius';
 import { LOCATION_TIME_INTERVAL } from '~/constants/location';
 import { getAccuracyBonus } from '~/utils/accuracyBonus';
 import type { Estimate, Leg, MotionSample, RouteStop } from './imuShadow';
+import { compareSpeedDistance } from './imuSpeedDistance';
 
 export type Mode = 'imu' | 'baseline';
 export type Reference = {
@@ -221,6 +222,13 @@ export const getLegComparison = (recording: Recording, legIndex: number) => {
       etaDetection && arrival
         ? (etaDetection.atMs - arrival.atMs) / 1000
         : null,
+    speedDistanceComparison: compareSpeedDistance(
+      leg,
+      observations,
+      departure?.atMs ?? null,
+      arrival?.atMs ?? null,
+      LOCATION_TIME_INTERVAL
+    ),
     gpsArrivalAtMs: gpsDetection?.atMs ?? null,
     gpsErrorSeconds:
       gpsDetection && arrival

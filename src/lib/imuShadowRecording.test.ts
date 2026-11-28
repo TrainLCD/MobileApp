@@ -223,3 +223,74 @@ test('exposes the source of an inferred departure, rather than labeling it groun
     etaErrorSeconds: -5,
   });
 });
+
+test('scores accepted speed fixes without using a manual arrival to trigger a candidate', () => {
+  const recording = makeRecording();
+  recording.legs[0].leg.distanceM = 50;
+  recording.events.push(event(0, 'departure'));
+  const observe = (
+    atMs: number,
+    timeMs: number,
+    speed: number,
+    stationId: number | null = null
+  ) => {
+    recording.observations.push({
+      atMs,
+      legIndex: 0,
+      estimate: null,
+      reference: {
+        ...reference,
+        rawLocationTimeMs: timeMs,
+        filteredLocationTimeMs: timeMs,
+        rawSpeedMps: speed,
+        locationArrivalStationId: stationId,
+      },
+    });
+  };
+  observe(0, 0, 10);
+  observe(3000, 0, 10);
+  observe(5000, 5000, 10);
+  observe(5100, 5100, 0, 1); // still at the origin
+  observe(5200, 5200, 0, 3); // destination alias
+  expect(getLegComparison(recording, 0)?.speedDistanceComparison).toEqual({
+    candidateAtMs: 5200,
+    distanceAtLabelM: null,
+    coveredAtLabelMs: null,
+  });
+  recording.events.push(event(5090, 'arrival'));
+  expect(getLegComparison(recording, 0)?.speedDistanceComparison).toEqual({
+    candidateAtMs: 5200,
+    distanceAtLabelM: 50,
+    coveredAtLabelMs: 5000,
+  });
+});
+
+test('does not bridge missing speeds, rejected fixes or long gaps', () => {
+  const recording = makeRecording();
+  recording.events.push(event(0, 'departure'), event(40000, 'arrival'));
+  for (const [time, speed, accepted] of [
+    [0, 10, true],
+    [1000, -1, true],
+    [2000, 10, true],
+    [3000, 10, false],
+    [4000, 10, true],
+    [20000, 10, true],
+  ] as const) {
+    recording.observations.push({
+      atMs: time,
+      legIndex: 0,
+      estimate: null,
+      reference: {
+        ...reference,
+        rawLocationTimeMs: time,
+        filteredLocationTimeMs: accepted ? time : null,
+        rawSpeedMps: speed,
+      },
+    });
+  }
+  expect(getLegComparison(recording, 0)?.speedDistanceComparison).toEqual({
+    candidateAtMs: null,
+    distanceAtLabelM: null,
+    coveredAtLabelMs: null,
+  });
+});
