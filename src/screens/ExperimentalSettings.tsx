@@ -217,6 +217,17 @@ const ExperimentalSettingsScreen: React.FC = () => {
     }
   }, [tuning.telemetryEnabled, setTuning]);
 
+  const handleToggleImuShadow = () => {
+    const enabled = !imuShadowEnabled;
+    try {
+      storage.set(STORAGE_KEYS.IMU_SHADOW_ENABLED, String(enabled));
+      setImuShadowEnabled(enabled);
+    } catch (error) {
+      console.error('Failed to save IMU shadow mode setting', error);
+      showDialog(translate('errorTitle'), translate('failedToSavePreference'));
+    }
+  };
+
   const handleToggleServicePatternDetection = () => {
     const enabled = !servicePatternDetectionEnabled;
     try {
@@ -300,7 +311,7 @@ const ExperimentalSettingsScreen: React.FC = () => {
                   <ToggleItem
                     title={isJapanese ? 'IMUシャドーモード' : 'IMU shadow mode'}
                     state={imuShadowEnabled}
-                    onToggle={() => setImuShadowEnabled((prev) => !prev)}
+                    onToggle={handleToggleImuShadow}
                   />
                 </View>
                 <Typography
